@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Wrapper script for X11-Basic (c) Markus Hoffmann 2008
+# Change these values if you like
+
+#first do some settings like the PWD, HOME and PATH
+cd /mnt/sdcard
+
+export PATH=$PATH:/mnt/sdcard/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/sdcard/lib
+export HOME=/mnt/sdcard/
+export TERMINFO=/mnt/sdcard/lib/terminfo
+export TERMCAP=/mnt/sdcard/lib/termcap
+
+# now start the console application
+
+TTconsole --login /mnt/sdcard/bin/xbasic /mnt/sdcard/X11-Basic/examples2/utils/sonnenaufgang.bas

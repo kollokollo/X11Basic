@@ -76,7 +76,7 @@ void handle_window(WINDOWDEF *);
 int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned int);
 void open_window(WINDOWDEF *);
 void close_window(WINDOWDEF *);
-void put_bitmap(char *adr,int x,int y,int w, int h);
+void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h);
 void graphics();
 void activate();
 #ifndef USE_GEM

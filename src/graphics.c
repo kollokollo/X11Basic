@@ -106,8 +106,8 @@ int get_point(int x, int y) {
     return(r);
 }
 
-#ifdef USE_X11
-int global_graphmode=1;
+#if defined USE_X11 || defined USE_SDL
+int global_graphmode=GRAPHMD_REPLACE;
 #endif
 
 void set_graphmode(int n) { 
@@ -137,6 +137,8 @@ void set_graphmode(int n) {
     break;
   } 
   XChangeGC(window[usewindow].display, window[usewindow].gc,  GCFunction, &gc_val);
+#elif defined USE_SDL
+  global_graphmode=n;
 #elif defined FRAMEBUFFER
   FB_setgraphmode(n);
   switch (n) {

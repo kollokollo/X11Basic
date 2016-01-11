@@ -1,6 +1,11 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
 # Version 28.08.2015 modified by Markus Hoffmann
 
+# This file is part of X11-Basic, the basic interpreter for Unix/X
+# ======================================================================
+# X11-Basic is free software and comes with NO WARRANTY - read the file
+# COPYING for details
+
 # Insert the defs for your machine
 
 SHELL=/bin/sh
@@ -19,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=1
+RELEASE=32
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -287,53 +292,54 @@ EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
 	  $(EXAMPLES_GAMES) $(EXAMPLES_MATHEMATICS) $(EXAMPLES_ATARI_ST) \
         ../examples2/RELEASE-NOTES 
 
-DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
-      AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss \
+DIST= ../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS \
+      ../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
+      ../doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss \
       config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
-        bitmaps/* icons/x11basic.png \
-        examples/compiler/xbc.bas.in \
-        examples/compiler/inline.bas \
-        examples/compiler/bas2x11basic.bas \
-        examples/compiler/gui2bas.bas \
-        examples/compiler/xbc-win.bas \
-        examples/compiler/xbc-st.bas \
-        examples/c-usage/c-demo.c \
-        examples/c-usage/c-demo2.c \
-        examples/c-usage/library.bas \
-        examples/c-usage/Makefile \
-	examples/tests/* \
-	examples/graphics/* 
+        bitmaps/* ../logo/x11basic.png \
+        ../examples/compiler/xbc.bas.in \
+        ../examples/compiler/inline.bas \
+        ../examples/compiler/bas2x11basic.bas \
+        ../examples/compiler/gui2bas.bas \
+        ../examples/compiler/xbc-win.bas \
+        ../examples/compiler/xbc-st.bas \
+        ../examples/c-usage/c-demo.c \
+        ../examples/c-usage/c-demo2.c \
+        ../examples/c-usage/library.bas \
+        ../examples/c-usage/Makefile \
+	../examples/tests/* \
+	../examples/graphics/* 
 
-BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
-      AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c x11basic.h xb2csol.h \
+BINDIST=../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS \
+      ../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
+      ../doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c x11basic.h xb2csol.h \
       x11basic.a libx11basic.so \
-      examples/compiler/xbc.bas.in \
-      examples/compiler/inline.bas \
-      examples/compiler/bas2x11basic.bas \
-      examples/compiler/gui2bas.bas \
-      examples/c-usage/c-demo.c \
-      examples/c-usage/c-demo2.c \
-      examples/c-usage/library.bas \
-      examples/c-usage/Makefile \
-      examples/tests/* \
-      examples/graphics/* 
+      ../examples/compiler/xbc.bas.in \
+      ../examples/compiler/inline.bas \
+      ../examples/compiler/bas2x11basic.bas \
+      ../examples/compiler/gui2bas.bas \
+      ../examples/c-usage/c-demo.c \
+      ../examples/c-usage/c-demo2.c \
+      ../examples/c-usage/library.bas \
+      ../examples/c-usage/Makefile \
+      ../examples/tests/* \
+      ../examples/graphics/* 
 
-WINDIST=Windows-Installer/setup.exe Windows.extension/lib/SDL.dll Windows.extension/lib/libusb0.dll \
+WINDIST=Windows-Installer/old/setup.exe Windows.extension/lib/SDL.dll \
+        Windows.extension/lib/libusb0.dll \
         Windows.extension/lib/README-libusb.txt \
         Windows.extension/lib/README-SDL.txt \
         Windows.extension/lib/README-GMP.txt \
         Windows.extension/lib/README-LAPACK.txt \
-        Windows-Installer/readme.txt Windows-Installer/demo.bas \
+        Windows-Installer/readme.txt Windows-Installer/old/demo.bas \
 	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
-	Windows-Installer/x11basic.ico Windows-Installer/x11bver.txt \
+	Windows-Installer/x11basic.ico Windows-Installer/old/x11bver.txt \
 	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico
 
-TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp Atari-ST-Installer/AUTO/VT100EMU.PRG \
-        Atari-ST-Installer/readme.txt Atari-ST-Installer/demo.bas Atari-ST-Installer/RELEASE_NOTES \
-	Atari-ST-Installer/X11-Basic-manual.txt
+TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp ATARI-ST/AUTO/VT100EMU.PRG \
+        ATARI-ST/readme.txt ATARI-ST/demo.bas ../RELEASE_NOTES \
+	../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 
 
 DIST2=$(LIBOBJS:.o=.c) main.c
@@ -343,10 +349,10 @@ DIR2=X11Basic-src-@version@
 DIR3=X11Basic-bin-@version@
 DIR33=$(DIR)-bin
 TINEDIR=tinexbasic-@version@
-TINEDIST=$(DIST) doc/tine-xbasic.html examples2/DESY/*
+TINEDIST=$(DIST) ../doc/tine-xbasic.html examples2/DESY/*
 DOOCSDIR=doocsxbasic-@version@
-DOOCSDIST=$(DIST) src/doocs-wrapper.cc doc/doocs-xbasic.html \
-                  doc/tine-xbasic.html examples2/DESY/*
+DOOCSDIST=$(DIST) src/Extensions/doocs-wrapper.cc ../doc/doocs-xbasic.html \
+                  ../doc/tine-xbasic.html examples2/DESY/*
 
 LINKFLAGS =
 WINLINKFLAGS = -L./Windows.extension/lib 
@@ -593,7 +599,7 @@ xbbc.tomtom : xbbc.c bytecode.h bytecode.c  x11basic.a.tomtom
 
 # This gives the TomTom Distribution
 
-$(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp TomTom.extension/x11basic-demo TomTom.extension/X11-Basic.cap Makefile ../doc/RELEASE_NOTES
+$(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp TomTom.extension/x11basic-demo TomTom.extension/X11-Basic.cap Makefile ../RELEASE_NOTES
 	rm -rf /tmp/$(DIR33)
 	mkdir /tmp/$(DIR33)
 	mkdir /tmp/$(DIR33)/bin
@@ -601,8 +607,8 @@ $(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp To
 	mkdir /tmp/$(DIR33)/X11-Basic/examples
 	mkdir /tmp/$(DIR33)/SDKRegistry
 	rsync -a README /tmp/$(DIR33)/
-	cp ../doc/README /tmp/$(DIR33)/X11-Basic/
-	cp ../doc/RELEASE_NOTES /tmp/$(DIR33)/X11-Basic/
+	cp ../README /tmp/$(DIR33)/X11-Basic/
+	cp ../RELEASE_NOTES /tmp/$(DIR33)/X11-Basic/
 	(cd ..; tar cf - $(EXAMPLES))|(cd /tmp/$(DIR33)/X11-Basic; tar xpf -)
 	rsync -a xbasic.tomtom /tmp/$(DIR33)/bin/xbasic
 	rsync -a xbvm.tomtom /tmp/$(DIR33)/bin/xbvm
@@ -778,11 +784,11 @@ xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o sv
 xb2c.debug : xb2c.c $(LIBCSRC)
 	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 
-x11basic.tga: x11basic.pov
-	povray +I$< +O$@ +FT +W160 +H200 +V -D +X
+x11basic.tga: ../logo/x11basic-logo-1999.pov
+	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
  
-install : xbasic icons/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
-	install -m 644 icons/x11basic.png $(ICONDIR)/
+install : xbasic ../logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+	install -m 644 ../logo/x11basic.png $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
 	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
@@ -791,8 +797,8 @@ install : xbasic icons/x11basic.png x11basic.desktop libx11basic.so x11basic.h x
 	install -m 644 x11basic.a $(LIBDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
-	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
-	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
+	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
+	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
 	install -s -m 755 xbc $(BINDIR)/
 	install -s -m 755 xb2c $(BINDIR)/
 	install -s -m 755 xbvm $(BINDIR)/
@@ -801,11 +807,11 @@ install : xbasic icons/x11basic.png x11basic.desktop libx11basic.so x11basic.h x
 	install -d $(INCDIR)
 	install -m 644 x11basic.h $(INCDIR)/
 	install -m 644 xb2csol.h $(INCDIR)/
-	install -m 644 doc/man-pages/xbc.1 $(MANDIR)/man1/
-	install -m 644 doc/man-pages/xbbc.1 $(MANDIR)/man1/
-	install -m 644 doc/man-pages/xbvm.1 $(MANDIR)/man1/
-	install -m 644 doc/man-pages/xb2c.1 $(MANDIR)/man1/
-	install -m 644 doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
+	install -m 644 ../doc/man-pages/xbc.1 $(MANDIR)/man1/
+	install -m 644 ../doc/man-pages/xbbc.1 $(MANDIR)/man1/
+	install -m 644 ../doc/man-pages/xbvm.1 $(MANDIR)/man1/
+	install -m 644 ../doc/man-pages/xb2c.1 $(MANDIR)/man1/
+	install -m 644 ../doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
 uninstall :
 	rm -f $(ICONDIR)/x11basic.png
 	rm -f $(DESKTOPDIR)/x11basic.desktop
@@ -827,6 +833,7 @@ uninstall :
 clean :
 	rm -f *.o a.out b.out b.b Makefile.bak xbasic.debug xbbc.debug xb2c.debug \
 	xbvm.debug backup-*.tgz *.d
+	rm -rf doc-pak
 moreclean : clean
 	rm -f  xbasic xbbc xbvm xbc xb2c bas2x11basic libx11basic.so.1.* x11basic.a 11.c \
 	       xbasic.sdl xbasic.framebuffer xbasic.static xbvm.static xb2c.static xbbc.static
@@ -863,7 +870,27 @@ rpm :	$(DIR).tar.gz x11basic.spec
 	cp $(DIR).tar.gz $(HOME)/rpmbuild/SOURCES/
 #	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
-deb :	$(BINDIST)
+
+DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian ../COPYING Debian/copyright \
+	../doc/editors/nedit.defs ../doc/editors/README ../doc/editors/920.conf ../doc/editors/x11basic.lang \
+	../doc/editors/x11basic.geany ../RELEASE_NOTES INSTALL ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
+doc-pak: $(DEBDOC)
+	mkdir $@
+	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY ../COPYING $@/
+	cp ../doc/AUTHORS ../RELEASE_NOTES ../README INSTALL $@/
+	cp Debian/changelog.Debian $@/
+	gzip $@/changelog.Debian
+	cp Debian/copyright $@/
+	mkdir $@/editors/
+	cp ../doc/editors/nedit.defs $@/editors/
+	cp ../doc/editors/README $@/editors/
+	cp ../doc/editors/920.conf $@/editors/
+	cp ../doc/editors/x11basic.lang $@/editors/
+	cp ../doc/editors/x11basic.geany $@/editors/
+	cp ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt $@/
+	
+	
+deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
 	--pkgrelease $(RELEASE)  \
 	--maintainer kollo@users.sourceforge.net \
@@ -871,6 +898,7 @@ deb :	$(BINDIST)
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
+	mv x11basic_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 deb2 :	$(DIR).tar.gz
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
@@ -887,12 +915,12 @@ deb2 :	$(DIR).tar.gz
 	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
 	sudo dpkg-buildpackage -rfakeroot)
 
-tinerpm : $(TINEDIR).tar.gz tinexbasic.spec
+tinerpm : $(TINEDIR).tar.gz Extensions/tinexbasic.spec
 	cp $(TINEDIR).tar.gz /usr/src/packages/SOURCES/
-	rpmbuild -ba --clean tinexbasic.spec
-doocsrpm : $(DOOCSDIR).tar.gz doocsxbasic.spec
+	rpmbuild -ba --clean Extensions/tinexbasic.spec
+doocsrpm : $(DOOCSDIR).tar.gz Extensions/doocsxbasic.spec
 	cp $(DOOCSDIR).tar.gz /usr/src/packages/SOURCES/
-	rpmbuild -ba --clean doocsxbasic.spec
+	rpmbuild -ba --clean Extensions/doocsxbasic.spec
 $(DIR3).zip : $(BINDIST)
 	rm -rf /tmp/$(DIR3)
 	mkdir /tmp/$(DIR3)
@@ -903,8 +931,8 @@ $(DIR3).zip : $(BINDIST)
 	rsync -a RELEASE_NOTES /tmp/$(DIR3)/
 	rsync -a xbasic /tmp/$(DIR3)/bin/
 	rsync -a xbc /tmp/$(DIR3)/bin/
-	rsync -a doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
-	rsync -a doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
+	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
+	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
 	(cd /tmp ; zip -r $(DIR3).zip $(DIR3))
 	mv /tmp/$(DIR3).zip .	
 

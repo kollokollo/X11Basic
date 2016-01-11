@@ -41,6 +41,7 @@
 #include "defs.h"
 #include "x11basic.h"
 
+#include "graphics.h"
 #include "bitmap.h"
 #include "framebuffer.h"
 #include "consolefont.h"
@@ -713,6 +714,34 @@ unsigned char *fontlist57[1] ={(unsigned char *)asciiTable};
 
 
 
+/*Draw a 1-Bit bitmap in fgcolor and bgcolor*/
+void Fb_BlitBitmap(int x, int y,unsigned int w, unsigned int h,unsigned short aColor, 
+                   unsigned short aBackColor, unsigned short graphmode, const unsigned char *bdata) {
+  if (x<0||y<0||w==0||h==0||x>screen.width-w || y>screen.height-h || bdata==NULL) return;
+  register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
+  ptr+=x;
+  register unsigned short *endp  = ptr+h*screen.width;
+  int i;
+  register const unsigned char *dptr=bdata;
+  unsigned char d;
+  while(ptr<endp) {
+  
+    for(i=0;i<w;i++) {
+      if((i%8)==0) d=*dptr++;
+      if(graphmode==GRAPHMD_TRANS) {    /* Transparent */
+        if(d & 1) *ptr= aColor;  ptr++; d >>= 1; 
+      } else if(graphmode==GRAPHMD_XOR) {    /* EOR */
+        if(d & 1) *ptr^=aColor; else *ptr^=aBackColor; ptr++; d >>= 1;   
+      } else {
+        if(d & 1) *ptr++=aColor; else *ptr++ = aBackColor; d >>= 1;    
+      }
+    }
+    ptr+=screen.width-w;
+  }
+}
+
+
+
 void Fb_BlitCharacter57_raw(int x, int y, unsigned short aColor, unsigned short aBackColor,int flags, const unsigned char *chrdata){
   unsigned char data0,data1,data2,data3,data4;
 
@@ -1182,7 +1211,13 @@ unsigned char *FB_get_image(int x, int y, int w,int h, int *len,int usealpha,int
   return(buf);
 }
 
-
+/*Put standard Bitmap to framebuffer 
+  bm -- bitmap
+  x,y -- destination coordinates on framebuffer
+  sx,sy -- source corrdinates in bm
+  sw,sw -- width and height of the portion.
+  
+  */
 
 static void stdbmtoframebuffer(STANDARDBITMAP bm,int x,int y,int sx,int sy,unsigned int sw,unsigned int sh) {
   unsigned short *ptr=(unsigned short *)(screen.pixels+y*screen.scanline);
@@ -1198,17 +1233,15 @@ static void stdbmtoframebuffer(STANDARDBITMAP bm,int x,int y,int sx,int sy,unsig
   unsigned char r,g,b,a;
   unsigned char *buf;
   unsigned short *ptr2;
-  for(j=sy;j<sh;j++) {
-    buf=bm.image+j*bm.w*4;
+  for(j=0;j<sh;j++) {
+    buf=bm.image+(sx+(sy+j)*bm.w)*4;
     ptr2=ptr+j*screen.scanline/2;
-    for(i=sx;i<sw;i++) {
+    for(i=0;i<sw;i++) {
       r=*buf++;
       g=*buf++;
       b=*buf++;
       a=*buf++;
-      
-      *ptr2=mix_color(((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f)),
-	*ptr2,a);
+      *ptr2=mix_color(((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f)),*ptr2,a);
       ptr2++;
     }
   }

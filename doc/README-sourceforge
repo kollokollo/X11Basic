@@ -1,0 +1,9 @@
+Readme for the X11-Basic files at sourceforge: 
+
+* X11-Basic-debian: debian package (for UBUNTU linux and others) of the current version.
+* X11-Basic-WIN: MS WINDOWS package of the current version.
+* X11-Basic-src: The sources
+* X11-Basic-programs: the collection of example programs written in X11-Basic 
+* X11-Basic-TomTom: A special compile for TomTom devices (ARM-linux+framebuffer)
+* X11-Basic-Android: package for Android. Also available in the Android Market.
+

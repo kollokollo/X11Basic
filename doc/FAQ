@@ -1,0 +1,87 @@
+4. FAQ frequently asked questions
+=================================
+
+Q: Why can't I compile X11Basic on my Computer with Zintorola 86060 processor 
+   and Sluggix 0.8 Beta O.S.?
+A: If you have GNU-C and X11R5/6 for this system, and X11Basic still won't 
+   compile, please let me know as soon as possible, I will try to fix it.
+
+Q: How do I leave the interpreter `gently'?
+A: type quit or press ctrl-c (twice)
+
+Q: What do all the warnings mean?
+A: Well, isn't proper ported to your (any?) system. 
+
+Q: Why do the graphics look funny?
+A: Some X-Servers do not clean newly allocated Pixmaps. So rubbish is displayed 
+   if the window is maped. Please do a clearw 1 as a first command.
+
+Q: Is there a GUI-Designer for the graphical user unterface functions 
+   of X11Basic ?
+A: Well, so far nobody has made a real efford to write a real graphical 
+   GUI_designer. But the program gui2bas may help creating GUI forms. The input
+   is a very siple ASCII-File (*.gui) which defines the interface. So far 
+   many GEM object types are supportet (and even Atart ST *.rsc-files may
+   be converted to *.gui files with the rsc2gui program.) but support for 
+   listboxes, popup-menues and Tooltips may be included in future.
+
+Q: My old ANSI Basic Programs (with line-Numbers) produce lots of errors in the
+   interpreter. How can I run classic (ANSI) Basic programs?
+A: Classic Basic programs have to be converted before they can be run with 
+   X11-Basic. With the bas2x11basic converter program most of this convertion
+   will be done automatically. 
+
+F: Kann ich meine alten Atari Programme "einfach" rüberziehen oder müssen
+   die noch irgendwie ( speziell Gem Programme ) angepasst werden?
+A: Die müssen noch angepasst werden. Es gibt kleinere Unterschiede in der
+   Syntax, Systemaufrufe (XBIOS,BIOS,VDISYS etc), Inline-Blöcke gehen
+   natürlich nicht, short int
+   Variablen gibt es nicht etc. Also man muss nochmal mit der Hand
+   drübergehen. Aber es gibt nichts, was nicht irgendwie auch geht.
+   Bei kleinen Programmen (ca. 100 Zeilen) ist es ein Kinderspiel. Bei
+   größeren (mehere 1000 Zeilen) ist es schon was arbeit. 10000-Zeilen
+   Programme habe ich noch nicht portiert. Es lohnt wahrscheinlich nicht.
+   Für Programme, an denen man nichts mehr machen will, empfehle ich dann
+   doch lieber STonX oder sowas.
+
+Q: Program XXX doesn't run, what should I do?
+A: Well this question is too difficult to answer. 
+
+Q: Can I use X11-Basic as a shell ? 
+A: Yes, simply copy the xbasic executable to /usr/bin .
+   The basic programs then should have in their first line
+   #!/usr/bin/xbasic 
+
+Q: Can I use X11-Basic as an internet daemon ? 
+A: Yes, start xbasic with the option -daemon .
+   This feature is still experimental. So use it on your own risk since this 
+   opens several security holes to your system.
+
+Q: Can X11-Basic generate stand-alone programs, which may run 
+   without the xbasic executable ?
+A: Yes and No. X11-Basic does not translate its input into assembly, you 
+   always need the xbasic executable. On the other hand: the xbasic 
+   executable is rather small (< 200 kB), so you might spread it around 
+   with your X11-Basic programs. If you really need stand alone programs 
+   try the pseudo-compiler (xbc). It can link the x11basic-library to your 
+   programs. The result is a stand alone binary.
+   
+Q: May I charge for my X11-Basic programs ?
+A: Yes, you may. But you should state clearly, that xbasic itself is available 
+   free of charge. Refer to the File COPYING for details.
+
+Q: Where can I get the newest version of X11-Basic? 
+A: Probably at 
+   http://x11-basic.sourceforge.net/
+   Don't bet on it though! :-) 
+
+Q: What can I do to speed up the development of X11-Basic?
+A: You can try to bribe me with any amount of money, any type of hardware or
+   software (no pirated stuff please).
+   A nice postcard might suffice too. :-)
+   If you like to implement some new features and/or commands to x11basic,
+   please send me your new sources with description. But I only will implement
+   this stuff if I like it .-)
+
+--------------------------------------------------------------------------------
+

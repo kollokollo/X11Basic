@@ -137,7 +137,9 @@
 #define MAXMENUTITLES 80
 
 
-
+#if defined USE_X11 || defined USE_SDL
+extern int global_graphmode;
+#endif
 
 extern unsigned char marker_typ;
 extern int marker_size;

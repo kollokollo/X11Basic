@@ -1,0 +1,6 @@
+Version|100|
+AppName|xbasic-demo|
+AppPath|/mnt/sdcard/X11-Basic/|
+AppMainTitle|x11basic-demo|
+AppPort|2001|
+COMMAND|CMD|Start|x11basic.bmp|X11-Basic|

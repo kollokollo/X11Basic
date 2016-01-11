@@ -1,0 +1,5 @@
+The sources for the Android version of X11-Basic including the little IDE are maintaines in a separate 
+git repository called "X11-Basic for Android" (hosted on gitlab.com).
+
+This makes it more convienient to have it included in F-Droid.
+

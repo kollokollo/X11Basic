@@ -6701,7 +6701,7 @@ _ACEOF
 
 
 
-ac_config_files="$ac_config_files examples/compiler/xbc.bas Makefile"
+ac_config_files="$ac_config_files ../examples/compiler/xbc.bas Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -7393,7 +7393,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
-    "examples/compiler/xbc.bas") CONFIG_FILES="$CONFIG_FILES examples/compiler/xbc.bas" ;;
+    "../examples/compiler/xbc.bas") CONFIG_FILES="$CONFIG_FILES ../examples/compiler/xbc.bas" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -1,3 +1,12 @@
 Release notes for Version 1.24 (Sept 2015 -- )
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Improved USB-Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- added source box to PUT
+- fixed SPEAK (Android)
+- fixed crash (Android) on load while program is still running
+- Improved USB-Support (linux+WINDOWS)
+- New Setup for WINDOWS version (by InnoSetup)
+- Added spanish voice in SPEAK (Android)
+- new feature: screen focus for Android
+- fixed INKEY$ and INP(-2) (Windows)
+- fixed PUT_BITMAP (Android + Windows)
+- fixed bug in PUT (Android)

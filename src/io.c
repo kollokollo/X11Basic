@@ -1467,6 +1467,9 @@ void touch(PARAMETER *plist,int e) {
 
 
 int inp8(PARAMETER *plist,int e) {
+#ifdef WINDOWS
+  if(plist->integer==-2) return(getch());
+#endif
   unsigned char ergebnis;
   FILEINFO fff=get_fileptr(plist->integer);
   if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
@@ -1475,18 +1478,16 @@ int inp8(PARAMETER *plist,int e) {
 }
 int inpf(PARAMETER *plist,int e) {
   if(plist->integer==-2) return(kbhit() ? -1 : 0);
-  else {
-    FILEINFO fff=get_fileptr(plist->integer);
-    if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-    fflush(fff.dptr);
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
+  fflush(fff.dptr);
 #ifndef WINDOWS
-    int i;
-    ioctl(fileno(fff.dptr), FIONREAD, &i);
-    return(i); 
+  int i;
+  ioctl(fileno(fff.dptr), FIONREAD, &i);
+  return(i); 
 #else    
-    return(((feof(fff.dptr)) ? 0 : -1)); 
+  return(((feof(fff.dptr)) ? 0 : -1)); 
 #endif  
-  }  
 }
 int inp16(PARAMETER *plist,int e) {
   unsigned short ergebnis;
@@ -1647,7 +1648,14 @@ int kbhit() {
 char *inkey() {
    static char ik[MAXSTRLEN];
    int i=0;
-   while(kbhit() && i<MAXSTRLEN-1) ik[i++]=getc(stdin);
+   while(kbhit() && i<MAXSTRLEN-1) 
+#ifdef WINDOWS
+     /*getch() unter windows (im Unterschied zu getc()) wartet nicht auf ein 
+       return und es gibt kein echo der Zeichen auf die Konsole */
+     ik[i++]=getch();
+#else
+     ik[i++]=getc(stdin);
+#endif
    ik[i]=0;
    return(ik);
 }

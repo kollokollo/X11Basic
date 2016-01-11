@@ -421,6 +421,8 @@ void open_window(WINDOWDEF *w) {
 #ifdef WINDOWS_NATIVE
 #endif
 #ifdef USE_SDL
+
+
 #elif defined USE_GEM
 #else
     XEvent event;
@@ -447,6 +449,9 @@ void close_window(WINDOWDEF *w) {
   vga_setmode(TEXT);
   w->flags&=(~WIN_OPENED);
 #elif defined USE_SDL
+  if(w->flags&WIN_OPENED) {
+
+  }
 #elif defined USE_X11
   XEvent event;
   if(w->flags&WIN_OPENED) {
@@ -746,7 +751,11 @@ static void *memrevcpy(char *dest, const char *src, size_t n) {
 }
 #endif
 
-void put_bitmap(char *adr,int x,int y,int w, int h) {
+/*Eine einfache Bitmap auf den Screen bringen, hierbei gibt es 
+  fordergrundfarbe, hintergrundfarbe und Graphmodi zu berücksichtigen.
+  */
+
+void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
 #ifdef USE_X11
   Pixmap bitpix=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,adr,w,h);
   XCopyPlane(window[usewindow].display,bitpix,window[usewindow].pix,window[usewindow].gc,0,0,w,h,x,y,1);
@@ -758,6 +767,24 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
   data=SDL_CreateRGBSurface(SDL_SWSURFACE,w,h,1, 0,0,0,0);
   memrevcpy(data->pixels,adr,bpl*h);
   data->pitch=bpl;
+  if(global_graphmode==GRAPHMD_TRANS) {
+    SDL_SetColorKey(data,SDL_SRCCOLORKEY,0);
+  }
+//  memdump((char *)(data->format),sizeof(SDL_PixelFormat));
+//  memdump((char *)(data->format->palette),sizeof(SDL_Palette));
+//  memdump((char *)(data->format->palette->colors),2*sizeof(SDL_Color));
+  unsigned char *pal;
+  pal=(unsigned char *)(data->format->palette->colors);
+  unsigned long col=window[usewindow].bcolor;
+  col>>=8;
+  pal[2]=(col&0xff); col>>=8;
+  pal[1]=(col&0xff); col>>=8;
+  pal[0]=(col&0xff);
+  col=window[usewindow].fcolor; col>>=8;
+  pal[6]=(col&0xff); col>>=8;
+  pal[5]=(col&0xff); col>>=8;
+  pal[4]=(col&0xff);
+   
   image=SDL_DisplayFormat(data);
   SDL_FreeSurface(data);
   SDL_Rect a={0,0,image->w,image->h};
@@ -765,6 +792,10 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
 //  printf("putbitmap: %dx%d %d %d\n",image->w,image->h,bpl,image->pitch);
   SDL_BlitSurface(image, &a,window[usewindow].display, &b);
   SDL_FreeSurface(image);
+#elif defined FRAMEBUFFER
+
+  Fb_BlitBitmap(x,y,w,h,window[usewindow].fcolor, window[usewindow].bcolor, window[usewindow].screen->graphmode, adr);
+
 #endif
 }
 

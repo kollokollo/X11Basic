@@ -264,6 +264,8 @@ void FB_setfillpattern(const char *p);
 void FB_setfillstyle(int);
 void FB_setfillrule(int);
 
+void Fb_BlitBitmap(int x, int y,unsigned int w, unsigned int h,unsigned short aColor, unsigned short aBackColor, unsigned short graphmode, const unsigned char *bdata);
+
 void FB_copyarea(int x,int y,int w, int h, int tx,int ty);
 int FB_get_color(unsigned char r, unsigned char g, unsigned char b);
 void FB_setgraphmode(int n);
