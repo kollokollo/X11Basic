@@ -581,6 +581,11 @@ void FB_pbox(int x1, int y1, int x2, int y2) {
 }
 
 
+
+
+
+
+
 /* Clear whole screen */
 void FB_Clear(G_CONTEXT *screen) {
   unsigned short *ptr=(unsigned short *)screen->pixels;
