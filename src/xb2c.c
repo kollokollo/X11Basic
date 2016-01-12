@@ -74,7 +74,7 @@ void xberror(char errnr, const char *bem);
 static void intro(){
   printf("********************************************************\n"
          "*     X11-Basic bytecode to C translator               *\n"
-         "*                  by Markus Hoffmann 1997-2015 (c)    *\n"
+         "*                  by Markus Hoffmann 1997-2016 (c)    *\n"
          "* V.%s/%04x    date: %30s  *\n"
          "********************************************************\n",version,BC_VERSION,vdate);
 }
@@ -116,17 +116,17 @@ static int havesymbol(int adr,int typ) {
   }
   return(-1);
 }
-static int frishmemcpy(char *d,char *s,int n) {
+static int frishmemcpy(unsigned char *d,unsigned char *s,unsigned int n) {
   int i,j=0;
   for(i=0;i<n;i++) {
     if(s[i]=='\"' || s[i]=='\\') {
       d[j++]='\\';
       d[j++]=s[i];  
     } else if(!isprint(s[i])) {
-      sprintf(&d[j],"\\x%02x",s[i]);
-      j+=4;
+      sprintf((char *)&d[j],"\\x%02x\" \"",s[i]);
+     /* printf("sonderzeichen %d %02x <%s>\n",s[i],s[i],(char *)&d[j]); */
+      j+=7;
     } else d[j++]=s[i];
-  
   }
   return(j);  
 }
@@ -178,7 +178,7 @@ static void data_section() {
 }
 
 static void translate() {
-  char *buf;
+  unsigned char *buf;
   
   signed char c;
   int i,n,b,redo;
@@ -523,7 +523,7 @@ static void translate() {
       n=bcpc[i++];
       CP4(&a,&bcpc[i],i);
       buf=malloc(n*4+8);
-      b=frishmemcpy(buf,rodata+a,n);
+      b=frishmemcpy(buf,(unsigned char *)(rodata+a),n);
       buf[b]=0;
       fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,n);
       free(buf);
@@ -537,7 +537,7 @@ static void translate() {
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
       buf=malloc(4*len+8);
-      b=frishmemcpy(buf,rodata+a,len);
+      b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,len);
       free(buf);
@@ -548,11 +548,11 @@ static void translate() {
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
       buf=malloc(4*len+8);
-      b=frishmemcpy(buf,rodata+a,len);
+      b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       ARBINT a;
       mpz_init(a);
-      mpz_set_str(a,buf,32);
+      mpz_set_str(a,(char *)buf,32);
       char *buf2=mpz_get_str(NULL,10,a);
       mpz_clear(a);
       fprintf(optr,"PUSHAI(\"%s\"); /*len=%d  %s*/\n",buf,len,buf2);
@@ -565,7 +565,7 @@ static void translate() {
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
       buf=malloc(4*len+8);
-      b=frishmemcpy(buf,rodata+a,len);
+      b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       fprintf(optr,"PUSHA(\"%s\",%d); /*len=%d*/\n",buf,len,len);
       free(buf);
