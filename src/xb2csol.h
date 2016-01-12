@@ -17,7 +17,7 @@
 
 #define BC_STACKLEN 512
 #define PL_LEER     0x00
-#define PL_KEY      0x39
+#define PL_KEY      0x45
 #define PL_INT       1
 #define PL_FLOAT     2
 #define PL_ARBINT    3
@@ -68,7 +68,7 @@ int programbufferlen;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer;
 const char version[]="1.24"; /* Version Number. Put some useful information here */
-const char vdate[]="2015-09-01";   /* Creation date.  Put some useful information here */
+const char vdate[]="2016-01-01";   /* Creation date.  Put some useful information here */
 char **program={"compiled by xb2c"};    /* Other comments. Put some useful information here */
 int prglen=sizeof(program)/sizeof(char *);
 extern int datapointer;
