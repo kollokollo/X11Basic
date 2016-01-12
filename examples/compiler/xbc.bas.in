@@ -11,6 +11,7 @@
 ' 01.2013: adapted to new **program structure
 ' 03.2013: added new compile flags -L and --pseudo
 ' 03.2014: corrected bug with -s (strip)   MH
+' 01.2016: added prefix macro to library path  MH
 
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
 '* ======================================================================
@@ -27,7 +28,7 @@ bytecode=FALSE
 virtualm=FALSE
 dostrip=FALSE
 docomments=FALSE
-librarypath$="/usr/lib"
+librarypath$="@prefix@/lib"
 CLR inputfile$,dyn,collect$
 outputfilename$="b.out"
 WHILE LEN(param$(i))
