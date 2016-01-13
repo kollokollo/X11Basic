@@ -35,6 +35,7 @@ OPT=@copt@
 
 # Additional header file paths
 INC=@X_CFLAGS@ -I.
+WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP
 TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # X11 library path
@@ -88,7 +89,7 @@ LIBCSRC=$(LIBOBJS:.o=.c)
 FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
 LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
 
-WINLIBOBJS= $(LIBOBJS) Windows.extension/fnmatch.o 
+WINLIBOBJS= $(LIBOBJS) WINDOWS/fnmatch.o 
 
 
 
@@ -326,12 +327,12 @@ BINDIST=../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS
       ../examples/tests/* \
       ../examples/graphics/* 
 
-WINDIST=Windows-Installer/old/setup.exe Windows.extension/lib/SDL.dll \
-        Windows.extension/lib/libusb0.dll \
-        Windows.extension/lib/README-libusb.txt \
-        Windows.extension/lib/README-SDL.txt \
-        Windows.extension/lib/README-GMP.txt \
-        Windows.extension/lib/README-LAPACK.txt \
+WINDIST=Windows-Installer/old/setup.exe WINDOWS/lib/SDL.dll \
+        WINDOWS/lib/libusb0.dll \
+        WINDOWS/lib/README-libusb.txt \
+        WINDOWS/lib/README-SDL.txt \
+        WINDOWS/lib/README-GMP.txt \
+        WINDOWS/lib/README-LAPACK.txt \
         Windows-Installer/readme.txt Windows-Installer/old/demo.bas \
 	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
 	Windows-Installer/x11basic.ico Windows-Installer/old/x11bver.txt \
@@ -355,7 +356,7 @@ DOOCSDIST=$(DIST) src/Extensions/doocs-wrapper.cc ../doc/doocs-xbasic.html \
                   ../doc/tine-xbasic.html examples2/DESY/*
 
 LINKFLAGS =
-WINLINKFLAGS = -L./Windows.extension/lib 
+WINLINKFLAGS = -L./WINDOWS/lib 
 
 LIBS =  @libs@ @xtra@
 LIBS1 =  @libs@
@@ -366,9 +367,9 @@ CONSOLELIBS= @libs@ @xtra@
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
 TOSLIBS = -lm  -lgem
 
-MYWINLIBS = x11basic.lib Windows.extension/lib/libgfx.lib Windows.extension/lib/libgmp.a \
-            Windows.extension/clapack/lapack.lib Windows.extension/lib/libusb.a \
-	    Windows.extension/blas/blas.lib Windows.extension/f2c/f2c.lib 
+MYWINLIBS = x11basic.lib WINDOWS/lib/libgfx.lib WINDOWS/lib/libgmp.a \
+            WINDOWS/clapack/lapack.lib WINDOWS/lib/libusb.a \
+	    WINDOWS/blas/blas.lib WINDOWS/f2c/f2c.lib 
 
 MYTOSLIBS = x11basic.toslib
 
@@ -414,10 +415,9 @@ xbasic : libx11basic.so main.o
 
 # Make th X11-Basic compiler manager xbc
 
-xbc : xbasic libx11basic.so examples/compiler/xbc.bas
-	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@ -L .
+xbc : xbasic libx11basic.so ../examples/compiler/xbc.bas
+	LD_LIBRARY_PATH=. ./xbasic ../examples/compiler/xbc.bas --dynamic -o $@ -L .
 	strip $@
-
 
 # Make the bytecode compiler xbbc
 
@@ -453,35 +453,35 @@ libx11basic.dll : x11basic.lib
 
 x11basic.lib : $(WINLIBOBJS)
 	rm -f *.o
-	$(WINCC) -DWINDOWS -c $(DIST2) -I./Windows.extension/include -I./Windows.extension/include/GMP
-	$(WINCC) -DWINDOWS -c mathematics.c -I./Windows.extension/include -I./Windows.extension/include/GMP
+	$(WINCC) -DWINDOWS -c $(DIST2) $(WININC) 
+	$(WINCC) -DWINDOWS -c mathematics.c $(WININC)
 	i586-mingw32msvc-ar -ru $@ $(WINLIBOBJS) 
 	rm -f *.o
 
 # Make the exe for MS WINDOWS
 
-xbasic.exe: x11basic.lib main.c
-	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
+xbasic.exe: main.c $(MYWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
 	 $(WINLIBS)
 	strip $@
-xbbc.exe: x11basic.lib bytecode.h bytecode.c xbbc.c 
-	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
+xbbc.exe: bytecode.h bytecode.c xbbc.c $(MYWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
 	$(MYWINLIBS) $(WINLIBS)
 	strip $@
 xb2c.exe: x11basic.lib xb2c.c 
-	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xb2c.c  \
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xb2c.c  \
 	$(MYWINLIBS) $(WINLIBS)
 	strip $@
 
-xbvm.exe: x11basic.lib bytecode.h xbvm.c 
-	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xbvm.c \
+xbvm.exe: bytecode.h xbvm.c $(MYWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xbvm.c \
 	 $(MYWINLIBS) $(WINLIBS)
 	strip $@
 
 # Make th X11-Xasic psydocompiler (for MS WINDOWS)
 
-xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
-	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-win.bas -o $@
+xbc.exe : xbasic ../examples/compiler/xbc-win.bas xbvm.exe xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q ../examples/compiler/xbc-win.bas -o $@
 	chmod 755 $@ 
 
 
@@ -499,8 +499,8 @@ xbvm.prg: x11basic.toslib bytecode.h xbvm.c
 	$(TOSCC) -DATARI $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
 	 $(MYTOSLIBS) $(TOSLIBS)
 	m68k-atari-mint-strip $@
-xbc.prg : xbasic examples/compiler/xbc-st.bas xbvm.prg xbbc
-	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-st.bas -o $@
+xbc.prg : xbasic ../examples/compiler/xbc-st.bas xbvm.prg xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q ../examples/compiler/xbc-st.bas -o $@
 	chmod 755 $@ 
 xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c
 	$(TOSCC) -DATARI -DDUMMY_LIST $(OPT) -o $@ xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c svariablen.c file.c
@@ -712,8 +712,7 @@ X11-Basic-examples-$(LIBNO)-$(RELEASE).zip:
 X11-Basic-examples-$(LIBNO).tar.gz:
 	cd .. ; tar czf  src/X11-Basic-examples-$(LIBNO).tar.gz examples2/
 
-
-
+# Fuer die Control System Varianten
 
 tineexe: $(WINLIBOBJS) main.o 
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
@@ -735,14 +734,9 @@ doocsxbasic : $(LIBOBJS) main.o  doocs-wrapper.o
 	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS)
 	strip $@
 
-
 csxbasic : $(LIBOBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
 	strip $@
-
-
-lib:	libx11basic.so x11basic.a
-
 
 libtinex11basic.so : $(LIBOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -shared -o $@ $(LIBOBJS)
@@ -750,12 +744,17 @@ libtinex11basic.so : $(LIBOBJS)
 tinex11basic.a : $(LIBOBJS)
 	 ar -ru $@ $(LIBOBJS)  
 
+
+lib:	libx11basic.so x11basic.a
+
+
+
 # Make the ANSI-Basic to X11-Basic translator
 
-bas2x11basic : xbc
-	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
+bas2x11basic : xbc ../examples/compiler/bas2x11basic.bas
+	LD_LIBRARY_PATH=. ./xbc ../examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
 	strip $@
-myzip : xbc
+myzip : xbc ../examples2/utils/myzip.bas ../examples2/utils/myunzip.bas
 	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myzip.bas --dynamic -o myzip -L .
 	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip -L .
 	strip myzip
@@ -874,6 +873,7 @@ rpm :	$(DIR).tar.gz x11basic.spec
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian ../COPYING Debian/copyright \
 	../doc/editors/nedit.defs ../doc/editors/README ../doc/editors/920.conf ../doc/editors/x11basic.lang \
 	../doc/editors/x11basic.geany ../RELEASE_NOTES INSTALL ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
+
 doc-pak: $(DEBDOC)
 	mkdir $@
 	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY ../COPYING $@/

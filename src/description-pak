@@ -1,0 +1,4 @@
+BASIC interpreter/compiler for UNIX.
+
+X11-Basic is a structured BASIC interpreter and compiler with X11-graphics capabilities.
+The dialect of this language is most similar to the ATARI ST version of GFA-Basic.
