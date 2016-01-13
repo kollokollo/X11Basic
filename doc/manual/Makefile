@@ -95,7 +95,7 @@ draft.ps : main.ps
 	draftit $< > $@
 
 clean : 
-	rm -f main.ps main.fot texput.log main.toc main.pdf $(EPSFILES) *.jpg main.dvi *.aux main.ilg main.idx main.ind main.log missfont.log
+	rm -f main.ps main.fot texput.log main.toc main.pdf $(EPSFILES) *.jpg main.dvi *.aux tex/*.aux main.ilg main.idx main.ind main.log missfont.log
 distclean : clean
 	rm -f *.pdf A.tex 39_Errors.sec main.otxt  $(NAME)-?.??.txt main.fot main.toc
 dist :	$(DIST)

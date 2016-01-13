@@ -1,0 +1,49 @@
+Ideas for future releases of X11-Basic
+======================================
+
+
+
+
+Systemvariablen:
+
+DATAPOINTER oder _DATA mit Restoremoeglichkeit
+
+ISDIR(d$)  --> STAT ?
+
+
+-------------SDL Graphics -------------------
+* Auch TTF fonts
+* GPRINT routinen zu voller VT100 Emulation mit standard-GEM-Font ausweiten.
+(einschliesslich cursor). Die Routinen koennen von TTconsole genommen werden.
+* 16 moegliche Fenster, USEWINDOW, --> SETWINDOW num,mode
+* Was tun mit SCREEN und ROOTWINDOW? SAVESCREEN/SAVEWINDOW?
+* Fullscreenmode (done)
+
+
+-------sound-----
+
+* 16 Kanaele zum zusammenmixen (ok)
+* Auf jedem Kanal kann man einen Sound laden (ok)
+* mit MIX kommando kann man die Mixtur beeinflussen
+* Event, wenn sound zuende (oder testfunktionen)
+* Einzelne Toene auf Kanal spielen (ok)
+
+
+-------encryption---------------
+
+LIBGCRYPT:
+    hash$=HASH$(data$[,typ%])
+    sdata$=SIGN$(data$,privkey$)
+    verify%=VERIFY$(sdata$,pubkey$)
+    cdata$=ENCRYPT$(data$,key$[,typ%])
+    data$=DECRYPT$(cdata$,key$[,typ%])
+
+    err=KEYGEN(typ%,pubkey$,privkey$)
+    
+---------------------------------
+
+
+--------incompatible aenderungen:---------------------
+* xbasic und xbasic.exe umbenennen in x11basic und x11basic.exe
+(vielleicht mit einem link von xbasic)
+

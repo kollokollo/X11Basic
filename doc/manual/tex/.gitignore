@@ -1,0 +1,4 @@
+# so that the aux files creaded by latex will not be stored in the repository
+
+*.aux
+
