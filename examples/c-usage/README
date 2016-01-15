@@ -1,0 +1,7 @@
+Examples how to mix X11-Basic and C
+===================================
+
+Makefile          Makefile for the examples below
+c-demo.c          Demonstration on how to use the x11basic library within a C main() program
+c-demo2.c         Demonstration on how to use the x11basic library and xbc compiled object code within c
+library.bas       example, how to produce .o linkabel object files 

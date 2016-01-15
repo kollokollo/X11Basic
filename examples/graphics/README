@@ -1,0 +1,51 @@
+Example Programs with graphics for X11-Basic
+============================================
+
+3Dmaze.bas
+3Dng.bas
+ana_uhr.bas
+animation.bas
+artifice.bas
+baum.bas
+bblocks.bas
+bezier.bas
+boxes.bas
+bubtri.bas
+carre3D.bas
+complex-mandel-sequence.bas	Mandelbrot fractals calculated with complex numbers
+conv_bmp.bas
+dla.bas
+draw.bas			Draw onto the screen with the mouse
+elli1.bas 
+fancy-digits.bas 
+farn.bas 
+fastmandel.bas
+Fractal_Cloud.bas
+fractal-tree.bas
+fring.bas
+kappa.bas
+kugel.bas
+landscape.bas
+lorenz-attractor.bas
+mandel.bas 
+mandelbenchmark.bas 
+mandel-simple.bas 
+mond-animation.bas		Animate the moon phases
+netzgraf.bas 
+OLED-Font.bas
+plasma.bas
+plot.bas
+RDS.bas
+replicator.bas 
+rotozoomer-9.bas
+sattrac1.bas			Strange Attractor
+sierpinski.bas			Sierpinski Fractal
+space.bas 
+space2.bas 
+spitzenteppich.bas
+terrain.bas			Realistic terrain generator 
+wanderermaze.bas 		Maze generator
+wanderermaze2.bas 		Maze generator for Mazes with holes
+wurm.bas
+zoom.bas 
+zoom2.bas 

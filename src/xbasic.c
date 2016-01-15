@@ -16,7 +16,7 @@
 
                        VERSION 1.24
 
-            (C) 1997-2015 by Markus Hoffmann
+            (C) 1997-2016 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -102,18 +102,12 @@ char **param_argumente=NULL;
 
 int usewindow=DEFAULTWINDOW;
 
-
 void free_pcode(int l);
-
 
 static int add_label(char *name,int zeile,int dataptr);
 static int add_proc(char *name,char *pars,int zeile,int typ);
 
-
-
-
 static int oldprglen=0;
-
 
 extern char ifilename[];
 
@@ -125,7 +119,6 @@ int original_line(int i) {
   for(j=0;j<i;j++) a+=linetable[j];
   return a;
 }
-
 
 
 /* Bytecode spezifica. */

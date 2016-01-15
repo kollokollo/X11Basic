@@ -1,3 +1,4 @@
+color get_color(65535,0,0)
 ' output of inline.bas for X11-Basic 06.01.2016
 ' /usr/share/games/enigma/gfx64/player_switch_anim.png 20198 Bytes. (compressed: 19464 Bytes, 96%)
 player_switch_anim$=""
@@ -411,18 +412,21 @@ player_switch_anim_png$=UNCOMPRESS$(INLINE$(player_switch_anim$))
 'open "I",#1,"/usr/share/games/enigma/gfx64/player_switch_anim.png"
 't$=input$(#1,LOF(#1))
 'close #1
-' p$=PNGDECODE$(t$)
-p$=player_switch_anim_png$
+p$=PNGDECODE$(player_switch_anim_png$)
+color get_color(65535,0,0)
+pbox 0,0,100,100
+showpage
+pause 1
 color 0
 do
-pbox 0,0,640,400
-put 0,0,p$,,,0,64*i,64,64
-inc i
-if i>19
-i=0
-endif
-put 200,0,p$,2,,0,64*i*2,64*2,64*2
-SHOWPAGE
-pause 0.05
+  pbox 100,0,540,400
+  put 0,0,p$,,,0,64*i,64,64
+  inc i
+  if i>19
+    i=0
+  endif
+  put 200,0,p$,2,,0,64*i*2,64*2,64*2
+  SHOWPAGE
+  pause 0.05
 loop
 KEYEVENT
