@@ -1,0 +1,309 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of XBC</TITLE>
+</HEAD><BODY>
+<H1>XBC</H1>
+Section: Linux Basic Compiler (1)<BR>Updated: 21-Aug-2014<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+xbc (X11-Basic compiler) - X11-Basic compiler 
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>xbc</B>
+
+[ <I>option</I> ] <I>&lt;filename&gt;</I>
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+X11-Basic is a dialect of the BASIC programming language with graphics
+capability that integrates features like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on modern 
+computers.
+<P>
+<I>xbc</I>
+
+can be used to make stand-alone-binaries out of *.bas script-Files.
+<P>
+<B>For a desciption of the X11-Basic language and usage of the interpreter see</B>
+
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
+
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>Filenames</H2>
+
+<P>
+Xbc process input files
+through one or more of three stages: preprocessing, compilation, translation 
+and linking.  Source filename suffixes identify the source
+language.
+<P>
+Suffixes of source file names indicate the kind of
+processing to be done:
+<PRE>
+
+<B>.bas</B>    Basic source; preprocess, compile, link
+<B>.b</B>      bytecode file; translate to C, then compile to native code
+<B>.o</B>      Object file; link
+</PRE>
+
+<P>
+Linking is always the last stage unless you use one of the
+<B>-c</B>
+
+, 
+<B>-b</B>
+
+or
+<B>-l</B>
+
+options to avoid it (or unless compilation errors stop the whole
+process).
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-b</B>
+
+<DD>
+Precompile the source files, but do not compile nor link.  The compiler
+output is a *.c file corresponding to the source file. These *.c files can
+be compiled with e.g. the GNU project C Compiler.
+<P>
+By default, xbc makes the *.c file name for a source file by replacing
+the suffix `<B>.bas</B><BR>&nbsp;with
+<B>.o</B>'.  Use
+<B>-o</B> to select another name.
+<DT><B>-c</B>
+
+<DD>
+Precompile and compile the source files, but do not link.  The compiler
+output is an object file corresponding to each source file.
+<P>
+By default, xbc makes the object file name for a source file by replacing
+the suffix `<B>.bas</B><BR>&nbsp;with&nbsp;`<B>.o</B>'.  Use
+<B>-o</B> to select another name.
+<DT><B>-l</B>
+
+<DD>
+Precompile and compile the source files, but do not link.  The compiler
+output is an object file corresponding to each source file. The source files 
+are compiled 
+in a way that they can (and will have to) be linked to other object files. With these
+object files it is possible to create a library from your basic routines, which can be 
+executed from another program.
+<P>
+By default, xbc makes the object file name for a source file by replacing
+the suffix `<B>.bas</B><BR>&nbsp;with&nbsp;`<B>.o</B>'.  Use
+<B>-o</B> to select another name.
+<DT><B>-o </B><I>file</I>
+
+<DD>
+Place output in file <I>file</I>.  This applies regardless to whatever
+sort of output xbc is producing, whether it be an executable file, a *.c file or
+an object file.
+<P>
+Since only one output file can be specified, it does not make sense to
+use `<B>-o</B>' when compiling more than one input file, unless you are
+producing an executable file as output.
+<P>
+If you do not specify `<B>-o</B>', the default is to put an executable file
+in `<B>b.out</B>', the object file for `<I>source</I><B>.</B><I>suffix</I>' in
+`<I>source</I><B>.o</B>', and its *.c file in `<I>source</I><B>.c</B></DL>
+<A NAME="lbAG">&nbsp;</A>
+<H3>-virtualm</H3>
+
+<A NAME="lbAH">&nbsp;</A>
+<H3>--virtualm</H3>
+
+this option tells the compiler to compile the code to bytecode and then translate it to C 
+source and finally compile it with gcc. The code produced is really fast. On UNIX this 
+option can always be used unless some compiler trouble occur. 
+<A NAME="lbAI">&nbsp;</A>
+<H3>--static</H3>
+
+this is the default. The X11-Basic library will be linked to the excecutable.
+<A NAME="lbAJ">&nbsp;</A>
+<H3>--dynamic</H3>
+
+The excecutable will be linked dynamically against the X11-Basic library.
+<A NAME="lbAK">&nbsp;</A>
+<H3>-shared</H3>
+
+This option is passed to the linker and tells it, that it should produce a shared
+object file which can then be linked with other objects to
+form an executable.  Not all systems support this option. 
+Usually the extention should be 
+<B>.so</B><BR>&nbsp;This&nbsp;option&nbsp;only&nbsp;makes&nbsp;sense
+if it was used together with the 
+<B>-l</B><BR>&nbsp;option.
+<P>
+<A NAME="lbAL">&nbsp;</A>
+<H3>-C</H3>
+
+Do not discard comments.  All comments are passed through to the
+output file.
+<P>
+<A NAME="lbAM">&nbsp;</A>
+<H3>-s --strip</H3>
+
+Remove all symbol table and relocation information from the
+executable.
+<P>
+<A NAME="lbAN">&nbsp;</A>
+<H3>-L  path</H3>
+
+Use <I>path</I> when looking for libraries to link (default is /usr/lib). 
+<P>
+<P>
+<A NAME="lbAO">&nbsp;</A>
+<H3>--version</H3>
+
+shows version, program and other information and exits
+<A NAME="lbAP">&nbsp;</A>
+<H3>-h --help</H3>
+
+print a short help
+<P>
+For detailed help and description of the implemented basic commands take a 
+look at the README file. 
+<P>
+<P>
+<A NAME="lbAQ">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<PRE>
+xbc testme.bas
+    produces an excecutable file b.out
+xbc testme.bas -o testme --dynamic
+    produces an excecutable file testme
+xbc testme.bas -c 
+    produces testme.o
+xbc testme.bas -b
+    produces testme.c or 11.c or b.b
+xbc testme.bas -virtualm --dynamic -o b.out
+    produces b.out, which excecutes really fast!
+</PRE>
+
+<P>
+You can find many sample programs in 
+<I>/usr/share/doc/packages/X11Basic/examples.</I>
+
+<A NAME="lbAR">&nbsp;</A>
+<H2>The pseudo compiler</H2>
+
+Actually xbc is only a real compiler, if used with the -virtualm option.
+The default behaviour is
+such, that the source code is still interpreted on runtime 
+(so to say, only a pseudo-compiler). But the
+source code is linked to the X11-Basic library so there results one 
+independant executable. Another advantage is that it is quite hard to extract a
+full running *.bas File from this binary since the code is compressd in a way. 
+Why is this the default? Well the compiler can pseudo-compile all BASIC 
+programs, which run in the interpreter. The real compiler has some restrictions 
+on the BASIC code, because it cannot compile every constructs (e.g. jumps/GOTO out 
+of a procedure). The compiler relies on gcc. The compiler for the MS WINDOWS 
+version behaves different (since no gcc is available): Here the BASIC program 
+is compiled into bytecode, which is packed together with a virtual machine into 
+an excecutable file. The bytecode is then interpreted on runtime, but anyway this
+is much faster than the interpreted code. Of course, you can always translate the 
+bytecode to a C source and crosscompile this for any platform. On MS windows it is
+worth looking for tcc, the tiny c compiler. It installs really quick and does the 
+job.
+<P>
+<P>
+<A NAME="lbAS">&nbsp;</A>
+<H2>VERSION</H2>
+
+Page was created for V.1.20
+<A NAME="lbAT">&nbsp;</A>
+<H2>BUG REPORTS       </H2>
+
+<P>
+If you find a bug in the X11-Basic compiler xbc, you should
+report it. But first,  you  should make sure that it really is
+a bug, and that it appears in the latest version of the
+X11-Basic package that you have.
+<P>
+Once  you have determined that a bug actually exists, mail a
+bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
+you  are  welcome  to  mail that as well!  Suggestions  may 
+be  mailed  to the x11-basic mailing list on 
+<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
+tracking system.
+<P>
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<A NAME="lbAU">&nbsp;</A>
+<H2>BUGS</H2>
+
+Still some bugs
+<A NAME="lbAV">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<A NAME="lbAW">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (C) 1997-2015 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<P>
+This program is free software;  you  can  redistribute  it
+and/or modify it under the terms of the GNU General Public
+License as published  by  the  Free  Software  Foundation;
+either  version  2 of the License, or (at your option) any
+later version.
+<P>
+This program is distributed in the hope that  it  will  be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+PURPOSE.   See  the  GNU  General  Public License for more
+details.
+<A NAME="lbAX">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+gcc">gcc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+ld">ld</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">Filenames</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DL>
+<DT><A HREF="#lbAG">-virtualm</A><DD>
+<DT><A HREF="#lbAH">--virtualm</A><DD>
+<DT><A HREF="#lbAI">--static</A><DD>
+<DT><A HREF="#lbAJ">--dynamic</A><DD>
+<DT><A HREF="#lbAK">-shared</A><DD>
+<DT><A HREF="#lbAL">-C</A><DD>
+<DT><A HREF="#lbAM">-s --strip</A><DD>
+<DT><A HREF="#lbAN">-L  path</A><DD>
+<DT><A HREF="#lbAO">--version</A><DD>
+<DT><A HREF="#lbAP">-h --help</A><DD>
+</DL>
+<DT><A HREF="#lbAQ">EXAMPLES</A><DD>
+<DT><A HREF="#lbAR">The pseudo compiler</A><DD>
+<DT><A HREF="#lbAS">VERSION</A><DD>
+<DT><A HREF="#lbAT">BUG REPORTS       </A><DD>
+<DT><A HREF="#lbAU">BUGS</A><DD>
+<DT><A HREF="#lbAV">AUTHOR</A><DD>
+<DT><A HREF="#lbAW">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAX">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 22:02:54 GMT, January 15, 2016
+</BODY>
+</HTML>

@@ -8,7 +8,7 @@
 # COPYING for details
 
 
-VERSION=1.22
+VERSION=1.24
 NAME=X11-Basic-manpages
 
 DIR=$(NAME)-$(VERSION)
@@ -21,7 +21,7 @@ MANS=$(wildcard *.1)
 HTMLS=$(MANS:.1=.1.html)
 TXTS=$(MANS:.1=.txt)
 
-all : $(HTMLS)
+all : $(HTMLS) move
 
 clean : 
 	rm -f $(HTMLS) $(TXTS) 
@@ -31,6 +31,8 @@ clean :
 	chmod 644 $@
 %.txt: %.1
 	groff -mandoc -Tlatin1 $< > $@
+move : $(HTMLS)
+	mv $(HTMLS) ../../htdocs/
 test : xbc.1 x11basic.1
 	echo  $< $@
 	echo $(HTMLS)

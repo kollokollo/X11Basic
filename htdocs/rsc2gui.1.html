@@ -1,0 +1,186 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of bas2x11basic</TITLE>
+</HEAD><BODY>
+<H1>bas2x11basic</H1>
+Section: ANSI-Basic to X11-Basic converter (1)<BR>Updated: 19-Sep-2003<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+bas2x11basic  - ANSI-Basic to X11-Basic converter
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>bas2x11basic</B>
+
+[ <I>option</I> ] <I>&lt;filename&gt;</I>
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates fratures like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on moden 
+computers.
+<P>
+X11-Basic  is  a  structured programming language. Structure is a
+form of visual and functional encapsulation  in  which  multipleline 
+sections of program look and act like single units. The beginning and 
+end of blocks are marked by descriptive  keyword  delimiters.  Lines within 
+blocks are generally indented to make the
+block visible. Most important: X11-Basic does not use line numbers.
+<P>
+<I>bas2x11basic</I>
+
+can be used to make X11-Basic template programs out of ANSI basic Files.
+It helps convertig old (real) Basic Programs
+with line numbers and multiple commands per line to the X11-Basic structure. 
+Because there are so many different BASIC Version aroud, in most cases you will 
+have to edit these files produced manually. But most of the work will already 
+have been done by this converter.
+<P>
+<B>For a desciption of the X11-basic language and Usage of the interpreter see</B>
+
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
+
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>Filenames</H2>
+
+<P>
+bas2x11basic processes input files with extention .bas. The default 
+output filename is b.bas.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-o </B><I>file</I>
+
+<DD>
+Place output in file <I>file</I>.  This applies regardless to whatever
+sort of output bas2x11basic is producing.
+
+If you do not specify `<B>-o</B>', the default is to use
+`<B>b.bas</B>'
+<P>
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H3>--version</H3>
+
+shows version, program and other information and exits
+<A NAME="lbAH">&nbsp;</A>
+<H3>-h --help</H3>
+
+print a short help
+<P>
+For detailed help and description of the implemented basic commands take a 
+look at the README file. 
+<P>
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<PRE>
+bas2x11basic ansibasic.bas
+    produces an output file b.bas
+
+bas2x11basic ansibasic.bas -o newname.bas
+    produces an output file newname.bas
+</PRE>
+
+<P>
+You can find some samples of former ANSI basic programs in 
+<I>/usr/share/doc/packages/X11Basic/examples.</I>
+
+<A NAME="lbAJ">&nbsp;</A>
+<H2>The ANSI Basic to X11-Basic converter</H2>
+
+Actually this converter is not yet complete. Further improvenents may 
+be applied in future. Please let me know about ANSI-Basic programs which 
+will not be converted.
+<P>
+<A NAME="lbAK">&nbsp;</A>
+<H2>VERSION</H2>
+
+Page was created for V.1.09
+<A NAME="lbAL">&nbsp;</A>
+<H2>BUG REPORTS       </H2>
+
+<P>
+If you find a bug in the ANSI Basic to X11-Basic converter, you should
+report it. But first,  you  should make sure that it really is
+a bug, and that it appears in the latest version of the
+X11-Basic package that you have.
+<P>
+Once  you have determined that a bug actually exists, mail a
+bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
+you  are  welcome  to  mail that as well!  Suggestions  may 
+be  mailed  to the x11-basic mailing list on 
+<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
+tracking system.
+<P>
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<A NAME="lbAM">&nbsp;</A>
+<H2>BUGS</H2>
+
+Still some bugs
+<A NAME="lbAN">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<A NAME="lbAO">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (C) 1997-2003 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<P>
+This program is free software;  you  can  redistribute  it
+and/or modify it under the terms of the GNU General Public
+License as published  by  the  Free  Software  Foundation;
+either  version  2 of the License, or (at your option) any
+later version.
+<P>
+This program is distributed in the hope that  it  will  be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+PURPOSE.   See  the  GNU  General  Public License for more
+details.
+<A NAME="lbAP">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">Filenames</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DL>
+<DT><A HREF="#lbAG">--version</A><DD>
+<DT><A HREF="#lbAH">-h --help</A><DD>
+</DL>
+<DT><A HREF="#lbAI">EXAMPLES</A><DD>
+<DT><A HREF="#lbAJ">The ANSI Basic to X11-Basic converter</A><DD>
+<DT><A HREF="#lbAK">VERSION</A><DD>
+<DT><A HREF="#lbAL">BUG REPORTS       </A><DD>
+<DT><A HREF="#lbAM">BUGS</A><DD>
+<DT><A HREF="#lbAN">AUTHOR</A><DD>
+<DT><A HREF="#lbAO">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAP">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 22:02:54 GMT, January 15, 2016
+</BODY>
+</HTML>

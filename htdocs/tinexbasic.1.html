@@ -1,0 +1,1026 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of TINEX11BASIC</TITLE>
+</HEAD><BODY>
+<H1>TINEX11BASIC</H1>
+Section: TINE Basic Interpreter (1)<BR>Updated: 10-Aug-2004<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+tinexbasic - Basic interpreter for TINE (Three-fold Integrated Networking 
+Environment)
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>tinexbasic</B>
+
+[--eval &lt;expression&gt;] [-e &lt;command&gt;] [-l] [&lt;filename&gt;]
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates features like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on modern 
+computers.
+<P>
+TINE is a multi-platform multi-protocol multi-control system architecture
+allowing client-server, publisher-subscriber, and producer-consumer data 
+exchange in any variation.
+<P>
+Tinexbasic is a modification which combines the TINE functionality with the
+X11-Basic interpreter.
+(see the man page 
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1)</I>
+
+and
+<I><A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3)</I>
+
+).
+<P>
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>COMMANDLINE OPTIONS</H2>
+
+
+<A NAME="lbAF">&nbsp;</A>
+<H3>&nbsp;&lt;file&gt;</H3>
+
+load and run script &lt;file&gt;
+<BR>
+
+<A NAME="lbAG">&nbsp;</A>
+<H3>-l &lt;file&gt;</H3>
+
+only load script, do not execute
+<BR>
+
+<A NAME="lbAH">&nbsp;</A>
+<H3>--eval &lt;expression&gt;</H3>
+
+evaluate expression
+<BR>
+
+<A NAME="lbAI">&nbsp;</A>
+<H3>-e &lt;command&gt;</H3>
+
+execute command
+<BR>
+
+<A NAME="lbAJ">&nbsp;</A>
+<H3>-version</H3>
+
+shows version, program and other information and exits
+<A NAME="lbAK">&nbsp;</A>
+<H3>-h --help</H3>
+
+print a short help
+<A NAME="lbAL">&nbsp;</A>
+<H3>--help &lt;topic&gt;</H3>
+
+print help on topic
+<A NAME="lbAM">&nbsp;</A>
+<H3>--daemon</H3>
+
+daemon mode
+<P>
+For detailed help and description of the implemented basic commands take a 
+look at the README file which comes with the X11Basic package. There is also a 
+full users manual available as *.pdf file on the homepage.
+<P>
+<A NAME="lbAN">&nbsp;</A>
+<H2>INTERACTIVE USE</H2>
+
+If no options are given on the command line, 
+<B>tinexbasic</B>
+
+will run interactivly.
+<P>
+A Prompt will be displayed and any command can be typed in. It will be
+excecuted immediately after pressing return or enter. The interpreter uses the 
+<B><A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3) </B>
+
+library. So the input is buffered and can be edited using the up and down 
+arrows on the keyboard.
+Readline offers editing capabilities while the user is
+entering the line. By default, the line editing commands
+are similar to those of emacs. 
+<BR>&nbsp;
+<B>To quit program</B>
+
+simply enter 
+<I>quit</I>
+
+or press 
+<I>CTRL-C.</I>
+
+<A NAME="lbAO">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<PRE>
+tinexbasic testme.bas
+tinexbasic -e 'alert 1,&quot;Hello world !&quot;,1,&quot; OK &quot;,b'
+tinexbasic --eval 1+3-4*tineget(&quot;GLOBALS[HEMAGEN]&quot;)
+tinexbasic --help &quot;*tine*&quot;
+</PRE>
+
+<P>
+You can find many sample programs in the X11-Basic packages. For a description
+of the X11-Basic language please also see the X11-Basic documentation and or
+man-pages. Her we will only describe the modifications of tinexbasic compared to
+the regular x11basic interpreter. 
+<P>
+<A NAME="lbAP">&nbsp;</A>
+<H2>Tinexbasic as shell:</H2>
+
+X11-Basic programs can be excecuted like shell scripts.
+If the tinexbasic interpreter was installed in 
+<I>/bin/</I>
+
+any X11-Basic program with
+<PRE>
+ #!/bin/tinexbasic
+</PRE>
+
+in the first command line can be excecuted directly.
+<P>
+<A NAME="lbAQ">&nbsp;</A>
+<H2>The X11-Basic Language extentions for TINE</H2>
+
+<P>
+It is obviuos why we want to use tinexbasic (with a simple basic dialect) 
+in addition to the MATLAB(TM) scrips.  n&amp;auml;mlich dort, wo
+kleinere Aufgaben erledigt werden m&amp;uumlssen, f&amp;uuml;r die keine extra
+MATLAB-Lizenz beschafft werden kann. So lassen sich beliebig viele
+X11-BASIC-Programme auf beliebig vielen Rechnern starten. X11-BASIC hat die
+Funktionalit&amp;aumlt eines einfachen BASIC-Interpreters,  der besonders an die
+UNIX-Umgebung angepasst ist. Die WINDOWS-9x/NT Version ist deshalb  noch nicht
+vollst&amp;auml;ndig angepasst.  Zus&amp;auml;tzlich stehen viele
+Low-Level-Grafikbefehle zur Verf&amp;uuml;gung, die sogar die Programmierung einer
+eigenen grafischen Benutzerschnittstelle erlauben.
+<P>
+Das Programm mit Kontrollsystemanbindung nennt sich TINEXBASIC. Diese Version
+Benutzt die TINE-Bibliothek der DESY-Datenbank. Alle Parameter sind zuganglich (sofern freigeschaltet) und werden
+mittels RPC-Protokoll von den ensprechenden Servern erfragt. 
+TINEXBASIC erlaubt ab Version 1.11 auch das Programmieren eines eigenen Servers.
+<P>
+<P>
+<A NAME="lbAR">&nbsp;</A>
+<H3>TINE server,device,property name convention</H3>
+
+<P>
+Die Zugriffe zu den Parametern erfolgen ueber einen eindeutigen Namen, der aus Servername, Devicename und 
+Propertyname besteht. Die Syntax ist wie folgt:
+<P>
+<PRE>
+SERVER/DEVICE[Property]
+</PRE>
+
+<P>
+e.g.
+<P>
+<PRE>
+a=tineget(&quot;LMBDAC8/#0[AMPLITUDE]&quot;)
+</PRE>
+
+<P>
+<P>
+<A NAME="lbAS">&nbsp;</A>
+<H3>TINE commands</H3>
+
+<P>
+<PRE>
+TINEBROADCAST &lt;var&gt;         -- broadcast a variable (server)
+TINECYCLE                   -- excecute TINE engine (80 ms) (server)
+TINEDELIVER &lt;var&gt;[,...]     -- immediately deliver variables to all clients listening
+TINEEXPORT &lt;var&gt;[,...]      -- list of variables to be exported by server
+TINELISTEN &lt;var&gt;[,callback] -- receives a broadcasted variable
+TINEMONITOR &lt;var&gt;[,callback] -- todo
+TINEPUT t$,???[,...]        -- set a value (client)
+TINESERVER [,t$,i%]         -- initialize and register a Server
+TINESET t$,???[,...]        -- same as tineput
+</PRE>
+
+<P>
+<P>
+<P>
+<A NAME="lbAT">&nbsp;</A>
+<H3>TINE functions</H3>
+
+<PRE>
+a=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINEGET">TINEGET</A>(1)      -- get a single value (client)
+a=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINEMAX">TINEMAX</A>(1)      -- get the maximum value for this property (client)
+a=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINEMIN">TINEMIN</A>(1)      -- get the minimum value for this property (client)
+a=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINESIZE">TINESIZE</A>(1)     -- get the size of this property (client)
+a=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINETYP">TINETYP</A>(1)      -- get the type of this property (client)
+t$=TINEGET$(1)    -- get a single text value (client)
+t$=TINEINFO$(1)   -- get the properties comment (client)
+t$=TINEQUERY$(2)  -- get a property from archive server (client)
+t$=TINEUNIT$(1)   -- get the properties physical unit (client)
+a()=<A HREF="http://localhost/cgi-bin/man/man2html?1+TINEVGET">TINEVGET</A>(1)   -- get a vector/array (client)
+t$()=TINEVGET$(1) -- get a vector/array if strings (client)
+a()=<A HREF="http://localhost/cgi-bin/man/man2html?3+tinehistory">tinehistory</A>(3)-- get values from archive server (client)
+</PRE>
+
+<P>
+<A NAME="lbAU">&nbsp;</A>
+<H3>TINE system variable</H3>
+
+<PRE>
+a=CCSERR          -- TINE error code in case of errors
+</PRE>
+
+<P>
+<A NAME="lbAV">&nbsp;</A>
+<H3>Client application</H3>
+
+<P>
+Data acquistion can either be synchronous (e.g. tineget)  where execution is
+blocked until a call completes, or asynchronous  (e.g. tinemonitor) where the
+results of a call are given to a callback routine upon completion.  Data  can
+also be 'monitored' asynchronously either at a supplied polling rate or  upon
+data change.  
+<P>
+<B>Get the value of a Propery from a server&lt;/H3&gt;</B>
+
+<P>
+<PRE>
+<I>a=tineget(&lt;Parameter&gt;)</I>
+<I>a$=tineget$(&lt;Parameter&gt;) </I>
+</PRE>
+
+<P>
+R&amp;uuml;ckgabewert ist der Wert des entsprechenden Parameters. Falls
+ein Fehler aufgetreten ist, wird Null zur&amp;uuml;ckgegeben, bzw. bei Zeichenketten die Zeichenkette
+&quot;&lt;ERROR&gt;&quot;.
+<P>
+<B>Vektorparameter (Array) abfragen</B>
+
+<P>
+<PRE>
+<I>a()=tinevget(&lt;Parameter&gt; [, &lt;Anzahl der Werte&gt;[,&lt;offset&gt;]])</I>
+<I>b$()=tinevget$(&lt;Parameter&gt; [, &lt;Anzahl der Werte&gt;[&lt;Offset&gt;]])</I>
+</PRE>
+
+<P>
+Die angebene Anzahl an Werten wird als Vektor zur&amp;uuml;ckgegeben. Falls ein
+Offset angegeben wird, wird ab dem entsprechenden Eintrag des Vektors gelesen.
+Das Ergebnis wird einem Feld zugewiesen, welches ggf. umdimensioniert wird. 
+Wird die Anzahl der Werte nicht angegeben, so wird der gesamte Vektor gelesen.
+Der erste Eintrag des Property-Vektors findet sich dann in a(0). Der letzte in
+a(n-1).
+<P>
+<P>
+<B>Parameter setzen</B>
+
+<P>
+<PRE>
+<I>tineput Parameter$, Wert</I>
+<I>tineput Parameter$, Wert$</I>
+<I>tineput Parameter$, Wert()</I>
+</PRE>
+
+<P>
+Der angebene Parameter wird auf die angebenen Werte gesetzt. Bitte vorsichtig,
+damit nicht der Beschleunigerbetrieb gestoert wird. Der Schreibzugriff muss
+freigegeben werden.
+<P>
+<B>Parameter-Vektor setzen</B>
+
+<P>
+<PRE>
+<I>tinevput Parameter$, Werte()[,n[,o]] </I>
+<I>tinevput Parameter$, Werte$()[,n[,o]]</I>
+</PRE>
+
+<P>
+Der angebene Parameter wird auf die angebenen Werte gesetzt. n=Anzahl der zu
+setzenden Werte, o=Offset.
+<P>
+<B>Minimum und Maximum eines Parameters abfragen</B>
+
+<PRE>
+
+<I>a=tinemin(&lt;Parameter&gt;)</I>
+<I>b=tinemax(&lt;Parameter&gt;)</I>
+</PRE>
+
+<P>
+Falls ein Fehler auftritt, wird Null zur&amp;uuml;ckgegeben.
+<P>
+<B>Maximalzahl der Werte (Vektorlaenge) eines Parameters zur&amp;uuml;ckgeben</B>
+
+<P>
+<I>s=tinesize(&amp;lt;Parameter&gt;)</I>
+
+<P>
+Es wird die Anzahl der Werte zur&amp;uuml;ckgegeben, die f&amp;uuml;r diesen
+Parameter definiert ist, zur&amp;uuml;ckgegeben. Falls ein Fehler auftritt,
+wird Null zur&amp;uuml;ckgegeben.
+<P>
+<B>Werte aus dem Parameter-Archiv erfragen</B>
+
+<P>
+<I>a()=tinehistory(HISTORY/#0[HEMAGEN],startzeit,stopzeit)</I>
+
+<P>
+<I>startzeit</I>
+
+und 
+<I>stopzeit </I>
+
+werden als UNIX-Timestamps angegeben.
+Diese Werte (siehe auch 
+<B>TIMER, </B>
+
+<B>STIMER</B>
+
+) geben Datum und Zeit 
+als die Anzahl der Sekunden ab 01.01.1970 00:00 an.
+<P>
+<I>a()</I>
+
+ist anschliessend eine 2-dimensionale Matrix, wobei in der Spalte 1
+die Zeitstamps und in Spalte 0 die Parameterwerte gespeichert sind.
+<P>
+<I>a(i,1)</I>
+
+Zeitwerte,
+<P>
+<I>a(i,0) </I>
+
+Parameterwerte.
+<P>
+<I>anz=dim?(a())/2 </I>
+
+ergibt die Anzahl der gelieferten Werte. 
+<P>
+Bemerkung: Es koennen nur Maximal 8000 Werte zurueckgeliefert werden, deshalb
+sollte der Zeitbereich nicht zu gross gewaehlt sein. Groessere Zeitbereiche
+muss man in kleinen Haeppchen abfragen.
+<P>
+<B>Beliebigen Wert aus dem Parameter-Archiv erfragen</B>
+
+<P>
+<I>a$=tinequery$(HEHISTORY/#0[HEVACS.NAM],zeit)</I>
+
+<P>
+Diese Funktion kann einen Parameter oder ein Array aus dem Archiv lesen, wobei ein
+Zeitpunkt uebergeben werden kann. Zurueckgeliefert wird immer ein String, er enthaellt alle 
+Rueckgabewerte als Byte-Stream, also z.B. einen Float als 4 Byte String. 
+Er kann mit 
+<I>CVS() </I>
+
+konvertiert werden.
+<P>
+Mit 
+<I>zeit</I>
+
+wird ein UNIX-Timestamp angegeben.
+Diese Werte (siehe auch 
+<I>TIMER,</I>
+
+<I>STIMER</I>
+
+) geben Datum und Zeit 
+als die Anzahl der Sekunden ab 01.01.1970 00:00 an.
+<P>
+Bemerkung: Die Groesse des Datenpuffers ist auf 64 kBytes beschraenkt.
+<P>
+<A NAME="lbAW">&nbsp;</A>
+<H3>Server application</H3>
+
+<P>
+A simple TINE server can look like this:
+<P>
+<PRE>
+tineserver &quot;MYSERVER&quot;
+tineexport a,b,c
+do
+  oa=a
+  tinecycle
+  if a&lt;&gt;oa
+    print &quot;Variable has changd: &quot;,a
+  endif
+  exit if a=13
+loop
+quit
+</PRE>
+
+<P>
+<P>
+<B>Server registration</B>
+
+<P>
+<I>TINESERVER name$[,portoffset]</I>
+
+<P>
+Meldet den Server unter dem Namen name$ an. Ab jetzt ist er in der gesamten 
+TINE-Umgebung (definiert durch den ENS) unter diesem Namen bekannt. Optional
+kann ein Port-Offset angegeben werden, default ist 0. Jeder Server auf einem
+Rechner muss einen anderen Port-Offset haben, sonst funktioniert die Verbindung
+nicht.
+<P>
+<B>Export Properties</B>
+
+<P>
+<I>TINEEXPORT &lt;var1&gt;[,&lt;var2&gt;,...]</I>
+
+<P>
+Bestimmt, welche X11-Basic Variablen vom Server exportiert werden sollen. 
+Der Inhalt dieser Variablen kann dann von den Clients gelesen oder veraendert
+werden.  
+<P>
+<I>TINEDELIVER &lt;var1&gt;[,&lt;var2&gt;,...]</I>
+
+<P>
+Schedules the given properties for immediate delivery to all attached clients.
+<P>
+When clients are attached to a particular property, they have specified a 
+polling rate, which defines the maximum latency for receiving updates at the 
+client side. This is usually fine. However, if a server knows that important 
+data have changed and which properties depend on these data, it can signal the 
+scheduler to call the given properties immediately and send the data to all 
+attached callers, regardless of their registered polling rates. In this way, a 
+server can signal an event to its attached clients.
+<P>
+<B>Listen and Broadcast properties</B>
+
+<P>
+F&quot;ur die Schnelle Daten&quot;ubertragung stellt TINE noch einen zweiten Mechanismus
+zur Verf&quot;ugung, welcher MULTICAST-f&quot;ahig ist. Daten&quot;ubertragungsraten bis zu 50
+Hz sind m&quot;oglich, sofern die Netzwerkgeschwingikeit dies erlaubt. Nachteil: Es
+wird nicht garantiert, dass die Daten auch beim Empfaenger ankommen.
+<P>
+<I>TINEBROADCAST &lt;var&gt;</I>
+
+<P>
+Sendet den Inhalt der Variable var unter ihrem Variablennamen aus. 
+TINEBROADCAST MYVAR wird also das Keywort MYVAR fuer eine Datensendung
+verwenden. 
+<P>
+<I>TINELISTEN &lt;var&gt;[,callback]</I>
+
+<P>
+Empfaengt den Inhalt der Variable var unter ihrem Variablennamen.
+Optional kann eine callback-Prozedur angegeben werden, welche nach Empfang eines
+Datums ausgefuehrt wird.
+<P>
+TINELISTEN kann nur funktionieren, wenn auch TINECYCLE verwendet wird. die
+maximale Zeit zwischen zwei TINECYCLE Anweisungen sollte 100 ms nicht
+ueberschreiten, damit es nicht zu Datenverlusten kommt. 
+<P>
+<B>Serveranfragen bearbeiten</B>
+
+<P>
+Damit Client-Anfragen auch bearbeitet werden koennen, muss der Server abundzu
+(moeglichst alle 100 ms) das Kommando
+<P>
+<I>TINECYCLE</I>
+
+<P>
+ausfuehren. 
+<P>
+<A NAME="lbAX">&nbsp;</A>
+<H3>Variables</H3>
+
+<P>
+There is one new variable:
+<P>
+<I>ccs_err</I>
+
+which holds the TINE error code after a command excecution. 
+<P>
+The interpretation of these error codes is as follows:
+<P>
+<PRE>
+ 0  &quot;success&quot;,
+ 1  &quot;illegal line number&quot;,
+ 2  &quot;illegal format specification&quot;,
+ 3  &quot;illegal arithmetic expression&quot;,
+ 4  &quot;ambiguous command&quot;,
+ 5  &quot;illegal delimiter&quot;,
+ 6  &quot;attempt to divide by zero&quot;,
+ 7  &quot;working area full&quot;,
+ 8  &quot;nonexistent name&quot;,
+ 9  &quot;wrong variable type&quot;,
+10  &quot;resources exhausted&quot;,
+11  &quot;command not properly terminated&quot;,
+12  &quot;not allocated&quot;,
+13  &quot;nonexistent line addressed&quot;,
+14  &quot;illegal data size&quot;,
+15  &quot;error in IF command&quot;,
+16  &quot;escape typed&quot;,
+17  &quot;illegal EDIT command&quot;,
+18  &quot;illegal ASK command&quot;,
+19  &quot;hardware operation in progress&quot;,
+20  &quot;argument list error&quot;,
+21  &quot;file error&quot;,
+22  &quot;resort to stream transport&quot;,
+23  &quot;array dimension error&quot;,
+24  &quot;square root of neg.number&quot;,
+25  &quot;data buffer too small&quot;,
+26  &quot;string too long&quot;,
+27  &quot;IPX socket error&quot;,
+28  &quot;net read error&quot;,
+29  &quot;call not ready&quot;,
+30  &quot;invalid transport size&quot;,
+31  &quot;LOGARITHM argument &lt;= 0&quot;,
+32  &quot;device not connected&quot;,
+33  &quot;unauthorised action&quot;,
+34  &quot;hardware error&quot;,
+35  &quot;illegal equipment number&quot;,
+36  &quot;illegal property&quot;,
+37  &quot;value out of range&quot;,
+38  &quot;not implemented yet&quot;,
+39  &quot;no such computer&quot;,
+40  &quot;result string filled&quot;,
+41  &quot;syntax error&quot;,
+42  &quot;no such file&quot;,
+43  &quot;File already exists&quot;,
+44  &quot;No file space&quot;,
+45  &quot;Link not open&quot;,
+46  &quot;remitted data lost&quot;,
+47  &quot;end of file&quot;,
+48  &quot;archive in progress&quot;,
+49  &quot;server name in use&quot;,
+50  &quot;no such column&quot;,
+51  &quot;out of client memory&quot;,
+52  &quot;Defined function area full&quot;,
+53  &quot;Syntax error in DEFINE command&quot;,
+54  &quot;illegal $SET command&quot;,
+55  &quot;String Function failure&quot;,
+56  &quot;illegal concatenation&quot;,
+57  &quot;Error in $IF command&quot;,
+58  &quot;Error in $ASK command&quot;,
+59  &quot;String expected&quot;,
+60  &quot;out of local memory&quot;,
+61  &quot;out of shared memory&quot;,
+62  &quot;invalid structure tag&quot;,
+63  &quot;invalid index&quot;,
+64  &quot;illegal equipment name&quot;,
+65  &quot;failure in datalink software&quot;,
+66  &quot;code failure&quot;,
+67  &quot;bracket missing&quot;,
+68  &quot;wrong hexadecimal number&quot;,
+69  &quot;wrong octal number&quot;,
+70  &quot;illegal character&quot;,
+71  &quot;illegal relational operator&quot;,
+72  &quot;command not allowed here&quot;,
+73  &quot;illegal read/write attempted&quot;,
+74  &quot;out of server memory&quot;,
+75  &quot;database not loaded&quot;,
+76  &quot;illegal command&quot;,
+77  &quot;resources exhausted&quot;,
+78  &quot;file not open&quot;,
+79  &quot;SEDAC error&quot;,
+80  &quot;no serial SEDAC loop&quot;,              /*1..3*/
+81  &quot;semaphore error&quot;,
+82  &quot;driver not installed&quot;,
+83  &quot;COMx port_not_available&quot;,
+84  &quot;scanner error&quot;,
+85  &quot;semaphore blocked&quot;,
+86  &quot;Non existent Element&quot;,
+87  &quot;Non existent Fec&quot;,
+88  &quot;Non existent Client&quot;,
+89  &quot;Unable to lock the memory&quot;,
+90  &quot;Server not responding&quot;,
+91  &quot;Command not posted&quot;,
+92  &quot;Command not accepted&quot;,
+93  &quot;operation timeout&quot;,
+94  &quot;Illegal network protocol&quot;,
+95  &quot;gpib error&quot;,
+96  &quot;rs232 error&quot;,
+97  &quot;operation busy&quot;,
+98  &quot;connection timeout&quot;,
+99  &quot;illegal mode&quot;,
+100  &quot;not owner&quot;,
+101  &quot;not defined&quot;,
+102  &quot;net write error&quot;,
+103  &quot;invalid data&quot;,
+104  &quot;software error&quot;,
+105  &quot;access denied&quot;,
+106  &quot;tcp not supported&quot;,
+107  &quot;ipx not supported&quot;,
+108  &quot;tcp host not resolved&quot;,
+109  &quot;tcp connect error&quot;,
+110  &quot;tcp socket error&quot;,
+111  &quot;fpss error&quot;,
+112  &quot;fpss timeout&quot;,
+113  &quot;fpss overflow&quot;,
+114  &quot;link exists&quot;,
+115  &quot;alarms buffer full&quot;,
+116  &quot;function not exported&quot;,
+117  &quot;is switching&quot;,
+118  &quot;at limit&quot;,
+119  &quot;get subscription id&quot;,
+120  &quot;renegotiate contract&quot;,
+121  &quot;server redirection&quot;,
+122  &quot;value too high&quot;,
+123  &quot;value too low&quot;,
+124  &quot;warn too high&quot;,
+125  &quot;warn too low&quot;,
+126  &quot;wait for completion&quot;,
+127  &quot;cannot select&quot;,
+128  &quot;has query function&quot;,
+129  &quot;not signalled&quot;,
+130  &quot;call redirection&quot;,
+131  &quot;udp socket error&quot;,
+132  &quot;mutex error&quot;,
+133  &quot;data not local&quot;
+
+</PRE>
+
+<P>
+<P>
+<P>
+<A NAME="lbAY">&nbsp;</A>
+<H2>Configuration</H2>
+
+<P>
+A tine control system application will need to make use of certain 
+configuration settings. A pure client application for instance will need to be
+able to resolve addresses for the servers it needs to talk to. A server
+application needs to identify itself and potentially change certain parameters
+away from their default settings.
+<P>
+Besides direct configuration in the program code, there are some files which
+hold information. The Location of the files are set by Environment variables.
+<P>
+<A NAME="lbAZ">&nbsp;</A>
+<H2>ENVIRONMENT</H2>
+
+<P>
+If csv files are used to configure a tine server (normally the case) then  the
+server application must know where to look for the relevant files.  Client
+applications as well as server applications need to find the equipment name
+server(s). The address of the configured equipment name server is typically
+contained in a csv file named 'cshosts.csv'. The application will look in the
+working directory for this file unless the environment variable TINE_HOME is
+set to point to the default location.
+<P>
+<P>
+<I>TINE_HOME</I>
+
+=/usr/etc/tine/ (for example)
+<P>
+In lieu of this, the addresses of the equipment name servers can also be
+supplied via the environment variable TINE_ENS, for instance:
+<P>
+<I>TINE_ENS</I>
+
+=131.169.120.41:131.169.120.46
+<P>
+<P>
+If a server application uses csv configuration files it will look for them in
+its working directory unless the environment variable FEC_HOME is set (the
+legacy variable FECDB still works as well). For example
+<P>
+<P>
+<I>FEC_HOME</I>
+
+=~/server/database/
+<P>
+will instruct the server to look in the directory for all relevant startup
+files. In addition, if the server is maintaining a local history it will use
+the FEC_HOME area as a repository unless the variable HISTORY_HOME (legacy:
+HISTORYDB) is set (a good idea!).
+<P>
+<I>HISTORY_HOME</I>
+
+=/localhome/fecadmin/hepbpm/HISTORY/ (for example)
+<P>
+A server will likewise put its log files inside the FEC_HOME directory unless
+the environment variable FEC_LOG is also set. For instance,
+<P>
+<I>FEC_LOG</I>
+
+=~/log
+<P>
+The default log depth (before rotating) is 500 lines. This also can be
+configured via an environment variable, LOGDEPTH, e.g.
+<P>
+<I>LOGDEPTH</I>
+
+=5000
+<P>
+<A NAME="lbBA">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+All Files are csv-Files (comma separated variables) 
+<P>
+<A NAME="lbBB">&nbsp;</A>
+<H3>TINE Server Startup Configuration CSV Files</H3>
+
+<P>
+We shall discuss the startup .csv files in some detail below. In theory,
+tinexbasic
+can run fine without using a single startup .csv file (although in
+practice you probably will want to make use of some subset of them). The
+location of these files is generally given by the environment setting FEC_HOME.
+The exception is cshosts.csv, whose location is given by TINE_HOME. This is due
+to the fact that a server is momentarily a client to the name server upon
+startup.
+<P>
+Most servers will make use of the two .csv files, namely 'cshosts.csv' and
+
+configuration file common to the client as well as the server substructure and
+serves only to provide the address(es) of the TINE Equipment Name Server(s)
+(ENS).
+<P>
+<A NAME="lbBC">&nbsp;</A>
+<H3>Common Configuration CSV Files</H3>
+
+<P>
+<I>cshosts.csv </I>
+
+the identity and address of the equipment name server (ENS). 
+This is a special server which resolves TINE names into server addresses 
+and process names, and has nothing to do with the domain name server (dns). 
+e.g.
+<P>
+<PRE>
+FecName,Protocol,FecNetwork,FecNode,IPaddr,OS,Description,Location,Hardware,Responsible
+ENS#0,3,83a97800,00a0246a3852,131.169.120.41,LINUX,Hera Name Server,Bldg 30a 1st Floor,Watchdog,P.Duval (PKTR)
+ENS#1,3,83a97800,0060978f1f5b,131.169.120.46,LINUX,Hera Name Server,Bldg 30a 1st Floor,Watchdog,P.Duval (PKTR)
+</PRE>
+
+<P>
+o IF MISSING: tinexbasic does not know the identity of the name server 
+<BR>&nbsp;&nbsp;and&nbsp;cannot&nbsp;register&nbsp;itself&nbsp;as&nbsp;a&nbsp;server&nbsp;or&nbsp;query&nbsp;the&nbsp;name&nbsp;server&nbsp;for&nbsp;
+<BR>&nbsp;&nbsp;names&nbsp;as&nbsp;a&nbsp;client.
+o ALTERNATIVES: 
+<BR>&nbsp;&nbsp;3)&nbsp;Clients&nbsp;can&nbsp;fall&nbsp;back&nbsp;on&nbsp;the&nbsp;local&nbsp;database&nbsp;files.&nbsp;If&nbsp;a&nbsp;server&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;already&nbsp;entered&nbsp;in&nbsp;the&nbsp;name&nbsp;server's&nbsp;database,&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;then&nbsp;it&nbsp;does&nbsp;not&nbsp;need&nbsp;to&nbsp;&quot;plug&quot;&nbsp;itself&nbsp;into&nbsp;the&nbsp;system.&nbsp;
+<BR>&nbsp;&nbsp;4)&nbsp;Addresses&nbsp;can&nbsp;also&nbsp;be&nbsp;entered&nbsp;by&nbsp;hand&nbsp;on&nbsp;the&nbsp;name&nbsp;server&nbsp;or&nbsp;via&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;Fec&nbsp;administration&nbsp;tool.
+o ENVIRONMENT: variable TINE_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<A NAME="lbBD">&nbsp;</A>
+<H3>FEC-specific Configuration CSV Files</H3>
+
+<P>
+<I>ipbcast.csv </I>
+
+gives the list of IP networks on which the server is to send 
+broadcasts. The server can send data to the network as network globals 
+(producer-consumer mode) or as a network link (publish-produce). If 
+multicast is enabled this will occur via multicast. In addition, the 
+data will be broadcasted on the subnets found inside the ipbcast.csv 
+file.
+<P>
+<PRE>
+SUBNET
+131.169.150.255
+131.169.121.255
+131.169.120.255
+131.169.110.255
+131.169.9.255
+</PRE>
+
+<P>
+o IF MISSING: The server will not honor requests to send data as IP 
+<BR>&nbsp;&nbsp;broadcasts.
+o ENVIRONMENT: variable FEC_HOME (or FECDB) points to location; if 
+<BR>&nbsp;&nbsp;not&nbsp;set&nbsp;the&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<P>
+<I>alias.csv </I>
+
+gives a list of alias names which the server will honor. If 
+present, this list is maintained in a hash table and is checked against 
+the requested PROPERTY, the requested DEVICE, and the requested local 
+equipment module name.
+<P>
+<PRE>
+NAME,ALIAS
+SINE,COSINE
+TEST,LINE
+SINEDEV_0,DEV0
+SINEDEV_2,DEV2
+</PRE>
+
+<P>
+o IF MISSING: The server will not make use of any alias names.
+o ENVIRONMENT: variable FEC_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<I>almwatch.csv </I>
+
+gives a list of properties and value thresholds for setting 
+value_too_high and value_too_low alarms. A &quot;warning&quot; threshold 
+can also be supplied to set warn_too_high and warn_too_low alarms.
+<P>
+<PRE>
+LOCALNAME,DEVICENAME,PROPERTY,SIZE,FORMAT,SEVERITY,HIGH,LOW,HIGHWARN,LOWWARN
+SINEQM,#0,SINE,10,Float,15,500,0,400,10
+</PRE>
+
+<P>
+o IF MISSING: The server will not automatically check and issue 
+<BR>&nbsp;&nbsp;&quot;threshold&quot;&nbsp;exceeded&nbsp;alarms.
+o ENVIRONMENT: variable FEC_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<P>
+<I>history.csv </I>
+
+gives properties that are to be used for in the local archive 
+server. e.g.
+<P>
+<PRE>
+Index,Export Name,Local Name,Property,Device,Data Length,Format,Heartbeat,Polling Rate,Archive Rate,Tolerance,Short Depth,Long Depth
+1,BPM,BPMEQM,ORBIT.X,WL197,300,float,18000,1000,10,10%,600,1
+2,BPM,BPMEQM,ORBIT.Y,WL197,300,float,18000,1000,10,10%,600,1
+</PRE>
+
+<P>
+o IF MISSING: The server will not maintain any histories in its local 
+<BR>&nbsp;&nbsp;archive&nbsp;server.
+o ENVIRONMENT: variable HISTORY_HOME (or HISTORYDB) points to 
+<BR>&nbsp;&nbsp;location;&nbsp;if&nbsp;not&nbsp;set&nbsp;then&nbsp;FEC_HOME&nbsp;points&nbsp;to&nbsp;location;&nbsp;if&nbsp;still&nbsp;not&nbsp;
+<BR>&nbsp;&nbsp;set&nbsp;the&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<P>
+<A NAME="lbBE">&nbsp;</A>
+<H3>Equipment Module-specific Configuration CSV Files</H3>
+
+<P>
+<I>&lt;eqm&gt;-alarms.csv </I>
+
+gives the alarm definitions pertaining to the specified 
+equipment function, where &lt;eqm&gt; refers to the 6-character local 
+(internal) name. e.g.
+<P>
+<PRE>
+ALARMTAG,ALARMCODE,ALARMMASK,SEVERITY,DATAFORMAT,DATAARRAYSIZE,ALARMTEXT,DEVICETEXT,DATATEXT,URL,ALARMSYSTEM
+BPM SEDAC error,79,0,1,short,3,Replace sedac module,BPM Module,&quot;line,crate,subaddress&quot;,mst.desy.de/hepbpm/alarms,650
+Threshold exceeded,512,0,1,short,14,Beam dump pending,BPM Module,threshold value,mst.desy.de/hepbpm/alarms,650
+</PRE>
+
+<P>
+o IF MISSING: The FEC has no knowledge of alarm information. You can 
+<BR>&nbsp;&nbsp;still&nbsp;set&nbsp;and&nbsp;clear&nbsp;alarms.&nbsp;But&nbsp;all&nbsp;alarms&nbsp;will&nbsp;have&nbsp;severity&nbsp;0,&nbsp;
+<BR>&nbsp;&nbsp;and&nbsp;an&nbsp;alarm&nbsp;Tag&nbsp;of&nbsp;&quot;undefined&quot;.
+o ENVIRONMENT: variable FEC_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<P>
+<A NAME="lbBF">&nbsp;</A>
+<H3>FEC-specific Security CSV Files</H3>
+
+<P>
+<I>users.csv </I>
+
+gives the list of allowed users with WRITE access to your FEC. e.g.
+<P>
+<PRE>
+USERNAME
+HERA_CONSOLE
+SMITH
+JONES
+</PRE>
+
+<P>
+This provides a 'soft' security against the accidental changing of 
+settings from unauthorized users. It is however easy to circumvent this 
+security layer.
+o IF MISSING: All users have WRITE access to your FEC.
+o ENVIRONMENT: variable FEC_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<I>ipnets.csv </I>
+
+gives the list of IP networks (and/or hosts) with WRITE 
+access to your server. e.g.
+<PRE>
+SUBNET
+131.169.150.255
+131.169.121.255
+131.169.120.255
+131.169.110.255
+131.169.9.255
+</PRE>
+
+<P>
+This provides a 'hard' security against the changing of settings from 
+unauthorized networks or stations. The list of IP address can refer to 
+an entire subnet (last byte = '.255') or specific stations.
+o IF MISSING: All ip addresses have WRITE access to your FEC.
+o ENVIRONMENT: variable FEC_HOME points to location; if not set the 
+<BR>&nbsp;&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
+<P>
+<P>
+<P>
+<A NAME="lbBG">&nbsp;</A>
+<H2>VERSION</H2>
+
+Page was created for V.1.13
+<A NAME="lbBH">&nbsp;</A>
+<H2>BUG REPORTS       </H2>
+
+<P>
+If you find a bug in the X11-Basic interpreter or the TINE-Implementation, 
+you should report it. But first, you should make sure that it really is
+a bug, and that it appears in the latest version of the
+TINE-X11-Basic package that you have.
+<P>
+Once you have determined that a bug actually exists, mail a
+bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
+you are welcome to mail that as well! Suggestions may 
+be mailed to the X11-Basic mailing list on 
+<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
+tracking system.
+<P>
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<A NAME="lbBI">&nbsp;</A>
+<H2>BUGS</H2>
+
+Still some bugs
+<A NAME="lbBJ">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<A NAME="lbBK">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (C) 1997-2006 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<P>
+This program is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any
+later version.
+<P>
+This program is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the GNU General Public License for more
+details.
+<A NAME="lbBL">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3),  <A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">COMMANDLINE OPTIONS</A><DD>
+<DL>
+<DT><A HREF="#lbAF">&nbsp;&lt;file&gt;</A><DD>
+<DT><A HREF="#lbAG">-l &lt;file&gt;</A><DD>
+<DT><A HREF="#lbAH">--eval &lt;expression&gt;</A><DD>
+<DT><A HREF="#lbAI">-e &lt;command&gt;</A><DD>
+<DT><A HREF="#lbAJ">-version</A><DD>
+<DT><A HREF="#lbAK">-h --help</A><DD>
+<DT><A HREF="#lbAL">--help &lt;topic&gt;</A><DD>
+<DT><A HREF="#lbAM">--daemon</A><DD>
+</DL>
+<DT><A HREF="#lbAN">INTERACTIVE USE</A><DD>
+<DT><A HREF="#lbAO">EXAMPLES</A><DD>
+<DT><A HREF="#lbAP">Tinexbasic as shell:</A><DD>
+<DT><A HREF="#lbAQ">The X11-Basic Language extentions for TINE</A><DD>
+<DL>
+<DT><A HREF="#lbAR">TINE server,device,property name convention</A><DD>
+<DT><A HREF="#lbAS">TINE commands</A><DD>
+<DT><A HREF="#lbAT">TINE functions</A><DD>
+<DT><A HREF="#lbAU">TINE system variable</A><DD>
+<DT><A HREF="#lbAV">Client application</A><DD>
+<DT><A HREF="#lbAW">Server application</A><DD>
+<DT><A HREF="#lbAX">Variables</A><DD>
+</DL>
+<DT><A HREF="#lbAY">Configuration</A><DD>
+<DT><A HREF="#lbAZ">ENVIRONMENT</A><DD>
+<DT><A HREF="#lbBA">FILES</A><DD>
+<DL>
+<DT><A HREF="#lbBB">TINE Server Startup Configuration CSV Files</A><DD>
+<DT><A HREF="#lbBC">Common Configuration CSV Files</A><DD>
+<DT><A HREF="#lbBD">FEC-specific Configuration CSV Files</A><DD>
+<DT><A HREF="#lbBE">Equipment Module-specific Configuration CSV Files</A><DD>
+<DT><A HREF="#lbBF">FEC-specific Security CSV Files</A><DD>
+</DL>
+<DT><A HREF="#lbBG">VERSION</A><DD>
+<DT><A HREF="#lbBH">BUG REPORTS       </A><DD>
+<DT><A HREF="#lbBI">BUGS</A><DD>
+<DT><A HREF="#lbBJ">AUTHOR</A><DD>
+<DT><A HREF="#lbBK">COPYRIGHT</A><DD>
+<DT><A HREF="#lbBL">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 22:02:54 GMT, January 15, 2016
+</BODY>
+</HTML>
