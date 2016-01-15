@@ -58,8 +58,8 @@ all : X11-Basic-manual.pdf text-manual
 
 draft : draft.ps
 brochure : brochure.pdf
-$(NAME)-$(VERSION).pdf : main.pdf
-	cp main.pdf Outputs/$@
+Outputs/$(NAME)-$(VERSION).pdf : main.pdf
+	cp main.pdf $@
 
 X11-Basic-manual.pdf : Outputs/$(NAME)-$(VERSION).pdf
 	ln -f -s $< $@
@@ -95,7 +95,7 @@ draft.ps : main.ps
 	draftit $< > $@
 
 clean : 
-	rm -f main.ps main.fot texput.log main.toc main.pdf $(EPSFILES) *.jpg main.dvi *.aux tex/*.aux main.ilg main.idx main.ind main.log missfont.log
+	rm -f main.ps main.fot texput.log main.toc main.pdf $(EPSFILES) *.jpg main.dvi *.aux tex/*.aux tex/main.ilg tex/main.idx tex/main.ind main.log missfont.log
 distclean : clean
 	rm -f *.pdf A.tex 39_Errors.sec main.otxt  $(NAME)-?.??.txt main.fot main.toc
 dist :	$(DIST)
@@ -104,15 +104,5 @@ dist :	$(DIST)
 	(tar cfh - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
 	mv /tmp/$(DIR).tar.gz .
-depend : $(DEPSRC) 
-	cp Makefile Makefile.bak
-	chmod +w Makefile
-	makedepend $(INC) $(DEF) $(DEPSRC) 
-	sed -n '/^# DO NOT DELETE/,$$p' < Makefile > Makefile.tmp
-	sed -n '1,/^# DO NOT DELETE/p' < Makefile > Makefile.new
-	tail +2 Makefile.tmp|\
-	sed 's/^\([A-Za-z0-9_]*\)\.o:/\1.o \1.ln:/g'>>Makefile.new
-	rm -f Makefile.tmp
-	mv Makefile.new Makefile
 
 # DO NOT DELETE
