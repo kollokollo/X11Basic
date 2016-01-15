@@ -16,6 +16,7 @@
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #include <windows.h>
 #endif
+#include <fnmatch.h>
 
 #include "defs.h"
 #ifdef HAVE_CACOS
@@ -40,11 +41,6 @@
 #include "file.h"
 #include "window.h"
 
-#ifndef WINDOWS
-  #include <fnmatch.h>
-#else
-  #include "Windows.extension/fnmatch.h"
-#endif
 
 #define NOIMP(a)  printf("The %s function is not implemented \n" \
   " in this version of X11-Basic because the COMPLEXMATH library \n" \

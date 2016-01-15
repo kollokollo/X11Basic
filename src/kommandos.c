@@ -27,6 +27,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
+#include <fnmatch.h>
 
 #include "defs.h"
 #include "x11basic.h"
@@ -2023,11 +2024,6 @@ static void c_home() {
 }
 static void c_version() { printf("X11-BASIC Version: %s %s\n",version,vdate);}
 
-#ifndef WINDOWS
-#include <fnmatch.h>
-#else
-#include "Windows.extension/fnmatch.h"
-#endif
 static void c_help(PARAMETER *plist,int e) {
   if(e==0 || plist->typ==PL_LEER) puts("HELP [topic]");
   else do_help(plist->pointer);

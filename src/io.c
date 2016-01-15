@@ -23,6 +23,7 @@
 
 #include "defs.h"
 #include <dirent.h>
+#include <fnmatch.h>
 
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -72,13 +73,11 @@
   };
   #define fsync(a) ;
   #define forkpty(a,b,c,d) (-1)  
-  #include "Windows.extension/fnmatch.h"
   #define FNM_FILE_NAME FNM_PATHNAME
 #else
   #include <sys/wait.h> 
   #include <sys/types.h>
   #include <sys/ioctl.h>
-  #include <fnmatch.h>
   #include <termios.h>
   #include <fcntl.h>
 

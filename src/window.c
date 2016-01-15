@@ -16,11 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef WINDOWS
-  #include "Windows.extension/fnmatch.h"
-#else
-  #include <fnmatch.h>
-#endif
+#include <fnmatch.h>
 
 #include "defs.h"
 #include "x11basic.h"
