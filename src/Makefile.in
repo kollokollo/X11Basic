@@ -16,7 +16,7 @@ exec_prefix=@exec_prefix@
 
 BINDIR=@bindir@
 DATADIR=@datadir@
-ICONDIR=$(DATADIR)/icons/hicolor/32x32/apps
+ICONDIR=$(DATADIR)/icons/hicolor/48x48/apps
 DESKTOPDIR=$(DATADIR)/applications
 LIBDIR=@libdir@
 MANDIR=@mandir@
@@ -870,16 +870,16 @@ rpm :	$(DIR).tar.gz x11basic.spec
 #	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
 
-DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian ../COPYING Debian/copyright \
+DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian Debian/copyright \
 	../doc/editors/nedit.defs ../doc/editors/README ../doc/editors/920.conf ../doc/editors/x11basic.lang \
-	../doc/editors/x11basic.geany ../RELEASE_NOTES INSTALL ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
+	../doc/editors/x11basic.geany ../RELEASE_NOTES ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 
 doc-pak: $(DEBDOC)
 	mkdir $@
-	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY ../COPYING $@/
+	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY $@/
 	cp ../doc/AUTHORS ../RELEASE_NOTES ../README INSTALL $@/
 	cp Debian/changelog.Debian $@/
-	gzip $@/changelog.Debian
+	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/
 	mkdir $@/editors/
 	cp ../doc/editors/nedit.defs $@/editors/
@@ -893,8 +893,8 @@ doc-pak: $(DEBDOC)
 deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
 	--pkgrelease $(RELEASE)  \
-	--maintainer kollo@users.sourceforge.net \
-        --requires libasound2,libreadline6,liblapack3,libgmp10 --backup  \
+	--maintainer "kollo@users.sourceforge.net" \
+        --requires libc6,libasound2,libreadline6,liblapack3,libgmp10 --backup  \
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
