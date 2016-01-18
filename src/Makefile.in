@@ -877,7 +877,7 @@ DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.De
 doc-pak: $(DEBDOC)
 	mkdir $@
 	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY $@/
-	cp ../doc/AUTHORS ../RELEASE_NOTES ../README INSTALL $@/
+	cp ../doc/AUTHORS ../RELEASE_NOTES ../README $@/
 	cp Debian/changelog.Debian $@/
 	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/
