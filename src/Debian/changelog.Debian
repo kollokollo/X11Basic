@@ -2,12 +2,12 @@ x11basic (1.21-63) unstable; urgency=low
 
   * fixed possible bufferoverrun with load
 
- -- Markus Hoffmann <kollo@users.sourceforge.net>  Wed, 25 May 2013 16:03:26 +0200
+ -- Markus Hoffmann <kollo@users.sourceforge.net>  Sun, 26 May 2013 16:03:00 +0200
 
 x11basic (1.21-2) unstable; urgency=low
 
   * Fixed manpage typo.
 
- -- Markus Hoffmann <kollo@users.sourceforge.net>  Wed, 25 May 2013 16:03:26 +0200
+ -- Markus Hoffmann <kollo@users.sourceforge.net>  Sat, 25 May 2013 16:03:26 +0200
 
 # For older changelog entries, run 'apt-get changelog x11basic'
