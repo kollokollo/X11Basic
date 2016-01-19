@@ -67,7 +67,7 @@ char *programbuffer=NULL;
 char **program=NULL;
 
 #ifdef ANDROID
-static void intro() {
+void intro() {
   putchar(27);
   printf("c");
   printf("*************************************\n"
