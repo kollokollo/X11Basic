@@ -74,7 +74,7 @@
 		<div id="bodyContent">
 			<h3 id="siteSub">From x11-basic</h3>
 			<div id="contentSub"></div>
-									<div id="jump-to-nav">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>			<!-- start content -->
+<div id="jump-to-nav">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>			<!-- start content -->
 			<div class="thumb tright"><div class="thumbinner" style="width:182px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Android-Screenshot-1.png" class="image" title="Start screen of the Android User Interface of X11-Basic"><img alt="" src="AQ_files/180px-Android-Screenshot-1.png" class="thumbimage" border="0" height="270" width="180"></a>  <div class="thumbcaption"><div class="magnify"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Android-Screenshot-1.png" class="internal" title="Enlarge"><img src="AQ_files/magnify-clip.png" alt="" height="11" width="15"></a></div>Start screen of the Android User Interface of X11-Basic</div></div></div>
 <p><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:X11-Basic-Android-Logo.png" class="image" title="X11-Basic-Android-Logo.png"><img alt="" src="AQ_files/128px-X11-Basic-Android-Logo.png" border="0" height="128" width="128"></a>
 <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:X11-Basic-Android-QR.png" class="image" title="X11-Basic-Android-QR.png"><img alt="" src="AQ_files/X11-Basic-Android-QR.png" border="0" height="128" width="128"></a>
@@ -116,15 +116,16 @@ Also a text console needed to be added, which handles the stdout. The
 stdin was implemented to take the keyboard actions of the device.
 </p><p>The idea is to have a simple user interface after startup, to 
 allow for single line commands to be entered and excecuted, as well as 
-to load and run .bas programs. Also the excecution of the faster <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Bytecode&amp;action=edit&amp;redlink=1" class="new" title="Bytecode (page does not exist)">bytecode</a> (ending .b) should be possible. 
-</p><p>Your programs have to deal with multiple different screen sizes. For console programs you can use the <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=ROWS&amp;action=edit&amp;redlink=1" class="new" title="ROWS (page does not exist)">ROWS</a> and <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=COLS&amp;action=edit&amp;redlink=1" class="new" title="COLS (page does not exist)">COLS</a>
- system variables to ask for the size of the textscreen (Example: 
+to load and run .bas programs. Also the excecution of the faster bytecode (ending .b) should be possible. 
+</p><p>Your programs have to deal with multiple different screen sizes. 
+For console programs you can use the ROWS and COLS system variables to ask for the size of the textscreen (Example: 
 console-clock.bas). The screen dimensions of the graphics screen can be 
-retreived with the <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=GET_GEOMETRY&amp;action=edit&amp;redlink=1" class="new" title="GET GEOMETRY (page does not exist)">GET_GEOMETRY</a> command (Example: kugel.bas).
-</p><p>Be careful with the use of the <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=QUIT&amp;action=edit&amp;redlink=1" class="new" title="QUIT (page does not exist)">QUIT</a> command: <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=QUIT&amp;action=edit&amp;redlink=1" class="new" title="QUIT (page does not exist)">QUIT</a>
- will really finish the app, so one cannot read the console output 
+retreived with the GET_GEOMETRY command (Example: kugel.bas).
+</p>
+<p>Be careful with the use of the QUIT command: 
+QUIT will really finish the app, so one cannot read the console output 
 anymore (this is unlike the console stdout on standard UNIX systems.). 
-Better use <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=END&amp;action=edit&amp;redlink=1" class="new" title="END (page does not exist)">END</a>.
+Better use END.
 </p>
 <a name="Usage" id="Usage"></a><h2> <span class="mw-headline">Usage</span></h2>
 <p>Android deviced usually have a BACK Butten, a HOME button and a MENU Button. 
@@ -139,12 +140,11 @@ Clipboard, Info/Settings, Editor, Compile, Help and Quit.
 </li><li> Load ... opens a fileselector which displays all .bas and all 
 .b programs in the directory /mnt/sdcard/bas. The selected program will 
 be loaded into memory. A program eventiually stored there before will be
- overwritten. You can display the sourcecode by entering <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=LIST&amp;action=edit&amp;redlink=1" class="new" title="LIST (page does not exist)">LIST</a>.
-</li><li> Run will simply start the excecution of a program which has been loaded before. (You can also enter <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=RUN&amp;action=edit&amp;redlink=1" class="new" title="RUN (page does not exist)">RUN</a>)
+ overwritten. You can display the sourcecode by entering LIST.
+</li><li> Run will simply start the excecution of a program which has been loaded before. (You can also enter RUN)
 </li><li> STOP/CONT will interrupt the excecution of the program or 
-resume it. (You can also press the BACK button once to stop the program,
- and you can enter <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=CONT&amp;action=edit&amp;redlink=1" class="new" title="CONT (page does not exist)">CONT</a> to continue it).
-</li><li> New will delete the program from memory (same as typing <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=NEW&amp;action=edit&amp;redlink=1" class="new" title="NEW (page does not exist)">NEW</a> at the command line).
+resume it. (You can also press the BACK button once to stop the program, and you can enter CONT to continue it).
+</li><li> New will delete the program from memory (same as typing NEW at the command line).
 </li><li> Keyboard will show or hide the on-screen virtual keyboard. If 
 you have a hardware or external USB/bluetooth keyboard, you can also 
 enter commands with that.
@@ -237,10 +237,11 @@ automatically set a readable font depending of your display resolution.
 Also the text-to-speach feature of Android devices is supported. You can
  use the following commands:
 </p>
-<pre> <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=PLAYSOUNDFILE&amp;action=edit&amp;redlink=1" class="new" title="PLAYSOUNDFILE (page does not exist)">PLAYSOUNDFILE</a>   -- playback a sound file, like .mp3 or .ogg
- <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=SPEAK&amp;action=edit&amp;redlink=1" class="new" title="SPEAK (page does not exist)">SPEAK</a>           -- speak out a text. The language and different voices can be selected
- <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=SOUND&amp;action=edit&amp;redlink=1" class="new" title="SOUND (page does not exist)">SOUND</a>           -- generate a sound 
- <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=WAVE&amp;action=edit&amp;redlink=1" class="new" title="WAVE (page does not exist)">WAVE</a>            -- program the sound synthesizer and sounc channel mixer
+<pre> 
+PLAYSOUNDFILE   -- playback a sound file, like .mp3 or .ogg
+SPEAK	        -- speak out a text. The language and different voices can be selected
+SOUND	        -- generate a sound 
+WAVE	        -- program the sound synthesizer and sounc channel mixer
 </pre>
 <a name="Text-Console" id="Text-Console"></a><h2> <span class="mw-headline">Text-Console</span></h2>
 <p>X11-Basic on Android implements a full featured coloured VT100/ANSI Terminal emulation for text output (e.g. with <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=PRINT&amp;action=edit&amp;redlink=1" class="new" title="PRINT (page does not exist)">PRINT</a>).
@@ -297,7 +298,7 @@ the search field.
 </li><li> sensortest.bas
 </li><li> ostern.bas
 </li><li> console-clock.bas
-</li><li> ballerburg.bas (see: <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Ballerburg" title="Ballerburg">ballerburg</a>)
+</li><li> ballerburg.bas (see: <a href="X11-Basic-Ballerburg.pdf" title="X11-Basic-Ballerburg.pdf">X11-Basic-Ballerburg.pdf</a>)
 </li><li> <i>add more</i>
 </li></ul>
 <table class="gallery" cellpadding="0" cellspacing="0">
@@ -305,28 +306,28 @@ the search field.
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Kugel-bas.png" class="image" title="Kugel-bas.png"><img alt="" src="AQ_files/80px-Kugel-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/kugel.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/kugel.bas" rel="nofollow"><i>kugel.bas</i></a>
+<p><a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/graphics/kugel.bas" class="external text" title="kugel.bas" rel="nofollow"><i>kugel.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:TTsky-bas.png" class="image" title="TTsky-bas.png"><img alt="" src="AQ_files/80px-TTsky-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/TomTom/TTsky.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/TomTom/TTsky.bas" rel="nofollow"><i>TTsky.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/TomTom/TTsky.bas" class="external text" title="TTsky.bas" rel="nofollow"><i>TTsky.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:3Dng-b.png" class="image" title="3Dng-b.png"><img alt="" src="AQ_files/80px-3Dng-b.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/3Dng.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/3Dng.bas" rel="nofollow"><i>3Dng.b</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/3Dng.bas" class="external text" title="3Dng.bas" rel="nofollow"><i>3Dng.b</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Ansicolor-bas.png" class="image" title="Ansicolor-bas.png"><img alt="" src="AQ_files/80px-Ansicolor-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/tests/ansicolor.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/tests/ansicolor.bas" rel="nofollow"><i>ansicolor.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/tests/ansicolor.bas" class="external text" title="ansicolor.bas" rel="nofollow"><i>ansicolor.bas</i></a>
 </p>
 			</div>
 		</div></td>
@@ -335,28 +336,28 @@ the search field.
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Whets-bas.png" class="image" title="Whets-bas.png"><img alt="" src="AQ_files/80px-Whets-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/calculation/Whets.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/calculation/Whets.bas" rel="nofollow"><i>whets.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/calculation/Whets.bas" class="external text" title="Whets.bas" rel="nofollow"><i>whets.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Farn-bas.png" class="image" title="Farn-bas.png"><img alt="" src="AQ_files/80px-Farn-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/farn.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/farn.bas" rel="nofollow"><i>farn.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/farn.bas" class="external text" title="farn.bas" rel="nofollow"><i>farn.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Sierpinsky-bas.png" class="image" title="Sierpinsky-bas.png"><img alt="" src="AQ_files/80px-Sierpinsky-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/sierpinski.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/sierpinski.bas" rel="nofollow"><i>sierpinski.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/sierpinski.bas" class="external text" title="sierpinski.bas" rel="nofollow"><i>sierpinski.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Wanderermaze-bas.png" class="image" title="Wanderermaze-bas.png"><img alt="" src="AQ_files/80px-Wanderermaze-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/wanderermaze.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/wanderermaze.bas" rel="nofollow"><i>wanderermaze.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/wanderermaze.bas" class="external text" title="wanderermaze.bas" rel="nofollow"><i>wanderermaze.bas</i></a>
 </p>
 			</div>
 		</div></td>
@@ -365,28 +366,28 @@ the search field.
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Mandel-b.png" class="image" title="Mandel-b.png"><img alt="" src="AQ_files/80px-Mandel-b.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/mandel.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/mandel.bas" rel="nofollow"><i>mandel.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/mandel.bas" class="external text" title="mandel.bas" rel="nofollow"><i>mandel.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Mandel-simple-b.png" class="image" title="Mandel-simple-b.png"><img alt="" src="AQ_files/80px-Mandel-simple-b.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/mandel-simple.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/mandel-simple.bas" rel="nofollow"><i>mandel-simple.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/mandel-simple.bas" class="external text" title="mandel-simple.bas" rel="nofollow"><i>mandel-simple.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Replicator-bas.png" class="image" title="Replicator-bas.png"><img alt="" src="AQ_files/80px-Replicator-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/replicator.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/replicator.bas" rel="nofollow"><i>replicator.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/replicator.bas" class="external text" title="replicator.bas" rel="nofollow"><i>replicator.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div style="height: 152px;">Atomium-bas.png</div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/games/atomium.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/games/atomium.bas" rel="nofollow"><i>atomium.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/games/atomium.bas" class="external text" title="atomium.bas" rel="nofollow"><i>atomium.bas</i></a>
 </p>
 			</div>
 		</div></td>
@@ -395,28 +396,28 @@ the search field.
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Ballerburg-bas.png" class="image" title="Ballerburg-bas.png"><img alt="" src="AQ_files/80px-Ballerburg-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/games/Ballerburg/ballerburg.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/games/Ballerburg/ballerburg.bas" rel="nofollow"><i>ballerburg.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/games/Ballerburg/ballerburg.bas" class="external text" title="ballerburg.bas" rel="nofollow"><i>ballerburg.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div style="height: 152px;">Ana uhr-bas.png</div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/graphics/ana_uhr.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/graphics/ana_uhr.bas" rel="nofollow"><i>ana_uhr.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/graphics/ana_uhr.bas" class="external text" title="ana_uhr.bas" rel="nofollow"><i>ana_uhr.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Bifur-bas.png" class="image" title="Bifur-bas.png"><img alt="" src="AQ_files/80px-Bifur-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/simulation/bifur.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/simulation/bifur.bas" rel="nofollow"><i>bifur.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/simulation/bifur.bas" class="external text" title="bifur.bas" rel="nofollow"><i>bifur.bas</i></a>
 </p>
 			</div>
 		</div></td>
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Console_clock-bas.png" class="image" title="Console clock-bas.png"><img alt="" src="AQ_files/80px-Console_clock-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/console/console_clock.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/console/console_clock.bas" rel="nofollow"><i>console_clock.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/console/console_clock.bas" class="external text" title="console_clock.bas" rel="nofollow"><i>console_clock.bas</i></a>
 </p>
 			</div>
 		</div></td>
@@ -425,7 +426,7 @@ the search field.
 		<td><div class="gallerybox" style="width: 155px;">
 			<div class="thumb" style="padding: 13px 0; width: 150px;"><div style="margin-left: auto; margin-right: auto; width: 120px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Resonnances-bas.png" class="image" title="Resonnances-bas.png"><img alt="" src="AQ_files/80px-Resonnances-bas.png" border="0" height="120" width="80"></a></div></div>
 			<div class="gallerytext">
-<p><a href="http://x11-basic.sourceforge.net/examples/simulation/resonnances.bas" class="external text" title="http://x11-basic.sourceforge.net/examples/simulation/resonnances.bas" rel="nofollow"><i>resonnances.bas</i></a>
+<p><a href="http://x11-basic.sourceforge.net/examples/simulation/resonnances.bas" class="external text" title="resonnances.bas" rel="nofollow"><i>resonnances.bas</i></a>
 </p>
 			</div>
 		</div></td>
@@ -443,30 +444,20 @@ file. It will be restored after the next excecution of X11-basic.
 <ul><li> GET_LOCATION is not working on every device
 </li><li> Screen-refresh is not working on some SAMSUNG tablets.
 </li><li> Crashes soimtimes right after start of the app on SAMSUNG devices.
-</li><li> ARRPTR() does not work as expected.<font color="green">(fixed in Version 1.20-46)</font>
-</li><li> VARPTR(array(n)) does not work as expected.<font color="green">(fixed in Version 1.20-46)</font>
 </li><li> Syntax checking should be done in PROCEDURE and FUNCTION definitions.
 </li><li> crash in FILESELECT with title
 </li><li> we see sometimes a crash when the device is turned by 90 degrees while a program is still running. 
-</li><li> we sometimes see crashes when running a program after having run a first one before.<font color="green">(fixed in Version 1.20-52)</font>
 </li><li> EXEC on android intents does not take the extra arguments.
-</li><li> crash after pasting something from the cliipboard.
+</li><li> crash after pasting something from the clipboard.
 </li><li> <i>add some more here</i>
 </li></ul>
 <p>Please also read the <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Compatibility" title="Compatibility">compatibility</a> issues.
 </p>
-<!-- 
-NewPP limit report
-Preprocessor node count: 42/1000000
-Post-expand include size: 0/2097152 bytes
-Template argument size: 0/2097152 bytes
-Expensive parser function count: 0/100
--->
 
 <div class="visualClear"></div>
 <div id="footer">
 <ul id="f-list">
-<li id="lastmod"> This page was last modified on 24 February 2014, at 08:46.</li>
+<li id="lastmod"> This page was last modified on 24 February 2015, at 08:46.</li>
 </ul>
 </div>
 </div>
