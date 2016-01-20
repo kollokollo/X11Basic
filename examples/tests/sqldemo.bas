@@ -7,6 +7,12 @@
 ' das binary sqlite3 muss von hier abgeholt werden:
 ' http://www.zois.co.uk/dl/sqlite3
 ' (Size: 1448982 bytes, MD5 checksum: c14086bcc1b32503e0ebfe711dda73ee) 
+'
+' The above site is down. You should now build a static binary youself. 
+'
+' The sources and Makefile for this are here: 
+' https://github.com/stockrt/sqlite3-android
+'
 ' Dann dieses File in den /sdcard/bas Ordner legen, da wo 
 ' sqldemo.bas auch liegt.
 ' Die Dateien test.db und error.txt finden sich anschliessend in /sdcard/
