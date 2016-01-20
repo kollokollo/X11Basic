@@ -8,7 +8,7 @@
 #define MyAppURL "http://x11-basic.sourceforge.net/"
 #define MyAppExeName "xbasic-wrapper.bat"
 #define MyAppVersion "1.24"
-#define MyAppRelease "30"
+#define MyAppRelease "32"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -31,9 +31,9 @@ AppPublisherURL={#MyAppURL}
 UninstallDisplayIcon={app}\x11basic.ico
 
 OutputDir=Inno-Output
-AppCopyright=Copyright (C) 1991-2015 Markus Hoffmann
-LicenseFile=COPYING  
-InfoBeforeFile=RELEASE_NOTES   
+AppCopyright=Copyright (C) 1991-2016 Markus Hoffmann
+LicenseFile=COPYING 
+InfoBeforeFile=RELEASE_NOTES
 InfoAfterFile=INTRO
 OutputBaseFilename={#MyAppName}-{#MyAppVersion}-{#MyAppRelease}-setup
 

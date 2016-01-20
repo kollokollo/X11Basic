@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2015
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2016
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -54,7 +54,7 @@ FILE *optr;
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
 const char version[]="1.24";        /* Programmversion*/
-const char vdate[]="2015-09-01";
+const char vdate[]="2016-01-01";
 char *programbuffer=NULL;
 char **program=NULL;
 int programbufferlen=0;
@@ -723,7 +723,7 @@ static int loadbcprg(char *filename) {
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
     fprintf(optr,"/* X11-Basic-Compiler Version 1.24\n"
-                 "   (c) Markus Hoffmann 2002-2015\n"
+                 "   (c) Markus Hoffmann 2002-2016\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
 		 
