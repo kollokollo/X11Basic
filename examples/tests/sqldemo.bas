@@ -4,17 +4,10 @@
 ' Markus Hoffmann +  Joachim Wiedemann-Heinzelmann Jan 2013
 '
 ' Anleitung f"ur Android:
-' das binary sqlite3 muss von hier abgeholt werden:
-' http://www.zois.co.uk/dl/sqlite3
-' (Size: 1448982 bytes, MD5 checksum: c14086bcc1b32503e0ebfe711dda73ee) 
+' das binary sqlite3 ist in der X11-Basic app enthalten und 
+' ist im Ordner bas/ abgelegt für drei Prozessor-Architekturen:
 '
-' The above site is down. You should now build a static binary youself. 
 '
-' The sources and Makefile for this are here: 
-' https://github.com/stockrt/sqlite3-android
-'
-' Dann dieses File in den /sdcard/bas Ordner legen, da wo 
-' sqldemo.bas auch liegt.
 ' Die Dateien test.db und error.txt finden sich anschliessend in /sdcard/
 ' Wenn die Datenbank test.db in einem anderen Verzeichnis liegen soll, muss
 ' prefix$ angepasst werden.
@@ -128,10 +121,10 @@ ENDFUNCTION
 PROCEDURE android_install
   LOCAL t$
   PRINT "installing Androids sqlite3 in "+sqls$
-  IF EXIST("/sdcard/bas/sqlite3")
+  IF EXIST("/sdcard/bas/sqlite3.armeabi")
     PRINT "copying..."
     FLUSH
-    OPEN "I",#1,"/sdcard/bas/sqlite3"
+    OPEN "I",#1,"/sdcard/bas/sqlite3.armeabi"
     t$=INPUT$(#1,LOF(#1))
     CLOSE #1
     BSAVE sqls$,VARPTR(t$),LEN(t$)
@@ -141,8 +134,7 @@ PROCEDURE android_install
     PRINT SYSTEM$("/system/bin/chmod 755 "+sqls$+" 2>&1")
     FLUSH
   ELSE
-    PRINT "cannot find sqlite3. please download it from"
-    PRINT "http://www.zois.co.uk/dl/sqlite3"
+    PRINT "cannot find sqlite3. please download it "
     PRINT "and put it in /sdcard/bas/"
     END
   ENDIF
