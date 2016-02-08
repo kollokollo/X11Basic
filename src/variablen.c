@@ -287,18 +287,18 @@ void set_var_adr(int vnr,void *adr) {
 
 void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck,short atyp) {
   int typ=variablen[vnr].typ;
-  char *varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
   int ia=0;
   // printf("zuweisxbyindex: <%s>  typ=%x  n=%d\n",ausdruck,typ,n);
   if(typ==ARRAYTYP) {
     ia=isarray(indexliste,n);
-    // printf("ia=%d varptr=%p\n",ia,varptr);
-    
     if(ia==NO_ARRAY) typ=(variablen[vnr].pointer.a)->typ;
     else if(ia==SUB_ARRAY) {
-      xberror(9,"Subarray"); /* Funktion noch nicht moeglich */
+      ARRAY arr=array_parser(ausdruck);
+      feed_subarray_and_free(vnr,indexliste,n,&arr);
+      return;
     }
   }
+  char *varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
   // printf("zuw: %s: %p ia=%d typ=$%x\n",variablen[vnr].name,varptr,ia,typ);
   if(varptr) {
     ARRAY arr,*zarr;
@@ -525,14 +525,17 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
   char *varptr;
   STRING str;
   if(indexliste==NULL) n=0;
-#if 0
-  else {
-    int i;
-    printf("INDEXE: ");
-    for(i=0;i<n;i++) printf("%d ",indexliste[i]);
-    printf("\n");
+  if(n) {
+    /* Erstmal rausfinden ob die Indexliste ein SUBARRAY markiert....*/
+    if(subarraydimf(indexliste,n)>0) {
+      if(typ==ARRAYTYP && p->typ==PL_ARRAY) {
+        ARRAY a=double_array((ARRAY *)&(p->integer));
+        feed_subarray_and_free(vnr,indexliste,n,&a);
+        return;
+      } else printf("Something is wrong!\n");
+    }
   }
-#endif
+
   varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
   // printf("VARPTR--__>%p  typ=%x\n",varptr,typ);
   if(varptr) {
@@ -696,88 +699,107 @@ int izuweis(const char *name, int wert) {
   return(0);
 }
 
+/*  ARRAY arr in ein anderes (ARRAY Variable) also Sub-Array einfügen....*/
 
-#if 0
-void feed_subarray_and_free(int vnr,char *pos, ARRAY wert) { 
-  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-  int e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
-  int indexe[variablen[vnr].opcode];
-  int indexo[variablen[vnr].opcode];
-  int indexa[variablen[vnr].opcode];   
-
-  /* Dimension des reduzierten Arrays bestimmen */
-	       
-  e=wort_sep(pos,',',TRUE,w1,w2);
-  while(e) {
-    indexa[ndim]=anz;
-    if(*w1!=':' && *w1!=0) {
-      indexo[ndim]=(int)parser(w1);
-      rdim++;
-    } else {
-      anz=anz*(((int *)variablen[vnr].pointer)[ndim]);
-    /*  printf("dim(vnr)=%d, dim(wert)=%d\n",((int *)variablen[vnr].pointer)[ndim],((int *)wert->pointer)[rdim]);
-      do_gets("");*/
-      indexo[ndim]=-1;
-    }	 
-    ndim++;
-    e=wort_sep(w2,',',TRUE,w1,w2);
-  }
-	       
-  /* Dimensionierung uebertragen */
-
-  if(wert.dimension!=max(variablen[vnr].opcode-rdim,1)) xberror(74,variablen[vnr].name); /* Dimensioning mismatch */
-  for(j=0;j<anz;j++) {  /*Loop fuer die Komprimierung */
-    int jj=j;
-         /* Indexliste aus anz machen */
-                 for(k=variablen[vnr].opcode-1;k>=0;k--) {
-		   if(indexo[k]==-1) {
-		     indexe[k]=jj/indexa[k];
-		     jj=jj % indexa[k];
-		     
-		   } else indexe[k]=indexo[k];
-		 }
-		 /* Testen ob passt  */
-	         
-		 anz2=0;
-	         for(k=0;k<variablen[vnr].opcode;k++) 
-		   anz2=anz2*((int *)variablen[vnr].pointer)[k]+indexe[k];
-	 	 
-		 
-		 
-		 
-		 if(jj!=0) {
-		   printf("INTERNAL ERROR: %d: Rechnung geht nicht auf. <%s>\n",jj,pos);
-		   xberror(70,""); /* Unknown Error */
-#ifdef DEBUG
-		   printf("anz=%d\n",anz);
-		   printf("--anz2=%d\n",anz2);
-		   printf("ARRAY wert: dim=%d (",wert->dimension);
-		   for(i=0;i<wert->dimension;i++) printf("%d ",((int *)wert->pointer)[i]);
-		   puts(")");
-		   printf("ARRAY vnr: dim=%d (",variablen[vnr].opcode);
-		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",((int *)variablen[vnr].pointer)[i]);
-		   puts(")");
-		   printf("INDEXO: [");
-		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexo[i]);
-		   puts("]");
-		   printf("INDEXE: [");
-		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexe[i]);
-		   puts("]");
-		   printf("INDEXA: [");
-		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexa[i]);
-		   puts("]");
-		   do_gets("Press RETURN");
-#endif
-		 }
-		   
-		 
-                 
- /* jetzt kopieren */
-	 
-    ((double *)(variablen[vnr].pointer+INTSIZE*variablen[vnr].opcode))[anz2]=((double *)(wert.pointer+INTSIZE*wert.dimension))[j];
-  }
+void feed_subarray_and_free(int vnr,int *indexliste, int n, ARRAY *arr) { 
+  int subdim=subarraydimf(indexliste,n);
+  int typ=variablen[vnr].typ;
+// printf("feed_subarray_and_free\n");
+  if(typ==ARRAYTYP) {
+    ARRAY *zarr=variablen[vnr].pointer.a; 
+    /* Zuerst dimension überprüfen...*/
+    if(arr->dimension!=subdim) xberror(74,"<subarray>"); /* Dimensioning mismatch */
+    else {
+      ARRAY tmparr;
+       /*  Dann ggf ARRARY Typ anpassen */
+      if(zarr->typ==arr->typ) ; /* nix tun */
+      else if(zarr->typ==INTTYP) {
+        tmparr=convert_to_intarray(arr); free_array(arr); arr=&tmparr;
+      } else if(zarr->typ==ARBINTTYP) {
+        tmparr=convert_to_arbintarray(arr); free_array(arr); arr=&tmparr;
+      } else if(zarr->typ==COMPLEXTYP) {
+        tmparr=convert_to_complexarray(arr); free_array(arr); arr=&tmparr;
+      } else if(zarr->typ==FLOATTYP) {
+        tmparr=convert_to_floatarray(arr); free_array(arr); arr=&tmparr;
+      } else {
+         xberror(58,variablen[vnr].name); /* Variable %s has incorrect type*/  
+	 printf("dest-Typ: %x  / %x \n",zarr->typ,arr->typ);
+      }      
+      /* Jetzt haben beide Arrays den gleichen Typ */
+      
+      int bindex[zarr->dimension];
+      int aindex[arr->dimension];
+      int *cdim=(int *)arr->pointer;
+      int *ddim=(int *)zarr->pointer;
+      int cc=0;
+      int anz=anz_eintraege(arr);
+      int jj=0;
+      int j,k,i;
+      int firsti=-1;
+      int adim=zarr->dimension;
+      
+     /*  Dimensionierungen überprüfen   */
+      if(adim) {
+        for(i=0;i<adim;i++) {
+          if(indexliste[i]==-1) {
+            if(firsti==-1) firsti=i;
+            if(cdim[cc++]!=ddim[i]) xberror(74,"<subarray>"); /* Dimensioning mismatch */
+          }
+        }
+      }
+      for(j=0;j<anz;j++) {
+	jj=j;
+        for(k=zarr->dimension-1;k>=0;k--) {
+          if(indexliste[k]==-1) {
+            if(k!=firsti) {
+	      bindex[k]=jj/cdim[k];
+	      jj=jj % ddim[k];
+	    } else {
+              bindex[k]=jj;
+	      jj=0;
+	    }
+          } else bindex[k]=indexliste[k];
+        }
+	// printf("(");
+	// for(i=0;i<zarr->dimension;i++) printf("%d,",bindex[i]);
+	// printf(") -- (");
+	jj=j;
+	for(k=arr->dimension-1;k>=0;k--) {
+	  if(k!=0) {
+	      aindex[k]=jj/cdim[k];
+	      jj=jj % cdim[k];
+	  } else {
+              aindex[k]=jj;
+	      jj=0;
+	    }
+	}
+	// for(i=0;i<arr->dimension;i++) printf("%d,",aindex[i]);
+	// printf(")\n");
+	/* Jetzt ein Element kopieren*/
+	char *varptr=varptr_indexliste(&variablen[vnr],bindex,n);
+        if(varptr) {
+	  switch(zarr->typ) {
+	  case INTTYP:     *((int *)varptr)=    int_array_element(arr,aindex);     break;
+	  case FLOATTYP:   *((double *)varptr)= float_array_element(arr,aindex);   break;
+	  case COMPLEXTYP: *((COMPLEX *)varptr)=complex_array_element(arr,aindex); break;
+          case ARBINTTYP:
+	     mpz_init(*((ARBINT *)varptr));
+	     arbint_array_element(arr,aindex,*((ARBINT *)varptr));
+	     break;
+	  case STRINGTYP:
+	    free_string((STRING *)varptr);
+	    *((STRING *)varptr)= string_array_element(arr,aindex);  break;
+	  case ARRAYTYP:  
+	    free_array((ARRAY *)varptr); 
+	    *((ARRAY *)varptr)=  array_array_element(arr,aindex);   break;
+ 	  default:       xberror(13,variablen[vnr].name);  /* Type mismatch */ 
+	  }
+	}
+      }
+    }
+  } else printf("Something is wrong.\n");
+  free_array(arr);
 }
-#endif
 
 /* Weist einer $-Variable eine Zeichenkette zu */
 

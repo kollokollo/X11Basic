@@ -405,10 +405,10 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
           pret->arraytyp=typ;  /* für spaeter */
 	  *((STRING *)&(pret->integer))=create_string(n);
 	}
-      } else {
+      } else {  /* nicht const typ*/
         pret->typ=PL_EVAL;
 	*((STRING *)&(pret->integer))=create_string(n);
-	    /* TODO: Hier koennte man noch den Typ in Parametere eintragen, dann hat man es zu laufzeit schneller*/
+	    /* Typ in Parameter eintragen, dann hat man es zu laufzeit schneller*/
         pret->arraytyp=typ;  /* Muss man spaeter natuerlich noch auswerten....*/
       }
       break;
@@ -668,8 +668,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       ARRAY arr;
       if(pin->typ==PL_ARRAY) arr=double_array((ARRAY *)&(pin->integer));
       else arr=array_parser(pin->pointer);
-      *((ARRAY *)&(pret->integer))=arr;
-	
+      *((ARRAY *)&(pret->integer))=arr;	
       if(ap==PL_IARRAY && (arr.typ==FLOATTYP||arr.typ==COMPLEXTYP||arr.typ==ARBINTTYP)) {
 	*((ARRAY *)&(pret->integer))=convert_to_intarray(&arr);
 	free_array(&arr);
@@ -693,6 +692,8 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       } else if(ap==PL_CFARRAY && (arr.typ==INTTYP||arr.typ==ARBINTTYP)) {
 	*((ARRAY *)&(pret->integer))=convert_to_floatarray(&arr);
 	free_array(&arr);
+      } else if(ap==PL_ARRAY) {
+	; /* nixtum*/
       } else {
         printf("line %d: Error: Parameter is wrong (typ=%x) ARRAY (need to be $%x). Cannot convert.\n",pc,ip,ap);
 	dump_parameterlist(pin,1);

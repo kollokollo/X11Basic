@@ -1675,16 +1675,24 @@ void compile(int verbose) {
         int ii=pcode[i].panzahl;
         // int dim=variablen[vnr].pointer.a->dimension;
         int typ=variablen[vnr].typ;
-        bc_parser(pcode[i].argument);
+        bc_parser(pcode[i].argument);  /* Das Argument liegt nun aufm Stack*/
+        // printf("TL=%x  ii=%d typ=%x\n",TL,ii,typ);
+
         if((typ&TYPMASK)==INTTYP) {
           if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+        } else if((typ&TYPMASK)==ARBINTTYP) {
+          if(TL!=PL_ARBINT)        {BCADD(BC_X2AI);TR(PL_ARBINT);}
         } else if((typ&TYPMASK)==FLOATTYP) {
           if(TL==PL_INT)        {BCADD(BC_I2F);TR(PL_FLOAT);}
           else if(TL!=PL_FLOAT) {BCADD(BC_X2F);TR(PL_FLOAT);}
+        } else if((typ&TYPMASK)==COMPLEXTYP) {
+	  if(TL!=PL_COMPLEX) {BCADD(BC_X2C);TR(PL_COMPLEX);}
         } else if((typ&TYPMASK)==STRINGTYP) {
           if(TL!=PL_STRING) printf("ERROR: cannot convert <%s> (Typ=%x) to string.\n",pcode[i].argument,TL);
         } 
-        if(ii) {
+	/* ARRAY braucht (hier) nicht konvertiert zu werden*/
+	
+        if(ii) { /* Bei Array Element Zuweisung oder SUBARRAY Zuweisung*/
           short ss=vnr;
 	  short f=ii;
 	  push_indexliste(pcode[i].ppointer,ii);

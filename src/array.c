@@ -1327,3 +1327,16 @@ ARRAY array_array_element(const ARRAY *a, int *idx) {
   }
   return(double_array(&varptr[anz]));
 }
+
+/*********** Subarray functions ****************/
+
+/*bestimmt die dimension eines Subarrays anhand der indexliste*/
+int subarraydimf(int *indexliste, int n) {
+  int dim=0;
+  if(indexliste) {
+    while(--n>=0) { if(indexliste[n]<0) dim++; }
+  }
+  return dim;
+}
+
+

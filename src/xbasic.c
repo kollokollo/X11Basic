@@ -627,7 +627,23 @@ int init_program(int prglen) {
 	      pcode[i].ppointer=NULL;
 	      pcode[i].integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
 	      if((pcode[i].atyp&ARRAYTYP)!=ARRAYTYP) printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
-              /*TODO: Subarray-Zuweisung...*/
+	      if(*argument) {  /*Idicies sind da */
+                /* Subarray-Zuweisung..., */
+		
+		/*  Erstmal muss das Argument in eine Indexliste verwandelt werden, die muss dann in 
+		pcode abgelegt werden.
+		*/
+		pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
+                if(pcode[i].panzahl>0) { 
+  		  pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
+		  make_preparlist(pcode[i].ppointer,argument);
+		  // dump_parameterlist(pcode[i].ppointer,pcode[i].panzahl);  
+                }
+		// xberror(9,zeile); /*not implemented*/
+		/* Das einzige Problem ist hier, wie unterscheidet man nun die Subarray-Zuweisung
+		von einer einfachen Zuweisung zum Array-Element? Es gibt keinen Typ-Parameter 
+		for den lvalue im P_CODE. Ein hinweis kann höchstens pcode[i].atyp geben.*/
+	      }
         } else {
 	      if(pcode[i].atyp&ARRAYTYP) printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
               if(e>1) {  /*Idicies sind da */
@@ -652,8 +668,8 @@ int init_program(int prglen) {
         /* Jetzt noch die rechte Seite behandeln....*/
         pcode[i].rvalue=calloc(1,sizeof(PARAMETER));
 	// printf("Rechte Seite <%s> typ=%x\n",pcode[i].argument,pcode[i].atyp);
-        make_parameter_stage2(pcode[i].argument,(PL_CONSTGROUP|(pcode[i].atyp&BASETYPMASK)),pcode[i].rvalue);
-	// dump_parameterlist(pcode[i].rvalue,1);
+        make_parameter_stage2(pcode[i].argument,PL_CONSTGROUP|(pcode[i].atyp&BASETYPMASK),pcode[i].rvalue);
+        // dump_parameterlist(pcode[i].rvalue,1);
 	pcode[i].rvalue->panzahl=0;  /* Warum muss das noch initialisiert werden?*/
 	continue;
       }
@@ -1141,19 +1157,24 @@ void programmlauf(){
       if(ii) {   /* Mit Index ....*/
         if(typ==ARRAYTYP) {
 	  int dim=variablen[vnr].pointer.a->dimension;
-  	  int *indexliste=malloc(ii*sizeof(int));
-	  get_indexliste(pcode[opc].ppointer,indexliste,ii);
 	  if(ii!=dim) xberror(18,"");  /* Falsche Anzahl Indizies */
+	  int *indexliste=malloc(ii*sizeof(int));
+	  get_indexliste(pcode[opc].ppointer,indexliste,ii);
+	  PARAMETER *par=calloc(1,sizeof(PARAMETER));
 	  if(pcode[opc].rvalue) {
-	     PARAMETER *par=calloc(1,sizeof(PARAMETER));
-  	     make_parameter_stage3(pcode[opc].rvalue,(PL_CONSTGROUP|variablen[vnr].pointer.a->typ),par);
-             zuweispbyindex(vnr,indexliste,ii,par);
-	     free_parameter(par);
-	     free(par);
-	  } else {  /* Kann entfernt werden, da nicht mehr benötigt....*/
-	    printf("Something is wrong: //zuweisxbyindex");
-	  //  zuweisxbyindex(vnr,indexliste,ii,pcode[opc].argument,pcode[opc].atyp);
-	  }
+	    /* Das kann jetzt entweder eine Zuweisung zum Array-Element sein oder
+	       Zuweisung eines Subarrays.*/
+	    if((pcode[opc].atyp&ARRAYTYP)==ARRAYTYP) {
+  	      make_parameter_stage3(pcode[opc].rvalue,PL_ARRAY,par);
+	      feed_subarray_and_free(vnr,indexliste,ii,(ARRAY *)&(par->integer));
+	      free_parameter(par);   
+	    } else { /* Einfaches Element wird zugewiesen.*/
+  	      make_parameter_stage3(pcode[opc].rvalue,(PL_CONSTGROUP|variablen[vnr].pointer.a->typ),par);
+              zuweispbyindex(vnr,indexliste,ii,par);
+	      free_parameter(par);
+	    }
+	  } else printf("Something is wrong: //zuweisxbyindex");
+	  free(par);
 	  free(indexliste);
         } else xberror(18,"");  /* Falsche Anzahl Indizies */
       } else {   /* Ohne indizies  ...*/

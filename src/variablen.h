@@ -74,7 +74,7 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p);
 int zuweis(const char *name, double wert);
 int izuweis(const char *name, int wert);
 void zuweisxbyindex(int vnr,int *indexliste,int,char *ausdruck,short atyp);
-void feed_subarray_and_free(int vnr,char *pos, ARRAY wert);
+void feed_subarray_and_free(int vnr,int *,int, ARRAY *wert);
 int zuweiss(char *name, char *inhalt);
 int zuweissbuf(char *name, char *inhalt,int len);
 int zuweis_string_and_free(const char *name, STRING inhalt);

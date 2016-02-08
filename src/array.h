@@ -61,6 +61,9 @@ void  arbint_array_element (const ARRAY *a, int *idx, ARBINT ret);
 
 double array_det(const ARRAY *a);
 
+int subarraydimf(int *,int);
+
+
 /*  Kleinere Hilfsfunktionen als inline Makro*/
 
 
