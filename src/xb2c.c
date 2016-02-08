@@ -522,7 +522,7 @@ static void translate() {
     case BC_PUSHX:
       n=bcpc[i++];
       CP4(&a,&bcpc[i],i);
-      buf=malloc(n*4+8);
+      buf=malloc(n*8+8);
       b=frishmemcpy(buf,(unsigned char *)(rodata+a),n);
       buf[b]=0;
       fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,n);
@@ -536,7 +536,7 @@ static void translate() {
       { int len;
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
-      buf=malloc(4*len+8);
+      buf=malloc(8*len+8);
       b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,len);
@@ -547,7 +547,7 @@ static void translate() {
       { int len;
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
-      buf=malloc(4*len+8);
+      buf=malloc(8*len+8);
       b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       ARBINT a;
@@ -564,7 +564,7 @@ static void translate() {
       { int len;
       CP4(&len,&bcpc[i],i);
       CP4(&a,&bcpc[i],i);
-      buf=malloc(4*len+8);
+      buf=malloc(8*len+8);
       b=frishmemcpy(buf,(unsigned char *)(rodata+a),len);
       buf[b]=0;
       fprintf(optr,"PUSHA(\"%s\",%d); /*len=%d*/\n",buf,len,len);

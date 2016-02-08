@@ -1,0 +1,17 @@
+*.o
+*.d
+config.log
+config.status
+x11basic.a
+xb2c.static
+xbasic.static
+xbbc.static
+xbvm.static
+Makefile
+config.h
+xb2c.debug
+xbasic.debug
+xbbc.debug
+xbvm.debug
+b.b
+11.c
