@@ -449,30 +449,34 @@ void c_bload(char *n) {
 }
 /* Fuehrt Code an Adresse aus */
 void c_exec(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  void (*adr)();
-  if(e==0) printf("EXEC: Zuwenig Parameter !\n");
-  else if(e==1) {
-    adr=(void (*)())((int)parser(w1));
-    adr();
-  } else {
-    adr=(void (*)())((int)parser(w1));
-    adr((void *)((int)parser(w2)));
-  }
+  f_exec(n);
 }
 int f_exec(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,w1,w2);
-  int (*adr)();
-  if(e==0) printf("EXEC: Zuwenig Parameter !\n");
-  else if(e==1) {
-    adr=(int (*)())((int)parser(w1));
-    return(adr());
-  } else {
-    adr=(int (*)())((int)parser(w1));
-    return(adr((void *)((int)parser(w2))));
+  typedef struct  {int feld[20];} GTT;
+  GTT gtt;
+  int (*adr)(GTT);
+  int i=0;
+  while(e) {
+    if(i==0) adr=(int (*)())((int)parser(w1));
+    else if(i<20) {
+      if(strncmp(w1,"D:",2)==0) {
+        *((double *)(&gtt.feld[i-1]))=parser(w1+2);
+        if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(int))-1;
+      } else if(strncmp(w1,"F:",2)==0) {
+        *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
+	if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
+      } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+      else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+      else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+      else gtt.feld[i-1]=(int)parser(w1);
+    }
+    i++;
+    e=wort_sep(w2,',',TRUE,w1,w2);
   }
+  if(i==0) printf("EXEC: Zuwenig Parameter !\n");
+  else return(adr(gtt));
   return(0);
 }
 
