@@ -331,7 +331,7 @@ typedef struct rshdrv3
 	LONG		rsh_rssize;	/* total bytes in resource	*/
 }RSHDRV3;
 
-typedef struct { unsigned short r,g,b;} AESRGBCOLOR;
+typedef struct { unsigned char r,g,b;} AESRGBCOLOR;
 
 
 /* Prototypes */
@@ -341,7 +341,6 @@ extern unsigned int chw,chh,baseline,depth;
 extern int gem_colors[];
 extern ARECT sbox;
 
-extern const AESRGBCOLOR gem_colordefs[];
 
 void gem_init();
 void load_GEMFONT(int n);
@@ -363,7 +362,6 @@ int objc_find(OBJECT *tree,int x,int y);
 int finded(OBJECT *tree,int start, int r);
 void draw_edcursor(OBJECT *tree,int ndx);
 int rootob(OBJECT *tree,int onr);
-void WSWAP(char *adr);
 void relobxy(OBJECT *tree,int ndx,int *x, int *y);
 int rsrc_load(char *filename);
 

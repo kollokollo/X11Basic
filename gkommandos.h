@@ -5,7 +5,7 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
-extern int menuaction;
+extern int menuaction,menuactiontype;
 extern int turtlex,turtley;
 
 void c_alert    (PARAMETER *,int);
@@ -41,7 +41,7 @@ void c_keyevent    (PARAMETER *,int);
 void c_line        (PARAMETER *,int);
 void c_ltext       (PARAMETER *,int);
 void c_menu        (char *);
-void c_menudef     (char *);
+void c_menudef     (PARAMETER *,int);
 void c_menukill    (char *);
 void c_menuset     (PARAMETER *,int);
 void c_motionevent (PARAMETER *,int);
@@ -87,4 +87,5 @@ void c_xrun        (char *);
 
 int get_point(int x, int y);
 
+int f_eventf(int mask);
 

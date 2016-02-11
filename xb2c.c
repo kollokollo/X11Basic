@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2013
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2014
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -23,6 +23,7 @@
 
 #include "defs.h"
 #include "x11basic.h"
+#include "xbasic.h"
 #include "bytecode.h"
 #include "variablen.h"
 #include "file.h"
@@ -47,40 +48,39 @@ FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.20";        /* Programmversion*/
-const char vdate[]="2012-11-01";
+const char version[]="1.22";        /* Programmversion*/
+const char vdate[]="2013-12-28";
 char *programbuffer=NULL;
 char **program=NULL;
 int programbufferlen=0;
 
 extern void memdump(unsigned char *,int);
 
-void intro(){
-  puts("***************************************************************\n"
-       "*           X11-Basic to C translator                         *\n"
-       "*                    by Markus Hoffmann 1997-2013 (c)         *");
-  printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
-  puts("***************************************************************\n");
+static void intro(){
+  printf("********************************************************\n"
+         "*     X11-Basic bytecode to C translator               *\n"
+         "*                  by Markus Hoffmann 1997-2014 (c)    *\n"
+         "* library V.%s date: %30s  *\n"
+         "********************************************************\n",libversion,libvdate);
 }
-void usage(){
+static void usage(){
   printf("\n Usage:\n ------ \n"
-         " %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
-  printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
-  puts("-h --help\t--- Usage\n"
-       "-l       \t--- suppress the main function\n"
-       "-v\t\t--- be more verbose");
+         " %s [-o <outputfile> -h] [<filename>] --- translate program [%s]\n\n"
+         "-o <outputfile>\t--- put result in file [%s]\n"
+         "-h --help\t--- Usage\n"
+         "-l       \t--- suppress the main function\n"
+         "-v\t\t--- be more verbose\n"
+	 ,"xb2c",ifilename,ofilename);
 }
 
-void kommandozeile(int anzahl, char *argumente[]) {
+static void kommandozeile(int anzahl, char *argumente[]) {
   int count;
 
   /* Kommandozeile bearbeiten   */
   for(count=1;count<anzahl;count++) {
     if (strcmp(argumente[count],"-o")==FALSE) {
       strcpy(ofilename,argumente[++count]);
-    } else if (strcmp(argumente[count],"-h")==FALSE) {
-      intro();usage();
-    } else if (strcmp(argumente[count],"--help")==FALSE) {
+    } else if (strcmp(argumente[count],"-h")==FALSE || strcmp(argumente[count],"--help")==FALSE) {
       intro();usage();
     } else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
     else if(strcmp(argumente[count],"-q")==FALSE)   verbose--;
@@ -91,17 +91,17 @@ void kommandozeile(int anzahl, char *argumente[]) {
         strcpy(ifilename,argumente[count]);
       }
     }
-   }
+  }
 }
 
-int havesymbol(int adr,int typ) {
+static int havesymbol(int adr,int typ) {
   int i,c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
   for(i=0;i<c;i++) {
     if(symtab[i].adr==adr && symtab[i].typ==typ) return(i);
   }
   return(-1);
 }
-int frishmemcpy(char *d,char *s,int n) {
+static int frishmemcpy(char *d,char *s,int n) {
   int i,j=0;
   for(i=0;i<n;i++) {
     if(s[i]=='\"' || s[i]=='\\') {
@@ -115,7 +115,7 @@ int frishmemcpy(char *d,char *s,int n) {
   }
   return(j);  
 }
-void data_section() {
+static void data_section() {
   int i=0,c;
   int count=0;
   fprintf(optr,"/* Data section compiled by xb2c. */\n\n");
@@ -157,7 +157,7 @@ void data_section() {
   }
 }
 
-void translate() {
+static void translate() {
   char *buf;
   
   signed char c;
@@ -247,16 +247,30 @@ void translate() {
 	else if(typ==STRINGTYP) sprintf(vnam,"VARs_");
 	else if(typ==ARRAYTYP)  sprintf(vnam,"VARa_");
 	
-	
-	if(typ==INTTYP || typ==FLOATTYP) {
+#if 0	
+/*Irgendwas ist hier noch faul....*/
           if(symtab[i].name)
-                fprintf(optr,"  add_variable_adr(\"%s\",0x%x,(char *)&%s%s); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
-          else  fprintf(optr,"  add_variable_adr(\"VAR_%d\",0x%x,(char *)&%s_%d); \t/*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
+                fprintf(optr,"  add_variable(\"%s\",0x%x,0,V_STATIC,(char *)&%s%s); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0,V_STATIC,(char *)&%s_%d); \t/*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
+ if(typ==STRINGTYP) {
+          if(symtab[i].name) fprintf(optr,"  %s%s=create_string(NULL);\n",vnam,&strings[symtab[i].name]);
+	  else               fprintf(optr,"  %s_%d=create_string(NULL);\n",vnam,count);
+ } else if(typ==ARRAYTYP) {
+          if(symtab[i].name) fprintf(optr,"  %s%s=create_array(0x%x,0,NULL);\n",vnam,&strings[symtab[i].name],subtyp);
+	  else               fprintf(optr,"  %s_%d=create_array(0x%x,0,NULL);\n",vnam,count,subtyp);
+ 
+ }
+ #else
+ 	if(typ==INTTYP || typ==FLOATTYP) {
+          if(symtab[i].name)
+                fprintf(optr,"  add_variable(\"%s\",0x%x,0,V_STATIC,(char *)&%s%s); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0,V_STATIC,(char *)&%s_%d); \t/*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
 	} else {
           if(symtab[i].name)
-                fprintf(optr,"  add_variable(\"%s\",0x%x,0x%x); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,subtyp,count,(unsigned int)symtab[i].adr);
-          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0x%x); \t/*%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
-	}
+                fprintf(optr,"  add_variable(\"%s\",0x%x,0x%x,V_DYNAMIC,NULL); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,subtyp,count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0x%x,V_DYNAMIC,NULL); \t/*%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
+	} 
+ #endif
         count++;
       }
       fflush(optr);
@@ -479,6 +493,10 @@ void translate() {
       fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,n);
       free(buf);
       break;
+    case BC_PUSHK:
+      n=bcpc[i++];
+      fprintf(optr,"PUSHK(%d);     /* %s */ \n",n,keywords[n]);
+      break;
     case BC_PUSHS:
       { int len;
       memcpy(&len,&bcpc[i],sizeof(int));i+=sizeof(int);
@@ -542,6 +560,20 @@ void translate() {
 	fprintf(optr,"LOCAL(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"LOCAL(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
+    case BC_ZUWEISi:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(ss==-1) {
+        printf("Error, Variable gibts nicht.\n");
+	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
+      } else fprintf(optr,"ZUWEISi(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
+      break;
+    case BC_ZUWEISf:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(ss==-1) {
+        printf("Error, Variable gibts nicht.\n");
+	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
+      } else fprintf(optr,"ZUWEISf(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
+      break;
     case BC_ZUWEIS:
       memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
       if(ss==-1) {
@@ -581,6 +613,24 @@ void translate() {
       if((b=havesymbol(a,STT_DATAPTR))>=0) fprintf(optr,"\t/* %s */\n",&strings[symtab[b].name]);
       else fprintf(optr,"\n");
       break;
+    case BC_PUSHLABEL:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      a-=sizeof(BYTECODE_HEADER);
+      if((b=havesymbol(a,STT_LABEL))>=0) 
+        fprintf(optr,"PUSHLABEL(&&%s);\t/* LABEL(0x%x); */\n",&strings[symtab[b].name],a);
+      else if((b=havesymbol(a,0))>=0) 
+        fprintf(optr,"PUSHLABEL(&&LBL_%x);\t/* LABEL(0x%x); */\n",a,a);
+      else fprintf(optr,"PUSHLABEL(0x%x);\n",a);
+      break;
+    case BC_PUSHPROC: 
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      a-=sizeof(BYTECODE_HEADER);
+      if((b=havesymbol(a,STT_FUNC))>=0) 
+        fprintf(optr,"PUSHPROC(proc_%s);\t/* PROC(0x%x); */\n",&strings[symtab[b].name],a);
+      else if((b=havesymbol(a,0))>=0) 
+        fprintf(optr,"pushproc LBL_%x;\t/* PROC(0x%x); */\n",a,a);
+      else fprintf(optr,"PUSHPROC(0x%x);\n",a);
+      break;
     default:
       printf("xb2c: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
       memdump((unsigned char *)&(bcpc[i]),16);
@@ -589,7 +639,7 @@ void translate() {
   fprintf(optr,"}\n");
 }
 
-int loadbcprg(char *filename) {  
+static int loadbcprg(char *filename) {  
   int len,i,c;
   char *p;
   FILE *dptr;
@@ -598,8 +648,8 @@ int loadbcprg(char *filename) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.20\n"
-                 "   (c) Markus Hoffmann 2002-2013\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.22\n"
+                 "   (c) Markus Hoffmann 2002-2014\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
 		 

@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.20], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.22], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -77,14 +77,6 @@ fi
 changequote([,])dnl
 fi
 
-AC_CHECK_PROG(MAKEDEPEND, makedepend, ok, no)
-if test "n$MAKEDEPEND" = nno; then
-cat <<'EOF'
-You don't seem to have `makedepend', but I'll continue the configuration
-process. It will fail at the end when I'll try to do a `make depend', you're
-on your own then... (Yes, I know I could use gcc -MM etc. but I was too lazy)
-EOF
-fi
 AC_SYS_INTERPRETER
 if test "n$interpval" = nno; then
 cat <<'EOF'
@@ -103,7 +95,7 @@ if test "x$no_x" = yes; then
 fi
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/kd.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
+AC_CHECK_HEADERS([sys/kd.h png.h jpeglib.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
 
 
 
@@ -128,10 +120,10 @@ AC_CHECK_LIB([m], [log1p], AC_DEFINE(HAVE_LOG1P,1,[log1p in Mathlib]))
 # `-ltermcap':
 #AC_CHECK_LIB([termcap], [main], libs="$libs -ltermcap")
 # `-lncurses':
-AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses", [
+#AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses", [
   # `-lcurses':
-  AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
-])
+#  AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
+#])
 AC_CHECK_LIB([pthread], [pthread_create], libs="$libs -lpthread")
 
 # `-lasound':
@@ -139,6 +131,18 @@ AC_CHECK_LIB([asound], [snd_pcm_recover], [
 libs="$libs -lasound"
 AC_DEFINE(HAVE_ALSA,1,[snd_pcm_recover in asound])
 ],,[$libs])
+
+# `-lpng':
+#AC_CHECK_LIB([png], [png_create_read_struct], [
+#libs="$libs -lpng"
+#AC_DEFINE(HAVE_PNG,1,[png_create_read_struct in png])
+#],,[$libs])
+
+# `-ljpeg':
+#AC_CHECK_LIB([jpeg], [jpeg_read_header], [
+#libs="$libs -ljpeg"
+#AC_DEFINE(HAVE_JPEG,1,[jpeg_read_header in jpeg])
+#],,[$libs])
 
 # `-lutil':
 AC_CHECK_LIB([util], [forkpty], [
@@ -151,6 +155,27 @@ AC_CHECK_LIB([readline], [readline], [
 libs="$libs -lreadline"
 AC_DEFINE(HAVE_READLINE,1,[readline in readline])
 ],,[$libs])
+
+
+# `-llapack':
+AC_CHECK_LIB([lapack], [dgelss_], [
+libs="$libs -llapack"
+AC_DEFINE(HAVE_LAPACK,1,[dgelss_ in lapack])
+],,[$libs])
+
+# `-lusb':
+#AC_CHECK_LIB([usb], [usb_open], [
+#libs="$libs -lusb"
+#AC_DEFINE(HAVE_USB,1,[usb_open in lusb])
+#],,[$libs])
+
+# `-lgcrypt':
+#AC_CHECK_LIB([gcrypt], [gcry_check_version], [
+#libs="$libs -lgcrypt"
+#AC_DEFINE(HAVE_GCRYPT,1,[gcry_check_version in lgcrypt])
+#],,[$libs])
+
+
 # `-lSDL':
 AC_CHECK_LIB([SDL], [SDL_MapRGB], AC_DEFINE(HAVE_SDL,1,[Simple Direct Media present]))
 AC_CHECK_LIB([SDL_gfx], [hlineRGBA], AC_DEFINE(HAVE_SDL_GFX,1,[Simple Direct Media GFX]))
@@ -359,5 +384,4 @@ AC_SUBST(libs)
 AC_SUBST(xtra)
 AC_SUBST(copt)
 AC_SUBST(static)
-AC_OUTPUT([examples/compiler/xbc.bas Makefile],
-make depend)
+AC_OUTPUT([examples/compiler/xbc.bas Makefile])

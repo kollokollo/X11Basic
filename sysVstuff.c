@@ -278,64 +278,48 @@ void dispval(int sid, int member) {
         printf("semval for member %d is %d\n", member, semval);
 }
 #endif
+#endif
 
+#if defined WINDOWS || defined __CYGWIN__ || defined ANDROID
+  #define shmget(a,b,c) (-1)
+  #define shmat(a,b,c) (-1)
+  #define shmdt(a) (-1)
+  #define shmctl(a,b,c) (-1)
+  #ifndef IPC_CREAT
+    #define IPC_CREAT 0
+    #define IPC_EXCL 0
+    #define IPC_RMID 0
+    #define IPC_STAT 0
+    #define IPC_SET 0
+  #endif
 #endif
 
 
 int shm_malloc(size_t segsize, key_t key) {
-  int   shmid;
+  int shmid=shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666);
   /* Open the shared memory segment - create if necessary */
-#ifndef WINDOWS
-#ifndef __CYGWIN__
-#if 0
-  if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
+  if(shmid==-1) {
     /* Segment probably already exists - try as a client */
-    if((shmid=shmget(key,segsize,0))==-1) {
-      io_error(errno,"SHM_MALLOC");    /* shm_malloc error.*/ 
-      return(-1);
-    }
+    shmid=shmget(key,segsize,0);
   }
-  #endif
-#endif       
-#endif 
+  if(shmid==-1) io_error(errno,"SHM_MALLOC");    /* shm_malloc error.*/ 
   return(shmid);
 }
+
 int shm_attach(int shmid) {
-  int r;
-#ifndef WINDOWS
-#ifndef __CYGWIN__
-#if 0
- if((r=(int)shmat(shmid,0,0))==-1) {
-   io_error(errno,"SHM_ATTACH");    /* shm_malloc error.*/ 
-   return(-1);
-  }
-  #endif
-#endif 
-#endif 
- return(r);
+  int r=(int)shmat(shmid,0,0);
+  if(r==-1) io_error(errno,"SHM_ATTACH");    /* shm_attach error.*/ 
+  return(r);
 }
 
 int shm_detatch(int shmaddr) {
-  int r;
- #ifndef WINDOWS
-#ifndef __CYGWIN__ 
-#if 0
- if((r=(int)shmdt((void *)shmaddr))==-1) return(errno);
-#endif
-#endif 
-#endif
- return(0);
+  if(shmdt((void *)shmaddr)==-1) return(errno);
+  return(0);
 }
 
-void shm_free(int shmid){        /*  mark for deletion*/
-#ifndef WINDOWS
-#ifndef __CYGWIN__
-#if 0
-        int r=shmctl(shmid, IPC_RMID, 0);
-	if(r==-1) io_error(errno,"SHM_FREE");
-#endif
-#endif
-#endif
+void shm_free(int shmid) {        /*  mark for deletion*/
+  int r=shmctl(shmid, IPC_RMID, 0);
+  if(r==-1) io_error(errno,"SHM_FREE");
 }
 
 #if 0
@@ -344,13 +328,10 @@ void change_shm_mode(int shmid, char *mode) {
 
         /* Get current values for internal data structure */
         shmctl(shmid, IPC_STAT, &myshmds);
-        /* Display old permissions */
       /*  printf("Old permissions were: %o\n", myshmds.shm_perm.mode); */
         /* Convert and load the mode */
         sscanf(mode, "%o", &myshmds.shm_perm.mode);
-        
         shmctl(shmid, IPC_SET, &myshmds);  /* Update the mode */
 /*        printf("New permissions are : %o\n", myshmds.shm_perm.mode);*/
 }
-
 #endif

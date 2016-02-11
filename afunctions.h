@@ -7,3 +7,4 @@
  */
 
 
+double f_det(PARAMETER *plist, int e);

@@ -241,4 +241,56 @@ Release notes for Version 1.19 (Mai 2012)
 - BUGFIX: SELECT/CONTINUE
 - some minor changes for 64bit version
 
+Release notes for Version 1.20 (Dez 2012-Mar 2013)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- New command: SHELL (also for Android)
+- bugfix: strcpy().
+- Improved: Editor execution in Android version
+- Fixed bug with desktop shortcuts under Android
+- Bugfix in virtual machine (AND)
+- included va_copy patch for 64 bit version by Matthias Vogl
+- fixed bugs in compiler (ARRAY constants)
+- fixed bugs in VARPTR() and ARRPTR()
+- fixed bug in local variable handling
+- fixed memory leak LOCAL/RETURN
+- fixed bug/crash with MERGE
+- new function: call android intents with EXEC
+- fixed bug/crash in LIST command 
+- fixed bug in SWAP command
+- fixed bug/crash in CALL command 
+- new commands: MKDIR, RMDIR, KILL, HIDEM, SHOWM
+- new functions: LEFTOF$(), RIGHTOF$(), ENCLOSE$(), DECLOSE$(), TALLY()
+- new functions: COLOR_RGB(), BYTE(), CARD(), WORD(), SWAP(), CINT(), VARIAT()
+- new commands: RENAME, CHMOD, TOUCH
+
+
+Release notes for Version 1.21 (Apr 2013-Nov 2013)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- fixed bug in GET_SCREENSIZE (Windows version)
+- new: support for Android x86 platform
+- new: (legal) FFT algorithm now included (by Paul N. Swarztrauber, public domain)
+- new: using LAPACK for INV() and SOLVE() (linux only)
+- removed support for numerical recipes routines
+- new: FIT_POLY
+- fixed bugs in SPUT, LOCATE, PRINT USING
+- new function USING$()
+- fixed memory leak with STRING variable assignment
+- fixed bug in INPUT (Android version only, locate)
+- fixed bug in RUN (close files)
+- fixed bug in bytecode compiler (STEP -#)
+- improved speed of string parser
+- fixed small problem with LOAD (last line without EOL)
+- fixed typos in the manual and offline help
+- fixed screen rotation bug (Android)
+- fixed bug in PUT scale (Android)
+- fixed bugs in GET and PUT (Windows version)
+- fixed bug in SPLIT
+- fixed bug in GPS functions (Android)
+- new function EVENT?()
+- improved LINEINPUT
+- fixed bug in Array const
+- fixed bug in compiler (array operations)
+- fixed bug in ELLIPSE, PELLIPE, RBOX and PRBOX (Android Version)
+
+
 --------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 ' 10.2012: now accepts also .xbas as source code extension
 ' 01.2013: adapted to new **program structure
 ' 03.2013: added new compile flags -L and --pseudo
+' 03.2014: corrected bug with -s (strip)   MH
 
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
 '* ======================================================================
@@ -158,7 +159,7 @@ PROCEDURE dobytecode
   if docomments
     extra$=extra$+"-c "
   endif
-  if dostrip
+  if dostrip AND NOT virtualm
     extra$=extra$+"-s "
   endif
   SYSTEM "xbbc "+extra$+" -o "+rumpf$+".b"+" "+inputfile$
@@ -179,7 +180,8 @@ PROCEDURE compilevm
         system "@CC@ @copt@ -c "+rumpf$+".c"
       endif
     endif
-    system "rm -f "+rumpf$+".c "+rumpf$+".b"
+    KILL rumpf$+".c"
+    KILL rumpf$+".b"
   ENDIF
 RETURN
 
@@ -272,7 +274,7 @@ PROCEDURE compile
     ELSE
       SYSTEM "@CC@ @copt@ -c "+rumpf$+".c"
     ENDIF
-    SYSTEM "rm -f "+rumpf$+".c"
+    KILL rumpf$+".c"
   ENDIF
 RETURN
 

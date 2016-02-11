@@ -1,34 +1,32 @@
 ' Test of the SORT function (c) Markus Hoffmann 2010
-' works only with version 1.16
+' written in X11-Basic (> 1.16)
 '
 
-n=1000000
+n%=1000000
+DIM t$(n%),u%(n%)
 
-dim t$(n)
-dim u%(n)
+t=TIMER
+PRINT "filling the string array with ";n%;" strings ..."
+FOR i%=0 TO n%-1
+  t$(i%)=STR$(RANDOM(n%))
+  u%(i%)=i%
+NEXT i%
+PRINT "this took ";TIMER-t;" seconds."
+PRINT "Sort the (string) array..."
+t=TIMER
+SORT t$(),n%,u%()
+t1=TIMER-t
+FOR i%=0 TO 20
+  PRINT i%,t$(i%),u%(i%)
+NEXT i%
+PRINT "Time: ";t1;" Seconds."
+PRINT "(back-)sort the int array:"
+t=TIMER
+SORT u%(),n%
+t2=TIMER-t
 
-t=timer
-print "filling the array with ";n;" values ..."
-for i=0 to n-1
-  t$(i)=STR$(RANDOM(n))
-  u%(i)=i
-next i
-print "this took ";timer-t;" seconds."
-print "Sort the (string) arrays..."
-t=timer
- sort t$(),n,u%()
-t1=timer-t
-for i=0 to 20
-  print i,t$(i),u%(i)
-next i
-print "Time: ";t1;" Seconds."
-print "(back-)sort the int array:"
-t=timer
- sort u%(),n
-t2=timer-t
-
-for i=0 to 10
-  print i,u%(i)
-next i
-print "Time: ";t2;" Seconds."
-quit
+FOR i%=0 TO 4
+  PRINT i%,u%(i%)
+NEXT i%
+PRINT "Time: ";t2;" Seconds."
+QUIT

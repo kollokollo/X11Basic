@@ -39,15 +39,19 @@
 #endif
 
 #include "defs.h"
-#include "window.h"
-#include "framebuffer.h"
+#include "x11basic.h"
+
 #include "bitmap.h"
+#include "framebuffer.h"
+#include "consolefont.h"
+#include "raw_mouse.h"
 
 #ifndef ANDROID
 extern struct fb_var_screeninfo vinfo;
 extern struct fb_fix_screeninfo finfo;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
+int font_behaviour;
 #else
 extern AndroidBitmapInfo  screen_info;
 #endif
@@ -56,54 +60,16 @@ int fbfd = -1;
 extern int font_behaviour;
 G_CONTEXT screen;
 
-const unsigned char mousealpha[16*16]={
-  0,0,0,0,0,0,0,127,127,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,
-127,255,255,255,255,255,255,255,  0,255,255,255,255,255,255,127,
-127,255,255,255,255,255,255,255,  0,255,255,255,255,255,255,127,
-127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,127,127,127,0,0,0,0,0,0};
 
-const unsigned short mousepat[16*16]={
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
-BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,127,127,127,127,127,127,127,
-WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,
-WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,
-127,127,127,127,127,255,127,127,127,127,127,127,127,127,127,127,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,BLACK,WHITE,BLACK,0,0,0,0,0,0};
-
-
-unsigned short vmousepat[16*16];
-unsigned char vmousealpha[16*16];
 void textscreen_redraw(int x, int y, int w,int h);
 extern int bigfont;
-
 
 void Fb_Open() {
 #ifndef ANDROID 
   fbfd=open(FB_DEVICENAME, O_RDWR);
-  if (!fbfd) {
-    printf("ERROR: could not open framebufferdevice.\n");
+  if(fbfd<0) {
+    printf("ERROR: could not open framebuffer device %s.\n",FB_DEVICENAME);
+    perror(FB_DEVICENAME);
     exit(EX_OSFILE);
   }
 #if DEBUG
@@ -115,15 +81,16 @@ void Fb_Open() {
 #ifndef ANDROID
   // Get fixed screen information
   if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
-    printf("ERROR: Could not get fixed screen information.\n");
+    perror("ERROR: Could not get fixed screen information.");
     exit(EX_IOERR);
   }
   // Get variable screen information
   if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
-    printf("ERROR: Could not get variable screen information.\n");
+    perror("ERROR: Could not get variable screen information.");
     exit(EX_IOERR);
   }
   screen.bpp=vinfo.bits_per_pixel;
+  if(screen.bpp!=16) printf("WARNING: The color depth of the framebuffer should be 16!\n");
   screen.clip_w=screen.width=vinfo.xres;
   screen.clip_h=screen.height=vinfo.yres;
 #else
@@ -132,13 +99,12 @@ void Fb_Open() {
   screen.clip_h=screen.height=screen_info.height;
 #endif
   screen.clip_x=screen.clip_y=0;
-if(screen.initialized!=4711) {
-  FB_defaultcontext();
-} else {
-  screen.mouse_x=min(screen.width,screen.mouse_x);
-  screen.mouse_y=min(screen.height,screen.mouse_y);
-
-}
+  if(screen.initialized!=4711) {
+    FB_defaultcontext();
+  } else {
+    screen.mouse_x=min(screen.width,screen.mouse_x);
+    screen.mouse_y=min(screen.height,screen.mouse_y);
+  }
   // Figure out the size of the screen in bytes
   screen.size = screen.width * screen.height * screen.bpp / 8;
   screen.scanline=screen.width*screen.bpp/8;
@@ -146,9 +112,9 @@ if(screen.initialized!=4711) {
 
   // Map the device to memory
 #ifndef ANDROID
-  screen.pixels = (char *)mmap(0, screen.size, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
+  screen.pixels = (unsigned char *)mmap(0, screen.size, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
   if((int)screen.pixels==-1) {
-    printf("ERROR: Could not map framebuffer device to memory.\n");
+    perror("ERROR: Could not map framebuffer device to memory.");
     exit(EX_IOERR);
   }
 #else
@@ -186,6 +152,9 @@ void Fb_Close() {
   }
 #endif
   FB_hide_mouse();
+#ifndef ANDROID
+  FB_close_mouse();
+#endif
   fbfd = -1;
 }
 
@@ -289,7 +258,7 @@ void FB_plot(int x, int y) {
   FB_PutPixel(x,y,screen.fcolor);
 }
 unsigned short FB_point(int x, int y) {
-  if(x<0 || y<0 || x>=screen.width || y>=screen.height) return;
+  if(x<0 || y<0 || x>=screen.width || y>=screen.height) return(0);
   unsigned short *ptr  = (unsigned short*)(screen.pixels+x*2+y*screen.scanline);
   return(*ptr);
 }
@@ -316,15 +285,9 @@ static void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
 
 
 
-void FB_setfillpattern(const char *p) {
-  screen.fill_pat=(unsigned short *)p;
-}
-void FB_setfillstyle(int c) {
-  screen.fill_style=c;
-}
-void FB_setfillrule(int c) {
-  screen.fill_rule=c;
-}
+void FB_setfillpattern(const char *p) { screen.fill_pat=(unsigned short *)p; }
+void FB_setfillstyle  (int c)         { screen.fill_style=c; }
+void FB_setfillrule   (int c)         { screen.fill_rule=c;  }
 
 
 /*Draw a horizontal line and use pattern, transparent*/
@@ -645,7 +608,7 @@ void Fb_inverse(int x, int y,int w,int h){
   register unsigned short *endp  = ptr+h*screen.width;
   register int i;
   while (ptr<endp) {
-    for(i=0;i<w;i++) *ptr++=~*ptr;
+    for(i=0;i<w;i++) {*ptr=~*ptr;ptr++;}
     ptr+=screen.width-w;
   }
 }
@@ -689,20 +652,7 @@ void FB_copyarea(int x,int y,int w, int h, int tx,int ty) {
 }
 
 
-/* mouse routines */
 
-void FB_show_mouse() {
-  if(!screen.mouseshown) {
-    FB_draw_sprite(screen.mousepat,screen.mousemask,screen.mouse_x-screen.mouse_ox,screen.mouse_y-screen.mouse_oy);
-    screen.mouseshown=1;
-  }
-}
-void FB_hide_mouse() {
-  if(screen.mouseshown) {
-    FB_hide_sprite(screen.mouse_x-screen.mouse_ox,screen.mouse_y-screen.mouse_oy);
-    screen.mouseshown=0;
-  }
-}
 
 
 /* Draw 16x16 Sprite */
@@ -737,8 +687,8 @@ void FB_hide_sprite(int x,int y) {
   }
 }
 
-int FB_get_color(int r, int g, int b) {
-  return((((r>>11)&0x1f)<<11)|(((g>>10)&0x3f)<<5)|(((b>>11)&0x1f)));
+int FB_get_color(unsigned char r, unsigned char g, unsigned char b) {
+  return((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|(((b>>3)&0x1f)));
 }
 
 
@@ -763,13 +713,13 @@ unsigned char *fontlist57[1] ={(unsigned char *)asciiTable};
 
 
 
-void Fb_BlitCharacter57(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags, int fontnr){
+void Fb_BlitCharacter57_raw(int x, int y, unsigned short aColor, unsigned short aBackColor,int flags, const unsigned char *chrdata){
   unsigned char data0,data1,data2,data3,data4;
 
-  if (x<0||y<0|| x>screen.width-CharWidth57 || y>screen.height-CharHeight57) return;
+  if (x<0||y<0|| x>screen.width-CharWidth57 || y>screen.height-CharHeight57 || chrdata==NULL) return;
 //  if ((character < Fontmin) || (character > Fontmax)) character = '.';
 
-  const unsigned char *aptr = &((fontlist57[fontnr])[character*5]);
+  const unsigned char *aptr = chrdata;
   data0 = *aptr++;
   data1 = *aptr++;
   data2 = *aptr++;
@@ -824,14 +774,18 @@ void Fb_BlitCharacter57(int x, int y, unsigned short aColor, unsigned short aBac
     }
   }
 }
+void Fb_BlitCharacter57(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags,int fontnr){
+  const unsigned char *aptr = &((fontlist57[fontnr])[character*5]);
+  Fb_BlitCharacter57_raw(x,y,aColor,aBackColor,flags, aptr);
+}
 
-
-void Fb_BlitCharacter816(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags,int fontnr){
+void Fb_BlitCharacter816_raw(int x, int y, unsigned short aColor, unsigned short aBackColor, int flags, const unsigned char *chrdata) {
   char charackter[CharHeight816];
   int i,d;
-  if (x<0||y<0|| x>screen.width-CharWidth816 || y>screen.height-CharHeight816) return;
-  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
-  memcpy(charackter,aptr,CharHeight816);
+  if (x<0||y<0|| x>screen.width-CharWidth816 || y>screen.height-CharHeight816 || chrdata==NULL) return;
+
+  memcpy(charackter,chrdata,CharHeight816);
+
   register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
 
   if(flags&FL_REVERSE) { /* reverse */
@@ -906,12 +860,24 @@ void Fb_BlitCharacter816(int x, int y, unsigned short aColor, unsigned short aBa
     }
   }
 }
+
+
+
+
+void Fb_BlitCharacter816(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags,int fontnr){
+  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
+  Fb_BlitCharacter816_raw(x,y,aColor,aBackColor,flags, aptr);
+}
+
 void Fb_BlitCharacter1632(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags,int fontnr){
+  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
+  Fb_BlitCharacter1632_raw(x,y,aColor,aBackColor,flags,aptr);
+}
+void Fb_BlitCharacter1632_raw(int x, int y, unsigned short aColor, unsigned short aBackColor, int flags,const unsigned char *chrdata){
   char charackter[CharHeight816];
   int i,d;
-  if (x<0||y<0|| x>screen.width-CharWidth816 || y>screen.height-CharHeight816) return;
-  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
-  memcpy(charackter,aptr,CharHeight816);
+  if (x<0||y<0|| x>screen.width-CharWidth816 || y>screen.height-CharHeight816 || chrdata==NULL) return;
+  memcpy(charackter,chrdata,CharHeight816);
   register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
 
   if(flags&FL_REVERSE) { /* reverse */
@@ -1066,14 +1032,17 @@ void Fb_BlitCharacter1632(int x, int y, unsigned short aColor, unsigned short aB
 }
 
 /*Langsame Routine zum scalieren des 8x16 Fonts auf beliebige Groessen*/
-
 void Fb_BlitCharacter816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, 
                                int flags,int fontnr,int charwidth,int charheight ) {
+  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
+  Fb_BlitCharacter816_scale_raw(x,y,aColor,aBackColor,flags,charwidth,charheight, aptr);
+}
+void Fb_BlitCharacter816_scale_raw(int x, int y, unsigned short aColor, unsigned short aBackColor, 
+                               int flags,int charwidth,int charheight, const unsigned char *chrdata) {
   char charackter[CharHeight816];
   int i,d,j,dd;
-  if (x<0||y<0|| x>screen.width-charwidth || y>screen.height-charheight) return;
-  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
-  memcpy(charackter,aptr,CharHeight816);
+  if (x<0||y<0|| x>screen.width-charwidth || y>screen.height-charheight || chrdata==NULL) return;
+  memcpy(charackter,chrdata,CharHeight816);
   register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
 
   if(flags&FL_REVERSE) { /* reverse */
@@ -1140,41 +1109,6 @@ void Fb_BlitCharacter816_scale(int x, int y, unsigned short aColor, unsigned sho
   }
 }
 
-void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
-  while (*str) {
-    Fb_BlitCharacter57(x, y, aColor, aBackColor, *str,0,0);
-    x+=CharWidth57;
-    str++;
-  }
-}
-void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
-  while (*str) {
-    Fb_BlitCharacter816(x, y, aColor, aBackColor, *str,0,0);
-    x+=CharWidth816;
-    str++;
-  }
-}
-void Fb_BlitText1632(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
-  while (*str) {
-    Fb_BlitCharacter1632(x, y, aColor, aBackColor, *str,0,0);
-    x+=CharWidth1632;
-    str++;
-  }
-}
-void Fb_BlitText3264(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
-  while (*str) {
-    Fb_BlitCharacter816_scale(x, y, aColor, aBackColor, *str,0,0,32,64);
-    x+=32;
-    str++;
-  }
-}
-void Fb_BlitText816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str,int w,int h) {
-  while (*str) {
-    Fb_BlitCharacter816_scale(x, y, aColor, aBackColor, *str,0,0,w,h);
-    x+=w;
-    str++;
-  }
-}
 
 extern int ltextpflg;
 extern unsigned int chw;
@@ -1184,6 +1118,7 @@ void FB_DrawString(int x, int y, const char *t,int len) {
   if(len>0) {
     char buf[len+1];
     FB_hide_mouse();
+    utf8(0,(unsigned short *)&buf);   /*Startbedingungen herstellen*/
     memcpy(buf,t,len);
     buf[len]=0;
     if(ltextpflg==1 || (chh==16 && chw==8))  Fb_BlitText816(x,y,screen.fcolor, screen.bcolor,buf);
@@ -1196,20 +1131,20 @@ void FB_DrawString(int x, int y, const char *t,int len) {
 
 
 
-void FB_get_geometry(int *x, int *y, int *w, int *h, int *b, int *d) {
+void FB_get_geometry(int *x, int *y, unsigned int *w, unsigned int *h, int *b, unsigned int *d) {
   *b=*x=*y=0;
   *w=screen.width;
   *h=screen.height;
   *d=screen.bpp;
 }
 /* We need these because ARM has 32 Bit alignment (and the compiler has a bug)*/
-static void writeint(char *p,int n) {
+static void writeint(unsigned char *p,int n) {
   p[0]=n&0xff;
   p[1]=(n&0xff00)>>8;
   p[2]=(n&0xff0000)>>16;
   p[3]=(n&0xff000000)>>24;
 }
-static void writeshort(char *p,short n) {
+static void writeshort(unsigned char *p,short n) {
   p[0]=n&0xff;
   p[1]=(n&0xff00)>>8;
 }
@@ -1218,30 +1153,30 @@ static void writeshort(char *p,short n) {
 
 /* This produces data which conforms to a WINDOWS .bmp file */
 
-char *FB_get_image(int x, int y, int w,int h, int *len) {
+unsigned char *FB_get_image(int x, int y, int w,int h, int *len) {
   if(x<0||y<0||w<=0||h<=0|| x+w>screen.width|| y+h>screen.height) return(NULL);
   register unsigned short *ptr1  = (unsigned short*)(screen.pixels+y*screen.scanline);
   int size=h*w*4;
   int i,j,r,g,b,l;
   l=size+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
-  char *buf=malloc(l);
-  char *buf3;
-  char *buf2=buf+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
+  unsigned char *buf=malloc(l);
+  unsigned char *buf3;
+  unsigned char *buf2=buf+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
   BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)buf;
   BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(buf+BITMAPFILEHEADERLEN);
   header->bfType=BF_TYPE;
-  writeint((char *)&buf[10],BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-  writeint((char *)&(iheader->biSize),BITMAPINFOHEADERLEN);
-  writeint((char *)&(iheader->biWidth),w);
-  writeint((char *)&(iheader->biHeight),h);
-  writeshort((char *)&(iheader->biPlanes),1);
-  writeshort((char *)&(iheader->biBitCount),24);
-  writeint((char *)&(iheader->biCompression),BI_RGB);
-  writeint((char *)&(iheader->biSizeImage),0);
-  writeint((char *)&(iheader->biXPelsPerMeter),0);
-  writeint((char *)&(iheader->biYPelsPerMeter),0);
-  writeint((char *)&(iheader->biClrUsed),0);
-  writeint((char *)&(iheader->biClrImportant),0);
+  writeint((unsigned char *)&buf[10],BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
+  writeint((unsigned char *)&(iheader->biSize),BITMAPINFOHEADERLEN);
+  writeint((unsigned char *)&(iheader->biWidth),w);
+  writeint((unsigned char *)&(iheader->biHeight),h);
+  writeshort((unsigned char *)&(iheader->biPlanes),1);
+  writeshort((unsigned char *)&(iheader->biBitCount),24);
+  writeint((unsigned char *)&(iheader->biCompression),BI_RGB);
+  writeint((unsigned char *)&(iheader->biSizeImage),0);
+  writeint((unsigned char *)&(iheader->biXPelsPerMeter),0);
+  writeint((unsigned char *)&(iheader->biYPelsPerMeter),0);
+  writeint((unsigned char *)&(iheader->biClrUsed),0);
+  writeint((unsigned char *)&(iheader->biClrImportant),0);
   ptr1+=x;
   buf3=buf2;
   for(i=h-1;i>=0;i--) {
@@ -1253,7 +1188,7 @@ char *FB_get_image(int x, int y, int w,int h, int *len) {
       *buf2++=g;
       *buf2++=r;
     }    
-    buf2=(char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
+    buf2=(unsigned char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
   }
   size=buf2-buf3;
   l=size+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
@@ -1261,7 +1196,47 @@ char *FB_get_image(int x, int y, int w,int h, int *len) {
   if(len) *len=l;
   return(buf);
 }
-void FB_put_image(char *data,int x, int y) {
+
+static void FB_put_bitmap(unsigned const char *oadr,unsigned char *adr,unsigned int w,unsigned int h,int dx,int dw,int dh) {
+  short *sptr=((short *)oadr);
+  short *dptr=((short *)adr)+dx;
+  int j;
+  for(j=0;j<h && j<dh;j++) {
+    memcpy(dptr,sptr,2*w);
+    sptr+=w;
+    dptr+=dw;
+  }
+}
+
+
+void FB_put_image_scale(const unsigned char *data,int x, int y,double scale) {
+ // BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
+  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
+  int  w=iheader->biWidth;
+  int  h=iheader->biHeight; 
+  int  dd=16;  /* Ziel ist ja framebuffer*/
+
+  if(x<screen.clip_x||y<screen.clip_y||x>screen.width||y>screen.height) return;
+
+  if(scale!=1) {
+ 	int oh=h;
+	int ow=w; 
+	unsigned char *adr=malloc(h*dd*w/8);
+        bmp2bitmap(data,adr,0,w,h,dd,NULL);
+
+	h=(int)((double)h*scale);
+	w=(int)((double)w*scale);
+	unsigned char *adr2=malloc(h*dd*w/8);
+        bitmap_scale(adr,dd,ow,oh,adr2,w,h);
+        free(adr);
+	FB_put_bitmap(adr2,screen.pixels+y*screen.scanline,w,h,x,screen.width,screen.height-y);
+        free(adr2);
+  
+  } else {
+    bmp2bitmap(data,screen.pixels+y*screen.scanline,x,screen.width,screen.height-y,16,NULL);
+  }
+}
+void FB_put_image(unsigned char *data,int x, int y) {
   if(x<screen.clip_x||y<screen.clip_y||x>screen.width||y>screen.height) return;
   bmp2bitmap(data,screen.pixels+y*screen.scanline,
              x,screen.width,screen.height-y,16,NULL);
@@ -1269,7 +1244,7 @@ void FB_put_image(char *data,int x, int y) {
 
 
 
-void FB_bmp2pixel(const char *s,unsigned short *d,int w, int h, unsigned short color) {
+void FB_bmp2pixel(const unsigned char *s,unsigned short *d,int w, int h, unsigned short color) {
   int i,j;
   unsigned char a;
   for(j=0;j<h;j++) {
@@ -1298,7 +1273,7 @@ void FB_bmp2pixel(const char *s,unsigned short *d,int w, int h, unsigned short c
 #endif
   }
 }
-void FB_bmp2mask(const char *s,unsigned char *d,int w, int h) {
+void FB_bmp2mask(const unsigned char *s,unsigned char *d,int w, int h) {
   int i,j;
   unsigned char a;
   for(j=0;j<h;j++) {
@@ -1328,16 +1303,17 @@ void FB_bmp2mask(const char *s,unsigned char *d,int w, int h) {
   }
 }
 
+/* Zeichne vollen Kreis: Mittelpunkt (x,y), Radius r [pixel]*/
+
+
+
 static void DrawCircle(int x, int y, int r, unsigned short color) {
-  int i, row, col, px, py;
+  int row, col, px, py;
   long int sum;
   if(r==0) {
     FB_PutPixel(x,y,color);
     return;
   }
-
-  x+=r;
-  y+=r;
 
   py = r<<1;
   px = 0;
@@ -1363,43 +1339,114 @@ static void DrawCircle(int x, int y, int r, unsigned short color) {
     }
   }
 }
+static void DrawEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
+  int hh = ry * ry;
+  int ww = rx * rx;
+  int hhww = hh * ww;
+  int x00 = rx;
+  int dx = 0;
+  int y,x1;
+  int oldx=0,oldy;
+
+  /* do the horizontal diameter */
+  FB_PutPixel(x0-rx,y0,color);
+  FB_PutPixel(x0+rx,y0,color);
+  oldy=0;
+
+  // now do both halves at the same time, away from the diameter
+  for(y=1;y<=ry;y++) {
+    x1 = x00 - (dx - 1);  // try slopes of dx - 1 or more
+    for ( ; x1 > 0; x1--) {
+        if (x1*x1*hh + y*y*ww <= hhww)
+            break;
+    }
+    dx = x00 - x1;  // current approximation of the slope
+    x00 = x1;
+    while(oldx-x00>0) {
+      FB_PutPixel(x0-oldx,y0+oldy,color);
+      FB_PutPixel(x0+oldx,y0+oldy,color);
+      FB_PutPixel(x0-oldx,y0-oldy,color);
+      FB_PutPixel(x0+oldx,y0-oldy,color);
+      oldx--;
+    }
+    FB_PutPixel(x0-x00,y0+y,color);
+    FB_PutPixel(x0-x00,y0-y,color);
+    FB_PutPixel(x0+x00,y0+y,color);
+    FB_PutPixel(x0+x00,y0-y,color);
+    oldx=x00;
+    oldy=y;
+  }
+}
 
 #include <math.h>
 
-void FB_Arc(int x, int y, int r1, int r2, int a1, int a2) {
-/* muss man mit polygonen machen.... */
+void FB_Arc(int x1, int y1, int w, int h, int a1, int da) {
+  // printf("ARC:%d:%d:%d:%d->%d:%d\n",x1,y1,w,h,a1,da);
+
+
+  int r1=w/2;
+  int r2=h/2;
+  int x=x1+w/2;
+  int y=y1+h/2;
+  int a2=a1+da;
+
+
   if(r1==0 && r2==0) {
     FB_PutPixel(x,y,screen.fcolor);
     return;
-  }
-  if(a1+64*360==a2) {
-    if(r1==r2) DrawCircle(x,y,r1/2,screen.fcolor);
-    else ; /*ellipse*/
+  } else if(da==64*360) {
+    if(r1==r2) DrawCircle(x,y,r1,screen.fcolor);
+    else DrawEllipse(x,y,r1,r2,screen.fcolor); 
     return;
   } else {
     int i;
     int ox=x;
     int oy=y;
     int dx,dy;
-//    printf("Draw-Arc: a1=%d,a2=%d\n",a1,a2);
+
     dx=(double)r1*cos((double)a1/180*3.14159/64);
-    dy=(double)r2*sin((double)a1/180*3.14159/64);
-    FB_line(x,y,x+dx,y+dy);
+    dy=-(double)r2*sin((double)a1/180*3.14159/64);
+    // FB_line(x,y,x+dx,y+dy);
     for(i=a1/64+1;i<=a2/64;i++) {
       ox=dx;oy=dy;
       dx=(double)r1*cos((double)i/180*3.14159);
-      dy=(double)r2*sin((double)i/180*3.14159);
+      dy=-(double)r2*sin((double)i/180*3.14159);
       FB_line(x+ox,y+oy,x+dx,y+dy);
     }
-    FB_line(x,y,x+dx,y+dy);
+   // FB_line(x,y,x+dx,y+dy);
   }
 }
 
+
+static void FillEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
+  int hh = ry * ry;
+  int ww = rx * rx;
+  int hhww = hh * ww;
+  int x00 = rx;
+  int dx = 0;
+  int y,x1;
+
+  fillLine(x0-rx, x0+rx, y0, color);/* do the horizontal diameter */
+
+
+  // now do both halves at the same time, away from the diameter
+  for(y=1;y<=ry;y++) {
+    x1 = x00 - (dx - 1);  // try slopes of dx - 1 or more
+    for ( ; x1 > 0; x1--)
+        if (x1*x1*hh + y*y*ww <= hhww)
+            break;
+    dx = x00 - x1;  // current approximation of the slope
+    x00 = x1;
+
+    fillLine(x0-x00, x0+x00, y0+y, color);
+    fillLine(x0-x00, x0+x00, y0-y, color);
+  }
+}
+
+
 void FillCircle(int x, int y, int r, unsigned short color) {
-  int i, row, col_start, col_end, t_row, t_col, px, py;
+  int row, col_start, col_end, px, py;
   long int sum;
-  x+=r;
-  y+=r;
   
   py = r<<1;
   px = 0;
@@ -1432,58 +1479,55 @@ void FillCircle(int x, int y, int r, unsigned short color) {
     }
   }
 }
-void FB_pArc(int x, int y, int r1, int r2, int a1, int a2) {
+void FB_pArc(int x1, int y1, int w, int h, int a1, int da) {
+  int r1=w/2;
+  int r2=h/2;
+  int x=x1+w/2;
+  int y=y1+h/2;
+  int a2=a1+da;
 /* muss man mit polygonen machen.... */
   if(r1==0 && r2==0) {
     FB_PutPixel(x,y,screen.fcolor);
     return;
-  }
-  if(a1+360*64==a2) {
-    if(r1==r2) FillCircle(x,y,r1/2,screen.fcolor);
-    else ; /*ellipse*/
+  } else if(da==360*64) {
+    if(r1==r2) FillCircle(x,y,r1,screen.fcolor);
+    else FillEllipse(x,y,r1,r2,screen.fcolor);
     return;
   } else {
     int point[((a2-a1)/64+2)*2];
     int i;
     int count=0;
-    int ox=x;
-    int oy=y;
-    int dx,dy;
-    printf("Draw-Arc: a1=%d,a2=%d\n",a1,a2);
+    // printf("Draw-Arc: a1=%d,a2=%d\n",a1,a2);
     point[count++]=x;
     point[count++]=y;
-    dx=(double)r1*cos((double)a1/180*3.14159/64);
-    dy=(double)r2*sin((double)a1/180*3.14159/64);
-    point[count++]=x+dx;
-    point[count++]=y+dy;
+    point[count++]=x+(int)((double)r1*cos((double)a1/180*3.14159/64));
+    point[count++]=y+(int)(-(double)r2*sin((double)a1/180*3.14159/64));
     for(i=a1/64+1;i<=a2/64;i++) {
-      ox=dx;oy=dy;
-      dx=(double)r1*cos((double)i/180*3.14159);
-      dy=(double)r2*sin((double)i/180*3.14159);
-      point[count++]=x+dx;
-      point[count++]=y+dy;
+      point[count++]=x+(int)((double)r1*cos((double)i/180*3.14159));
+      point[count++]=y+(int)(-(double)r2*sin((double)i/180*3.14159));
     }
     fill2Poly(screen.fcolor,point,count/2);
   }
 }
 
 /*
-  ษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-  บ                                                         บ
-  บ                                                         บ
-  บ fil2Poly() = fills a polygon in specified color by      บ
-  บ              filling in boundaries resulting from       บ
-  บ              connecting specified points in the         บ
-  บ              order given and then connecting last       บ
-  บ              point to first.  Uses an array to          บ
-  บ              store coordinates.                         บ
-  บ                                                         บ
-  ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ
+  +---------------------------------------------------------+
+  |                                                         |
+  |                                                         |
+  | fil2Poly() = fills a polygon in specified color by      |
+  |              filling in boundaries resulting from       |
+  |              connecting specified points in the         |
+  |              order given and then connecting last       |
+  |              point to first.  Uses an array to          |
+  |              store coordinates.                         |
+  |                                                         |
+  +---------------------------------------------------------+
 */
 static int sort_function (const long int *a, const long int *b) {
 	if (*a < *b)  return(-1);
-	if (*a == *b) return(0);
-	if (*a > *b)  return(1);
+	// else if (*a == *b) return(0);
+	else if (*a > *b)  return(1);
+	return(0);
 }
 
 
@@ -1504,18 +1548,15 @@ void fill2Poly(unsigned short color,int *point, int num) {
     coord[index++] = px | (long)py << 16;
   }
   for (j=0; j<=i-3; j+=2) {
-		xs = point[j];
-		ys = point[j+1];
-		if ((j == (i-3)) || (j == (i-4)))
-		{
-			xe = point[0];
-			ye = point[1];
-		}
-		else
-		{
-			xe = point[j+2];
-			ye = point[j+3];
-		}
+    xs = point[j];
+    ys = point[j+1];
+    if ((j == (i-3)) || (j == (i-4))) {
+    	    xe = point[0];
+    	    ye = point[1];
+    } else {
+    	    xe = point[j+2];
+    	    ye = point[j+3];
+    }
     dx = xe - xs;
     dy = ye - ys;
     sdx = sign(dx);
@@ -1561,18 +1602,18 @@ void fill2Poly(unsigned short color,int *point, int num) {
       }
     }
   }
-  if(sy0 + sdy == 0) index--;
+  if(sy0+sdy==0) index--;
   qsort(coord,index,sizeof(coord[0]),(int(*)
 		(const void *, const void *))sort_function);
   for (i=0; i<index; i++) {
-    xs = min(screen.width-1,(max(0,(int)((signed short)(coord[i])))));
-    xe = min(screen.width-1,(max(0,(int)((signed short)(coord[i + 1])))));
-    ys = min(screen.height-1,(max(0,(int)((signed short)(coord[i] >> 16)))));
-    ye = min(screen.height-1,(max(0,(int)((signed short)(coord[i + 1] >> 16)))));
-    if ((ys == ye) && (toggle == 0)) {
+    xs=min(screen.width-1,(max(0,(int)((signed short)(coord[i])))));
+    xe=min(screen.width-1,(max(0,(int)((signed short)(coord[i + 1])))));
+    ys=min(screen.height-1,(max(0,(int)((signed short)(coord[i] >> 16)))));
+    ye=min(screen.height-1,(max(0,(int)((signed short)(coord[i + 1] >> 16)))));
+    if((ys==ye) && (toggle==0)) {
       fillLine(xs, xe, ys, color);
-      toggle = 1;
-    } else toggle = 0;
+      toggle=1;
+    } else toggle=0;
   }
 }
 
@@ -1602,115 +1643,116 @@ static void process_char(int a) {
     if(a==';') {
       if(anznumbers<15) numbers[anznumbers++]=number;
       number=0;
-    } else if(a=='?') {
-      escflag++;
-    } else if(a>='0' && a<='9') {
-      number=number*10+(a-'0');
-    } else {      
+    } else if(a=='?') escflag++;
+    else if(a>='0' && a<='9') number=number*10+(a-'0');
+    else {      
       escflag=0;
       if(anznumbers<15)  numbers[anznumbers++]=number;
       if(a=='o') {
-        eque[queueptr].type=MotionNotify;
-        eque[queueptr].xmotion.x=numbers[0];
-        eque[queueptr].xmotion.y=numbers[1];
-        eque[queueptr].xmotion.x_root=numbers[0];
-        eque[queueptr].xmotion.y_root=numbers[1];
-        eque[queueptr].xmotion.state=numbers[2];
+        XEvent e;
+        e.type=MotionNotify;
+        e.xmotion.x=numbers[0];
+        e.xmotion.y=numbers[1];
+        e.xmotion.x_root=numbers[0];
+        e.xmotion.y_root=numbers[1];
+        e.xmotion.state=numbers[2];
 #if DEBUG
 	printf("Mausmotion: %d %d %d \n",numbers[0],numbers[1],numbers[2]);
 #endif
-        queueptr++;
+        FB_put_event(&e);
       } else if(a=='M') {
-        if(anznumbers>=3 ||numbers[2]>0) eque[queueptr].type=ButtonPress;
-        else eque[queueptr].type=ButtonRelease;
-        eque[queueptr].xbutton.x=numbers[0];
-        eque[queueptr].xbutton.y=numbers[1];
-        eque[queueptr].xbutton.button=1;
-        eque[queueptr].xbutton.state=numbers[2];
-        eque[queueptr].xbutton.x_root=numbers[0];
-        eque[queueptr].xbutton.y_root=numbers[1];
+        XEvent e;
+        if(anznumbers>=3 ||numbers[2]>0) e.type=ButtonPress;
+        else e.type=ButtonRelease;
+        e.xbutton.x=numbers[0];
+        e.xbutton.y=numbers[1];
+        e.xbutton.button=1;
+        e.xbutton.state=numbers[2];
+        e.xbutton.x_root=numbers[0];
+        e.xbutton.y_root=numbers[1];
 #if DEBUG
 	printf("Mausklick: %d %d %d \n",numbers[0],numbers[1],numbers[2]);
 #endif
-	queueptr++;
+	FB_put_event(&e);
+	
 	if(eque[queueptr-1].type==ButtonPress) {
-	eque[queueptr].type=ButtonRelease;
-        eque[queueptr].xbutton.x=numbers[0];
-        eque[queueptr].xbutton.y=numbers[1];
-        eque[queueptr].xbutton.button=1;
-        eque[queueptr].xbutton.state=numbers[2];
-        eque[queueptr].xbutton.x_root=numbers[0];
-        eque[queueptr].xbutton.y_root=numbers[1];
+	  e.type=ButtonRelease;
+          e.xbutton.x=numbers[0];
+          e.xbutton.y=numbers[1];
+          e.xbutton.button=1;
+          e.xbutton.state=numbers[2];
+          e.xbutton.x_root=numbers[0];
+          e.xbutton.y_root=numbers[1];
 #if DEBUG
-	printf("Mausrelease: %d %d %d \n",numbers[0],numbers[1],numbers[2]);
+	  printf("Mausrelease: %d %d %d \n",numbers[0],numbers[1],numbers[2]);
 #endif
-	queueptr++;
+	  FB_put_event(&e);
 	}
       } else if(a>='A' && a<='D') {
+        XEvent e;
         if(a=='A') a=0x52;
 	else if(a=='B') a=0x54;
 	else if(a=='C') a=0x53;
 	else if(a=='D') a=0x51;
 	
-        eque[queueptr].type=KeyPress;
-        eque[queueptr].xkey.keycode=(char)a;
-        eque[queueptr].xkey.ks=a&255|0xff00;
-        eque[queueptr].xkey.buf[0]=(char)a;
-        eque[queueptr].xkey.buf[1]=0;
-        queueptr++;
-        eque[queueptr].xkey.keycode=(char)a;
-        eque[queueptr].xkey.ks=a&255|0xff00;
-        eque[queueptr].type=KeyRelease;
-        eque[queueptr].xkey.buf[0]=(char)a;
-        eque[queueptr].xkey.buf[1]=0;
-        queueptr++;
+        e.type=KeyPress;
+        e.xkey.keycode=(char)a;
+        e.xkey.ks=(a&255)|0xff00;
+        e.xkey.buf[0]=(char)a;
+        e.xkey.buf[1]=0;
+        FB_put_event(&e);
+        e.xkey.keycode=(char)a;
+        e.xkey.ks=(a&255)|0xff00;
+        e.type=KeyRelease;
+        e.xkey.buf[0]=(char)a;
+        e.xkey.buf[1]=0;
+        FB_put_event(&e);
       } else printf("Unknown ESC-Code: %d\n",a);
     }    
   } else if(escflag==1) {
     if(a=='[') {escflag=2;number=anznumbers=0;}
     else escflag=0;
   } else {
+    XEvent e;
     if(a==27) escflag=1;
     else if(a==127||a==10||a==8||a==9||a==27) {
       if(a==10) a=13;
       else if(a==127) a=8;
-      eque[queueptr].type=KeyPress;
-      eque[queueptr].xkey.keycode=(char)a;
-      eque[queueptr].xkey.ks=a&255|0xff00;
-      eque[queueptr].xkey.buf[0]=(char)a;
-      eque[queueptr].xkey.buf[1]=0;
-      queueptr++;
-      eque[queueptr].xkey.keycode=(char)a;
-      eque[queueptr].xkey.ks=a&255|0xff00;
-      eque[queueptr].type=KeyRelease;
-      eque[queueptr].xkey.buf[0]=(char)a;
-      eque[queueptr].xkey.buf[1]=0;
-      queueptr++;
+      e.type=KeyPress;
+      e.xkey.keycode=(char)a;
+      e.xkey.ks=((a&255)|0xff00);
+      e.xkey.buf[0]=(char)a;
+      e.xkey.buf[1]=0;
+      FB_put_event(&e);
+      e.xkey.keycode=(char)a;
+      e.xkey.ks=((a&255)|0xff00);
+      e.type=KeyRelease;
+      e.xkey.buf[0]=(char)a;
+      e.xkey.buf[1]=0;
+      FB_put_event(&e);
     } else {
-      eque[queueptr].xkey.keycode=(char)a;
-      eque[queueptr].xkey.ks=a&255;
-      eque[queueptr].type=KeyPress;
-      eque[queueptr].xkey.buf[0]=(char)a;
-      eque[queueptr].xkey.buf[1]=0;
-      queueptr++;
-      eque[queueptr].xkey.keycode=(char)a;
-      eque[queueptr].xkey.ks=a&255;
-      eque[queueptr].type=KeyRelease;
-      eque[queueptr].xkey.buf[0]=(char)a;
-      eque[queueptr].xkey.buf[1]=0;
-      queueptr++;
+      e.xkey.keycode=(char)a;
+      e.xkey.ks=(a&255);
+      e.type=KeyPress;
+      e.xkey.buf[0]=(char)a;
+      e.xkey.buf[1]=0;
+      FB_put_event(&e);
+      e.xkey.keycode=(char)a;
+      e.xkey.ks=(a&255);
+      e.type=KeyRelease;
+      e.xkey.buf[0]=(char)a;
+      e.xkey.buf[1]=0;
+      FB_put_event(&e);
     }
-  }
-  if(queueptr>=MAXQUEUELEN-5) {
-    queueptr=0;
-    printf("error: Eventqueue is full!\n");
   }
 }
 
 #endif
-static void collect_events(){
+
+
+static void collect_events()  {
 #ifndef ANDROID
-  fd_set set;
+  fd_set aset,rset;
   int a,rc;
 #ifdef TIMEVAL_WORKAROUND
   struct { int  tv_sec; 
@@ -1719,19 +1761,21 @@ static void collect_events(){
     struct timeval tv;
 #endif
    /* memset(&tv, 0, sizeof(tv));  */   
-    FD_ZERO(&set);
-    FD_SET(0, &set);
+
+    FD_ZERO(&aset);
+    FD_SET(0, &aset);
 
   while(1) {
-    tv.tv_sec=0; tv.tv_usec=0;
-    FD_ZERO(&set);
-    FD_SET(0, &set);
-    rc=select(1, &set, 0, 0, &tv);
-    if(rc==0) return;
+    tv.tv_sec=0; tv.tv_usec=100;
+    rset=aset;
+    rc=select(FD_SETSIZE, &rset, NULL, NULL, &tv);
+    if(rc==0) return;  /*TIMEOUT*/
     else if (rc<0) printf("select failed: errno=%d\n",errno);
     else {
-      a=getc(stdin);
-      process_char(a);
+      if(FD_ISSET(0,&rset)) {
+        a=getc(stdin);
+        process_char(a);
+      } 
 #if DEBUG
       printf("PC: %d, %d Events pending.\n",a,queueptr);
 #endif
@@ -1752,8 +1796,8 @@ static void wait_events() {
     struct timeval tv;
 #endif
    /* memset(&tv, 0, sizeof(tv));  */   
-  while(rc==0) {
-    tv.tv_sec=1; tv.tv_usec=0;
+  while(queueptr==queueptrlow) {
+    tv.tv_sec=0; tv.tv_usec=100;
     FD_ZERO(&set);
     FD_SET(0, &set);
     rc=select(1, &set, 0, 0, &tv);
@@ -1789,7 +1833,22 @@ static void remove_event(int r) {
     }
 }
 
+/*Event am Ende der Schlange anfรผgen*/
 
+void FB_put_event(XEvent *event) {
+  eque[queueptr++]=*event;
+  if(queueptr>=MAXQUEUELEN) queueptr=0;
+  if(queueptrlow==queueptr) printf("Event-queue is full!\n");
+}
+
+/*Event am Anfang der Schlange einfรผgen*/
+
+void FB_putback_event(XEvent *event) {
+  queueptrlow--;
+  if(queueptrlow<0) queueptrlow+=MAXQUEUELEN;
+  if(queueptrlow!=queueptr) eque[queueptrlow]=*event;
+  else printf("Event-queue is full!\n");
+}
 int FB_check_event(int mask, XEvent *event) {
   int e,i,r=-1;
   collect_events();
@@ -1822,7 +1881,7 @@ int FB_check_event(int mask, XEvent *event) {
 
 
 void FB_event(int mask, XEvent *event) {
-  int i,r=0;
+  int r=0;
   while(r==0) {
     r=FB_check_event(mask,event);
     if(r==0) {
@@ -1831,64 +1890,6 @@ void FB_event(int mask, XEvent *event) {
     }
   }
 }
-void FB_clear_events() {
-  queueptrlow=queueptr=0;
-}
+void FB_clear_events()            { queueptrlow=queueptr=0; }
+void FB_next_event(XEvent *event) { FB_event(0xffffffff, event); }
 
-
-void FB_next_event(XEvent *event) {
-  FB_event(0xffffffff, event);
-}
-
-/*Hier sollte man das Mousepointerzeichnen entfernen, da es schon beim Fuettern 
-  der Event-Queue geschieht.
-  */
-
-void FB_Query_pointer(int *rx,int *ry,int *x,int *y,int *k) {
-  XEvent ev;
-  int is;
-  // printf("Querypointer\n");invalidate_screen();
-  is=FB_check_event(ButtonPressMask|PointerMotionMask|ButtonReleaseMask, &ev);
-  if(is) {
-#ifndef ANDROID
-    FB_hide_mouse();
-#endif
-    while(is) {
-#ifndef ANDROID
-    if(ev.type==ButtonPress||ev.type==ButtonRelease) {
-      screen.mouse_x=ev.xbutton.x;
-      screen.mouse_y=ev.xbutton.y;
-      screen.mouse_k=ev.xbutton.button;
-      screen.mouse_s=ev.xbutton.state;      
-    } else if(ev.type==MotionNotify) {
-      screen.mouse_x=ev.xmotion.x;
-      screen.mouse_y=ev.xmotion.y;
-      screen.mouse_s=ev.xmotion.state;
-    }
-#endif
-    is=FB_check_event(ButtonPressMask|PointerMotionMask|ButtonReleaseMask, &ev);
-    }
-#ifndef ANDROID
-    FB_show_mouse();
-#endif
-  }
-  *rx=*x=screen.mouse_x;
-  *ry=*y=screen.mouse_y;
-  *k=screen.mouse_k;
-}
-
-/*Routine teilt TTconsole mit, dass nun mousebewegungen gemeldet
-  werden sollen....*/
-void FB_mouse(int onoff){
-#ifndef ANDROID
-  static int mousecount=0;
-  if(onoff) {
-    printf("\033[?10h");
-    mousecount++;
-  } else {
-    mousecount--;
-    if(mousecount==0) printf("\033[?10l");
-  }  
-  fflush(stdout);
-#endif
-}

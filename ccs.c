@@ -80,7 +80,7 @@ int notify_handler(int pid, int overflow, int entries) {
       int oldbatch,osp=sp;
       pc2=procs[isubs[i]].zeile;
       if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-      else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+      else xberror(75,""); /* Stack Overflow! */
       oldbatch=batch;batch=1;
       programmlauf();
       batch=min(oldbatch,batch);

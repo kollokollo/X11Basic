@@ -1,24 +1,34 @@
 '
 ' 7 segments calculator (c) Markus Hoffmann 2004
+' This is a cool way to display numbers in oldfashioned 7-segments
 '
 '
 
 
 ziff%()=[0x7b,0x42,0x37,0x67,0x4e,0x6d,0x7d,0x43,0x7f,0x6f]
 
-rot=COLOR_RGB(1,0,0)
-grau=COLOR_RGB(0.237,0,0)
-schwarz=COLOR_RGB(0,0,0)
+' classical red design
+rot=COLOR_RGB(0.9,0,0)     ! color for segment on
+grau=COLOR_RGB(0.237,0,0) ! color for segment off
+schwarz=COLOR_RGB(0,0,0)  ! color for background
+' LCD design
+rot=COLOR_RGB(0.1,0.1,0.1)     ! color for segment on
+grau=COLOR_RGB(0.8,0.6,0.7) ! color for segment off
+schwarz=COLOR_RGB(0.6,0.7,0.6)  ! color for background
 t$=""
 
 scale=0.5
 
+' italic=-0.2       ! for slight italic 
+
 bw=640*scale
 bh=400*scale
 
-sizew ,bw,bh
-do
-  t$=@conv$(str$(mem,13,13))
+SIZEW ,bw,bh
+COLOR schwarz
+PBOX 0,0,bw,bh
+DO
+  t$=@conv$(STR$(mem,13,13))
   groesse=scale
   @puts7(0,0,t$)
   groesse=0.5*scale
@@ -27,53 +37,57 @@ do
   t$=@conv$(str$(timer))
   @puts7(400*scale,100*scale,t$)
   groesse=2*scale
-  t$=@conv$(str$(acu,10,7))
+  t$=@conv$(STR$(acu,10,7))
   @puts7(0,200*scale,t$)
   groesse=1*scale
-  t$=@conv$(hex$(mem,13,13))
+  t$=@conv$(HEX$(mem,13))
   @puts7(0,320*scale,t$)
 
   SHOWPAGE
-  keyevent a,b,c$
-  if left$(c$)>="0" and left$(c$)<="9"
-    if clearacu
-      acu=0
-      clearacu=0
-    endif
-    acu=acu*10+(asc(left$(c$))-asc("0"))
-  else if instr("+-/^*",left$(c$))
-    x=acu
-    clearacu=true
-    mod$=left$(c$)
-  else if left$(c$)="~"
-    acu=-acu
-  else if left$(c$)="p"
-    acu=pi
-    clearacu=true
-  else if left$(c$)="m"
-    mem=acu
-  else if left$(c$)="="
-    if mod$="+"
-      acu=acu+x
-    else if mod$="-"
-      acu=x-acu
-    else if mod$="*"
-      acu=x*acu
-    else if mod$="/"
-      if acu<>0
-        acu=x/acu
-      else
-        acu=nan
+  if EVENT?(1)
+    keyevent a,b,c$
+    if left$(c$)>="0" and left$(c$)<="9"
+      if clearacu
+        acu=0
+        clearacu=0
       endif
-    else if mod$="^"
-      acu=x^acu
-    endif
-    clearacu=true
-  else
-    print at(1,1);a,hex$(b),c$,"   "
-  endif
-loop
-end
+      acu=acu*10+(asc(left$(c$))-asc("0"))
+    else if instr("+-/^*",left$(c$))
+      x=acu
+      clearacu=true
+      mod$=left$(c$)
+    else if left$(c$)="~"
+      acu=-acu
+    else if left$(c$)="p"
+      acu=pi
+      clearacu=true
+    else if left$(c$)="m"
+      mem=acu
+    else if left$(c$)="="
+      if mod$="+"
+        acu=acu+x
+      else if mod$="-"
+        acu=x-acu
+      else if mod$="*"
+        acu=x*acu
+      else if mod$="/"
+        if acu<>0
+          acu=x/acu
+        else
+          acu=nan
+        endif
+      else if mod$="^"
+        acu=x^acu
+      endif
+      clearacu=true
+    else
+      print at(1,1);a,hex$(b),c$,"   "
+    ENDIF
+  ELSE
+    PAUSE 0.1
+  ENDIF
+LOOP
+END
 
 procedure puts7(x,y,c$)
   local i
@@ -87,9 +101,9 @@ procedure puts7(x,y,c$)
   next i  
 return
 procedure put7(x,y,s,c)
-  local i
-  color schwarz
-  pbox x,y,x+s*32,y+s*64
+  local i,p1,p2,p3,p4
+  ' color schwarz
+  ' pbox x,y,x+s*32,y+s*64
   d%()=[3,3,29,3;29,3,29,29;3,32,29,32;3,3,3,29;3,32,3,61;3,61,29,61;29,61,29,32;34,64,35,64]
   for i=0 to 7
     if btst(c,i)
@@ -98,7 +112,11 @@ procedure put7(x,y,s,c)
       color grau
     endif
     defline ,4*s,2
-    line x+d%(i,0)*s*0.8,y+d%(i,1)*s*0.6,x+d%(i,2)*s*0.8,y+d%(i,3)*s*0.6
+    p1=d%(i,0)*s*0.8
+    p2=d%(i,1)*s*0.6
+    p3=d%(i,2)*s*0.8
+    p4=d%(i,3)*s*0.6
+    line x+p1+p2*italic,y+p2,x+p3+p4*italic,y+p4
   next i
 return
 

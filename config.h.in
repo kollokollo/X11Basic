@@ -95,6 +95,12 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the <png.h> header file. */
+#undef HAVE_PNG_H
+
+/* Define to 1 if you have the <jpeglib.h> header file. */
+#undef HAVE_JPEGLIB_H
+
 /* Define to 1 if you have the `nanosleep' function. */
 #undef HAVE_NANOSLEEP
 
@@ -113,6 +119,9 @@
 /* readline in readline */
 #undef HAVE_READLINE
 
+/* dgelss_ in LAPACK */
+#undef HAVE_LAPACK
+
 /* _SystemCycle in dynamical TINE lib */
 #undef HAVE_TINE
 
@@ -127,6 +136,12 @@
 
 /* Advanced Sound System present */
 #undef HAVE_ALSA
+
+/* PNG Library present */
+#undef HAVE_PNG
+
+/* JPEG Library present */
+#undef HAVE_JPEG
 
 /* forkpty usable */
 #undef HAVE_FORKPTY
@@ -225,8 +240,15 @@
 /* Define to 1 if you have the <utime.h> header file. */
 #undef HAVE_UTIME_H
 
+/* Define to 1 if  you have the <usb.h> header file. */
+#undef HAVE_USB
+
+/* Define to 1 if  you have the <gcrypt.h> header file. */
+#undef HAVE_GCRYPT
+
 /* Define to 1 if `utime(file, NULL)' sets file's timestamp to the present. */
 #undef HAVE_UTIME_NULL
+
 
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK

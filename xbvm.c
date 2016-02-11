@@ -1,4 +1,4 @@
-/* XBVM.C   The X11-basic virtual machine.          (c) Markus Hoffmann
+/* XBVM.C   The X11-Basic virtual machine.          (c) Markus Hoffmann
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
+
 #ifdef WINDOWS
 #define EX_OK 0
 #else
@@ -19,13 +23,13 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
-#include "variablen.h"
 #include "parameter.h"
 #include "bytecode.h"
 #include "file.h"
 #include "wort_sep.h"
-#include "kommandos.h"
 #include "virtual-machine.h"
+#include "io.h"
+#include "number.h"
 
 void reset_input_mode();
 void x11basicStartup();
@@ -61,82 +65,95 @@ int verbose=0;
 
 char selfseek[]="4007111";
 
-void intro(){
-  printf("**********************************************************\n"
-         "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2011 (c) *\n"
-         "*                                                        *\n"
+static void intro(){
+  printf("****************************************************\n"
+         "*  %10s virtual machine  V.%5s             *\n"
+         "*                 by Markus Hoffmann 1997-2014 (c) *\n"
+         "*                                                  *\n"
 #ifdef GERMAN
-         "* Programmversion vom     %30s *\n"
-         "* Library V. %s vom     %30s *\n"
+         "* Programmvers. vom %30s *\n"
+         "* Lib.  V. %s vom %30s *\n"
 #else
-         "* version date:           %30s *\n"
-         "* library V.%s date:    %30s *\n"
+         "* version date:     %30s *\n"
+         "* lib. V.%s date: %30s *\n"
 #endif
-         "**********************************************************\n\n",
+         "****************************************************\n\n",
 	     xbasic_name,version,vdate,libversion,libvdate);
 }
 
-void usage(){
+static void usage(){
   printf(
 #ifdef GERMAN
     "Bedienung: %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n"
-    " -l\t\t--- Programm nur laden\n"
     " -e <kommando>\t--- Basic Kommando ausführen\n"
     " --eval <ausdruck>\t--- Num. Ausdruck auswerten\n"
     " -h --help\t--- Diese Kurzhilfe\n"
-    " --help <Stichwort>\t--- Hilfe zum Stichwort/Befehl\n"
     "-q --quiet\t--- weniger Ausgaben\n"
     "-v --verbose\t--- mehr Ausgaben\n"
 #else
     "Usage: %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n"
-    " -l\t\t--- do not run the program (only load)\n"
     " -e <command>\t--- execute basic command\n"
     " --eval <exp>\t--- evaluate num. expression\n"
     " -h --help\t--- Usage\n"
-    " --help <topic>\t--- Print help on topic\n"
     "-q --quiet\t--- be more quiet\n"
     "-v --verbose\t--- be more verbose\n"
 #endif
     ,xbasic_name,ifilename);
 }
+static STRING inhexs(const char *n) {
+  int l=strlen(n);
+  STRING ergebnis;
+  ergebnis.len=(l+1)/2;
+  ergebnis.pointer=malloc(ergebnis.len+1);  
+  unsigned int value=0;
+  int i=0;
+  while(*n) {
+    value<<=4;
+    if(v_digit(*n)) value+=(int)(*n-'0');
+    else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
+    else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
+    n++;
+    if((i&1)) (ergebnis.pointer)[i>>1]=(value&0xff);
+    i++;
+  }
+  (ergebnis.pointer)[ergebnis.len]=0;
+  return(ergebnis);
+}
+static void doit(STRING bcpc) {
+  PARAMETER *p;
+  int n; 
 
-void kommandozeile(int anzahl, char *argumente[]) {
-  int count,quitflag=0;
-  char buffer[100];
+  if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
+  if(verbose>1) memdump((unsigned char *)bcpc.pointer,bcpc.len);
+  do_run();
+  p=virtual_machine(bcpc,0,&n,NULL,0);
+  if(verbose) printf("done.\n");
+  dump_parameterlist(p,n);  
+  free_pliste(n,p);
+}
+
+static void kommandozeile(int anzahl, char *argumente[]) {
+  int count;
 
   /* Kommandozeile bearbeiten   */
   runfile=TRUE;
   for(count=1;count<anzahl;count++) {
-    if (strcmp(argumente[count],"-l")==FALSE)               runfile=FALSE;
-    else if (strcmp(argumente[count],"--load-only")==FALSE) runfile=FALSE;
-    else if (strcmp(argumente[count],"--eval")==FALSE) {
+    if (strcmp(argumente[count],"--eval")==FALSE) {
       printf("%.13g\n",parser(argumente[++count]));
-      quitflag=1;
-    } else if (strcmp(argumente[count],"-e")==FALSE) {
-      kommando(argumente[++count]);
-      quitflag=1;
-    } else if (strcmp(argumente[count],"--exec")==FALSE) {
-      kommando(argumente[++count]);
-      quitflag=1;
-    } else if (strcmp(argumente[count],"-v")==FALSE) {
-      verbose++;
-    } else if (strcmp(argumente[count],"-q")==FALSE) {
-      verbose--;
-    } else if (strcmp(argumente[count],"-h")==FALSE) {
+    } else if (strcmp(argumente[count],"-e")==FALSE || strcmp(argumente[count],"--exec")==FALSE) {
+      char *p=argumente[++count];
+      if(p[0]==':') { /*Hier k"onnte man stattdessen codierten bytecode laden und starten...*/
+        bcpc=inhexs(p+1);
+	// memdump(bcpc.pointer,bcpc.len);
+	doit(bcpc);
+      } else kommando(p);
+     
+    } else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
+    else if (strcmp(argumente[count],"-q")==FALSE) verbose--;
+    else if (strcmp(argumente[count],"-h")==FALSE) {
       intro();
       usage();
-      quitflag=1;
-    } else if (strcmp(argumente[count],"--help")==FALSE) {
-      intro();
-      if(count<anzahl-1 && *argumente[count+1]!='-') {
-        strncpy(buffer,argumente[count+1],100);
-        xtrim(buffer,TRUE,buffer);
-        do_help(buffer);
-      } else usage();
-      quitflag=1;
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
-      intro();
       daemonf=1;
     } else {
       if(!loadfile) {
@@ -144,17 +161,15 @@ void kommandozeile(int anzahl, char *argumente[]) {
         strcpy(ifilename,argumente[count]);
       }
     }
-   }
-   if(quitflag) c_quit(NULL,0);
+  }
 }
 
 
-int loadbcprg(char *filename) {  
-  int len;
-  char *adr;
-  FILE *dptr;
-  dptr=fopen(filename,"rb"); len=lof(dptr); fclose(dptr);
-  bcpc.pointer=adr=malloc(len+1);
+static int loadbcprg(char *filename) {  
+  FILE *dptr=fopen(filename,"rb"); 
+  int len=lof(dptr); 
+  fclose(dptr);
+  char *adr=bcpc.pointer=malloc(len+1);
   bload(filename,bcpc.pointer,len);
   bcpc.len=len;
   if(verbose) printf("%s loaded (%d Bytes)\n",filename,bcpc.len);
@@ -184,21 +199,9 @@ int loadbcprg(char *filename) {
 
 
 
-void doit(STRING bcpc) {
-  PARAMETER *p;
-  int n;
-  if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
-  do_run();
-  p=virtual_machine(bcpc,&n);
-  if(verbose) printf("done.\n");
-  dump_parameterlist(p,n);  
-  free_pliste(n,p);
-}
 
 int main(int anzahl, char *argumente[]) {
-
   x11basicStartup();   /* initialisieren   */
-
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
   atexit(reset_input_mode);
   param_anzahl=anzahl;
@@ -206,28 +209,27 @@ int main(int anzahl, char *argumente[]) {
 
 
    /* Programm ist vom Compiler hintendrangepackt. */
-    if(atoi(selfseek)!=4007111) {
-      int s=atoi(selfseek);
-      char filename[strlen(argumente[0])+8];
-      char filename2[strlen(argumente[0])+8];
-      FILE *dptr;
-      wort_sep(argumente[0],'.',FALSE,filename,filename2);
-      if(!exist(filename)) strcat(filename,".exe");
-      if(!exist(filename)) printf("ERROR: could not link X11-Basic code.\n");
-      if(verbose) printf("selfseek=%s %d\n",selfseek,s);
-      dptr=fopen(filename,"rb"); bcpc.len=lof(dptr); fclose(dptr);
-      bcpc.pointer=malloc(bcpc.len+1);
-      bload(filename,bcpc.pointer,bcpc.len);
-      bcpc.pointer+=s;
-      bcpc.len-=s;
+ if(atoi(selfseek)!=4007111) {
+   int s=atoi(selfseek);
+   char filename[strlen(argumente[0])+8];
+   char filename2[strlen(argumente[0])+8];
+   FILE *dptr;
+   wort_sep(argumente[0],'.',FALSE,filename,filename2);
+   if(!exist(filename)) strcat(filename,".exe");
+   if(!exist(filename)) printf("ERROR: could not link X11-Basic code.\n");
+   if(verbose) printf("selfseek=%s %d\n",selfseek,s);
+   dptr=fopen(filename,"rb"); bcpc.len=lof(dptr); fclose(dptr);
+   bcpc.pointer=malloc(bcpc.len+1);
+   bload(filename,bcpc.pointer,bcpc.len);
+   bcpc.pointer+=s;
+   bcpc.len-=s;
 
-      if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
-      if(bytecode_init(bcpc.pointer)) doit(bcpc);
-      else printf("Something is wrong, no code!\n");
-    }
-    
-  if(anzahl<2) {
+   if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
+   if(bytecode_init(bcpc.pointer)) doit(bcpc);
+   else printf("ERROR: Something is wrong, no code!\n");
+ } else if(anzahl<2) {
     intro();
+    usage();
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {

@@ -1,6 +1,7 @@
 ' This program codes a File for use for the INLINE$()-Function in
 ' X11-Basic V.1.06                    (c) Markus Hoffmann
 '           V.1.15 2010 MH
+'           V.1.22 2014 MH
 '
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
 '* ======================================================================
@@ -8,7 +9,7 @@
 '* COPYING for details
 '*
 
-docomp=1    ! Flag if compression should be used
+docomp=1       ! Flag if compression should be used
 chuncklen=63   ! length of a line
 
 i=1
@@ -45,7 +46,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic inline V.1.15 (c) Markus Hoffmann 2002-2010"
+  PRINT "X11-Basic inline V.1.22 (c) Markus Hoffmann 2002-2014"
   VERSION
 RETURN
 PROCEDURE using
@@ -64,9 +65,8 @@ PROCEDURE doit(f$)
     ll=LOF(#1)
     content$=INPUT$(#1,ll)
     CLOSE #1
-
     IF docomp
-      gg$=compress$(content$)
+      gg$=COMPRESS$(content$)
     ENDIF
     IF LEN(gg$)<LEN(content$) AND docomp=1
       g$=gg$
@@ -89,7 +89,7 @@ PROCEDURE doit(f$)
     n$=REPLACE$(n$,"-","_")
     PRINT n$+"$="+CHR$(34)+CHR$(34)
     pointer=0
-    WHILE l>3
+    WHILE l>=3
       t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0xfc)/4)
       t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0x3)*16+(PEEK(VARPTR(g$)+pointer*3+1) and 0xf0)/16)
       t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+1) AND 0xf)*4+(PEEK(VARPTR(g$)+pointer*3+2) and 0xc0)/64)
@@ -100,15 +100,24 @@ PROCEDURE doit(f$)
         PRINT n$+"$="+n$+"$+"+ENCLOSE$(t$)
         t$=""
       ENDIF
-    WEND
-    IF l
-      a$=RIGHT$(g$,l)+MKL$(0)
-      t$=t$+CHR$(36+(PEEK(VARPTR(a$)) AND 0xfc)/4)
-      t$=t$+CHR$(36+(PEEK(VARPTR(a$)) AND 0x3)*16+(PEEK(VARPTR(a$)+1) AND 0xf0)/16)
-      t$=t$+CHR$(36+(PEEK(VARPTR(a$)+1) AND 0xf)*4+(PEEK(VARPTR(a$)+2) AND 0xc0)/64)
-      t$=t$+CHR$(36+(PEEK(VARPTR(a$)+2) AND 0x3f))
+    WEND 
+    IF l    ! handle the last 1 or 2 bytes
+      t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0xfc)/4)
+      IF l=1
+        t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0x3)*16)
+      ELSE 
+        t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0x3)*16+(PEEK(VARPTR(g$)+pointer*3+1) and 0xf0)/16)
+        IF l=2
+          t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+1) AND 0xf)*4)
+	ELSE
+          t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+1) AND 0xf)*4+(PEEK(VARPTR(g$)+pointer*3+2) and 0xc0)/64)
+          t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+2) AND 0x3f))
+        ENDIF
+      ENDIF
+    ENDIF 
+    if len(t$)
       PRINT n$+"$="+n$+"$+"+ENCLOSE$(t$)
-    ENDIF
+    endif
     IF comp
       PRINT n$+"_"+b$+"$=UNCOMPRESS$(INLINE$("+n$+"$))"
     ELSE

@@ -27,6 +27,7 @@
   #include <fcntl.h>
   #include <alsa/asoundlib.h>
   #include <pthread.h>   /* Posix 1003.1c threads */
+  int snd_pcm_stop(snd_pcm_t *, int); 
 #endif
 
 #include "x11basic.h"
@@ -46,13 +47,13 @@ static void mixeAudio(void *nichtVerwendet, Uint8 *stream, int laenge);
 
 #define GAIN 8192.0
 
-static char *device = "default";			 /* playback device */
 #ifdef USE_ALSA
+static char *device = "default";			 /* playback device */
 static snd_pcm_t *handle;
-#endif
 static unsigned char *mixbuf;
 static int mixpos;
 static int mixlen;
+#endif
 static const int format=16/8;  /*16/8*/
 static const int channels=1;  /* 2 */
 #ifdef USE_ALSA
@@ -130,7 +131,7 @@ static double silence(double a) {return(0);}        /*Stille*/
 
 
 /* Enveloppe function for synthesizer */
-
+#if defined USE_ALSA || defined ANDROID
 static double envelope(int *note_active, int gate, double *env_level, int t, 
                 int attack, int decay, double sustain, int release, int duration) {
     if(gate==1)  {
@@ -158,7 +159,7 @@ static double envelope(int *note_active, int gate, double *env_level, int t,
        else return(*env_level=0);
     }
 }
-
+#endif
 #ifdef ANDROID
 void mixeAudio(Uint8 *stream, int laenge) {
   int i,j;
@@ -211,13 +212,12 @@ void mixeAudio(Uint8 *stream, int laenge) {
 static void mixeAudio(Uint8 *stream, int laenge) {
   int i,j;
   double ev;
-  Uint32 menge;
   memset(stream, 0, laenge*format*channels);
 
   for(i=0; i<MAX_SOUND_CHANNELS; ++i ) {
     if(sounds[i].generator==0) {
     #if 0
-        menge = (sounds[i].dlen-sounds[i].dpos);
+        Uint32 menge = (sounds[i].dlen-sounds[i].dpos);
         if(menge>laenge) menge=laenge;
 	if(menge>0) {
 	  printf("copy channel %d, [%d->%d]\n",i,(int)sounds[i].dpos,(int)menge);	
@@ -270,7 +270,7 @@ void *soundthread(void *arg) {
 	snd_pcm_prepare (handle);
       } 
   }
-  e=snd_pcm_stop(handle);SNDERR;
+ // e=snd_pcm_stop(handle);SNDERR;
   free(mixbuf);
 }
 #endif
@@ -310,7 +310,7 @@ int init_soundsystem() {
 #ifdef USE_ALSA
   int e;
   snd_pcm_hw_params_t *hw_params;
-  snd_pcm_sw_params_t *sw_params;
+
 
   pthread_t sthread;
   
@@ -342,6 +342,7 @@ int init_soundsystem() {
     } else {
 #endif
 #if 0
+      snd_pcm_sw_params_t *sw_params;
       e=snd_pcm_sw_params_malloc(&sw_params);SNDERR;
       e=snd_pcm_sw_params_current(handle, sw_params);SNDERR;
  //     e=snd_pcm_sw_params_set_start_threshold(handle, sw_params, buffer_size - period_size);

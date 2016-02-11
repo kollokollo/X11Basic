@@ -8,7 +8,7 @@
 
 
 
-int do_parameterliste(char *pos, int *,int);
+int do_parameterliste(const char *pos, const int *,int);
 double parser(const char *funktion);
 ARRAY array_parser(char *funktion);
 STRING string_parser(const char *);

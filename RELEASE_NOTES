@@ -1,22 +1,26 @@
-
-Release notes for Version 1.20 (Dez 2012-Mar 2013)
+Release notes for Version 1.22 (Dec 2013-Mar 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- New command: SHELL (also for Android)
-- bugfix: strcpy().
-- Improved: Editor excecution in Android version
-- Fixed bug with desktop shortcuts under Android
-- Bugfix in virtual machine (AND)
-- included va_copy patch for 64 bit version by Matthias Vogl
-- fixed bugs in compiler (ARRAY constants)
-- fixed bugs in VARPTR() and ARRPTR()
-- fixed bug in local variable handling
-- fixed memory leak LOCAL/RETURN
-- fixed bug/crash with MERGE
-- new function: call android intents with EXEC
-- fixed bug/crash in LIST command 
-- fixed bug in SWAP command
-- fixed bug/crash in CALL command 
-- new commands: MKDIR, RMDIR, KILL, HIDEM, SHOWM
-- new functions: LEFTOF$(), RIGHTOF$(), ENCLOSE$(), DECLOSE$(), TALLY()
-- new functions: COLOR_RGB(), BYTE(), CARD(), WORD(), SWAP(), CINT(), VARIAT()
-- new Commands: RENAME, CHMOD, TOUCH
+- improved crash reports (Android)
+- Bugfix ARRAY (create, init)
+- new: ABSOLUTE command
+- new: VAR statement allows parameters "by reference"
+- added UTF-8 (unicode) support for LTEXT
+- added UTF-8 (unicode) support for console/terminal (Android)
+- added unicode bitmap font for greek/kyrillic for console/terminal (Android)
+- MENUDEF now compiles without error
+- AFTER/EVERY works in bytecode now
+- new functions: FSFIRST$(), FSNEXT$()
+- new example program: stepdir.bas
+- fixed bug in MOUSEK, MOUSE (Windows version)
+- small bugfixes in CASE,PAUSE,INSTR(), SORT, USING$(), PRINT USING
+- fixed bug in VAL?(), DET(), and GPRINT
+- fixed bug in ON ERROR, ON BREAK and ON MENU
+- fixed bug in String compare
+- fixed bug in HEX constants "0x" (Android)
+- new string function RADIX$()
+- fixed bug in framebuffer version (linux) 
+- fixed bugs in parser
+- new statement: ENDPROCEDURE (optional)
+- improved speed of bytecode
+- bugfix in compiler, improved error messages
+- fixed bug in DIM, VAL?(), PLIST

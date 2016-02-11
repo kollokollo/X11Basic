@@ -18,6 +18,7 @@
 #define PI       3.141592653589793
 #define E        2.718281828459
 
+
 /*Variablen Typen*/
 
 typedef struct {
@@ -32,7 +33,8 @@ typedef struct {
 } ARRAY;
 
 typedef struct {
-  unsigned int typ;
+  unsigned int typ; /* can be INTTYP, FLOATTYP, STRINGTYP, ARRAYTYP*/
+  unsigned int flags; /* can be DYNAMIC, STATIC*/
   char *name;
   union {
     int *i;
@@ -151,8 +153,6 @@ extern int anzlabels, anzprocs;
 extern PROCEDURE  procs[];
 extern LABEL labels[];
 
-extern int filenr[];
-extern FILE *dptr[];
 /* Variablen, welche ausserhalb der lib definiert werden muessen */
 
 extern int prglen;
@@ -196,9 +196,6 @@ void doocssig_handler( int);
 double ltext(int, int, double, double, double , int, char *);
 char *do_gets (char *); 
 char *simple_gets(char *);
-double floatarrayinhalt(int, char*);
-double varfloatarrayinhalt(int, int *);
-int varintarrayinhalt(int, int *);
 char *indirekt2(const char *);
 void local_vars_loeschen(int);
 char *varrumpf(const char *);

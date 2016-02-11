@@ -1,9 +1,9 @@
-.TH X11BASIC 1 21-Dec-2012 "Version 1.20" "Basic Interpreter"
+.TH X11BASIC 1 21-Dec-2012 "Version 1.21" "Basic Interpreter"
 .SH NAME
-xbasic (X11-Basic) \- Basic interpreter and shell
+xbasic (X11-Basic) \- The BASIC language interpreter and shell
 .SH SYNOPSIS
 .B xbasic
-[--eval <expression>] [-e <command>] [-l] [<filename>]
+[\--eval <expression>] [-e <command>] [-l] [<filename>]
 
 .SH DESCRIPTION
 
@@ -24,7 +24,7 @@ program (see the man page
 ).
 
 .IR xbasic 
-is the script interpreter. It interpretes basic command-Files (programs), which 
+is the script interpreter. It interpretes basic command-files (programs), which 
 usually have the extension .bas or .xbas.
 It can also run in interactive mode in which case it interpretes single lines of
 code, which are entered.
@@ -61,19 +61,16 @@ If no options are given on the command line,
 .B xbasic
 will run interactivly.
 
-A Prompt will be displayed and any command can be typed in. It will be
-excecuted immediately after pressing return or enter. The interpreter uses the 
-.B readline(3) 
-library. So the input is buffered and can be edited using the up and down 
-arrows on the keyboard.
-Readline offers editing capabilities while the user is
-entering the line.
+A prompt will be displayed and any command can be typed in. It will be
+excecuted immediately after pressing return or enter. The input is buffered 
+and can be edited using the up and down arrows on the keyboard.
  
 .B To quit the program
 simply enter 
 .IR quit
 or press 
 .IR CTRL-C.
+
 .SH EXAMPLES
 .nf
 xbasic testme.bas
@@ -90,18 +87,6 @@ The commandline option --daemon forces the interpreter to run in daemon-mode
 (with no terminal connected).
 No prompt is given and the input is not echoed back. 
 
-To run the X11-Basic interpreter on a tcp-socket on port 1371 create a new user 
-called xbasic and insert
-.nf
---- in /etc/inetd.conf: --- 
-xbasic stream tcp nowait xbasic /usr/sbin/tcpd /bin/xbasic --daemon
---- in /etc/services: ---
-xbasic          1371/tcp
----
-.fi
-Please note that this is not recommended since xbasic would open
-several security holes on your system.
-
 .SH X11-Basic as shell:
 X11-Basic programs can be excecuted like shell scripts.
 If the xbasic interpreter was installed in 
@@ -115,601 +100,14 @@ in the first command line can be excecuted directly.
 
 .SH The X11-Basic Language
 
-.SS Variables
-X11-Basic recognizes three types of variables; floating point numbers, integer
-numbers and charackter strings. Also arrays of each of these types are used.
-.fi
 
-Variable names are, as well as all X11-Basic commands, case insensitive. There
-is no limit on the  length of a variable name. Variable names must begin with a
-character ("A" to "Z" or "_"). Each name is bound to only one kind of variable;
-A$ is a whole different variable(value) than A which is different from A(1,1)
-and A$(1,1).
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+.I http://x11-basic.sourceforge.net/x11basic.html
 
-.B Integer Variables
-
-Integer Variables are denoted by a % at the end of their names. Integer
-variables can hold only (32 bit) integer numbers. The calculation can be done
-faster and no rounding errors can occur. 
-
-
-.B String variables
-
-String variables are sequences of characters. Strings generally contain
-ASCII text, but can hold arbitrary byte sequences. Strings are automatically
-elastic, meaning they automatically resize to contain whatever number of bytes
-are put into them. When a string resizes, its location in memory may change.
-A wealth of intrinsics and functions are provided to
-support efficient string processing.  
- 
-
-.B Arrays
-
-X11-Basic arrays can contain variables of any type, including strings.  
-All arrays, even multi-dimensional arrays, can be redimensioned without
-altering the contents.
-
-
-.B Spaces
-
-Space between commands will be ignored, but note that no space is allowed 
-between the name of a variable or command and the '(' of its parameter list. 
-So, ASC("A") is good, ASC(     "A"     ) also,
-but ASC ("A") isn't.
-
-.B reserved variable names
-
-There are some reserved variables. Some keywords may not work as varable names
-as well. Although there is no checking done, parsing errors could occure.
-Please try the command LET in such cases. In general, as long as an ending of
-an variable name is different then any command or keyword, it's usable as
-name.
-
-Reserved and system variables are:
-
-.nf
-int ANDROID?  -1 on Android systems, else 0
-int COLS      number of columns of the text terminal
-int CRSCOL    text cursor position: current column
-int CRSLIN    text cursor position: current line
-flt CTIMER    CPU system timer (seconds)
-int ERR       number of the last error
-int FALSE     constant: 0
-int GPS?      TRUE if GPS is availabe, else 0
-flt GPS_ALT   Altitude in m received from GPS
-flt GPS_LAT   latitude in degrees received from GPS
-flt GPS_LON   longitude in degrees received from GPS
-int MOUSEK    mouse button state (Button 1=Bit 0,Button 2=Bit 1 etc.)
-int MOUSES    state of the shift,alt,ctrl,caps keys 
-int MOUSEX    x coordinate of mouse position relative to window or screen
-int MOUSEY    y coordinate of mouse position
-int PC        line number of next program line to be processed
-flt PI        constant: 3.141592...
-int ROWS      number of rows of the text terminal
-int SENSOR?   TRUE if sensor phallanx is available
-int SP        internal stack pointer
-int STIMER    integer system timer
-flt TIMER     unix system timer, float, seconds since 1970-01-01 00:00 
-int TRUE      constant: -1
-int WIN32?    TRUE if OS is MS WINDOWS 32 bit
-int UNIX?     TRUE if OS is UNIX like (linux, BSD)
-
-DATE$         current date
-FILEEVENT$    get events about files
-INKEY$        content of the keyboard-buffer
-TERMINALNAME$ device name of the standard terminal
-TIME$         current time 
-TRACE$        current program code line
-.fi
-
-.SS Conditions
-
-Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
-As a consequence, boolean operators like AND, OR, XOR etc. are applied as a
-bitwise operation. This way they can be used in expressions as well as in
-conditions.
-
-.SS Numbers and Constants
-
-Number constants may preceed 0x to represent hex values. String constants are
-marked with pairs of "". Array constants have following format: 
-[ , , ; , , ; , , ].
-
-.SS Operators
-
-Precedence is defined as follows (highest first):
-.nf
-0. ()                 (brackets)
-1. ^                  (power)
-2. * /
-3. \
-4. - +                ()
-5. MOD DIV            (modulus, ...)
-6. < > = <> <= >=      (comparison operators)
-7. AND OR XOR NOT EQV IMP (logical operators)
-.fi
-
-.SS Shortcuts
-.nf
-'    -- REM
-?    -- PRINT
-@    -- GOSUB
-~    -- VOID
-!    -- comment at the end of a line
-&    -- indirect command
-.fi
-
-.SS commands
-.nf
-? [,...]                -- abbreviation for PRINT
-ADD var_a,b             -- ADD b to var_a
-AFTER n,procedure       -- execute procedure after n seconds
-ARRAYFILL a(),b         -- fills array with value
-ARRAYCOPY dest(),souce() -- copies array including Dimensionierung
-
-BEEP                    -- Beep (on TTY/console)
-BELL                    -- same as BEEP
-BGET #f,a,n             -- read n bytes from file #f to adress a
-BLOAD f$,a%[,l%]        -- reads entire file (given by name) to adress a
-BMOVE q,z,n             -- copies a block of n bytes from adress q to z
-BPUT #f,a,n             -- writes n bytes from adress a to file/channel f
-BREAK                   -- entspricht EXIT IF true
-BSAVE f$,a,l            -- saves l bytes in memory at adress a to file f$
-
-CALL adr%[,par,...]     -- see EXEC
-CASE const              -- see SELECT * CASE * DEFAULT * ENDSELECT
-CHAIN bas$              -- executes another basic program
-CHDIR path$             -- change current working directory
-CLEAR                   -- clear and remove all variables
-CLOSE  [[#]n%[,...]]    -- close file, I/O channel or link
-CLR a,b%,c(),f$         -- clear variables
-CLS                     -- clear (text)screen
-CONNECT #n,t$[,i%]
-CONTINUE 
-CONT                    -- continue (after STOP)
-
-DATA 1,"Hallo",...      -- define constants 
-DEC var                 -- same as var=var-1
-DEFAULT                 -- see SELECT * CASE * DEFAULT * ENDSELECT
-DEFFN 
-DELAY sec		-- same as PAUSE
-DIM                     -- Declarate array
-DIV var,num
-DO * LOOP               -- Loop
-DPOKE adr,word          -- write short int word to adr
-DUMP                    -- lists all used variable names
-DUMP "@"                -- list of Funktionen und Prozeduren
-DUMP ":"                -- list of all labels
-DUMP "#"                -- list of open Files
-DUMP "K"                -- list of implementierten Kommandos
-DUMP "F"                -- list of internal functions
-
-ECHO {ON|OFF}           -- same as TRON * TROFF
-EDIT                    -- call default editor to edit program
-ELSE                    -- see IF * ELSE * ENDIF
-END                     -- program end, enter interactive mode
-ENDFUNCTION             -- see FUNCTION * ENDFUNCTION
-ENDIF                   -- see IF * ELSE * ENDIF
-ENDSELECT               -- see SELECT * CASE * DEFAULT * ENDSELECT 
-ERASE a()[,b$(),...]    -- erase arrays
-ERROR n                 -- execute error number n
-EVAL a$                 -- evaluate command, which is in a$
-EVENT [,var,var,var,var,var,var,var,var,var$]
-EVERY n,procedure       -- invokes procedure every n seconds
-EXEC t$[,t$,t$]         -- call system service or program. 
-EXIT IF a               -- exit loop if condition a is TRUE
-
-FFT a()[,i%]
-FIT a(),a(),a(),a()[,#n,???,KEY,num,KEY,num]
-FIT_LINEAR a(),a(),#n,???[,KEY,num,KEY,num,i%,#n]
-FLUSH [#n]              -- flush output
-FOR * NEXT              -- For Next loop
-FORM_INPUT t$           -- input string with default value
-FREE i%
-FUNCTION * ENDFUNC      -- define function
-
-GET_LOCATION var,var[,var,var,var,var,var,var$]
-GOSUB procedure(varliste) -- call subroutine
-GOTO label              -- goto label
-GPS {ON|OFF} 
-
-HELP <expr>             -- prints short help on expr              
-HOME                    -- Textcursor home
-
-
-IF * ELSE IF * ELSE * ENDIF -- conditions
-INC a%                  -- increments a%
-INPUT [#unit,]["text";] varlist -- read values for variables   
-
-LET a=b                 -- enforces assignment
-LINEINPUT [#unit,]t$    -- read entire line from channel/file/console
-LINK #n,t$              -- load shared object file t$
-LIST [s,e]              -- List programm code (from line s to e)
-LLIST [s,e]             -- writes the BASIC-program-listing from line s to 
-                           line e with linenumbers into the file 
-                           "<programname>.prme" and prints it on demand            
-LOAD a$                 -- load Programm 
-LOCAL var[,var2,...]    -- specifies a list of vars to be local in Procedure 
-                           or function
-LOCATE column,row       -- Place cursor on column and row
-LOOP                    -- see DO * LOOP
-LPOKE adr,long          -- writes long int value to pointer adr
-LSET t$=a$
-
-MERGE f$                -- Merges bas-file to actual program code
-MFREE i%
-MID$(t$,i,j)=b$
-MSYNC i%,i%
-MUL a,b	                -- same as a=a*b
-
-NEW                     -- clear and erase all variables and stop.
-NEXT                    -- see FOR * NEXT
-NOP                     -- do nothing
-NOOP                    -- do nothing
-
-ON * GOSUB proc1[,proc2,...]
-ON BREAK GOSUB proc
-ON ERROR GOSUB proc
-OPEN mode$,#n,filename$	-- open a file or socket for input and/or output
-OUT #n,a                -- out byte a to channel n
-
-PAUSE sec               -- pauses sec seconds
-PLIST                   -- formatted listing
-POKE adr,byte           -- write byte to pointer adr
-PRINT a;b$              -- console output
-PRINT #n;               -- output to channel/file
-PRINT AT(x,y);          -- locate textcursor at row y and column x
-PRINT a USING f$        -- print number with formatter
-PROCEDURE procname [(p1 [,p2] ... )]  * RETURN
-PSAVE a$                -- writes the reformatted BASIC-program into file with the name a$      
-PUTBACK [#n,]a%         -- put back a char to channel/file/console
-QUIT                    -- quits the X11-BASIC-Interpreter
-
-RANDOMIZE [seed%]       -- Sets seed for random generator, normally TIMER is used for this
-READ var                -- reads constant from DATA statement
-RELSEEK #n,d            -- Place filepointer on new relative position d
-REM comment             -- comment 
-REPEAT                  -- see REPEAT * UNTIL
-RESTORE [label]         -- (re)sets pointer for READ-statement to "label" 
-RESUME
-RETURN                  -- define the end of a PROCEDURE          
-RETURN expr             -- return value from FUNCTION          
-RSRC_LOAD filename$     -- loads GEM rsc-File (ATARI ST)
-RSRC_FREE               -- frees GEM rsc-File (ATARI ST)
-RUN                     -- start program
-
-SAVE [a$]               -- writes the BASIC-program into file with the name a$      
-SEEK #n,d               -- Place filepointer on new absolute position d
-SELECT                  -- SELECT statement
-SETENV t$=a$            -- Sets environmentvar t$ using value a$
-SORT a(),n[,b()]        -- Sort array
-SOUND chan,freq[,vol,dur] -- produce a sound (frequency f [Hz])
-SWAP
-SYSTEM t$               -- excecute shell with command t$
-TROFF                   -- Trace mode off
-TRON                    -- Trace mode on  (for debugging)
-UNLINK #n               -- unlinks shared object #n
-UNTIL exp               -- if exp is false goto REPEAT
-VERSION                 -- shows X11-Basic version number and date
-VOID a                  -- claculates expresion a and discard result
-
-WAVE chan,a,b,c,d       -- sound synthesizer parameters 
-WORT_SEP t$,d$,mode,a$,b$ -- separates string t$ by deliminator d$ in 
-                           a$ and b$
-.fi
-
-.SS Graphic commands
-.nf
-ALERT a,b$,c,d$,var[,ret$] -- Infobox
-BOTTOMW n               -- lowers window n and moves it to the bottom of statck
-BOUNDARY b		-- sets boundary for filled box/circle etc. on or off              
-BOX x1,y1,x2,y2         -- draw a frame
-CIRCLE x,y,r            -- draw a circle
-CLEARW [[#]n%]          -- clear graphic window
-CLIP i%,i%,i%,i%[,i%,i%]-- defines the  clipping  rectangle
-CLOSEW [[#]n%]          -- close graphic window
-COLOR f[,b]             -- Set foreground color (and background color)
-
-DEFFILL c,a,b           -- set fill style and pattern 
-DEFLINE a,b             -- set line width and type
-DEFMARK c,a,g           -- define: colour, size, type (POLYMARK)        
-DEFMOUSE i              -- set mouse cursor type
-DEFTEXT c,s,r,g	        -- set text properties for ltext
-DRAW [[x1,y1] TO] x2,y2 -- draw line 
-
-ELLIPSE x,y,a,b[,a1,a2] -- draw an ellipse
-FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box            
-FILL i%,i%[,i%]         -- flood fill 
-FULLW n                 -- raises window size to full screen
-
-GET x,y,w,h,g$          -- grabs part of graphic window to string
-GPRINT                  -- like PRINT, but the output goes to the graphic window
-GRAPHMODE mode          -- set graphic-mode                 
-INFOW n,t$              -- set information strong for a window
-KEYEVENT a,b            -- Waits until key is pressed
-LINE x1,y1,x2,y2        -- draw a line
-LTEXT x,y,t$            -- Linegraphic-Text
-
-MENUDEF array$(),proc   -- read text for menu-header from array$() 
-MENUSET n,x             -- change menu-point #n with value x       
-MENU STOP               -- switch off the menu                     
-ON MENU GOSUB p1        -- define PROCEDURE p1 to handle an action   
-ONMENU                  -- execute the menu and                      
-MENU                    -- wait for menue-events  
-
-MOUSE x,y,k             -- gets position and state of mouse
-MOUSEEVENT              -- wait for mouse event
-MOTIONEVENT             -- wait for mouse movement
-
-MOVEW n,x,y             -- move window
-ON MENU GOSUB p1        -- define PROCEDURE p1 to handle an action   
-                           if a menue-point was selected             
-OPENW n                 -- open window
-PBOX  x1,y1,x2,y2       -- draw filled box
-PCIRCLE x,y,r[,a1,a2]   -- draw filled cirle
-PELLIPSE x,y,a,b[,a1,a2]-- draw filled ellipse
-PLOT x,y                -- draw point
-POLYLINE n,x(),y()      -- draw polygon in (x(),y())        
-POLYFILL n,x(),y()      -- draw filled polygon
-POLYMARK n,x(),y()      -- draw polygon points                
-PRBOX x1,y1,x2,y2       -- draw filled rounded box
-PUT x,y,g$              -- map graphic at position
-PUT_BITMAP t$,i,i,i,i   -- map bitmap
-RBOX x1,y1,x2,y2        -- draws a rounded box
-SCOPE a(),typ,yscale,yoffset   -- fast plot a()
-SCOPE y(),x(),typ,yscale,yoffset,xscale,xoffset   -- fast 2D plot
-SGET screen$            -- capture graphic and store it in screen$
-SHOWPAGE                -- maps all graphic to window
-SPUT screen$            -- maps (xwd-)graphic to window 
-TEXT x,y,t$             -- draw text
-TITLEW n,t$             -- set window title
-TOPW n                  -- raises window n to the top of the stack
-VSYNC                   -- same as SHOWPAGE
-XLOAD                   -- load a program, with FILESELECTOR
-XRUN                    -- load and run a program, with FILESELECTOR
-.fi
-
-.SS Math commands
-.nf
-ADD a,b                 -- same as a=a+b but faster
-DEC var                 -- same as var=var-1 but faster
-DIV a,b                 -- same as a=a/b but faster
-FFT a(),i               -- fast fourier transformation on 1D array.
-			   if i=-1 backward transformation
-FIT x(),y()[,yerr()],n,func(x,a,b,c,...) -- fits function to data
-FIT_LINEAR x(),y()[,[xerr(),]yerr()],n,a,b[,siga,sigb,chi2,q]
-                        -- linear regression with errors
-INC var                 -- same as var=var+1 but faster
-MUL a,b	                -- same as a=a*b but faster
-SORT a(),n[,b()]        -- sorts n values of a() to incrementing order 
-SUB a,b                 -- same as a=a-b but faster
-.fi
-
-.SS Math functions
-.nf
-b=ABS(a)                -- absolut value 
-c=ADD(a,b)              -- add
-a=CINT(b)               -- Truncate number (NOTE: differs from INT ! )
-a=RND(dummy)            -- random number between 0 and 1
-a=GASDEV(dummy)         -- random number Gauss distribution
-a=RAND(dummy)           -- random integer number between 0 and a large number
-a=RANDOM(n)             -- random integer number between 0 and n 
-i=SGN(a)                -- sign of a (-1,0,1)
-b=SQR(a)                -- square root
-b=SQRT(a)               -- square root
-b=TRUNC(a)              -- round a to the nearest integer not larger in 
-                           absolute value
-b=FRAC(a)               -- fractional (non integer) part of a
-b=INT(a)                -- convert to integer
-b=LN(a)                 -- base e logarithm (natural log)
-b=LOG(a)                -- base e logarithm (natural log)
-b=LOG10(a)              -- base 10 logarithm
-b=EXP(a)                -- base e "anti-log"  (e to the x)
-b=FAK(a)                -- Fakultaet
-.fi
-
-.B Angles
-
-Angles are always radians, for both arguments and return values.
-
-.nf
-b=RAD(a)                -- convert degrees to radians
-b=DEG(a)                -- convert radians to degrees
-.fi
-
-.B trigonometric functions
-
-.nf
-b=SIN(a)                -- sine
-b=COS(a)                -- cosine
-b=TAN(a)                -- tangent
-b=COT(a)                -- cotangent
-b=SEC(a)                -- secant
-b=CSC(a)                -- cosecant
-
-b=ASIN(a)               -- arc-sine
-b=ACOS(a)               -- arc-cosine
-b=ATAN(a)               -- arc-tangent
-b=ATAN2(a,c)            -- extended arc-tangent
-b=ACOT(a)               -- arc-cotangent
-b=ASEC(a)               -- arc-secant
-b=ACSC(a)               -- arc-cosecant
-
-b=SINH(a)               -- hyperbolic sine
-b=COSH(a)               -- hyperbolic cosine
-b=TANH(a)               -- hyperbolic tangent
-b=COTH(a)               -- hyperbolic cotangent
-b=SECH(a)               -- hyperbolic secant
-b=CSCH(a)               -- hyperbolic cosecant
-
-b=ASINH(a)              -- hyperbolic arc-sine
-b=ACOSH(a)              -- hyperbolic arc-cosine
-b=ATANH(a)              -- hyperbolic arc-tangent
-b=ACOTH(a)              -- hyperbolic arc-cotangent
-b=ASECH(a)              -- hyperbolic arc-secant
-b=ACSCH(a)              -- hyperbolic arc-cosecant
-.fi
-
-.B Boolean functions
-
-.nf
-a=EVEN(d)               -- TRUE if d is even number
-a=ODD(d)                -- TRUE if d is odd number
-
-.fi
-
-.SS Other functions
-.nf
-a=ARRPTR(b())           -- pointer to array descriptors
-a=ASC(t$)               -- ASCII code of first letter of string
-b$=BIN$(a[,n])          -- convert to binary number
-
-t$=CHR$(a)              -- convert ascii code to string
-b=CVI(a$)               -- convert 2-byte string to integer
-b=CVL(a$)               -- convert 4-byte string to integer
-b=CVS(a$)               -- convert 4-byte string to float
-b=CVF(a$)               -- convert 4-byte string to float
-b=CVD(a$)               -- convert 8-byte string to double
-
-DFREE
-DIM?(a())               -- returns number of elements of array a()
-i=DPEEK(adr)            -- read word from pointer adr
-
-t$=ENV$(n$)             -- read value of environment variable n$
-
-b=EOF(#n)               -- TRUE if file pointer reached end of file
-a=EVAL(t$)              -- evaluate expression contained in t$
-b=EXIST(fname$)         -- TRUE if file fname$ exist
-ret=EXEC(adr[,var])     -- see command EXEC, returns int
-
-a=FRE(n)                -- n.n.
-a=FREEFILE()            -- Returns first free filenumber or -1
-f=GLOB(a$,b$[,flags])   -- TRUE if a$ matches pattern b$
-b=GRAY(a)		-- Gray code. if a<0: inverse Gray code
-
-t$=HEX$(a[,n])          -- a as Hexadecimal number
-a=HYPOT(num,num)        -- n.n.
-
-t$=INLINE$(a$)          -- 7Bit-ASCII to Binary conversion, can be used to include
-                           Binary data in the source code.
-c%=INP(#n)		-- reads character (Byte) from channel/file.
-c%=INP?(#n)		-- number of chars which can be read from channel/file
-INP&(#n)
-i=INP%(#n)
-
-t$=INPUT$(#n,num)       -- reads num bytes from file/channel n
-a=INSTR(s1$,s2$[,n])    -- tests if s2$ is contained in s1$
-
-a=julian(date$)         -- julian day
-d$=juldate$(a)          -- date$ by julian day a
-
-LEFT$(a$[,n%])          -- extraxts from string a$ the first (left) n characters
-l%=LEN(t$)              -- length of string
-p%=LOC(#n)		-- Returns value of file position indicator
-l%=LOF(#n)		-- length of file
-b%=LPEEK(adr%)          -- reads long (4 Bytes) from adress
-LPOS
-
-m=MAX(a,b,c,...)        -- returns biggest value
-m=MAX(f())		-- n.n.
-m$=MID$(t$,s[,l])       -- extraxts from string t$ a string from position s 
-                           with l characters
-m=MIN(a,b,c,...)        -- returns smallest value
-m=MIN(array())		-- not implemented jet
-m=MIN(function())	-- not implemented jet
-
-t$=MKI$(i%)             -- convert Integer to 2-Byte String
-t$=MKL$(i%)             -- convert integer to 4-Byte String
-t$=MKF$(a)              -- convert float to 4 Byte String
-t$=MKD$(a)              -- convert float to 8 Byte String
-
-o$=OCT$(d%,n%)
-
-d%=PEEK(a%)             -- reads Byte from adress
-POS
-t$=PRG$(i)              -- Program line 
-
-a%=RINSTR(s1$,s2$[,n])  -- tests if s2$ is contained in s1$, then      
-                           returns start-position of s2$, else 0.
-                           start comparison at pos. n (default=1)
-                           start comparison at right
-
-t$=STR$(a[,b,c])        -- convert number to String of length b 
-                           with c signifikant digits
-adr=SYM_ADR(#n,s$)      -- return pointer to symbol with name s$ from shared
-                           Object file #n
-t$=SYSTEM$(n$)          -- execute shell with command n$
-
-t$=TERMINALNAME$(#n)    -- returns device name of terminal connected to #n
-
-t$=unixtime$(i)         -- give time$ from TIMER value
-d$=unixdate$(i)         -- give date$ from TIMER value
-
-a=VAL(t$)		-- converts String/ASCII to number
-i%=VAL?(t$)		-- returns number of chars which can be converted to 
-                           number
-a%=VARPTR(v)		-- returns pointer to variable
-.fi
-
-
-.SS String functions
-
-.nf
-u$=LCASE$(t$)		-- converts t$ to lower case
-u$=LOWER$(t$)		-- converts t$ to lower case
-t$=REPLACE$(a$,b$,c$)   -- replace all b$ in a$ with c$
-t$=REVERSE$(a$)         -- reverse the order of the string
-t$=RIGHT$(a$[,n])       -- returns right n characters of a$
-t$=SPACE$(i)		-- returns string consisting of i spaces
-t$=STRING$(w$,i)        -- returns string consisting of i copys of w$
-u$=UCASE$(t$)		-- converts t$ to upper case
-u$=UPPER$(t$)		-- converts t$ to upper case
-.fi
-
-.SS Graphic functions
-.nf
-a=FORM_ALERT(n,t$)      -- message box with default button n
-a=FORM_DIAL(i,i,i,i,i,i,i,i,i) -- complex function
-a=FORM_DO(i)            -- do dialog
-c=GET_COLOR(r,g,b)      -- allocate color by rgb value 
-dummy=OBJC_DRAW(i,i,i,i,i) -- draw object tree
-ob=OBJC_FIND(tree,x,y)  -- return object number by coordinates
-c=POINT(x,y)            -- returns color of pixel of graphic in window
-c=PTST(x,y)             -- same as POINT()
-a=RSRC_GADDR(typ,nr)    -- get pointer to object tree
-.fi
-
-
-.SS SUBROUTINES
-Subroutines are blocks of code that can be called from elsewhere in a
-function.  Subroutines can take arguments but return no results. They can
-access all variables available but also may have local variables (--> LOCAL).
-Subroutines are defined with 
-.nf
-PROCEDURE name(argumentlist)
-  ...  many commands
-RETURN
-.fi
-
-.SS FUNCTIONS
-X11-Basic functions are blocks of code that can be called from elsewhere within an
-expression (e.g a=3*@myfunction(b)). Functions can take arguments 
-and must return a result.
-Variables are global unless declared local. For local variables changes outside a
-function have no effect within the function except as explicitly specified
-within the function.  Functions arguments can be variables and arrays of any
-types.  Functions can return variables of any type. By default,
-arguments are passed by value. Functions can be executed recursively.
-A function will be defined by:
-.nf
-FUNCTION name(argumentlist)
-  .. many more calculations
-  RETURN returnvalue
-ENDFUNCTION
-.fi
 
 .SH VERSION
-Page was created for V.1.20
+This page was created for V.1.21
 .SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should
@@ -727,7 +125,7 @@ tracking system.
 Comments and  bug  reports  concerning  this  manual  page
 should be directed to kollo@users.sourceforge.net.
 .SH BUGS
-Still some bugs
+There are probably still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
@@ -745,4 +143,9 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE. See the GNU General Public License for more
 details.
 .SH SEE ALSO
+
+http://x11-basic.sourceforge.net/
+
+/usr/share/doc/x11basic/
+
 tcsh(1), sh(1), readline(3), xbc(1), bas211basic(1)

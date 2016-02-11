@@ -1,5 +1,8 @@
-/* ltext.c (c) Markus Hoffmann
-   Fontdaten einlesen fuer Linienfont char font[zeile][spalte] */
+/* ltext.c (c) Markus Hoffmann  (c) 1995
+   Fontdaten einlesen fuer Linienfont char font[zeile][spalte] 
+   ErgÃ¤nzt durch UTF-8 support 2013 MH
+   
+   */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -28,7 +31,8 @@ extern void line(int x1,int y1,int x2, int y2);
 
 /* Kleine Aenderung an der "6" aufgrund v. Anregung 
     von Jardine A.R. <@swansea.ac.uk> Tue, 3 Aug 2010 11:53:38 
-   vollst. "Uberarbeitung 2011-09-24 MH    */
+   vollst. "Uberarbeitung 2011-09-24 MH  
+   EURO-Symbol ergÃ¤nzt MH 2014-01-21  */
 
 static const unsigned char font[128][36] = {
 {0}, /* 0 */
@@ -54,7 +58,7 @@ static const unsigned char font[128][36] = {
 {100,70,40,30,40,1,70,30,100,70,100,100,70,70,40,171,20,70,21,131,20,30,21}, /* 20 ö */
 {100,1,1,1,75,25,100,75,100,100,75,100,1,171,1,70,2,131,1,30,2}, /* Ü 21 */
 {100,1,40,1,70,30,100,70,100,100,70,100,40,201,40,100,100,171,20,70,21,131,20,30,21}, /* ü 22 */
-{0}, /* 23 */
+{100,100,20,70,1,30,1,1,30,1,70,30,100,70,100,100,80,110,40,90,40,111,60,90,60}, /* 23 */
 {0}, /* 24 */
 {0}, /* 25 */
 {0}, /* 26 */
@@ -161,76 +165,219 @@ static const unsigned char font[128][36] = {
 {100,1,100,100,100,50,40,1,100} /* 127 */   };
 
 
+
+
+ const unsigned short ltext_unicode_page0[]={
+   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
+0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f,
+0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x2a,0x2b,0x2c,0x2d,0x2e,0x2f,
+0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,0x3f,
+0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f,
+0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5a,0x5b,0x5c,0x5d,0x5e,0x5f,
+0x60,0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,
+0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  /* 80 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+0x20,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x2d,   0,   0,  /* A0 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,0x11,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  /* C0 */
+   0,   0,   0,   0,   0,   0,0x13,   0,   0,   0,   0,   0,0x15,   0,   0,0x10,
+   0,   0,   0,   0,0x12,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,0x14,   0,   0,   0,   0,   0,0x16,   0,   0,   0};
+
+ const unsigned short ltext_unicode_page3[]={
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 0360 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 0380 */
+   0,0x41,0x42,   0,0x7f,0x45,0x5a,0x48,   0,0x49,0x4b,   0,0x4d,0x4e,   0,0x4f, /* 0390 */
+   0,0x50,   0,   0,0x54,0x59,   0,0x58,   0,   0,   0,   0,   0,   0,   0,   0, /* 03A0 */
+   0,   0,0x10,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x6f,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 03C0 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x46,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,0x43,0x4d,   0,   0,   0,   0,   0};
+
+ const unsigned short ltext_unicode_page4[]={
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+0x41,   0,0x42,0xe2,   0,0x45,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+0x50,0x43,0x54,0x59,0xed,0x58,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+0x61,0x196,0x197,0x198,0x199,0x65,0x19a,0x19b,0x19c,0x19d,0x19e,0x19f,0x1a0,0x1a1,0x6f,0x1a2,0x70,0x63,0x1a3,0x79,0x1a4,0x78,0x1a5,0x1a6,0x1a7,0x1a8,0x1a9,0x1aa,0x1ab,0x1ac,0x1ad,0x1ae,0x8a,0x89,0x1af,0x1b0,0x1b1,0x73,0x69,0x8b,0x6a,0x1b2,0x1b3,0x1b4,0x1b5,0x1b6,0x1b7,0x1b8,0x1b9,0x1ba,0x1bb,0x1bc,0x1bd,0x1be,0x1bf,0x1c0,0x1c1,0x1c2,0x1c3,0x1c4,0x1c5,0x1c6,0x1c7,0x1c8,0x1c9,0x1ca,0xe9,0x1cb,0x1cc,0x1cd,0x1ce,0x1cf,0x1d0,0x1d1,0x1d2,0x1d3,0x1d4,0x1d5,0x1d6,0x1d7,0x1d8,0x1d9,0x1da,0x1db,0x1dc,0x1dd,0x1de,0,0,0,0,0,0,0,0,0,0x1df,0x1e0,0x1e1,0x1e2,0x1e3,0x1e4,0x1e5,0x1e6,0x1e7,0x1e8,0x1e9,0x1ea,0x1eb,0x1ec,0x1ed,0x1ee,0x1ef,0x1f0,0x1f1,0x1f2,0x1f3,0x1f4,0x1f5,0x1f6,0x1f7,0x1f8,0x80,0x87,0x1f9,0x1fa,0x59,0x79,0x1fb,0x1fc,0x1fd,0x1fe,0x1ff,0x200,0x201,0x202,0x203,0x204,0x205,0x68,0x206,0x207,0x208,0x209,0x49,0x20a,0x20b,0x20c,0x20d,0,0,0x20e,0x20f,0,0,0x210,0x211,0,0,0,0x212,0x213,0x8e,0x84,0x92,0x91,0x214,0x215,0x216,0x217,0x218,0x219,0x21a,0x21b,0x21c,0x21d,0x21e,0x21f,0x220,0x221,0x222,0x223,0x99,0x94,0xe9,0x224,0x225,0x226,0,0,0x227,0x228,0x229,0x22a,0x22b,0x22c,0x22d,0x22e,0,0,0x22f,0x230,0,0,0,0,0,0,};
+ const unsigned short ltext_unicode_page5[]={
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x51,0x71,0x57,0x77,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,0x67,   0,   0,   0,0x6f,   0,   0,   0,0x3a,   0,   0,   0,   0,   0,   0,
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,};
+ const unsigned short ltext_unicode_page32[]={
+0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,   0,   0,   0,   0,   0, /* 2000 */
+0x2d,0x2d,0x2d,0x2d,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 2020 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,0x2d,0x2f,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 2040 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x20,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 2060 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, /* 2080 */
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x17,   0,   0,   0, /* 20A0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x282,0x283,0x284,0x285,0x286,0x287,0x288,0x289,0x28a,0x28b,0x28c,0x28d,0x28e,0,0,0,0,0x28f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,};
+
+const unsigned short *ltext_unicode_pages[]={
+  ltext_unicode_page0,NULL,NULL,ltext_unicode_page3,ltext_unicode_page4,ltext_unicode_page5,NULL,NULL,
+  NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+  NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+  NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+  ltext_unicode_page32,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+  NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+
+static unsigned short unicode2glyph(unsigned short unicode) {
+ // printf("unicode: %04x\n",unicode);
+  if(unicode<0x80) return(unicode);
+
+  unsigned int page=(unicode&0xff00)>>8;
+  if(page>47) return(0);
+  if(ltext_unicode_pages[page]==NULL) return(0);
+  const unsigned short *table=ltext_unicode_pages[page];
+  if(table[unicode&0xff]>127) return(0);    //  TODO  //
+  return(table[unicode&0xff]);
+}
+
+
+static int utf8(unsigned char a,unsigned short *runicode) {
+  static unsigned char utf8_start=0;
+  static int utf8_count=0;
+  static unsigned short unicode=0;
+
+  if(a>=0x80) {
+    if((a&0xc0)!=0x80) { // Startbyte
+      if(utf8_start) {
+	utf8_start=0;
+	*runicode=0x3f;
+	return(1);
+      }
+      if(a==0xc0 || a==0xc1 || a>=0xf5) { *runicode=0x3f;return(1);}
+      else {
+        utf8_start=a;
+	unicode=0;
+	if(utf8_start<0xe0) {
+	  utf8_count=1;
+	  unicode=(utf8_start&0x1f);
+	} else if(utf8_start<0xf0) {
+	  utf8_count=2;
+	  unicode=(utf8_start&0xf);
+	} else {
+	  utf8_count=3;
+	  unicode=(utf8_start&0x7);
+	}
+      }
+     // printf("unistart: %d %02x %04x\n",utf8_count,utf8_start,unicode);
+    } else {   // follow byte
+      if(utf8_start==0 || utf8_count<=0)  {*runicode=0x3f;return(0);}
+      else {
+        unicode=(unicode<<6)|(a&0x3f);
+	if(--utf8_count==0) {
+	  *runicode=unicode;
+	//  printf("unicode: %04x\n",unicode);
+          unicode=0;
+          utf8_start=0;
+          utf8_count=0; 
+	  return(1);         
+	}
+      }
+    }
+  } else {
+    unicode=0;
+    utf8_start=0;
+    utf8_count=0;
+    *runicode=(unsigned short)a;
+    return(1);
+  }
+  return(0);
+}
+
+
+
+
+
 double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt) {
   double bxx=0,msin,mcos;
   unsigned int a;
   int i,j,len2,fx,fy,charw,center,px,py,pxo,pyo;
   int xx,yy,ox=0,oy=0;
   int len=strlen(tt);
+  unsigned short unicode;
+  utf8(0,&unicode);   /*Startbedingungen herstellen*/
+
   if(len>0) {
     msin=sin(rad(wk));
     mcos=cos(rad(wk)); 
 
     for(i=0;i<len;i++) {
       a=tt[i];
-      if(a=='ß') a=16;
-      else if(a=='Ä') a=17;
-      else if(a=='ä') a=18;
-      else if(a=='Ö') a=19;
-      else if(a=='ö') a=20;
-      else if(a=='Ü') a=21;
-      else if(a=='ü') a=22;
-      else a&=0x7f;
-      fy=bxx*msin+y;
-      fx=bxx*mcos+x;
-      len2=strlen((const char *)font[a]);
+      if(utf8(a,&unicode)) {
+	a=unicode2glyph(unicode);
+        fy=bxx*msin+y;
+        fx=bxx*mcos+x;
+        len2=strlen((const char *)font[a]);
       
-      charw=(int)font[a][0];
+        charw=(int)font[a][0];
       
-      if(pflg==FALSE) {
-        center=(100-charw)/2;
-        charw=100;
-      } else center=0;
-      if(len2>1) {
-        for(j=1;j<len2;j++) {
-          xx=font[a][j++];
-          yy=font[a][j];
+        if(pflg==FALSE) {
+          center=(100-charw)/2;
+          charw=100;
+        } else center=0;
+        if(len2>1) {
+          for(j=1;j<len2;j++) {
+            xx=font[a][j++];
+            yy=font[a][j];
 
-
-          if(xx>100) xx=xx-101+center;
-          else {
-            xx+=center;
-            if (j>2) {
-              pxo=ox*s*mcos-oy*t*msin;
-              pyo=oy*t*mcos+ox*s*msin;
-              px=xx*s*mcos-yy*t*msin;
-              py=yy*t*mcos+xx*s*msin;
-	      line(pxo+fx,pyo+fy,px+fx,py+fy); 
+            if(xx>100) xx=xx-101+center;
+            else {
+              xx+=center;
+              if (j>2) {
+                pxo=ox*s*mcos-oy*t*msin;
+                pyo=oy*t*mcos+ox*s*msin;
+                px=xx*s*mcos-yy*t*msin;
+                py=yy*t*mcos+xx*s*msin;
+	        line(pxo+fx,pyo+fy,px+fx,py+fy); 
+              }
             }
+            ox=xx; oy=yy;
           }
-          ox=xx; oy=yy;
         }
+        bxx+=(charw+30)*s;
       }
-      bxx+=(charw+30)*s;
     }
   }
   return(bxx);
-}
+} 
+
+
+
 double ltextlen (double s, int pflg, char *tt) {
-  int a,charw=100,bxx=0;
-  int i=strlen(tt);
-  while(--i>=0) {
-    a=(int)tt[i];
-    if(a=='ß') a=16;
-    else if(a=='Ä') a=17;
-    else if(a=='ä') a=18;
-    else if(a=='Ö') a=19;
-    else if(a=='ö') a=20;
-    else if(a=='Ü') a=21;
-    else if(a=='ü') a=22;
-    else a&=0x7f;
-    if(pflg && strlen((const char *)font[a])>1) charw=(int)font[a][0];
-    bxx+=(charw+30);
+  unsigned int a,charw=100;
+  int bxx=0;
+  int i,l=strlen(tt);
+  unsigned short unicode;
+  utf8(0,&unicode);   /*Startbedingungen herstellen*/
+  for(i=0;i<l;i++) {
+    a=(unsigned int)tt[i];
+    if(utf8(a,&unicode)) {
+      a=unicode2glyph(unicode);
+      if(pflg && strlen((const char *)font[a])>1) charw=(int)font[a][0];
+      bxx+=(charw+30);
+    }
   }
   return(bxx*s);
 }

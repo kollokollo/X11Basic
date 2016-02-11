@@ -6,8 +6,8 @@
  * COPYING for details
  */
 
-#ifdef WINDOWS
-#define key_t int
+#if defined WINDOWS || defined ATARI 
+  #define key_t int
 #endif
 
 void shm_free(int shmid);

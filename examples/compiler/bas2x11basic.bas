@@ -38,6 +38,9 @@ WHILE LEN(PARAM$(i))
   ENDIF
   INC i
 WEND
+if (WIN32? or ANDROID?) and (len(inputfile$)=0 or inputfile$="bas2x11basic.bas")
+  fileselect "Load ANSI basic program","./*.bas","ANSI.bas",inputfile$
+endif
 IF LEN(inputfile$)
   rumpf$=inputfile$
   WHILE LEN(rumpf$)
@@ -166,10 +169,10 @@ PROCEDURE processline(t$)
 RETURN
 PROCEDURE processifline(t$)
   LOCAL ifauf,a$,b$
-# xxx why is this in the original?, it seems debugging code:
-#  IF pass<>1
-#    PRINT #2,"' "+t$
-#  ENDIF
+' xxx why is this in the original?, it seems debugging code:
+'  IF pass<>1
+'    PRINT #2,"' "+t$
+'  ENDIF
   t$=REPLACE$(t$,", ",",")
   WHILE LEN(t$)
     WORT_SEP t$,":",1,b$,t$

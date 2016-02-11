@@ -13,6 +13,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
+
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
@@ -20,6 +24,7 @@
 #include "xbasic.h"
 #include "gkommandos.h"
 #include "functions.h"
+#include "afunctions.h"
 #include "array.h"
 #include "wort_sep.h"
 #include "graphics.h"
@@ -99,6 +104,10 @@ static double f_sub(double v1, double v2) {return(v1-v2);}
 static int    f_succ(double b)  {return((int)(b+1));}
 
 static double f_val(STRING n)   {return(myatof(n.pointer)); }
+static int    f_valf(STRING n)   {
+  if(n.len==0) return(0);
+  return(myatofc(n.pointer));
+}
 
 #ifdef TINE
 static double f_tinemax(STRING n) { return(tinemax(n.pointer)); }
@@ -141,19 +150,8 @@ static int f_int(double b) {return((int)b);}
 static int f_cint(double b) {return((int)round(b));}
 static double f_pred(double b) {return(ceil(b-1));}
 
-static int  f_dimf(char *pos) {
-  int typ=vartype(pos);
-  char *r=varrumpf(pos);
-  int subtyp,vnr;
-  if(typ&ARRAYTYP) {subtyp=typ&(~ARRAYTYP);typ=ARRAYTYP;}
-  else subtyp=0;
-  vnr=var_exist(pos,typ,subtyp,0);
-  free(r);
-  if(vnr==-1) {
-    xberror(15,pos); /* Feld nicht dimensioniert */
-    return(0);
-  }
-  return((double)do_dimension(&variablen[vnr]));
+static int  f_dimf(PARAMETER *plist,int e) {
+  return((double)do_dimension(&variablen[plist->integer]));
 }
 
 static int f_combin(PARAMETER *plist,int e) {
@@ -256,9 +254,8 @@ static double f_max(PARAMETER *plist,int e) {
 
 
 static int f_crc(PARAMETER *plist,int e) { 
-  if(e==1)  return(update_crc(0L, plist[0].pointer, plist[0].integer));
-  if(e>=1)  return(update_crc(plist[1].integer, plist[0].pointer, plist[0].integer));
-  return(0);
+  if(e>1) return(update_crc(plist[1].integer, plist->pointer, plist->integer));
+  return(update_crc(0L, plist->pointer, plist->integer));
 }
 
 
@@ -271,18 +268,20 @@ static double f_sensor(int n) {
 
 static int f_lof(PARAMETER *plist,int e) {
 // dump_parameterlist(plist,e);
-  if(filenr[plist[0].integer]) return(lof(dptr[plist[0].integer]));
+  if(filenr[plist[0].integer].typ) return(lof(filenr[plist[0].integer].dptr));
   else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 static int f_loc(PARAMETER *plist,int e) {
-  if(filenr[plist[0].integer]) return(ftell(dptr[plist[0].integer]));
+  if(filenr[plist[0].integer].typ) return(ftell(filenr[plist[0].integer].dptr));
   else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 static int f_eof(PARAMETER *plist,int e) {
   if(plist[0].integer==-2) return((myeof(stdin))?-1:0);
-  else if(filenr[plist[0].integer]) {
-    fflush(dptr[plist[0].integer]);
-    return(myeof(dptr[plist[0].integer])?-1:0);
+  else if(filenr[plist[0].integer].typ) {
+    // fflush(filenr[plist[0].integer].dptr);
+    // dieses fflush hat bei der WINDOWS version dazu geführt, dass
+    // ans ende des files gesprungen wurde. Folgendes EOF war immer true
+    return(myeof(filenr[plist[0].integer].dptr)?-1:0);
   } else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 
@@ -303,29 +302,32 @@ static int f_wort_sep(PARAMETER *plist,int e) {
 }
 
 static int f_instr(PARAMETER *plist,int e) {
-  int start=1;
-  char *pos=NULL;
-  if(e>=2) {
-    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
-    pos=(char *)memmem(&(((char *)(plist[0].pointer))[start-1]),plist[0].integer-start+1,plist[1].pointer,plist[1].integer);
-    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
-  } return(0);
+  int start=0;
+  if(plist[1].integer>plist->integer) return(0);
+  if(e>2) start=plist[2].integer-1;
+  if(start<0) start=0;
+  if(start>=plist->integer) return(0);  
+  char *pos=(char *)memmem(&(((char *)(plist->pointer))[start]),plist->integer-start,plist[1].pointer,plist[1].integer);
+  if(pos!=NULL) return((int)(pos-(char *)plist->pointer)+1);
+  return(0);
 }
 static int f_rinstr(PARAMETER *plist,int e) {
-  char *pos=NULL;
-  int start;
-  if(e>=2) {
-    start=plist[0].integer;
-    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
-    pos=rmemmem(plist[0].pointer,start-1,plist[1].pointer,plist[1].integer);
-    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
-  } return(0);
+  if(plist[1].integer>plist->integer) return(0);
+  int start=plist->integer-1;
+  if(e>2) start=plist[2].integer-1;
+  if(start<0) start=0;
+  if(start>=plist->integer) return(0);  
+  char *pos=rmemmem(plist->pointer,start,plist[1].pointer,plist[1].integer);
+  if(pos!=NULL) return((int)(pos-(char *)plist->pointer)+1);
+  return(0);
 }
 static int f_tally(PARAMETER *plist,int e) {
-  int start=1;
-  if(e>=3) start=min(plist->integer,max(1,plist[2].integer));
-  if(plist->integer<start-1+plist[1].integer) return(0);
-  int i=start-1;
+  int start=0;
+  if(e>2) start=plist[2].integer-1;
+  if(start<0) start=0;
+  if(start>=plist->integer) return(0);  
+  if(plist->integer<start+plist[1].integer) return(0);
+  int i=start;
   char *t=plist->pointer;
   char *c=plist[1].pointer;
   int j=0;
@@ -344,11 +346,10 @@ static int f_tally(PARAMETER *plist,int e) {
 
 static int f_glob(PARAMETER *plist,int e) {
   int flags=FNM_NOESCAPE;
-  if(e>=2) {
-    if(e==3) flags^=plist[2].integer;
-    flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
-    if(flags==0) return(-1);
-  } return(0);
+  if(e>2) flags^=plist[2].integer;
+  flags=fnmatch(plist[1].pointer,plist->pointer,flags);
+  if(flags==0) return(-1);
+  return(0);
 }
 
 #ifndef NOGRAPHICS
@@ -369,28 +370,22 @@ static int f_form_center(PARAMETER *plist,int e) {
   return(ret);
 }
 static int f_form_dial(PARAMETER *plist,int e) {
-  if(e==9) {
     graphics();
     gem_init();
-    return(form_dial(plist[0].integer,plist[1].integer,
-  plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,
-  plist[6].integer,plist[7].integer,plist[8].integer));
-  } else return(-1);
+    return(form_dial(plist->integer,plist[1].integer,
+      plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,
+      plist[6].integer,plist[7].integer,plist[8].integer));
 }
 static int f_form_do(PARAMETER *plist,int e) {
-  if(e==1) {
-    graphics();
-    gem_init();
-    return(form_do((OBJECT *)plist[0].integer));
-  } else return(-1);
+  graphics();
+  gem_init();
+  return(form_do((OBJECT *)plist->integer));
 }
 static int f_objc_draw(PARAMETER *plist,int e) {
-  if(e==5) {
-    graphics();
-    gem_init();
-    return(objc_draw((OBJECT *)plist[0].integer,plist[1].integer
+  graphics();
+  gem_init();
+  return(objc_draw((OBJECT *)plist->integer,plist[1].integer
     ,plist[2].integer,plist[3].integer,plist[4].integer));
-  } else return(-1);
 }
 static int f_objc_find(PARAMETER *plist,int e) {
     return(objc_find((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer));
@@ -421,42 +416,29 @@ static int f_objc_offset(PARAMETER *plist,int e) {
 }
 static int f_get_color(PARAMETER *plist,int e) {
   graphics();
-  return(get_color(plist[0].integer,plist[1].integer,plist[2].integer,65535));
+  return(get_color(plist->integer>>8,plist[1].integer>>8,plist[2].integer>>8,255));
 }
 static int f_color_rgb(PARAMETER *plist,int e) {
   double a=1;
-  #if 0
-  double r=plist[0].real;
-  double g=plist[1].real;
-  double b=plist[2].real;
-  #endif
-  if(e>=3) a=plist[3].real;
+  if(e>3) a=plist[3].real;
   graphics();
-#if 0
-  printf("r=%g g=%g b=%g a=%g\n",r,g,b,a);
-#endif
-  return(get_color((int)(plist[0].real*65535.0),(int)(plist[1].real*65535.0),
-                   (int)(plist[2].real*65535.0),(int)(a*65535.0)));
+  return(get_color((unsigned char)(plist[0].real*255.0),(unsigned char)(plist[1].real*255.0),
+                   (unsigned char)(plist[2].real*255.0),(unsigned char)(a*255.0)));
 }
 static int f_rsrc_gaddr(PARAMETER *plist,int e) {
-  int i;
   char *ptr;
-  i=rsrc_gaddr(plist[0].integer,plist[1].integer,&ptr);
+  int i=rsrc_gaddr(plist->integer,plist[1].integer,&ptr);
   if(i>0) return((int)ptr);
   else return(-1);
 }
 
-int lsel_input(char *,STRING *,int,int);
 
 static int f_listselect(PARAMETER *plist,int e) {
   int sel=-1;
   if(e>2) sel=plist[2].integer;
-  if(e>1) {
-    ARRAY a;
-    a=*(ARRAY *)&(plist[1].integer);
-    return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(&a),sel));
-  }
-  return(0);
+  ARRAY a;
+  a=*(ARRAY *)&(plist[1].integer);
+  return(lsel_input(plist->pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(&a),sel));
 }
 #endif
 
@@ -494,6 +476,20 @@ static int f_varptr(PARAMETER *p,int e) {
 
 /*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
   output liefern.
+  */
+  
+  
+  /* Folgende funktionen sollten noch implemntiert werden
+  
+  MEAN(ARRAY)
+  RMS(ARRAY)
+  STDDEV(ARRAY)
+  int=MEDIAN(ARRAY)
+  also
+  AMAX(ARRAY)
+  AMIN(ARRAY)
+  NORM(ARRAY)
+  
   */
   
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
@@ -548,8 +544,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK|F_IRET,  "CVS"       , (pfunc)f_cvf ,1,1     ,{PL_STRING}},
 
  { F_CONST|F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_DRET,    "DET"       , f_det ,1,1     ,{PL_FARRAY}},
  { F_SQUICK|F_IRET,    "DEVICE"    , (pfunc)f_device,1,1   ,{PL_STRING}},
- { F_CONST|F_ARGUMENT|F_IRET,  "DIM?"      , (pfunc)f_dimf ,1,1      ,{PL_ARRAY}},
+ { F_CONST|F_PLISTE|F_IRET,  "DIM?"      , (pfunc)f_dimf ,1,1      ,{PL_ARRAYVAR}},
  { F_CONST|F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 #ifdef DOOCS
  { F_SQUICK|F_DRET,  "DOOCSGET"     , f_doocsget ,1,1   ,{PL_STRING}},
@@ -563,6 +560,8 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_CONST|F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
  { F_CONST|F_IQUICK|F_IRET,    "EVEN"       , (pfunc)f_even ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "EVENT?"      , (pfunc)f_eventf ,1,1     ,{PL_INT}},
+
  { F_ARGUMENT|F_IRET,  "EXEC"       , (pfunc)f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_SQUICK|F_IRET,    "EXIST"      , (pfunc)f_exist ,1,1     ,{PL_STRING}},
  { F_CONST|F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
@@ -585,6 +584,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
  { F_SIMPLE|F_IRET,    "FREEFILE"  , (pfunc)f_freefile ,0,0  },
 
+ { F_CONST|F_DQUICK|F_DRET,    "GAMMA"       , tgamma ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,0,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "GET_COLOR", (pfunc)f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
@@ -596,9 +596,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_SQUICK|F_IRET,    "INODE"     ,(pfunc) f_inode,1,1   ,{PL_STRING}},
  { F_PLISTE|F_IRET,  "INP"       , (pfunc)inp8 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP?"      ,(pfunc) inpf ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP&"      , (pfunc)inp16 ,1,1      ,{PL_FILENR}},
  { F_PLISTE|F_IRET,  "INP%"      , (pfunc)inp32 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP&"      , (pfunc)inp16 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP?"      ,(pfunc) inpf ,1,1      ,{PL_FILENR}},
  { F_CONST|F_PLISTE|F_IRET,  "INSTR"     ,(pfunc) f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
  { F_CONST|F_DQUICK|F_IRET,    "INT"       ,(pfunc) f_int ,1,1     ,{PL_NUMBER}},
@@ -606,6 +606,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    ,(pfunc) f_julian ,1,1     ,{PL_STRING}},
 
  { F_CONST|F_SQUICK|F_IRET,    "LEN"       ,(pfunc) f_len ,1,1   ,{PL_STRING}},
+ { F_CONST|F_DQUICK|F_DRET,    "LGAMMA"       , lgamma ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "LISTSELECT", (pfunc)f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
 #endif
@@ -687,17 +688,18 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,  "TINESIZE"    , (pfunc)f_tinesize ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_IRET,  "TINETYP"    , (pfunc)f_tinetyp ,1,1   ,{PL_STRING}},
 #endif
- { F_CONST|F_DQUICK|F_DRET,    "TRUNC"     , trunc ,1,1     ,{PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "TYP?"       , (pfunc)type ,1,1     ,{PL_ALLVAR}},
+ { F_CONST|F_DQUICK|F_DRET, "TRUNC"     , trunc ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,       "TYP?"       , (pfunc)type ,1,1     ,{PL_ALLVAR}},
 
- { F_CONST|F_SQUICK|F_DRET,  "VAL"       , f_val ,1,1     ,{PL_STRING}},
- { F_CONST|F_PLISTE|F_IRET,    "VARIAT"    , (pfunc)f_variat ,2,2     ,{PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,  "VARPTR"    , (pfunc)f_varptr ,1,1     ,{PL_ALLVAR}},
+ { F_CONST|F_SQUICK|F_DRET, "VAL"       , f_val ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET, "VAL?"       ,(pfunc) f_valf ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_IRET, "VARIAT"    , (pfunc)f_variat ,2,2     ,{PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,         "VARPTR"    , (pfunc)f_varptr ,1,1     ,{PL_ALLVAR}},
 
- { F_CONST|F_IQUICK|F_IRET,    "WORD"     , (pfunc)f_word ,1,1     ,{PL_INT}},
- { F_PLISTE|F_IRET,  "WORT_SEP" , (pfunc)f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { F_CONST|F_IQUICK|F_IRET, "WORD"     , (pfunc)f_word ,1,1     ,{PL_INT}},
+ { F_PLISTE|F_IRET,         "WORT_SEP" , (pfunc)f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 
- { F_CONST|F_IQUICK|F_IRET,    "XOR"      , (pfunc) f_xor,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET, "XOR"      , (pfunc) f_xor,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
 };
 const int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);

@@ -19,7 +19,10 @@
 #include "file.h"
 #include "window.h"
 
-#ifndef FRAMEBUFFER
+#ifdef FRAMEBUFFER
+#include "framebuffer.h"
+#include "raw_mouse.h"
+#else
 #define CharWidth1632 16
 #define CharWidth816 8
 #define CharWidth57 5
@@ -36,23 +39,23 @@ RSHDR *rsrc=NULL;    /* Adresse der Recource im Speicher */
 
 unsigned int chw=4,chh=8,baseline=7,depth=8;
 int gem_colors[16];
-const AESRGBCOLOR gem_colordefs[]={
-{65535,65535,65535},  /* WHITE */
+static const AESRGBCOLOR gem_colordefs[]={
+{255,255,255},  /* WHITE */
 {0,0,0},/*BLACK  */
-{65535,0,0},/* RED */
-{0,65535,0},/* GREEN */
-{0,0,65535},/* BLUE */
-{0,65535,65535},/* CYAN */
-{65535,65535,0},/* YELLOW */
-{65535,0,65535},/* MAGENTA */
-{40000,40000,40000},/* LWHITE */
-{20000,20000,20000},/* LBLACK */
-{65535,32000,32000},/* LRED */
-{32000,65535,32000},/* LGREEN */
-{32000,32000,65535},/* LBLUE */
-{32000,65535,65535},/* LCYAN  */
-{65535,65535,32000},/* LYELLOW */
-{65535,32000,65535},/* LMAGENTA */
+{255,0,0},/* RED */
+{0,255,0},/* GREEN */
+{0,0,255},/* BLUE */
+{0,255,255},/* CYAN */
+{255,255,0},/* YELLOW */
+{255,0,255},/* MAGENTA */
+{156,156,156},/* LWHITE */
+{78,78,78},/* LBLACK */
+{255,127,127},/* LRED */
+{127,255,127},/* LGREEN */
+{127,127,255},/* LBLUE */
+{127,255,255},/* LCYAN  */
+{255,255,127},/* LYELLOW */
+{255,127,255} /* LMAGENTA */
 };
 
 ARECT sbox;
@@ -63,31 +66,30 @@ ARECT sbox;
 extern int font_behaviour;
 #endif
 
+
+/*GEM_INIT muss jedesmal aufgrÃufen werden, sobald sich die Bildschirmgroesse
+  veraendert.*/
+
 void gem_init() {
-  int i;
-#ifdef USE_X11
-  Window root;
-#endif
+  int i,x,y;
   unsigned int border;
   /* Screendimensionen bestimmem */
 #ifdef FRAMEBUFFER
-  FB_get_geometry(&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth);
-#endif
-#ifdef USE_X11
-    XGetGeometry(display[usewindow],win[usewindow],&root,&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth);
+  FB_get_geometry(&sbox.x,&sbox.y,&sbox.w,&sbox.h,(int *)&border,&depth);
+#elif defined USE_X11
+  Window root;
+  XGetGeometry(display[usewindow],win[usewindow],&root,&x,&y,&sbox.w,&sbox.h,&border,&depth);
+  sbox.y=sbox.x=0;  /* Funktioniert so besser */
 #if 0
-   weiss=WhitePixel(display[usewindow], DefaultScreen(display[usewindow]));
-   schwarz=BlackPixel(display[usewindow], DefaultScreen(display[usewindow]));
+    weiss=WhitePixel(display[usewindow], DefaultScreen(display[usewindow]));
+    schwarz=BlackPixel(display[usewindow], DefaultScreen(display[usewindow]));
 #endif
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   border=sbox.x=sbox.y=0;
   sbox.w=display[usewindow]->w;
   sbox.h=display[usewindow]->h;
   depth=32;
-#endif
- 
-#ifdef WINDOWS_NATIVE
+#elif defined WINDOWS_NATIVE
   RECT interior;
 
   GetClientRect(win_hwnd[usewindow],&interior);
@@ -100,6 +102,10 @@ void gem_init() {
   printf("gem_init: usewin=%d\n",usewindow);
   printf("sbox=(%d,%d,%d,%d)\n",sbox.x,sbox.y,sbox.w,sbox.h);
 #endif
+
+/* Passenden Zeichensatz laden.*/
+/* Passende Zeichengroesse ermitteln.*/
+
 #ifdef FRAMEBUFFER
   /*Das Ziel ist hier, dass ungefaehrr 60 bis 80 Zeichen in eine Zeile passen*/
   if(font_behaviour==0) { /* Auto */
@@ -119,9 +125,18 @@ void gem_init() {
 #else
   load_GEMFONT(FONT_DEFAULT);
 #endif
-  for(i=0;i<16;i++)
-    gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b,65535);
 
+  /* Farbpalette initialisieren */
+  for(i=0;i<16;i++) {
+    gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b,255);
+#ifdef DEBUG
+    printf("color #%d: r=%d,g=%d,b=%d --> %08x\n",i,gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b,
+    (unsigned int)gem_colors[i]);
+#endif
+  }
+#ifdef DEBUG
+printf("chw=%d, chh=%d\n",chw,chh);
+#endif
 }
 
 #ifdef USE_SDL
@@ -186,8 +201,7 @@ void load_GEMFONT(int n) {
   chw=siz.cx/2;
   chh=siz.cy;
   baseline=chh-2;
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
   if(n==FONT_IBM) n=f2;
   else if(n==FONT_SMALLIBM) n=f1;
   else if(n==FONT_BIGIBM) n=f3;
@@ -224,8 +238,7 @@ void load_GEMFONT(int n) {
     backlog(t);
 #endif
   }
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
   XGCValues gc_val;
   XFontStruct *fs;
   if(n==FONT_SMALL) fs=XLoadQueryFont(display[usewindow], GEMFONTSMALL);
@@ -237,9 +250,8 @@ void load_GEMFONT(int n) {
      chh=fs->max_bounds.ascent+fs->max_bounds.descent;
      baseline=fs->max_bounds.ascent;
   }
-#endif
-#ifdef USE_SDL
-  if(n==FONT_BIG || n==FONT_IBM) {
+#elif defined USE_SDL
+  if(n==FONT_BIG || n==FONT_IBM || n==FONT_LARGE|| n==FONT_BIGIBM) {
     chw=8;
     chh=16;
     baseline=chh-2; 
@@ -258,24 +270,22 @@ void box_center(ARECT *b) {
     b->y=sbox.y+(sbox.h-b->h)/2;
 }
 #endif
-void WSWAP(char *adr) {
-  char a;
-  a=adr[0];
-  adr[0]=adr[1];
+static inline void WSWAP(char *adr) {
+  char a=*adr;
+  *adr=adr[1];
   adr[1]=a;
 }
-void LSWAP(short *adr) {
-  short a;
-  a=adr[0];
-  adr[0]=adr[1];
+static void LSWAP(short *adr) {
+  short a=*adr;
+  *adr=adr[1];
   adr[1]=a;
 }
-void LWSWAP(short *adr) {
+static void LWSWAP(short *adr) {
   short a;
   WSWAP((char *)&adr[0]);
   WSWAP((char *)&adr[1]);
-  a=adr[0];
-  adr[0]=adr[1];
+  a=*adr;
+  *adr=adr[1];
   adr[1]=a;
 }
 /* -------------------------------- AES-Implementationen ------------------*/
@@ -292,8 +302,8 @@ int form_alert(int dbut,char *n) {
 int form_alert2(int dbut,char *n, char *tval) {
   char *bzeilen[30],*bbuttons[30],*buffer[30];
   int anzzeilen=0,anzbuttons=0,anztedinfo=0,anzbuffer=0;
-  int symbol,sbut=0;
-  char *pos;
+  int symbol=0,sbut=0;
+  char *pos=n;
   char **ein=bzeilen;
   int i=0,j=strlen(n),k=0,l=0;
   TEDINFO tedinfo[32];
@@ -306,8 +316,8 @@ int form_alert2(int dbut,char *n, char *tval) {
 #ifdef DEBUG
   printf("**form_alert:\n");
 #endif
-memset(tmplt,'_',32*80);
-memset(valid,'X',32*80);
+  memset(tmplt,'_',32*80);
+  memset(valid,'X',32*80);
   while(i<j) {
     if(n[i]=='[') {
       pos=&n[i+1];
@@ -321,8 +331,11 @@ memset(valid,'X',32*80);
       } else if(k==2) {
         ein=bbuttons;anzzeilen=l;
       } else if(k==3) anzbuttons=l;
-    }
-    else if(n[i]=='|') {ein[l]=pos;n[i]=0;pos=n+i+1;l++;};
+    } else if(n[i]=='|') {
+      ein[l++]=pos;
+      n[i]=0;
+      pos=n+i+1;
+    };
     i++;
   }
 
@@ -493,58 +506,46 @@ int rsrc_free() {
 *	template string build a formatted string.
 */
 
-void ob_format(short just, char *raw_str, char *tmpl_str, char *fmt_str) {
-  char *pfbeg, *ptbeg, *prbeg;
-  char *pfend, *ptend, *prend;
-  short  inc, ptlen, prlen;
+static void ob_format(short just, const char *raw_str, const char *tmpl_str, char *fmt_str) {
 #if DEBUG
-printf("ob-format: tmpl=<%s> ",tmpl_str);
-printf(" raw =<%s>\n",raw_str);
+  printf("ob-format: tmpl=<%s> raw =<%s>\n",tmpl_str,raw_str);
 #endif
-  if(*raw_str=='@') *raw_str=0;
-  pfbeg=fmt_str;
-  ptbeg=tmpl_str;
-  prbeg=raw_str;
+  if(!fmt_str) return;
+  if(!raw_str && !tmpl_str){*fmt_str=0; return;}
+  if(!tmpl_str || *tmpl_str==0) {strcpy(fmt_str,raw_str);return;}
+  if(!raw_str || *raw_str=='@' ||*raw_str==0) {strcpy(fmt_str,tmpl_str);return;}
 
-  ptlen=strlen(tmpl_str);
-  prlen=strlen(raw_str);
-
-  if(!ptlen) {
-    strcpy(fmt_str,raw_str);
-    return;
-  }
-
-  inc=1;
-  pfbeg[ptlen]=0;
   if(just==TE_RIGHT) {
-    inc=-1;
-    pfbeg=pfbeg+ptlen-1;
-    ptbeg=ptbeg+ptlen-1;
-    prbeg=prbeg+prlen-1;
-  }
-
-  pfend=pfbeg+(inc*ptlen);
-  ptend=ptbeg+(inc*ptlen);
-  prend=prbeg+(inc*prlen);
-
-  while(ptbeg!=ptend) {
-    if (*ptbeg!='_') *pfbeg=*ptbeg;
-    else {
-      if(prbeg!=prend) {
-  	*pfbeg=*prbeg;
-  	prbeg+=inc;
+    int ptlen=strlen(tmpl_str);
+    const char *ptbeg=tmpl_str+ptlen-1;
+    char *pfbeg=fmt_str+ptlen-1;
+    const char *prbeg=raw_str+strlen(raw_str)-1;
+    fmt_str[ptlen]=0;
+    while(ptbeg>=tmpl_str) {
+      if (*ptbeg!='_') *pfbeg--=*ptbeg;
+      else {
+        if(prbeg>=raw_str) {
+  	  *pfbeg--=*prbeg;
+    	  prbeg--;
+        } else *pfbeg--='_';
       }
-      else *pfbeg='_';
-    }
-    pfbeg+=inc;
-    ptbeg+=inc;
-  } /* while */
-#if DEBUG
-printf("--> fmt=<%s>\n",fmt_str);
-#endif
+      ptbeg--;
+    } /* while */
+  
+  } else {
+    while(*tmpl_str) {
+      if (*tmpl_str!='_') *fmt_str++=*tmpl_str;
+      else {
+        if(*raw_str) *fmt_str++=*raw_str++;
+        else *fmt_str++='_';
+      }
+      tmpl_str++;
+    } 
+    *fmt_str=0;
+  }
 } /* ob_format */
 
-WORD invert_color(WORD color) {
+static WORD invert_color(WORD color) {
   switch(color) {
   case    BLACK:
   	  return  WHITE;
@@ -583,18 +584,18 @@ WORD invert_color(WORD color) {
   }
 }
 
-void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
+static void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   signed char randdicke=0;
   char zeichen,opaque=0;
   int fillcolor=BLACK,pattern=8;
   int bgcolor=WHITE;
-  int textcolor=BLACK,textmode,framecolor=BLACK;
+  int textcolor=BLACK,framecolor=BLACK;
   int i,drawbg=1;
   int obx=tree[idx].ob_x+rootx;
   int oby=tree[idx].ob_y+rooty;
   int obw=tree[idx].ob_width;
   int obh=tree[idx].ob_height;
-
+ // int textmode;
 #ifdef DEBUG
   printf("Drawobjc: %d   head=%d  next=%d tail=%d\n",idx,tree[idx].ob_head,
   tree[idx].ob_next, tree[idx].ob_tail);
@@ -606,7 +607,7 @@ void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     randdicke=(tree[idx].ob_spec & 0xff0000)>>16;
     fillcolor=(tree[idx].ob_spec & 0xf);
     textcolor=(tree[idx].ob_spec & 0xf00)>>8;
-    textmode=(tree[idx].ob_spec & 0x80)>>7;
+  //  textmode=(tree[idx].ob_spec & 0x80)>>7;
     framecolor=(tree[idx].ob_spec & 0xf000)>>12;
     pattern=(tree[idx].ob_spec & 0x70)>>4;
     if(LOBYTE(tree[idx].ob_type)==G_BOXCHAR) bgcolor=invert_color(textcolor);
@@ -618,7 +619,7 @@ void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     randdicke=0;
     fillcolor=(tree[idx].ob_spec & 0xf);
     textcolor=(tree[idx].ob_spec & 0xf00)>>8;
-    textmode=(tree[idx].ob_spec & 0x80)>>7;
+  //  textmode=(tree[idx].ob_spec & 0x80)>>7;
     framecolor=(tree[idx].ob_spec & 0xf000)>>12;
     pattern=(tree[idx].ob_spec & 0x70)>>4;
     bgcolor=WHITE;
@@ -698,7 +699,7 @@ if (drawbg) {
 
 /* Hintergrund zeichnen */
   SetForeground(gem_colors[bgcolor]);
-  if(!opaque) FillRectangle(obx,oby,obw,obh);
+  if(!opaque) FillRectangle(obx+1,oby+1,obw-1,obh-1);
 
 
   if(pattern) {
@@ -776,7 +777,7 @@ if (drawbg) {
       else flen-=ted->te_junk2;
     } else ted->te_junk2=0;
     
-    y=oby+(obh-fontheight(ted->te_font))/2+fontbaseline(ted->te_font);
+    y=oby+(obh-fontheight(ted->te_font))/2+fontbaseline(ted->te_font)-2;
     
     if(ted->te_just==TE_LEFT) x=obx;
     else if(ted->te_just==TE_RIGHT) {
@@ -787,9 +788,9 @@ if (drawbg) {
     
     if(!opaque || 1) { /* AUf dem Atari war edit-text nie durchsichtig!*/
       SetForeground(gem_colors[bgcolor]);
-      FillRectangle(x,y-fontbaseline(ted->te_font),
-                    fontwidth(ted->te_font)*flen,
-		    fontheight(ted->te_font));
+      FillRectangle(x+1,y-fontbaseline(ted->te_font)+3,
+                    fontwidth(ted->te_font)*flen-1,
+		    fontheight(ted->te_font)-1);
       SetForeground(gem_colors[textcolor]);
     }
     DrawString(x,y,text+ted->te_junk2,flen);
@@ -803,9 +804,8 @@ if (drawbg) {
     break;
   case G_IMAGE:
     {BITBLK *bit=(BITBLK *)((long)tree[idx].ob_spec);
-    unsigned int adr;
-
-    adr=*((LONG *)&(bit->bi_pdata));
+    char *helper=(char *)&(bit->bi_pdata);
+    unsigned int adr=*((LONG *)helper);
     SetForeground(gem_colors[(bit->bi_color) & 0xf]);
     SetBackground(gem_colors[WHITE]);
 
@@ -814,19 +814,23 @@ if (drawbg) {
     break;
   case G_ICON:
     {ICONBLK *bit=(ICONBLK *)((long)tree[idx].ob_spec);
-    unsigned int adr;
-    adr=*(LONG *)&bit->ib_pmask;
-
+    char *helper=(char *)&bit->ib_pmask;
+    unsigned int adr=*((LONG *)helper);
+    char *maskdata=(char *)adr;
+    helper=(char *)&bit->ib_pdata;
+    adr=*((LONG *)helper);
+    char *bitdata=(char *)adr;
+    helper=(char *)&bit->ib_ptext;
+    char *text=(char *)adr;
     SetForeground(gem_colors[WHITE]);
-    put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
+    put_bitmap(maskdata,obx,oby,bit->ib_wicon,bit->ib_hicon);
     FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
-    adr=*(LONG *)&bit->ib_pdata;
     SetBackground(gem_colors[WHITE]);
     SetForeground(gem_colors[BLACK]);
-    put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
+    put_bitmap(bitdata,obx,oby,bit->ib_wicon,bit->ib_hicon);
     /* Icon-Text */
     load_GEMFONT(FONT_SMALLIBM);
-    DrawString(obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,(char *)*(LONG *)&bit->ib_ptext,strlen((char *)*(LONG *)&bit->ib_ptext));
+    DrawString(obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,text,strlen(text));
     /* Icon char */
     load_GEMFONT(FONT_DEFAULT);}
     break;
@@ -919,7 +923,7 @@ int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr) {
   } else return(0);
 }
 
-void fix_trindex() {
+static void fix_trindex() {
   int i;
   char **ptreebase;
   int anzahl;
@@ -933,7 +937,7 @@ void fix_trindex() {
     }
   }
 }
-void fix_frstrindex() {
+static void fix_frstrindex() {
   int i;
   char **ptreebase;
   int anzahl;
@@ -948,7 +952,7 @@ void fix_frstrindex() {
     }
   }
 }
-void fix_objc() {
+static void fix_objc() {
   int i,j;
   OBJECT *base;
   int anzahl;
@@ -974,7 +978,7 @@ void fix_objc() {
     }
   }
 }
-void fix_tedinfo() {
+static void fix_tedinfo() {
   int i,j;
   TEDINFO *base;
   int anzahl;
@@ -996,10 +1000,11 @@ void fix_tedinfo() {
     }
   }
 }
-void fix_bitblk() {
+static void fix_bitblk() {
   unsigned int i,j,k,l,m,n=0;
   BITBLK *base;
   int anzahl;
+  LONG *helper;
   base = (BITBLK *)((LONG)rsrc+(LONG)rsrc->rsh_bitblk);
   anzahl=rsrc->rsh_nbb;
 #if DEBUG
@@ -1013,9 +1018,10 @@ void fix_bitblk() {
         }
 	LSWAP((short *)&(base[i].bi_pdata));
       }
-      *((LONG *)&base[i].bi_pdata)+=(LONG)rsrc;
+      helper=(LONG *)&base[i].bi_pdata;
+      *helper+=(LONG)rsrc;
       if(rsrc->rsh_vrsn==0) {
-      k=*((LONG *)&base[i].bi_pdata);
+        k=*helper;
 #if DEBUG
 	  printf("Bitmap #%d at %x\n",i,k);
 	  printf("w=%d h=%d x=%d y=%d c=%d\n",base[i].bi_wb,base[i].bi_hl,base[i].bi_x,base[i].bi_y,base[i].bi_color);
@@ -1037,10 +1043,11 @@ void fix_bitblk() {
     }
   }
 }
-void fix_iconblk() {
+static void fix_iconblk() {
   unsigned int i,j,k,l,m,n=0;
   ICONBLK *base;
   int anzahl;
+  LONG *helper,*helper2;
   base = (ICONBLK *)((LONG)rsrc+(LONG)rsrc->rsh_iconblk);
   anzahl=rsrc->rsh_nib;
   if(anzahl) {
@@ -1053,16 +1060,19 @@ void fix_iconblk() {
 	    LSWAP((short *)&(base[i].ib_pdata));
 	    LSWAP((short *)&(base[i].ib_ptext));
 	  }
-	  *(LONG *)&base[i].ib_pmask+=(LONG)rsrc;
-	  *(LONG *)&base[i].ib_pdata+=(LONG)rsrc;
-	  *(LONG *)&base[i].ib_ptext+=(LONG)rsrc;
+	  helper2=(LONG *)&base[i].ib_pdata;
+	  *helper2+=(LONG)rsrc;
+	  helper=(LONG *)&base[i].ib_ptext;
+	  *helper+=(LONG)rsrc;
+	  helper=(LONG *)&base[i].ib_pmask;
+	  *helper+=(LONG)rsrc;
 #if DEBUG
 	  printf("Icon #%d name %s  ",i,*(LONG *)&base[i].ib_ptext);
 	  printf("w=%d h=%d x=%d y=%d c=<%c>\n",base[i].ib_wicon,base[i].ib_hicon,
 	  base[i].ib_xicon,base[i].ib_yicon,base[i].ib_char);
 #endif
           if(rsrc->rsh_vrsn==0) {
-            k=*(LONG *)&base[i].ib_pmask;
+            k=*helper;  /*(LONG *)&base[i].ib_pmask*/
 
 	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
               WSWAP((char *)(k+2*j));
@@ -1077,7 +1087,7 @@ void fix_iconblk() {
 	      }
 	      *((WORD *)(k+2*j))=n;
             }
-            k=*(LONG *)&base[i].ib_pdata;
+            k=*helper2;   /*(LONG *)&base[i].ib_pdata;*/
 	
 	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
            WSWAP((char *)(k+2*j));
@@ -1266,7 +1276,7 @@ void relobxy(OBJECT *tree,int ndx,int *x, int *y){
   }
 }
 
-int ob_curpos(TEDINFO *ted) {
+static int ob_curpos(TEDINFO *ted) {
   int n=ted->te_junk1;
   int i=0,j=0;
   char *a=(char *)ted->te_ptmplt;
@@ -1332,10 +1342,5 @@ int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
   *h=tree->ob_height;
   return(0);
 }
-
-
-
-
-
 
 #endif

@@ -17,6 +17,9 @@ SHOWPAGE
 DO
   MOUSEEVENT x,y,k,,s
   PRINT "Klick:",x,y,k
+  WHILE EVENT?(64)     ! Clear all pending motionevents
+    MOTIONEVENT
+  WEND
   IF k=1
     DRAW x,y
     SHOWPAGE

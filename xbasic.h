@@ -38,7 +38,7 @@
 
 #define P_PREFETCH      0x00100  /* PC lesen */
 
-#define PM_TYP          0x00600
+#define PM_TYP          0x00600  /*  Maske */
 #define P_BYTECODE      0x00000  /* */
 #define P_ARGUMENT      0x00200  /* Befehl mit Parameter im P_CODE.argument */
 #define P_SIMPLE        0x00400  /* Befehl ohne Parameter */
@@ -208,13 +208,38 @@ extern UNIVAR returnvalue;
 extern const int anzpafuncs;
 extern const AFUNCTION pafuncs[];
 extern P_CODE *pcode;
-extern int errorpc, breakpc;
-extern int everytime,alarmpc;
+extern int errorpc,errorpctype,breakpc,breakpctype;
+extern int everytime,alarmpc,alarmpctype;
 
 extern int breakcont;
 extern const char vdate[];
 extern const char version[];
 extern int is_bytecode;
+
+/*  Keywords */
+
+#define KEYW_UNKNOWN 127
+#define KEYW_NONE     0
+#define KEYW_ON       1
+#define KEYW_OFF      2
+#define KEYW_CONT     3
+#define KEYW_THEN     4
+#define KEYW_MENU     5
+#define KEYW_IF       6
+#define KEYW_TO       7
+#define KEYW_DOWNTO   8
+#define KEYW_STEP     9
+#define KEYW_USING   10
+#define KEYW_ERROR   11
+#define KEYW_BREAK   12
+#define KEYW_GOTO    13
+#define KEYW_GOSUB   14
+
+
+extern int keyword2num(char *t);
+extern const int anzkeywords;
+extern const char *keywords[];
+
 
 /* Deklarationen von Hilfsfunktionen */
 
@@ -237,6 +262,8 @@ unsigned int type(const char *ausdruck);
 #else
 #define structure_warning(lin,comment)  {printf("WARNING: corrupt program structure at line %d ==> %s.\n",lin,comment); invalidate_screen();}
 #endif
+
+
 
 
 

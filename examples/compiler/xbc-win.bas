@@ -1,6 +1,6 @@
 ' Pseudo-Compiler for X11-Basic (MS WINDOWS Version)
 ' erzeugt allein lauffaehigen Code (.exe)
-' (c) Markus Hoffmann 2010-2013
+' (c) Markus Hoffmann 2010-2014 2014-05-04
 '
 '* This file is part of X11BASIC, the BASIC interpreter / compiler
 '* ======================================================================
@@ -15,17 +15,13 @@ lflag=FALSE
 CLR dyn,inputfile$,collect$
 outputfilename$="b.exe"
 bfile$="b.b"
+cfile$="c.c"
 
 IF NOT EXIST("xbvm.exe")
   ~FORM_ALERT(1,"[3][xbc: ERROR: xbvm.exe not found.][CANCEL]")
   PRINT "xbc: ERROR: xbvm.exe not found."
   QUIT
 ENDIF
-IF NOT EXIST("xbbc.exe")
-  ~form_alert(1,"[3][xbc: ERROR: xbbc.exe not found.][CANCEL]")
-  print "xbc: ERROR: xbbc.exe not found."
-  quit
-endif
 
 WHILE LEN(param$(i))
   IF LEFT$(param$(i))="-"
@@ -51,7 +47,7 @@ WHILE LEN(param$(i))
       IF LEN(param$(i))
         outputfilename$=param$(i)
       ENDIF
-    else 
+    ELSE
       collect$=collect$+param$(i)+" " 
     ENDIF
   ELSE
@@ -64,8 +60,11 @@ WHILE LEN(param$(i))
   INC i
 WEND
 IF qflag=0
+  schwarz=COLOR_RGB(0,0,0)
+  weiss=COLOR_RGB(1,1,1)
+  COLOR weiss,schwarz
   IF LEN(inputfile$)=0
-    TEXT 10,10,"X11-Basic compiler V.1.20 (c) Markus Hoffmann 2010-2013"
+    TEXT 10,10,"X11-Basic compiler V.1.22 (c) Markus Hoffmann 2010-2014"
     FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
     IF LEN(inputfile$)
       IF NOT EXIST(inputfile$)
@@ -80,70 +79,62 @@ IF UPPER$(RIGHT$(inputfile$,4))<>".BAS"
 ENDIF
 
 IF LEN(inputfile$)
-  print "INPUT: ";inputfile$
-  system "xbbc "+inputfile$+" -o "+bfile$
-  if not exist(bfile$)
-    if qflag=0
-      ~form_alert(1,"[3][xbc/xbbc: FATAL ERROR: something is wrong.][CANCEL]")
-    endif
-    print "xbc/xbbc: FATAL ERROR: something is wrong."
-    quit
-  endif
-  open "I",#1,"xbvm.exe"
-  l=lof(#1)
-  print "xbvm.exe (lof: ",l,")"
-  close #1
-  t$=space$(l)
-  bload "xbvm.exe",varptr(t$)
-  print "len(t$) ",len(t$)
-  p=instr(t$,"4007111")
-  print p
-  memdump varptr(t$)+p-1,16
-  if p=0
-    if qflag=0
-      ~form_alert(1,"[3][xbc: FATAL ERROR: something is wrong.][CANCEL]")
-    endif
-    print "xbc: FATAL ERROR: something is wrong."
-    quit
-  endif
-  print "poking"
-  u$=str$(len(t$),7,7,1)
-  for i=0 to len(u$)-1
-    poke varptr(t$)+p-1+i,peek(varptr(u$)+i)
-  next i
-  memdump varptr(t$)+p-1,16
-
-  print "appending",bfile$
-  open "I",#1,bfile$
-  lb=lof(#1)
-  print lb,"bytes."
-  close #1
-  t$=t$+space$(lb)
-  bload bfile$,varptr(t$)+l
-  memdump varptr(t$)+l,lb
-  oagain:
-  if qflag=0
-    default$=right$(inputfile$,len(inputfile$)-rinstr(inputfile$,"/"))
-    default$=right$(default$,len(default$)-rinstr(default$,"\"))
-    default$=replace$(default$,".bas",".exe")
-    fileselect "select filename to write to","./*.exe",default$,outputfilename$
-    if len(outputfilename$)=0
-      quit
-    endif
-    if exist(outputfilename$)
-      a=form_alert(2,"[3][File "+outputfilename$+" already exists!|Overwrite ?][Overwrite|CANCEL]")
-      if a=2
-        goto oagain
-      ENDIF
-    ENDIF
+  t$="[2][You have now following choice:||"
+  t$=t$+"1. make bytecode, then make a standalone exe from the bytecode,|"
+  t$=t$+"2. make bytecode, then translate bytecode to C,|   and use tcc to compile it,|"
+  t$=t$+"3. only produce the bytecode,|"
+  t$=t$+"4. pseudo compile, then use tcc.|"
+  t$=t$+"|Option 1 is recommended.|For options 2 and 4 tcc needs to be installed.|"
+  
+  t$=t$+"][ 1 | 2 | 3 | 4 |CANCEL]"
+  IF qflag=0
+    COLOR weiss,schwarz
+    TEXT 10,32,inputfile$+" OK."
+    a=FORM_ALERT(1,t$)
+  ELSE
+    a=1
   ENDIF
-  PRINT "saving ";outputfilename$,LEN(t$),"bytes."
-
-  BSAVE outputfilename$,VARPTR(t$),LEN(t$)
-  if qflag=0
-    a=FORM_ALERT(1,"[0][done.| The program was stored under:|"+outputfilename$+".|Do you want to run it?][RUN|QUIT]")
-    IF a=1
-      SYSTEM outputfilename$
+  IF a=1
+    @make_bytecode(inputfile$,bfile$)
+    @packvm(bfile$)
+  ELSE IF a=2
+    @make_bytecode(inputfile$,bfile$)
+    IF NOT EXIST("xb2c.exe")
+      ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.exe not found.][CANCEL]")
+      PRINT "xbc: ERROR: xb2c.exe not found."
+      QUIT
+    ENDIF 
+    SYSTEM "xb2c "+bfile$+" -o "+cfile$
+    IF EXIST(cfile$)
+      IF qflag=0
+        COLOR weiss,schwarz
+        TEXT 10,64,bfile$+" --> "+cfile$+" OK."
+      ENDIF
+      PRINT bfile$+" --> "+cfile$+" OK."
+    ENDIF
+    @usetcc
+  ELSE IF a=3
+    @make_bytecode(inputfile$,bfile$)
+    outputfilename$=bfile$
+  ELSE IF a=4
+    @pseudo
+    @usetcc
+  ELSE
+    QUIT
+  ENDIF
+  ' Now compilation should have been successful  
+  IF qflag=0
+    IF EXIST(outputfilename$)
+      a=FORM_ALERT(1,"[0][done.| |The program was stored under:|"+outputfilename$+".|Do you want to run it?][RUN|QUIT]")
+      IF a=1
+        IF outputfilename$=bfile$
+          SYSTEM "xbvm "+outputfilename$
+        ELSE
+          SYSTEM outputfilename$
+        ENDIF
+      ENDIF
+    ELSE
+     ~FORM_ALERT(1,"[3][Ups...|compilation was not successful!][ OH ]")
     ENDIF
   ENDIF
 ELSE
@@ -154,7 +145,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.1.20 (c) Markus Hoffmann 2002-2013"
+  PRINT "X11-Basic Compiler V.1.22 (c) Markus Hoffmann 2002-2014"
   VERSION
 RETURN
 PROCEDURE using
@@ -171,4 +162,192 @@ PROCEDURE using
   PRINT "  -shared                  produce shared object file"
   PRINT "  -win32                   produce Windows .exe file"
   PRINT "  -o <file>                Place the output into <file>"
+RETURN
+
+PROCEDURE make_bytecode(file$,bfile$)
+  IF NOT EXIST("xbbc.exe")
+    IF qflag=0
+      ~FORM_ALERT(1,"[3][xbc: ERROR: xbbc.exe not found.][CANCEL]")
+    ENDIF
+    PRINT "xbc: ERROR: xbbc.exe not found."
+    QUIT
+  ENDIF
+  PRINT "INPUT: ";file$
+  SYSTEM "xbbc "+file$+" -o "+bfile$
+  IF NOT EXIST(bfile$)
+    IF qflag=0
+      ~FORM_ALERT(1,"[3][xbc/xbbc: FATAL ERROR: something is wrong.][CANCEL]")
+    ENDIF
+    PRINT "xbc/xbbc: FATAL ERROR: something is wrong."
+    QUIT
+  ENDIF
+  IF EXIST(bfile$)
+    IF qflag=0
+      COLOR weiss,schwarz
+      TEXT 10,48,file$+" --> "+bfile$+" OK."
+    ENDIF
+    PRINT file$+" --> "+bfile$+" OK."
+  ENDIF
+RETURN
+
+
+PROCEDURE packvm(bfile$)
+  LOCAL t$,l,lb,p,u$
+  OPEN "I",#1,"xbvm.exe"
+  l=LOF(#1)
+  PRINT "xbvm.exe (lof: ",l,")"
+  CLOSE #1
+  t$=SPACE$(l)
+  BLOAD "xbvm.exe",VARPTR(t$)
+  PRINT "len(t$) ",LEN(t$)
+  p=INSTR(t$,"4007111")
+  PRINT p
+  MEMDUMP VARPTR(t$)+p-1,16
+  IF p=0
+      IF qflag=0
+        ~FORM_ALERT(1,"[3][xbc: FATAL ERROR: something is wrong.][CANCEL]")
+      ENDIF
+      PRINT "xbc: FATAL ERROR: something is wrong."
+      QUIT
+  ENDIF
+  PRINT "poking"
+  u$=using$(LEN(t$),"#######")
+  print u$,p
+  FOR i=0 TO LEN(u$)-1
+    POKE VARPTR(t$)+p-1+i,PEEK(VARPTR(u$)+i)
+  NEXT i
+  MEMDUMP VARPTR(t$)+p-1,16
+
+  PRINT "appending",bfile$
+  OPEN "I",#1,bfile$
+  lb=LOF(#1)
+  PRINT lb,"bytes."
+  CLOSE #1
+  t$=t$+SPACE$(lb)
+  BLOAD bfile$,VARPTR(t$)+l
+  MEMDUMP VARPTR(t$)+l,lb
+oagain:
+  if qflag=0
+    default$=right$(inputfile$,len(inputfile$)-rinstr(inputfile$,"/"))
+    default$=right$(default$,len(default$)-rinstr(default$,"\"))
+    default$=replace$(default$,".bas",".exe")
+    FILESELECT "select filename to write to","./*.exe",default$,outputfilename$
+    IF LEN(outputfilename$)=0
+      QUIT
+    ENDIF
+    IF EXIST(outputfilename$)
+      a=form_alert(2,"[3][File "+outputfilename$+" already exists!|Overwrite ?][Overwrite|CANCEL]")
+      IF a=2
+        GOTO oagain
+      ENDIF
+    ENDIF
+  ENDIF
+  PRINT "saving ";outputfilename$,LEN(t$),"bytes."
+  BSAVE outputfilename$,VARPTR(t$),LEN(t$)
+  KILL bfile$
+RETURN
+PROCEDURE pseudo
+  LOCAL linecount
+  linecount=0
+  OPEN "O",#2,cfile$
+  PRINT #2,"/* PSEUDO-Code.c ("+f$+")"
+  PRINT #2,"   X11-BAsic-Pseudo-Compiler Version 1.20"
+  PRINT #2,"   (c) Markus Hoffmann"
+  PRINT #2,"*/"
+  PRINT #2,"#include <stdio.h>"
+  PRINT #2,"#include <stdlib.h>"
+  PRINT #2,"#include <string.h>"
+  PRINT #2,"extern int param_anzahl;"
+  PRINT #2,"extern char **param_argumente;"
+  IF lflag
+    PRINT #2,"void programmlauf();"
+    PRINT #2,"extern char **program;"
+    PRINT #2,"extern int prglen;"
+    PRINT #2,"char *routine_"+rumpf$+"[]={"
+  ELSE
+    PRINT #2,"void reset_input_mode(),x11basicStartup(),programmlauf();"
+    PRINT #2,"const char version[]="+ENCLOSE$("1.20")+";"
+    PRINT #2,"const char vdate[]="+ENCLOSE$(date$+" "+time$+" xxxx 1.20")+";"
+    PRINT #2,"int verbose=0;"
+    PRINT #2,"int programbufferlen=0;"
+    PRINT #2,"char ifilename[]="+ENCLOSE$(f$)+";"
+    PRINT #2,"char *programbuffer=NULL;"
+    PRINT #2,"char **program=(char *[]) {"
+  ENDIF
+  OPEN "I",#1,inputfile$
+  WHILE NOT EOF(#1)
+    LINEINPUT #1,t$
+    t$=XTRIM$(t$)
+    IF LEN(t$)
+      IF LEFT$(t$)<>"'"
+        SPLIT t$," !",1,t$,b$
+        IF LEFT$(t$,6)="PRINT "
+          t$="? "+right$(t$,len(t$)-6)
+        ELSE IF LEFT$(t$,6)="GOSUB "
+          t$="@"+right$(t$,len(t$)-6)
+        ELSE IF LEFT$(t$,5)="VOID "
+          t$="~"+right$(t$,len(t$)-5)
+        ENDIF
+        t$=REPLACE$(t$,chr$(34),"##AN"+"F##")
+        t$=REPLACE$(t$,"\","##BACKS"+"LASH##")
+        t$=REPLACE$(t$,"##A"+"NF##","\042")
+        t$=REPLACE$(t$,"##BACK"+"SLASH##","\\")
+        PRINT #2,ENCLOSE$(t$)+","
+	INC linecount
+      ENDIF
+    ENDIF
+  WEND
+  CLOSE #1
+  PRINT #2,"};"
+  IF lflag
+    PRINT #2,"int routinelen_"+rumpf$+"=sizeof(routine_"+rumpf$+")/sizeof(char *);"
+    PRINT #2,"typedef struct {int len; char *pointer;} STRING;"
+    PRINT #2,"extern union {double f; STRING str;} returnvalue;"
+    PRINT #2,"double enter_"+rumpf$+"(char *n){"
+    PRINT #2,"int oldprglen; char **oldprogram;"
+    PRINT #2,"oldprglen=prglen; oldprogram=program;"
+    PRINT #2,"program=routine_"+rumpf$+";"
+    PRINT #2,"prglen=routinelen_"+rumpf$+";"
+    PRINT #2,"init_program(prglen);c_run("");c_gosub(n);programmlauf();"
+    PRINT #2,"program=oldprogram;prglen=oldprglen;"
+    PRINT #2,"return(returnvalue.f);}"
+  ELSE 
+    ' PRINT #2,"int prglen=sizeof(program)/sizeof(char *);"
+    PRINT #2,"int prglen="+str$(linecount)+";"
+    IF win32
+      PRINT #2,"#include <windows.h>"
+      print #2,"HINSTANCE hInstance;"
+    ENDIF
+    PRINT #2,"main(int anzahl, char *argumente[]){"
+    IF win32
+      PRINT #2,"hInstance=GetModuleHandle(NULL);"
+    ENDIF
+    PRINT #2,"x11basicStartup(); set_input_mode(1,0);" 
+    PRINT #2,"atexit(reset_input_mode);"
+    PRINT #2,"param_anzahl=anzahl;"
+    PRINT #2,"param_argumente=argumente;"
+    PRINT #2,"init_program(prglen); do_run(); programmlauf();}"
+  ENDIF
+  CLOSE #2
+RETURN
+
+
+PROCEDURE usetcc
+  IF qflag=0
+    default$=RIGHT$(inputfile$,LEN(inputfile$)-RINSTR(inputfile$,"/"))
+    default$=RIGHT$(default$,LEN(default$)-RINSTR(default$,"\"))
+    default$=REPLACE$(default$,".bas",".exe")
+    o2again:
+    FILESELECT "select filename to write to","./*.exe",default$,outputfilename$
+    IF LEN(outputfilename$)=0
+      QUIT
+    ENDIF
+    IF EXIST(outputfilename$)
+      a=FORM_ALERT(2,"[3][File "+outputfilename$+" already exists!|Overwrite ?][Overwrite|CANCEL]")
+      IF a=2
+        GOTO o2again
+      ENDIF
+    ENDIF
+  ENDIF
+  SYSTEM "tcc "+cfile$+" x11basic.lib libgfx.lib -o "+outputfilename$
 RETURN

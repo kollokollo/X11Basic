@@ -12,13 +12,13 @@ DIM col(256)
 col(0)=COLOR_RGB(0,0,0)
 col(255)=COLOR_RGB(1,1,1)
 for i=1 to 254
-  col(i)=GET_COLOR(RANDOM(65535),RANDOM(65535),RANDOM(65535))
+  col(i)=COLOR_RGB(RND(),RND(),RND())
 NEXT i 
 
 GET_GEOMETRY 1,bx,by,bw,bh
 bw=min(512,bw)
 bh=min(512,bh)
-DIM field(bw,bh)
+DIM field(bw+1,bh+1)
 ARRAYFILL field(),0
 
 sx=-2.2
@@ -33,7 +33,7 @@ count=0
 count2=0
 DO
   IF MOUSEK
-    VSYNC
+    SHOWPAGE
     IF MOUSEX>=0 AND MOUSEY>=0 AND MOUSEX<bw AND MOUSEY<bh
       x=MOUSEX
       y=MOUSEY

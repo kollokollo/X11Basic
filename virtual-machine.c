@@ -11,6 +11,9 @@
 #include <stdarg.h>
 #include <math.h>
 #include <string.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
@@ -37,7 +40,7 @@ extern int verbose;
 #endif
 
 #define TYPEMISMATCH(...) printf("ERROR: type mismatch for %s.\n",__VA_ARGS__)
-#define VMERROR(...) printf("VM-ERROR: %s.\n",__VA_ARGS__)
+#define VMERROR(a,...) {printf("VM-ERROR: " a "\n",##__VA_ARGS__);batch=0;}
 
 /*for every platform where no real compiler exists define some functions
   static --> higher performance */
@@ -53,23 +56,23 @@ extern int verbose;
 
 char *rodata=NULL;;
 
-inline static int vm_x2i(PARAMETER *sp) {    /* cast to integer */
+inline static void vm_x2i(PARAMETER *sp) {    /* cast to integer */
   VERBOSE("x2i ");
-  if(sp[-1].typ==PL_INT) return(0);
+  if(sp[-1].typ==PL_INT) return;
   else if(sp[-1].typ==PL_FLOAT) {
     sp[-1].integer=(int)sp[-1].real;
     sp[-1].typ=PL_INT;  
-  } else VMERROR("X2I");
-  return(0);
+  } else VMERROR("X2I (typ=%x)",sp[-1].typ);
+  return;
 }
-inline static int vm_x2f(PARAMETER *sp) {    /* cast to integer */
+inline static void vm_x2f(PARAMETER *sp) {    /* cast to float */
   VERBOSE("x2f ");
-  if(sp[-1].typ==PL_FLOAT) return(0);
+  if(sp[-1].typ==PL_FLOAT) return;
   else if(sp[-1].typ==PL_INT) {
     sp[-1].real=(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;  
-  } else VMERROR("X2F");
-  return(0);
+  } else VMERROR("X2F (typ=%x)",sp[-1].typ);
+  return;
 }
 
 STATIC int vm_add(PARAMETER *sp) {    /* binaer addition */
@@ -93,6 +96,13 @@ STATIC int vm_add(PARAMETER *sp) {    /* binaer addition */
     memcpy(sp[-1].pointer+a.len,b.pointer,b.len);
     free(a.pointer);
     free(b.pointer);
+  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
+    ARRAY a,b;
+    a=*((ARRAY *)&(sp[-1].integer));
+    b=*((ARRAY *)&(sp[0].integer));
+    array_add(a,b);
+    free_array(&b);
+    *((ARRAY *)&(sp[-1].integer))=a;
   } else {
     TYPEMISMATCH("ADD");
     free_parameter(sp);
@@ -108,6 +118,13 @@ STATIC int vm_sub(PARAMETER *sp) {    /* binaer addition */
   else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
     sp[-1].real=sp[0].real-(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;
+  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
+    ARRAY a,b;
+    a=*((ARRAY *)&(sp[-1].integer));
+    b=*((ARRAY *)&(sp[0].integer));
+    array_sub(a,b);
+    free_array(&b);
+    *((ARRAY *)&(sp[-1].integer))=a;
   } else {
     TYPEMISMATCH("SUB");
     free_parameter(sp);
@@ -123,6 +140,14 @@ STATIC int vm_mul(PARAMETER *sp) {    /* binaer addition */
   else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
     sp[-1].real=sp[0].real*(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;
+  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
+    ARRAY a,b,c;
+    a=*((ARRAY *)&(sp[-1].integer));
+    b=*((ARRAY *)&(sp[0].integer));
+    c=mul_array(a,b);
+    free_array(&b);
+    free_array(&a);
+    *((ARRAY *)&(sp[-1].integer))=c;
   } else {
     TYPEMISMATCH("MUL");
     free_parameter(sp);
@@ -170,8 +195,7 @@ STATIC int vm_mod(PARAMETER *sp) {    /* binaer addition */
   VERBOSE("vm_mod ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
-   sp[-1].real=fmod((double)sp[-1].integer,(double)sp[0].integer);
-   sp[-1].typ=PL_FLOAT;
+   sp[-1].integer=(int)fmod((double)sp[-1].integer,(double)sp[0].integer);
   } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) 
     sp[-1].real=fmod(sp[-1].real,sp[0].real);
   else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   
@@ -288,7 +312,7 @@ ISTATIC int vm_ssysvar(PARAMETER *sp,int n) {    /*  */
 }
 ISTATIC int vm_asysvar(PARAMETER *sp,int n) {    /*  */
   VERBOSE("vm_%s ",sysvars[n].name);
-  printf("#####Sysvar ARRAY: %s not implemented\n",sysvars[n].name);
+  VMERROR("#####Sysvar ARRAY: %s not implemented.",sysvars[n].name);
   xberror(9,"Sysvar ARRAY"); /*Function or command %s not implemented*/
   sp->real=4711;
   sp->typ=PL_FLOAT;
@@ -326,7 +350,10 @@ inline static void cast_to_real(PARAMETER *sp) {
   else if(sp->typ==PL_INT) {
     sp->typ=PL_FLOAT;
     sp->real=(double)sp->integer;
-  } else printf("ERROR: CAST to real not possible for $%x/not implemented.\n",sp->typ);
+  } else {
+    VMERROR("CAST to real not possible for typ=$%x/value=%d,%g not implemented.",
+    sp->typ,sp->integer,sp->real);
+  }
 }
 inline static void cast_to_int(PARAMETER *sp) {
   VERBOSE("vm_cast-to-int ");
@@ -335,7 +362,9 @@ inline static void cast_to_int(PARAMETER *sp) {
   else if(sp->typ==PL_FLOAT) {
     sp->typ=PL_INT;
     sp->integer=(int)sp->real;
-  } else puts("ERROR: CAST to int not possible/not implemented.");
+  } else {
+    VMERROR("CAST to int not possible for typ=$%x/not implemented.",sp->typ);
+  }
 }
 STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   VERBOSE("vm_%s(%d) ",psfuncs[i].name,anzarg);
@@ -410,8 +439,8 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
 
-  puts("ERROR: INCOMPLETE"
-       ", diese Funktion bekommt ihre Parameter nicht.");
+  VMERROR("INCOMPLETE"
+       ", this function does not get its parameters.");
   return 1-anzarg;
 }
 
@@ -448,7 +477,7 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
-    cast_to_real(&sp[0]);
+    if(anzarg>0) cast_to_real(&sp[0]);
     if(pfuncs[i].opcode&F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].real);
       sp[0].typ=PL_INT;
@@ -459,8 +488,8 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
   if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
-    cast_to_real(&sp[0]);
-    cast_to_real(&sp[1]);
+    if(anzarg>0) cast_to_real(&sp[0]);
+    if(anzarg>1) cast_to_real(&sp[1]);
     if(pfuncs[i].opcode&F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].real,sp[1].real);
       sp[0].typ=PL_INT;
@@ -471,7 +500,7 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
-    cast_to_int(&sp[0]);
+    if(anzarg>0) cast_to_int(&sp[0]);
     if(pfuncs[i].opcode&F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].integer);
       sp[0].typ=PL_INT;
@@ -482,8 +511,8 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
   if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
-    cast_to_int(&sp[0]);
-    cast_to_int(&sp[1]);
+    if(anzarg>0) cast_to_int(&sp[0]);
+    if(anzarg>1) cast_to_int(&sp[1]);
     if(pfuncs[i].opcode&F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].integer,sp[1].integer);
       sp[0].typ=PL_INT;
@@ -527,9 +556,8 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     sp[0]=rpar;
     return 1-anzarg;
   }
-  puts("ERROR: INCOMPLETE"
-       ", diese Funktion bekommt ihre Parameter nicht.");
-
+  VMERROR("INCOMPLETE"
+       ", this function does not get its parameters.");
   return 1-anzarg;
 }
 
@@ -566,8 +594,8 @@ STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
     if(e!=-1) free_pliste(e,plist);
     return -anzarg;
   } 
-  puts("ERROR: INCOMPLETE"
-       ", diese Funktion bekommt ihre Parameter nicht.");
+  VMERROR("INCOMPLETE"
+       ", this function does not get its parameters.");
   return -anzarg;
 }
 
@@ -578,9 +606,26 @@ ISTATIC int vm_pushvv(int vnr,PARAMETER *sp) {    /*  */
     if(variablen[vnr].typ==INTTYP) sp->typ=PL_IVAR;
     else if(variablen[vnr].typ==FLOATTYP) sp->typ=PL_FVAR;
     else if(variablen[vnr].typ==STRINGTYP) sp->typ=PL_SVAR;
-    else sp->typ=PL_ALLVAR;
+    else if(variablen[vnr].typ==ARRAYTYP) {
+      if(variablen[vnr].pointer.a->typ==INTTYP) sp->typ=PL_IARRAYVAR;
+      else if(variablen[vnr].pointer.a->typ==FLOATTYP) sp->typ=PL_FARRAYVAR;
+      else if(variablen[vnr].pointer.a->typ==STRINGTYP) sp->typ=PL_SARRAYVAR;
+      else sp->typ=PL_ARRAYVAR;
+    } else sp->typ=PL_ALLVAR;
     return(1);
 }
+
+
+static void make_indexliste_plist(int dim, PARAMETER *p, int *index) {
+  while(--dim>=0) {
+      if(p[dim].typ==PL_INT) index[dim]=p[dim].integer;
+      else if(p[dim].typ==PL_FLOAT) index[dim]=(int)p[dim].real;
+      else printf("ERROR: no int!");    
+  }
+}
+
+
+
 
 STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
   int *indexliste=NULL;
@@ -642,9 +687,56 @@ static void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
 	printf("Ziel-Array  hat folgenden Typ: %d\n",zarr->typ);
 	printf("Quell-Array hat folgenden Typ: %d\n",arr->typ);
       }
-  } else {
+      
+  } else if(v->typ==INTTYP && p->typ==PL_IVAR) {
+    erase_variable(v);
+    v->pointer.i=(int *)p->pointer;
+    v->flags=V_STATIC;
+  } else if(v->typ==FLOATTYP && p->typ==PL_FVAR) {
+    erase_variable(v);
+    v->pointer.f=(double *)p->pointer;
+    v->flags=V_STATIC;
+  } else if(v->typ==STRINGTYP && p->typ==PL_SVAR) {
+    erase_variable(v);
+    v->pointer.s=(STRING *)p->pointer;
+    v->flags=V_STATIC;
+  } else if(v->typ==ARRAYTYP) {
+    int atyp=v->pointer.a->typ;
+    if(p->typ==PL_IARRAYVAR) {
+      if(atyp!=INTTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+    } else if(p->typ==PL_FARRAYVAR) {
+      if(atyp!=FLOATTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+    } else if(p->typ==PL_SARRAYVAR) {
+      if(atyp!=STRINGTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+    } else if(p->typ==PL_ARRAYVAR) {
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+    } else {
+      xberror(58,v->name); /* Variable %s has incorrect type*/ 
+      dump_parameterlist(p,1);
+    }
+  } else {  
     xberror(58,v->name); /* Variable %s has incorrect type*/  
-    printf("zuweis_v_parameter: $%x->$%x kann nicht konvertieren.\n",p->typ,v->typ);
+    printf("zuweis_v_parameter: $%x->$%x can not convert.\n",p->typ,v->typ);
     dump_parameterlist(p,1);
   }
 }
@@ -777,17 +869,25 @@ static int vm_eval(PARAMETER *sp) {    /*  */
                  *dd=*ss; i+=l;}
 
 
-PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
+PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAMETER *plist, int inpar) {
   PARAMETER *opstack=calloc(BC_STACKLEN,sizeof(PARAMETER));
   PARAMETER *osp=opstack;
   register unsigned char cmd;
-  register int i=0;
+  register int i=offset;
   int j;
   
   int a,n;
   short ss,ss2;
   double d;
   char *buf;
+  
+  if(plist && inpar>0) {
+    memcpy(osp,plist,sizeof(PARAMETER)*inpar);
+    opstack+=inpar;
+  }
+  
+  
+  
 #ifdef ANDROID
   backlog("enter virtual machine.");
 #endif
@@ -848,7 +948,8 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
       break;
     case BC_BRAs:
       VERBOSE("vm_bra.s_%d \n",bcpc.pointer[i]); 
-      i+=(bcpc.pointer[i++]);
+      i+=bcpc.pointer[i];
+      i++;
       break;
     case BC_BEQs:
       ss=bcpc.pointer[i++];
@@ -987,11 +1088,20 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
         memcpy(buf,rodata+a,len);
         buf[len]=0;
         opstack->integer=len;
-        opstack->typ=PL_KEY;
+        opstack->typ=PL_KEY;    /*  Kann auch EVAL oder P_ARGUMENT sein */
+	opstack->arraytyp=KEYW_UNKNOWN; 
         opstack->pointer=buf;
         opstack++;
         VERBOSE("%s ",buf);
       }
+      break;
+    case BC_PUSHK:
+      opstack->arraytyp=bcpc.pointer[i++];
+      opstack->typ=PL_KEY;
+      opstack->integer=0;
+      opstack->pointer=NULL;
+      opstack++;
+      VERBOSE("%s ",keywords[opstack[-1].arraytyp]);
       break;
     case BC_COMMENT:
       a=bcpc.pointer[i++];
@@ -1122,6 +1232,14 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
       opstack--;
       free_parameter(opstack);
       break;
+    case BC_ZUWEISi:
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      *(variablen[ss].pointer.i)=(--opstack)->integer;
+      break;
+    case BC_ZUWEISf:
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      *(variablen[ss].pointer.f)=(--opstack)->real;
+      break;
     case BC_ZUWEIS:
       CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_zuweis(ss,opstack);
@@ -1163,16 +1281,28 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
       VERBOSE("vm_eval-%d ",a);
       opstack+=vm_eval(opstack);
       break;
+    case BC_PUSHLABEL:
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      opstack->integer=a;
+      opstack->typ=PL_LABEL;
+      opstack->arraytyp=1;
+      opstack++;
+      break;
+    case BC_PUSHPROC: 
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      opstack->integer=a;
+      opstack->typ=PL_PROC;
+      opstack->arraytyp=1;
+      opstack++;
+      break;
     default:
-      printf("VM: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
+      VMERROR("BC_ILLEGAL instruction %2x at %p",(int)cmd,(void *)i);
       memdump((unsigned char *)&(bcpc.pointer[i]),16);
       xberror(104,""); /* Illegal Instruction */
-
-      *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  
-      return(osp);
     }
   }
-  VERBOSE("\nVirtual machine exited.");
+  VERBOSE("\nVirtual machine exited at %p. batch=%d err=%d",(void *)i,batch,err);
+  // printf("\nVirtual machine exited at %p. batch=%d err=%d\n",(void *)i,batch,err);
 #ifdef ANDROID
   backlog("Virtual machine exited.");
 #endif

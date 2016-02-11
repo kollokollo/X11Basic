@@ -33,8 +33,10 @@ Authors:
 --------
     Mark Edel <edel@fnal.gov>
 
-===902 Text Editor Syntax file ============
+======================== 902 Text Editor Syntax file =======================
+
 920.conf
+
 This is the syntax conf file for 920 Text Editor
 
 
@@ -45,4 +47,16 @@ Marcos Cruz has published a Vim syntax file:
 
 http://programandala.net/en.program.x11-basic_vim_syntax_file
 
+======================== gedit and geany sytax file ================================
+x11basic.lang and x11basic.geany
+
+I am sending you two files with syntax highlighting for X11 Basic for
+gtksourceview (gedit) and geany. The geany version is a modified version of the
+freebasic file because adding language support to geany is a nightmare, though
+geany would have made a great ide for X11 Basic the syntax highlighting leaves a
+lot to be desired. For gtksourceview you can copy the lang file to
+/usr/share/gtksourceview3 and it will automatically be recognised. I believe
+there is also an IDE that uses those definitions but I haven't used it.
+
+Christos Tziotzis
 

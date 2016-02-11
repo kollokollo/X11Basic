@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.20
+                       VERSION 1.22
 
-            (C) 1997-2013 by Markus Hoffmann
+            (C) 1997-2014 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.20                              Vendor: Markus Hoffmann
+Version     : 1.22                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
@@ -52,14 +52,14 @@ Description :
   X11-Basic programs can also be compiled into a bytecode (see xbbc). This
   bytecode  can be interpreted by a virtual machine (see xbvm). Finally, the
   bytecode can be  converted to C sourcefiles (see xb2c) which can be compiled
-  with the gnu C compiler (or the tiny c compiler) to native excecutables.
+  with the gnu C compiler (or the tiny C compiler) to native excecutables.
 
   Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
   with the bas2x11basic program (see the man page bas2x11basic(1) ).
 
   You will find the compiler sourcecode and some other sample programs in 
   /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-  can be found in X11-Basic-examples-1.20.zip, which you can download from the 
+  can be found in X11-Basic-examples-1.22.zip, which you can download from the 
   homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
   of the manual can be found there.
 
@@ -116,9 +116,6 @@ If you want to use the compilers included in this package, you have to
 make both the static and dynamic libraries.
 
 cd ./src
-      If you do not have the file mathematics.c please do
-cp mathemat_dummy.c mathematics.c
-      then:
 make lib              will generate libx11basic.so
 make x11basic.a       will generate x11basic.a
 

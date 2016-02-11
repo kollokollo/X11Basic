@@ -33,6 +33,13 @@
 /* A static variable for holding the line. */
 static char *line_read = (char *)NULL;
 #ifndef HAVE_READLINE
+
+#ifdef ANDROID
+int utf8coding=1;    /* Flag if we should use UTF-8 coding */
+#else
+static int utf8coding=0;    /* Flag if we should use UTF-8 coding */
+#endif
+
 #define MAX_HISTORY 100
 static int historyp=-1;
 static char *history[MAX_HISTORY];
@@ -51,15 +58,32 @@ void add_history(const char *line) {
   }
  // printf("Add history: %s --> %d\n",line,historyp);
 }
+
+static int strlen_utf8(const char *s) {
+   int i = 0, j = 0;
+   if(!s) return(0);
+   if(!utf8coding) return(strlen(s));
+   while (s[i]) {
+     if ((s[i] & 0xc0) != 0x80) j++;
+     i++;
+   }
+   return j;
+}
+
 void out_line(const char *prompt,const char *edittext, const int cursorpos) {
   int i;
   /* ESC sequenz fuer ganze Zeile l"oschen, cursor an*/
+#if 0
   putchar(13);
+#else
+  putchar(27);   /*   resore cursor position */
+  putchar('8');
+#endif
   putchar(27);
   printf("[K%s%s ",prompt,edittext);
   putchar(8);
-  if(strlen(edittext)>cursorpos) {
-    for(i=0;i<strlen(edittext)-cursorpos;i++) putchar(8);
+  if(strlen_utf8(edittext)>cursorpos) {
+    for(i=0;i<strlen_utf8(edittext)-cursorpos;i++) putchar(8);
   }
   #ifdef ANDROID
     invalidate_screen();
@@ -68,11 +92,13 @@ void out_line(const char *prompt,const char *edittext, const int cursorpos) {
   #endif
 }
 char *readline(char *prompt) {
-  int i,cur=0,len=0,escflag=0,hip=0,hisav=0;
+  int i,cur=0,tcur=0,len=0,escflag=0,hip=0,hisav=0;
   int finish=0;
   char a;
   char *line_read=(char *)malloc(MAXLINELEN+1);
   line_read[0]=0;
+  putchar(27);   /*   save cursor position */
+  putchar('7');
 
   out_line(prompt,line_read,cur);
 #ifdef ANDROID
@@ -83,11 +109,10 @@ char *readline(char *prompt) {
     a=getchar();
     if(escflag==2) {
       if(a==51) {  /*DEL Taste*/
-        if(len>cur) {
+        if(len>tcur) {
           len--;
-	  for(i=cur;i<len;i++) line_read[i]=line_read[i+1];
+	  for(i=tcur;i<len;i++) line_read[i]=line_read[i+1];
 	  line_read[len]=0;
-	  out_line(prompt,line_read,cur);
 	}
       } else if(a==65) {
 	if(!hisav) {
@@ -97,56 +122,72 @@ char *readline(char *prompt) {
 	}
         if(historyp-hip-1>0) hip++;
 	if(history[historyp-hip-1]) strcpy(line_read,history[historyp-hip-1]);
-	len=strlen(line_read);
-	cur=len;
-	out_line(prompt,line_read,cur);
+	tcur=len=strlen(line_read);
+	cur=strlen_utf8(line_read);
       } else if(a==66) {
         if(hip>0) hip--;
 	if(history[historyp-hip-1]) strcpy(line_read,history[historyp-hip-1]);
-	len=strlen(line_read);
-	cur=len;
-	out_line(prompt,line_read,cur);
-	
+	tcur=len=strlen(line_read);
+	cur=strlen_utf8(line_read);
       } else if(a==67) {
-       if(cur<len) cur++;
+       if(tcur<len) {
+         tcur++;
+	 cur++;
+	 if(utf8coding) {while(tcur<len && ((line_read[tcur]&0xc0)==0x80)) tcur++;}
+       }
       } else if(a==68) {
-        if(cur>0) cur--;
+        if(cur>0) {
+	  cur--;
+	  tcur--;
+	  if(utf8coding) {while(tcur>0 && ((line_read[tcur]&0xc0)==0x80)) tcur--;}
+	}
       } else printf("ESC [ %c %d\n",a,a);
+#ifndef _WIN32
+      out_line(prompt,line_read,cur);
+#endif
       escflag=0;
     } else if(escflag==1) {
-      if(a==91) escflag++;
+      if(a=='[') escflag++;
       else printf("ESC %c %d\n",a,a);
     } else {
-    
-    if(a==27) {
-      escflag=1;
-    } else if(a==10) {
-      finish++;
-    } else if(a==8 || a==127) {
-      if(cur>0) {
-        cur--;
-	len--;
-	for(i=cur;i<len;i++) line_read[i]=line_read[i+1];
-	line_read[len]=0;
+      if(a==27) escflag=1;
+      else if(a==10 || a==13) finish++;
+      else if(a==8 || a==127) {
+        if(cur>0) {
+          int otcur=tcur;
+	  int olen=len;
+          cur--;
+	  len--;
+	  tcur--;
+	  if(utf8coding) {
+	    while(tcur>0 && ((line_read[tcur]&0xc0)==0x80)) {tcur--; len--;}
+	  }
+	  for(i=otcur;i<olen;i++) line_read[tcur+i-otcur]=line_read[i];
+	  line_read[len]=0;
+        }
+      } else {
+        if(len<MAXLINELEN) {
+          if(tcur<len) {
+            for(i=len;i>tcur;i--) line_read[i]=line_read[i-1];	  
+	  }
+	  len++;
+          line_read[tcur++]=a;
+	  cur++;
+	  if(utf8coding) {
+	    if((a&0xc0)==0x80) cur--;
+	  }
+	  line_read[len]=0;
+	  hisav=0;
+        }
       }
-    } else if(isprint(a)){
-      if(len<MAXLINELEN) {
-        if(cur<len) {
-          for(i=len;i>cur;i--) line_read[i]=line_read[i-1];	  
-	}
-	len++;
-        line_read[cur++]=a;
-	line_read[len]=0;
-	hisav=0;
-      }
-    } else {
-      printf("non printable char: %c %d\n",a,a);
-    }
-    
-    out_line(prompt,line_read,cur);
+#ifndef _WIN32
+      out_line(prompt,line_read,cur);
+#endif
     }
   }
-  printf("\n");
+#ifndef _WIN32
+  puts("");
+#endif
 
 #ifdef ANDROID
   cursor_onoff(0);

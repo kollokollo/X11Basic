@@ -16,6 +16,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 #if defined WINDOWS || defined ANDROID
 #define EX_CANTCREAT	73	/* can't create (user) output file */
@@ -57,8 +60,8 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
-const char version[]="1.20"; /* Version Number. Put some useful information here */
-const char vdate[]="2012-05-26";   /* Creation date.  Put some useful information here */
+const char version[]="1.22"; /* Version Number. Put some useful information here */
+const char vdate[]="2014-01-02";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 
@@ -83,10 +86,9 @@ int bssdatalen=0;
 
 int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
-  
-  BYTECODE_HEADER h;
   if(fdis==-1) return(-1);
-  
+  BYTECODE_HEADER h;
+  bzero(&h,sizeof(BYTECODE_HEADER));
   add_rodata(ifilename,strlen(ifilename));
   
   /* align to even adresses: */
@@ -121,8 +123,8 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   }
   if(write(fdis,&h,sizeof(BYTECODE_HEADER))==-1) io_error(errno,"write");
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
-  if(rodatalen) if(write(fdis,rodata,rodatalen)==-1) io_error(errno,"write");
-  if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");
+  if(rodatalen) {if(write(fdis,rodata,rodatalen)==-1) io_error(errno,"write");}
+  if(dlen) {if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");}
   if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write");
   if(write(fdis,symtab,h.symbolseglen)==-1) io_error(errno,"write");
   return(close(fdis));
@@ -134,11 +136,11 @@ static void doit(char *ausdruck) {
   PARAMETER *p;
   int n;
   bcpc.len=0;
-  printf("Ausdruck: %s\n",ausdruck);
+  printf("Expression: %s\n",ausdruck);
   bc_parser(ausdruck);
   memdump((unsigned char *)bcpc.pointer,bcpc.len);
   printf("Virtual Machine: %d Bytes\n",bcpc.len);
-  p=virtual_machine(bcpc,&n);
+  p=virtual_machine(bcpc,0,&n,NULL,0);
   dump_parameterlist(p,n);
   free_pliste(n,p);
 }
@@ -146,7 +148,7 @@ static void doit(char *ausdruck) {
 static void intro(){
   puts("*************************************************************\n"
        "*           X11-Basic bytecode compiler                     *\n"
-       "*                    by Markus Hoffmann 1997-2013 (c)       *");
+       "*                    by Markus Hoffmann 1997-2014 (c)       *");
   printf("* library V. %s date:   %30s    *\n",libversion,libvdate);
   puts("*************************************************************\n");
 }
@@ -213,7 +215,7 @@ int main(int anzahl, char *argumente[]) {
 	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
 	if(ret==-1) exit(EX_CANTCREAT);
       } else {
-        printf("ERROR: %s not found !\n",ifilename);
+        printf("%s: ERROR: %s: file not found!\n",argumente[0],ifilename);
         exit(EX_NOINPUT);
       }
     } else exit(EX_NOINPUT);

@@ -14,9 +14,9 @@
 
 
 
-                       VERSION 1.20
+                       VERSION 1.22
 
-            (C) 1997-2013 by Markus Hoffmann
+            (C) 1997-2014 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -35,6 +35,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 
 #include <math.h>
@@ -59,6 +62,7 @@
 #include "virtual-machine.h"
 #include "graphics.h"
 #include "window.h"
+#include "number.h"
 
 
 const char libversion[]=VERSION;           /* Programmversion           */
@@ -78,14 +82,14 @@ const char xbasic_name[]="sdlxbasic";
 const char xbasic_name[]="xbasic";
 #endif
 int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
-int errorpc=-1,breakpc=-1;
-int everytime=0,alarmpc=-1;
+int errorpc=-1,errorpctype=0,breakpc=-1,breakpctype=0;
+int everytime=0,alarmpc=-1,alarmpctype=0;
 
 int stack[STACKSIZE];
 
+
 /* fuer die Dateiverwaltung     */
-FILE *dptr[ANZFILENR];
-int filenr[ANZFILENR];
+FILEINFO filenr[ANZFILENR];
 
 P_CODE *pcode=NULL;    /*Preprocessor code goes into an array of this structure */
 
@@ -114,10 +118,17 @@ void free_pcode(int l);
 static int add_label(char *name,int zeile,int dataptr);
 static int add_proc(char *name,char *pars,int zeile,int typ);
 
-#if 0
-char *keys[]={"ON","OFF","IF","TO","DOWNTO","STEP","USING"};
-const int anzkeys=sizeof(keys)/sizeof(char *);
-#endif
+
+const char *keywords[]={"","ON","OFF","CONT","THEN","MENU","IF","TO","DOWNTO","STEP","USING","ERROR","BREAK","GOTO","GOSUB"};
+const int anzkeywords=sizeof(keywords)/sizeof(char *);
+int keyword2num(char *t) {
+  int i;
+  for(i=0;i<anzkeywords;i++) {
+    if(strcmp(t,keywords[i])==0) return(i);
+  }
+  return(KEYW_UNKNOWN);
+}
+
 
 static int oldprglen=0;
 
@@ -172,7 +183,7 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
 	*/
 
 char *bytecode_init(char *adr) {
-  int i,a,vnr,typ;
+  int i,a,typ;
   char *name;
   char *bsseg;
   unsigned char *fixup;   /* Relocation information */
@@ -193,8 +204,8 @@ char *bytecode_init(char *adr) {
 //     backlog(buffer);
 //#endif
     if(bytecode->version!=BC_VERSION) {
-      printf("ERROR: This Bytecode was compiled for a different version of "
-      "X11-Basic.\n Please consider to recompile it.\n");
+      printf("ERROR: This bytecode was compiled for a different version of "
+      "X11-Basic.\n Please consider to recompile it from the .bas file.\n");
       return(NULL);
     }
         
@@ -227,7 +238,7 @@ char *bytecode_init(char *adr) {
 	  if(symtab[i].name) name=&stringseg[symtab[i].name];
           else {
 	    name=malloc(32);  /*TODO: Das muss irgendwann wieder freigegeben werden ....*/
-	    sprintf(name,"VAR_%x",vnr);
+	    sprintf(name,"VAR_%x",i);
           }
 	  /*Hier erstmal nur int und float im bss ablegen, da noch nicht geklaert ist, 
 	  wie wir strings und arrays hier initialisieren koennen ohne die symboltabelle 
@@ -236,9 +247,9 @@ char *bytecode_init(char *adr) {
 //    sprintf(buffer,"Symbol: <%s> $%04x %08x ",name,typ,symtab[i].adr);
 //    backlog(buffer);
 //#endif	  
-	  if(typ&ARRAYTYP)        add_variable(name,ARRAYTYP,typ&(~ARRAYTYP));
-	  else if(typ==STRINGTYP) add_variable(name,typ,0);
-	  else                    add_variable_adr(name,typ,bsseg+symtab[i].adr);
+	  if(typ&ARRAYTYP)        add_variable(name,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+	  else if(typ==STRINGTYP) add_variable(name,typ,0,V_DYNAMIC,NULL);
+	  else                    add_variable(name,typ,0,V_STATIC,bsseg+symtab[i].adr);
 //#ifdef ANDROID	  
 //    sprintf(buffer,"BSSSEG auf %08x ",bsseg);
 //    backlog(buffer);
@@ -307,8 +318,8 @@ int mergeprg(const char *fname) {
        printf("Bytecode header found (V.%x)\n",bytecode->version);
      #endif
      if(bytecode->version!=BC_VERSION) {
-       printf("ERROR: This Bytecode was compiled for a different version of "
-       "X11-Basic.\n Please consider to recompile it.\n");
+       printf("ERROR: This bytecode was compiled for a different version of "
+       "X11-Basic.\n Please consider to recompile it from the .bas file.\n");
        return(-1);
     }
     
@@ -339,7 +350,8 @@ int mergeprg(const char *fname) {
       } else if(programbuffer[i]==9) programbuffer[i]=' '; /* TABs entfernen*/
       i++;
     }
-
+    if(i>0 && programbuffer[i-1]!=0) prglen++;  /*letzte Zeile hatte kein \n*/
+    
     program=(char **)realloc(program,prglen*sizeof(char *));  /*Array mit Zeilenpointern*/
     linetable=realloc(linetable,prglen*sizeof(int));
     bzero(linetable,prglen*sizeof(int));
@@ -358,7 +370,10 @@ int mergeprg(const char *fname) {
       }
       i++;
     }
-    
+    if((pos-programbuffer)<programbufferlen) {
+      program[prglen++]=pos;  /* Potenzielle letzte Zeile ohne \n */
+      programbuffer[i]=0; /*stelle sicher dass die letzte Zeile durch ein 0 beendet ist*/
+    }
     return(init_program(prglen));
   }
 }
@@ -576,7 +591,39 @@ int init_program(int prglen) {
       } else pos2=zeile+strlen(zeile);
       pcode[i].integer=add_proc(buffer,pos2,i,typ);
     } else { /* Rest Transformieren    */
-      int j=find_comm(zeile);
+      int j=-1;
+    
+    
+    
+      if(strcmp(zeile,"ON")==0) {
+       // TODO: Sonderbehandlung ON  
+        char *w1,*w2,w3[strlen(buffer)+1],w4[strlen(buffer)+1];
+	wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
+	wort_sep(w2,' ',TRUE,w3,w4);
+	// printf("Onspecial: <%s> <%s> --<%s>-- / <%s>\n",w1,w2,w3,w4);
+         if(strcmp(w1,"ERROR")==0 || strcmp(w1,"BREAK")==0 || strcmp(w1,"MENU")==0) {
+	   if(strcmp(w3,"GOSUB")==0) {
+	     j=find_comm("ON B/E/M GOSUB");
+	     sprintf(buffer,"%s,%s",w1,w4);
+	   } else if(strcmp(w3,"GOTO")==0) {
+	     j=find_comm("ON B/E/M GOTO");
+	     sprintf(buffer,"%s,%s",w1,w4);
+	   } else {
+	     j=find_comm("ON B/E/M OTHER");
+  	     sprintf(buffer,"%s,%s",w1,w3);
+	   }
+	  // printf("j=%d, buffer=<%s>\n",j,buffer);
+         } else if(strcmp(w3,"GOSUB")==0) {
+	   j=find_comm("ON GOSUB");
+	   strcat(buffer,",");
+	   strcat(buffer,w4);
+         } else if(strcmp(w3,"GOTO")==0) {
+	   j=find_comm("ON GOTO");
+	   strcat(buffer,",");
+	   strcat(buffer,w4);
+	 } else j=find_comm(zeile);
+      } else j=find_comm(zeile);
+            
       if(j==-1) { /* Kein Befehl passt... */
         char *buf=malloc(strlen(zeile)+strlen(buffer)+2);
         char *pos,*name;
@@ -601,7 +648,10 @@ int init_program(int prglen) {
 	    pcode[i].opcode=P_ZUWEIS;
 	    pcode[i].argument=strdup(pos);
 	    typ=vartype(name);
-	    
+	    int ttt=type(pos);
+	    if(((ttt&STRINGTYP)==STRINGTYP && (typ&STRINGTYP)!=STRINGTYP) || 
+	      ((ttt&STRINGTYP)!=STRINGTYP && (typ&STRINGTYP)==STRINGTYP) )
+	        printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
 	    e=klammer_sep_destroy(buf,&vname,&argument);
 	    /* opcode durch P_ZUWEIS ersetzen, 
 	       Variable anlegen, wenn noch nicht definiert,
@@ -614,19 +664,20 @@ int init_program(int prglen) {
 	    if(typ & ARRAYTYP) { 
   	      pcode[i].panzahl=0;
 	      pcode[i].ppointer=NULL;
-	      pcode[i].integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
+	      pcode[i].integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
             } else {
               if(e>1) {
-		pcode[i].integer=add_variable(r,ARRAYTYP,typ);
+		pcode[i].integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
 		pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
 		pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
                 /*hier die Indizies in einzelne zu evaluierende Ausdruecke
 		  separieren*/
+		  // printf("makepreparelist: <%s>\n",argument);
 		make_preparlist(pcode[i].ppointer,argument);
               } else {
   	        pcode[i].panzahl=0;
 	        pcode[i].ppointer=NULL;
-	        pcode[i].integer=add_variable(r,typ,0);
+	        pcode[i].integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
 	      }
 	    }
 	    if(pcode[i].integer==-1) printf("ERROR at line %d: Variable could not be created.\n",original_line(i));
@@ -663,6 +714,14 @@ int init_program(int prglen) {
           char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
 	  wort_sep(buffer,' ',TRUE,w1,w2);
 	  if(strcmp(w1,"IF")==0) pcode[i].opcode=P_ELSEIF|j;
+	} else if(comms[j].opcode==P_IF) {/*Unn"otiges THEN entfernen*/
+	  int l=strlen(pcode[i].argument);
+	  if(l>4) {
+	    if(strcmp(pcode[i].argument+l-5," THEN")==0) {
+	   // printf("Unnutzes THEN gefunden:\n");
+	      pcode[i].argument[l-5]=0;
+	    }
+	  }
 	} 
 	/*Argumente und Argument-Listen vorbereiten*/
 	if(comms[j].pmax==0 || (comms[j].opcode&PM_TYP)==P_SIMPLE) {
@@ -689,7 +748,7 @@ int init_program(int prglen) {
   } 
 
 
-#ifdef DEBUG
+#ifdef DEBUG 
   puts("PASS 2:");
 #endif
   /* Pass 2, jetzt sind alle Labels und Proceduren bekannt. 
@@ -778,6 +837,7 @@ int init_program(int prglen) {
     } 
     if((pcode[i].opcode&PM_TYP)==P_PLISTE) { /* Nachbearbeiten */
        int j=pcode[i].opcode&PM_COMMS;
+     //  printf("OPS: %s   anz=%d\n",comms[j].name,pcode[i].panzahl);
        make_pliste2(comms[j].pmin,comms[j].pmax,
 	(unsigned short *)comms[j].pliste,pcode[i].argument,&(pcode[i].ppointer),pcode[i].panzahl);
     } 
@@ -814,7 +874,7 @@ void free_pcode(int l) {
 }
 
 
-
+/*Bereitet die Variablenliste einer Procedur oder Funktion vor*/
 
 static int make_varliste(char *argument, int *l,int n) {
   char arg[strlen(argument)+1];
@@ -822,9 +882,14 @@ static int make_varliste(char *argument, int *l,int n) {
   int i=0,e;
   char *r;
   int typ,subtyp,vnr;
+  int flag;
   strcpy(arg,argument);
   e=wort_sep_destroy(arg,',',TRUE,&w1,&w2);
   while(e && i<n) {
+    if(w1[0]=='V' && w1[1]=='A' && w1[2]=='R' && w1[3]==' ') {
+      w1+=4;
+      flag=1;
+    } else flag=0;
     r=varrumpf(w1);
     typ=vartype(w1);
     if(typ&ARRAYTYP) {
@@ -832,7 +897,7 @@ static int make_varliste(char *argument, int *l,int n) {
       typ=ARRAYTYP;
     } else subtyp=0;
     
-    l[i++]=vnr=add_variable(r,typ,subtyp);
+    l[i++]=vnr=(add_variable(r,typ,subtyp,V_DYNAMIC,NULL) | flag*V_BY_REFERENCE);
     free(r);
     e=wort_sep_destroy(w2,',',TRUE,&w1,&w2);
   }
@@ -901,185 +966,209 @@ int type3(const char *ausdruck) {
 }
 #endif
 
+/*Bestimmt den Ergebnistyp einer Binaeren Operation, gegeben durch das
+Zeichen c.*/
+
+static int combine_type(int rtyp,int ltyp,char c) {
+  int typ=0;
+  if((ltyp&CONSTTYP) && (rtyp&CONSTTYP)) typ|=CONSTTYP;
+  if((ltyp&ARRAYTYP) || (rtyp&ARRAYTYP)) typ|=ARRAYTYP;
+  if(c=='/') { /*War division, dann kann das Ergebnis nur float sein */
+    typ|=FLOATTYP;
+  } else if(c=='=' || c=='<' || c=='>'|| c=='&') { /*War Vergleichsoperator, dann kann das Ergebnis nur int sein */
+    typ|=INTTYP;
+  } else if(c==',') {
+    if(rtyp&STRINGTYP) typ|=STRINGTYP;
+    else if(rtyp&INTTYP) typ|=INTTYP;
+    else if(rtyp&FLOATTYP) typ|=FLOATTYP;
+    else {
+      xberror(51,"combine-type");  /* Parser: Syntax Error */
+      printf("r=%x l=%x   c=%c\n",rtyp,ltyp,c);
+    }
+  } else {
+    if(rtyp&STRINGTYP) typ|=STRINGTYP;
+    else if(rtyp&INTTYP && ltyp&INTTYP) typ|=INTTYP;
+    else if(rtyp&FLOATTYP || ltyp&FLOATTYP) typ|=FLOATTYP;
+    else {
+      xberror(51,"combine-type");  /* Parser: Syntax Error */
+      printf("r=%x l=%x   c=%c\n",rtyp,ltyp,c);
+    }
+  }
+  return(typ);
+}
 
 
-/* Bestimmt den Typ eines Ausdrucks 
+/* Bestimmt den Typ eines Ausdrucks, 
+   es darf sich nicht um eine Liste von Ausdr"ucken handeln.
 
 */
 
 unsigned int type(const char *ausdruck) {
-  char *pos;
-  unsigned int typ=0,ltyp=0;
-  int i;
-
-/*Hier erstes Trennzeichen suchen (ausserhalb "" und Klammern()[]), dann type getrennt fuer beide teile.
-  Trennzeichen=',', ';', ''', ' ', "+-* / ^()|<>=&!" 
-  Trennzeichen sind aber auch alle Operatoren wie AND, OR, ....
-  
-  + und - am Anfang einfach ignorieren
-  blank am Anfang ignorieren
-  wenn eines kein Konsttyp ist, dann konsttyp loeschen
-  */
- // printf("type: <%s>\n",ausdruck);
   if(ausdruck==NULL) return(NOTYP);
-  switch(*ausdruck) {
-    case 0: 
-      return(NOTYP);
-    case '+':
-    case '-': 
-      return(type(ausdruck+1));  /* war Vorzeichen */
-    case '&':
-      if(ausdruck[1]=='"') return(INDIRECTTYP|CONSTTYP); 
-      else return(INDIRECTTYP);
-    case '#':
-      return(FILENRTYP|type(ausdruck+1));
-    default: ; /*Was machen mit ~ und @  ?*/
+  char c=*ausdruck;
+  if(c==0) return(NOTYP);
+  else if(c=='+' || c=='-') return(type(ausdruck+1));  /* war Vorzeichen */
+  else if(c=='&') {
+    if(ausdruck[1]=='"') return(INDIRECTTYP|CONSTTYP); 
+    else return(INDIRECTTYP);
   }
-  { char *w1=strdup(ausdruck);  /*Ab hier arbeiten wir mit einer Kopie des Ausdrucks*/
-    if(w1==NULL) {
-      xberror(43,ausdruck); /* Ausdruck zu komplex  */
-      printf("X11-Basic: FATAL ERROR. expression len=%d bytes.\n",strlen(ausdruck));
-      return(NOTYP);
-    }
+  char s[strlen(ausdruck)+1];
+  char *pos;
+  
+  xtrim(ausdruck,TRUE,s);  /* Leerzeichen vorne und hinten entfernen, Grossbuchstaben */
+  
+  if((pos=searchchr3(s,';'))!=NULL) { /* Erst der Semikolon-Operator */
+    *pos++=0;
+    return(combine_type(type(pos),type(s),';'));
+  }  
+  
+  if((pos=searchchr3(s,','))!=NULL) {  /* Dann der Komma-Operator */
+    *pos++=0;
+    return(combine_type(type(pos),type(s),','));
+  }  
 
+  if(*s=='[') {   /*Array const def.*/
+    pos=searchchr2(s+1,']');
+    if(pos!=NULL) *pos=0;
+    return(ARRAYTYP|type(s+1));
+  }
 
-    if(*w1=='[') {   /*Array const def.*/
+  if((pos=searchchr3_multi(s,"&|"))!=NULL) {  /* Dann & | operatoren */
+    while(*pos=='|' || *pos=='&') *pos++=0;
+    return(combine_type(type(pos),type(s),'&'));
+  }  
 
-      pos=searchchr2(w1+1,']');
-      if(pos!=NULL) *pos=0;
-      typ=ARRAYTYP|type(w1+1);
-      free(w1);
-      return(typ);
-    }
+  char *w1,*w2;
+  if(wort_sepr2_destroy(s," AND ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," OR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," NAND ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," NOR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," XOR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," EQR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," EQV ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," IMP ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," MOD ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s," DIV ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
+  if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
+      if(strlen(w1)==0) return(type(w2));    /* von rechts !!  */
+      /* Ansonsten ist NOT Teil eines Variablennamens */
+  }
+  
+    /* Addition/Subtraktion/Vorzeichen  */
 
-    pos=searchchr2_multi(w1,",;+- '*/^=<>");
-    if(pos!=NULL) {
-      char a=*pos;
-      // printf("Wir haben folgendes im Ausdruck gefunden: <%s>\n",pos);
-      *pos++=0;
-      if(a=='=' || a=='<' || a=='>') {
-        if(*pos=='=' ||*pos=='<' ||*pos=='>') { /* faengt die operatoen <>,==,<=,>= ab.*/
-	  a=*pos++;
-	}
-      } else if(a==' ') {
-        ; /*Hier koennte man die Operatoren OR; AND etc bearbeiten....*/
-      }
-      
-      int rtyp=type(pos);  /*Rechte Seite auswerten */
-      int ltyp=type(w1);   /*Linke Seite auswerten */
-    //  if(ltyp&CONSTTYP) printf("rechts ist const.\n");
-      typ=0;
-      if((ltyp&CONSTTYP) && (rtyp&CONSTTYP)) typ|=CONSTTYP;
-      if((ltyp&ARRAYTYP) || (rtyp&ARRAYTYP)) typ|=ARRAYTYP;
-      if(a=='/') { /*War division, dann kann das Ergebnis nur float sein */
-        typ|=FLOATTYP;
-      } else if(a=='=' || a=='<' || a=='>') { /*War Vergleichsoperator, dann kann das Ergebnis nur int sein */
-        typ|=INTTYP;
-      } else {
-        if(rtyp&INTTYP) typ|=INTTYP;
-	else if(rtyp&FLOATTYP) typ|=FLOATTYP;
-	else if(rtyp&STRINGTYP) typ|=STRINGTYP;
-	else printf("ERROR in expression: something is wrong: %x\n",rtyp);
-      } 
-      free(w1);
-      return(typ); 
-    }
+    /* Suche eine g"ultige Trennstelle f"ur + oder -  */
+  /* Hier muessen wir testen, ob es nicht ein vorzeichen war oder Teil eines Exponenten ...*/
 
-/*  hier ist nun nurnoch ein operand zu untersuchen */
-    if(*w1=='(' && w1[strlen(w1)-1]==')') {
-      w1[strlen(w1)-1]=0;
-      typ=type(w1+1);
-    } else {
-      pos=searchchr(w1,'(');
-      if(pos!=NULL) {
-        if(*w1!='@') {
-          if(pos==w1) printf("WARNING: Syntax-error in expression: parenthesis? <%s>\n",w1);
+  pos=searchchr2_multi_r(s,"+-",s+strlen(s));  /* Finde n"achsten Kandidaten  von rechts*/
+  while(pos!=NULL) {
+    if(pos==s) return(type(s+1));/*Das +/-  war ganz am Anfang*/
+    if(pos>s && strchr("*/^",*(pos-1))==NULL && 
+                                     !( *(pos-1)=='E' && pos-1>s && vfdigittest(s,pos-1) && v_digit(*(pos+1)))) {
+    /* Kandidat war gut.*/
+      char c=*pos;
+      *pos=0;
+      return(combine_type(type(pos+1),type(s),c));
+    } 
+    pos=searchchr2_multi_r(s,"+-",pos);  /* Finde n"achsten Kandidaten  von rechts*/
+  }
+
+  /* File-Type */
+  if(*s=='#') return(FILENRTYP|type(s+1));
+  
+  /* Restliche Trennzeichen= ''', ' ', "* /^()|<>=&!" */
+
+  pos=searchchr2_multi(s,"'*/^=<>");
+  
+  if(pos!=NULL) {
+    char a=*pos;
+    *pos++=0;
+    if(a=='=' || a=='<' || a=='>') {
+      while(*pos=='=' ||*pos=='<' ||*pos=='>') pos++; /* faengt die operatoen <>,==,<=,>= ab.*/
+    } 
+    return(combine_type(type(pos),type(s),a));
+  }
+
+  
+  /*  hier ist nun nurnoch ein operand zu untersuchen */
+
+  if(*s=='(' && s[strlen(s)-1]==')') {
+    s[strlen(s)-1]=0;
+    return(type(s+1));
+  }
+  int typ=0;
+  int i=0;
+  pos=searchchr(s,'(');
+  if(pos!=NULL) {       /* Erste Klammer finden*/
+    if(*s!='@') {
+      if(pos==s) printf("WARNING: Syntax-error in expression: parenthesis? <%s>\n",s);
       /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
-          char *ppp=pos+1;
-          int i=0,flag=0,sflag=0,count=0;
-	  *pos=0;
-	  if((i=find_func(w1))!=-1) { /* Koennte funktion sein: */
-	    if((pfuncs[i].opcode&F_IRET)==F_IRET) typ=INTTYP;
-	    else  typ=FLOATTYP;
-	    if(pfuncs[i].opcode&F_CONST) {
-	      if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	      else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
-              if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
-            }
-	    goto binfertig;
-	  } else if((i=find_sfunc(w1))!=-1) { /* Koennte $-funktion sein: */
-	    typ=STRINGTYP;
-	    if(psfuncs[i].opcode&F_CONST) {
-	      if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	      else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
-              if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
-            }
-	    goto binfertig;
-	    
-	  } else {
-           if(pos[1]==')') typ=(typ | ARRAYTYP);
-           else {
- 	  
+      char *ppp=pos+1;
+      int i=0,flag=0,sflag=0,count=0;
+      *pos=0;
+      if((i=find_func(s))!=-1) { /* Koennte funktion sein: */
+        if((pfuncs[i].opcode&F_IRET)==F_IRET) typ=INTTYP;
+	else  typ=FLOATTYP;
+	if(pfuncs[i].opcode&F_CONST) {
+	  if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
+	  else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
+          if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
+        }
+	return(typ);
+      } else if((i=find_sfunc(s))!=-1) { /* Koennte $-funktion sein: */
+        typ=STRINGTYP;
+	if(psfuncs[i].opcode&F_CONST) {
+	  if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
+	  else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
+          if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
+        }
+	return(typ);
+      } else {                   /* wird wohl Array sein.*/
+        if(pos[1]==')') typ=(typ | ARRAYTYP);
+        else {
           while(ppp[i]!=0 && !(ppp[i]==')' && flag==0 && sflag==0)) { /*Fine doppelpunkte in Argumentliste*/
             if(ppp[i]=='(') flag++;
 	    if(ppp[i]==')') flag--;
 	    if(ppp[i]=='"') sflag=(!sflag);
 	    if(ppp[i]==':' && flag==0 && sflag==0) count++;
             i++;
-          } 
+          }
           if(count) typ=(typ | ARRAYTYP);
-          }
-	  }
-        
-      }
-      if((pos-1)[0]=='$') typ=(typ | STRINGTYP);
-      else if((pos-1)[0]=='%') typ=(typ | INTTYP);
-      else typ=(typ | FLOATTYP);
-    } else {
-    
-      switch(*w1) {
-      case 0:   typ=NOTYP; break;
-      case '"': typ=CONSTTYP|STRINGTYP;break;
-      case '$': typ=INTTYP|CONSTTYP;break;
-      default:
-        if((i=find_sysvar(w1))!=-1) {  /*Es koennte sysvar sein. Dann testen, ob ggf constant.*/
-          typ=sysvars[i].opcode;
-        } else {
-            if(w1[strlen(w1)-1]=='$') typ=STRINGTYP;
-            else if(w1[strlen(w1)-1]=='%') typ=INTTYP;
-            else if(*w1=='0' && w1[1]=='X') typ=INTTYP|CONSTTYP;
-            else {
-              int i,f=0,g=0;
-              for(i=0;i<strlen(w1);i++) f|=(strchr("-.1234567890E",w1[i])==NULL);      
-              for(i=0;i<strlen(w1);i++) g|=(strchr("1234567890",w1[i])==NULL);
-              if(!f && !g) typ=INTTYP|CONSTTYP;
-              else typ=FLOATTYP|(f?0:CONSTTYP);
-            } 
-          }
         }
       }
-    }
-    binfertig:
-    if(ltyp) {
-      if((ltyp&CONSTTYP)==0) typ&=(~CONSTTYP);
-      if((typ&STRINGTYP)==0 && ltyp&FLOATTYP) {
-        typ&=(~INTTYP);
-        typ|=FLOATTYP;
-      } 
-      if((ltyp&INTTYP) && typ&FLOATTYP) {
-        ltyp&=(~INTTYP);
-        ltyp|=FLOATTYP;
-      } 
-      #if 0
-      if((typ&(STRINGTYP|FLOATTYP|INTTYP|ARRAYTYP))!=
-       (ltyp&(STRINGTYP|FLOATTYP|INTTYP|ARRAYTYP))) 
-       printf("WARNING: Syntax-error? <%s> $%x $%x\n",ausdruck,typ,ltyp);
-     #endif
-    }
-    free(w1);
+    } /* Kann auch @-Funktionsergebnis sein */
+    if((pos-1)[0]=='$') typ=(typ | STRINGTYP);
+    else if((pos-1)[0]=='%') typ=(typ | INTTYP);
+    else typ=(typ | FLOATTYP);
     return(typ);
+  } 
+  /* Keine Klammer*/
+  switch(*s) {
+  case 0:   typ=NOTYP; break;
+  case '"': typ=CONSTTYP|STRINGTYP;break;
+  case '$':				  /*HEX Zahl*/
+  case '%': typ=INTTYP|CONSTTYP;break;    /*BIN Zahl*/
+  default:
+    if((i=find_sysvar(s))!=-1) {  /*Es koennte sysvar sein. Dann testen, ob ggf constant.*/
+          typ=sysvars[i].opcode;
+    } else { /* Normale Variablen und Konstanten*/
+      if(s[strlen(s)-1]=='$') typ=STRINGTYP;
+      else if(s[strlen(s)-1]=='%') typ=INTTYP;
+      else { /*Unterscheide nun noch zwischen ZahlenKonstanten und float variablen*/
+        int i=myisatof(s);
+        if(i==1) typ=INTTYP|CONSTTYP;
+	else if(i==2) typ=FLOATTYP|CONSTTYP;
+	else typ=FLOATTYP;
+	//printf("type---> <%s> = %x\n",s,typ);
+      }
+    }
   }
+  return(typ);
 }
+
+
+
+
+
 #if 0
 /*Sucht anhand der Programmtextzeilen
   (anstelle von PCODE)
@@ -1118,29 +1207,23 @@ void kommando(char *cmd) {
 
   wort_sep2(cmd," !",TRUE,zeile,buffer);
   xtrim2(zeile,TRUE,zeile);
-  if(wort_sep_destroy(zeile,' ',TRUE,&w1,&w2)==0) return;  /* Leerzeile */
-  switch(*w1) {
+
+  switch(*zeile) {
   case 0:
   case '\'':
   case '!':
-    return;  /* Kommentar */
+    return;  /* Kommentar oder leerzeile */
   case '@':
-    c_gosub(w1+1);
+    c_gosub(zeile+1);
     return;
   case '~':
-    c_void(w1+1);
+    c_void(zeile+1);
     return;
   case '&':
     {
-      
-      char *test=s_parser(w1+1);
-      char *test2=malloc(strlen(test)+1+1+strlen(w2));
-      strcpy(test2,test);
+      char *test=s_parser(zeile+1);
+      kommando(test);
       free(test);
-      strcat(test2," ");
-      strcat(test2,w2);
-      kommando(test2);
-      free(test2);
     }
     return;
   case '(':
@@ -1150,18 +1233,20 @@ void kommando(char *cmd) {
      return;
   }
   
-  if(w1[strlen(w1)-1]==':')             return;  /* nixtun, label */
+  if(zeile[strlen(zeile)-1]==':')             return;  /* nixtun, label */
 
-  if(searchchr2(w1,'=')!=NULL) {
-    wort_sep_destroy(zeile,'=',TRUE,&w1,&w2);
-    xzuweis(w1,w2);
+  if((w2=searchchr2(zeile,'='))!=NULL) {
+    *w2++=0;
+    xzuweis(zeile,w2);
     return;
   }
-   if(isdigit(w1[0])) {
+  if(isdigit(*zeile)) {
      printf("%.13g\n",parser(zeile));
      return;
   } 
 
+
+  wort_sep_destroy(zeile,' ',TRUE,&w1,&w2);
   i=find_comm_guess(w1,&a,&b);
   if(i!=-1) {
       if((comms[i].opcode&PM_TYP)==P_IGNORE) return; /*?? das geht nicht*/
@@ -1198,7 +1283,7 @@ void programmlauf(){
     STRING bcpc;  /* Bytecode holder */
     bcpc.pointer=programbuffer;
     bcpc.len=programbufferlen;
-    p=virtual_machine(bcpc,&n);
+    p=virtual_machine(bcpc,0,&n,NULL,0);
     dump_parameterlist(p,n);  
     free_pliste(n,p);
     return;

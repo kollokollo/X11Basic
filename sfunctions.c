@@ -15,8 +15,16 @@
 #include <errno.h>
 #include <time.h>
 #include <ctype.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 #include "defs.h"
+#ifdef HAVE_GCRYPT
+  #include <gcrypt.h>
+  #define GCRYPT_VERSION "1.5.0"
+
+#endif
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
@@ -117,6 +125,7 @@ static STRING f_lowers(STRING n) {
   ergebnis.pointer=malloc(n.len+1);
   ergebnis.len=n.len;
   while(i<n.len) {ergebnis.pointer[i]=tolower(n.pointer[i]); i++;}
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -126,6 +135,7 @@ static STRING f_uppers(STRING n) {
   ergebnis.pointer=malloc(n.len+1);
   ergebnis.len=n.len;
   while(i<n.len) {ergebnis.pointer[i]=toupper(n.pointer[i]); i++;}
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -186,6 +196,12 @@ static STRING f_encloses(PARAMETER *plist,int e) {
   ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
+static STRING f_usings(PARAMETER *plist,int e) {
+  STRING form;
+  form.pointer=plist[1].pointer;
+  form.len=plist[1].integer;
+  return(do_using(plist->real,form));
+}
 
 #ifdef CONTROL
 static STRING f_csgets(STRING n) {
@@ -233,8 +249,8 @@ static STRING f_doocsinfos(STRING n) { return(doocsinfos(n.pointer)); }
 #endif
 static STRING f_terminalnames(PARAMETER *plist,int e) {
   STRING ergebnis;
-  FILE *fff=get_fileptr(plist->integer);
-  if(fff) ergebnis.pointer=terminalname(fileno(fff));
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ) ergebnis.pointer=terminalname(fileno(fff.dptr));
   else {
     xberror(24,""); /* File nicht geoeffnet */
     return(vs_error());
@@ -308,39 +324,88 @@ static STRING f_strs(PARAMETER *plist,int e) {         /* STR$(a[,b[,c[,d]]])   
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
+
+
+static char *i2a(unsigned i, char *a, unsigned r) {
+  if(i/r>0) a=i2a(i/r,a,r);
+  *a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$!?"[i % r];
+  return a+1;
+}
+
 static STRING f_bins(PARAMETER *plist,int e) {
   STRING ergebnis;
-  unsigned int a=plist[0].integer;
-  int j,b=8,i=0;
-  if(e==2) b=max(0,plist[1].integer);
-  ergebnis.pointer=malloc(b+1);
-  for(j=b;j>0;j--) ergebnis.pointer[i++]=((a&(1<<(j-1)))  ? '1':'0');
-  ergebnis.len=i;
-  ergebnis.pointer[ergebnis.len]=0;
+  unsigned int value=plist[0].integer;
+  /*Predict length of string*/
+  int plen=1;
+  if(value) plen=(log(value)/(double)log(2))+1;
+  int len=plen;
+  if(e>1) len=max(plen,plist[1].integer);
+  ergebnis.pointer=malloc(len+1);
+  ergebnis.len=len;
+  char *a=ergebnis.pointer;
+  while(len>plen) {*a++='0';len--;}
+  *i2a(value,a,2)=0;
   return(ergebnis);
 }
-
-  /* STR$(a[,b[,c[,d]]])     */
-static STRING hexoct_to_string(char n,PARAMETER *plist, int e) {
+static STRING f_octs(PARAMETER *plist,int e) {
   STRING ergebnis;
-  char formatter[20];
-  int b=-1,c=13,mode=0;
-  unsigned int a=plist[0].integer;
-  if(e>1) b=min(50,max(0,plist[1].integer));
-  if(e>2) c=min(50,max(0,plist[2].integer));
-  if(e>3) mode=plist[3].integer;
-	
-  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%d%c",b,c,n);
-  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%d%c",b,c,n);
-  else  sprintf(formatter,"%%.13%c",n);
-  ergebnis.pointer=malloc(31);
-  sprintf(ergebnis.pointer,formatter,a);
-  ergebnis.len=strlen(ergebnis.pointer);
+  unsigned int value=plist[0].integer;
+  /*Predict length of string*/
+  int plen=1;
+  if(value) plen=(log(value)/(double)log(8))+1;
+  int len=plen;
+  if(e>1) len=max(plen,plist[1].integer);
+  ergebnis.pointer=malloc(len+1);
+  ergebnis.len=len;
+  char *a=ergebnis.pointer;
+  while(len>plen) {*a++='0';len--;}
+  *i2a(value,a,8)=0;
+  return(ergebnis);
+}
+static STRING f_hexs(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  unsigned int value=plist[0].integer;
+  /*Predict length of string*/
+  int plen=1;
+  if(value) plen=(int)(log((double)value)/(double)log(16))+1;
+  int len=plen;
+  if(e>1) len=max(plen,plist[1].integer);
+  ergebnis.pointer=malloc(len+1);
+  ergebnis.len=len;
+  char *a=ergebnis.pointer;
+ // printf("valuse=%d, len=%d, plen=%d\n",value, len,plen);
+  while(len>plen) {*a++='0';len--;}
+ // printf("ergebnis=<%s>\n",ergebnis.pointer);
+  *i2a(value,a,16)=0;
   return(ergebnis);
 }
 
-static STRING f_hexs(PARAMETER *plist, int e) {return(hexoct_to_string('x',plist,e));}
-static STRING f_octs(PARAMETER *plist, int e) {return(hexoct_to_string('o',plist,e));}
+/*  a$=RADIX$(n%[,b%[,l%]])*/
+static STRING f_radixs(PARAMETER *plist, int e) {
+  STRING ergebnis;
+  unsigned int base=64;
+  int len=0,plen=1;
+  int value=plist->integer;
+  int sign=1;
+  if(e>1) base=min(64,max(2,plist[1].integer));
+  if(value<0) {sign=-1;value=-value;}
+
+  /*Predict length of string*/
+  
+  if(value) plen=(log(value)/(double)log(base))+1;
+  if(sign<0) plen++;
+  if(e>2) len=max(plen,plist[2].integer);
+  else len=plen;
+  ergebnis.pointer=malloc(len+1);
+  ergebnis.len=len;
+  char *a=ergebnis.pointer;
+  
+  if(sign<0) {*a++='-';len--;}
+  while(len>plen) {*a++='0';len--;}
+  *i2a(value,a,base)=0;
+  return(ergebnis);
+}
+
 
 
 /* Gibt das i te Wort aus Zeichenkette zurueck (mit Blank getrennt, Teile in
@@ -373,7 +438,11 @@ static STRING f_words(PARAMETER *plist,int e) {
 
 static STRING f_spaces(int n) {   
   STRING ergebnis;
-  int i=0;
+  int i=0; 
+  if(n<0) {
+    xberror(11,""); /* Argument muss positiv sein */
+    n=0;
+  }
   ergebnis.pointer=malloc(n+1);
   ergebnis.len=n;
   while(i<n) ergebnis.pointer[i++]=' ';
@@ -392,6 +461,7 @@ static STRING f_lefts(PARAMETER *plist,int e) {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
   }
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 static STRING f_leftofs(PARAMETER *plist,int e) {
@@ -492,6 +562,7 @@ static STRING f_rights(PARAMETER *plist,int e) {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
   }
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -512,6 +583,7 @@ static STRING f_mids(PARAMETER *plist,int e) {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
   }
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -522,13 +594,20 @@ static STRING f_strings(PARAMETER *plist,int e) {
     j=plist->integer;
     buffer.len=plist[1].integer;
     buffer.pointer=plist[1].pointer;
-    ergebnis.pointer=malloc(j*buffer.len+1);
-    ergebnis.len=j*buffer.len;
-    while(i<j) {memcpy(ergebnis.pointer+i*buffer.len,buffer.pointer,buffer.len); i++;}
+    if(j<0)  {
+      xberror(11,""); /* Argument muss positiv sein */
+      ergebnis.pointer=malloc(1);
+      ergebnis.len=0;
+    } else {
+      ergebnis.pointer=malloc(j*buffer.len+1);
+      ergebnis.len=j*buffer.len;
+      while(i<j) {memcpy(ergebnis.pointer+i*buffer.len,buffer.pointer,buffer.len); i++;}
+    }
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
   }
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -602,22 +681,39 @@ static STRING f_replaces(PARAMETER *plist,int e) {  /* MH 10.02.2004 */
   return(ergebnis);
 }
 
+
+/*  Conversion from Base64 (+36) radix data to 8 Bit (Base256) binary data*/
+
 static STRING f_inlines(STRING n) {   
+  int l1=n.len>>2;
+  int a=n.len&3;
   STRING ergebnis;
-  char *pos1=n.pointer;
-  char *pos2;
-  ergebnis.len=n.len*3/4;
-  pos2=ergebnis.pointer=malloc(ergebnis.len+1);
-  while(pos2-ergebnis.pointer<ergebnis.len-2) {
-  *pos2=(((pos1[0]-36) & 0x3f)<<2)|(((pos1[1]-36) & 0x30)>>4);
-    pos2[1]=(((pos1[1]-36) & 0xf)<<4)|(((pos1[2]-36) & 0x3c)>>2);
-    pos2[2]=(((pos1[2]-36) & 0x3)<<6)|(((pos1[3]-36) & 0x3f));
-    pos2+=3;
-    pos1+=4;
+  if(a==0) ergebnis.len=l1*3;
+  else if(a==1) ergebnis.len=l1*3+1;  /* Should not happen*/
+  else if(a==2) ergebnis.len=l1*3+1;  
+  else  ergebnis.len=l1*3+2;  
+ 
+  char *p=n.pointer;
+  char *q=ergebnis.pointer=malloc(ergebnis.len+1);
+  while(l1-->0) {
+   *q++=(((p[0]-36) & 0x3f)<<2)|(((p[1]-36) & 0x30)>>4);
+   *q++=(((p[1]-36) & 0xf)<<4) |(((p[2]-36) & 0x3c)>>2);
+   *q++=(((p[2]-36) & 0x3)<<6) |(((p[3]-36) & 0x3f));
+    p+=4;
+  }
+  if(a==1) *q++=(((*p-36) & 0x3f)<<2); /* soll nicht vorkommen*/
+  else if(a==2) *q++=(((p[0]-36) & 0x3f)<<2)|(((p[1]-36) & 0x30)>>4);
+  else if(a==3) {
+    *q++=(((p[0]-36) & 0x3f)<<2)|(((p[1]-36) & 0x30)>>4);
+    *q++=(((p[1]-36) & 0xf)<<4)|(((p[2]-36) & 0x3c)>>2);
   }
   (ergebnis.pointer)[ergebnis.len]=0;
   return(ergebnis);
 }
+
+
+
+
 static STRING f_reverses(STRING n) {   
   int i=0;
   STRING ergebnis;
@@ -627,10 +723,6 @@ static STRING f_reverses(STRING n) {
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
-
-
-
-
 
 
 #define IGREG 2299161
@@ -805,14 +897,11 @@ static STRING f_bwtes(STRING n) {  /* Burrows-Wheeler transform*/
 }
 static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
   STRING ergebnis;
-  int primary_index;
-  int size;   
+  int primary_index=0;
+  int size=0;   
   if(n.len>=sizeof(int)) {
     size=n.len-sizeof(int);
     primary_index=*((int *)n.pointer);
-  } else {
-    size=0;
-    primary_index=0;
   }
   ergebnis.pointer=malloc(size+1);
   {
@@ -825,8 +914,8 @@ static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
     for(i=0;i<size;i++) buckets[n.pointer[sizeof(int)+i]&0xff]++;
     for(i=0,k=0;i<256;i++)
       for(j=0;j<buckets[i];j++) F[k++]=i;
-   
-    for(i=0,j=0;i<256;i++) {
+    j=0;
+    for(i=0;i<256;i++) {
       while(i>F[j] && j<size) j++;
       buckets[i]=j;     // it will get fake values if there is no i in F, but
                         // that won't bring us any problems
@@ -842,67 +931,137 @@ static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
-
+#ifdef HAVE_GCRYPT
+  static int gcrypt_init=0;
+#endif
+static STRING f_hashs(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  int typ=1;  /*  Default is md5 */
+  if(e>1) typ=plist[1].integer;
+  if(typ==0 || (typ>11 && typ<301) || typ>307) typ=1;
+#ifdef HAVE_GCRYPT
+  if(!gcrypt_init) {
+    if(!gcry_check_version(GCRYPT_VERSION)) {
+      puts("ERROR: libgcrypt version mismatch\n");
+    } 
+    gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
+    gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
+    gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+    gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+    gcrypt_init=1;
+  }
+  int hash_length = gcry_md_get_algo_dlen(typ);
+  ergebnis.len=hash_length;
+  ergebnis.pointer=malloc(ergebnis.len+1);
+  gcry_md_hash_buffer(typ,ergebnis.pointer, plist[0].pointer, plist[0].integer);
+#else
+  printf("The %s function is not implemented \n"
+  " in this version of X11-Basic because the GCRYPT library \n"
+  " was not present at compile time.\n","HASH$()");
+  ergebnis.len=plist[0].integer;
+  ergebnis.pointer=malloc(ergebnis.len+1);
+#endif
+  (ergebnis.pointer)[ergebnis.len]=0; 
+  return(ergebnis);
+}
+static STRING f_signs(PARAMETER *plist,int e) {
+  STRING ergebnis;
+#ifdef HAVE_GCRYPT
+#else
+  printf("The %s function is not implemented \n"
+  " in this version of X11-Basic because the GCRYPT library \n"
+  " was not present at compile time.\n","SIGN$()");
+#endif
+  ergebnis.pointer=malloc(1);
+  ergebnis.len=0;
+  (ergebnis.pointer)[ergebnis.len]=0; 
+  return(ergebnis);
+}
 
 
 static STRING f_encrypts(PARAMETER *plist,int e) {
   STRING ergebnis;
-  int len=plist[0].integer>>3;
-#ifdef USE_BLOWFISH 
-  int i;  
-  unsigned long *L,*R;
-#endif
-  if(plist[0].integer&7) len++;
-  len<<=3;
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  memcpy(ergebnis.pointer,plist[0].pointer,plist[0].integer);
-#ifdef USE_BLOWFISH 
-  if(e==2) {
-    BLOWFISH_CTX ctx;
-    Blowfish_Init(&ctx, (unsigned char*)plist[1].pointer,plist[1].integer);
-    len>>=3;
-    for(i=0;i<len;i++) {
-      L=(unsigned long *)&(ergebnis.pointer[i*8]);
-      R=(unsigned long *)&(ergebnis.pointer[i*8+4]);
-      Blowfish_Encrypt(&ctx,L,R);
-    }
-  } 
+#ifdef HAVE_GCRYPT
+  int typ=4;  /*  Default is BLOWFISH */
+  if(e>2) typ=plist[2].integer;
+  if(!gcrypt_init) {
+    if(!gcry_check_version(GCRYPT_VERSION)) {
+      puts("ERROR: libgcrypt version mismatch\n");
+    } 
+    gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
+    gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
+    gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+    gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+    gcrypt_init=1;
+  }
+  size_t blkLength = gcry_cipher_get_algo_blklen(typ);
+  size_t keyLength = gcry_cipher_get_algo_keylen(typ);
+  gcry_cipher_hd_t hd;
+  
+  if(plist[1].integer<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
+  if(plist[0].integer%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
+  int len=(plist[0].integer-1)/blkLength+1;
+  
+    ergebnis.len=len*blkLength;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    gcry_cipher_open(&hd, typ, GCRY_CIPHER_MODE_CBC, 0);
+    gcry_cipher_setkey(hd,plist[1].pointer, keyLength);
+   // gcry_cipher_setiv(hd, iniVector, blkLength);
+    int ret=gcry_cipher_encrypt(hd, ergebnis.pointer,ergebnis.len, plist[0].pointer,len*blkLength);
+    if(ret) printf("cipher failed:  %s/%s\n",gcry_strsource(ret),gcry_strerror(ret));
+    gcry_cipher_close(hd);
 #else
-#ifdef HAVE_MEMFROB
-  memfrob(ergebnis.pointer,len);  
+  printf("The %s function is not implemented \n"
+  " in this version of X11-Basic because the GCRYPT library \n"
+  " was not present at compile time.\n","ENCRYPT$()");
+  ergebnis.len=plist[0].integer;
+  ergebnis.pointer=malloc(ergebnis.len+1);
+  memcpy(ergebnis.pointer,plist[0].pointer,plist[0].integer);
 #endif
-#endif  
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 static STRING f_decrypts(PARAMETER *plist,int e) {
   STRING ergebnis;
-  int len=plist[0].integer>>3;
-#ifdef USE_BLOWFISH
-  int i;  
-  unsigned long *L,*R;
-#endif
-  if(plist[0].integer&7) len++;
-  len<<=3;
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  memcpy(ergebnis.pointer,plist[0].pointer,plist[0].integer);
-#ifdef USE_BLOWFISH 
-  if(e==2) {
-    BLOWFISH_CTX ctx;
-    Blowfish_Init(&ctx, (unsigned char*)plist[1].pointer,plist[1].integer);
-    len>>=3;
-    for(i=0;i<len;i++) {
-      L=(unsigned long *)&(ergebnis.pointer[i*8]);
-      R=(unsigned long *)&(ergebnis.pointer[i*8+4]);
-      Blowfish_Decrypt(&ctx,L,R);
-    }
-  } 
+#ifdef HAVE_GCRYPT
+  int typ=4;  /*  Default is BLOWFISH */
+  if(e>2) typ=plist[2].integer;
+  if(!gcrypt_init) {
+    if(!gcry_check_version(GCRYPT_VERSION)) {
+      puts("ERROR: libgcrypt version mismatch\n");
+    } 
+    gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
+    gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
+    gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+    gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+    gcrypt_init=1;
+  }
+  size_t blkLength = gcry_cipher_get_algo_blklen(typ);
+  size_t keyLength = gcry_cipher_get_algo_keylen(typ);
+  gcry_cipher_hd_t hd;
+  
+  if(plist[1].integer<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
+  if(plist[0].integer%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
+  int len=(plist[0].integer-1)/blkLength+1;
+  
+    ergebnis.len=len*blkLength;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    gcry_cipher_open(&hd, typ, GCRY_CIPHER_MODE_CBC, 0);
+    gcry_cipher_setkey(hd,plist[1].pointer, keyLength);
+   // gcry_cipher_setiv(hd, iniVector, blkLength);
+    int ret=gcry_cipher_decrypt(hd, ergebnis.pointer,ergebnis.len, plist[0].pointer, len*blkLength);
+    if(ret) printf("cipherdecrypt failed:  %s/%s\n",gcry_strsource(ret),gcry_strerror(ret));
+    gcry_cipher_close(hd);
+
 #else
- #ifdef HAVE_MEMFROB 
-   memfrob(ergebnis.pointer,len);
- #endif 
-#endif  
+  printf("The %s function is not implemented \n"
+  " in this version of X11-Basic because the GCRYPT library \n"
+  " was not present at compile time.\n","DECRYPT$()");
+  ergebnis.len=plist[0].integer;
+  ergebnis.pointer=malloc(ergebnis.len+1);
+  memcpy(ergebnis.pointer,plist->pointer,plist->integer);
+#endif
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 
@@ -951,16 +1110,22 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "CSUNIT$"   , f_csunits ,1,1   ,{PL_STRING}},
 #endif
  { F_CONST|F_SQUICK,    "DECLOSE$", f_decloses ,1,1   ,{PL_STRING}},
- { F_CONST|F_PLISTE,    "DECRYPT$", f_decrypts ,2,2   ,{PL_STRING,PL_STRING}},
+ { F_CONST|F_PLISTE,    "DECRYPT$", f_decrypts ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 #ifdef DOOCS
  { F_SQUICK,    "DOOCSGET$"    , f_doocsgets ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "DOOCSINFO$"    , f_doocsinfos ,1,1   ,{PL_STRING}},
 #endif
 
  { F_CONST|F_PLISTE,    "ENCLOSE$" , f_encloses ,1,2   ,{PL_STRING,PL_STRING}},
- { F_CONST|F_PLISTE,    "ENCRYPT$", f_encrypts ,2,2   ,{PL_STRING,PL_STRING}},
+ { F_CONST|F_PLISTE,    "ENCRYPT$", f_encrypts ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
  { F_CONST|F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
+ { F_PLISTE,    "FSFIRST$"    , f_fsfirsts ,1,3,  {PL_STRING,PL_STRING,PL_STRING} },
+ { F_SIMPLE,    "FSNEXT$"    , f_fsnexts ,0,0   },
+
+
+ { F_CONST|F_PLISTE,  "HASH$", f_hashs ,1,2   ,{PL_STRING,PL_INT}},
+
  { F_CONST|F_PLISTE,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_CONST|F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_INT}},
@@ -987,11 +1152,13 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
  { F_CONST|F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "REVERSE$"  , f_reverses ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "RADIX$"    , f_radixs ,1,3   ,{PL_INT,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHTOF$" , f_rightofs ,2,2   ,{PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "RLD$"  , f_rlds ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "RLE$"  , f_rles ,1,1   ,{PL_STRING}},
 
+ { F_CONST|F_PLISTE,  "SIGN$", f_signs ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
  { F_CONST|F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
  { F_CONST|F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,  "STRING$" , f_strings ,2,2   ,{PL_INT,PL_STRING}},
@@ -1010,8 +1177,8 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_IQUICK,    "UNIXDATE$" , f_unixdates ,1,1   ,{PL_INT}},
  { F_CONST|F_IQUICK,    "UNIXTIME$" , f_unixtimes ,1,1   ,{PL_INT}},
  { F_CONST|F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "USING$"    , f_usings ,2,2   ,{PL_NUMBER,PL_STRING}},
  { F_CONST|F_PLISTE,    "WORD$"    , f_words ,2,3   ,{PL_STRING,PL_INT,PL_STRING}},
  { F_CONST|F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}}
 };
 const int anzpsfuncs=sizeof(psfuncs)/sizeof(SFUNCTION);
-

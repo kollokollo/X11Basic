@@ -79,7 +79,7 @@
 #define SetFillStyle(c)  ;
 #else
 #ifdef FRAMEBUFFER
-#define SetFillRule(c)   ;
+#define SetFillRule(c)   FB_setfillrule(c)
 #define SetFillStyle(c)  FB_setfillstyle(c)
 #define SetForeground(c) FB_set_color(c)
 #define SetBackground(c) FB_set_bcolor(c)
@@ -102,7 +102,7 @@
 #define CopyArea(a,b,c,d,e,f) ;
 #define XDrawArc(a,b,c,d,e,f,g,h,i) pieColor(a,d,e,0,100,fcolor)
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;
-#define XQueryPointer(a,b,c,d,e,f,g,h,i) *(i)=SDL_BUTTON(SDL_GetMouseState(g,h))
+#define XQueryPointer(a,b,c,d,e,f,g,h,i) *(i)=SDL_GetMouseState(g,h)
 #else
 #define SetFillRule(c)   XSetFillRule(display[usewindow], gc[usewindow],c)
 #define SetFillStyle(c)  XSetFillStyle(display[usewindow], gc[usewindow],c)
@@ -151,7 +151,7 @@ int mouses();
 
 void graphics_setdefaults();
 
-unsigned int get_color(int r, int g, int b, int a);
+unsigned int get_color(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 #ifdef USE_X11
 extern char *display_name;  
 Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor);

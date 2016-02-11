@@ -7,14 +7,27 @@
 DIM pxU(4),pyU(4)
 '
 '
-bxU=0
-byU=18
-bwU=640
-bhU=400-50
-CLIP bxU,byU,bwU,bhU
+bx%=0
+by%=18
+bw%=640
+bh%=400-50
+weiss=COLOR_RGB(1,1,1)
+schwarz=COLOR_RGB(0,0,0)
+grau=COLOR_RGB(1/2,1/2,1/2)
+gelb=COLOR_RGB(1,1,1/2)
+blau=COLOR_RGB(1/2,1/2,1)
+SHOWPAGE
+GET_GEOMETRY 1,bx%,by%,bw%,bh%
+CLIP bx%,by%,bw%,bh%
+
+bx%=0.1*bw%
+by%=0.1*bh%
+sub bw%,2*bx%
+sub bh%,2*by%
+
 ' Koordinaten:
 '
-bwU=bhU
+'bw%=bh%
 x1=-1
 x2=1
 y1=-1
@@ -53,14 +66,9 @@ lichtr=50000
 lichtg=65535
 lichtb=65535
 '
-weiss=COLOR_RGB(1,1,1)
-schwarz=COLOR_RGB(0,0,0)
-grau=get_color(32000,32000,32000)
-gelb=get_color(65535,65535,32000)
-blau=get_color(32000,32000,65535)
 clearw 1
 color grau
-pbox 0,0,bwU,bhU
+pbox bx%,by%,bw%,bh%
 color weiss
 pxU(0)=@kx(x1,y2,z1/2)
 pyU(0)=@ky(x1,y2,z1/2)
@@ -89,7 +97,7 @@ for i=z1/2 to z2/2 step (z2-z1)/12
   LINE @kx(x1,y2,i),@ky(x1,y2,i),@kx(x2,y2,i),@ky(x2,y2,i)
 next i
 color gelb
-text bxU+20,byU+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
+text bx%+20,by%+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
 color schwarz
 LINE @kx(x1,y1,0),@ky(x1,y1,0),@kx(x1,y2,0),@ky(x1,y2,0)
 LINE @kx(x1,y2,0),@ky(x1,y2,0),@kx(x2,y2,0),@ky(x2,y2,0)
@@ -182,7 +190,7 @@ FUNCTION kx(x,y,z)
 '  py=(z-prozz)*(ebene-prozy)/(y-prozy)
   px=(x-prozx)*(ebene-prozy)/(y-prozy)
   '
-  RETURN bxU+bwU/2+px*bwU/(x2-x1)
+  RETURN bx%+bw%/2+px*bw%/(x2-x1)
 ENDFUNC
 FUNCTION ky(x,y,z)
   LOCAL xx
@@ -208,5 +216,5 @@ FUNCTION ky(x,y,z)
   ' persp
   py=(z-prozz)*(ebene-prozy)/(y-prozy)
 '  px=(x-prozx)*(ebene-prozy)/(y-prozy)
-  RETURN byU+bhU/2-py*bhU/(z2-z1)
+  RETURN by%+bh%/2-py*bh%/(z2-z1)
 ENDFUNC

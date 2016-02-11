@@ -12,6 +12,7 @@ void cursor_onoff(int onoff);
 void textscreen_redraw(int x,int y,int w,int h);
 
 typedef struct {
+        unsigned char page;  /* for unicode */
         unsigned char c;
 	unsigned short color;
 	unsigned short bcolor;

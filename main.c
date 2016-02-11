@@ -67,7 +67,7 @@ void intro() {
   printf("c");
   printf("*************************************\n"
          "* %10s          V.%5s       *\n"
-         "*  by Markus Hoffmann 1997-2013 (c) *\n"
+         "*  by Markus Hoffmann 1997-2014 (c) *\n"
          "*                                   *\n"
          "* lib %29s *\n"
          "*************************************\n\n",
@@ -77,7 +77,7 @@ void intro() {
 void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2013 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2014 (c) *\n"
          "*                                                        *\n"
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"

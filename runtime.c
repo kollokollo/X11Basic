@@ -18,6 +18,7 @@
 #include "x11basic.h"
 #include "xbasic.h"
 #include "kommandos.h"
+#include "parameter.h"
 
 
 static void *obh;       /* old break handler  */
@@ -34,14 +35,23 @@ void xberror(char errnr, const char *bem) {
     errcont=0;
     if(errorpc!=-1) {
       int osp=sp;
-        if(sp<STACKSIZE) {stack[sp++]=pc;pc=errorpc+1;}
-        else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
+      int pc2=errorpc;
+      if(errorpctype==8) pc2=procs[pc2].zeile;
+      else if(errorpctype==16) pc2=labels[pc2].zeile;
+      else if(errorpctype!=0) {
+        printf("ERROR ERROR--> TODO\n");
+	batch=0;
+      }
+      if((errorpctype&7)==0) {
+        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
         programmlauf();
 	
         if(osp!=sp) {
 	  pc=stack[--sp]; /* wenn error innerhalb der func. */
         }
       }
+    }
   } else { 
     batch=0;   
 #ifdef GERMAN
@@ -64,13 +74,22 @@ static void break_handler( int signum) {
     if(breakcont) {
       breakcont=0;
       if(breakpc!=-1) {
-        int osp=sp;
-        if(sp<STACKSIZE) {stack[sp++]=pc;pc=breakpc+1;}
-        else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
-        programmlauf();
-        if(osp!=sp) {
-	  pc=stack[--sp]; /* wenn error innerhalb der func. */
+        int pc2=breakpc;
+        if(breakpctype==8) pc2=procs[pc2].zeile;
+        else if(breakpctype==16) pc2=labels[pc2].zeile;
+        else if(breakpctype!=0) {
+          printf("BREAK/E ERROR--> TODO\n");
+	  batch=0;
         }
+        if((breakpctype&7)==0) {
+          int osp=sp;
+          if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+          else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
+          programmlauf();
+          if(osp!=sp) {
+	    pc=stack[--sp]; /* wenn error innerhalb der func. */
+          }
+	}
       }
     } else {
       puts("** PROGRAM-STOP");
@@ -141,6 +160,9 @@ void alarm(int dummy) {
 
 }
 #endif
+PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
+
+
 
 static void timer_handler( int signum) {
   if(alarmpc==-1) {
@@ -149,18 +171,42 @@ static void timer_handler( int signum) {
 #else
     printf("** Uninitialized interrupt #%d \n",signum);
 #endif
-  } else {
-    int oldbatch,osp=sp,pc2;
-      pc2=procs[alarmpc].zeile;
-      
-      if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-      else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
-      oldbatch=batch;batch=1;
-      programmlauf();
-      batch=min(oldbatch,batch);
-      if(osp!=sp) {
-	pc=stack[--sp]; /* wenn error innerhalb der func. */
-      }   
+  } else {      
+      if(alarmpctype==0) {
+        int oldbatch,osp=sp,pc2;
+        pc2=procs[alarmpc].zeile;
+        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
+        oldbatch=batch;batch=1;
+        programmlauf();
+        batch=min(oldbatch,batch);
+        if(osp!=sp) {
+  	  pc=stack[--sp]; /* wenn error innerhalb der func. */
+        }
+     } else if(alarmpctype==1) {
+	  batch=1;
+	  int n;
+	  PARAMETER par[1];
+
+	  STRING bcpc;
+	  bcpc.pointer=programbuffer;
+          bcpc.len=programbufferlen;
+	  par[0].integer=0;
+	  par[0].typ=PL_INT;
+	  par[0].panzahl=0;
+	  par[0].ppointer=NULL;
+
+	  sp++;
+	  stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
+	  virtual_machine(bcpc,alarmpc, &n,par,1);
+	  sp--;	
+
+     } else {
+     // TODO:
+     	  void (*func)();	  
+	  func=(void *)alarmpc;
+	  func();
+     }
   }
   
   signal(signum, timer_handler);

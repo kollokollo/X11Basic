@@ -17,15 +17,32 @@
 
 #ifdef WINDOWS
   #undef HAVE_READLINE
+  #undef HAVE_LAPACK
  // #undef HAVE_EXECVPE
   #undef HAVE_FUTIMENS
   #undef HAVE_PTY_H
   #undef HAVE_SYS_SOCKET_H
   #undef HAVE_SYS_KD_H
+  #undef HAVE_DLOPEN
+  #undef HAVE_INOTIFY_INIT
+  #undef HAVE_USB
+
   #define X_DISPLAY_MISSING
   #define USE_SDL
   #define HAVE_SDL 1 
   #define HAVE_SDL_GFX 1 
+#elif defined ATARI
+  #undef HAVE_READLINE
+  #undef HAVE_LAPACK
+  #undef HAVE_SYS_KD_H
+  #undef HAVE_DLOPEN
+  #undef HAVE_INOTIFY_INIT
+  #undef HAVE_ALSA
+  #undef HAVE_EXECVPE
+  #define X_DISPLAY_MISSING
+  #define USE_SDL
+  #define HAVE_SDL 1 
+  #define NOGRAPHICS
 #else
   #define USE_X11
 #endif
@@ -82,12 +99,5 @@
     #define USE_ALSA
   #endif
 #endif
-
-
-
-/* If you are allowed to use stron cryptographics ... */
-
-/*#define USE_BLOWFISH*/
-
 
 #endif /* OPTIONS_H */

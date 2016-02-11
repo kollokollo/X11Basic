@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "number.h"
 
@@ -16,7 +17,7 @@ static int atohex(char *n) {
   int value=0;
   while(*n) {
     value<<=4;
-    if(*n>='0' && *n<='9') value+=(int)(*n-'0');
+    if(v_digit(*n)) value+=(int)(*n-'0');
     else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
     else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
     n++;
@@ -34,11 +35,147 @@ static int atobin(char *n) {
   }
   return(value);
 }
+static int atohexc(char *n) {
+  int i=0;
+  while(*n && (v_digit(*n) || (*n>='a' && *n<='f') || (*n>='A' && *n<='F'))) {i++;n++;}
+  return(i);
+}
+static int atobinc(char *n) {
+  int i=0;
+  while(*n && (*n=='0' || *n=='1')) {i++;n++;}
+  return(i);
+}
 
+/* Bestimmt die anzal an Zeichen, welche zu einer Gültigen Zahl
+gehören. z.B. für val?()
+*/
+int myatofc(char *n) {
+  if(!n) return(0);
+  int i=0;
+  while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
+  if(*n=='-' || *n=='+') { n++;i++;} /*  Get sign, if any.  */
+   /* try special codings  */
+  if(*n=='$') return(i+1+atohexc(++n));
+  if(*n=='%') return(i+1+atobinc(++n));
+  if(*n=='0' && (n[1]&0xdf)=='X') return(i+2+atohexc(n+2));
+ 
+  /* Count digits before decimal point or exponent, if any. */
+  for(;v_digit(*n); n++) i++;;
+  /* Count digits after decimal point, if any. */
+  if(*n=='.') {
+    n++;i++;
+    while(v_digit(*n)) {i++;n++;}
+  }
+  /* Handle exponent, if any. */
+  if((*n&0xdf)=='E') {
+    n++;i++;
+    /* Get sign of exponent, if any. */
+    if(*n=='-' || *n=='+') {i++;n++;} 
+
+    /* Get digits of exponent, if any. */
+    for(;v_digit(*n); n++) i++;;
+  }
+  return(i); 
+}
+/* Bestimmt, ob es sich um eine gültige Zahl handelt und liefert dann
+   zurueck:
+   1 = INTTYP
+   2 = FLOATTYP
+   0 = INVALID
+   
+*/
+int myisatof(char *n) {
+  if(!n) return(0);
+  int i=0;
+  int isfloat=0;
+  int l=strlen(n);
+  while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
+  if(*n=='-' || *n=='+') { n++;i++;} /*  Get sign, if any.  */
+   /* try special codings  */
+  if(*n=='$') i+=1+atohexc(++n);
+  else if(*n=='%') i+=1+atobinc(++n);
+  else if(*n=='0' && (n[1]&0xdf)=='X') i+=2+atohexc(n+2);
+  else { 
+    /* Count digits before decimal point or exponent, if any. */
+    for(;v_digit(*n); n++) i++;;
+    /* Count digits after decimal point, if any. */
+    if(*n=='.') {
+      n++;i++;
+      isfloat=1;
+      while(v_digit(*n)) {i++;n++;}
+    }
+    /* Handle exponent, if any. */
+    if((*n&0xdf)=='E') {
+      isfloat=1;
+      n++;i++;
+      /* Get sign of exponent, if any. */
+      if(*n=='-' || *n=='+') {i++;n++;} 
+
+      /* Get digits of exponent, if any. */
+      for(;v_digit(*n); n++) i++;;
+    }
+  }
+  if(i!=l) return(0);
+  if(isfloat) return(2);
+  return(1); 
+}
+
+/* 
+Wandelt einen String mit einer (floating-point) Zahl in einen double 
+um.
+
+Diese funktion muss stark Geschwindigkeitsoptimiert sein
+*/
 double myatof(char *n) {
-  if(*n=='$') return((double)atohex(++n));  
-  else if(*n=='%') return((double)atobin(++n));  
-  else return(atof(n));
+  double sign=1.0;
+  while (w_space(*n) ) n++;  /* Skip leading white space, if any. */
+  if(*n=='-') { /*  Get sign, if any.  */
+    sign=-1.0;
+    n++;
+  } else if(*n=='+') n++;
+  /* try special codings  */
+  if(*n=='$') return(sign*(double)atohex(++n));
+  if(*n=='%') return(sign*(double)atobin(++n));
+  if(*n=='0' && (n[1]&0xdf)=='X') return(sign*(double)atohex(n+2));
+  
+  /* Get digits before decimal point or exponent, if any. */
+  double value=0.0;
+  for(;v_digit(*n); n++) value=value*10.0+(*n-'0');
+  /* Get digits after decimal point, if any. */
+  if(*n=='.') {
+    double pow10 = 10.0;
+    n++;
+    while(v_digit(*n)) {
+      value+=(*n-'0')/pow10;
+      pow10*=10.0;
+      n++;
+    }
+  }
+  /* Handle exponent, if any. */
+  if((*n&0xdf)=='E') {
+    int f=0;
+    double scale=1.0;
+    unsigned int ex=0; 
+    n++;
+
+    /* Get sign of exponent, if any. */
+    if(*n=='-') {
+      f=1;
+      n++;
+    } else if(*n=='+') n++;
+    /* Get digits of exponent, if any. */
+    for(;v_digit(*n); n++) ex=ex*10+(*n-'0');
+    if(ex>308) ex=308;
+    /* Calculate scaling factor. */
+    while(ex>= 64) { scale *= 1E64; ex-=64; }
+    while(ex>=  8) { scale *= 1E8;  ex-=8; }
+    while(ex>   0) { scale *= 10.0; ex--; }
+
+    /* Return signed and scaled floating point result. */
+    return sign*(f?(value/scale):(value*scale));
+  }
+  /* Return signed floating point result. */
+  return(sign*value);
 }
 
 int f_gray(int n) { /* Gray-Code-Konversion */

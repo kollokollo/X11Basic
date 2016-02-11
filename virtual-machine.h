@@ -8,3 +8,4 @@
 
 extern char *rodata;
 
+PARAMETER *virtual_machine(const STRING bcpc, int o, int *np, const PARAMETER *plist, int inp);

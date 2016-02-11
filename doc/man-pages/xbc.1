@@ -27,15 +27,13 @@ language.
 
 Suffixes of source file names indicate the kind of
 processing to be done:
-.Sp
 .nf
 .ta \w'\fB.cxx\fP  'u
 \&\fB.bas\fP	Basic source; preprocess, compile, link
 \&\fB.b\fP	bytecode file; translate to C, then compile to native code
 \&\fB.o\fP	Object file; link
-.Sp
 .fi
-.Sp
+
 Linking is always the last stage unless you use one of the
 .BR \-c 
 , 
@@ -50,7 +48,7 @@ process).
 Precompile the source files, but do not compile nor link.  The compiler
 output is a *.c file corresponding to the source file. These *.c files can
 be compiled with e.g. the GNU project C Compiler.
-.Sp
+
 By default, xbc makes the *.c file name for a source file by replacing
 the suffix `\|\c
 .B .bas\c
@@ -63,7 +61,7 @@ the suffix `\|\c
 .B \-c
 Precompile and compile the source files, but do not link.  The compiler
 output is an object file corresponding to each source file.
-.Sp
+
 By default, xbc makes the object file name for a source file by replacing
 the suffix `\|\c
 .B .bas\c
@@ -80,7 +78,7 @@ are compiled
 in a way that they can (and will have to) be linked to other object files. With these
 object files it is possible to create a library from your basic routines, which can be 
 executed from another program.
-.Sp
+
 By default, xbc makes the object file name for a source file by replacing
 the suffix `\|\c
 .B .bas\c
@@ -96,13 +94,13 @@ Place output in file \c
 \&.  This applies regardless to whatever
 sort of output xbc is producing, whether it be an executable file, a *.c file or
 an object file.
-.Sp
+
 Since only one output file can be specified, it does not make sense to
 use `\|\c
 .B \-o\c
 \&\|' when compiling more than one input file, unless you are
 producing an executable file as output.
-.Sp
+
 If you do not specify `\|\c
 .B \-o\c
 \&\|', the default is to put an executable file

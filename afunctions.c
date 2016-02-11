@@ -23,7 +23,7 @@
 
 static ARRAY f_smula(PARAMETER *plist, int e) {
   ARRAY ergeb;
-  ergeb.typ=plist->typ;
+  ergeb.typ=((ARRAY *)&(plist->integer))->typ;
   ergeb.dimension=plist->integer;
   ergeb.pointer=plist->pointer;
   ergeb=double_array(&ergeb);
@@ -39,14 +39,22 @@ static ARRAY f_einsmat(PARAMETER *plist, int e) {
     return(einheitsmatrix(FLOATTYP,2,dimlist));
 }
 
+/*Determinante berechnen*/
+
+double f_det(PARAMETER *plist, int e) {
+    ARRAY *arr=(ARRAY *)&(plist->integer);
+    return array_det(arr);   
+}
+
 
 /* Gleichungssystem loesen  d=Mx    x()=SOLVE(m(),d())*/
 static ARRAY f_solvea(PARAMETER *plist, int e) {
   ARRAY ergeb;
   int anzzeilen,anzspalten;
-  ergeb.typ=plist[0].typ;
+  ergeb.typ=((ARRAY *)&(plist->integer))->typ;
   ergeb.dimension=1;
-  if(plist[0].integer!=2) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
+  if(plist[0].integer>2)  xberror(80,""); /* Matrizenoperationen nur für ein- oder zweidimensionale Felder*/
+  else if(plist[0].integer!=2) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
   if(plist[1].integer!=1) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
   anzspalten=*((int *)(plist[0].pointer+sizeof(int)));
   anzzeilen=*((int *)(plist[0].pointer));
@@ -55,9 +63,46 @@ static ARRAY f_solvea(PARAMETER *plist, int e) {
 
   ergeb.pointer=malloc(INTSIZE+anzspalten*sizeof(double));
   *((int *)ergeb.pointer)=anzspalten;
-  makeSVD2((double *)(plist[1].pointer+plist[1].integer*INTSIZE),(double *)(plist[0].pointer+plist[0].integer*INTSIZE),anzzeilen,anzspalten, (double *)(ergeb.pointer+INTSIZE));
+  solve((double *)(plist[1].pointer+plist[1].integer*INTSIZE),(double *)(plist[0].pointer+plist[0].integer*INTSIZE),anzzeilen,anzspalten, (double *)(ergeb.pointer+INTSIZE));
   return(ergeb);
 }
+/* Diskrete Faltung x()=CONVOLUT(A(),h())*/
+static ARRAY f_convolut(PARAMETER *plist, int e) {
+  ARRAY *arr=(ARRAY *)&(plist->integer);
+  ARRAY ergeb=double_array(arr);
+  int n=anz_eintraege(&ergeb); 
+  ARRAY *h=(ARRAY *)&(plist[1].integer);
+  int n2=anz_eintraege(h);
+  double *varptr=(double  *)(ergeb.pointer+ergeb.dimension*INTSIZE);
+  double *varptr1=(double  *)(arr->pointer+arr->dimension*INTSIZE);
+  double *varptr2=(double  *)(h->pointer+h->dimension*INTSIZE);
+  int i,j;
+  int o=n2/2;
+  double a;
+  for(i=0;i<n;i++) {
+     a=0;
+     for(j=0;j<n2;j++) {
+       if(i+j-o>=0 && i+j-o<n) a+=varptr1[i+j-o]*varptr2[j];
+     }  
+     varptr[i]=a;
+  }
+
+  return(ergeb);
+}
+
+/* Fast Fourier Transform  */
+static ARRAY f_fft(PARAMETER *plist, int e) {
+  int isign=0;
+  ARRAY ergeb=double_array((ARRAY *)&(plist->integer));
+  int n=anz_eintraege(&ergeb);
+  double *varptr=(double  *)(ergeb.pointer+ergeb.dimension*INTSIZE);
+  if(e>1) isign=plist[1].integer;
+  realft(varptr,n,isign);
+  return(ergeb);
+}
+
+
+
 #ifdef CONTROL
 static ARRAY f_csvgeta(char *pos) {
   int o=0,nn=0;
@@ -96,6 +141,7 @@ const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_ARGUMENT,  "!nulldummy",  (afunc) f_nop ,0,0   ,{0}},
  { F_CONST|F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "1"         , f_einsmat ,1,1   ,{PL_INT}},
+ { F_CONST|F_PLISTE,  "CONVOLUT"       , f_convolut ,2,2   ,{PL_FARRAY,PL_FARRAY}},
 #ifdef CONTROL
  { F_PLISTE,    "CSGET"     , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "CSVGET"    , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
@@ -106,10 +152,11 @@ const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,    "DOOCSNAMES"     , f_doocsnames ,1,1   ,{PL_STRING}},
  { F_PLISTE,    "DOOCSVGET"    , f_doocsgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
+ { F_CONST|F_PLISTE,  "FFT"        , f_fft ,1,2   ,{PL_FARRAY,PL_INT}},
 
  { F_CONST|F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
  { F_CONST|F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
- { F_CONST|F_PLISTE,  "SOLVE"       , f_solvea ,2,2   ,{PL_ARRAY,PL_ARRAY}},
+ { F_CONST|F_PLISTE,  "SOLVE"       , f_solvea ,2,2   ,{PL_FARRAY,PL_FARRAY}},
 
 #ifdef TINE
  { F_PLISTE,    "TINEGET"     , f_tinegeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},

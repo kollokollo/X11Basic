@@ -5,17 +5,23 @@
  */
 int wort_sep   (const char *t,char c,int klamb ,char *w1, char *w2);
 int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2);
-int wort_sep_multi(const char *t,char *c, int klamb ,char *w1, char *w2);
+int wort_sep_multi(const char *t,const char *c, int klamb ,char *w1, char *w2);
+
 int wort_sep_e (const char *t,char c,int klamb ,char *w1, char *w2);
 int wort_sepr_e(const char *t,char c,int klamb ,char *w1, char *w2);
 int wort_sepr  (const char *t,char c,int klamb ,char *w1, char *w2);
-int wort_sep2  (const char *t,char *c,int klamb ,char *w1, char *w2);
-int wort_sepr2 (const char *t,char *c,int klamb ,char *w1, char *w2);
+int wort_sep2  (const char *t,const char *c,int klamb ,char *w1, char *w2);
+int wort_sep2_destroy  (char *t,const char *c,int klamb ,char **w1, char **w2);
+int wort_sepr2 (const char *t,const char *c,int klamb ,char *w1, char *w2);
+int wort_sepr2_destroy (char *t,const char *c,int klamb ,char **w1, char **w2);
 int arg2       (const char *t,int klamb ,char *w1, char *w2);
 char *searchchr(const char *buf, char c);
 char *searchchr2(const char *buf, char c);
 char *searchchr3(const char *buf, char c);
+char *searchchr3_multi(const char *buf, const char *c);
 char *searchchr2_multi(const char *buf, const char *c);
+char *searchchr2_multi_r(const char *buf, const char *c, const char *);
+
 char *rsearchchr(const char *buf, char c);
 char *rsearchchr2(const char *start,char c,const char *end);
 void *memmem(const void *buf,  size_t buflen,const void *pattern, size_t len);

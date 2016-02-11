@@ -1,5 +1,5 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
-# Version 08.08.2007 modified by Markus Hoffmann
+# Version 10.03.2014 modified by Markus Hoffmann
 
 # Insert the defs for your machine
 
@@ -11,6 +11,8 @@ exec_prefix=@exec_prefix@
 
 BINDIR=@bindir@
 DATADIR=@datadir@
+ICONDIR=$(DATADIR)/icons/hicolor/32x32/apps
+DESKTOPDIR=$(DATADIR)/applications
 LIBDIR=@libdir@
 MANDIR=@mandir@
 INCDIR=@prefix@/include/x11basic
@@ -18,28 +20,33 @@ INCDIR=@prefix@/include/x11basic
 LIBNO=@version@
 
 # Register variables (-ffixed-reg) -Wall
-REGS= @regs@ -g -Wall
+REGS= @regs@ -Wall 
 
 # Optimization and debugging options
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
+INC=@X_CFLAGS@ -I.
+TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # X11 library path
 XLIBS=@X_LIBS@ @X_EXTRA_LIBS@
-SFLAGS=
 
 DEF= @def@ 
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
 CC=@CC@ $(REGS)
+CCDEBUG=@CC@ -g $(REGS)
+CCSHARED=@CC@ $(REGS) -fPIC -shared -Wl,-Bsymbolic-functions 
 
 # Cross-Compiler fuer Windows-Excecutable
 
 # WINCC=i386-mingw32msvc-gcc
 WINCC=i586-mingw32msvc-gcc
+
+# Cross-Compiler fuer ATARI ST TOS
+TOSCC=m68k-atari-mint-gcc
 
 # Cross-Compiler fuer ARM-Linux-Excecutable
 
@@ -48,51 +55,60 @@ ARMCC=arm-linux-gcc $(REGS)
 # Preprocessor
 CPP=@CPP@
 
-CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
+CFLAGS= $(INC) $(DEF) $(OPT)
 
+# these are the objects which go into libx11basic
 
-OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o svariablen.o \
-        array.o parameter.o \
+LIBOBJS=xbasic.o file.o io.o parser.o variablen.o svariablen.o \
+        array.o parameter.o fft.o mathematics.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
 	sysVstuff.o aes.o graphics.o sound.o number.o decode.o \
 	virtual-machine.o
 
-# Object group for framebuffer variant
+# these are objects which are compiled to binary
 
-OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o  svariablen.o array.o parameter.o\
-        runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
-	kommandos.o do_gets.o errortxt.o number.o decode.o \
-	sysVstuff.o aes.o  sound.o virtual-machine.o
+MAINOBJS= main.o xbbc.o xbvm.o xb2c.o
+
+EXTRAOBJS= bytecode.o ccs.o framebuffer.o raw_mouse.o spat-a-fnt.o 5x7.o consolefont.o \
+	   unifont.o unifont57.o terminal.o 8x16.o
 
 # Sources for libx11basic
 
-LIBCSRC=$(OBJS:.o=.c) mathematics.c 
-LIBCSRCFB=$(OBJS:.o=.c) framebuffer.c mathematics.c spat-a-fnt.c 5x7.c
-
-DISTOBJS=$(OBJS) main.o mathemat_dummy.o
-LIBOBJS= $(OBJS) mathematics.o
-EXTRAOBJS= bytecode.o xbbc.o xbvm.o xb2c.o framebuffer.o spat-a-fnt.o 5x7.o
-WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
-AOBJS=   main.o $(LIBOBJS)
-BOBJS=   main.o blowfish.o $(LIBOBJS)
-CSRC=    $(DISTOBJS:.o=.c) 5x7-rev.c $(EXTRAOBJS:.o=.c)
-DISTCSRC=$(DISTOBJS:.o=.c)
 LIBCSRC=$(LIBOBJS:.o=.c)
+
+FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
+LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
+
+WINLIBOBJS= $(LIBOBJS) Windows.extension/fnmatch.o
+TOSLIBOBJS= $(LIBOBJS) 
+CSRC=    $(LIBOBJS:.o=.c) 5x7-rev.c $(EXTRAOBJS:.o=.c) $(MAINOBJS:.o=.c)
 
 DEPSRC=  $(CSRC) 
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  aes.h android.h array.h bitmap.h defs.h file.h functions.h gkommandos.h kommandos.h \
-       options.h xbasic.h window.h bytecode.h number.h  parameter.h \
-       framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h \
-       sound.h wort_sep.h variablen.h svariablen.h mathematics.h sysVstuff.h x11basic.h \
-       decode.h xb2csol.h virtual-machine.h terminal.h
+HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
+       consolefont.h decode.h defs.h fft.h file.h framebuffer.h functions.h \
+       gkommandos.h graphics.h io.h kommandos.h \
+       mathematics.h number.h options.h parameter.h parser.h raw_mouse.h \
+       sfunctions.h sound.h svariablen.h sysVstuff.h \
+       terminal.h variablen.h virtual-machine.h \
+       window.h wort_sep.h x11basic.h xb2csol.h xbasic.h
 
-EXAMPLES=examples2/calculation/randomminmax.bas \
-        examples2/calculation/sieve.bas \
-        examples2/calculation/sqr.bas \
+EXAMPLES= \
+        examples2/3D-graphics/*.bas \
+        examples2/Android/*.bas \
+        examples2/calculation/1*.bas \
+        examples2/calculation/b*.bas \
+        examples2/calculation/fact*.bas \
+        examples2/calculation/gen*.bas \
+        examples2/calculation/k*.bas \
+        examples2/calculation/r*.bas \
+        examples2/calculation/sie*.bas \
+        examples2/calculation/sq*.bas \
+        examples2/calculation/ts*.bas \
+        examples2/calculation/W*.bas \
         examples/c-usage/c-demo.c \
         examples/c-usage/c-demo2.c \
         examples/c-usage/library.bas \
@@ -101,11 +117,11 @@ EXAMPLES=examples2/calculation/randomminmax.bas \
         examples/compiler/gui2bas.bas \
         examples/graphics/*.bas \
         examples/tests/*.bas \
-        examples2/3D-graphics/*.bas \
         examples2/console/console_clock.bas \
         examples2/console/g*.bas \
         examples2/console/l*.bas \
         examples2/console/m*.bas \
+        examples2/console/s*.bas \
         examples2/console/t*.bas \
         examples2/fragments/* \
         examples2/games/*.bas \
@@ -130,8 +146,8 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
       doc/editors/*  $(HSRC) $(CSRC) \
       config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
-        x11basic.spec x11basic.pov 5x7-rev.c \
-        bitmaps/* \
+        x11basic.spec x11basic.desktop 5x7-rev.c \
+        bitmaps/* icons/x11basic.png \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
         examples/compiler/bas2x11basic.bas \
@@ -146,7 +162,7 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 
 BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/* xbasic xbc bas2x11basic xbbc xbvm x11basic.h xb2csol.h \
+      doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c x11basic.h xb2csol.h \
       x11basic.a libx11basic.so \
       examples/compiler/xbc.bas.in \
       examples/compiler/inline.bas \
@@ -162,12 +178,14 @@ BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 WINDIST=Windows-Installer/setup.exe Windows.extension/lib/SDL.dll \
         Windows.extension/lib/README-SDL.txt \
         Windows-Installer/readme.txt Windows-Installer/demo.bas \
-	xbasic.exe xbvm.exe xbbc.exe xbc.exe \
+	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
 	Windows-Installer/x11basic.ico Windows-Installer/x11bver.txt \
 	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico
 
+TOSDIST=xbasic.tos xbvm.tos xbbc.tos xbc.tos xb2c.tos
 
-DIST2=$(DISTOBJS:.o=.c)
+
+DIST2=$(LIBOBJS:.o=.c) main.c
 
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
@@ -182,15 +200,17 @@ DOOCSDIST=$(DIST) src/doocs-wrapper.cc doc/doocs-xbasic.html \
 LINKFLAGS =
 WINLINKFLAGS = -L./Windows.extension/lib 
 
-LIBS =  @libs@ @xtra@ -lutil
+LIBS =  @libs@ @xtra@
 LIBS1 =  @libs@
 LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
 
 CONSOLELIBS= @libs@ @xtra@
 
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
+TOSLIBS = -lm  -lgem
 
 MYWINLIBS = x11basic.lib Windows.extension/lib/libgfx.lib
+MYTOSLIBS = x11basic.toslib
 
 all :    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic 
 
@@ -218,7 +238,7 @@ libx11basic.so: libx11basic.so.$(LIBNO)
 	ln -s -f $< libx11basic.so.1
 	ln -s -f libx11basic.so.1 libx11basic.so
 libx11basic.so.$(LIBNO) : $(LIBCSRC)
-	$(CC) -fPIC -shared -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) $(XLIBS)
+	$(CCSHARED) $(OPT)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) $(XLIBS)
 	strip $@
 
 # Make the (static) library
@@ -232,28 +252,34 @@ xbasic : libx11basic.so main.o
 	$(CC) -L. $(LINKFLAGS) -o $@ main.o $(LIBS) -lx11basic $(XLIBS)
 	strip $@
 
-# Make th X11-Xasic psydocompiler
+# Make th X11-Basic compiler manager xbc
 
-xbc : xbasic libx11basic.so
+xbc : xbasic libx11basic.so examples/compiler/xbc.bas
 	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@ -L .
 	strip $@
 
 
 # Make the bytecode compiler xbbc
 
-xbbc : bytecode.h bytecode.o  xbbc.c
-	$(CC) -o $@ xbbc.c bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
+xbbc : bytecode.h bytecode.o xbbc.o
+	$(CC) -o $@ xbbc.o bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
 	strip $@
-xbbcstatic : xbbc.c bytecode.h bytecode.o  x11basic.a
-	$(CC) -o xbbc xbbc.c bytecode.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
+xbbc.static : xbbc.o bytecode.o x11basic.a
+	$(CC) -o $@ xbbc.o bytecode.o x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
+	strip $@
+xbbc.debug : xbbc.c bytecode.c $(LIBCSRC) 
+	$(CCDEBUG) -o $@ xbbc.c bytecode.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
 
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c 
 	$(CC) -o $@ xbvm.c  -L . $(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
 	strip $@
-xbvmstatic : bytecode.h xbvm.c  bytecode.h x11basic.a
-	$(CC) -o xbvm xbvm.c   x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
+xbvm.static : xbvm.o x11basic.a
+	$(CC) -o $@ xbvm.o x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
+	strip $@
+xbvm.debug : xbvm.c  $(LIBCSRC) 
+	$(CCDEBUG) -o $@ xbvm.c $(LIBCSRC) -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -265,7 +291,7 @@ libx11basic.dll : x11basic.lib
 
 # Make the (static) library for MS WINDOWS
 
-x11basic.lib : $(DIST2) mathematics.c
+x11basic.lib : $(WINLIBOBJS)
 	rm -f *.o
 	$(WINCC) -DWINDOWS -c $(DIST2) -I./Windows.extension/include
 	$(WINCC) -DWINDOWS -c mathematics.c -I./Windows.extension/include
@@ -282,6 +308,10 @@ xbbc.exe: x11basic.lib bytecode.h bytecode.c xbbc.c
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
 	$(MYWINLIBS) $(WINLIBS)
 	strip $@
+xb2c.exe: x11basic.lib xb2c.c 
+	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xb2c.c  \
+	$(MYWINLIBS) $(WINLIBS)
+	strip $@
 
 xbvm.exe: x11basic.lib bytecode.h xbvm.c 
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
@@ -296,24 +326,21 @@ xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
 
 
 ###################################################
+# Make the exe for ATARI ST
 
+xbasic.tos: x11basic.toslib main.c
+	$(TOSCC) -DATARI $(OPT) $(WINLINKFLAGS) main.c -o $@ $(MYTOSLIBS) \
+	 $(TOSLIBS)
+	m68k-atari-mint-strip $@
+# Make the (static) library for ATARI ST
 
-mathematics.c:	mathemat_dummy.c
-	test -e mathematics.c || (echo "mathematics.c is not installed. using dummy..." ; ln -s $< $@ )
+x11basic.toslib : $(DIST2) mathematics.c
+	rm -f *.o
+	$(TOSCC) -DATARI -c $(DIST2) 
+	$(TOSCC) -DATARI -c mathematics.c
+	m68k-atari-mint-ar -ru $@ $(TOSLIBOBJS) 
+	rm -f *.o
 
-# Make a version of X11-basic with full math support
-
-xbasic.fft : $(AOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
-	strip $@
-fft :  xbasic.fft
-
-# Make a version of X11-basic with encryption/decryption support
-	
-xbasic.blow : $(BOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(BOBJS) $(LIBS) $(XLIBS)
-	strip $@
-blow : 	xbasic.blow
 
 
 # Make a version of X11-Basic which uses the framebuffer (and touchscreen) device
@@ -321,16 +348,21 @@ blow : 	xbasic.blow
 
 fb: xbasic.framebuffer
 xbasic.framebuffer : main.c $(LIBCSRCFB)
-	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@  main.c   $(LIBCSRCFB) $(LINKFLAGS)  $(LIBS1) 
+	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRCFB) $(LINKFLAGS)  $(LIBS1) 
 	strip $@
 
 # Make a version of X11-basic which is statically linked to libx11basic and 
 # therefor can be used without the .so file
+
 xbasic.static : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic main.o x11basic.a $(LIBS) $(XLIBS)
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) $(XLIBS)
+	strip $@
+xbasic.debug :	main.c $(LIBCSRC)
+	$(CCDEBUG) $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRC) $(LIBS) $(XLIBS)
 	
 
-static : xbasic.static	xbbcstatic xbvmstatic xb2cstatic
+static : xbasic.static	xbbc.static xbvm.static xb2c.static
+debug  : xbasic.debug	xbbc.debug xb2c.debug xbvm.debug
 strip  : xbasic xbbc xbvm xb2c
 	strip xbasic
 	strip xbbc
@@ -338,10 +370,9 @@ strip  : xbasic xbbc xbvm xb2c
 	strip xb2c
 
 
-debugtest : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic main.o x11basic.a $(LIBS) $(XLIBS)
-	
-	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic ../examples2/calculation/diffglei.bas
+
+debugtest : xbasic.debug
+	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic.debug ../examples2/calculation/diffglei.bas
 
 # Make a version of X11-basic which uses the SDL library for graphics 
 
@@ -350,16 +381,6 @@ xbasic.sdl : main.c $(LIBCSRC)
 	strip $@
 
 sdl : xbasic.sdl	
-
-
-# Make a version of X11-Basic which is statically linked to libx11basic and 
-# the readline library therefor can be used without the .so files
-
-xbasic.staticreadline : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a\
-		/usr/lib/libreadline.a -ldl -lm -lncurses -lX11  $(XLIBS)
-	strip $@
-
 
 config.h: configure
 
@@ -371,7 +392,7 @@ x11basic.a.tomtom : $(LIBCSRCFB)
 	ln -s config.h.tomtom config.h
 	rm -f *.o
 	$(ARMCC) -ITomTom.extension/ -DFRAMEBUFFER $(OPT)  -c $(LIBCSRCFB)  
-	arm-linux-ar -ru $@ $(OBJS) framebuffer.o mathematics.o spat-a-fnt.o 5x7.o
+	arm-linux-ar -ru $@ $(FBLIBOBJS)
 	rm -f *.o config.h
 
 libx11basic.so.$(LIBNO).tomtom : $(LIBCSRCFB)
@@ -431,19 +452,16 @@ $(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp To
 TomTom: $(DIR33).zip
 
 
-tinexbasic.rs : $(OBJS) $(AOBJS) 
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS)  \
-		 /usr/lib/libreadline.a /usr/lib/libtine.a -ldl -lm -lncurses -lX11  $(XLIBS)
-	strip $@
-psydo : psydo.o lib
-	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o  \
-		$(LIBS) -lx11basic $(XLIBS)
-psydostatic : psydo.o x11basic.a
-	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
-		$(LIBS) $(XLIBS)
-windows: $(WINDIST) xbasic.exe xbvm.exe xbbc.exe xbc.exe
+windows: $(WINDIST) xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe
 	rm -f X11-Basic-@version@.zip
 	zip -j -D  -o X11-Basic-@version@-win.zip $(WINDIST)
+
+# Make an ATARI ST version
+
+tos: $(TOSDIST) xbasic.tos xbvm.tos xbbc.tos xbc.tos xb2c.tos
+	rm -f X11-Basic-atari-@version@.zip
+	zip -j -D  -o X11-Basic-@version@-st.zip $(TOSDIST)
+
 
 examples: X11-Basic-examples-$(LIBNO).zip X11-Basic-examples-$(LIBNO).tar.gz
 X11-Basic-examples-$(LIBNO).zip:
@@ -457,32 +475,32 @@ examples2: myzip
 	                   X11-Basic-examples-@version@.tar 
 
 
-tineexe: $(OBJS) main.o mathematics.o
+tineexe: $(WINLIBOBJS) main.o 
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
-	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(DISTOBJS) \
-		 Windows.extension/fnmatch.o  Windows.extension/memfrob.o rpclib.lib $(WINLIBS)
-tinexbasic.dyn : $(OBJS) main.o mathematics.o
-	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) \
-		$(LIBS)  -ltine $(XLIBS)
+	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(WINLIBOBJS) main.o \
+		 rpclib.lib $(WINLIBS)
+tinexbasic.dyn : $(LIBOBJS) main.o 
+	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine $(XLIBS)
 	strip $@
-tinexbasic : $(OBJS) main.o mathematics.o
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
-		$(LIBS)  /usr/lib/libtine.a $(XLIBS)
+tinexbasic : $(LIBOBJS) main.o 
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  /usr/lib/libtine.a $(XLIBS)
 	strip $@
-doocsxbasic.dyn : $(OBJS) main.o mathematics.o doocs-wrapper.o
+doocsxbasic.dyn : $(LIBOBJS) main.o  doocs-wrapper.o
 	$(CC) -DTINE -DDOOCS  $(LINKFLAGS) -o $@ $(AOBJS) doocs-wrapper.o \
 		$(LIBS) $(XLIBS) -ltine -lDOOCSclient -lDOOCSserver 
 	strip $@
-doocsxbasic : $(OBJS) main.o mathematics.o doocs-wrapper.o
+doocsxbasic : $(LIBOBJS) main.o  doocs-wrapper.o
 	g++ -DTINE -DDOOCS $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
 	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
 	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS)
 	strip $@
 
 
-csxbasic : $(OBJS) 
+csxbasic : $(LIBOBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
 	strip $@
+
+
 lib:	libx11basic.so x11basic.a
 
 
@@ -505,18 +523,23 @@ myzip : xbc
 
 
 # make the X11-Basic to C translator
-xb2c :  xb2c.c
-	$(CC) -o $@ xb2c.c  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
+xb2c :  xb2c.o
+	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
 	strip $@
-xb2cstatic : xb2c.c x11basic.a
-	$(CC) -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+xb2c.static : xb2c.o x11basic.a
+	$(CC) -o $@ xb2c.o x11basic.a  -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+	strip $@
+xb2c.debug : xb2c.c $(LIBCSRC)
+	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 
 x11basic.tga: x11basic.pov
 	povray +I$< +O$@ +FT +W160 +H200 +V -D +X
-
-install : xbasic libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+ 
+install : xbasic icons/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+	install -m 644 icons/x11basic.png $(ICONDIR)/
+	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
-	install -m 755 libx11basic.so.$(LIBNO) $(LIBDIR)/
+	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
 	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
 	ln -s -f $(LIBDIR)/libx11basic.so.1 $(LIBDIR)/libx11basic.so
 	install -m 644 x11basic.a $(LIBDIR)/
@@ -532,12 +555,14 @@ install : xbasic libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb
 	install -d $(INCDIR)
 	install -m 644 x11basic.h $(INCDIR)/
 	install -m 644 xb2csol.h $(INCDIR)/
-	install doc/man-pages/xbc.1 $(MANDIR)/man1/
-	install doc/man-pages/xbbc.1 $(MANDIR)/man1/
-	install doc/man-pages/xbvm.1 $(MANDIR)/man1/
-	install doc/man-pages/xb2c.1 $(MANDIR)/man1/
-	install doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbc.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbbc.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbvm.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xb2c.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
 uninstall :
+	rm -f $(ICONDIR)/x11basic.png
+	rm -f $(DESKTOPDIR)/x11basic.desktop
 	rm -f $(LIBDIR)/libx11basic.so*
 	rm -f $(LIBDIR)/x11basic.a
 	rm -f $(BINDIR)/xbasic 
@@ -554,17 +579,19 @@ uninstall :
 	rm -f $(INCDIR)/xb2csol.h
 	rmdir $(INCDIR)
 clean :
-	rm -f *.o a.out b.out b.b Makefile.bak \
-	backup-*.tgz
+	rm -f *.o a.out b.out b.b Makefile.bak xbasic.debug xbbc.debug xb2c.debug \
+	xbvm.debug backup-*.tgz *.d
 moreclean : clean
-	rm -f  xbasic xbbc xbvm xbc xb2c bas2x11basic libx11basic.so.1.* x11basic.a
+	rm -f  xbasic xbbc xbvm xbc xb2c bas2x11basic libx11basic.so.1.* x11basic.a 11.c \
+	       xbasic.sdl xbasic.framebuffer xbasic.static xbvm.static xb2c.static xbbc.static
 
-distclean : clean
-	rm -f Makefile config.cache config.status config.log config.h 11.c xbasic xbc xbvm \
-	X11-Basic-examples-@version@.zip xbasic.sdl xbasic.framebuffer xbbc \
-	xb2c xbasic.static X11-Basic-examples-$(LIBNO).zip \
-	tinexbasic doocsxbasic xbasic.exe xbbc.exe xbc.exe xbvm.exe xbasic.dyn xbasic.staticreadline \
-	myzip myunzip bas2x11basic libx11basic.so* x11basic.lib x11basic.a xbvm.tomtom xbbc.tomtom xbasic.tomtom
+distclean : moreclean
+	rm -f Makefile config.cache config.status config.log config.h \
+	X11-Basic-examples-@version@.zip  \
+	X11-Basic-examples-$(LIBNO).zip \
+	tinexbasic doocsxbasic xbasic.exe xbbc.exe xbc.exe xbvm.exe xb2c.exe \
+	myzip myunzip bas2x11basic  x11basic.lib \
+	xbvm.tomtom xbbc.tomtom xbasic.tomtom 
 	rm -rf autom4te.cache
 
 $(DIR).tar.gz : dist
@@ -591,11 +618,29 @@ rpm :	$(DIR).tar.gz x11basic.spec
 #	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
 deb :	$(BINDIST)
-	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ --pkgrelease 3 --arch i386 \
-	--maintainer kollo@users.sourceforge.net --requires libreadline5 --backup \
+	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
+	--pkgrelease 97 --arch i386 \
+	--maintainer kollo@users.sourceforge.net \
+        --requires libasound2,libreadline6,liblapack3 --backup  \
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
+deb2 :	$(DIR).tar.gz
+	rm -rf /tmp/$(DIR)
+	mkdir /tmp/$(DIR)
+	cp $(DIR).tar.gz /tmp/$(DIR)/
+	(cd /tmp/$(DIR); \
+	tar xzf $(DIR).tar.gz;\
+	mv $(DIR) x11basic-$(LIBNO) )
+	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
+	dh_make -s -c gpl2 -e kollo@users.sourceforge.net -f ../$(DIR).tar.gz)
+	cp debcontrol.spec /tmp/$(DIR)/x11basic-$(LIBNO)/debian/control
+	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
+	dpkg-depcheck -d ./configure;\
+	rm -f examples/compiler/xbc.bas)
+	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
+	sudo dpkg-buildpackage -rfakeroot)
+
 tinerpm : $(TINEDIR).tar.gz tinexbasic.spec
 	cp $(TINEDIR).tar.gz /usr/src/packages/SOURCES/
 	rpmbuild -ba --clean tinexbasic.spec
@@ -636,15 +681,11 @@ dslpackage : xbasic.staticreadline
 	(md5sum X11Basic.tar.gz > X11Basic.tar.gz.md5.txt )
 check :	xbasic
 	LD_LIBRARY_PATH=. ./xbasic -e version
-depend : $(DEPSRC) 
-	cp Makefile Makefile.bak
-	chmod +w Makefile
-	makedepend $(INC) $(DEF) $(DEPSRC) 
-#	sed -n '/^# DO NOT DELETE/,$$p' < Makefile > Makefile.tmp
-#	sed -n '1,/^# DO NOT DELETE/p' < Makefile > Makefile.new
-#	tail +2 Makefile.tmp|\
-#	sed 's/^\([A-Za-z0-9_]*\)\.o:/\1.o \1.ln:/g'>>Makefile.new
-#	rm -f Makefile.tmp
-#	mv Makefile.new Makefile
-
-# DO NOT DELETE THIS LINE -- make depend depends on it.
+# Auto dependency stuff (from info make)
+%.d: %.c
+	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< -o $@
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),distclean)
+-include $(DEPSRC:.c=.d)
+endif
+endif

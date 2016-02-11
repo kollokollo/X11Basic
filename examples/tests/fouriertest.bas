@@ -1,40 +1,49 @@
-' Testet die eingebaute Fast-Fourier-Transformation 
-' (geht nur, wenn man numerical recepies besitzt.)
+' Testet die eingebaute Fast-Fourier-Transformation with X11-Basic 
+' (c) by Markus Hoffmann 2000-2013
+'
+' Demonstrates the use of FFT and SCOPE commands
 '
 
-l=2^11
+l=2^10   ! It is faster to use a power of two
 c1=4
 c2=86
 
-dim a(l+1),b(l+1)
-sizew ,l,400
-for i=0 to l
+DIM a(l),b(l)
+SIZEW ,l,400
+CLEARW
+FOR i=0 TO l-1
   a(i)=200/100*@si(3*i/512*2*pi)+i/100*sin(20*i/512*2*pi)
   b(i)=a(i)
-next i
+NEXT i
 
-if form_alert(2,"[2][Do you have full X11-Basic |Version (with NR)?][yes|no]")=2
-  print "sorry..."
-  quit
-endif
 
-for c2=c1 to c1+100 step 2
-  print c2
-  color get_color(65535,32000,0)
-  scope a(),1,-10,300
-  fft a()
-  color 1
-  for i=0 to l step 2
-    line i/2,300,i/2,300-100/l*sqrt(a(i)^2+a(i+1)^2)
+FOR c2=c1 TO c1+200 STEP 2
+  CLEARW
+  COLOR get_color(65535,32000,0)
+  TEXT 10,32,"Fourier Transformation test with X11-Basic."
+  SCOPE a(),1,-10,300
+  FFT a()              ! Do the Fourier transformation
+  ' Normalize
+  FOR i=0 TO l-1
+    a(i)=a(i)/SQRT(l)
+  NEXT i
+  
+  COLOR COLOR_RGB(0,1,1)
+  FOR i=0 TO l STEP 2
+    LINE i/2,400,i/2,400-100/SQRT(l)*SQRT(a(i)^2+a(i+1)^2)
   next i
-  line c1/2,0,c1/2,10
-  line c2/2,0,c2/2,10
-  for i=c1 to c2
+  LINE c1/2,0,c1/2,10
+  LINE c2/2,0,c2/2,10
+  SHOWPAGE
+  FOR i=c1 TO c2
     a(i)=0
-  next i
-  fft a(),-1
-  color get_color(0,32535,65535)
-  scope a(),0,-20/l,300
+  NEXT i
+  FOR i=l-1 DOWNTO l-c2
+    a(i)=0
+  NEXT i
+  FFT a(),-1
+  COLOR COLOR_RGB(0,1/2,1)
+  SCOPE a(),0,-10/SQRT(l),300
 
 ' open "O",#1,"testme"
 ' for i=0 to l
@@ -43,22 +52,19 @@ for c2=c1 to c1+100 step 2
 ' next i
 ' close #1
 
-  for g=1 to 10
-    color get_color(65535,65535,0)
-    scope a(),b(),1,2/l*g,200,-1*g,200
-    vsync
-    color get_color(0,0,0)
-    scope a(),b(),1,2/l*g,200,-1*g,200
-  next g
-  for i=0 to l
-    a(i)=b(i)
-  next i
-  color get_color(0,0,0)
-  pbox 0,0,l,400
-next c2
-alert 0,"Fertig",1," OK ",d
-quit
+  FOR g=1 TO 10
+    COLOR COLOR_RGB(1,1,0)
+    SCOPE a(),b(),1,2/SQRT(l)*g,200,-1*g,200
+    SHOWPAGE
+    COLOR COLOR_RGB(0,0,0)
+    SCOPE a(),b(),1,2/SQRT(l)*g,200,-1*g,200
+  NEXT g
+  FOR i=0 TO l-1
+    a(i)=a(i)/SQRT(l)
+  NEXT i
+  PAUSE 0.1
+NEXT c2
+ALERT 0,"Done.",1," OK ",d
+QUIT
 
-function si(x)
-return x mod pi
-endfunction
+DEFFN si(x)=x mod pi

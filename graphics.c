@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
+#include "x11basic.h"
 
 #include "graphics.h"
 
@@ -76,19 +77,17 @@ void mybox(int x1,int y1,int x2, int y2) {
   DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
 }
 int get_point(int x, int y) {
-    int d,r;
-#ifdef WINDOWS_NATIVE
-#endif
-#ifdef USE_SDL
-r=sdl_getpixel(display[usewindow],x,y);
-#endif
-#ifdef FRAMEBUFFER
+    int r;
+#if defined WINDOWS_NATIVE
+  r=0;
+#elif defined USE_SDL
+  r=sdl_getpixel(display[usewindow],x,y);
+#elif defined FRAMEBUFFER
   r=FB_point(x,y);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
     XImage *Image;
     graphics();
-    d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(display[usewindow]));
+    int d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(display[usewindow]));
     Image=XGetImage(display[usewindow],win[usewindow],
                 x, y, 1, 1, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     r=XGetPixel(Image, 0, 0);
@@ -251,9 +250,15 @@ void draw_string(int x, int y, char *text,int len) {
   TextOut(bitcon[usewindow],x,(y-baseline),text,len);
 #elif defined FRAMEBUFFER
   FB_DrawString(x,y-baseline,text,len);
-#elif defined USE_X11
-  if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
-  else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+#elif defined USE_X11 
+  #ifdef X_HAVE_UTF8_STRING 
+    // TODO:
+    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+    else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);    
+  #else
+    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+    else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+  #endif
 #elif defined USE_SDL
   char s[len+1];
   memcpy(s,text,len);
@@ -281,16 +286,16 @@ void set_fill(int c) {
 #endif
 }
 int mousex() {
-#if defined ANDROID
+#if defined ANDROID || defined FRAMEBUFFER
+  graphics(); 
   return(screen.mouse_x);
-#endif
-#ifdef WINDOWS_NATIVE
+#elif defined  WINDOWS_NATIVE
   return(global_mousex);
 #endif
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
+#if defined USE_X11 || defined USE_SDL
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
 
@@ -302,16 +307,16 @@ int mousex() {
 #endif
 }
 int mousey() {
-#if defined ANDROID
-  return(screen.mouse_y);
-#endif
-#ifdef WINDOWS_NATIVE
+#if defined ANDROID || defined FRAMEBUFFER
+   graphics(); 
+ return(screen.mouse_y);
+#elif defined  WINDOWS_NATIVE
   return(global_mousey);
 #endif
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
+#if defined USE_X11 || defined USE_SDL
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
   graphics(); 
@@ -322,30 +327,33 @@ int mousey() {
 #endif
 }
 int mousek() {
-#if defined ANDROID
+#if defined ANDROID || defined FRAMEBUFFER
+  graphics(); 
   return(screen.mouse_k);
-#endif
-#if defined WINDOWS_NATIVE 
+#elif defined WINDOWS_NATIVE 
   return(global_mousek);
 #endif
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
+#if defined USE_X11 || defined USE_SDL
    int root_x_return, root_y_return,win_x_return, win_y_return;
    unsigned int mask_return;
    graphics(); 
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
+#if defined USE_SDL
+  return(mask_return&0xff);
+#else
    return(mask_return>>8);
+#endif
 #endif
 }
 int mouses() {
 #if defined WINDOWS_NATIVE
   return(global_mouses);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
    Window root_return,child_return;
@@ -355,9 +363,11 @@ int mouses() {
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
    return(mask_return & 255);
-#endif
-#if defined USE_SDL|| defined FRAMEBUFFER
-return(0);
+#elif defined USE_SDL
+  return(0);
+#elif defined FRAMEBUFFER || defined ANDROID
+  graphics(); 
+  return(screen.mouse_s);
 #endif
 }
 
@@ -371,28 +381,23 @@ return(0);
    (c) Markus Hoffmann  1998                                   */
 
 
-unsigned int get_color(int r, int g, int b, int a) {
+unsigned int get_color(unsigned char r, unsigned char g, unsigned char b,unsigned char a) {
 #ifdef WINDOWS_NATIVE
-  return(RGB(r>>8,g>>8,b>>8));
-#endif
-#ifdef FRAMEBUFFER
+  return(RGB(r,g,b));
+#elif defined FRAMEBUFFER
   return(FB_get_color(r,g,b));
-#endif
-#ifdef USE_SDL
-  return((unsigned int)SDL_MapRGB(display[usewindow]->format, r>>8, g>>8, b>>8)<<8 |0xff);
-#endif
-#ifdef USE_X11
+#elif defined USE_SDL
+  return((unsigned int)SDL_MapRGB(display[usewindow]->format, r, g, b)<<8 |0xff);
+#elif defined USE_X11
   Colormap map;
   XColor pixcolor;
 
   map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay ( display[usewindow] ) );
 
-  pixcolor.red=r;
-  pixcolor.green=g;
-  pixcolor.blue=b;
-  if(my_XAllocColor(display[usewindow], map, &pixcolor)==0)
-    printf("could not switch to color.\n");
-
+  pixcolor.red=r<<8;
+  pixcolor.green=g<<8;
+  pixcolor.blue=b<<8;
+  if(my_XAllocColor(display[usewindow], map, &pixcolor)==0) printf("ERROR: could allocate color.\n");
   return(pixcolor.pixel);
 #endif
 }

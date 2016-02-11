@@ -5,8 +5,8 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
- 
-#ifdef WINDOWS
+
+#ifdef _WIN32
 //#define FD_SETSIZE 4096
 #define EINPROGRESS   WSAEINPROGRESS
 #define EWOULDBLOCK   WSAEWOULDBLOCK
@@ -17,6 +17,32 @@
 #define closesocket(s) close(s)
 #define ioctlsocket(a,b,c) ioctl(a,b,c)
 #endif
+
+
+/*  File handling structures */
+
+#define FT_NONE   0
+#define FT_FILE   1
+#define FT_DLL    2
+#define FT_DEV    3
+#define FT_SOCKET 4
+#define FT_USB    5
+#define FT_PIPE   6
+
+typedef struct {
+  int typ;
+  FILE *dptr;
+  unsigned int blk_len;
+  unsigned char ep_in;
+  unsigned char ep_out;
+  #if defined(_WIN32)
+  HANDLE cport;   /* COM-Port Handle*/
+  #endif
+} FILEINFO;
+
+
+extern FILEINFO filenr[];
+
 
 
 #ifdef ANDROID 
@@ -36,7 +62,11 @@ void getrowcols(int *rows, int *cols);
 void getcrsrowcol(int *rows, int *cols);
 
 int get_number(const char *w);
-FILE *get_fileptr(int n);
+FILEINFO get_fileptr(int n);
+
+void close_all_files();
+
+
 int inp8(PARAMETER *plist,int e);
 int inpf(PARAMETER *plist,int e);
 int inp16(PARAMETER *plist,int e);
@@ -58,11 +88,16 @@ int spawn_shell (char *argv[]);
 int f_freefile();
 int f_map(PARAMETER *plist,int e);
 STRING f_lineinputs(PARAMETER *plist,int e);
+STRING f_fsfirsts(PARAMETER *plist,int e);
+STRING f_fsnexts();
 STRING f_inputs(char *n);
 int f_call(PARAMETER *plist,int e);
 int f_exec(PARAMETER *plist,int e);
 int f_symadr(PARAMETER *plist,int e);
 int f_ioctl(PARAMETER *plist,int e);
+
+
+
 
 void c_print    (PARAMETER *plist,int e);
 void c_msync    (PARAMETER *plist,int e);

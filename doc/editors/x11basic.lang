@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ This is a modified file of the pascal.lang file of GtkSourceView
+ for the x11-basic language. 
+
+ This file is part of GtkSourceView
+
+ Author: Andrew Johnson <acjgenius@earthlink.net>
+ Copyright (C) 2004 Andrew Johnson <acjgenius@earthlink.net>
+ Copyright (C) 2005 Thierry Moisan <thierryn@videotron.ca>
+
+ This library is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+-->
+<language id="x11basic" _name="X11-Basic" version="2.0" _section="Sources">
+  <metadata>
+    <property name="mimetypes">text/x11basic</property>
+    <property name="globs">*.bas;*.lst</property>
+    <property name="line-comment-start">'</property>
+  </metadata>
+
+  <styles>
+    <style id="comment" _name="Comment" map-to="def:comment"/>
+    <style id="string" _name="String" map-to="def:string"/>
+    <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+    <style id="decimal" _name="Decimal" map-to="def:decimal"/>
+    <style id="type" _name="Data Type" map-to="def:type"/>
+    <style id="preprocessor" _name="Preprocessor" map-to="def:preprocessor"/>
+  </styles>
+
+  <default-regex-options case-sensitive="false"/>
+
+  <definitions>
+
+    <context id="string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>"</start>
+      <end>"</end>
+    </context>
+
+    <context id="line-comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
+      <start>'</start>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+
+    <!--<context id="block-comment-1" style-ref="comment" class="comment" class-disabled="no-spell-check">
+      <start>\(\*</start>
+      <end>\*\)</end>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+
+    <context id="block-comment-2" style-ref="comment" class="comment" class-disabled="no-spell-check">
+      <start>\{</start>
+      <end>\}</end>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+-->
+  <!--  <context id="preprocessor-defines" style-ref="preprocessor" end-at-line-end="true">
+      <start>\{\$</start>
+      <end>\}</end>
+    </context>
+-->
+    <context id="general-format" style-ref="keyword">
+	<suffix>(?!\w)</suffix>
+	<keyword>rows</keyword>
+	<keyword>ccs_err</keyword>
+	<keyword>cols</keyword>
+	<keyword>mousek</keyword>
+	<keyword>mousex</keyword>
+	<keyword>mousey</keyword>
+	<keyword>mouses</keyword>
+	<keyword>true</keyword>
+	<keyword>false</keyword>
+	<keyword>crscol</keyword>
+	<keyword>crslin</keyword>
+	<keyword>ctimer</keyword>
+	<keyword>timer</keyword>
+	<keyword>stimer</keyword>
+	<keyword>err</keyword>
+	<keyword>date\$</keyword>
+	<keyword>time\$</keyword>
+	<keyword>terminalname\$</keyword>
+	<keyword>inkey\$</keyword>
+	<keyword>pi</keyword>
+	<keyword>pc</keyword>
+	<keyword>sp</keyword>
+    </context>
+
+    <!--<context id="functions-and-function-modifiers" style-ref="keyword">
+      <keyword>Function</keyword>
+      <keyword>Procedure</keyword>
+      <keyword>Overload</keyword>
+      <keyword>cdecl</keyword>
+    </context> -->
+	
+  <!--  <context id="boolean-bitwise-operators" style-ref="keyword">
+      <keyword>if</keyword>
+      <keyword>then</keyword>
+      <keyword>else</keyword>
+      <keyword>is</keyword>
+      <keyword>and</keyword>
+      <keyword>and_then</keyword>
+      <keyword>not</keyword>
+      <keyword>or</keyword>
+      <keyword>or_else</keyword>
+      <keyword>xor</keyword>
+      <keyword>shr</keyword>
+      <keyword>shl</keyword>
+      <keyword>otherwise</keyword>
+    </context> -->
+
+   <!-- <context id="math-operators" style-ref="keyword">
+      <keyword>div</keyword>
+      <keyword>mod</keyword>
+    </context>
+-->
+    <context id="loop-flow-and-exceptions-keywords" style-ref="keyword">
+	<suffix>(?!\w)</suffix>      	
+	<keyword>tron</keyword>
+	<keyword>troff</keyword>
+	<keyword>break</keyword>
+	<keyword>stop</keyword>
+	<keyword>cont</keyword>
+	<keyword>continue</keyword>
+	<keyword>default</keyword>
+	<keyword>do</keyword>
+	<keyword>exit</keyword>
+	<keyword>gosub</keyword>
+	<keyword>goto</keyword>
+	<keyword>if</keyword>
+	<keyword>else</keyword>
+	<keyword>endif</keyword>
+	<keyword>while</keyword>
+	<keyword>wend</keyword>
+	<keyword>repeat</keyword>
+	<keyword>until</keyword>
+	<keyword>loop</keyword>
+	<keyword>deffn</keyword>
+	<keyword>function</keyword>
+	<keyword>procedure</keyword>
+	<keyword>program</keyword>
+	<keyword>return</keyword>
+	<keyword>endfunc</keyword>
+	<keyword>endfunction</keyword>
+	<keyword>for</keyword>
+	<keyword>next</keyword>
+	<keyword>end</keyword>
+	<keyword>echo</keyword>
+	<keyword>on</keyword>
+	<keyword>off</keyword>
+	<keyword>quit</keyword>
+	<keyword>to</keyword>
+	<keyword>downto</keyword>
+	<keyword>step</keyword>
+	<keyword>switch</keyword>
+	<keyword>case</keyword>
+	<keyword>select</keyword>
+	<keyword>endselect</keyword>
+    </context>
+
+    <context id="type-class-and-object-keywords" style-ref="keyword">
+	<suffix>(?!\w)</suffix>      	
+	<keyword>data</keyword>
+	<keyword>dim</keyword>
+	<keyword>local</keyword>
+	<keyword>var</keyword>
+	<keyword>let</keyword>
+	<keyword>and</keyword>
+	<keyword>or</keyword>
+	<keyword>not</keyword>
+	<keyword>div</keyword>
+	<keyword>mod</keyword>
+	<keyword>xor</keyword>
+	<keyword>add</keyword>
+	<keyword>after</keyword>
+	<keyword>alert</keyword>
+	<keyword>arraycopy</keyword>
+	<keyword>arrayfill</keyword>
+	<keyword>beep</keyword>
+	<keyword>bell</keyword>
+	<keyword>bget</keyword>
+	<keyword>bload</keyword>
+	<keyword>bmove</keyword>
+	<keyword>box</keyword>
+	<keyword>bput</keyword>
+	<keyword>bsave</keyword>
+	<keyword>call</keyword>
+	<keyword>chain</keyword>
+	<keyword>chdir</keyword>
+	<keyword>circle</keyword>
+	<keyword>curve</keyword>
+	<keyword>clear</keyword>
+	<keyword>clearw</keyword>
+	<keyword>close</keyword>
+	<keyword>closew</keyword>
+	<keyword>clr</keyword>
+	<keyword>cls</keyword>
+	<keyword>color</keyword>
+	<keyword>connect</keyword>
+	<keyword>copyarea</keyword>
+	<keyword>dec</keyword>
+	<keyword>deffill</keyword>
+	<keyword>defline</keyword>
+	<keyword>defmark</keyword>
+	<keyword>defmouse</keyword>
+	<keyword>deftext</keyword>
+	<keyword>dpoke</keyword>
+	<keyword>draw</keyword>
+	<keyword>dump</keyword>
+	<keyword>edit</keyword>
+	<keyword>elipse</keyword>
+	<keyword>ellipse</keyword>
+	<keyword>erase</keyword>
+	<keyword>error</keyword>
+	<keyword>event</keyword>
+	<keyword>every</keyword>
+	<keyword>exec</keyword>
+	<keyword>fft</keyword>
+	<keyword>fileselect</keyword>
+	<keyword>fit</keyword>
+	<keyword>fit_linear</keyword>
+	<keyword>flush</keyword>
+	<keyword>free</keyword>
+	<keyword>get</keyword>
+	<keyword>gprint</keyword>
+	<keyword>graphmode</keyword>
+	<keyword>clip</keyword>
+	<keyword>help</keyword>
+	<keyword>home</keyword>
+	<keyword>inc</keyword>
+	<keyword>infow</keyword>
+	<keyword>input</keyword>
+	<keyword>keyevent</keyword>
+	<keyword>line</keyword>
+	<keyword>lineinput</keyword>
+	<keyword>link</keyword>
+	<keyword>list</keyword>
+	<keyword>load</keyword>
+	<keyword>lpoke</keyword>
+	<keyword>ltext</keyword>
+	<keyword>merge</keyword>
+	<keyword>menu</keyword>
+	<keyword>menudef</keyword>
+	<keyword>menukill</keyword>
+	<keyword>menuset</keyword>
+	<keyword>mkdir</keyword>
+	<keyword>mouse</keyword>
+	<keyword>mouseevent</keyword>
+	<keyword>motionevent</keyword>
+	<keyword>movew</keyword>
+	<keyword>mul</keyword>
+	<keyword>new</keyword>
+	<keyword>noop</keyword>
+	<keyword>nop</keyword>
+	<keyword>norootwindow</keyword>
+	<keyword>open</keyword>
+	<keyword>openw</keyword>
+	<keyword>out</keyword>
+	<keyword>pause</keyword>
+	<keyword>pbox</keyword>
+	<keyword>pcircle</keyword>
+	<keyword>pelipse</keyword>
+	<keyword>pellipse</keyword>
+	<keyword>plist</keyword>
+	<keyword>plot</keyword>
+	<keyword>poke</keyword>
+	<keyword>polyfill</keyword>
+	<keyword>polyline</keyword>
+	<keyword>polymark</keyword>
+	<keyword>prbox</keyword>
+	<keyword>print</keyword>
+	<keyword>put</keyword>
+	<keyword>putback</keyword>
+	<keyword>put_bitmap</keyword>
+	<keyword>randomize</keyword>
+	<keyword>rbox</keyword>
+	<keyword>read</keyword>
+	<keyword>receive</keyword>
+	<keyword>relseek</keyword>
+	<keyword>restore</keyword>
+	<keyword>rmdir</keyword>
+	<keyword>rootwindow</keyword>
+	<keyword>rsrc_free</keyword>
+	<keyword>rsrc_load</keyword>
+	<keyword>run</keyword>
+	<keyword>save</keyword>
+	<keyword>savescreen</keyword>
+	<keyword>savewindow</keyword>
+	<keyword>scope</keyword>
+	<keyword>seek</keyword>
+	<keyword>send</keyword>
+	<keyword>setfont</keyword>
+	<keyword>setmouse</keyword>
+	<keyword>sget</keyword>
+	<keyword>shm_detach</keyword>
+	<keyword>shm_free</keyword>
+	<keyword>showpage</keyword>
+	<keyword>sizew</keyword>
+	<keyword>sort</keyword>
+	<keyword>sound</keyword>
+	<keyword>split</keyword>
+	<keyword>sput</keyword>
+	<keyword>sub</keyword>
+	<keyword>swap</keyword>
+	<keyword>system</keyword>
+	<keyword>text</keyword>
+	<keyword>tinebroadcast</keyword>
+	<keyword>tinecycle</keyword>
+	<keyword>tinelisten</keyword>
+	<keyword>tinemonitor</keyword>
+	<keyword>tineput</keyword>
+	<keyword>tineserver</keyword>
+	<keyword>tineset</keyword>
+	<keyword>titlew</keyword>
+	<keyword>unlink</keyword>
+	<keyword>usewindow</keyword>
+	<keyword>version</keyword>
+	<keyword>void</keyword>
+	<keyword>vsync</keyword>
+	<keyword>wort_sep</keyword>
+	<keyword>xload</keyword>
+	<keyword>xrun</keyword>
+	<keyword>csput</keyword>
+	<keyword>csset</keyword>
+	<keyword>then</keyword>
+	<keyword>using</keyword>
+	<keyword>nand</keyword>
+	<keyword>nor</keyword>
+	<keyword>sec</keyword>
+	<keyword>cot</keyword>
+	<keyword>inv</keyword>
+	<keyword>imp</keyword>
+	<keyword>eval</keyword>	
+    </context>
+
+   <!-- <context id="builtin-types" style-ref="type">
+      <keyword>Char</keyword>
+      <keyword>String</keyword>
+      <keyword>Integer</keyword>
+      <keyword>Real</keyword>
+      <keyword>Boolean</keyword>
+      <keyword>Pointer</keyword>
+      <keyword>Byte</keyword>
+      <keyword>LongInt</keyword>
+    </context>
+-->
+    <context id="builtin-functions" style-ref="keyword">
+	<suffix>(?!\w)</suffix>      	
+	<keyword>abs</keyword>
+	<keyword>acos</keyword>
+	<keyword>acosh</keyword>
+	<keyword>arrptr</keyword>
+	<keyword>asc</keyword>
+	<keyword>asin</keyword>
+	<keyword>asinh</keyword>
+	<keyword>atan</keyword>
+	<keyword>atan2</keyword>
+	<keyword>atanh</keyword>
+	<keyword>atn</keyword>
+	<keyword>bchg</keyword>
+	<keyword>bclr</keyword>
+	<keyword>bset</keyword>
+	<keyword>btst</keyword>
+	<keyword>cbrt</keyword>
+	<keyword>ceil</keyword>
+	<keyword>cos</keyword>
+	<keyword>cosh</keyword>
+	<keyword>cvd</keyword>
+	<keyword>cvf</keyword>
+	<keyword>cvi</keyword>
+	<keyword>cvl</keyword>
+	<keyword>cvs</keyword>
+	<keyword>exec</keyword>
+	<keyword>exist</keyword>
+	<keyword>exp</keyword>
+	<keyword>expm1</keyword>
+	<keyword>fak</keyword>
+	<keyword>fix</keyword>
+	<keyword>floor</keyword>
+	<keyword>fork</keyword>
+	<keyword>form_alert</keyword>
+	<keyword>form_center</keyword>
+	<keyword>form_dial</keyword>
+	<keyword>form_do</keyword>
+	<keyword>frac</keyword>
+	<keyword>gasdev</keyword>
+	<keyword>get_color</keyword>
+	<keyword>glob</keyword>
+	<keyword>gray</keyword>
+	<keyword>hypot</keyword>
+	<keyword>inp</keyword>
+	<keyword>inp?</keyword>
+	<keyword>instr</keyword>
+	<keyword>int</keyword>
+	<keyword>julian</keyword>
+	<keyword>len</keyword>
+	<keyword>ln</keyword>
+	<keyword>log</keyword>
+	<keyword>log10</keyword>
+	<keyword>log1p</keyword>
+	<keyword>logb</keyword>
+	<keyword>lpeek</keyword>
+	<keyword>ltextlen</keyword>
+	<keyword>malloc</keyword>
+	<keyword>max</keyword>
+	<keyword>min</keyword>
+	<keyword>mod</keyword>
+	<keyword>objc_draw</keyword>
+	<keyword>objc_find</keyword>
+	<keyword>odd</keyword>
+	<keyword>peek</keyword>
+	<keyword>point</keyword>
+	<keyword>pred</keyword>
+	<keyword>rad</keyword>
+	<keyword>rand</keyword>
+	<keyword>random</keyword>
+	<keyword>realloc</keyword>
+	<keyword>rinstr</keyword>
+	<keyword>rnd</keyword>
+	<keyword>round</keyword>
+	<keyword>rsrc_gaddr</keyword>
+	<keyword>sgn</keyword>
+	<keyword>shm</keyword>
+	<keyword>_attach</keyword>
+	<keyword>shm_attach</keyword>
+	<keyword>shm_malloc</keyword>
+	<keyword>sin</keyword>
+	<keyword>sinh</keyword>
+	<keyword>sqr</keyword>
+	<keyword>sqrt</keyword>
+	<keyword>srand</keyword>
+	<keyword>succ</keyword>
+	<keyword>sym_adr</keyword>
+	<keyword>tan</keyword>
+	<keyword>tanh</keyword>
+	<keyword>tineget</keyword>
+	<keyword>tinemax</keyword>
+	<keyword>tinemin</keyword>
+	<keyword>tinesize</keyword>
+	<keyword>tinetyp</keyword>
+	<keyword>trunc</keyword>
+	<keyword>typ?</keyword>
+	<keyword>val</keyword>
+	<keyword>varptr</keyword>
+	<keyword>wort_sep</keyword>
+	<keyword>bin\$</keyword>
+	<keyword>chr\$</keyword>
+	<keyword>declose\$</keyword>
+	<keyword>env\$</keyword>
+	<keyword>enclose\$</keyword>
+	<keyword>err\$</keyword>
+	<keyword>hex\$</keyword>
+	<keyword>inline\$</keyword>
+	<keyword>input\$</keyword>
+	<keyword>juldate\$</keyword>
+	<keyword>left\$</keyword>
+	<keyword>leftof\$</keyword>
+	<keyword>lineinput\$</keyword>
+	<keyword>lower\$</keyword>
+	<keyword>mid\$</keyword>
+	<keyword>mkd\$</keyword>
+	<keyword>mkf\$</keyword>
+	<keyword>mki\$</keyword>
+	<keyword>mkl\$</keyword>
+	<keyword>mks\$</keyword>
+	<keyword>oct\$</keyword>
+	<keyword>param\$</keyword>
+	<keyword>prg\$</keyword>
+	<keyword>replace\$</keyword>
+	<keyword>right\$</keyword>
+	<keyword>rightof\$</keyword>
+	<keyword>space\$</keyword>
+	<keyword>str\$</keyword>
+	<keyword>string\$</keyword>
+	<keyword>system\$</keyword>
+	<keyword>terminalname\$</keyword>
+	<keyword>trim\$</keyword>
+	<keyword>ucase\$</keyword>
+	<keyword>unixdate\$</keyword>
+	<keyword>unixtime\$</keyword>
+	<keyword>upper\$</keyword>
+	<keyword>xtrim\$</keyword>
+	<keyword>csget</keyword>
+	<keyword>csget\$</keyword>
+	<keyword>lof</keyword>
+	<keyword>eof</keyword>
+	<keyword>ioctl</keyword>
+	<keyword>tally</keyword>
+	<keyword>color_rgb</keyword>
+    </context>
+
+    <context id="builtin-values" style-ref="keyword">
+      <keyword>nil</keyword>
+      <keyword>False</keyword>
+      <keyword>True</keyword>
+    </context>
+
+    <context id="number" style-ref="decimal">
+      <match extended="true">
+        (?&lt;![\w\.])
+        (([0-9]+)|([0-9]+\.[0-9]+([Ee][-]?[0-9]+)?))
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="hex-number" style-ref="decimal">
+      <match extended="true">
+        (?&lt;![\w\.])
+        \$[0-9a-fA-F]*
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="x11basic" class="no-spell-check">
+      <include>
+        <context ref="string"/>
+        <context ref="line-comment"/>
+        <!--<context ref="preprocessor-defines"/>-->
+        <!--<context ref="block-comment-1"/>
+        <context ref="block-comment-2"/>-->
+        <context ref="general-format"/>
+        <!--<context ref="functions-and-function-modifiers"/>-->
+        <!--<context ref="boolean-bitwise-operators"/>-->
+        <!--<context ref="math-operators"/>-->
+        <context ref="loop-flow-and-exceptions-keywords"/>
+        <context ref="type-class-and-object-keywords"/>
+        <!--<context ref="builtin-types"/>-->
+        <context ref="builtin-functions"/>
+        <context ref="builtin-values"/>
+        <context ref="number"/>
+        <context ref="hex-number"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>

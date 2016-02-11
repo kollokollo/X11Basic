@@ -1,13 +1,13 @@
 #
-# spec file for package X11Basic (Version 1.20), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.22), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2013
+# Copyright  (c)  Markus Hoffmann 1997-2014
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
 Name: x11basic
-Version: 1.20
-Release: 2
+Version: 1.22
+Release: 1
 License: GPL
 Group: Development/Languages
 Summary: A Basic Interpreter with X11-Graphics capabilities
@@ -55,7 +55,6 @@ of the manual can be found there.
 #cd ./src
 ./configure
 make
-test -e mathematics.c || ln -s mathemat_dummy.c mathematics.c
 make xbasic x11basic.a xbvm xbbc
 touch xbc
 touch bas2x11basic
@@ -94,6 +93,10 @@ xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -
 %{_libdir}/*
 
 %changelog
+* Fri Dec 27 2013 Markus Hoffmann <kollo@users.sourceforge.net> - 1.22
+- adapted for Version 1.22
+* Fri Apr 12 2013 Markus Hoffmann <kollo@users.sourceforge.net> - 1.21
+- adapted for Version 1.21
 * Fri Jan 13 2013 Markus Hoffmann <kollo@users.sourceforge.net> - 1.20
 - adapted for Version 1.20
 * Fri May 13 2011 Markus Hoffmann <kollo@users.sourceforge.net> - 1.16

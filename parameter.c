@@ -22,7 +22,7 @@
 
 
 /*Fuellt die Struktur PARAMETER ausgehend von ASCII w1 und solltyp.
-  Hierbei nur vorbereitung, also keine parseraufrufe (be Auswertung der
+  Hierbei nur Vorbereitung, also keine Parseraufrufe (bei Auswertung der
   Index-Liste). Es treten nur Variablen und Array-indizies als Variablen
   auf. Es werden nur gefuellt:
   p->typ --> Variablentyp
@@ -30,22 +30,32 @@
   p->integer --> vnr
   p->panzahl
   p->ppointer
+  
+  
+  Rückgabe: 
+  >=0 -- alles OK
+  -1 -- Error
+  
+  
   */
   
 
-void prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
+int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
   char k1[strlen(w1)+1],k2[strlen(w1)+1];
   int typ=vartype(w1);
   int e=klammer_sep(w1,k1,k2);
 
   p->pointer=NULL;
+  p->integer=-1;
+  p->typ=NOTYP; /* Falls type mismatch auftritt, definiertes Ergebnis */
   if(e==1 || strlen(k2)==0) {  /* Keine Argumente in Klammer oder keine klammern*/
-    if((typ&solltyp)==typ) {
+  // printf("---> Typ=%x Solltyp=%x  ....\n",typ,solltyp);
+    if((typ&solltyp)==typ || (solltyp==ARRAYTYP && (typ&ARRAYTYP)==ARRAYTYP)) {
       char *r=varrumpf(w1);
       /*p->integer soll vnr bekommen.*/
       if(typ&ARRAYTYP) {
-        p->integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
-      } else p->integer=add_variable(r,typ,0);
+        p->integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+      } else p->integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
       free(r);
       /*Parameter Typ eintragen.*/
       if(typ==ARRAYTYP) p->typ=PL_ARRAYVAR;
@@ -55,25 +65,27 @@ void prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
       else if(typ==(ARRAYTYP|INTTYP)) p->typ=PL_IARRAYVAR;
       else if(typ==(ARRAYTYP|FLOATTYP)) p->typ=PL_FARRAYVAR;
       else if(typ==(ARRAYTYP|STRINGTYP)) p->typ=PL_SARRAYVAR;
-      else printf("vvar: ???\n");
-    } else printf("prepare_vvar: ERROR: Variable hat falschen Typ. $%x/$%x  <%s>\n",typ,solltyp,w1);
+    } 
   } else { /* Es sind indizies da. */
     typ&=~ARRAYTYP;
     if((typ&solltyp)==typ) {
       char *r=varrumpf(w1);
-      p->integer=add_variable(r,ARRAYTYP,typ);  /*  vnr */
+      p->integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);  /*  vnr */
       free(r);
       if(typ==INTTYP) p->typ=PL_IVAR;
       else if(typ==FLOATTYP) p->typ=PL_FVAR;
       else if(typ==STRINGTYP) p->typ=PL_SVAR;
-      else printf("vvar: ???\n");
+      else xberror(13,w1);  /* Type mismatch */
       p->panzahl=count_parameters(k2);   /* Anzahl indizes z"ahlen*/
       p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
       /*hier die Indizies in einzelne zu evaluierende Ausdruecke
         separieren*/
       make_preparlist(p->ppointer,k2);
-    } else printf("ERROR: Variable hat falschen Typ. $%x/$%x\n",typ,solltyp);
+    } 
   }
+  if(p->integer<0) xberror(76,w1);   /*illegal variable name */
+  else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
+  return(p->integer);
 }
 
 
@@ -153,7 +165,7 @@ void dump_parameterlist(PARAMETER *p, int n) {
         case PL_FLOAT:  printf(" flt %g\n",p[j].real); break;
         case PL_NUMBER: printf(" num %g\n",p[j].real); break;
         case PL_STRING: printf("   $ <%s> len=%d\n",(char *)p[j].pointer,p[j].integer);break;
-        case PL_KEY:    printf(" KEY <%s>\n",(char *)p[j].pointer);break;
+        case PL_KEY:    printf(" KEY %d <%s>\n",p[j].arraytyp,(char *)p[j].pointer);break;
         case PL_LEER:   printf(" <empty>\n");break;
         case PL_FILENR: printf("   # %d\n",p[j].integer);break;
         case PL_EVAL:   printf(" EVAL: <%s>\n",(char *)p[j].pointer);break;
@@ -168,10 +180,14 @@ void dump_parameterlist(PARAMETER *p, int n) {
 	case PL_NVAR:   printf(" <nvar,%d,%s>\n", p[j].integer,variablen[p[j].integer].name);break;
 	case PL_VAR:    printf(" <var,%d,%s>\n",  p[j].integer,variablen[p[j].integer].name);break;
         case PL_ARRAYVAR:  
+                        printf(" <array(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         case PL_IARRAYVAR: 
+                        printf(" <array%%(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         case PL_FARRAYVAR: 
+                        printf(" <array#(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         case PL_SARRAYVAR: 
-        default:   printf("$%x %d %g %p\n",p[j].typ,p[j].integer,p[j].real,(void *)p[j].pointer);
+                        printf(" <array$(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
+        default:   printf("<typ=$%x %d %g %p>\n",p[j].typ,p[j].integer,p[j].real,(void *)p[j].pointer);
       }
       if(p->panzahl>0 && (p[j].typ&~PL_BASEMASK)==(PL_VAR&~PL_BASEMASK)) {
          printf("%d Index-Parameters:\n",p->panzahl);
@@ -317,13 +333,18 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
  	case PL_SARRAYVAR: prepare_vvar(w1,&pret[i],STRINGTYP|ARRAYTYP);                 break;
 	case PL_ALLVAR:    prepare_vvar(w1,&pret[i],INTTYP|FLOATTYP|STRINGTYP|ARRAYTYP); break;
  	case PL_KEY: /* Keyword */
+	  pret[i].arraytyp=keyword2num(w1);
         case PL_EVAL:
+	// printf("makepliste2: w1=<%s> -->",w1);
 	  *((STRING *)&(pret[i].integer))=create_string(w1);
+	//  printf(" <%s>\n",pret[i].pointer);
 	  break;
 	default:
           printf("illegal parameter type $%x\n",ap);
         }
       } else pret[i].typ=PL_LEER;           /* Hier dann Leertyp*/
+      
+      //printf(" <%s>\n",pret[i].pointer);
       i++;
     }
   }
@@ -336,7 +357,7 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
 
 /*Hier Ergaenzungen von pre-pliste zu aktueller (Zu Laufzeit). 
 Jetzt koennen variableninhalte
-aus fix betrachtet werden.*/
+als fix betrachtet werden.*/
 
 int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAMETER **pout,int ii){
   PARAMETER *pret;
@@ -371,8 +392,10 @@ int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAME
       break;
     case PL_LABEL: 
     case PL_PROC:
-      if(ip==PL_LABEL || ip==PL_PROC) pret[i].integer=pin[i].integer;
-      else printf("Error: Parameter %d/%d incompatibel. $%x\n",i,anzpar,ip);
+      if(ip==PL_LABEL || ip==PL_PROC) {
+        pret[i].integer=pin[i].integer;
+	pret[i].arraytyp=pin[i].arraytyp;  /* Typ */
+      } else printf("Error: Parameter %d/%d incompatibel. $%x\n",i,anzpar,ip);
       break;
     case PL_FILENR:
     case PL_INT:    /* Integer */
@@ -490,7 +513,10 @@ int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAME
       // printf("Variable uebergeben. %d %s\n",vnr,varinfo(&variablen[vnr]));
       break;
     case PL_KEY: /* Keyword */
-      *((STRING *)&(pret[i].integer))=create_string(pin[i].pointer);
+      if(ip==PL_LEER) pret[i].arraytyp=KEYW_NONE;
+      else if(ip==PL_KEY) pret[i].arraytyp=pin[i].arraytyp;
+      else if(ip==PL_EVAL) pret[i].arraytyp=keyword2num(pin[i].pointer);
+      if(ip==PL_EVAL ||ip==PL_KEY) *((STRING *)&(pret[i].integer))=create_string(pin[i].pointer);
       break;
     case PL_EVAL: /* Keyword */
       if(ip==PL_LEER) pret[i].typ=PL_LEER;
@@ -517,8 +543,7 @@ int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAME
 int make_preparlist(PARAMETER *p,char *n) {
   char buf[strlen(n)+1];
   char *w1,*w2;
-  int ii,e,typ;
-  ii=0;
+  int ii=0,e,typ;  
   strcpy(buf,n);
   e=wort_sep_destroy(buf,',',TRUE,&w1,&w2);
   while(e) {
@@ -587,12 +612,4 @@ int get_indexliste(PARAMETER *p,int *l,int n) {
 }
 
 
-
-void make_indexliste_plist(int dim, PARAMETER *p, int *index) {
-  while(--dim>=0) {
-      if(p[dim].typ==PL_INT) index[dim]=p[dim].integer;
-      else if(p[dim].typ==PL_FLOAT) index[dim]=(int)p[dim].real;
-      else printf("ERROR: no int!");    
-  }
-}
 

@@ -16,6 +16,9 @@ setfont "SMALL"
     SHOWPAGE
   next y
 next x
+
+ltext 0,350,"Umlaute: ÄÜÖ äüö ß °C €"
+
 PAUSE 5
 ALERT 0,"Fertig !",1," OK ",dummy
 QUIT

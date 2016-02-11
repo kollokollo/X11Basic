@@ -22,6 +22,9 @@
 #define PL_STRING  4
 #define PL_ARRAY   8
 
+#define PL_LABEL    0x10
+#define PL_PROC     0x11
+
 /* Variablen Typen (unsigned char)*/
 
 #define NOTYP             0
@@ -32,6 +35,9 @@
 #define ARRAYTYP       0x10
 #define CONSTTYP       0x20
 #define FILENRTYP       0x40
+
+#define V_DYNAMIC 0
+#define V_STATIC 1
 
 /* X11-Basic needs these declarations:  */
 #ifdef NOMAIN
@@ -52,8 +58,8 @@ extern int is_bytecode;
 int programbufferlen;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer;
-const char version[]="1.20"; /* Version Number. Put some useful information here */
-const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
+const char version[]="1.22"; /* Version Number. Put some useful information here */
+const char vdate[]="2014-04-28";   /* Creation date.  Put some useful information here */
 char **program={"compiled by xb2c"};    /* Other comments. Put some useful information here */
 int prglen=sizeof(program)/sizeof(char *);
 extern int datapointer;
@@ -88,6 +94,7 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define PUSHW(a) opstack->integer=a; opstack->typ=PL_INT; opstack++
 #define PUSHF(a) opstack->real=a; opstack->typ=PL_FLOAT; opstack++
 #define PUSHX(a) opstack->integer=strlen(a); opstack->pointer=strdup(a); opstack->typ=PL_KEY; opstack++
+#define PUSHK(a) opstack->integer=0; opstack->pointer=NULL; opstack->arraytyp=a; opstack->typ=PL_KEY; opstack++
 /* TODO: binary data in Strings*/
 #define PUSHS(a) opstack->integer=strlen(a); opstack->pointer=strdup(a); opstack->typ=PL_STRING; opstack++
 /* TODO: Array constant */
@@ -103,6 +110,9 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define PUSHVV(a) opstack+=vm_pushvv(a,opstack)
 #define PUSHVVI(a,b) opstack+=vm_pushvvi(a,opstack,b)
 #define ZUWEIS(a) opstack+=vm_zuweis(a,opstack)
+#define ZUWEISi(a) *(variablen[a].pointer.i)=(--opstack)->integer
+#define ZUWEISf(a) *(variablen[a].pointer.f)=(--opstack)->real
+
 #define LOCAL(a)  do_local(a,sp)
 #define MOD      opstack+=vm_mod(opstack)
 #define NOT      (opstack-1)->integer=~(opstack-1)->integer
@@ -146,6 +156,11 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define PUSHCOMM(a,n) opstack+=vm_comm(opstack,a,n)
 #define PUSHFUNC(a,n) opstack+=vm_func(opstack,a,n)
 #define PUSHSFUNC(a,n) opstack+=vm_sfunc(opstack,a,n)
+
+#define PUSHLABEL(a) opstack->integer=(int)a; opstack->arraytyp=3; opstack->typ=PL_LABEL; opstack++
+#define PUSHPROC(a)  opstack->integer=(int)a; opstack->arraytyp=3; opstack->typ=PL_PROC; opstack++
+
+
 
 /* simplified commands */
 

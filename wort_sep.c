@@ -102,7 +102,7 @@ int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2)    {
 
 
 /* Dasselbe fuer eine Liste von n Zeichen */
-int wort_sep_multi(const char *t,char *c, int klamb ,char *w1, char *w2)    {
+int wort_sep_multi(const char *t,const char *c, int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
 
   if(!(*t)) return(*w1=*w2=0);
@@ -127,102 +127,12 @@ int wort_sep_multi(const char *t,char *c, int klamb ,char *w1, char *w2)    {
 
 
 
-
-/* Spezielle Abwandlung zum erkennen von Exponentialformat */
-
-static int is_operator(char c) {
-  return(!(strchr("|&~!*/+-<>^ =",c)==NULL));
-}
-
-int wort_sep_e(const char *t,char c,int klamb ,char *w1, char *w2)    {
-  int f=0, klam=0,i=0,skip=0,zahl=0;
-
-  if(!(*t)) return(w1[0]=w2[0]=0); 
-#if 0
-  printf("wsep: <%s>\n",t);
-  printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
-#endif
-  while(*t && (*t!=c || f || klam>0 || skip)) {
-    skip=0;
-    if(*t=='"') f=!f;
-    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
-    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
-    else if(*t=='E' && klam==0 && !f && zahl) skip=1;
-    if(i==0 || is_operator(*(t-1))) zahl=1;
-    zahl=(!(strchr("-.1234567890",*t)==NULL) && zahl); 
-    *w1++=*t++;
-    i++;
-#if 0
-    printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
-#endif
-  }
-  if(!*t) {
-    *w2=*w1=0;
-    return(1);
-  } else {
-    *w1=0;
-    ++t;
-    while(*t) *w2++=*t++;
-    *w2=0; 
-    return(2);
-  }
-}
-
-int wort_sepr_e(const char *t,char c,int klamb ,char *w1, char *w2)    {
-  register int i;
-  int f=0, klam=0,j,zahl=0;
-  
-  if(*t==0)  return(w1[0]=w2[0]=0);
-
-  i=strlen(t)-1;
-#if 0
-  printf("wsep: <%s>\n",t);
-#endif
-
-  while(i>=0) {
-    if(t[i]!=c || f || klam<0) {
-      if(t[i]=='"') f=!f;
-    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
-    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
-      if(i==strlen(t)-1 || is_operator(t[i+1])) zahl=1;
-      zahl=(!(strchr("1234567890",t[i])==NULL) && zahl); 
-    } else {
-#if 0
-      printf("Halt bei i=%d   zahl=%d\n",i,zahl);
-#endif
-      if(!zahl || i<2 || t[i-1]!='E') break;
-      j=i-2;
-      while(j>=0 && !(strchr("1234567890.",t[j])==NULL)) j--;
-      if(j>=0 && !is_operator(t[j])) break;
-    }
-    i--;
-#if 0
-    printf("i=%d t[i]=%d zahl=%d\n",i,t[i],zahl); 
-#endif
-  }
-  if(i<0) {
-    while(*t) *w1++=*t++; 
-    *w2=*w1=0;
-    return(1);
-  } else {
-    while(i>0) {
-      *w1++=*t++;
-      i--;
-    }
-    *w1=0;
-    t++;
-    while(*t) *w2++=*t++;
-    *w2=0;
-    return(2);
-  }
-}
-
 int wort_sepr(const char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0;
   
   if(!*t) return(*w1=*w2=0);
- 
+ // printf("klamb=%d\n",klamb);
   i=strlen(t)-1;
 
   while(i>=0 && (t[i]!=c || f || klam<0)) {
@@ -251,7 +161,7 @@ int wort_sepr(const char *t,char c,int klamb ,char *w1, char *w2)    {
 
 
 
-int wort_sep2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
+int wort_sep2(const char *t,const char *c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, i=0, j=0;
 
   if(!*t) return(*w1=*w2=0);   /* hier gibts nix zu trennen */
@@ -291,9 +201,52 @@ int wort_sep2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
   }
 }
 
+int wort_sep2_destroy(char *t,const char *c,int klamb ,char **w1, char **w2)    {
+  int f=0, klam=0, i=0, j=0;
+
+  *w1=t;
+  if(!*t) {*w2=t;return(0);}   /* hier gibts nix zu trennen */
+  int strc=strlen(c);
+  int strt=strlen(t);
+
+  if(strt<=strc) {
+    *w2=t+strt;
+    return(1);
+  }
+  for(;;) {
+/* suche erstes Vorkommen von c */
+    while(t[i] && (t[i]!=*c || f || klam>0)) {
+      if(t[i]=='"') f=!f;
+      else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+      else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+      j++;
+      i++;
+    }
+
+    if(t[i]==0) { /* schon am ende ? */
+      *w2=t+i;
+      t[j]=0;
+      return(1);
+    } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */
+      if(strncmp(t+i,c,strc)==0) {
+        t[j]=0;
+	i+=strlen(c);
+	*w2=t+i;
+        return(2);
+      } else {
+        if(t[i]=='"') f=!f;
+        else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+        else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+        j++;
+	i++;
+      }     /* ansonsten weitersuchen */
+    }
+  }
+}
 
 
-int wort_sepr2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
+
+int wort_sepr2(const char *t,const char *c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0;
   int strc,strt;
@@ -336,6 +289,45 @@ int wort_sepr2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
     }
   }
 }
+int wort_sepr2_destroy(char *t,const char *c,int klamb ,char **w1, char **w2)    {
+  register int i;
+  int f=0, klam=0;
+  int strc,strt;
+  *w1=t;
+  if(!*t)  {*w2=t;return(0);}  /* hier gibts nix zu trennen */
+  strc=strlen(c);
+  strt=strlen(t);
+  if(strt<=strc) {
+    *w2=t+strt;
+    return(1);
+  }
+  i=strt-1;
+  for(;;) {
+/* suche erstes Vorkommen von c */
+    while(i>=0 && (t[i]!=c[strc-1] || f || klam<0)) {
+      if(t[i]=='"') f=!f;
+      else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+      else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+      i--;
+    }
+    
+    if(i<0) { /* schon am ende ? */
+      *w2=t+strt;
+      return(1);
+    } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */
+      if(strncmp(t+i-strc+1,c,strc)==0) {
+	t[i-strc+1]=0;
+        *w2=t+i+1;
+        return(2);
+      } else {
+        if(t[i]=='"') f=!f;
+        else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+        else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+        i--;
+      }     /* ansonsten weitersuchen */
+    }
+  }
+}
 
 /* Funktion Trennt w1(w2) string in w1 und w2 auf */ 
 
@@ -349,8 +341,8 @@ int klammer_sep(const char *t,char *w1, char *w2)    {
     pos++;
     if((pos2=searchchr2(pos,')'))!=NULL) {
       pos2++;
-      if(*pos2) printf("<%s> klammer_sep: Hier war ein Rest: <%s>\n",t,pos2);
-    } else printf("WARNING: fehlende schliessende Klammer <%s>\n",t);
+      if(*pos2) printf("WARNING: Syntax error: expression <%s> is incomplete, rest: <%s>\n",t,pos2);
+    } else printf("WARNING: Syntax error: missing closing parenthesis in <%s>.\n",t);
     strncpy(w2,pos,pos2-pos);
     w2[pos2-pos-1]=0;
    // printf("w1=<%s>, w2=<%s>\n",w1,w2);
@@ -372,8 +364,8 @@ int klammer_sep_destroy(char *t,char **w1, char **w2) {
     *w2=pos;
     if((pos2=searchchr2(pos,')'))!=NULL) {
       *pos2++=0;
-      if(*pos2) printf("<%s> klammer_sep: Hier war ein Rest: <%s>\n",t,pos2);
-    } else printf("WARNING: fehlende schliessende Klammer <%s>\n",t);
+      if(*pos2) printf("WARNING: Syntax error: expression <%s> is incomplete, rest: <%s>\n",t,pos2);
+    } else printf("WARNING: Syntax error: missing closing parenthesis in <%s>.\n",t);
     return(2);
   } else {
     *w2=&t[strlen(t)];
@@ -446,6 +438,23 @@ char *searchchr3(const char *buf, char c) { /* Alle 3  Klammertypen (()[]{}) ber
   }
   return(NULL);
 }
+char *searchchr3_multi(const char *buf, const char *c) { /* Alle 3  Klammertypen (()[]{}) beruecksichtigen ! */ 
+ int f=0,klam=0,klam2=0,klam3=0;;
+  while(*buf!=0) {
+    if(*buf=='"') f= !f;
+    else if(!f) {
+      if(*buf=='(') klam++;
+      else if(*buf=='{') klam2++;
+      else if(*buf=='[') klam3++;
+      if((strchr(c,*buf)!=NULL) && !(klam>0 || klam2>0 || klam3>0)) return((char *)buf);
+      if(*buf==')') klam--;
+      else if(*buf=='}') klam2--;
+      else if(*buf==']') klam3--;
+    }
+    buf++;
+  }
+  return(NULL);
+}
 
 /*Dasselbe, aber jetzt werden mehrere Zeichen gefunden */
 
@@ -460,6 +469,23 @@ char *searchchr2_multi(const char *buf, const char *c) {
   }
   return(NULL);
 }
+
+/*Dasselbe, aber jetzt werden mehrere Zeichen gefunden von rechts */
+
+char *searchchr2_multi_r(const char *buf, const char *c,const char *pos) { 
+ int f=0,klam=0;
+  while(--pos>=buf) {
+    if(*pos=='"') f= !f;
+    else if(*pos=='('  && !f) klam--;
+    if((strchr(c,*pos)!=NULL) && !f && !(klam>0)) return((char *)pos);
+    if(*pos==')' && !f) klam++;
+  }
+  return(NULL);
+}
+
+
+
+
 
 char *rsearchchr(const char *buf, char c) {
  char *pos;

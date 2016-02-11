@@ -10,20 +10,19 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
 #include <sys/time.h>
-#ifdef WINDOWS
-  #define WEXITSTATUS(w)    (((w) >> 8) & 0xff)
-  #define WIFEXITED(w)      (((w) & 0xff) == 0)
-#else
-  #include <sys/wait.h> 
-#endif
+#include <sys/stat.h>
 
 #include "defs.h"
+#include <dirent.h>
 
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -37,58 +36,62 @@
 #ifdef HAVE_SYS_KD_H
 #include <sys/kd.h>
 #endif
+#ifdef HAVE_USB
+#include <usb.h>
+#define TIMEOUT 5000
+#endif
 
 #include "x11basic.h"
 #include "parser.h"
 #include "svariablen.h"
+#include "number.h"
 #include "io.h"
 
 
 #ifdef __hpux
-#define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
-#define CRTS_IFLOW      0x00020000      /* RTS flow control of input */
-#define CRTSCTS         (CRTS_IFLOW|CCTS_OFLOW) /* RTS/CTS flow control */
-#include <sys/termios.h>
+  #define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
+  #define CRTS_IFLOW      0x00020000      /* RTS flow control of input */
+  #define CRTSCTS         (CRTS_IFLOW|CCTS_OFLOW) /* RTS/CTS flow control */
+  #include <sys/termios.h>
 #endif
-
-#ifdef WINDOWS
-#include <ws2tcpip.h>
-#include <winsock2.h>
+#if defined _WIN32
+  #include <ws2tcpip.h>
+  #include <winsock2.h>
+  #include <windows.h>
+  #define WEXITSTATUS(w)    (((w) >> 8) & 0xff)
+  #define WIFEXITED(w)      (((w) & 0xff) == 0)
+  #define NAME_MAX FILENAME_MAX
+  struct winsize {
+    unsigned short ws_row;	/* rows, in characters */
+    unsigned short ws_col;	/* columns, in characters */
+    unsigned short ws_xpixel;	/* horizontal size, pixels */
+    unsigned short ws_ypixel;	/* vertical size, pixels */
+  };
+  #define fsync(a) ;
+  #define forkpty(a,b,c,d) (-1)  
+  #include "Windows.extension/fnmatch.h"
+  #define FNM_FILE_NAME FNM_PATHNAME
+#else
+  #include <sys/wait.h> 
+  #include <sys/types.h>
+  #include <sys/ioctl.h>
+  #include <fnmatch.h>
+  #include <termios.h>
+  #include <fcntl.h>
 
 #endif 
 
-#include <sys/stat.h>
 #ifndef WINDOWS
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/mman.h>
+#ifndef ATARI
+ #include <sys/mman.h>
+#endif
 #include <netinet/in.h>
 #include <netdb.h>
-#else
-#include <windows.h>
-
-struct winsize
-{
-  unsigned short ws_row;	/* rows, in characters */
-  unsigned short ws_col;	/* columns, in characters */
-  unsigned short ws_xpixel;	/* horizontal size, pixels */
-  unsigned short ws_ypixel;	/* vertical size, pixels */
-};
-#define fsync(a) ;
-#define forkpty(a,b,c,d) (-1)
-
-
 #endif
 
 double sensordata[ANZSENSORS];
 
 /* fuer Dynamisches Linken von shared Object-Files   */
-
-#ifdef WINDOWS
-#undef HAVE_DLOPEN
-#endif
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
@@ -105,9 +108,6 @@ double sensordata[ANZSENSORS];
 #include "array.h"
 #include "sfunctions.h"
 
-#ifdef WINDOWS
-#undef HAVE_INOTIFY_INIT
-#endif
 #ifdef HAVE_INOTIFY_INIT
 #include <sys/inotify.h>
 #endif
@@ -126,10 +126,12 @@ static int make_UDP_socket(unsigned short int port);
   #define UTIME_NOW      ((1l << 30) - 1l)
   #define UTIME_OMIT     ((1l << 30) - 2l) 
 #ifndef ANDROID
+#ifndef ATARI
   struct timespec {
-               time_t tv_sec;        /* seconds */
-               long   tv_nsec;       /* nanoseconds */
+        time_t tv_sec;        /* seconds */
+        long   tv_nsec;       /* nanoseconds */
   };
+#endif
 #endif
 #endif
 
@@ -146,9 +148,8 @@ void getcrsrowcol(int *_row, int *_col) {
   *_row=0;
   *_col=0;
 }
-
-
 #endif
+
 /* Get the number of rows and columns for this screen. */
 #ifdef ANDROID
 extern struct winsize win;
@@ -183,23 +184,98 @@ void getrowcols(int *rows, int *cols) {
 /*******************************/
 /* Ein- und Ausgaberoutinen    */
 
-FILE *get_fileptr(int n) {
-  if(n==-1) return(stderr);  
-  else if(n==-2) return(stdin);  
-  else if(n==-4) return(stdout);  
-  else if(n<0 || n>=ANZFILENR) return(NULL);
-  else if(filenr[n]) return(dptr[n]);
-  else return(NULL);
+FILEINFO get_fileptr(int n) {
+  FILEINFO ret;
+  ret.typ=FT_FILE; 
+  if(n==-1) ret.dptr=stderr;  
+  else if(n==-2) ret.dptr=stdin;  
+  else if(n==-4) ret.dptr=stdout;  
+  else if(n<0 || n>=ANZFILENR) {
+    ret.typ=FT_NONE;
+    ret.dptr=NULL;
+  } else if(filenr[n].typ) return(filenr[n]);
+  return(ret);
 }
 
 int f_freefile() {
   int i=1;
   while(i<ANZFILENR) {
-    if(filenr[i]==0) return(i);
+    if(filenr[i].typ==0) return(i);
     i++;
   }
   return(-1);
 }
+
+
+#ifdef WINDOWS
+static char fspath[NAME_MAX+1];
+#endif
+static char fspattern[NAME_MAX+1];
+static char fsattr[32];
+static DIR *dp=NULL;
+
+STRING f_fsfirsts(PARAMETER *plist,int e) {
+#ifdef WINDOWS
+ strncpy(fspath,plist[0].pointer,min(plist[0].integer,NAME_MAX));
+#endif
+  if(e>1)  strncpy(fspattern,plist[1].pointer,min(plist[1].integer,NAME_MAX));
+  else strcpy(fspattern,"*");
+  if(e>2)  strncpy(fsattr,plist[2].pointer,min(plist[2].integer,31));
+  else strcpy(fsattr,"f");
+  // printf("FSFIRST: path=<%s>, pattern=<%s>, attr=<%s>\n",plist->pointer,fspattern,fsattr);
+  if(dp) closedir(dp);
+  dp=opendir(plist->pointer);
+ // printf("OPENDIR: <%s> --> %p\n",plist->pointer,dp);
+  return(f_fsnexts());
+}
+STRING f_fsnexts() {
+  STRING ergebnis;
+  struct dirent *ep;
+  if(dp==NULL) {
+    io_error(errno,"fsfirst/fsnext");
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+    ergebnis.pointer[ergebnis.len]=0;
+    return(ergebnis);
+  } 
+//  printf("FSNEXT: pattern=<%s>, attr=<%s>\n",fspattern,fsattr);
+  while(1) {
+    ep=readdir(dp);
+   // printf("READDIR: --> %p\n",ep);
+    if(!ep) {
+      ergebnis.pointer=malloc(1);
+      ergebnis.len=0;
+      ergebnis.pointer[ergebnis.len]=0;
+      return(ergebnis);
+    }
+    if(fnmatch(fspattern,ep->d_name,FNM_NOESCAPE|FNM_PERIOD|FNM_FILE_NAME)==0) break;
+  }
+  
+  ergebnis.pointer=malloc(3+strlen(ep->d_name));
+#ifdef WINDOWS
+  char filename[NAME_MAX];
+  sprintf(filename,"%s/%s",fspath,ep->d_name);
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,filename);
+  if(S_ISDIR(fstats.st_mode)) ergebnis.pointer[0]='d';
+ // else if(S_ISLNK(fstats.st_mode)) ergebnis.pointer[0]='s';
+  else
+#else
+  if(ep->d_type==DT_DIR) ergebnis.pointer[0]='d';
+  else if(ep->d_type==DT_LNK) ergebnis.pointer[0]='s';
+  else 
+#endif
+  ergebnis.pointer[0]='-';    
+  ergebnis.pointer[1]=' ';
+  strcpy(ergebnis.pointer+2,ep->d_name);
+  ergebnis.len=2+strlen(ep->d_name);
+  ergebnis.pointer[ergebnis.len]=0;
+  return(ergebnis);
+}
+
+
+
 #if 0
 int f_map(PARAMETER *plist,int e) {
   int ergebnis;
@@ -212,27 +288,31 @@ int f_map(PARAMETER *plist,int e) {
 void c_msync(PARAMETER *plist,int e) {
   if(e>=2) {
   #ifndef WINDOWS
+  #ifndef ATARI
       if(msync((void *)plist[0].integer, plist[1].integer,MS_SYNC|MS_INVALIDATE))
         io_error(errno,"msync"); 
+  #endif
   #endif
   }
 }
 void c_unmap(PARAMETER *plist,int e) {
   if(e>=2) {
-   #ifndef WINDOWS 
+   #ifndef WINDOWS
+   #ifndef ATARI 
       if(munmap((void *)plist[0].integer, plist[1].integer))
         io_error(errno,"munmap"); 
+   #endif
    #endif
   }
 }
 void c_locate(PARAMETER *plist,int e) {
-  printf("\033[%.3d;%.3dH",plist->integer,plist[1].integer);
+  printf("\033[%.3d;%.3dH",plist->integer+1,plist[1].integer+1);
 }
 void c_print(PARAMETER *plist,int e) {
   if(e) {
     int i;
     char *v;
-    FILE *fff=stdout;
+    FILEINFO fff=get_fileptr(-4);  /* stdout */
 
     for(i=0;i<e;i++) {
       switch(plist[i].typ) {
@@ -241,32 +321,33 @@ void c_print(PARAMETER *plist,int e) {
           v=plist[i].pointer;
           if(i==0 && *v=='#') {  /* Sonderbehandlung fuer erstes.. */
             fff=get_fileptr(get_number(v));
-            if(fff==NULL) {xberror(24,v); /* File nicht geoeffnet */return;}
+            if(fff.typ==0) {xberror(24,v); /* File nicht geoeffnet */return;}
+	    if(e==1) fputc('\n',fff.dptr); /* Dann war # der einzige parameter.*/
           } else if(strlen(v)) {
 	    STRING buffer=print_arg(v);
-	    fwrite(buffer.pointer,1,buffer.len,fff);
+	    fwrite(buffer.pointer,1,buffer.len,fff.dptr);
             free(buffer.pointer);
-	    if(i!=e-1) fputc('\011',fff);
+	    if(i!=e-1) fputc('\011',fff.dptr);
 	    else {
               if(v[strlen(v)-1]!=';' && v[strlen(v)-1]!='\'') 
-	      fputc('\n',fff);
+	      fputc('\n',fff.dptr);
 #ifdef ANDROID
   invalidate_screen();
 #endif
             }
 	  } else {
-	    if(i!=e-1) fputc('\011',fff);
+	    if(i!=e-1) fputc('\011',fff.dptr);
 	  }
 	  break;
       case PL_FILENR:
         if(i==0) {
 	  fff=get_fileptr(plist[i].integer);
-          if(fff==NULL) {xberror(24,""); /* File nicht geoeffnet */return;}
-	  if(e==1) fputc('\n',fff); /* Dann war # der einzige parameter.*/
+          if(fff.typ==0) {xberror(24,""); /* File nicht geoeffnet */return;}
+	  if(e==1) fputc('\n',fff.dptr); /* Dann war # der einzige parameter.*/
 	} else xberror(32,"PRINT"); /* Syntax Error */
 	break;
       case PL_LEER:
-        if(i!=e-1) fputc('\011',fff);
+        if(i!=e-1) fputc('\011',fff.dptr);
 	break;
       default:
         dump_parameterlist(plist,e);
@@ -293,7 +374,7 @@ void c_input(const char *n) {
   if(*n=='#') {
     wort_sep(n,',',TRUE,t,s);
     e=get_number(t);
-    if(filenr[e]) fff=dptr[e];
+    if(filenr[e].typ) fff=filenr[e].dptr;
     else xberror(24,""); /* File nicht geoeffnet */
   } else strcpy(s,n);
   
@@ -314,6 +395,8 @@ void c_input(const char *n) {
     while(e!=0) {
       xtrim(s,TRUE,s);
       if(fff==stdin) {
+        /* It can be that do_gets retuned a NULL because of EOF*/
+        if(!v) return;
         // int e2=
 	arg2(v,TRUE,u,v);
       /*  while(e2==0) {
@@ -366,8 +449,8 @@ static STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASC
 }
 STRING f_lineinputs(PARAMETER *plist,int e) {
   int i=plist[0].integer;
-  if(filenr[i]) {
-    return(longlineinput(dptr[i]));
+  if(filenr[i].typ) {
+    return(longlineinput(filenr[i].dptr));
   } else {
     xberror(24,""); /* File nicht geoeffnet */
     return(vs_error());
@@ -382,8 +465,8 @@ STRING f_inputs(char *n) {
     int i=get_number(s);
     int anz=(int)parser(t);
     FILE *fff=stdin;
-    if(filenr[i]) {
-      fff=dptr[i];
+    if(filenr[i].typ) {
+      fff=filenr[i].dptr;
       inbuf.pointer=malloc(anz+1);
       inbuf.len=(int)fread(inbuf.pointer,1,anz,fff);
       inbuf.pointer[anz]=0;
@@ -402,7 +485,7 @@ void c_lineinput(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   char *u,*text=NULL;
   int e,i=0,typ;
-  FILE *fff=stdin;
+  FILEINFO fff=get_fileptr(-2);   /*   stdin */
   e=arg2(n,TRUE,s,t);
   while(strlen(s)) {
     typ=type(s);
@@ -416,15 +499,15 @@ void c_lineinput(const char *n) {
 	 strcpy(text,u);
        }
        free(u);
-      if(e==3) strcat(text," ? ");
-      if(e!=2) strcat(text," ");
+      if(e==4) strcat(text," ");
     } else if(i==0 && (typ&FILENRTYP)==FILENRTYP) {
       fff=get_fileptr(get_number(s));
-      if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
+      if(fff.typ==0) {xberror(24,"");return;} /* File nicht geoeffnet */
     } else {
       if(text==NULL) text=strdup("? ");
-      if(fff==stdin) {
+      if(fff.dptr==stdin) {
         u=do_gets(text);
+	if(!u) return;   /*  EOF or such */
         if(typ & STRINGTYP) {
 	  STRING str;
 	  str.len=strlen(u);
@@ -433,7 +516,7 @@ void c_lineinput(const char *n) {
 	  zuweis_string_and_free(s,str);
         } else zuweis(s,parser(u));
       } else {
-        STRING a=longlineinput(fff);
+        STRING a=longlineinput(fff.dptr);
         if(typ & STRINGTYP) zuweis_string_and_free(s,a);
         else {
 	  zuweis(s,parser(a.pointer));
@@ -471,15 +554,18 @@ static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned
  connect  socket to server and port */
 
 void c_connect(PARAMETER *plist,int e) {
-  struct sockaddr_in host_address;
-  int sock;
-  FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
-  sock=fileno(fff);
-  if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
-  else { 
-    if(0>connect(sock,(struct sockaddr *) &host_address, sizeof(host_address))) 
-      io_error(errno,"connect");    
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) xberror(24,"");    /* File nicht geoeffnet */
+  else if(fff.typ==FT_USB) {
+      /*  TODO  */ 
+  } else {
+    int sock=fileno(fff.dptr);
+    struct sockaddr_in host_address;
+    if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
+    else { 
+      if(0>connect(sock,(struct sockaddr *) &host_address, sizeof(host_address))) 
+        io_error(errno,"connect");    
+    }
   }
 }
 static int make_socket(unsigned short int port) {
@@ -516,201 +602,287 @@ static int make_UDP_socket(unsigned short int port) {
 
 //#define DEBUG 1
 
-void c_open(PARAMETER *plist, int e) {
-  char modus,special=0;
-  int number=1,port=0;
-  char *filename=plist[2].pointer;
-  char *modus2="r";
-  int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
 
-
-  if(e>=4) port=plist[3].integer;
-  modus=toupper(((char *)plist[0].pointer)[0]);
-  special=toupper(((char *)plist[0].pointer)[1]);
-  number=plist[1].integer;  /*File #*/
-  
- // printf("OPEN: <%s> number=%d, special=%c modus=%c port=%d\n",filename, number,special,modus,port);
-  
-  
-  if(special=='X') { /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
-    char ww1[plist[0].integer+1],ww2[plist[0].integer+1];
-    int ii=0,ee=wort_sep(plist[0].pointer,':',TRUE,ww1,ww2);
-	  ee=wort_sep(ww2,',',TRUE,ww1,ww2);
-	  while(ee) {
-     	    if(strlen(ww1)) {
-	      switch(ii) {
-	        case 0: { baud=(int)parser(ww1);  break; } /* Baudrate */  
-		case 2: { bits=(int)parser(ww1);  break; } /* Bits */  
-		case 3: { stopbits=(int)parser(ww1);  break; } /* Stopbits */  
-
-                default: 
-		  if(strcmp(ww1,"N")==0) parity=0;
-		  else if(strcmp(ww1,"O")==0) parity=1;
-		  else if(strcmp(ww1,"E")==0) parity=2;
-		  else if(strcmp(ww1,"XON")==0) sflow=1;
-		  else if(strcmp(ww1,"CTS")==0) hflow=1;
-		  else if(strcmp(ww1,"DTR")==0) dtr=1;
-		  else
-		printf("Unknown extra Option: %s\n",ww1);
-
-	      }
-	    }
-	    ii++;
-            ee=wort_sep(ww2,',',TRUE,ww1,ww2);
-	  }
-#if DEBUG
-	  printf("baud=%d, bits=%d, stopbits=%d, parity=%d\n",baud,bits,
-	  stopbits,parity);
+static struct usb_dev_handle *open_USB_device(const char *filename) {
+#ifdef HAVE_USB
+  static int usb_is_init=0;
+  static struct usb_bus *busses=NULL;
+  struct usb_bus *bus_cur;
+  struct usb_device *dev_cur;
+  struct usb_device *dev=NULL;
+  struct usb_dev_handle *dev_hdl = NULL;
 #endif
+  int vid=-1,pid=-1,ret;
+  char w1[strlen(filename)+1],w2[strlen(filename)+1];
+  ret=wort_sep(filename,':',TRUE,w1,w2);
+  if(ret==2) {
+    vid=(int)parser(w1); /* Vendor id */  
+    pid=(int)parser(w2); /* Product id */  
   }
-  if(modus=='I') modus2="rb";
-  else if(modus=='O') modus2="wb";
-  else if(modus=='U') modus2="rb+";
-  else if(modus=='A') modus2="ab+";
-  else xberror(21,""); /* bei Open nur erlaubt ...*/
+  printf("OPEN USB: vid=0x%04x, pid=0x%04x, stopbits=%d, parity=%d\n",vid,pid,0,0);
 
-#ifdef DEBUG
-   printf("number=%d, filename=<%s>, port=%d ($08x)\n",number,filename,port,port);
+#ifdef HAVE_USB
+
+  if(!usb_is_init) {usb_init();usb_is_init=1;}
+  ret=usb_find_busses();
+  if(ret<0) {
+      printf("usb_find_busses failed with status %i\n", ret);
+      errno=ENODEV;
+      return(NULL);
+  }
+  ret=usb_find_devices();
+  if(ret<0) {
+      printf("usb_find_devices failed with status %i\n", ret);
+      errno=ENODEV;
+      return(NULL);
+  }
+  free(busses);
+  busses=usb_get_busses();
+  for(bus_cur=busses; bus_cur!=NULL; bus_cur=bus_cur->next) {
+    for(dev_cur=bus_cur->devices; dev_cur!=NULL; dev_cur=dev_cur->next) {
+      printf("Wir haben: %04x/%04x\n",dev_cur->descriptor.idVendor,dev_cur->descriptor.idProduct);
+      if((dev_cur->descriptor.idVendor == vid && dev_cur->descriptor.idProduct == pid)) {
+	dev=dev_cur;
+	printf("Gerät gefunden.\n");
+	break;
+      }
+    }
+    if(dev!=NULL) break;
+  }
+  if(dev==NULL) {
+    printf("Kein unterstuetzter Logger angeschlossen.\n");
+    errno=ENOENT;
+    return(NULL);
+  }
+  dev_hdl=usb_open(dev);
+  if(dev_hdl==NULL) {
+    printf("usb_open failed: %s\n", usb_strerror());
+    errno=ENOENT;
+    return(NULL);
+  }
+  if(dev->descriptor.bNumConfigurations) {
+    printf("%d Configurations.\n",dev->descriptor.bNumConfigurations);
+  }
+
+/* Todo: Es muessen Endpoints gesetzt werden, am besten zwei, einen zum 
+    lesen und einen zum schreiben. Sind weniger (nur 1) endpoints da, wird auf dem 
+    0 (control endpoint) geschrieben. Ist kein endpoint da, wird auch auf der 0 
+    gelesen.*/
+
+
+  char string[100];
+  ret=usb_get_string_simple(dev_hdl, dev->descriptor.iProduct,string, sizeof(string)); 
+  printf("Geraet Name=<%s>\n",string);
+#ifndef WINDOWS
+  ret=usb_reset(dev_hdl);
+  if(ret<0) {
+    printf("usb_reset failed with status %i: %s\n", ret, usb_strerror());
+  }
+#endif	
+  ret=usb_set_configuration(dev_hdl, 1); //1 bConfigurationValue=1, iConfiguration=0
+  if(ret<0) {
+    printf("usb_set_configuration failed with status %i\n", ret);
+  }
+  ret=usb_claim_interface(dev_hdl, 0); // bInterfaceNumber=0, bAlternateSetting=0, bNumEndpoints=2
+  if(ret<0) {
+    printf("usb_claim_interface failed with status %i: %s\n", ret, usb_strerror());
+  }
+
+  return(dev_hdl);
+#else
+  printf("The %s function is not implemented \n"
+  " in this version of X11-Basic because the LIBUSB library \n"
+  " was not present at compile time.\n","OPEN \"Y\"");
+  return(NULL);
 #endif
+}
 
-  if(filenr[number]) xberror(22,"");  /* File schon geoeffnet  */
-  else if(number>99 || number<1) xberror(23,"");  /* File # falsch  */
-  else {
-    /*  Sockets  */
-    if(special=='C') { /* Connect */
-      int sock;
-      struct sockaddr_in servername;
+
+static FILE *create_socket(int port, const char *modus2) {
+#ifdef DEBUG
+   printf("Create Socket: modus=%s port=%d\n",modus2,port);
+#endif
+  int sock=make_socket(port);
+  if(sock<0)           { io_error(errno,"make_socket"); return(NULL); }
+  if(listen(sock,1)<0) { io_error(errno,"listen");      return(NULL); }
+  return(fdopen(sock,modus2));
+}
+static FILE *connect_socket(int port, const char *modus2, const char *filename) { 
+  struct sockaddr_in servername;
 #ifdef DEBUG	 
-     printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+  printf("Open Socket: modus=%s adr=%s port=%d\n",modus2,filename, port);
 #endif
-      sock=socket(PF_INET, SOCK_STREAM,0);
-      if(sock<0) {
-	io_error(errno,"socket");
-	dptr[number]=NULL;
-      } else {
-	if(init_sockaddr(&servername,filename,port)<0) {
-	  io_error(errno,"init_sockadr");
-	  dptr[number]=NULL;
-	} else { 
-	  if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) {
-            io_error(errno,"connect");
-	    dptr[number]=NULL;
-	  } else dptr[number]=fdopen(sock,modus2);
-	}
-      }
-    } else if(special=='S') { /* serve */
-      int sock;
-#ifdef DEBUG
-   printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
-#endif
-      sock=make_socket(port);
-      if(sock<0) {
-	io_error(errno,"make_socket");
-	dptr[number]=NULL;
-      } else {
-	if(listen(sock,1)<0) {
-	  io_error(errno,"listen");
-	  dptr[number]=NULL;
-	} else { 
-          dptr[number]=fdopen(sock,modus2);
-	}
-      }
-    } else if(special=='A') { /* accept */
-      int sock,sock2;
-      socklen_t size;	
-      struct sockaddr_in clientname;
+  int sock=socket(PF_INET, SOCK_STREAM,0);
+  if(sock<0)                                     { io_error(errno,"socket");        return(NULL); }
+  if(init_sockaddr(&servername,filename,port)<0) { io_error(errno,"init_sockadr");  return(NULL); }
+  if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) { io_error(errno,"connect");  return(NULL); }
+  return(fdopen(sock,modus2));
+}
+static FILE *accept_socket(int port, const char *modus2) { 
 #ifdef DEBUG
       printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
 #endif
-      if(filenr[port]) {
-	sock=fileno(dptr[port]);
-	size=sizeof(clientname);
-	sock2=accept(sock,(struct sockaddr *) &clientname,&size);
-	if(sock2<0) {
-	  io_error(errno,"accept");
-	  dptr[number]=NULL;
-	} else {
+  if(filenr[port].typ==0) {printf("Socket %d nicht geoeffnet.\n",port); io_error(errno,"accept_sockadr");  return(NULL); }
+  int sock=fileno(filenr[port].dptr);
+  struct sockaddr_in clientname;
+  socklen_t size=sizeof(clientname);
+  int sock2=accept(sock,(struct sockaddr *) &clientname,&size);
+  if(sock2<0) { io_error(errno,"accept"); return(NULL); }
 #ifdef DEBUG	   
-	  printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), 
-	      ntohs(clientname.sin_port),sock2);
+  printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), ntohs(clientname.sin_port),sock2);
 #endif
-          dptr[number]=fdopen(sock2,modus2);
-	}
-      } else printf("Socket %d nicht geoeffnet.\n",port); 
-    } else if(special=='U') { /* UDP datagramms */
-      int sock;
+  return(fdopen(sock2,modus2));
+}
+
+static FILE *create_udp_socket(int port, const char *modus2) {
 #ifdef DEBUG
-   printf("Create UDP Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+   printf("Create UDP Socket: modus=%s port=%d\n",modus2,port);
 #endif
-      sock=make_UDP_socket(port);
-      if(sock<0) {
-	io_error(errno,"make_udp_socket");
-	dptr[number]=NULL;
-      } else {
-         printf("sock=%d\n",sock);
-          dptr[number]=fdopen(sock,modus2);
-          if(dptr[number]==NULL) io_error(errno,"make_udp_socket");
-      }
-    } else dptr[number]=fopen(filename,modus2);
-    if(dptr[number]==NULL) {io_error(errno,"OPEN");return;}
-    else  filenr[number]=1;
-    if(special=='X') {  /* Fuer Serielle Devices !  */
-      int fp=fileno(dptr[number]);
+   int sock=make_UDP_socket(port);
+   if(sock<0)         { io_error(errno,"make_udp_socket"); return(NULL); }
+#if DEBUG
+   printf("sock=%d\n",sock);
+#endif
+  return(fdopen(sock,modus2));
+}
+
 #ifndef WINDOWS
-      struct termios ttyset;
-      if(isatty(fp)) {
-        /* Stream buffering ausschalten */
-	setbuf(dptr[number],NULL);
-	/* Nicht-Canoschen Mode setzen */    
-	tcgetattr(fp,&ttyset);
-#ifdef DEBUG	
-	  printf("Old Port-Settings:\n");
-	  printf("cflag=$%08x \n",ttyset.c_cflag);
-	  printf("iflag=$%08x \n",ttyset.c_iflag);
-	  printf("oflag=$%08x \n",ttyset.c_oflag);
-	  printf("lflag=$%08x \n",ttyset.c_lflag);
-//	  printf("cc(VMIN)=$%08x \n",ttyset.c_cc[VMIN]);
-//	  printf("cc(VMAX)=$%08x \n",ttyset.c_cc[VMAX]);
+
+/*
+Constant  Description
+TIOCM_LE  DSR (data set ready/line enable)
+TIOCM_DTR DTR (data terminal ready)
+TIOCM_RTS RTS (request to send)
+TIOCM_ST  Secondary TXD (transmit)
+TIOCM_SR  Secondary RXD (receive)
+TIOCM_CTS CTS (clear to send)
+TIOCM_CAR DCD (data carrier detect)
+TIOCM_CD  Synonym for TIOCM_CAR
+TIOCM_RNG RNG (ring)
+TIOCM_RI  Synonym for TIOCM_RNG
+TIOCM_DSR DSR (data set ready)
+
+http://linux.die.net/man/4/tty_ioctl
+*/
+
+static void RS232_enable(int fp,int what) {
+  int status;
+#ifdef TIOCMGET
+  if(ioctl(fp, TIOCMGET, &status) == -1) perror("unable to get portstatus");
+  status |= what;    /* turn on something */
+  if(ioctl(fp, TIOCMSET, &status) == -1) perror("unable to set portstatus");
 #endif
-	ttyset.c_cc[VMIN]=1;
-	ttyset.c_cc[VTIME]=0;
-	if(!port) {
+}
+static void RS232_disable(int fp,int what) {
+  int status;
+#ifdef TIOCMGET
+  if(ioctl(fp, TIOCMGET, &status) == -1) perror("unable to get portstatus");
+  status &= ~what;    /* turn off something */
+  if(ioctl(fp, TIOCMSET, &status) == -1) perror("unable to set portstatus");
+#endif
+}
+
+#endif
+
+static void set_terminal_flags(FILEINFO *finfo, const char *pars, int port) {
+  int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
+
+  /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
+
+  char ww1[strlen(pars)+1],ww2[strlen(pars)+1];
+  int ii=0,ee=wort_sep(pars,':',TRUE,ww1,ww2);
+  ee=wort_sep(ww2,',',TRUE,ww1,ww2);
+    while(ee) {
+      if(strlen(ww1)) {
+        switch(ii) {
+        case 0: { baud=(int)parser(ww1);  break; } /* Baudrate */  
+	case 2: { bits=(int)parser(ww1);  break; } /* Bits */  
+	case 3: { stopbits=(int)parser(ww1);  break; } /* Stopbits */  
+
+        default: 
+	  if(strcmp(ww1,"N")==0) parity=0;
+	  else if(strcmp(ww1,"O")==0) parity=1;
+	  else if(strcmp(ww1,"E")==0) parity=2;
+	  else if(strcmp(ww1,"XON")==0) sflow=1;
+	  else if(strcmp(ww1,"CTS")==0) hflow=1;
+	  else if(strcmp(ww1,"DTR")==0) dtr=1;
+	  else
+	    printf("Unknown extra Option: %s\n",ww1);
+       }
+    }
+    ii++;
+    ee=wort_sep(ww2,',',TRUE,ww1,ww2);
+  }
+#if DEBUG
+  printf("baud=%d, bits=%d, stopbits=%d, parity=%d\n",baud,bits,stopbits,parity);
+#endif
+
+  int fp=fileno(finfo->dptr);
+#ifndef WINDOWS
+  struct termios ttyset;
+  if(isatty(fp)) {
+    setbuf(finfo->dptr,NULL); /* Stream buffering ausschalten */
+    /* Nicht-Canoschen Mode setzen */    
+    tcgetattr(fp,&ttyset);
+    ttyset.c_cc[VMIN]=1;
+    ttyset.c_cc[VTIME]=0;
+    if(!port) {
 /* CBAUD gibt es nicht in allen systemen ! */
 #ifdef CBAUD
           port&=~CBAUD;      /* Bits loeschen !  */
 #else
 	  port=0;
 #endif
-	  if(baud==300) port|=B300;
-	  else if(baud==1200) port|=B1200;
-	  else if(baud==2400) port|=B2400;
-	  else if(baud==4800) port|=B4800;
-	  else if(baud==9600) port|=B9600;
-#ifdef B19200
-	  else if(baud==19200) port|=B19200;
-#else /* B19200 */
-#  ifdef EXTA
-	  else if(baud==19200) port|=EXTA;
-
+          switch(baud) {
+	  case 50: port|=B50; break;
+	  case 75: port|=B75; break;
+	  case 110: port|=B110; break;
+	  case 134: port|=B134; break;
+	  case 150: port|=B150; break;
+	  case 200: port|=B200; break;
+	  case 300: port|=B300; break;
+	  case 600: port|=B600; break;
+	  case 1200: port|=B1200; break;
+	  case 1800: port|=B1800; break;
+	  case 2400: port|=B2400; break;
+	  case 4800: port|=B4800; break;
+	  case 9600: port|=B9600; break;
+#ifdef B19200 /* B19200 */
+	  case 19200: port|=B19200; break;
+#elif defined EXTA
+	  case 19200: port|=EXTA; break;
 #endif
-#endif
-#ifdef B38400
-	  else if(baud==38400) port|=B38400;
-#else /* B38400 */
-#  ifdef EXTB
-	  else if(baud==38400) port|=EXTB;
-#endif
+#ifdef B38400 /* B38400 */
+	  case 38400: port|=B38400; break;
+#elif defined EXTB
+	  case 38400: port|=EXTB; break;
 #endif
 #ifdef B57600
-	  else if(baud==57600) port|=B57600;
+	  case 57600: port|=B57600; break;
 #endif
 #ifdef B115200
-	  else if(baud==115200) port|=B115200;
+	  case 115200: port|=B115200; break;
 #endif
 #ifdef B230400
-	  else if(baud==230400) port|=B230400;
-#endif  
-          else printf("Baud rate not supported !\n");
+	  case 230400: port|=B230400; break;
+#endif
+#ifdef B460800
+	  case 460800: port|=B460800; break;
+#endif
+#ifdef B500000
+	  case 500000: port|=B500000; break;
+#endif
+#ifdef B576000
+	  case 576000: port|=B576000; break;
+#endif
+#ifdef B921600
+	  case 921600: port|=B921600; break;
+#endif
+#ifdef B1000000
+	  case 1000000: port|=B1000000; break;
+#endif
+          default: printf("Baud rate not supported !\n");
+          }
    	  port&=~CSIZE;      /* Bits loeschen !  */
           if(bits==7) port|=CS7;
           else if(bits==8) port|=CS8;
@@ -744,65 +916,132 @@ void c_open(PARAMETER *plist, int e) {
 #endif
            if(sflow) ttyset.c_iflag |= IXON | IXOFF;
            else ttyset.c_iflag &= ~(IXON|IXOFF|IXANY);
+        if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
+
+    #if defined(TIOCM_RTS) && defined(TIOCMGET)
+    RS232_enable(fp,TIOCM_RTS);  /* set RTS */
+    #endif
+
+#if defined(TIOCM_DTR) && defined(TIOCMGET)
+    /* Sometimes it must be: Drop DTR line and raise it again. */
+    if(dtr) RS232_enable(fp,TIOCM_DTR);
+    else RS232_disable(fp,TIOCM_DTR);
+    
+#endif
+  } else printf("No TTY: cannot set attributes!\n");
+  #else /*  WINDOWS */
+  char baudstring[256];
+  sprintf(baudstring,"baud=%d data=%d parity=%c stop=%d dtr=%s rts=on",baud,bits,"NOE"[parity],stopbits,((dtr==1)?"on":"off"));
+  DCB port_settings;
+  memset(&port_settings, 0, sizeof(port_settings));  /* clear the new struct  */
+  port_settings.DCBlength = sizeof(port_settings);
+  finfo->cport=CreateFileA("COM1",
+                      GENERIC_READ|GENERIC_WRITE,
+                      0,                          /* no share  */
+                      NULL,                       /* no security */
+                      OPEN_EXISTING,
+                      0,                          /* no threads */
+                      NULL);                      /* no templates */
+
+  if(finfo->cport==INVALID_HANDLE_VALUE) {
+    printf("unable to open comport\n");
+    return;
+  }
+  if(!BuildCommDCBA(baudstring, &port_settings)) {
+    printf("unable to set comport dcb settings\n");
+    CloseHandle(finfo->cport);
+    return;
+  }
+  if(!SetCommState(finfo->cport, &port_settings)) {
+    printf("unable to set comport cfg settings\n");
+    CloseHandle(finfo->cport);
+    return;
+  }
+  COMMTIMEOUTS Cptimeouts;
+
+  Cptimeouts.ReadIntervalTimeout         = MAXDWORD;
+  Cptimeouts.ReadTotalTimeoutMultiplier  = 0;
+  Cptimeouts.ReadTotalTimeoutConstant    = 0;
+  Cptimeouts.WriteTotalTimeoutMultiplier = 0;
+  Cptimeouts.WriteTotalTimeoutConstant   = 0;
+
+  if(!SetCommTimeouts(finfo->cport, &Cptimeouts)) {
+    printf("unable to set comport time-out settings\n");
+    CloseHandle(finfo->cport);
+    return;
+  }
+  #endif /* WINDOWS */
+}
+
+
+
+/*
+   OPEN "AB"
+   a= U / I / O / A
+   b = C connect to socet
+       X open serial
+       Y open USB device
+       S serve
+       U UDP data
+  
+*/
+
+void c_open(PARAMETER *plist, int e) {
+  char *filename=plist[2].pointer;
+  int port=0;
+  if(e>=4) port=plist[3].integer;
+  char modus=toupper(((char *)plist[0].pointer)[0]);
+  char special=toupper(((char *)plist[0].pointer)[1]);
+  int number=plist[1].integer;  /*File #*/
+
+  if(number>99 || number<1) { xberror(23,"");  /* File # falsch  */        return;}
+  if(filenr[number].typ)    { xberror(22,"");  /* File schon geoeffnet  */ return;}
+
+   
+  char *modus2;
+  if(modus=='I') modus2="rb";
+  else if(modus=='O') modus2="wb";
+  else if(modus=='U') modus2="rb+";
+  else if(modus=='A') modus2="ab+";
+  else { xberror(21,""); /* bei Open nur erlaubt ...*/ return;}
 
 #ifdef DEBUG
-          printf("IGNPAR  =$%08x \n",IGNPAR);
-          printf("PARENB  =$%08x \n",PARENB);
-          printf("PARODD  =$%08x \n",PARODD);
-
-	  printf("port =$%08x \n",port);
-	  printf("cflag=$%08x \n",ttyset.c_cflag);
-	  printf("iflag=$%08x \n",ttyset.c_iflag);
-	  printf("oflag=$%08x \n",ttyset.c_oflag);
-	  printf("lflag=$%08x \n",ttyset.c_lflag);
+   printf("OPEN #%d, filename=<%s>, port=%d ($08x), modus=%c, special=%c\n",number,filename,port,port,modus,special);
 #endif
-        
-        if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
-        /* set RTS */
-        /* Set RTS line. Sometimes dropped. Linux specific? */
 
-	#if defined(TIOCM_RTS) && defined(TIOCMODG)
-        {int mcs=0;
+  /*  Sockets  */
+  if(special=='C')      filenr[number].dptr=connect_socket(port,modus2,filename);   /* Connect */
+  else if(special=='S') filenr[number].dptr=create_socket(port,modus2);             /* serve */
+  else if(special=='A') filenr[number].dptr=accept_socket(port,modus2);             /* accept */
+  else if(special=='U') filenr[number].dptr=create_udp_socket(port,modus2);         /* UDP socket*/
+  else if(special=='Y') filenr[number].dptr=(FILE *) open_USB_device(filename);     /* USB devices */
+  else                  filenr[number].dptr=fopen(filename,modus2);                 /* Normal File */
+    
+  if(filenr[number].dptr==NULL) {io_error(errno,"OPEN");return;}
 
-        ioctl(fp, TIOCMODG, &mcs);
-        mcs |= TIOCM_RTS;
-        ioctl(fp, TIOCMODS, &mcs);}
-        #endif
-        #ifdef _COHERENT
-          ioctl(fp, TIOCSRTS, 0);
-        #endif
-
-        if(dtr) {
-        /*
-        * Drop DTR line and raise it again.
-        */
-#ifdef TIOCSDTR
-          ioctl(fp, TIOCCDTR, 0);   
-          sleep(1);  /* for one second */
-          ioctl(fp, TIOCSDTR, 0);
-#endif /* TIOCSDTR */
-        }
-      } else printf("No TTY: cannot set attributes!\n");
-  #endif /* WINDOWS */
-    }
-  }
+  /*  Nachbereitungen / Einstellungen */
+  if(special=='X')      {
+    set_terminal_flags(&(filenr[number]),plist->pointer,port); /* Fuer Serielle Devices !  */
+    filenr[number].typ=FT_DEV;
+  } else if(special=='Y') filenr[number].typ=FT_USB;
+  else filenr[number].typ=FT_FILE;
 }
 
 void c_link(PARAMETER *plist, int e) {
   int number;
   if(e==2) {
     number=plist[0].integer;
-    if(filenr[number]) xberror(22,"");  /* File schon geoeffnet  */
+    if(filenr[number].typ) xberror(22,"");  /* File schon geoeffnet  */
     else {
 #ifdef WINDOWS
-      dptr[number]=(FILE *)LoadLibrary(plist[1].pointer);
-      if(dptr[number]==NULL) io_error(GetLastError(),"LINK");
-      else  filenr[number]=2;
+      filenr[number].dptr=(FILE *)LoadLibrary(plist[1].pointer);
+      if(filenr[number].dptr==NULL) io_error(GetLastError(),"LINK");
+      else  filenr[number].typ=FT_DLL;
 #else
 #ifdef HAVE_DLOPEN
-      dptr[number]=(FILE *)dlopen((char *)plist[1].pointer,RTLD_LAZY);
-      if(dptr[number]==NULL) io_error(errno,"LINK");
-      else  filenr[number]=2;
+      filenr[number].dptr=(FILE *)dlopen((char *)plist[1].pointer,RTLD_LAZY);
+      if(filenr[number].dptr==NULL) io_error(errno,"LINK");
+      else filenr[number].typ=FT_DLL;
 #else
       xberror(9,"LINK"); /*Function or command %s not implemented*/
 #endif
@@ -811,12 +1050,18 @@ void c_link(PARAMETER *plist, int e) {
   }
 }
 void c_send(PARAMETER *plist, int e) {
-  FILE *fff;
-  if(e>=2) {
-    int sock;
-    fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
-    sock=fileno(fff);
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */ 
+  else if(fff.typ==FT_USB) {
+#ifdef HAVE_USB
+    int ep_out=fff.ep_out;
+    if(e>2) ep_out=plist[2].integer;
+  /*  TODO */ 
+    int ret=usb_bulk_write(fff.dptr,ep_out,plist[1].pointer,plist[1].integer,TIMEOUT);
+    if(ret<0) printf("usb_bulk_write failed with code %i: %s\n", ret, usb_strerror());
+#endif
+  } else {
+    int sock=fileno(fff.dptr);
     if(e>=4) {
       struct sockaddr_in host_address;
 
@@ -834,20 +1079,31 @@ void c_send(PARAMETER *plist, int e) {
   }
 }
 void c_receive(PARAMETER *plist, int e) {
-  FILE *fff;
-  struct	sockaddr_in	host_address;
-  socklen_t 	host_address_size;
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
+  else if(fff.typ==FT_USB) {
+    /*   TODO    */
+#ifdef HAVE_USB
+    STRING str;
+    str.pointer=malloc(fff.blk_len+1);    
+    str.len=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
+    if(str.len<0) {
+      printf("usb_bulk_read failed with code %i: %s\n", str.len, usb_strerror());
+      str.len=0;
+    }
+    str.pointer[str.len]=0;
+    varcaststring(plist[1].integer,plist[1].pointer,str);
+    free(str.pointer);
+#endif
+  } else {
+    int fdes=fileno(fff.dptr);
+    struct	sockaddr_in	host_address;
+    socklen_t 	host_address_size;
 #if DEBUG
-	 
   unsigned	char	*address_holder;
 #endif
     STRING str;  
-    int fdes;
-    
     str.pointer=malloc(1500);
-    fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
-    fdes=fileno(fff);
     memset((void*)&host_address,0,sizeof(host_address));
     host_address.sin_family=AF_INET;
     host_address_size=sizeof(host_address);
@@ -861,7 +1117,8 @@ address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
 #endif
     varcaststring(plist[1].integer,plist[1].pointer,str);
     if(e>2) varcastint(plist[2].integer,plist[2].pointer,host_address.sin_addr.s_addr);
-  free(str.pointer);
+    free(str.pointer);
+  }
 }
 
 static const struct {int sf; char xf; } ioemaptable[] = {
@@ -970,36 +1227,65 @@ void io_error(int n, const char *s) {
   xberror(-1,s);  /* Allgemeiner IO-Fehler */
 }
 
+/* Schliesse alle Files (und sockets und USB verbindungen). macht kein UNLINK. (evtl. TODO)*/
+void close_all_files() {
+  int i;
+  for(i=0;i<ANZFILENR;i++) {
+    if(filenr[i].typ==FT_FILE || filenr[i].typ==FT_SOCKET|| filenr[i].typ==FT_PIPE) {
+      if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
+      else filenr[i].typ=FT_NONE;
+    } else if(filenr[i].typ==FT_DEV) {
+      #if defined(TIOCM_DTR) && defined(TIOCMGET)
+        RS232_disable(fileno(filenr[i].dptr),TIOCM_DTR|TIOCM_RTS);
+      #endif
+#ifdef WINDOWS
+	CloseHandle(filenr[i].cport);        
+#endif
+
+      if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
+      else filenr[i].typ=FT_NONE;         
+    } else if(filenr[i].typ==FT_USB) {
+#ifdef HAVE_USB
+        usb_close((struct usb_dev_handle *)filenr[i].dptr);
+#endif
+    }
+  }
+}
+
 
 void c_close(PARAMETER *plist,int e) {
   int i;
   if(e) {
     while(--e>=0) {
       i=plist[e].integer;
-      if(filenr[i]==1) { 
-        if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
-        else filenr[i]=0;
-      } else if(filenr[i]==2) { 
+      if(filenr[i].typ==FT_FILE) { 
+        if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
+        else filenr[i].typ=FT_NONE;
+      } else if(filenr[i].typ==FT_DEV) {
+#if defined(TIOCM_DTR) && defined(TIOCM_RTS)
+        RS232_disable(fileno(filenr[i].dptr),TIOCM_DTR|TIOCM_RTS);
+#endif
+        if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
+        else filenr[i].typ=FT_NONE; 
 #ifdef WINDOWS
-      if(FreeLibrary(dptr[i])==0) io_error(GetLastError(),"UNLINK");
-      else filenr[i]=0;
-#else
-#ifdef HAVE_DLOPEN
-     if(dlclose(dptr[i])==EOF) io_error(errno,"UNLINK");
-      else filenr[i]=0;
+	CloseHandle(filenr[i].cport);        
 #endif
+      } else if(filenr[i].typ==FT_DLL) { 
+#ifdef WINDOWS
+        if(FreeLibrary(filenr[i].dptr)==0) io_error(GetLastError(),"UNLINK");
+        else filenr[i].typ=FT_NONE;
+#elif defined HAVE_DLOPEN
+        if(dlclose(filenr[i].dptr)==EOF) io_error(errno,"UNLINK");
+        else filenr[i].typ=FT_NONE;
 #endif
-      }
-      else xberror(24,""); /* File nicht geoeffnet...*/
+      } else if(filenr[i].typ==FT_USB) {
+#ifdef HAVE_USB
+        usb_close((struct usb_dev_handle *)filenr[i].dptr);
+#endif
+        filenr[i].typ=FT_NONE;
+      } else xberror(24,""); /* File nicht geoeffnet...*/
     }
-  } else {
-    for(i=0;i<ANZFILENR;i++) {
-      if(filenr[i]==1) {
-        if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
-        else filenr[i]=0;
-      }
-    }
-  }
+  } else close_all_files();
 }
 
 #ifndef HAVE_EXECVPE
@@ -1129,148 +1415,137 @@ int f_call(PARAMETER *plist,int e) {
 }
 void c_bload(PARAMETER *plist,int e) {
   int len=-1;
-  if(e>=2) {
-    if(e==3) len=plist[2].integer;
-    if(bload(plist[0].pointer,(char *)plist[1].integer,len)==-1)
-      io_error(errno,"BLOAD");
-  }
+  if(e>2) len=plist[2].integer;
+  if(bload(plist->pointer,(char *)plist[1].integer,len)==-1) io_error(errno,"BLOAD");
 }
 
 void c_bsave(PARAMETER *plist,int e) {
-  if(bsave(plist[0].pointer,(char *)plist[1].integer,plist[2].integer)==-1)
-        io_error(errno,"BSAVE");
+  if(bsave(plist->pointer,(char *)plist[1].integer,plist[2].integer)==-1) io_error(errno,"BSAVE");
 }
 void c_bget(PARAMETER *plist,int e) {
-  int i=plist[0].integer;
-  if(e==3) {
-    if(filenr[i]) {
-      e=fread((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
-      if(e<plist[2].integer) xberror(26,""); /* Fileende erreicht EOF */
-    } else xberror(24,""); /* File nicht geoeffnet */
-  }
+  int i=plist->integer;
+  if(filenr[i].typ) {
+    e=fread((char *)plist[1].integer,1,plist[2].integer,filenr[i].dptr);
+    if(e<plist[2].integer) xberror(26,""); /* Fileende erreicht EOF */
+  } else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_bput(PARAMETER *plist,int e) {
-  int i=plist[0].integer;
-  if(e==3) {
-    if(filenr[i]) fwrite((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
-    else xberror(24,""); /* File nicht geoeffnet */
-  }
+  int i=plist->integer;
+  if(filenr[i].typ) fwrite((char *)plist[1].integer,1,plist[2].integer,filenr[i].dptr);
+  else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
-  if(e==3) 
-    memmove((char *)plist[1].integer,(char *)plist[0].integer,(size_t)plist[2].integer);
+  memmove((char *)plist[1].integer,(char *)plist[0].integer,(size_t)plist[2].integer);
 }
 void c_pipe(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   int j=plist[1].integer;
-  if(e==2) {
-    if(filenr[i] || filenr[j]) xberror(22,"");  /* File schon geoeffnet  */
-    else {
-      int filedes[2];
+  if(filenr[i].typ || filenr[j].typ) xberror(22,"");  /* File schon geoeffnet  */
+  else {
+    int filedes[2];
 #ifndef WINDOWS
-      if(pipe(filedes)) io_error(errno,"PIPE");
-      else {
-        dptr[i]=fdopen(filedes[0],"r");
-	if(dptr[i]==NULL) printf("Error with fdopen! should not happen\n");
-	else filenr[i]=1;
-        dptr[j]=fdopen(filedes[1],"w");
-	if(dptr[j]==NULL) printf("Error with fdopen! should not happen\n");
-	else filenr[j]=1;
-      }
-#else
-      io_error(errno,"PIPE");
-#endif
+    if(pipe(filedes)) io_error(errno,"PIPE");
+    else {
+        filenr[i].dptr=fdopen(filedes[0],"r");
+	if(filenr[i].dptr==NULL) io_error(errno,"PIPE");
+	else filenr[i].typ=FT_FILE;
+        filenr[j].dptr=fdopen(filedes[1],"w");
+	if(filenr[j].dptr==NULL) io_error(errno,"PIPE");
+	else filenr[j].typ=FT_FILE;
     }
+#else
+    io_error(errno,"PIPE");
+#endif
   }
 }
 
 
 
 void c_unget(PARAMETER *plist,int e) {
-  if(e>1) {
-    FILE *fff;
-    if(plist->typ==PL_LEER) fff=stdin;
-    else fff=get_fileptr(plist->integer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
-    ungetc(plist[1].integer,fff);
-  } else  ungetc(plist->integer,stdin);
+  FILEINFO fff;
+  if(plist->typ==PL_LEER) {fff.dptr=stdin;fff.typ=FT_FILE;}
+  else fff=get_fileptr(plist->integer);
+  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */
+  else ungetc(plist[1].integer,fff.dptr);
 }
 
 void c_flush(PARAMETER *plist,int e) {
-  FILE *fff=stdout;
-  if(e) fff=get_fileptr(plist[0].integer);
+  FILEINFO fff;
+  if(e) fff=get_fileptr(plist->integer);
+  else {
+    fff=get_fileptr(-4);  /*  stdout */
 #ifdef ANDROID
-  else invalidate_screen(); 
+    invalidate_screen(); 
 #endif
-  if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */  
-  if(fflush(fff)) io_error(errno,"FLUSH");
+  }
+  if(fff.typ==0) {xberror(24,"");return;} /* File nicht geoeffnet */  
+  if(fflush(fff.dptr)) io_error(errno,"FLUSH");
 }
 
 void c_seek(PARAMETER *plist,int e) {
   int j=0,i=plist[0].integer;
   if(e>1) j=plist[1].integer;
-  if(filenr[i]) {
-    if(fseek(dptr[i],j,SEEK_SET)) io_error(errno,"SEEK");
+  if(filenr[i].typ) {
+    if(fseek(filenr[i].dptr,j,SEEK_SET)) io_error(errno,"SEEK");
   } else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_relseek(PARAMETER *plist,int e) {
   int i=plist[0].integer;
-  if(filenr[i]) {
-    if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
+  if(filenr[i].typ) {
+    if(fseek(filenr[i].dptr,plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
   } else xberror(24,""); /* File nicht geoeffnet */
 }
 
 void touch(PARAMETER *plist,int e) {
   if(plist->integer>0) {
-    FILE *fff=get_fileptr(plist->integer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */ 
-    int fp=fileno(fff);
+    FILEINFO fff=get_fileptr(plist->integer);
+    if(fff.typ==0) {xberror(24,"");return;} /* File nicht geoeffnet */ 
+    int fp=fileno(fff.dptr);
     struct timespec ts[2];
     ts[0].tv_nsec=UTIME_NOW;
     ts[1].tv_nsec=UTIME_NOW;
+#ifndef ATARI
     int ret=futimens(fp, ts);
     if(ret==-1) io_error(errno,"touch");
+#endif
   }
 }
 
 
 int inp8(PARAMETER *plist,int e) {
   unsigned char ergebnis;
-  FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-  if(fread(&ergebnis,1,1,fff)<1) {xberror(26,"");return(-1);}/* Fileende erreicht EOF */  
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
+  if(fread(&ergebnis,1,1,fff.dptr)<1) {xberror(26,"");return(-1);}/* Fileende erreicht EOF */  
   return((int)ergebnis);
 }
 int inpf(PARAMETER *plist,int e) {
-  if(plist[0].integer==-2) return(kbhit() ? -1 : 0);
+  if(plist->integer==-2) return(kbhit() ? -1 : 0);
   else {
-    FILE *fff=get_fileptr(plist[0].integer);
+    FILEINFO fff=get_fileptr(plist->integer);
+    if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
+    fflush(fff.dptr);
 #ifndef WINDOWS
-    int fp,i;
-#endif
-    if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-    fflush(fff);
-#ifndef WINDOWS
-    fp=fileno(fff);
-    ioctl(fp, FIONREAD, &i);
+    int i;
+    ioctl(fileno(fff.dptr), FIONREAD, &i);
     return(i); 
 #else    
-    return(((eof(fff)) ? 0 : -1)); 
+    return(((feof(fff.dptr)) ? 0 : -1)); 
 #endif  
   }  
 }
 int inp16(PARAMETER *plist,int e) {
   unsigned short ergebnis;
-  FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-  if(fread(&ergebnis,sizeof(short),1,fff)<1)  io_error(errno,"fread");
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
+  if(fread(&ergebnis,sizeof(short),1,fff.dptr)<1)  io_error(errno,"fread");
   return((int)ergebnis);
 }
 int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
-  FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */ 
-  if(fread(&ergebnis,sizeof(long),1,fff)<1)  io_error(errno,"fread");
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */ 
+  if(fread(&ergebnis,sizeof(long),1,fff.dptr)<1)  io_error(errno,"fread");
   return(ergebnis);
 }
 
@@ -1322,17 +1597,17 @@ void reset_input_mode() {
 
 int f_symadr(PARAMETER *plist,int e) {
   long adr=0;
-  if(filenr[plist[0].integer]==2) {
+  if(filenr[plist->integer].typ==FT_DLL) {
     char *sym=malloc(plist[1].integer+1);
     char *derror;
     memcpy(sym,plist[1].pointer,plist[1].integer);
     sym[plist[1].integer]=0;
     #ifdef WINDOWS
-      adr = (long)GetProcAddress(dptr[plist[0].integer],sym);
+      adr = (long)GetProcAddress(filenr[plist[0].integer].dptr,sym);
       if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
     #else
       #ifdef HAVE_DLOPEN
-      adr = (long)dlsym(dptr[plist[0].integer],sym);
+      adr = (long)dlsym(filenr[plist[0].integer].dptr,sym);
       if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
       #else
         adr=-1;
@@ -1358,9 +1633,9 @@ char *terminalname(int fp) {
 
 
 void c_out(PARAMETER *plist,int e) {
-  FILE *fff=get_fileptr(plist->integer);
+  FILEINFO fff=get_fileptr(plist->integer);
   // printf("OUT #%d mit %d args.\n",plist->integer,e);
-  if(fff==NULL) xberror(24,""); /* File nicht geoeffnet */
+  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */
   else {
     int i,typ;
     for(i=1;i<e;i++) {
@@ -1375,27 +1650,27 @@ void c_out(PARAMETER *plist,int e) {
 	  if(zzz.typ & FLOATTYP) {
             double *varptr=(double *)(zzz.pointer+zzz.dimension*INTSIZE);
             
-	    fwrite(varptr,sizeof(double),a,fff);
+	    fwrite(varptr,sizeof(double),a,fff.dptr);
 	  } else if(zzz.typ & INTTYP) {
 	    int *varptr=(int *)(zzz.pointer+zzz.dimension*INTSIZE);
-	    fwrite(varptr,sizeof(int),a,fff);
+	    fwrite(varptr,sizeof(int),a,fff.dptr);
 	  } else if(zzz.typ & STRINGTYP) {
             STRING *varptr=(STRING *)(zzz.pointer+zzz.dimension*INTSIZE);
 	    for(j=0;j<a;j++) {
-	      fwrite(varptr[j].pointer,sizeof(char),varptr[j].len,fff);
+	      fwrite(varptr[j].pointer,sizeof(char),varptr[j].len,fff.dptr);
 	    }
 	  }
 
 	  free_array(&zzz);
 	} else if(typ & FLOATTYP) {
           double zzz=parser(plist[i].pointer);
-          fwrite(&zzz,sizeof(double),1,fff);
+          fwrite(&zzz,sizeof(double),1,fff.dptr);
 	} else if(typ & INTTYP) {
 	  int zzz=(int)parser(plist[i].pointer);
-          fwrite(&zzz,sizeof(int),1,fff);
+          fwrite(&zzz,sizeof(int),1,fff.dptr);
 	} else if(typ & STRINGTYP){
  	  STRING zzz=string_parser(plist[i].pointer);
-          fwrite(zzz.pointer,sizeof(char),zzz.len,fff);
+          fwrite(zzz.pointer,sizeof(char),zzz.len,fff.dptr);
           free_string(&zzz);
 	} else xberror(32,"OUT"); /* Syntax error */
         break;
@@ -1445,29 +1720,42 @@ STRING print_arg(const char *ausdruck) {
   int e;
   char *a1,w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
+// printf("print_arg: >%s<\n",ausdruck);
   STRING ergebnis;
   ergebnis.pointer=malloc(4);
   ergebnis.len=0;
   e=arg2(ausdruck,TRUE,w1,w2);
   while(e) {
     a1=indirekt2(w1);
+// printf("a1=<%s>\n",a1);
   /*  printf("TEST: <%s> <%s> %d\n",w1,w2,e);*/
     if(strncmp(a1,"AT(",3)==0) {
       a1[strlen(a1)-1]=0;
       wort_sep(a1+3,',',TRUE,w3,w4);
+      int x=max(0,(int)parser(w3));
+      int y=max(0,(int)parser(w4));
       ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+11);
-      sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3d;%.3dH",(int)parser(w3),(int)parser(w4));
+      sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3d;%.3dH",x,y);
       ergebnis.len+=10;
     } else if(strncmp(a1,"TAB(",4)==0) {
       a1[strlen(a1)-1]=0;
       ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+8);
-      sprintf(ergebnis.pointer+ergebnis.len,"\r\033[%.3dC",(int)parser(a1+4));
-      ergebnis.len+=7;
+      int x=max(0,(int)parser(a1+4));
+      if(x) {
+        sprintf(ergebnis.pointer+ergebnis.len,"\r\033[%.3dC",x);
+        ergebnis.len+=7;
+      } else {
+        sprintf(ergebnis.pointer+ergebnis.len,"\r");
+        ergebnis.len+=1;     
+      }
     } else if(strncmp(a1,"SPC(",4)==0) {
       a1[strlen(a1)-1]=0;
+      int x=max(0,(int)parser(a1+4));
       ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+7);
-      sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3dC",(int)parser(a1+4));
-      ergebnis.len+=6;
+      if(x) {
+        sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3dC",x);
+        ergebnis.len+=6;
+      }
     } else if(strncmp(a1,"COLOR(",6)==0) {
       int i;
       a1[strlen(a1)-1]=0;
@@ -1495,17 +1783,45 @@ STRING print_arg(const char *ausdruck) {
 	  if(typ & STRINGTYP) ;
 	  else ;
 	} else if(typ & STRINGTYP) {
+	  int i;
           STRING a3=string_parser(a1);
-	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+a3.len+1);
-          memcpy(ergebnis.pointer+ergebnis.len,a3.pointer,a3.len);
-	  ergebnis.len+=a3.len;
+	  if(ee==2) {
+	    STRING e2=string_parser(w4);
+	    if(e2.len<a3.len) {
+	      for(i=0;i<e2.len;i++) e2.pointer[i]='*';
+	    } else if(*(e2.pointer)=='<') {
+	      for(i=0;i<e2.len;i++) {
+	        if(i<a3.len) e2.pointer[i]=a3.pointer[i];
+	        else e2.pointer[i]=' ';
+	      }	     
+	    } else if(*(e2.pointer)=='>') {
+	      for(i=0;i<e2.len;i++) {
+	        if(i>=e2.len-a3.len) e2.pointer[i]=a3.pointer[i-(e2.len-a3.len)];
+	        else e2.pointer[i]=' ';
+	      }	     
+	    } else {
+	      int a=(e2.len-a3.len)>>1;
+	      for(i=0;i<e2.len;i++) {
+	        if(i>=a && i<a+a3.len) e2.pointer[i]=a3.pointer[i-a];
+	        else e2.pointer[i]=' ';
+	      }  
+	    }
+	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+e2.len+1);
+            memcpy(ergebnis.pointer+ergebnis.len,e2.pointer,e2.len);
+	    ergebnis.len+=e2.len;
+	    free(e2.pointer);
+          } else {
+	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+a3.len+1);
+            memcpy(ergebnis.pointer+ergebnis.len,a3.pointer,a3.len);
+	    ergebnis.len+=a3.len;
+	  }
 	  ergebnis.pointer[ergebnis.len]=0;
 	  free(a3.pointer);
         } else {
 	  if(ee==2) {
 	    STRING a3=string_parser(w4);
 	    STRING e2=do_using(parser(a1),a3);
-	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+e2.len);
+	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+e2.len+1);
 	    memcpy(ergebnis.pointer+ergebnis.len,e2.pointer,e2.len);
             ergebnis.len+=e2.len;
 	    free(a3.pointer);
@@ -1529,58 +1845,188 @@ STRING print_arg(const char *ausdruck) {
   }
   return(ergebnis);
 }
+/* Fuer den Teil nach dem Komma und fuer Exponenten*/
+static void xfill(char *p,const char *q,char c, int n) {
+  while(*p && n--) {
+    if(*p==c) {
+      if(*q) *p=*q++;
+      else if(c=='#') *p='0';
+    }
+    p++;
+  }
+}
+/*Fuer den Teil vor dem Komma*/
+static void xfillx(char *p,const char *q,int n) {
+  char c=0,c2;
+  char f=' ';
+  while(*p && n--) {
+    c2=c;
+    c=*q;
+    switch(*p) {
+    case '$':
+      if(c==' ') {
+        int i=1;
+	while(*(p+i)==',') i++;
+        if(*(p+i)=='$' && *(q+1)==' ') *p=f;
+        q++;
+      } else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '*':
+      if(c==' ') {*p=f='*';q++;}
+      else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '0':
+    case '%':
+      if(c==' ') {*p=c='0';q++;f=' ';}
+      else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '#':
+      if(c) {*p=c;q++;f=' ';}
+      p++;
+      break;
+    case ',':
+      if(c2==' ') *p=f;
+      p++;
+      break;
+    default:
+      p++;
+    }
+  }
+}
+
+/* print 0 using "+#.###^^^^"   */
 STRING do_using(double num,STRING format) {
   STRING dest;
-  int a,p,p2,r,i,j; /* dummy */
-  int neg,ln=0,vorz=1;
-  char *des;
-  const char *digits="01234567899";
+  int a=0,b=0,p,r=0,i,j,ex=0,v=0; 
+  int neg;
+  char des[32+format.len];
+
   
-  
+//  printf("DO__USING: %13.13g, <%s>\n",num,format.pointer);
   if (*format.pointer=='%') { /* c-style format */
     char b[32];
     sprintf(b,format.pointer,num);
     dest.len=strlen(b);
-    dest.pointer=malloc(strlen(b));
-    memcpy(dest.pointer,b,strlen(b));
+    dest.pointer=strdup(b);
   } else { /* basic-style format */
-    dest.len=format.len;
-    dest.pointer=malloc(format.len);
-    des=dest.pointer;
+    dest=double_string(&format);
     
    /* Zaehle die Rauten vor dem Punkt */
-   a=r=p=0;
+   p=0;
    while((format.pointer)[p] && (format.pointer)[p]!='.') {
-     if((format.pointer)[p++]=='#') r++;
+     if((format.pointer)[p]=='#' || 
+        (format.pointer)[p]=='%' || 
+        (format.pointer)[p]=='$' || 
+        (format.pointer)[p]=='0' || 
+	(format.pointer)[p]=='*') r++;
+     p++;
    }
    /* Zaehle die Rauten nach dem Punkt */
    while((format.pointer)[p]) {
      if((format.pointer)[p++]=='#') a++;
    }
-   j=a+r;
-   neg=(num<0);
-   num=fabs(num);
-
-   num+=0.5*pow(10.0,-(double)a);  /* zum Runden */
-   
-   for(i=0;i<format.len;i++) {
-     if(format.pointer[i]=='+') {*des=(neg ? '-':'+'); vorz=0;}
-     else if(format.pointer[i]=='-') {*des=(neg ? '-':' ');vorz=0;}
-     else if(format.pointer[i]=='.') {*des='.';ln=1;}
-     else if(format.pointer[i]=='#') {
-       j--;
-       p=(int)(num/pow(10,(double)--r));
-       p2=(int)(num/pow(10,(double)(r-1)));
-       num-=p*pow(10,(double)r);
-       if(p) {
-         *des=digits[p];ln=1;
-       } else {
-         if(vorz&&p2) { *des=(neg ? '-':' ');vorz=0;}
-	 else *des=(ln?'0':' ');
-       }
-     } else *des=format.pointer[i];
-     des++;
+   /* Zaehle platzhalter für Exponentialdarstellung */
+   p=0;
+   while(p<format.len) {
+     if((format.pointer)[p++]=='^') ex++;
    }
+   /* Zaehle platzhalter für vorzeichen */
+   p=0;
+   while(p<format.len) {
+     if((format.pointer)[p]=='+' || (format.pointer)[p]=='-') v++;
+     p++;
+   }
+   neg=(num<0); 
+   num=fabs(num);
+ //  printf("Rauten vor Punkt: %d, rauten danach: %d, exponent: %d, vorzeichen: %d\n",r,a,ex,v);
+
+   /* Vorzeichen als erstes: */
+   for(i=0;i<dest.len;i++) {
+     if(format.pointer[i]=='+') {dest.pointer[i]=(neg ? '-':'+');}
+     else if(format.pointer[i]=='-') {dest.pointer[i]=(neg ? '-':' ');}
+   }
+   //printf("destpointer: <%s>\n",dest.pointer);
+
+   
+   if(ex>2) {
+     sprintf(des,"%16.16e",num); 
+     // printf("preformat: <%s>\n",des);
+     j=i=0;
+     while(des[i] && des[i]!='e') i++;
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     des[i++]=0;
+     dest.pointer[j++]='e';   /*e */
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     dest.pointer[j++]=des[i++];   /* +*/
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     int l=strlen(&des[i])+2;
+     while(l<ex) {
+       dest.pointer[j++]='0'; 
+       while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+       l++;
+     }
+     if(l>ex) {
+       for(i=0;i<dest.len;i++) dest.pointer[i]='*';
+       return(dest);    
+     } else xfill(dest.pointer,&des[i],'^',dest.len);
+   } else sprintf(des,"%16.16f",num);
+   //  printf("preformat: <%s>\n",des); 
+     /*Jetzt muss die Zahl gerundet werden.*/
+     num=myatof(des)+pow(0.1,a)*0.5;
+     sprintf(des,"%16.16f",num);
+   //  printf("preformat2: <%s>\n",des); 
+    /*Hierzu brauchen wir die Anzahl der tatsaechlichen STellen vor dem Komma*/
+    int count=0;
+    i=0;
+    while(des[i] && des[i]!='.') {
+      if(des[i]>='0' && des[i]<='9') count++;
+      i++;
+    }
+ //   printf("%d Stellen bis Punkt, davon %d signifikant.\n",i,count);
+ //   printf("des=<%s>\n",des);
+    i=0;
+    while(des[i] && des[i]!='.') i++; 
+    j=0;
+    // printf("destpointer=<%s>\n",dest.pointer);
+    while(dest.pointer[j] && dest.pointer[j]!='.') j++;
+    if(dest.pointer[j]) {
+      if(des[i]) {
+        des[i]=0;
+        xfill(dest.pointer+j+1,&des[i+1],'#',dest.len-j-1);
+      } else xfill(dest.pointer+j+1,"0000000000000000",'#',dest.len-j-1);
+    }
+    // printf("destpointer=<%s>\n",dest.pointer);
+    
+    b=0;
+    /*Jetzt noch Leerzeichen am Anfang entfernen und ggf minus einfügen.*/
+    
+    char p[strlen(des)+1+1];
+    char *p2=des;
+    // printf("des=<%s>\n",des);
+    if(neg && !v) p[b++]='-';
+    neg=0;
+    
+    while(*p2 && *p2!='.') {
+      if(*p2!=' ') p[b++]=*p2;
+      p2++;
+    }
+    p[b]=0;
+    // printf("Verbleiben: <%s> b=%d fuer %d stellen\n",p,b,r);
+    if(b==r) xfillx(dest.pointer,p,dest.len);
+    else if(b<r) {
+      char buf[r+1];
+      for(i=0;i<r-b;i++)  buf[i]=' ';
+      for(i=r-b;i<r;i++)  buf[i]=p[i-(r-b)];
+      buf[r]=0;  
+      // printf("buf=<%s>\n",buf);
+
+      xfillx(dest.pointer,buf,dest.len);
+    } else {
+      for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
+    }
   }
   return(dest);
 }
@@ -1645,15 +2091,17 @@ void speaker(int frequency) {
 
 
 int f_ioctl(PARAMETER *plist,int e) {
-  FILE *fff;
   int ret=0;
-  if(e>=2) {
-    int sock;
-    fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */    
-    sock=fileno(fff);
+  FILEINFO fff=get_fileptr(plist->integer);
+  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
+  else {
+    int sock=fileno(fff.dptr);
 #ifndef WINDOWS
+#ifdef ATARI
+    if (e==2) ret=ioctl(sock,plist[1].integer,NULL);
+#else
     if (e==2) ret=ioctl(sock,plist[1].integer);
+#endif
     else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
     if(ret==-1) 
 #endif

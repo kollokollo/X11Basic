@@ -25,7 +25,7 @@ do
   clearw
   scope dy(),dx(),1,sy,py,sx,px
   text 100,50,"Drag the image with the mouse... LEFT=move, MIDDLE=scale"
-  vsync
+  SHOWPAGE
   ox=x
   oy=y
   ok=k
@@ -34,7 +34,9 @@ do
     ox=x
     oy=y
   else
-    motionevent x,y,k
+    REPEAT  
+      MOTIONEVENT x,y,k
+    UNTIL EVENT?(64)=FALSE OR k=1  ! clear all pending motion events
   endif
 
   print ox,oy,ok
@@ -52,9 +54,8 @@ do
       else if k=1 and abs(x-ox)<10 and abs(y=oy)<10
         add px,x-ox
         add py,y-oy
-      endif
-
-    endif
-  endif
-loop
-quit
+      ENDIF
+    ENDIF
+  ENDIF
+LOOP
+QUIT

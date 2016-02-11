@@ -30,14 +30,19 @@
 
 #include "wort_sep.h"
 #include "window.h"
+#ifdef FRAMEBUFFER
+#include "raw_mouse.h"
+#endif
 
 
 /* globale Variablen */
 /* GEM-Globals   */
 
 #ifndef NOGRAPHICS
-static char wname[MAXWINDOWS][80];
-static char iname[MAXWINDOWS][80];
+#ifndef FRAMEBUFFER
+static char *wname[MAXWINDOWS];
+static char *iname[MAXWINDOWS];
+#endif
 #ifdef WINDOWS_NATIVE
   HANDLE keyevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE buttonevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
@@ -45,9 +50,9 @@ static char iname[MAXWINDOWS][80];
   HANDLE tsync=INVALID_HANDLE_VALUE; /* handle for win thread event */
 #endif
 
-static int create_window2(int nummer,char *title, char* info,int x,int y,unsigned int w,unsigned int h);
+static int create_window2(int nummer,const char *title, const char* info,int x,int y,unsigned int w,unsigned int h);
 static int fetch_rootwindow();
-
+#if 0
 int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
   int nummer=0;
   while(winbesetzt[nummer] && nummer<MAXWINDOWS) nummer++;
@@ -60,6 +65,7 @@ int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned
 #endif
   return(create_window2(nummer,title,info,x,y,w,h));
 }
+#endif
 #ifdef WINDOWS_NATIVE
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   RECT cr; /* client area rectangle */
@@ -81,7 +87,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
       }
       if(nr==-1) {
-        printf("ERROR: Window existiert gar nicht !\n");
+        xberror(99,""); /* Window %s does not exist  */
         nr=1;
       }
       BeginPaint(hwnd,&ps);
@@ -217,22 +223,22 @@ static int init_sdl() {
 }
 #endif
 
-static int create_window2(int nummer,char *title, char* info,int x,int y,unsigned int w,unsigned int h) {
+static int create_window2(int nummer,const char *title, const char* info,int x,int y,unsigned int w,unsigned int h) {
 
+#ifndef FRAMEBUFFER
   int screen_num;              /* Ein Server kann mehrere Bildschirme haben */
-  unsigned long border=4,foreground,background;
+  unsigned long border=0,foreground,background;
   unsigned int d,b;
+#endif
 #ifdef WINDOWS
     static class_reg=0;
 #endif
   if(winbesetzt[nummer]) {
     printf("X11-Basic: Window %d already open !\n",nummer);
 #ifdef WINDOWS_NATIVE
-  MessageBox(NULL,"X11-Basic: Window already open !" , "Error!",
-			MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(NULL,"X11-Basic: Window already open !" , "Error!",MB_ICONEXCLAMATION | MB_OK);
 #endif			
- return(-1);
-
+    return(-1);
   } else {
 #ifdef WINDOWS_NATIVE
   if (buttonevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -271,17 +277,20 @@ static int create_window2(int nummer,char *title, char* info,int x,int y,unsigne
   }
   winbesetzt[nummer]=1;
   WaitForSingleObject(tsync,INFINITE);
-#endif
-#ifdef USE_VGA
+#elif defined USE_VGA
   vga_init();
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
   Fb_Open();
+  #ifndef ANDROID
+    Fb_Mouse_Open();
+  #endif
 #endif
 
 #if defined USE_X11 || defined USE_SDL
-    strcpy(wname[nummer],title);
-    strcpy(iname[nummer],info);
+    if(wname[nummer]) free(wname[nummer]);
+    wname[nummer]=strdup(title);
+    if(iname[nummer]) free(iname[nummer]);
+    iname[nummer]=strdup(info);
 #endif
 
 #ifdef USE_SDL
@@ -299,12 +308,10 @@ static int create_window2(int nummer,char *title, char* info,int x,int y,unsigne
 #ifdef USE_X11
   XGCValues gc_val;            /* */
   Window root;
-  char *wn;
-  char *in;
   XTextProperty win_name, icon_name;
   char *agv[1];
-    wn=wname[nummer];
-    in=iname[nummer];
+  char *wn=wname[nummer];
+  char *in=iname[nummer];
 
   /* Verbindung zum X-Server aufnehmen. */
   if ( (display[nummer] = XOpenDisplay(display_name)) == NULL) {
@@ -320,6 +327,7 @@ static int create_window2(int nummer,char *title, char* info,int x,int y,unsigne
   foreground = WhitePixel(display[nummer], screen_num);
   win[nummer] = XCreateSimpleWindow(display[nummer], RootWindow(display[nummer], screen_num),
 			    x, y, w, h, border, foreground, background);
+			   // printf("border=%d\n",border);
   XGetGeometry(display[nummer],win[nummer],&root,&x,&y,&w,&h,&b,&d);
   pix[nummer]=XCreatePixmap(display[nummer],win[nummer],w,h,d);
   fetch_icon_pixmap(nummer);
@@ -357,21 +365,20 @@ static int create_window2(int nummer,char *title, char* info,int x,int y,unsigne
 	       KeyReleaseMask);
   gc[nummer] = XCreateGC(display[nummer], win[nummer], 0, &gc_val);
 
+  
+  XSetBackground(display[nummer], gc[nummer], background);
+  XSetForeground(display[nummer], gc[nummer], background);
+/* Clear window*/
+
+  XFillRectangle(display[nummer],pix[nummer],gc[nummer],0,0,w,h);   
+//   XClearWindow(display[nummer], win[nummer]); /*sonst hat man evtl. Müll von vorher */
   XSetForeground(display[nummer], gc[nummer], foreground);
+
 #endif
     winbesetzt[nummer]=1; 
   }
   return(nummer);
 }
-#ifdef USE_SDL
-#define XEvent union SDL_Event
-#define Expose 0
-#endif
-
-#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
-void handle_event(int,XEvent *);
-#endif
-
 
 void open_window(int nr) {
  if(winbesetzt[nr]) {
@@ -382,6 +389,7 @@ void open_window(int nr) {
     /* Das Fensterauf den Screen Mappen */
 
     XMapWindow(display[nr], win[nr]);
+
 #ifdef USE_X11
     XNextEvent(display[nr], &event);
 #endif
@@ -425,11 +433,12 @@ void handle_event(int nr,XEvent *event) {
      event->xexpose.x,
      event->xexpose.y);
       break;
-#ifdef DEBUG
     case GraphicsExpose:
-      printf("GraphicsExpose: %d\n",event->type);break;
+      // printf("GraphicsExpose: %d\n",event->type);
+      break;
     case NoExpose:
-      printf("NoExpose: %d\n",event->type);break;
+      // printf("NoExpose: %d\n",event->type);
+      break;
     case KeyPress:
       printf("Key Press: %d\n",event->type);break;
     case KeyRelease:
@@ -447,7 +456,6 @@ void handle_event(int nr,XEvent *event) {
     default:
       printf("Window-Event: %d\n",event->type);
       break;
-#endif
 #endif
 #ifdef USE_SDL
 /* wahrscheinlich muessen wir gar nix tun...*/
@@ -481,8 +489,7 @@ void handle_window(int winnr) {
 #ifdef USE_X11
    XEvent event;
    while(XCheckWindowEvent(display[winnr],win[winnr],
-        ExposureMask|ButtonPressMask|PointerMotionMask|KeyPressMask, 
-	&event)) {
+        ExposureMask, &event)) {
      handle_event(winnr,&event);
    }
 #endif
@@ -610,8 +617,8 @@ void activate() {
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
 
-
-void *memrevcpy(char *dest, const char *src, size_t n) {
+#if defined USE_SDL
+static void *memrevcpy(char *dest, const char *src, size_t n) {
   unsigned char a,b;
   int i;
   while(n--) {
@@ -626,16 +633,13 @@ void *memrevcpy(char *dest, const char *src, size_t n) {
   }
   return(dest);
 }
-
+#endif
 
 void put_bitmap(char *adr,int x,int y,int w, int h) {
 #ifdef USE_X11
-  Pixmap bitpix;
-  bitpix=XCreateBitmapFromData(display[usewindow],win[usewindow],
-    adr,w,h);
-    XCopyPlane(display[usewindow],bitpix,pix[usewindow],gc[usewindow],
-     0,0,w,h,x,y,1);
-    XFreePixmap(display[usewindow],bitpix);
+  Pixmap bitpix=XCreateBitmapFromData(display[usewindow],win[usewindow],adr,w,h);
+  XCopyPlane(display[usewindow],bitpix,pix[usewindow],gc[usewindow],0,0,w,h,x,y,1);
+  XFreePixmap(display[usewindow],bitpix);
 #endif
 #ifdef USE_SDL
   SDL_Surface *data;
@@ -655,7 +659,7 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
 }
 
 #ifdef FRAMEBUFFER
-  char *spix[30];
+  unsigned char *spix[30];
 #endif
   int sgccount=0;
 
@@ -770,13 +774,13 @@ int form_do(OBJECT *tree) {
   int e;
 #endif
   int exitf=0,bpress=0;
-  int sbut,edob=-1,idx;
+  int sbut=-1,edob=-1,idx;
 #ifdef DEBUG
   printf("**form_do:\n");
 #endif
 #if defined FRAMEBUFFER
   FB_clear_events();
-  FB_mouse(1);
+  FB_mouse_events(1);
 #endif
     /* erstes editierbare Objekt finden */
 
@@ -818,7 +822,9 @@ int form_do(OBJECT *tree) {
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
     switch (event.type) {
+#ifndef FRAMEBUFFER
       char buf[4];
+#endif
 #endif
 #ifdef USE_X11
       XComposeStatus status;
@@ -941,8 +947,7 @@ int form_do(OBJECT *tree) {
 
 #ifdef FRAMEBUFFER
          if(HIBYTE(event.xkey.ks)) {
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
          if(HIBYTE(ks)) {
 #endif
 #ifdef WINDOWS_NATIVE
@@ -961,7 +966,10 @@ int form_do(OBJECT *tree) {
 	     if(ted->te_junk1>0) {
 	       int len=strlen((char *)ted->te_ptext);
 	       i=ted->te_junk1--;
-	       while(i<len) ((char *)(ted->te_ptext))[i-1]=((char *)(ted->te_ptext))[i++];
+	       while(i<len) {
+	         ((char *)(ted->te_ptext))[i-1]=((char *)(ted->te_ptext))[i];
+		 i++;
+	       }
 	       ((char *)ted->te_ptext)[i-1]=0;
 	       objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
 	     }
@@ -980,11 +988,9 @@ int form_do(OBJECT *tree) {
 	     draw_edcursor(tree,edob);activate();
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff53) { /* RIGHT */
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
 	   } else if(ks==0xff53) { /* RIGHT */
-#endif  
-#ifdef USE_SDL
+#elif defined USE_SDL
            } else if(event.key.keysym.sym==SDLK_RIGHT) {   /* RIGHT */
 #endif  
 
@@ -1017,11 +1023,9 @@ int form_do(OBJECT *tree) {
 
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff52) {
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
 	   } else if(ks==0xff52) {
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
            } else if(event.key.keysym.sym==SDLK_PAGEUP) {   
 #endif
 	   /* Suche vorangehendes ED-Feld */
@@ -1032,11 +1036,9 @@ int form_do(OBJECT *tree) {
 	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();}
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff54) { /* Page down */
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
 	   } else if(ks==0xff54) { /* Page down */
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
            } else if(event.key.keysym.sym==SDLK_PAGEDOWN) {   
 #endif
 	     int cp=ted->te_junk1;
@@ -1136,7 +1138,7 @@ int form_do(OBJECT *tree) {
     } /* switch */
   } /* while */
 #ifdef FRAMEBUFFER
-  FB_mouse(0);
+  FB_mouse_events(0);
 #endif
   return(sbut);
 }
@@ -1252,7 +1254,7 @@ Pixmap schubladepix;
 SDL_Surface *schubladepix;
 #endif
 #ifdef FRAMEBUFFER
-char *schubladepix;
+unsigned char *schubladepix;
 #endif
 int schubladeff=0;
 int schubladenr;
@@ -1408,20 +1410,20 @@ typedef struct fileinfo {
 #define ANZSHOW 13
 #define FWW 34
 
-int dir_bytes(FINFO *dir,int anzfiles) {
+
+#ifdef WINDOWS
+  #define dir_bytes(dir,anzfiles) 0
+#else
+static int dir_bytes(FINFO *dir,int anzfiles) {
   int byt=0,i;
   if(anzfiles){
-#ifndef WINDOWS
-    for(i=0;i<anzfiles;i++) {
-      byt+=dir[i].dstat.st_blocks;
-    }
-#endif
+    for(i=0;i<anzfiles;i++) byt+=dir[i].dstat.st_blocks;
     byt*=512;
   }
   return(byt);
 }
-
-void make_filelist(OBJECT *objects,FINFO *filenamen,int *filenamensel,int anzfiles,int showstart){
+#endif
+static void make_filelist(OBJECT *objects,FINFO *filenamen,int *filenamensel,int anzfiles,int showstart){
   int i,j;
   TEDINFO *ted;
   for(i=0;i<ANZSHOW;i++) {
@@ -1444,17 +1446,17 @@ void make_filelist(OBJECT *objects,FINFO *filenamen,int *filenamensel,int anzfil
   }
 }
 
-int compare_dirs(FINFO *a,FINFO *b) {
+static int compare_dirs(FINFO *a,FINFO *b) {
   if(a->typ==FT_DIR && b->typ!=FT_DIR) return(-1);
   if(a->typ!=FT_DIR && b->typ==FT_DIR) return(1);
   return(strcmp(a->name,b->name));
 }
 
-void sort_dir(FINFO *fileinfos,int anz) {
+static inline void sort_dir(FINFO *fileinfos,int anz) {
   qsort((void *)fileinfos,anz,sizeof(FINFO),(int(*)(const void *,const void*))compare_dirs);
 }
 #define MAXANZFILES 512
-int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {
+static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char *mask) {
   DIR *dp;
   struct dirent *ep;
   int anzfiles=0;
@@ -1500,7 +1502,7 @@ int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {
   return(anzfiles);
 }
 
-void make_scaler(OBJECT *objects,int anzfiles,int showstart){
+static void make_scaler(OBJECT *objects,int anzfiles,int showstart){
   float hoehe,xpos;
 
   if(anzfiles>ANZSHOW){
@@ -1514,7 +1516,7 @@ void make_scaler(OBJECT *objects,int anzfiles,int showstart){
   objects[16].ob_y=(int)(xpos*(objects[15].ob_height-objects[16].ob_height));
 }
 
-char *fsel_input(char *titel, char *pfad, char *sel) {
+char *fsel_input(const char *titel, const char *pfad, const char *sel) {
   char btitel[128],mask[128],dpfad[128];
   char feld1[128],feld2[128];
   char *ergebnis;
@@ -1682,7 +1684,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
 	make_scaler(objects,anzfiles,showstart);
 
-      }objects[sbut].ob_state=NORMAL;
+      }
+      objects[sbut].ob_state=NORMAL;
     } else if(sbut==6) {    /* < */
       char buf[128];
       wort_sepr(dpfad,'/',0,dpfad, buf);
@@ -1700,17 +1703,20 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
         showstart--;
         make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
 	make_scaler(objects,anzfiles,showstart);
-      }objects[sbut].ob_state=NORMAL;
+      }
+      objects[sbut].ob_state=NORMAL;
     } else if(sbut==8) {    /* v */
       if(showstart<anzfiles-ANZSHOW) {
         showstart++;
         make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
         make_scaler(objects,anzfiles,showstart);
-      }objects[sbut].ob_state=NORMAL;
+      }
+      objects[sbut].ob_state=NORMAL;
     } else if(sbut==9) {    /* ? */
       char buf[128];
       sprintf(buf,"[1][%d Bytes in %d Files.][ OK ]",dir_bytes(filenamen,anzfiles),anzfiles);
-      form_alert(1,buf);objects[sbut].ob_state=NORMAL;
+      form_alert(1,buf);
+      objects[sbut].ob_state=NORMAL;
     } else if(sbut==10) {    /* MASK */
       wort_sepr((char *)tedinfo[2].te_ptext,'/',0,dpfad, mask);
       anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
@@ -1856,7 +1862,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   else ergebnis[0]=0;
   return(ergebnis);
 }
-void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfiles,int showstart){
+static void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfiles,int showstart){
   int i,j;
   TEDINFO *ted;
   for(i=0;i<ANZSHOW;i++) {
@@ -1877,7 +1883,7 @@ void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfiles,int s
     }
   }
 }
-void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
+static void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
   float hoehe,xpos;
 
   if(anzfiles>ANZSHOW){
@@ -1893,7 +1899,7 @@ void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
 
 /* List-Select */
 
-int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
+int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
   char btitel[128],mask[128];
   char findmsk[50];
   int ergebnis;
@@ -2146,16 +2152,16 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
   form_dial(2,0,0,0,0,x,y,w,h);
   return(ergebnis);
 }
-
-
 #endif /* nographics */
+
+
+
 void do_sizew(int winnr,int w,int h) {
 #ifdef WINDOWS_NATIVE
   RECT interior;
   GetClientRect(win_hwnd[winnr],&interior);
   MoveWindow(win_hwnd[winnr],interior.left,interior.top,w,h,1);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
   Pixmap pixi;
   Window root;
   int ox,oy;
@@ -2168,8 +2174,7 @@ void do_sizew(int winnr,int w,int h) {
   XFreePixmap(display[winnr],pix[winnr]); 
   pix[winnr]=pixi;
   XFlush(display[winnr]);
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   Uint32 flags;
   flags=display[winnr]->flags;
   SDL_FreeSurface(display[winnr]);
@@ -2179,14 +2184,4 @@ void do_sizew(int winnr,int w,int h) {
     return;
   }
 #endif
-}
-void do_movew(int winnr,int x,int y) {
-  if(winnr) {
-    #ifdef USE_X11
-      XMoveWindow(display[winnr], win[winnr], x, y);
-    #endif
-    #ifdef WINDOWS_NATIVE
-      MoveWindow(win_hwnd[winnr], x, y,640,400,1);
-    #endif  
-  }
 }

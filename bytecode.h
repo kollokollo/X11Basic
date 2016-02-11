@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x1203   /* Version 1.20 release 1*/
+#define BC_VERSION 0x1227   /* Version 1.22 release 7*/
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
@@ -91,11 +91,11 @@ typedef struct {
 #define BC_COUNT    0x24 /*   00100100  --- COUNT the number of elements on stack */
 #define BC_PUSHSYS  0x25 /*   00100101  --- PUSHSYS push system variable */
 #define BC_PUSHFUNC 0x26 /*   00100110  --- push function */
-                         /*   00100111  ---  */
+#define BC_PUSHPROC 0x27 /*   00100111  --- push procedure label */
 #define BC_PUSH0    0x28 /*   00101000  --- PUSH0 push a zero (int 0) */
 #define BC_PUSHSSYS 0x29 /*   00101001  --- PUSHSSYS push system string variable */
 #define BC_PUSHSFUNC 0x2a /*  00101010  --- push string function */
-                         /*   00101011  ---  */
+#define BC_PUSHLABEL 0x2b /*  00101011  --- push a label  */
 #define BC_PUSH1    0x2c /*   00101100  --- Push a int 1 */
 #define BC_PUSHASYS 0x2d /*   00101101  --- PUSHASYS */
 #define BC_PUSHAFUNC 0x2e /*  00101110  --- push array function */
@@ -106,6 +106,7 @@ typedef struct {
 #define BC_PUSHW    0x32 /*   00110010  ---  Push a short int */
 #define BC_PUSHX    0x33 /*   00110011  ---  Push a keyword */
 #define BC_PUSHM1   0x34 /*   00110100  ---  Push a int -1 */
+#define BC_PUSHK    0x35 /*   00110101  ---  Push a keyword by index */
 #define BC_PUSHF    0x37 /*   00110111  ---  Push a double constant */
 #define BC_PUSHS    0x3f /*   00111111  ---  Push a string constant */
 
@@ -156,6 +157,9 @@ typedef struct {
 #define BC_CLEAR    0xa4 /*    10100100  --- CLEAR remove all elements from stack*/
 #define BC_LOCAL    0xa6 /*    10100110  --- LOCAL */
 #define BC_NOOP     0xa8 /*    10101000  --- NOOP */
+
+#define BC_ZUWEISf  0xac /*    10101100  --- ZUWEIS float */
+#define BC_ZUWEISi  0xad /*    10101101  --- ZUWEIS integer */
 #define BC_ZUWEIS   0xae /*    10101110  --- ZUWEIS */
 #define BC_COMMENT  0xaf /*    10101111  --- Comment */
    
@@ -194,7 +198,7 @@ typedef struct {
 
 /* Protos */
 
-PARAMETER *virtual_machine(STRING, int *);
+PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 void compile(int verbose);
 int bc_parser(const char *funktion);
 int add_rodata(char *data,int len);

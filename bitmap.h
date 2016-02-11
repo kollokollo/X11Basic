@@ -6,7 +6,7 @@
  * COPYING for details
  */
 
-#ifndef WINDOWS_NATIVE
+#ifndef WINDOWS
 /* Wegen alignment (auf 4 !) */
 
 typedef struct {                     /**** BMP file header structure ****/
@@ -25,7 +25,7 @@ typedef struct {                     /**** BMP file header structure ****/
 #define BF_TYPE 0x4D42             /* "MB" */
 #define BITMAPFILEHEADERLEN 14
 
-#ifndef WINDOWS_NATIVE
+#ifndef WINDOWS
 typedef struct   {                   /**** BMP file info structure ****/
     unsigned int   biSize;           /*14 Size of info header */
     int            biWidth;          /*18 Width of image */
@@ -51,7 +51,7 @@ typedef struct   {                   /**** BMP file info structure ****/
 #  define BI_RLE4      2             /* 4-bit run-length compression */
 #  define BI_BITFIELDS 3             /* RGB bitmap with RGB masks */
 
-#ifndef WINDOWS_NATIVEs
+#ifndef WINDOWS
 typedef struct  {                    /**** Colormap entry structure ****/
     unsigned char  rgbBlue;          /* Blue value */
     unsigned char  rgbGreen;         /* Green value */
@@ -60,7 +60,10 @@ typedef struct  {                    /**** Colormap entry structure ****/
 } RGBQUAD;
 #endif
 
-int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask);
+int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int bw,unsigned int bh,unsigned int depth, unsigned char *mask);
+
 #ifdef USE_X11
-XImage *xwdtoximage(char *data,Visual *visual, int depth, XImage **XMask, int tres, double scale);
+XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMask, int tres, double scale);
+unsigned char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len);
 #endif
+void bitmap_scale(const unsigned char *oadr,unsigned int depth,unsigned int ow,unsigned int oh,unsigned char *adr,unsigned int w,unsigned int h);

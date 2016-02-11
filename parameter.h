@@ -69,7 +69,7 @@ int count_parameters(const char *n);
 void free_parameter(PARAMETER *p);
 void dump_parameterlist(PARAMETER *p, int n);
 
-void prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp);
+int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp);
 
 
 int make_pliste(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **pr);
@@ -85,8 +85,6 @@ static inline void free_pliste(int anz,PARAMETER *p) {
   while(anz>0)  free_parameter(&p[--anz]);
   free(p);
 }
-
-void make_indexliste_plist(int dim, PARAMETER *p, int *index);
 
 #endif
 

@@ -37,7 +37,6 @@ int form_do(OBJECT *tree);
 
 #ifdef USE_X11
 void handle_event(int, XEvent *);
-char *imagetoxwd(XImage *,Visual *,XColor *, int *);
 #endif
 void do_menu_open(int);
 void do_menu_close();
@@ -109,7 +108,30 @@ extern int schubladex,schubladey,schubladew,schubladeh;
 
 void do_sizew(int,int,int);
 void do_movew(int,int,int);
-char *fsel_input(char *,char *,char *);
+char *fsel_input(const char *,const char *,const char *);
+int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel);
+
+#ifdef USE_SDL
+#define XEvent union SDL_Event
+#define Expose 0
+#endif
+
+
+
+
+#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
+void handle_event(int,XEvent *);
+#endif
+
+#if defined USE_X11
+  #define do_movew(winnr,x,y) if(winnr) XMoveWindow(display[winnr], win[winnr], x, y)
+#elif defined WINDOWS_NATIVE
+  #define do_movew(winnr,x,y) if(winnr) MoveWindow(win_hwnd[winnr], x, y,640,400,1)
+#else
+  #define do_movew(winnr,x,y) 
+#endif
+
+
 
 
 #define ROOT 0
@@ -153,3 +175,10 @@ char *fsel_input(char *,char *,char *);
 #define FIS_PATTERN 2
 #define FIS_HATCH 3
 #define FIS_USER 4
+
+
+
+
+
+
+

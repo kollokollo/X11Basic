@@ -14,6 +14,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 #include "defs.h"
 #include "x11basic.h"
