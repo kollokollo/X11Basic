@@ -37,8 +37,17 @@
 /* Define to 1 if you have the <pty.h> header file. */
 #undef HAVE_PTY_H
 
+/* Define to 1 if you have the <complex.h> header file. */
+#undef HAVE_COMPLEX_H
+
 /* expm1 in Mathlib */
 #undef HAVE_EXPM1
+
+/* clog10 in Mathlib */
+#undef HAVE_CLOG10
+
+/* cacos in Mathlib */
+#undef HAVE_CACOS
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
@@ -121,6 +130,12 @@
 
 /* dgelss_ in LAPACK */
 #undef HAVE_LAPACK
+
+/* mpz_init in GMP */
+#undef HAVE_GMP
+
+/* mpz_primorial_ui in GMP */
+#undef HAVE_PRIMORIAL_UI
 
 /* _SystemCycle in dynamical TINE lib */
 #undef HAVE_TINE

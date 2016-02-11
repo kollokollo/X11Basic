@@ -269,7 +269,7 @@ int wort_sepr2(const char *t,const char *c,int klamb ,char *w1, char *w2)    {
       i--;
     }
     
-    if(i<0) { /* schon am ende ? */
+    if(i-strc+1<0) { /* schon am ende ? */
       while(*t) *w1++=*t++; 
       *w1=*w2=0;
       return(1);
@@ -311,7 +311,7 @@ int wort_sepr2_destroy(char *t,const char *c,int klamb ,char **w1, char **w2)   
       i--;
     }
     
-    if(i<0) { /* schon am ende ? */
+    if(i-strc+1<0) { /* schon am ende ? */
       *w2=t+strt;
       return(1);
     } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */

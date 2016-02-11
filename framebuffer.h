@@ -65,7 +65,6 @@ typedef struct {
   unsigned short linestyle;
   unsigned short linecap;
   unsigned short linejoin;
-  unsigned int bcolor,fcolor;
   unsigned char alpha;
   unsigned char graphmode;
   unsigned int textmode;

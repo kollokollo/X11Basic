@@ -57,4 +57,18 @@
 #ifdef WINDOWS
   #define bzero(p, l) memset(p, 0, l)
 #endif
+#ifdef ATARI
+  void xberror(char errnr, const char *bem);
+  static void *mymalloc(size_t d) {
+    void *a=malloc(d);
+    if(a==0) {
+      xberror(8,"malloc"); /* Out of Memory error.... */
+      printf("Malloc(%d) --> #%x  failed !\n",(int)d,(int)a);
+      a=malloc(1024);
+    } 
+    return(a);
+  }
+  #define malloc(a) mymalloc(a)
+  
+#endif
 #endif

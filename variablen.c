@@ -13,14 +13,12 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
-#include "parameter.h"
 #include "xbasic.h"
+#include "parser.h"
+#include "parameter.h"
 #include "array.h"
 #include "wort_sep.h"
-#include "parser.h"
 
-VARIABLE variablen[ANZVARS];
-int anzvariablen;
 
 VARIABLE *lvar[STACKSIZE];
 int anzlvar[STACKSIZE];
@@ -30,10 +28,10 @@ int anzlvar[STACKSIZE];
 /* Bestimmt Typ der Variablen anhand des Ausdrucks 
    Rückgabe ist: 
    NOTYP, wenn Ausdruck leer.
-   STRINGTYP/INTTYP/FLOATTYP wenn keine Klammer im Ausdruclk
-   ARRAYTYP|(STRINGTYP/INTTYP/FLOATTYP) wenn () im Ausdruclk
-   ARRAYTYP|(STRINGTYP/INTTYP/FLOATTYP) wenn Suarray   
-   STRINGTYP/INTTYP/FLOATTYP sonst
+   STRINGTYP/INTTYP/FLOATTYP/COMPLEXTYP wenn keine Klammer im Ausdruclk
+   ARRAYTYP|(STRINGTYP/INTTYP/FLOATTYP/COMPLEXTYP) wenn () im Ausdruclk
+   ARRAYTYP|(STRINGTYP/INTTYP/FLOATTYP/COMPLEXTYP) wenn Suarray   
+   STRINGTYP/INTTYP/FLOATTYP/COMPLEXTYP sonst
 */
 
 int vartype(const char *name) {  
@@ -42,7 +40,7 @@ int vartype(const char *name) {
   char *pos;
   int typ=0;
   
-/*  printf("Vartype(%s): ",name);*/
+  // printf("Vartype(%s): ",name);
   pos=searchchr(w1+1,'(');
   if(pos!=NULL) {
     if(pos[1]==')') typ=(typ|ARRAYTYP);
@@ -61,6 +59,8 @@ int vartype(const char *name) {
   } else pos=&w1[strlen(w1)];
   if(*(pos-1)=='$') typ=(typ|STRINGTYP);
   else if(*(pos-1)=='%') typ=(typ|INTTYP);
+  else if(*(pos-1)=='#') typ=(typ|COMPLEXTYP);
+  else if(*(pos-1)=='&') typ=(typ|ARBINTTYP);
   else typ=(typ|FLOATTYP);
   free(w1);
   return(typ);
@@ -69,9 +69,12 @@ int vartype(const char *name) {
 char *varrumpf(const char *n) {  /* Rumpf des Variablennamens */
   char *pos,*ergebnis=strdup(n);
   if((pos=strchr(ergebnis,'('))!=NULL) *pos=0;
-  while(strchr("$%()",ergebnis[strlen(ergebnis)-1])!=NULL && strlen(ergebnis)) ergebnis[strlen(ergebnis)-1]=0;
+  int l=strlen(ergebnis);
+  while(l && strchr("$%#&()",ergebnis[l-1])!=NULL) ergebnis[--l]=0;
   return(ergebnis);
 }
+
+
 
 /* Zurueck: 0 -- Arrayelement
             1 -- subarray
@@ -83,20 +86,35 @@ static int isarray(const int *indexliste,int n) {
   return(NO_ARRAY);
 }
 
-/* entferne Variablen.*/ 
+/* entferne Variable. Gibt sämtlichen Speicher frei. 
+   Die Variable muss dann wieder neu angelegt werden.*/ 
+
+void remove_variable(VARIABLE *a) { 
+  erase_variable(a);
+  if(a->name) free(a->name);
+  a->name=NULL;
+  a->typ=NOTYP;
+}
+
+/* gibt alle Speicherstrukturen des Variableninhalts frei. Die Variable bleibt aber bestehen.
+*/ 
 
 void erase_variable(VARIABLE *a) {
   if(a->flags==V_DYNAMIC && a->pointer.i) {
-    // printf("erase var: %s %p\n",a->name,a->pointer.i);
     if(a->typ==ARRAYTYP)       free_array(a->pointer.a);
     else if(a->typ==STRINGTYP) free_string(a->pointer.s);
+    else if(a->typ==ARBINTTYP) mpz_clear(*(a->pointer.ai));
     free(a->pointer.i);
   }
   a->pointer.i=NULL;
 }
 
+/* Löscht Variablen-Inhalt, 
+aber die Variable an sich bleibt erhalten 
+und muss nicht wieder neu angelegt werden.*/
 
 void clear_variable(VARIABLE *v) {
+  if(v==NULL || v->typ==NOTYP || v->pointer.i==NULL) return;
   STRING inh;
   ARRAY *arr;
   STRING *str;
@@ -112,6 +130,19 @@ void clear_variable(VARIABLE *v) {
         break;
       case INTTYP:   fill_int_array(arr,0);    break;
       case FLOATTYP: fill_float_array(arr,0);  break;
+      case COMPLEXTYP: {
+        COMPLEX a;
+	a.r=a.i=0;
+        fill_complex_array(arr,a); 
+	} 
+	break;
+      case ARBINTTYP: {
+        ARBINT a;
+	mpz_init(a);
+        fill_arbint_array(arr,a);
+	mpz_clear(a); 
+	} 
+	break;
     }
     break;
   case STRINGTYP:
@@ -120,7 +151,9 @@ void clear_variable(VARIABLE *v) {
     *(str->pointer)=0;
     break;
   case INTTYP:   *(v->pointer.i)=0;  break;
+  case ARBINTTYP:   mpz_clear(*(v->pointer.ai)); mpz_init(*(v->pointer.ai)); break;
   case FLOATTYP: *(v->pointer.f)=0;  break;
+  case COMPLEXTYP: (v->pointer.c)->r=(v->pointer.c)->i=0;  break;
   }
 }
 
@@ -144,7 +177,7 @@ int var_exist(const char *name, unsigned char typ,unsigned char subtyp, int l) {
       }
     } else {
       for(i=0;i<j;i++){
-        if(v[i].typ==typ){
+        if(v[i].typ==typ) {
           if(strcmp(name,v[i].name)==0) return(i);
         }
       }
@@ -223,17 +256,19 @@ int add_variable(const char *name, unsigned char typ, unsigned char subtyp, unsi
   }
   if(vnr>=0 && variablen[vnr].pointer.i==NULL) {
      // printf("Add variable %d %s\n",vnr,name);
- 
-      if(typ==ARRAYTYP) {
+      switch(typ) {
+      case ARRAYTYP:
 	variablen[vnr].pointer.a=calloc(1,sizeof(ARRAY));
 	*(variablen[vnr].pointer.a)=create_array(subtyp,0,NULL);
-      } else if(typ==FLOATTYP) {
-        variablen[vnr].pointer.f=calloc(1,sizeof(double));
-      } else if(typ==INTTYP) {
-        variablen[vnr].pointer.i=calloc(1,sizeof(int));
-      } else if(typ==STRINGTYP) {
+	break;
+      case FLOATTYP:   variablen[vnr].pointer.f=calloc(1,sizeof(double));  break;
+      case COMPLEXTYP: variablen[vnr].pointer.c=calloc(1,sizeof(COMPLEX)); break;
+      case INTTYP:     variablen[vnr].pointer.i=calloc(1,sizeof(int));     break;
+      case ARBINTTYP:  variablen[vnr].pointer.ai=calloc(1,sizeof(ARBINT)); mpz_init(*(variablen[vnr].pointer.ai));    break;
+      case STRINGTYP:
         variablen[vnr].pointer.s=calloc(1,sizeof(STRING));
 	*(variablen[vnr].pointer.s)=create_string(NULL);
+        break;
       }
   }
   return(vnr);
@@ -249,14 +284,14 @@ void set_var_adr(int vnr,void *adr) {
   }
 }
 
-
-void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
+void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck,short atyp) {
   int typ=variablen[vnr].typ;
   char *varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
   int ia;
-   
+  // printf("zuweisxbyindex: <%s>  typ=%x  n=%d\n",ausdruck,typ,n);
   if(typ==ARRAYTYP) {
     ia=isarray(indexliste,n);
+    // printf("ia=%d varptr=%p\n",ia,varptr);
     
     if(ia==NO_ARRAY) typ=(variablen[vnr].pointer.a)->typ;
     else if(ia==SUB_ARRAY) {
@@ -271,13 +306,21 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
       arr=array_parser(ausdruck);
     //  zarr=(ARRAY *)varptr;
       zarr=variablen[vnr].pointer.a;
-     
+     // printf("ARRAYTYP=%x  --> %x\n",arr.typ,zarr->typ);
       if(arr.typ==zarr->typ) {
         free_array(zarr);
         *zarr=arr;
       } else if(zarr->typ==INTTYP) {
         free_array(zarr);
         *zarr=convert_to_intarray(&arr);
+	free_array(&arr);
+      } else if(zarr->typ==ARBINTTYP) {
+        free_array(zarr);
+        *zarr=convert_to_arbintarray(&arr);
+	free_array(&arr);
+      } else if(zarr->typ==COMPLEXTYP) {
+        free_array(zarr);
+        *zarr=convert_to_complexarray(&arr);
 	free_array(&arr);
       } else if(zarr->typ==FLOATTYP) {
         free_array(zarr);
@@ -298,14 +341,183 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
         *((STRING *)varptr)=a;
       }
       break;
+      /*TODO: Argument-Typ kann abweichen von Variablen-Typ !*/
     case INTTYP:   *((int *)varptr)=(int)parser(ausdruck);       break;
     case FLOATTYP: *((double *)varptr)=(double)parser(ausdruck); break;
+    case COMPLEXTYP: *((COMPLEX *)varptr)=complex_parser(ausdruck); break;
+    case ARBINTTYP: arbint_parser(ausdruck,*(ARBINT *)varptr);    break;
     default:       xberror(13,variablen[vnr].name);  /* Type mismatch */ 
     }
   }
-  
 }
 
+/* Weise aus parameter zu einer Vaiable, diese Funktion ist universell und 
+   k"onnte auch im
+   interpreter eingestet werden statt xzuweis, zuweis.. etc...
+   
+   Weist entweder per value zu oder per reference. 
+   
+   
+   */
+
+void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
+  switch(v->typ) {
+  case INTTYP: 
+    switch(p->typ) {
+    case PL_IVAR:  
+      erase_variable(v);
+      v->pointer.i=(int *)p->pointer;
+      v->flags=V_STATIC;
+      return;
+    default: 
+      *(v->pointer.i)=p2int(p);
+    }
+    return;
+  case FLOATTYP:
+    switch(p->typ) {
+    case PL_FVAR:
+      erase_variable(v);
+      v->pointer.f=(double *)p->pointer;
+      v->flags=V_STATIC;
+      return;
+    default: 
+      *(v->pointer.f)=p2float(p);
+    }
+    return;
+  case COMPLEXTYP:
+    switch(p->typ) {
+    case PL_CVAR:
+      erase_variable(v);
+      v->pointer.c=(COMPLEX *)p->pointer;
+      v->flags=V_STATIC;
+      return;
+    default:
+      *(v->pointer.c)=p2complex(p); 
+    }
+    return;
+  case ARBINTTYP:
+    switch(p->typ) {
+    case PL_AIVAR:
+      erase_variable(v);
+      v->pointer.ai=(ARBINT *)p->pointer;
+      v->flags=V_STATIC;
+      return;
+    default: 
+      p2arbint(p,*(v->pointer.ai)); 
+    }
+    return;
+  case STRINGTYP:
+    switch(p->typ) {
+    case PL_STRING:
+      free(v->pointer.s->pointer);
+      *(v->pointer.s)=double_string((STRING *)&(p->integer));
+      break;
+    case PL_SVAR:
+      erase_variable(v);
+      v->pointer.s=(STRING *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    default: xberror(58,v->name); /* Variable %s has incorrect type*/
+    }
+    break;
+  case ARRAYTYP: {
+    int atyp=v->pointer.a->typ;
+    switch(p->typ) {
+    case PL_IARRAY:
+    case PL_FARRAY:
+    case PL_CARRAY:
+    case PL_AIARRAY:
+    case PL_SARRAY:
+    case PL_ARRAY: {
+    
+    /*Was machen wir, wenn die Arraytypen nicht stimmen?*/
+    
+       ARRAY *zarr=v->pointer.a;
+       ARRAY *arr=(ARRAY *)&(p->integer);
+     
+      if(arr->typ==atyp) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=double_array((ARRAY *)&(p->integer));
+      } else if(atyp==INTTYP && (arr->typ!=STRINGTYP)) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_intarray(arr);
+      } else if(atyp==FLOATTYP && (arr->typ!=STRINGTYP)) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_floatarray(arr);
+      } else if(atyp==COMPLEXTYP && arr->typ!=STRINGTYP) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_complexarray(arr);
+      } else if(atyp==ARBINTTYP && arr->typ!=STRINGTYP) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_arbintarray(arr);
+      } else {
+        xberror(58,v->name); /* Variable %s has incorrect type*/  
+	printf("ERROR: cannot convert array from typ %x to %x\n",arr->typ,zarr->typ);
+      }
+      } 
+      break;
+    case PL_IARRAYVAR:
+      if(atyp!=INTTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    case PL_FARRAYVAR:
+      if(atyp!=FLOATTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    case PL_CARRAYVAR:
+      if(atyp!=COMPLEXTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    case PL_AIARRAYVAR:
+      if(atyp!=ARBINTTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    case PL_SARRAYVAR:
+      if(atyp!=STRINGTYP) {
+        xberror(58,v->name); /* Variable %s has incorrect type*/ 
+        dump_parameterlist(p,1);
+      }
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    case PL_ARRAYVAR:
+      erase_variable(v);
+      v->pointer.a=(ARRAY *)p->pointer;
+      v->flags=V_STATIC;
+      break;
+    default: xberror(58,v->name); /* Variable %s has incorrect type*/
+    }
+    }
+    break;
+  default:
+    xberror(58,v->name); /* Variable %s has incorrect type*/  
+    printf("zuweis_v_parameter: $%x->$%x can not convert.\n",p->typ,v->typ);
+    dump_parameterlist(p,1);
+  } /* switch */
+}
+
+/* Siehe auch die (bessere) Routine zuweis_v_parameter s.o. */
 
 void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
   int typ=variablen[vnr].typ;
@@ -321,7 +533,7 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
   }
 #endif
   varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
-
+  // printf("VARPTR--__>%p  typ=%x\n",varptr,typ);
   if(varptr) {
     switch(typ) {
     case ARRAYTYP:
@@ -340,16 +552,11 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
 	    *((STRING *)varptr)=str;
           } else xberror(13,variablen[vnr].name);  /* Type mismatch */
           break;
-	case INTTYP:
-	  if(p->typ==PL_INT)        *((int *)varptr)=p->integer;
-	  else if(p->typ==PL_FLOAT) *((int *)varptr)=(int)p->real;
-          else xberror(13,variablen[vnr].name);  /* Type mismatch */
-	  break;
-	case FLOATTYP: 
-	  if(p->typ==PL_FLOAT)    *((double *)varptr)=p->real;
-          else if(p->typ==PL_INT) *((double *)varptr)=(double)p->integer;
-          else xberror(13,variablen[vnr].name);  /* Type mismatch */
-          break;
+	case INTTYP:     *((int *)varptr)=p2int(p);        break;
+	case FLOATTYP:   *((double *)varptr)=p2float(p);   break;
+	case COMPLEXTYP: *((COMPLEX *)varptr)=p2complex(p);break;
+	case ARBINTTYP:  p2arbint(p,*((ARBINT *)varptr));  break;
+        default:    xberror(13,variablen[vnr].name);  /* Type mismatch */ 
         }
       }
       break;
@@ -360,18 +567,11 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
         *((STRING *)varptr)=str;
       } else xberror(13,variablen[vnr].name);  /* Type mismatch */
       break;
-    case INTTYP:
-      if(p->typ==PL_INT)        *((int *)varptr)=p->integer;
-      else if(p->typ==PL_FLOAT) *((int *)varptr)=(int)p->real;
-      else xberror(13,variablen[vnr].name);  /* Type mismatch */
-      break;
-    case FLOATTYP:
-      if(p->typ==PL_FLOAT)    *((double *)varptr)=p->real;
-      else if(p->typ==PL_INT) *((double *)varptr)=(double)p->integer;
-      else xberror(13,variablen[vnr].name);  /* Type mismatch */
-      break;
-    default:
-      xberror(13,variablen[vnr].name);  /* Type mismatch */ 
+    case INTTYP:     *((int *)varptr)=p2int(p);        break;
+    case FLOATTYP:   *((double *)varptr)=p2float(p);   break;
+    case COMPLEXTYP: *((COMPLEX *)varptr)=p2complex(p);break;
+    case ARBINTTYP:  p2arbint(p,*((ARBINT *)varptr));  break;
+    default: xberror(13,variablen[vnr].name);  /* Type mismatch */ 
     }
   }
 }
@@ -421,17 +621,22 @@ char *varptr_indexliste(VARIABLE *v,int *indexliste,int n) {
         for(ndim=0;ndim<v->pointer.a->dimension;ndim++) 
           anz=indexliste[ndim]+anz*((int *)v->pointer.a->pointer)[ndim];
         switch(v->pointer.a->typ) {
-        case STRINGTYP: varptr+=anz*sizeof(STRING); break;
-        case INTTYP:    varptr+=anz*sizeof(int);    break;
-        case FLOATTYP:  varptr+=anz*sizeof(double); break;
+        case STRINGTYP:  varptr+=anz*sizeof(STRING); break;
+        case INTTYP:     varptr+=anz*sizeof(int);    break;
+        case FLOATTYP:   varptr+=anz*sizeof(double); break;
+        case COMPLEXTYP: varptr+=anz*sizeof(COMPLEX); break;
+        case ARBINTTYP: varptr+=anz*sizeof(ARBINT); break;
+        case ARRAYTYP:   varptr+=anz*sizeof(ARRAY);  break;
         default:        xberror(13,v->name);  /* Type mismatch */ 
         }
       }
     } 
     break;
-  case STRINGTYP: varptr=(char *)v->pointer.s;  break;
-  case INTTYP:    varptr=(char *)v->pointer.i;  break;
-  case FLOATTYP:  varptr=(char *)v->pointer.f;  break;
+  case STRINGTYP:  varptr=(char *)v->pointer.s;  break;
+  case INTTYP:     varptr=(char *)v->pointer.i;  break;
+  case FLOATTYP:   varptr=(char *)v->pointer.f;  break;
+  case COMPLEXTYP: varptr=(char *)v->pointer.c;  break;
+  case ARBINTTYP:  varptr=(char *)v->pointer.ai;  break;
   default:        xberror(13,v->name);  /* Type mismatch */ 
   }
   return(varptr);
@@ -610,19 +815,31 @@ void string_zuweis(VARIABLE *v, STRING inhalt) {
 }
 
 void xzuweis(const char *name, char *inhalt) {
-  int vnr;
-  int dim,ii=0;
-  char *vname,*argument;
-  int *indexliste=NULL;
-  
   char *buffer1=indirekt2(name);
   char *buffer2=indirekt2(inhalt);
+  if(*buffer1==0 || *buffer2==0) {
+    xberror(32,name); /* Syntax error */
+    free(buffer1);free(buffer2);
+    return;
+  }
   int typ=vartype(buffer1);
+  char *vname,*argument;
   int e=klammer_sep_destroy(buffer1,&vname,&argument);
   char *r=varrumpf(buffer1);
-  // printf("xzuweis: <%s> <%s>\n",name,inhalt);
+  
+  int vnr;
+  int dim,ii=0;
+  
+  int *indexliste=NULL;
+  
+  
+ //  printf("xzuweis: <%s> <%s>\n",name,inhalt);
   if(e>1) {
-    vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+    vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
+    if(vnr<0) { /*Wenn irgendwas mit Variablen-Erstellung nicht geklappt hat.*/
+      free(r);free(buffer1);free(buffer2);
+      return;
+    }
     ii=count_parameters(argument);
     dim=variablen[vnr].pointer.a->dimension;
     if(dim<ii) xberror(18,name); /* Falsche Anzahl Indizes */
@@ -630,7 +847,7 @@ void xzuweis(const char *name, char *inhalt) {
     make_indexliste(ii,argument,indexliste);
   } else vnr=add_variable(r,typ,0,V_DYNAMIC,NULL);  
 
-  zuweisxbyindex(vnr,indexliste,ii,buffer2);  
+  if(vnr>=0) zuweisxbyindex(vnr,indexliste,ii,buffer2,typ);
   free(r); free(indexliste);
   free(buffer1);free(buffer2);
 }
@@ -646,27 +863,35 @@ void xzuweis(const char *name, char *inhalt) {
 
 static void copy_var(VARIABLE *a,VARIABLE *b) {
   *a=*b;
-     switch(b->typ) {
-     case STRINGTYP:
-       b->pointer.s=malloc(sizeof(STRING));
-       *(b->pointer.s)=double_string(a->pointer.s);
-       break;
-     case ARRAYTYP: 
-       b->pointer.a=malloc(sizeof(ARRAY));
-       *(b->pointer.a)=double_array(a->pointer.a);
-       break;
-     case INTTYP:
-       b->pointer.i=malloc(sizeof(int));
-       *(b->pointer.i)=*(a->pointer.i);
-       break;
-     case FLOATTYP:
-       b->pointer.f=malloc(sizeof(double));
-       *(b->pointer.f)=*(a->pointer.f);
-       break;
-     default:
-       xberror(13,a->name);  /* Type mismatch */
-     }
-     b->flags=V_DYNAMIC;
+  switch(b->typ) {
+  case STRINGTYP:
+    b->pointer.s=malloc(sizeof(STRING));
+    *(b->pointer.s)=double_string(a->pointer.s);
+    break;
+  case ARRAYTYP: 
+    b->pointer.a=malloc(sizeof(ARRAY));
+    *(b->pointer.a)=double_array(a->pointer.a);
+    break;
+  case INTTYP:
+    b->pointer.i=malloc(sizeof(int));
+    *(b->pointer.i)=*(a->pointer.i);
+    break;
+  case FLOATTYP:
+    b->pointer.f=malloc(sizeof(double));
+    *(b->pointer.f)=*(a->pointer.f);
+    break;
+  case COMPLEXTYP:
+    b->pointer.c=malloc(sizeof(COMPLEX));
+    *(b->pointer.c)=*(a->pointer.c);
+    break;
+  case ARBINTTYP:
+    b->pointer.ai=malloc(sizeof(ARBINT));
+    mpz_init_set(*(b->pointer.ai),*(a->pointer.ai));
+    break;
+  default:
+    xberror(13,a->name);  /* Type mismatch */
+  }
+  b->flags=V_DYNAMIC;
 }
 
 /*restauriere Variable, hierbei werden nur die Inhalte Uebertragen, typ und name bleiben unveraendert.
@@ -717,12 +942,22 @@ void varcastint(int vnr,void *pointer,int val) {
     if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
     if(typ==FLOATTYP) *((double *)pointer)=(double)val;
     else if(typ==INTTYP) *((int *)pointer)=val;
+    else if(typ==ARBINTTYP) mpz_set_si(*((ARBINT *)pointer),val);
+    else if(typ==COMPLEXTYP) {
+      ((COMPLEX *)pointer)->r=(double)val;
+      ((COMPLEX *)pointer)->i=0;
+    }
 }
 void varcastfloat(int vnr,void *pointer,double val) {
     int typ=variablen[vnr].typ;
     if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
     if(typ==FLOATTYP) *((double *)pointer)=val;
     else if(typ==INTTYP) *((int *)pointer)=(int)val;
+    else if(typ==ARBINTTYP) mpz_set_d(*((ARBINT *)pointer),val);
+    else if(typ==COMPLEXTYP) {
+      ((COMPLEX *)pointer)->r=val;
+      ((COMPLEX *)pointer)->i=0;
+    }
 }
 
 void varcaststring(int vnr,void *pointer,STRING val) {

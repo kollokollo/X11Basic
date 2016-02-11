@@ -1111,8 +1111,7 @@ void Fb_BlitCharacter816_scale_raw(int x, int y, unsigned short aColor, unsigned
 
 
 extern int ltextpflg;
-extern unsigned int chw;
-extern unsigned int chh;
+extern unsigned short chw,chh;
 
 void FB_DrawString(int x, int y, const char *t,int len) {
   if(len>0) {

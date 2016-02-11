@@ -23,6 +23,8 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "parser.h"
+#include "variablen.h"
 #include "parameter.h"
 #include "bytecode.h"
 #include "file.h"
@@ -68,7 +70,7 @@ char selfseek[]="4007111";
 static void intro(){
   printf("****************************************************\n"
          "*  %10s virtual machine  V.%5s             *\n"
-         "*                 by Markus Hoffmann 1997-2014 (c) *\n"
+         "*                 by Markus Hoffmann 1997-2015 (c) *\n"
          "*                                                  *\n"
 #ifdef GERMAN
          "* Programmvers. vom %30s *\n"
@@ -131,7 +133,20 @@ static void doit(STRING bcpc) {
   dump_parameterlist(p,n);  
   free_pliste(n,p);
 }
-
+#if 0
+static void compileandrun(char *ausdruck) {
+  PARAMETER *p;
+  int n;
+  bcpc.len=0;
+  printf("Expression: %s\n",ausdruck);
+  bc_parser(ausdruck);
+  memdump((unsigned char *)bcpc.pointer,bcpc.len);
+  printf("Virtual Machine: %d Bytes\n",bcpc.len);
+  p=virtual_machine(bcpc,0,&n,NULL,0);
+  dump_parameterlist(p,n);
+  free_pliste(n,p);
+}
+#endif
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count;
 
@@ -198,7 +213,7 @@ static int loadbcprg(char *filename) {
 }
 
 
-
+extern int fix_bytecode_header(BYTECODE_HEADER *bytecode);
 
 int main(int anzahl, char *argumente[]) {
   x11basicStartup();   /* initialisieren   */
@@ -215,18 +230,64 @@ int main(int anzahl, char *argumente[]) {
    char filename2[strlen(argumente[0])+8];
    FILE *dptr;
    wort_sep(argumente[0],'.',FALSE,filename,filename2);
-   if(!exist(filename)) strcat(filename,".exe");
+   if(!exist(filename)) {
+   #ifdef ATARI
+     strcat(filename,".prg");
+     printf("try <%s>\n",filename); 
+     /*TODO cannot find of the name of the program arg[0]*/
+     strcpy(filename,"xbc.prg");
+     verbose=2;
+   #else
+     strcat(filename,".exe");
+   #endif
+   }
    if(!exist(filename)) printf("ERROR: could not link X11-Basic code.\n");
    if(verbose) printf("selfseek=%s %d\n",selfseek,s);
-   dptr=fopen(filename,"rb"); bcpc.len=lof(dptr); fclose(dptr);
+   dptr=fopen(filename,"rb"); 
+   fseek(dptr,s,SEEK_SET);
+   bcpc.len=lof(dptr)-s; 
+   #ifdef ATARI
+   printf("Asking for %d bytes.\n",bcpc.len);
+   #endif
    bcpc.pointer=malloc(bcpc.len+1);
-   bload(filename,bcpc.pointer,bcpc.len);
-   bcpc.pointer+=s;
-   bcpc.len-=s;
+   #ifdef ATARI
+   if(bcpc.pointer==NULL) {
+     perror("malloc");
+     sleep(5);
+   }
+   #endif
+   if(fread(bcpc.pointer,1,bcpc.len,dptr)<bcpc.len) printf("read error.\n");
+//   bload(filename,bcpc.pointer,bcpc.len);
+//   memdump(bcpc.pointer,64);
+//   verbose=4;
+   fclose(dptr);
+   #ifdef ATARI
+   memdump(bcpc.pointer,64);
+   sleep(5);
+   #endif
 
    if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
-   if(bytecode_init(bcpc.pointer)) doit(bcpc);
-   else printf("ERROR: Something is wrong, no code!\n");
+   if(fix_bytecode_header((BYTECODE_HEADER *)bcpc.pointer)==0) {
+     BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)bcpc.pointer;
+    /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
+    if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
+      bcpc.len+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
+      bcpc.pointer=realloc(bcpc.pointer,bcpc.len);
+      #ifdef ATARI
+      if(bcpc.pointer==NULL) {
+        perror("malloc");
+        sleep(5);
+      }
+      #endif
+    }
+     bytecode_init(bcpc.pointer); 
+     doit(bcpc);
+   } else {
+     printf("ERROR: Something is wrong, no code!\n");
+     #ifdef ATARI
+     sleep(5);
+     #endif
+   }
  } else if(anzahl<2) {
     intro();
     usage();

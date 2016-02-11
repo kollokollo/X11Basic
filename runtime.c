@@ -17,7 +17,9 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "parser.h"
 #include "kommandos.h"
+#include "variablen.h"
 #include "parameter.h"
 
 
@@ -27,6 +29,7 @@ static void *obh;       /* old break handler  */
 /* Standard-Fehlerroutine   */
 
 int globalerr=0;
+extern int program_adr;
 
 void xberror(char errnr, const char *bem) {
   extern int globalerr;
@@ -53,13 +56,10 @@ void xberror(char errnr, const char *bem) {
       }
     }
   } else { 
-    batch=0;   
-#ifdef GERMAN
-    printf("FEHLER in Zeile %d: %s\n",original_line(pc-1),error_text(errnr,bem));
-#else
+    batch=0;
     if(pc>0) printf("ERROR at line %d: %s\n",original_line(pc-1),error_text(errnr,bem));
+    else if(program_adr) printf("ERROR at offset $%x: %s\n",program_adr,error_text(errnr,bem));
     else printf("ERROR: %s\n",error_text(errnr,bem));
-#endif
 #ifdef ANDROID
     invalidate_screen();
 #endif

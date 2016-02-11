@@ -17,12 +17,15 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
-#include "parameter.h"
+#include "parser.h"
 #include "variablen.h"
+#include "parameter.h"
 #include "functions.h"
+#include "number.h"
 #include "bytecode.h"
 #include "array.h"
 #include "io.h"
+#include "virtual-machine.h"
 
 extern int datapointer;
 
@@ -54,246 +57,313 @@ extern int verbose;
 #endif
 
 
-char *rodata=NULL;;
+char *rodata=NULL;
 
-inline static void vm_x2i(PARAMETER *sp) {    /* cast to integer */
-  VERBOSE("x2i ");
-  if(sp[-1].typ==PL_INT) return;
-  else if(sp[-1].typ==PL_FLOAT) {
-    sp[-1].integer=(int)sp[-1].real;
-    sp[-1].typ=PL_INT;  
-  } else VMERROR("X2I (typ=%x)",sp[-1].typ);
-  return;
-}
-inline static void vm_x2f(PARAMETER *sp) {    /* cast to float */
-  VERBOSE("x2f ");
-  if(sp[-1].typ==PL_FLOAT) return;
-  else if(sp[-1].typ==PL_INT) {
-    sp[-1].real=(double)sp[-1].integer;
-    sp[-1].typ=PL_FLOAT;  
-  } else VMERROR("X2F (typ=%x)",sp[-1].typ);
-  return;
-}
+
+
+
+#define vm_x2f(a) cast_to_real(a-1)
+#define vm_x2c(a) cast_to_complex(a-1)
+#define vm_x2i(a) cast_to_int(a-1)
+#define vm_x2ai(a) cast_to_arbint(a-1)
 
 STATIC int vm_add(PARAMETER *sp) {    /* binaer addition */
   VERBOSE("vm_add ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer+=sp[0].integer;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real+=sp[0].real;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   sp[-1].real+=(double)sp[0].integer;
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=sp[0].real+(double)sp[-1].integer;
-    sp[-1].typ=PL_FLOAT;
-  } else if(sp[-1].typ==PL_STRING && sp[0].typ==PL_STRING) {
-    STRING a,b;
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+  cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer+=sp->integer; break;
+  case PL_COMPLEX: sp[-1].imag+=sp->imag;
+  case PL_FLOAT:   sp[-1].real+=sp->real;       break;
+  case PL_ARBINT:  mpz_add(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);  break;
+  case PL_STRING: {
+    STRING a;
     a.pointer=sp[-1].pointer;
     a.len=sp[-1].integer;
-    b.pointer=sp[0].pointer;
-    b.len=sp[0].integer;
-    sp[-1].pointer=malloc(a.len+b.len+1);
-    sp[-1].integer=a.len+b.len;
+    sp[-1].pointer=malloc(a.len+sp->integer+1);
+    sp[-1].integer=a.len+sp->integer;
     memcpy(sp[-1].pointer,a.pointer,a.len);
-    memcpy(sp[-1].pointer+a.len,b.pointer,b.len);
+    memcpy(sp[-1].pointer+a.len,sp->pointer,sp->integer);
     free(a.pointer);
-    free(b.pointer);
-  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
-    ARRAY a,b;
+    }
+    break;
+  case PL_ARRAY: {
+    ARRAY a;
     a=*((ARRAY *)&(sp[-1].integer));
-    b=*((ARRAY *)&(sp[0].integer));
-    array_add(a,b);
-    free_array(&b);
+    array_add(a,*((ARRAY *)&(sp->integer)));
     *((ARRAY *)&(sp[-1].integer))=a;
-  } else {
-    TYPEMISMATCH("ADD");
-    free_parameter(sp);
+    }
+    break;
+  default: TYPEMISMATCH("ADD");
   }
+  free_parameter(sp);
   return(-1);
 }
-STATIC int vm_sub(PARAMETER *sp) {    /* binaer addition */
+STATIC int vm_and(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_and ");
+  sp--;
+  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
+    sp[-1].integer&=sp->integer;
+  } else {
+    cast_to_arbint(sp);
+    cast_to_arbint(sp-1);
+    mpz_and(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);
+  }
+  free_parameter(sp);
+  return(-1);
+}
+STATIC int vm_or(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_or ");
+  sp--;
+  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
+    sp[-1].integer|=sp->integer;
+  } else {
+    cast_to_arbint(sp);
+    cast_to_arbint(sp-1);
+    mpz_ior(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);
+  }
+  free_parameter(sp);
+  return(-1);
+}
+STATIC int vm_xor(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_xor ");
+  sp--;
+  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
+    sp[-1].integer^=sp->integer;
+  } else {
+    cast_to_arbint(sp);
+    cast_to_arbint(sp-1);
+    mpz_eor(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);
+  }
+  free_parameter(sp);
+  return(-1);
+}
+STATIC int vm_not(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_not ");
+  if(sp[-1].typ==PL_INT) {
+    sp[-1].integer=~(sp[-1].integer);
+  } else {
+    cast_to_arbint(sp-1);
+    mpz_com(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer);
+  }
+  return(0);
+}
+STATIC int vm_sub(PARAMETER *sp) {    /* binaer subtraktion */
   VERBOSE("vm_sub ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer-=sp[0].integer;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real-=sp[0].real;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   sp[-1].real-=(double)sp[0].integer;
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=sp[0].real-(double)sp[-1].integer;
-    sp[-1].typ=PL_FLOAT;
-  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
-    ARRAY a,b;
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+  cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer-=sp->integer; break;
+  case PL_COMPLEX: sp[-1].imag-=sp->imag;
+  case PL_FLOAT:   sp[-1].real-=sp->real;       break;
+  case PL_ARBINT:  mpz_sub(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);  break;
+  case PL_ARRAY: {
+    ARRAY a;
     a=*((ARRAY *)&(sp[-1].integer));
-    b=*((ARRAY *)&(sp[0].integer));
-    array_sub(a,b);
-    free_array(&b);
+    array_sub(a,*((ARRAY *)&(sp->integer)));
     *((ARRAY *)&(sp[-1].integer))=a;
-  } else {
-    TYPEMISMATCH("SUB");
-    free_parameter(sp);
+    }
+    break;
+  default: TYPEMISMATCH("SUB");
   }
+  free_parameter(sp);
   return(-1);
 }
-STATIC int vm_mul(PARAMETER *sp) {    /* binaer addition */
+STATIC int vm_mul(PARAMETER *sp) {    /* binaer multiplikation */
   VERBOSE("vm_mul ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer*=sp[0].integer;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real*=sp[0].real;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   sp[-1].real*=(double)sp[0].integer;
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=sp[0].real*(double)sp[-1].integer;
-    sp[-1].typ=PL_FLOAT;
-  } else if(sp[-1].typ==PL_ARRAY && sp[0].typ==PL_ARRAY) {
-    ARRAY a,b,c;
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+  cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer*=sp->integer; break;
+  case PL_COMPLEX: *((COMPLEX *)&(sp[-1].real))=complex_mul(*((COMPLEX *)&(sp[-1].real)),*((COMPLEX *)&(sp[0].real)));break;
+  case PL_FLOAT:   sp[-1].real*=sp->real;       break;
+  case PL_ARBINT:  mpz_mul(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);  break;
+  case PL_ARRAY: {
+    ARRAY a;
     a=*((ARRAY *)&(sp[-1].integer));
-    b=*((ARRAY *)&(sp[0].integer));
-    c=mul_array(a,b);
-    free_array(&b);
-    free_array(&a);
-    *((ARRAY *)&(sp[-1].integer))=c;
-  } else {
-    TYPEMISMATCH("MUL");
-    free_parameter(sp);
+    mul_array(a,*((ARRAY *)&(sp->integer)));
+    *((ARRAY *)&(sp[-1].integer))=a;
+    }
+    break;
+  default: TYPEMISMATCH("MUL");
   }
+  free_parameter(sp);
   return(-1);
 }
-STATIC int vm_pow(PARAMETER *sp) {    /* binaer addition */
+
+/*  Hier kann man bei den arbint operationen noch optimieren: 
+    der zweite Operand darf auch long sein....*/
+
+
+STATIC int vm_pow(PARAMETER *sp) {    /* binaer potenzieren */
   VERBOSE("vm_pow ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
-    sp[-1].real=pow((double)sp[-1].integer,(double)sp[0].integer);
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) 
-   sp[-1].real=pow(sp[-1].real,sp[0].real);
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   
-   sp[-1].real=pow(sp[-1].real,(double)sp[0].integer);
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=pow(sp[0].real,(double)sp[-1].integer);
-  } else {
-    TYPEMISMATCH("POW");
-    free_parameter(sp);
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+  if(rt==PL_INT) rt=PL_FLOAT;  /*  Naja ...*/
+  if(rt==PL_ARBINT) cast_to_x(sp,PL_INT);  /*  Hm ...*/
+  else cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_COMPLEX: *((COMPLEX *)&(sp[-1].real))=complex_pow(*((COMPLEX *)&(sp[-1].real)),*((COMPLEX *)&(sp[0].real)));break;
+  case PL_FLOAT:   sp[-1].real=pow((sp-1)->real,sp->real);       break;
+  case PL_ARBINT:  mpz_pow_ui(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,sp->integer);  break;
+  default: TYPEMISMATCH("POW");
   }
-    sp[-1].typ=PL_FLOAT;
+  free_parameter(sp);
   return(-1);
 }
-#if 0
-int vm_div(PARAMETER *sp) {    /* binaer addition */
+
+STATIC int vm_div(PARAMETER *sp) {    /* binaer dividieren, ggf integer */
   VERBOSE("vm_div ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
-   sp[-1].real=(double)sp[-1].integer/(double)sp[0].integer;
-   sp[-1].typ=PL_FLOAT;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real/=sp[0].real;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   sp[-1].real/=(double)sp[0].integer;
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=(double)sp[-1].integer/sp[0].real;
-    sp[-1].typ=PL_FLOAT;
-  } else {
-    TYPEMISMATCH("DIV");
-    free_parameter(sp);
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'/'));
+  if(rt==ARBFLOATTYP || rt==ARBCOMPLEXTYP) rt=ARBINTTYP;
+  cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_COMPLEX: *((COMPLEX *)&(sp[-1].real))=complex_div(*((COMPLEX *)&(sp[-1].real)),*((COMPLEX *)&(sp[0].real)));break;
+  case PL_FLOAT:   sp[-1].real/=sp->real;       break;
+  case PL_ARBINT:  mpz_div(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);  break;
+  default: TYPEMISMATCH("DIV");
   }
+  free_parameter(sp);
   return(-1);
 }
-#endif
-STATIC int vm_mod(PARAMETER *sp) {    /* binaer addition */
+
+
+
+
+STATIC int vm_mod(PARAMETER *sp) {    /* binaer rest */
   VERBOSE("vm_mod ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
-   sp[-1].integer=(int)fmod((double)sp[-1].integer,(double)sp[0].integer);
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) 
-    sp[-1].real=fmod(sp[-1].real,sp[0].real);
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT)   
-    sp[-1].real=fmod(sp[-1].real,(double)sp[0].integer);
-  else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
-    sp[-1].real=fmod((double)sp[-1].integer,sp[0].real);
-    sp[-1].typ=PL_FLOAT;
-  } else {
-    TYPEMISMATCH("MOD");
-    free_parameter(sp);
+  int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+  cast_to_x(sp,rt);
+  cast_to_x(sp-1,rt);
+  switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer%=sp->integer; break;
+  case PL_FLOAT:   sp[-1].real=fmod(sp[-1].real,sp->real);       break;
+  case PL_ARBINT:  mpz_mod(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer);  break;
+  default: TYPEMISMATCH("MOD");
   }
+  free_parameter(sp);
   return(-1);
 }
 
 
-STATIC int vm_equal(PARAMETER *sp) {    /* binaer and */
+STATIC int vm_equal(PARAMETER *sp) {    /* binaer vergleich */
   VERBOSE("vm_equal ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
-    sp[-1].integer=(sp[-1].integer==sp[0].integer)?-1:0;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) {
-    sp[-1].integer=(sp[-1].real==sp[0].real)?-1:0;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT) {
-    sp[-1].integer=(sp[-1].real==(double)sp[0].integer)?-1:0;
-  } else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) 
-    sp[-1].integer=((double)sp[-1].integer==sp[0].real)?-1:0;
-  else if(sp[-1].typ==PL_STRING && sp[0].typ==PL_STRING) {
-    int v;
-    v=(sp[-1].integer-sp[0].integer);
-    if(v==0) v=memcmp(sp[-1].pointer,sp[0].pointer,min(sp[-1].integer,sp[0].integer));
-    free(sp[0].pointer);
-    free(sp[-1].pointer); 
-    
-    sp[-1].integer=v?0:-1;
-    
-  } else {
-    TYPEMISMATCH("EQUAL");
-    free_parameter(sp);
+  if(sp->typ!=(sp-1)->typ) {
+    int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+    if(rt==PL_LEER) {  /*  Wenn die Typen inkompatibel sind, dann ungleich!*/
+      free_parameter(sp);
+      free_parameter(sp-1);
+      (sp-1)->integer=0;
+      (sp-1)->typ=PL_INT;
+      return(-1);
+    }
+    cast_to_x(sp,rt);
+    cast_to_x(sp-1,rt);
   }
-  sp[-1].typ=PL_INT;
+  switch(sp->typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer=(sp[-1].integer==sp[0].integer)?-1:0; break;
+  case PL_COMPLEX: sp[-1].integer=(sp[-1].real==sp[0].real && sp[-1].imag==sp[0].imag)?-1:0; break;
+  case PL_FLOAT:   sp[-1].integer=(sp[-1].real==sp[0].real)?-1:0;  break;
+  case PL_ARBINT:  sp[-1].integer=(mpz_cmp(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer)==0)?-1:0;  break;
+  case PL_STRING: {
+    int v=(sp[-1].integer-sp[0].integer);
+    if(v==0) v=memcmp(sp[-1].pointer,sp[0].pointer,sp[-1].integer);
+    sp[-1].integer=v?0:-1;
+    }
+    break;
+  case PL_ARRAY:    /*   Array compare haben wir noch nicht .....*/
+    
+    xberror(9,"Compare ARRAY"); /*Function or command %s not implemented*/
+    break;
+  default: TYPEMISMATCH("EQUAL");
+  }
+  free_parameter(sp);
+  free_parameter(sp-1);
+  (sp-1)->typ=PL_INT;
   return(-1);
 }
-STATIC int vm_greater(PARAMETER *sp) {    /* binaer and */
+
+
+
+STATIC int vm_greater(PARAMETER *sp) {    /* binaer groesser vergleich */
   VERBOSE("vm_greater ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
-    sp[-1].integer=(sp[-1].integer>sp[0].integer)?-1:0;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) {
-    sp[-1].integer=(sp[-1].real>sp[0].real)?-1:0;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT) {
-    sp[-1].integer=(sp[-1].real>(double)sp[0].integer)?-1:0;
-  } else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) 
-    sp[-1].integer=((double)sp[-1].integer>sp[0].real)?-1:0;
-  else if(sp[-1].typ==PL_STRING && sp[0].typ==PL_STRING) {
-    int v;
-    v=(sp[-1].integer-sp[0].integer);
-    if(v==0) v=memcmp(sp[-1].pointer,sp[0].pointer,sp[-1].integer);
-    free_parameter(sp);
-    free_parameter(&sp[-1]);
-    sp[-1].integer=(v>0)?-1:0;
-  }  else {
-    TYPEMISMATCH("GREATER");
-    free_parameter(sp);
+  if(sp->typ!=(sp-1)->typ) {
+    int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+    cast_to_x(sp,rt);
+    cast_to_x(sp-1,rt);
   }
-  sp[-1].typ=PL_INT;
+  switch(sp->typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer=(sp[-1].integer>sp[0].integer)?-1:0; break;
+  case PL_COMPLEX: sp[-1].integer=(hypot(sp[-1].real,sp[-1].imag)>hypot(sp[0].real,sp[0].imag))?-1:0; break;
+  case PL_FLOAT:   sp[-1].integer=(sp[-1].real>sp[0].real)?-1:0;  break;
+  case PL_ARBINT:  sp[-1].integer=(mpz_cmp(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer)>0)?-1:0;  break;
+  case PL_STRING: {
+    int v=memcmp(sp[-1].pointer,sp[0].pointer,min(sp[-1].integer,sp->integer)+1);
+    sp[-1].integer=(v>0)?-1:0;
+    }
+    break;
+  case PL_ARRAY:    /*   Array compare haben wir noch nicht .....*/
+    
+    xberror(9,"Compare ARRAY"); /*Function or command %s not implemented*/
+    break;
+  default: TYPEMISMATCH("GREATER");
+  }
+  free_parameter(sp);
+  free_parameter(sp-1);
+  (sp-1)->typ=PL_INT;
   return(-1);
 }
-STATIC int vm_less(PARAMETER *sp) {    /* binaer and */
+
+
+STATIC int vm_less(PARAMETER *sp) {    /* binaer kleiner vergleich */
   VERBOSE("vm_less ");
   sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
-    sp[-1].integer=(sp[-1].integer<sp[0].integer)?-1:0;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) {
-    sp[-1].integer=(sp[-1].real<sp[0].real)?-1:0;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT) {
-    sp[-1].integer=(sp[-1].real<(double)sp[0].integer)?-1:0;
-  } else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) 
-    sp[-1].integer=((double)sp[-1].integer<sp[0].real)?-1:0;
-  else if(sp[-1].typ==PL_STRING && sp[0].typ==PL_STRING) {
-    int v;
-    v=(sp[-1].integer-sp[0].integer);
-    if(v==0) v=memcmp(sp[-1].pointer,sp[0].pointer,sp[-1].integer);
-    free_parameter(sp);
-    free_parameter(&sp[-1]);
-    sp[-1].integer=(v>0)?-1:0;
-  } else {
-    TYPEMISMATCH("LESS");
-    free_parameter(sp);
+  if(sp->typ!=(sp-1)->typ) {
+    int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
+    cast_to_x(sp,rt);
+    cast_to_x(sp-1,rt);
   }
-  sp[-1].typ=PL_INT;
+  switch(sp->typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     sp[-1].integer=(sp[-1].integer<sp[0].integer)?-1:0; break;
+  case PL_COMPLEX: sp[-1].integer=(hypot(sp[-1].real,sp[-1].imag)<hypot(sp[0].real,sp[0].imag))?-1:0; break;
+  case PL_FLOAT:   sp[-1].integer=(sp[-1].real<sp[0].real)?-1:0;  break;
+  case PL_ARBINT:  sp[-1].integer=(mpz_cmp(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)sp->pointer)<0)?-1:0;  break;
+  case PL_STRING: {
+    int v=memcmp(sp[-1].pointer,sp[0].pointer,min(sp[-1].integer,sp->integer)+1);
+    sp[-1].integer=(v<0)?-1:0;
+    }
+    break;
+  case PL_ARRAY:    /*   Array compare haben wir noch nicht .....*/
+    
+    xberror(9,"Compare ARRAY"); /*Function or command %s not implemented*/
+    break;
+  default: TYPEMISMATCH("GREATER");
+  }
+  free_parameter(sp);
+  free_parameter(sp-1);
+  (sp-1)->typ=PL_INT;
   return(-1);
 }
+
 STATIC int vm_sysvar(PARAMETER *sp,int n) {    /*  */
-  VERBOSE("vm_%s ",sysvars[n].name);	   
-  if(sysvars[n].opcode&INTTYP) {
+  VERBOSE("vm_%s ",sysvars[n].name);
+  int typ=sysvars[n].opcode&TYPMASK;
+  if(typ==INTTYP) {
     sp->integer=((int (*)())sysvars[n].routine)();
     sp->typ=PL_INT;
-  } else if(sysvars[n].opcode&FLOATTYP) {
+  } else if(typ==FLOATTYP) {
     sp->real=(sysvars[n].routine)();
     sp->typ=PL_FLOAT;
   } else {
@@ -318,53 +388,41 @@ ISTATIC int vm_asysvar(PARAMETER *sp,int n) {    /*  */
   sp->typ=PL_FLOAT;
   return(1);
 }
-STATIC int vm_dup(PARAMETER *sp) {    /*  */
+STATIC int vm_dup(PARAMETER *sp) {    /* dupliziere Parameter */
   VERBOSE("vm_dup ");
-  sp[0]=sp[-1];   
-  if(sp->typ==PL_KEY || sp->typ==PL_STRING) {
+  sp[0]=sp[-1];
+  switch(sp->typ) {
+  case PL_KEY:
+  case PL_STRING:
     sp[0].pointer=malloc(sp[0].integer+1);
     memcpy(sp[0].pointer,sp[-1].pointer,sp[0].integer+1);
-  } else if(sp->typ==PL_ARRAY) {
-    printf("WARNING: Pointerinhalt muesste hier dupliziert werden !\n");    
+    break;
+  case PL_ARBINT:
+    mpz_init(*(ARBINT *)sp->pointer);
+    mpz_set(*(ARBINT *)sp->pointer,*(ARBINT *)(sp-1)->pointer);
+    break;
+  case PL_ARRAY:
+    *(ARRAY *)&(sp->integer)=double_array((ARRAY *)&(sp[-1].integer));
   }
   return(1);
 }
 inline static int vm_exch(PARAMETER *sp) {    /*  */
   VERBOSE("vm_exch ");
-  sp[0]=sp[-1];   
+  *sp=sp[-1];   
   sp[-1]=sp[-2];   
-  sp[-2]=sp[0];   
+  sp[-2]=*sp;   
   return(0);
 }
 ISTATIC int vm_neg(PARAMETER *sp) {    /*  */
   VERBOSE("vm_neg ");
-  if(sp[-1].typ==PL_INT)          sp[-1].integer=-sp[-1].integer;
-  else if(sp[-1].typ==PL_FLOAT)   sp[-1].real=-sp[-1].real;
-  else TYPEMISMATCH("NEG");
+  switch(sp[-1].typ) {
+  case PL_INT:          sp[-1].integer=-sp[-1].integer; break;
+  case PL_COMPLEX:      sp[-1].imag=-sp[-1].imag;
+  case PL_FLOAT:        sp[-1].real=-sp[-1].real; break;
+  case PL_ARBINT:       mpz_neg(*(ARBINT *)sp[-1].pointer,*(ARBINT *)sp[-1].pointer);break;
+  default: TYPEMISMATCH("NEG");
+  }
   return(0);
-}
-inline static void cast_to_real(PARAMETER *sp) {
-  VERBOSE("vm_cast-to-real ");
-  if(sp->typ==PL_FLOAT) ;
-  else if(sp->typ==PL_LEER) ;
-  else if(sp->typ==PL_INT) {
-    sp->typ=PL_FLOAT;
-    sp->real=(double)sp->integer;
-  } else {
-    VMERROR("CAST to real not possible for typ=$%x/value=%d,%g not implemented.",
-    sp->typ,sp->integer,sp->real);
-  }
-}
-inline static void cast_to_int(PARAMETER *sp) {
-  VERBOSE("vm_cast-to-int ");
-  if(sp->typ==PL_INT) ;
-  else if(sp->typ==PL_LEER) ;
-  else if(sp->typ==PL_FLOAT) {
-    sp->typ=PL_INT;
-    sp->integer=(int)sp->real;
-  } else {
-    VMERROR("CAST to int not possible for typ=$%x/not implemented.",sp->typ);
-  }
 }
 STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   VERBOSE("vm_%s(%d) ",psfuncs[i].name,anzarg);
@@ -456,31 +514,120 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   } 	      
   sp-=anzarg;
   if((pfuncs[i].opcode&FM_TYP)==F_SIMPLE || pfuncs[i].pmax==0) {
-    if(pfuncs[i].opcode&F_IRET){
-       sp[0].integer=((int (*)())pfuncs[i].routine)();
-       sp[0].typ=PL_INT;
-    } else {
-      sp[0].real=(pfuncs[i].routine)();
-      sp[0].typ=PL_FLOAT;
+    switch(pfuncs[i].opcode&FM_RET) {
+    case F_IRET: 
+       sp->integer=((int (*)())pfuncs[i].routine)();
+       sp->typ=PL_INT;
+       break;
+    case F_CRET:
+       *((COMPLEX *)&(sp->real))=((COMPLEX (*)())pfuncs[i].routine)();
+       sp->typ=PL_COMPLEX;
+       break;
+    case F_DRET:
+       sp->real=(pfuncs[i].routine)();
+       sp->typ=PL_FLOAT;
+       break;
+    case F_AIRET: 
+       sp->pointer=malloc(sizeof(ARBINT));
+       mpz_init(*(ARBINT *)sp->pointer);
+       ((void (*)())pfuncs[i].routine)(*(ARBINT *)sp->pointer);
+       sp->typ=PL_ARBINT;
+       break;
+    case F_ANYRET:
+    case F_NRET:
+    case F_ANYIRET:  {
+       *sp=((ppfunc)(pfuncs[i].routine))();
+       break;
+     }
+    default: xberror(13,"");  /* Type mismatch */
     }
     return 1-anzarg;
-  }  
-  if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-    if(pfuncs[i].opcode&F_IRET) {
-      sp->integer=((int (*)())pfuncs[i].routine)(sp->pointer);
-      sp->typ=PL_INT;
-    } else {
-      sp->real=(pfuncs[i].routine)(sp->pointer);
-      sp->typ=PL_FLOAT;
+  } else if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
+    switch(pfuncs[i].opcode&FM_RET) {
+    case F_IRET: 
+       sp->integer=((int (*)())pfuncs[i].routine)(sp->pointer);
+       sp->typ=PL_INT;
+       free(sp->pointer);
+       break;
+    case F_CRET:
+       *((COMPLEX *)&(sp->real))=((COMPLEX (*)())pfuncs[i].routine)(sp->pointer);
+       sp->typ=PL_COMPLEX;
+       free(sp->pointer);
+       break;
+    case F_DRET:
+       sp->real=(pfuncs[i].routine)(sp->pointer);
+       sp->typ=PL_FLOAT;
+       free(sp->pointer);
+       break;
+    case F_AIRET: {
+       ARBINT b;
+       mpz_init(b);
+       ((void (*)())pfuncs[i].routine)(b,sp->pointer);
+       free_parameter(sp);
+       sp->pointer=malloc(sizeof(ARBINT));
+       mpz_init(*(ARBINT *)sp->pointer);
+       mpz_set(*(ARBINT *)sp->pointer,b);
+       mpz_clear(b);
+       sp->typ=PL_ARBINT;
+       }
+       break;
+    case F_ANYRET: 
+    case F_NRET:
+    case F_ANYIRET: {
+       PARAMETER b=((ppfunc)(pfuncs[i].routine))(sp->pointer);
+       free_parameter(sp);
+       *sp=b;
+       break;
+     }
+    default: xberror(13,"");  /* Type mismatch */
+       free(sp->pointer);
     }
-    free(sp->pointer);
+    return 1-anzarg;
+  } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {
+    PARAMETER *plist;
+    PARAMETER rpar;
+    int e=make_pliste3(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,sp,&plist,anzarg);
+    switch(pfuncs[i].opcode&FM_RET) {
+    case F_IRET: 
+      rpar.integer=((int (*)())pfuncs[i].routine)(plist,anzarg);
+      rpar.typ=PL_INT;
+      break;
+    case F_CRET:
+      *((COMPLEX *)&(rpar.real))=((COMPLEX (*)())pfuncs[i].routine)(plist,anzarg);
+      rpar.typ=PL_COMPLEX;
+      break;
+    case F_DRET:
+      rpar.real=(pfuncs[i].routine)(plist,anzarg);
+      rpar.typ=PL_FLOAT;
+      break;
+    case F_AIRET: 
+       rpar.typ=PL_ARBINT;
+       rpar.pointer=malloc(sizeof(ARBINT));
+       mpz_init(*(ARBINT *)rpar.pointer);
+       ((void (*)())pfuncs[i].routine)(*(ARBINT *)rpar.pointer,plist,anzarg);
+       break;
+    case F_ANYRET:
+    case F_NRET:
+    case F_ANYIRET:
+       rpar=((ppfunc)(pfuncs[i].routine))(plist,anzarg);
+       break;
+    default: xberror(13,"");  /* Type mismatch */
+    }
+    if(e!=-1) free_pliste(e,plist);
+    e=anzarg;
+    while(--e>=0) free_parameter(&sp[e]);
+    sp[0]=rpar;
     return 1-anzarg;
   }
+ 
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
     if(anzarg>0) cast_to_real(&sp[0]);
-    if(pfuncs[i].opcode&F_IRET) {
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].real);
       sp[0].typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      *((COMPLEX *)&(sp[0].real))=((COMPLEX (*)())pfuncs[i].routine)(sp[0].real);
+      sp->typ=PL_COMPLEX;
     } else {
       sp[0].real=(pfuncs[i].routine)(sp[0].real);
       sp[0].typ=PL_FLOAT;
@@ -490,9 +637,12 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
     if(anzarg>0) cast_to_real(&sp[0]);
     if(anzarg>1) cast_to_real(&sp[1]);
-    if(pfuncs[i].opcode&F_IRET) {
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].real,sp[1].real);
       sp[0].typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      *((COMPLEX *)&(sp[0].real))=((COMPLEX (*)())pfuncs[i].routine)(sp[0].real,sp[1].real);
+      sp->typ=PL_COMPLEX;
     } else {
       sp[0].real=(pfuncs[i].routine)(sp[0].real,sp[1].real);
       sp[0].typ=PL_FLOAT;
@@ -501,9 +651,12 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   }
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
     if(anzarg>0) cast_to_int(&sp[0]);
-    if(pfuncs[i].opcode&F_IRET) {
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].integer);
       sp[0].typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      *((COMPLEX *)&(sp[0].real))=((COMPLEX (*)())pfuncs[i].routine)(sp[0].integer);
+      sp->typ=PL_COMPLEX;
     } else {
       sp[0].real=(pfuncs[i].routine)(sp[0].integer);
       sp[0].typ=PL_FLOAT;
@@ -513,11 +666,29 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
     if(anzarg>0) cast_to_int(&sp[0]);
     if(anzarg>1) cast_to_int(&sp[1]);
-    if(pfuncs[i].opcode&F_IRET) {
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp[0].integer=((int (*)())pfuncs[i].routine)(sp[0].integer,sp[1].integer);
       sp[0].typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      *((COMPLEX *)&(sp[0].real))=((COMPLEX (*)())pfuncs[i].routine)(sp[0].integer,sp[1].integer);
+      sp->typ=PL_COMPLEX;
     } else {
-      sp[0].real=(pfuncs[i].routine)(sp[0].integer,sp[1].integer);
+      sp->real=(pfuncs[i].routine)(sp[0].integer,sp[1].integer);
+      sp->typ=PL_FLOAT;
+    }   
+    return 1-anzarg;
+  }
+  if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_CQUICK) {
+    if(anzarg>0) cast_to_complex(sp);
+    COMPLEX *a=(COMPLEX *)(&(sp[0].real));
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
+      sp[0].integer=((int (*)())pfuncs[i].routine)(*a);
+      sp[0].typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      *((COMPLEX *)&(sp[0].real))=((COMPLEX (*)())pfuncs[i].routine)(*a);
+      sp->typ=PL_COMPLEX;
+    } else {
+      sp[0].real=(pfuncs[i].routine)(*a);
       sp[0].typ=PL_FLOAT;
     }   
     return 1-anzarg;
@@ -530,30 +701,18 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     } else 
     xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
 //    printf("Got a string: <%s>\n",a.pointer);
-    if(pfuncs[i].opcode&F_IRET) {
+    if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp->integer=((int (*)())pfuncs[i].routine)(a);
       sp->typ=PL_INT;
+    } else if((pfuncs[i].opcode&FM_RET)==F_CRET) {
+      sp->real=(double)((int (*)())pfuncs[i].routine)(a);
+      sp->imag=0;
+      sp->typ=PL_COMPLEX;
     } else {
       sp->real=(pfuncs[i].routine)(a);
       sp->typ=PL_FLOAT;
     }
     free(a.pointer);
-    return 1-anzarg;
-  }
-  if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {
-    PARAMETER *plist;
-    PARAMETER rpar;
-    int e=make_pliste3(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,
-                 &sp[0],&plist,anzarg);
-    if(pfuncs[i].opcode&F_IRET) {
-      rpar.integer=((int (*)())pfuncs[i].routine)(plist,anzarg);
-      rpar.typ=PL_INT;
-    } else {
-      rpar.real=(pfuncs[i].routine)(plist,anzarg);
-      rpar.typ=PL_FLOAT;
-    }
-    if(e!=-1) free_pliste(e,plist);
-    sp[0]=rpar;
     return 1-anzarg;
   }
   VMERROR("INCOMPLETE"
@@ -564,7 +723,6 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
 STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
   VERBOSE("vm_%s(%d)_%d\n",comms[i].name,anzarg,i);
 // printf("SP=%p\n",sp);
-  if(comms[i].opcode&P_IGNORE) return -anzarg;
 #ifdef EXTRACHECK
   if(anzarg<comms[i].pmin) {
     xberror(42,comms[i].name); /* Zu wenig Parameter  */
@@ -575,23 +733,24 @@ STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
     return -anzarg;
   }  
 #endif
-  if((comms[i].opcode&PM_TYP)==P_ARGUMENT) {
-    char *w2;
-    w2=sp[-1].pointer;
+  switch(comms[i].opcode&PM_TYP) {
+  case P_IGNORE: return -anzarg;
+  case P_ARGUMENT: {
+    char *w2=sp[-1].pointer;
     (comms[i].routine)(w2);    
     free_parameter(&sp[-1]);
+    }
     return -anzarg;
-  }  
-  if((comms[i].opcode&PM_TYP)==P_SIMPLE) {
+  case P_SIMPLE:
     (comms[i].routine)();
     return -anzarg;
-  }      
-  if((comms[i].opcode&PM_TYP)==P_PLISTE) {
+  case P_PLISTE: {
     PARAMETER *plist;
     int e=make_pliste3(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,
                  &sp[-anzarg],&plist,anzarg);
     (comms[i].routine)(plist,e);
     if(e!=-1) free_pliste(e,plist);
+    }
     return -anzarg;
   } 
   VMERROR("INCOMPLETE"
@@ -603,25 +762,15 @@ ISTATIC int vm_pushvv(int vnr,PARAMETER *sp) {    /*  */
     VERBOSE("vm_pushvv_%d\n",vnr);
     sp->integer=vnr;
     sp->pointer=varptr_indexliste(&variablen[vnr],NULL,0);
-    if(variablen[vnr].typ==INTTYP) sp->typ=PL_IVAR;
-    else if(variablen[vnr].typ==FLOATTYP) sp->typ=PL_FVAR;
-    else if(variablen[vnr].typ==STRINGTYP) sp->typ=PL_SVAR;
-    else if(variablen[vnr].typ==ARRAYTYP) {
-      if(variablen[vnr].pointer.a->typ==INTTYP) sp->typ=PL_IARRAYVAR;
-      else if(variablen[vnr].pointer.a->typ==FLOATTYP) sp->typ=PL_FARRAYVAR;
-      else if(variablen[vnr].pointer.a->typ==STRINGTYP) sp->typ=PL_SARRAYVAR;
-      else sp->typ=PL_ARRAYVAR;
-    } else sp->typ=PL_ALLVAR;
+    int typ=variablen[vnr].typ;
+    if(typ==ARRAYTYP) typ|=variablen[vnr].pointer.a->typ;
+    sp->typ=(PL_VARGROUP|variablen[vnr].typ);
     return(1);
 }
 
 
 static void make_indexliste_plist(int dim, PARAMETER *p, int *index) {
-  while(--dim>=0) {
-      if(p[dim].typ==PL_INT) index[dim]=p[dim].integer;
-      else if(p[dim].typ==PL_FLOAT) index[dim]=(int)p[dim].real;
-      else printf("ERROR: no int!");    
-  }
+  while(--dim>=0) index[dim]=p2int(&p[dim]);
 }
 
 
@@ -641,116 +790,22 @@ STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
   p->integer=vnr;
   p->pointer=varptr_indexliste(&variablen[vnr],indexliste,dim);
  // printf("Pointer=%x\n",(int)p->pointer);
-  if(variablen[vnr].pointer.a->typ==INTTYP) p->typ=PL_IVAR;
-  else if(variablen[vnr].pointer.a->typ==FLOATTYP) p->typ=PL_FVAR;
-  else if(variablen[vnr].pointer.a->typ==STRINGTYP) p->typ=PL_SVAR;
-  else {
-    p->typ=PL_ALLVAR;
-    TYPEMISMATCH("pushvvi");
-  }
+  p->typ=(PL_VARGROUP|variablen[vnr].pointer.a->typ);
   if(indexliste) free(indexliste);
   return(-dim+1);
 }
 
 
-
-
-
-/* Weise aus parameter zu einer Vaiable */
-
-static void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
-  if(v->typ==INTTYP && p->typ==PL_INT)          *(v->pointer.i)=p->integer;
-  else if(v->typ==INTTYP && p->typ==PL_FLOAT)   *(v->pointer.i)=(int)p->real;
-  else if(v->typ==FLOATTYP && p->typ==PL_FLOAT) *(v->pointer.f)=p->real;
-  else if(v->typ==FLOATTYP && p->typ==PL_INT)   *(v->pointer.f)=(double)p->integer;
-  else if(v->typ==STRINGTYP && p->typ==PL_STRING) {
-    free(v->pointer.s->pointer);
-    *(v->pointer.s)=double_string((STRING *)&(p->integer));
-  } else if(v->typ==ARRAYTYP && p->typ==PL_ARRAY) {
-    
-    /*Was machen wir, wenn die Arraytypen nicht stimmen?*/
-    
-       ARRAY *zarr=v->pointer.a;
-       ARRAY *arr=(ARRAY *)&(p->integer);
-     
-      if(arr->typ==zarr->typ) {
-        free_array(v->pointer.a);
-        *(v->pointer.a)=double_array((ARRAY *)&(p->integer));
-      } else if(zarr->typ==INTTYP && arr->typ==FLOATTYP) {
-        free_array(v->pointer.a);
-        *(v->pointer.a)=convert_to_intarray(arr);
-      } else if(zarr->typ==FLOATTYP && arr->typ==INTTYP) {
-        free_array(v->pointer.a);
-        *(v->pointer.a)=convert_to_floatarray(arr);
-      } else {
-          xberror(58,v->name); /* Variable %s has incorrect type*/  
-	printf("Ziel-Array  hat folgenden Typ: %d\n",zarr->typ);
-	printf("Quell-Array hat folgenden Typ: %d\n",arr->typ);
-      }
-      
-  } else if(v->typ==INTTYP && p->typ==PL_IVAR) {
-    erase_variable(v);
-    v->pointer.i=(int *)p->pointer;
-    v->flags=V_STATIC;
-  } else if(v->typ==FLOATTYP && p->typ==PL_FVAR) {
-    erase_variable(v);
-    v->pointer.f=(double *)p->pointer;
-    v->flags=V_STATIC;
-  } else if(v->typ==STRINGTYP && p->typ==PL_SVAR) {
-    erase_variable(v);
-    v->pointer.s=(STRING *)p->pointer;
-    v->flags=V_STATIC;
-  } else if(v->typ==ARRAYTYP) {
-    int atyp=v->pointer.a->typ;
-    if(p->typ==PL_IARRAYVAR) {
-      if(atyp!=INTTYP) {
-        xberror(58,v->name); /* Variable %s has incorrect type*/ 
-        dump_parameterlist(p,1);
-      }
-      erase_variable(v);
-      v->pointer.a=(ARRAY *)p->pointer;
-      v->flags=V_STATIC;
-    } else if(p->typ==PL_FARRAYVAR) {
-      if(atyp!=FLOATTYP) {
-        xberror(58,v->name); /* Variable %s has incorrect type*/ 
-        dump_parameterlist(p,1);
-      }
-      erase_variable(v);
-      v->pointer.a=(ARRAY *)p->pointer;
-      v->flags=V_STATIC;
-    } else if(p->typ==PL_SARRAYVAR) {
-      if(atyp!=STRINGTYP) {
-        xberror(58,v->name); /* Variable %s has incorrect type*/ 
-        dump_parameterlist(p,1);
-      }
-      erase_variable(v);
-      v->pointer.a=(ARRAY *)p->pointer;
-      v->flags=V_STATIC;
-    } else if(p->typ==PL_ARRAYVAR) {
-      erase_variable(v);
-      v->pointer.a=(ARRAY *)p->pointer;
-      v->flags=V_STATIC;
-    } else {
-      xberror(58,v->name); /* Variable %s has incorrect type*/ 
-      dump_parameterlist(p,1);
-    }
-  } else {  
-    xberror(58,v->name); /* Variable %s has incorrect type*/  
-    printf("zuweis_v_parameter: $%x->$%x can not convert.\n",p->typ,v->typ);
-    dump_parameterlist(p,1);
-  }
-}
-
 ISTATIC int vm_zuweis(int vnr,PARAMETER *sp) {    /*  */
   VERBOSE("vm_zuweis_%d\n",vnr);
   zuweis_v_parameter(&variablen[vnr],&sp[-1]);
-  free_parameter(&sp[-1]);
+  free_parameter(sp-1);
   return(-1);
 }
 
 STATIC int vm_zuweisindex(int vnr,PARAMETER *sp,int dim) {    /*  */
   int *indexliste=NULL;
-  VERBOSE("vm_suweisindex_%d_%d \n",vnr,dim);
+  VERBOSE("vm_zuweisindex_%d_%d \n",vnr,dim);
 //printf("ZUWEISINDEX: vnr=%d dim=%d",vnr,dim);
 //dump_parameterlist(&sp[-dim],dim);
 //printf("value: ");
@@ -792,6 +847,14 @@ STATIC int vm_pusharrayelem(int vnr, PARAMETER *sp, int dim) {    /*  */
       } else if(subtyp==FLOATTYP) {
         p->typ=PL_FLOAT;
 	p->real=*((double *)varptr);
+      } else if(subtyp==COMPLEXTYP) {
+        p->typ=PL_COMPLEX;
+	*(COMPLEX *)&p->real=*((COMPLEX *)varptr);
+      } else if(subtyp==ARBINTTYP) {
+        p->typ=PL_ARBINT;
+	p->pointer=malloc(sizeof(ARBINT));
+	mpz_init(*(ARBINT *)p->pointer);
+	mpz_set(*(ARBINT *)p->pointer,*((ARBINT *)varptr));
       } else if(subtyp==STRINGTYP) {
         p->typ=PL_STRING;
 	p->integer=((STRING *)varptr)->len;
@@ -806,22 +869,23 @@ STATIC int vm_pusharrayelem(int vnr, PARAMETER *sp, int dim) {    /*  */
   return(-dim+1);
 }
 
-STATIC void  push_v(PARAMETER *p, VARIABLE *v) {
+STATIC void  push_v(PARAMETER *p, const VARIABLE *v) {
   p->panzahl=0;
-  if(v->typ==INTTYP) {
-    p->typ=PL_INT;
-    p->integer=*(v->pointer.i);
-  } else if(v->typ==FLOATTYP) {
-    p->typ=PL_FLOAT;
-    p->real=*(v->pointer.f);
-  } else if(v->typ==STRINGTYP) {
-    p->typ=PL_STRING;
-    *((STRING *)&(p->integer))=double_string(v->pointer.s);
-  } else if(v->typ==ARRAYTYP) {
-    p->typ=PL_ARRAY;
-    *((ARRAY *)&(p->integer))=double_array(v->pointer.a);
-  } else printf("pushv: Something is wrong, var <%s> $%x->$%x kann nicht konvertieren.\n",
-  v->name,v->typ,p->typ);
+  p->typ=(PL_CONSTGROUP|v->typ);
+  switch(v->typ) {
+  case INTTYP:   p->integer=*(v->pointer.i); return;
+  case FLOATTYP: p->real=*(v->pointer.f);    return;
+  case COMPLEXTYP: *((COMPLEX *)&(p->real))=*(v->pointer.c); return;
+  case STRINGTYP: *((STRING *)&(p->integer))=double_string(v->pointer.s); return;
+  case ARRAYTYP:  *((ARRAY *)&(p->integer))=double_array(v->pointer.a);   return;
+  case ARBINTTYP: 
+    p->pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)p->pointer);   
+    mpz_set(*(ARBINT *)p->pointer,*(v->pointer.ai));
+    return;
+  default: 
+    printf("pushv: Something is wrong, var <%s> typ=$%x cannot push.\n",v->name,v->typ);
+  }
 }
 
 inline static int vm_pushv(unsigned short vnr,PARAMETER *sp) {    /*  */
@@ -846,29 +910,7 @@ static int vm_eval(PARAMETER *sp) {    /*  */
 }
 
 
-#define CP4(d,s,l) { register char *dd=(char *)(d); \
-                   register char *ss=(char *)(s); \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd=*ss; i+=l;}
-#define CP2(d,s,l) { register char *dd=(char *)(d); \
-                   register char *ss=(char *)(s); \
-                 *dd++=*ss++; \
-                 *dd=*ss; i+=l;}
-
-#define CP8(d,s,l) { register char *dd=(char *)(d); \
-                   register char *ss=(char *)(s); \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd++=*ss++; \
-                 *dd=*ss; i+=l;}
-
-
+int program_adr=0;
 PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAMETER *plist, int inpar) {
   PARAMETER *opstack=calloc(BC_STACKLEN,sizeof(PARAMETER));
   PARAMETER *osp=opstack;
@@ -885,32 +927,32 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
     memcpy(osp,plist,sizeof(PARAMETER)*inpar);
     opstack+=inpar;
   }
-  
-  
-  
+
 #ifdef ANDROID
   backlog("enter virtual machine.");
 #endif
   while(batch && i<bcpc.len && (cmd=bcpc.pointer[i])) {
+    program_adr=i;
     i++;
     switch(cmd) {
     case BC_NOOP:  
       VERBOSE("vm_noop ");
       break;
     case BC_JSR:
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       VERBOSE("vm_jsr_%d\n",a);
       stack[sp]=i;
       i=a;
+      // dump_parameterlist(opstack-8,8);
       break;
     case BC_JMP:
-      CP4(&a,&bcpc.pointer[i],0);
+      CP4(&a,&bcpc.pointer[i],i);
       i=a;
       VERBOSE("vm_jmp_%d\n",a);
       break;
     case BC_JEQ:
       if((--opstack)->integer==0) {
-        CP4(&a,&bcpc.pointer[i],0);
+        CP4(&a,&bcpc.pointer[i],i);
 	i=a;
         VERBOSE("vm_jeq_%d ",a);
       } else {
@@ -919,17 +961,17 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       }
       break;
     case BC_BRA:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       VERBOSE("vm_bra_%d \n",ss);
       i+=ss;
       break;
     case BC_BEQ:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       VERBOSE("vm_beq_%d ",ss);
       if((--opstack)->integer==0) i+=ss;
       break;
     case BC_BSR:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       VERBOSE("vm_bsr_%d \n",ss);
       stack[sp]=i;
       i+=ss;
@@ -956,36 +998,53 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("vm_beqs_%d ",ss);
       if((--opstack)->integer==0) i+=ss;
       break;
+    case BC_PUSHC:
+      CP8(&d,&bcpc.pointer[i],i);
+      opstack->real=d;
+      CP8(&d,&bcpc.pointer[i],i);
+      opstack->imag=d;
+      opstack->typ=PL_COMPLEX;
+      opstack++;
+      VERBOSE("(%g+%gi)",opstack->real,opstack->imag);
+      break;
     case BC_PUSHF:
-      CP8(&d,&bcpc.pointer[i],sizeof(double));
+      CP8(&d,&bcpc.pointer[i],i);
       opstack->real=d;
       opstack->typ=PL_FLOAT;
       opstack++;
       VERBOSE("%g ",d);
       break;
     case BC_PUSHI:
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->integer=a;
       opstack->typ=PL_INT;
       opstack++;
       VERBOSE("%d ",a);
       break;
     case BC_LOADi:
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->integer=*((int *)a);
       opstack->typ=PL_INT;
       opstack++;
       VERBOSE("[$%x].i ",a);
       break;
     case BC_LOADf:
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->real=*((double *)a);
       opstack->typ=PL_FLOAT;
       opstack++;
       VERBOSE("[$%x].d ",a);
       break;
+    case BC_LOADc:
+      CP4(&a,&bcpc.pointer[i],i);
+      opstack->real=*((double *)a);
+      opstack->imag=0;
+      opstack->typ=PL_COMPLEX;
+      opstack++;
+      VERBOSE("[$%x].d ",a);
+      break;
     case BC_PUSHW:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       opstack->integer=ss;
       opstack->typ=PL_INT;
       opstack++;
@@ -1028,8 +1087,8 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_PUSHS:  /*String konstante auf STack....*/
       { int len;
-      CP4(&len,&bcpc.pointer[i],sizeof(int));
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&len,&bcpc.pointer[i],i);
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->integer=len;
       opstack->typ=PL_STRING;
       opstack->pointer=malloc(len+1);
@@ -1039,11 +1098,29 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("\"%s\" ",(char *)opstack[-1].pointer);
       }
       break;
+    case BC_PUSHAI:  /*Big int Konstante auf STack....*/
+      { int len;
+      CP4(&len,&bcpc.pointer[i],i);
+      CP4(&a,&bcpc.pointer[i],i);
+      opstack->typ=PL_ARBINT;
+      char *buf=malloc(len+1);
+      memcpy(buf,rodata+a,len);
+      buf[len]=0;
+      opstack->pointer=malloc(sizeof(ARBINT));
+      mpz_init(*(ARBINT *)opstack->pointer);
+      mpz_set_str(*(ARBINT *)opstack->pointer,buf,32);
+      free(buf);
+      buf=mpz_get_str(NULL,10,*(ARBINT *)opstack->pointer);
+      opstack++;
+      VERBOSE("\"%s\" ",buf);
+      free(buf);
+      }
+      break;
     case BC_PUSHA:  /*Array konstante auf STack....*/
       { int len;
         STRING str;
-      CP4(&len,&bcpc.pointer[i],sizeof(int));
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&len,&bcpc.pointer[i],i);
+      CP4(&a,&bcpc.pointer[i],i);
       str.len=len;
       str.pointer=(char *)(rodata+a);
       opstack->typ=PL_ARRAY;
@@ -1083,7 +1160,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_PUSHX:
       { int len=bcpc.pointer[i++];
-        CP4(&a,&bcpc.pointer[i],sizeof(int));
+        CP4(&a,&bcpc.pointer[i],i);
         buf=malloc(len+1);
         memcpy(buf,rodata+a,len);
         buf[len]=0;
@@ -1123,6 +1200,14 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("ADDf ");
       opstack--;(opstack-1)->real+=opstack->real;
       break;
+    case BC_ADDc:
+      VERBOSE("ADDc ");
+      opstack--;(opstack-1)->real+=opstack->real;(opstack-1)->imag+=opstack->imag;
+      break;
+    case BC_SUBc:
+      VERBOSE("SUBc ");
+      opstack--;(opstack-1)->real-=opstack->real;(opstack-1)->imag-=opstack->imag;
+      break;
     case BC_ADDs:
       VERBOSE("ADDs ");
       opstack--; 
@@ -1138,13 +1223,21 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_OR:
       VERBOSE("OR ");
+      opstack+=vm_or(opstack);
+      break;
+    case BC_ORi:
+      VERBOSE("ORi ");
       opstack--;
-      (opstack-1)->integer=(opstack-1)->integer | opstack->integer;
+      (opstack-1)->integer|=opstack->integer;
       break;
     case BC_XOR:
       VERBOSE("XOR ");
+      opstack+=vm_xor(opstack);
+      break;
+    case BC_XORi:
+      VERBOSE("XORi ");
       opstack--;
-      (opstack-1)->integer=(opstack-1)->integer ^ opstack->integer;
+      (opstack-1)->integer^=opstack->integer;
       break;
     case BC_SUB:
       opstack+=vm_sub(opstack);
@@ -1168,17 +1261,33 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("MULf ");
       opstack--;(opstack-1)->real*=opstack->real;
       break;
+    case BC_MULc:
+      VERBOSE("MULc ");
+      opstack--;*(COMPLEX *)&((opstack-1)->real)=complex_mul(*(COMPLEX *)&((opstack-1)->real),*(COMPLEX *)&((opstack)->real));
+      break;
     case BC_DIV:
       VERBOSE("DIV ");
+      opstack+=vm_div(opstack);
+      break;
+    case BC_DIVf:
+      VERBOSE("DIVf ");
       opstack--;(opstack-1)->real/=opstack->real;
+      break;
+    case BC_DIVc:
+      VERBOSE("DIVc ");
+      opstack--;*(COMPLEX *)&((opstack-1)->real)=complex_div(*(COMPLEX *)&((opstack-1)->real),*(COMPLEX *)&((opstack)->real));
       break;
     case BC_POW:
       opstack+=vm_pow(opstack);
       break;
     case BC_AND:
       VERBOSE("AND ");
+      opstack+=vm_and(opstack);
+      break;
+    case BC_ANDi:
+      VERBOSE("ANDi ");
       opstack--;
-      (opstack-1)->integer=opstack->integer & (opstack-1)->integer;
+      (opstack-1)->integer&=opstack->integer;
       break;
     case BC_EQUAL:
       opstack+=vm_equal(opstack);
@@ -1210,19 +1319,30 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       opstack++;
       VERBOSE("vm_count_%d ",a);
       break;
-    case BC_NEG:
-      vm_neg(opstack);
-      break;
     case BC_NOT:
       VERBOSE("NOT ");
+      vm_not(opstack);
+      break;
+    case BC_NOTi:
+      VERBOSE("NOTi ");
       (opstack-1)->integer=~(opstack-1)->integer;
       break;
-    case BC_X2I:
-      vm_x2i(opstack);
+    case BC_NEG: vm_neg(opstack); break;
+    case BC_X2I: vm_x2i(opstack); break;
+    case BC_X2AI: vm_x2ai(opstack); break;
+    case BC_I2F: 
+      (opstack-1)->real=(double)(opstack-1)->integer;
+      (opstack-1)->typ=PL_FLOAT;
       break;
-    case BC_X2F:
-      vm_x2f(opstack);
+    case BC_I2FILE: 
+      (opstack-1)->typ=PL_FILENR;
       break;
+    case BC_F2C: 
+      (opstack-1)->imag=0;
+      (opstack-1)->typ=PL_COMPLEX;
+      break;
+    case BC_X2F: vm_x2f(opstack); break;
+    case BC_X2C: vm_x2c(opstack); break;
     case BC_MOD:
       VERBOSE("MOD ");
       opstack+=vm_mod(opstack);
@@ -1233,48 +1353,51 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       free_parameter(opstack);
       break;
     case BC_ZUWEISi:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       *(variablen[ss].pointer.i)=(--opstack)->integer;
       break;
     case BC_ZUWEISf:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       *(variablen[ss].pointer.f)=(--opstack)->real;
       break;
+    case BC_ZUWEISc:
+      CP2(&ss,&bcpc.pointer[i],i);
+      *(variablen[ss].pointer.c)=*((COMPLEX *)&((--opstack)->real));
+      break;
     case BC_ZUWEIS:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       opstack+=vm_zuweis(ss,opstack);
       break;
     case BC_PUSHVV:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       opstack+=vm_pushvv(ss,opstack);
       break;
     case BC_LOCAL:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       VERBOSE("dolocal_%d ",ss);
       do_local(ss,sp);
       break;
     case BC_ZUWEISINDEX:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
-      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
+      CP2(&ss2,&bcpc.pointer[i],i);
       opstack+=vm_zuweisindex(ss,opstack,ss2);
       break;
     case BC_PUSHV:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
       opstack+=vm_pushv(ss,opstack);
-      
       break;
     case BC_PUSHARRAYELEM:      
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
-      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
+      CP2(&ss2,&bcpc.pointer[i],i);
       opstack+=vm_pusharrayelem(ss,opstack,ss2);
       break;
     case BC_PUSHVVI:
-      CP2(&ss,&bcpc.pointer[i],sizeof(short));
-      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss,&bcpc.pointer[i],i);
+      CP2(&ss2,&bcpc.pointer[i],i);
       opstack+=vm_pushvvi(ss,opstack,ss2);
       break;
     case BC_RESTORE:
-      CP4(&datapointer,&bcpc.pointer[i],sizeof(int));
+      CP4(&datapointer,&bcpc.pointer[i],i);
       VERBOSE("vm_restore_%d\n",datapointer);
       break;
     case BC_EVAL:
@@ -1282,14 +1405,14 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       opstack+=vm_eval(opstack);
       break;
     case BC_PUSHLABEL:
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->integer=a;
       opstack->typ=PL_LABEL;
       opstack->arraytyp=1;
       opstack++;
       break;
     case BC_PUSHPROC: 
-      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],i);
       opstack->integer=a;
       opstack->typ=PL_PROC;
       opstack->arraytyp=1;

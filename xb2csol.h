@@ -12,27 +12,36 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <gmp.h>
 #include <x11basic/x11basic.h>
 
 #define BC_STACKLEN 512
 #define PL_LEER     0x00
-#define PL_KEY      0x06
-#define PL_INT     1
-#define PL_FLOAT   2
-#define PL_STRING  4
-#define PL_ARRAY   8
+#define PL_KEY      0x39
+#define PL_INT       1
+#define PL_FLOAT     2
+#define PL_ARBINT    3
+#define PL_COMPLEX   5
+#define PL_STRING    7
 
-#define PL_LABEL    0x10
-#define PL_PROC     0x11
+#define PL_ARRAY     8
+
+#define PL_LABEL    0x20
+#define PL_PROC     0x21
+#define PL_IVAR     0x11
+#define PL_FVAR     0x12
 
 /* Variablen Typen (unsigned char)*/
+
+#define TYPMASK           7
 
 #define NOTYP             0
 #define INTTYP            1
 #define FLOATTYP          2
-#define STRINGTYP         4
-#define INDIRECTTYP       8
-#define ARRAYTYP       0x10
+#define ARBINTTYP         3
+#define COMPLEXTYP        5
+#define STRINGTYP         7
+#define ARRAYTYP          8
 #define CONSTTYP       0x20
 #define FILENRTYP       0x40
 
@@ -58,8 +67,8 @@ extern int is_bytecode;
 int programbufferlen;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer;
-const char version[]="1.22"; /* Version Number. Put some useful information here */
-const char vdate[]="2014-04-28";   /* Creation date.  Put some useful information here */
+const char version[]="1.23"; /* Version Number. Put some useful information here */
+const char vdate[]="2015-01-01";   /* Creation date.  Put some useful information here */
 char **program={"compiled by xb2c"};    /* Other comments. Put some useful information here */
 int prglen=sizeof(program)/sizeof(char *);
 extern int datapointer;
@@ -69,6 +78,32 @@ int verbose;
 #endif
 
 int vm_comm(PARAMETER *sp,int i, int anzarg);
+
+
+static inline void p2arbint(PARAMETER *p,ARBINT a) {
+  switch(p->typ) {
+  case PL_INT:     mpz_set_si(a,p->integer);break; 
+  case PL_FLOAT:   
+  case PL_COMPLEX: mpz_set_d(a,p->real);break;
+  case PL_ARBINT:  mpz_set(a,*(ARBINT *)p->pointer);break;
+  default: xberror(46,""); /*  Parameter %s falsch, keine Number */
+  }
+}
+
+inline static void cast_to_arbint(PARAMETER *sp) {
+  if(sp->typ==PL_LEER ||sp->typ==PL_ARBINT) return;
+  ARBINT a;
+  mpz_init(a);
+  p2arbint(sp,a);
+  free_parameter(sp);
+  sp->pointer=malloc(sizeof(ARBINT));
+  mpz_init(*(ARBINT *)sp->pointer);
+  mpz_set(*(ARBINT *)sp->pointer,a);
+  sp->typ=PL_ARBINT;
+  mpz_clear(a);
+}
+
+
 void free_parameter(PARAMETER *p);
 int add_variable_adr(char *name, unsigned char  typ, char *adr);
   /* Initialize the x11basic-library */
@@ -93,6 +128,8 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define PUSHI(a) opstack->integer=a; opstack->typ=PL_INT; opstack++
 #define PUSHW(a) opstack->integer=a; opstack->typ=PL_INT; opstack++
 #define PUSHF(a) opstack->real=a; opstack->typ=PL_FLOAT; opstack++
+#define PUSHC(a,b) opstack->real=a;opstack->imag=b; opstack->typ=PL_COMPLEX; opstack++
+
 #define PUSHX(a) opstack->integer=strlen(a); opstack->pointer=strdup(a); opstack->typ=PL_KEY; opstack++
 #define PUSHK(a) opstack->integer=0; opstack->pointer=NULL; opstack->arraytyp=a; opstack->typ=PL_KEY; opstack++
 /* TODO: binary data in Strings*/
@@ -112,14 +149,19 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define ZUWEIS(a) opstack+=vm_zuweis(a,opstack)
 #define ZUWEISi(a) *(variablen[a].pointer.i)=(--opstack)->integer
 #define ZUWEISf(a) *(variablen[a].pointer.f)=(--opstack)->real
+#define ZUWEISc(a) *(variablen[a].pointer.c)=*((COMPLEX *)&((--opstack)->real))
 
 #define LOCAL(a)  do_local(a,sp)
 #define MOD      opstack+=vm_mod(opstack)
-#define NOT      (opstack-1)->integer=~(opstack-1)->integer
-//#define X2I      vm_x2i(opstack)
-#define X2I      if((opstack-1)->typ==PL_FLOAT) {(opstack-1)->integer=(int)(opstack-1)->real; (opstack-1)->typ=PL_INT;}
-//#define X2F      vm_x2f(opstack)
-#define X2F      if((opstack-1)->typ==PL_INT) {(opstack-1)->real=(double)(opstack-1)->integer; (opstack-1)->typ=PL_FLOAT;}
+#define NOT      vm_not(opstack)
+#define NOTi     (opstack-1)->integer=~(opstack-1)->integer
+#define X2I      if((opstack-1)->typ!=PL_INT) {(opstack-1)->integer=(int)(opstack-1)->real; (opstack-1)->typ=PL_INT;}
+#define X2AI     cast_to_arbint(opstack-1)
+#define X2F      if((opstack-1)->typ==PL_INT) {(opstack-1)->real=(double)(opstack-1)->integer;} (opstack-1)->typ=PL_FLOAT
+#define I2F      (opstack-1)->real=(double)(opstack-1)->integer; (opstack-1)->typ=PL_FLOAT
+#define I2FILE   (opstack-1)->typ=PL_FILENR
+#define X2C      if((opstack-1)->typ==PL_INT) {(opstack-1)->real=(double)(opstack-1)->integer;} if((opstack-1)->typ!=PL_COMPLEX) {(opstack-1)->imag=0;(opstack-1)->typ=PL_COMPLEX;}
+#define F2C      (opstack-1)->imag=0;(opstack-1)->typ=PL_COMPLEX
 
 #define NEG      vm_neg(opstack)
 #define EXCH     *opstack=opstack[-1];opstack[-1]=opstack[-2];opstack[-2]=*opstack
@@ -129,20 +171,27 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define LESS     opstack+=vm_less(opstack)
 #define GREATER  opstack+=vm_greater(opstack)
 #define POW      opstack+=vm_pow(opstack)
-#define DIV      opstack--;(opstack-1)->real/=opstack->real
+#define DIV      opstack+=vm_div(opstack)
+#define DIVf     opstack--;(opstack-1)->real/=opstack->real
+#define DIVc     opstack--;*(COMPLEX *)&((opstack-1)->real)=complex_div(*(COMPLEX *)&((opstack-1)->real),*(COMPLEX *)&((opstack)->real))
 #define MUL      opstack+=vm_mul(opstack)
 #define MULi     opstack--;(opstack-1)->integer*=opstack->integer
 #define MULf     opstack--;(opstack-1)->real*=opstack->real
+#define MULc     opstack--;*(COMPLEX *)&((opstack-1)->real)=complex_mul(*(COMPLEX *)&((opstack-1)->real),*(COMPLEX *)&((opstack)->real))
 #define SUB      opstack+=vm_sub(opstack)
 #define SUBi     opstack--;(opstack-1)->integer-=opstack->integer
 #define SUBf     opstack--;(opstack-1)->real-=opstack->real
-#define AND      opstack--;(opstack-1)->integer=(opstack-1)->integer & opstack->integer
-#define OR       opstack--;(opstack-1)->integer=(opstack-1)->integer | opstack->integer
-#define XOR      opstack--;(opstack-1)->integer=(opstack-1)->integer ^ opstack->integer
+#define AND      opstack+=vm_and(opstack)
+#define ANDi     opstack--;(opstack-1)->integer&=opstack->integer
+#define OR       opstack+=vm_or(opstack)
+#define ORi      opstack--;(opstack-1)->integer|=opstack->integer
+#define XOR      opstack+=vm_xor(opstack)
+#define XORi     opstack--;(opstack-1)->integer^=opstack->integer
 
 #define ADD      opstack+=vm_add(opstack)
 #define ADDi     opstack--;(opstack-1)->integer+=opstack->integer
 #define ADDf     opstack--;(opstack-1)->real+=opstack->real
+#define ADDc     opstack--;(opstack-1)->real+=opstack->real;(opstack-1)->imag+=opstack->imag
 #define ADDs     opstack--; {\
                  int l=(opstack-1)->integer;char *p=(opstack-1)->pointer;\
 		 (opstack-1)->integer+=opstack->integer;\
@@ -169,8 +218,8 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define COMM_VSYNC activate()
 #define COMM_SHOWPAGE activate()
 #define COMM_END puts("done.");batch=0
-#define COMM_INC opstack--;if(variablen[opstack->integer].typ&FLOATTYP) (*((double *)opstack->pointer))++;  else if(variablen[opstack->integer].typ&INTTYP) (*((int *)opstack->pointer))++
-#define COMM_DEC opstack--;if(variablen[opstack->integer].typ&FLOATTYP) (*((double *)opstack->pointer))--;  else if(variablen[opstack->integer].typ&INTTYP) (*((int *)opstack->pointer))--
+#define COMM_INC opstack--;if(opstack->typ==PL_FVAR) (*((double *)opstack->pointer))++;  else if(opstack->typ==PL_IVAR) (*((int *)opstack->pointer))++
+#define COMM_DEC opstack--;if(opstack->typ==PL_FVAR) (*((double *)opstack->pointer))--;  else if(opstack->typ==PL_IVAR) (*((int *)opstack->pointer))--
 
 /* conditional helpers*/
 #define JUMPIFZERO if((--opstack)->integer==0) goto

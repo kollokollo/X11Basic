@@ -39,7 +39,68 @@
 #include "decode.h"
 
 
+#ifdef DUMMY_LIST
+#define f_nop NULL
+#define array_to_string NULL
+#define f_fsfirsts NULL
+#define f_fsnexts NULL
+#define f_inputs NULL
+#define f_lineinputs NULL
+#define f_xtrims NULL
+#define f_words  NULL
+#define f_usings NULL
+#define f_unixtimes NULL
+#define f_unixdates NULL
+#define f_uncompresss NULL
+#define f_uppers NULL
+#define f_lowers NULL
+#define f_chrs NULL
+#define f_trims NULL
+#define f_terminalnames NULL
+#define f_systems NULL
+#define f_prgs NULL
+#define f_replaces NULL
+#define f_reverses NULL
+#define f_mids NULL
+#define f_rights NULL
+#define f_lefts NULL
+#define f_strings NULL
+#define f_strs NULL
+#define f_signs NULL
+#define f_spaces NULL
+#define f_rles NULL
+#define f_rlds NULL
+#define f_hexs NULL
+#define f_octs NULL
+#define f_bins NULL
+#define f_hashs NULL
+#define f_errs NULL
+#define f_envs NULL
+#define f_inlines NULL
+#define f_radixs NULL
+#define f_rightofs NULL
+#define f_leftofs NULL
+#define f_params NULL
+#define f_mkis NULL
+#define f_mkls NULL
+#define f_mkss NULL
+#define f_mkds NULL
+#define f_mkfs NULL
+#define f_aries NULL
+#define f_arids NULL
+#define f_bwtes NULL
+#define f_bwtds NULL
+#define f_compresss NULL
+#define f_encloses NULL
+#define f_decloses NULL
+#define f_decrypts NULL
+#define f_encrypts NULL
+#define f_juldates NULL
+#define f_mtfds NULL
+#define f_mtfes NULL
 
+
+#else
 static STRING f_errs(int n)    { return(create_string((char *)error_text((char)n,NULL))); }
 static STRING f_envs(STRING n) { return(create_string(getenv(n.pointer)));}
 
@@ -197,6 +258,8 @@ static STRING f_encloses(PARAMETER *plist,int e) {
   return(ergebnis);
 }
 static STRING f_usings(PARAMETER *plist,int e) {
+  if(plist->typ==PL_INT) plist->real=(double)plist->integer;
+  else if(plist->typ==PL_ARBINT)  plist->real=mpz_get_d(*(ARBINT *)(plist->pointer));
   STRING form;
   form.pointer=plist[1].pointer;
   form.len=plist[1].integer;
@@ -320,7 +383,30 @@ static STRING f_strs(PARAMETER *plist,int e) {         /* STR$(a[,b[,c[,d]]])   
   if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%dg",b,c);
   else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%dg",b,c);
   else  sprintf(formatter,"%%.13g");
-  sprintf(ergebnis.pointer,formatter,plist[0].real);
+  switch(plist->typ) {
+  case PL_INT:
+    plist->real=(double)plist->integer;
+  case PL_FLOAT:
+    sprintf(ergebnis.pointer,formatter,plist->real);
+    break;
+  case PL_COMPLEX: {
+    char *formatter2=malloc(48);
+    sprintf(formatter2,"(%s+%si)",formatter,formatter);
+    sprintf(ergebnis.pointer,formatter2,plist->real,plist->imag);
+    free(formatter2);
+    }
+    break;
+  case PL_ARBINT: {
+    char *buf=mpz_get_str(NULL,10,*(ARBINT *)(plist->pointer));
+    free(ergebnis.pointer);
+    ergebnis.pointer=buf;
+    break;
+    }
+  default:
+    printf("Unknown parameter typ in STR$():\n");
+    dump_parameterlist(plist,e);
+  }
+  
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
@@ -334,49 +420,67 @@ static char *i2a(unsigned i, char *a, unsigned r) {
 
 static STRING f_bins(PARAMETER *plist,int e) {
   STRING ergebnis;
-  unsigned int value=plist[0].integer;
-  /*Predict length of string*/
-  int plen=1;
-  if(value) plen=(log(value)/(double)log(2))+1;
-  int len=plen;
-  if(e>1) len=max(plen,plist[1].integer);
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  char *a=ergebnis.pointer;
-  while(len>plen) {*a++='0';len--;}
-  *i2a(value,a,2)=0;
+  if(plist->typ==PL_INT) {
+    unsigned int value=plist[0].integer;
+    /*Predict length of string*/
+    int plen=1;
+    if(value) plen=(log(value)/(double)log(2))+1;
+    int len=plen;
+    if(e>1) len=max(plen,plist[1].integer);
+    ergebnis.pointer=malloc(len+1);
+    ergebnis.len=len;
+    char *a=ergebnis.pointer;
+    while(len>plen) {*a++='0';len--;}
+    *i2a(value,a,2)=0;
+    return(ergebnis);
+  }
+  cast_to_arbint(plist);
+  ergebnis.pointer=mpz_get_str(NULL,2,*(ARBINT *)(plist->pointer));
+  ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
 static STRING f_octs(PARAMETER *plist,int e) {
   STRING ergebnis;
-  unsigned int value=plist[0].integer;
-  /*Predict length of string*/
-  int plen=1;
-  if(value) plen=(log(value)/(double)log(8))+1;
-  int len=plen;
-  if(e>1) len=max(plen,plist[1].integer);
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  char *a=ergebnis.pointer;
-  while(len>plen) {*a++='0';len--;}
-  *i2a(value,a,8)=0;
+  if(plist->typ==PL_INT) {
+    unsigned int value=plist[0].integer;
+    /*Predict length of string*/
+    int plen=1;
+    if(value) plen=(log(value)/(double)log(8))+1;
+    int len=plen;
+    if(e>1) len=max(plen,plist[1].integer);
+    ergebnis.pointer=malloc(len+1);
+    ergebnis.len=len;
+    char *a=ergebnis.pointer;
+    while(len>plen) {*a++='0';len--;}
+    *i2a(value,a,8)=0;
+    return(ergebnis);
+  }
+  cast_to_arbint(plist);
+  ergebnis.pointer=mpz_get_str(NULL,8,*(ARBINT *)(plist->pointer));
+  ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
 static STRING f_hexs(PARAMETER *plist,int e) {
   STRING ergebnis;
-  unsigned int value=plist[0].integer;
-  /*Predict length of string*/
-  int plen=1;
-  if(value) plen=(int)(log((double)value)/(double)log(16))+1;
-  int len=plen;
-  if(e>1) len=max(plen,plist[1].integer);
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  char *a=ergebnis.pointer;
+  if(plist->typ==PL_INT) {
+    unsigned int value=plist[0].integer;
+    /*Predict length of string*/
+    int plen=1;
+    if(value) plen=(int)(log((double)value)/(double)log(16))+1;
+    int len=plen;
+    if(e>1) len=max(plen,plist[1].integer);
+    ergebnis.pointer=malloc(len+1);
+    ergebnis.len=len;
+    char *a=ergebnis.pointer;
  // printf("valuse=%d, len=%d, plen=%d\n",value, len,plen);
-  while(len>plen) {*a++='0';len--;}
+    while(len>plen) {*a++='0';len--;}
  // printf("ergebnis=<%s>\n",ergebnis.pointer);
-  *i2a(value,a,16)=0;
+    *i2a(value,a,16)=0;
+    return(ergebnis);
+  }
+  cast_to_arbint(plist);
+  ergebnis.pointer=mpz_get_str(NULL,16,*(ARBINT *)(plist->pointer));
+  ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
 
@@ -384,25 +488,31 @@ static STRING f_hexs(PARAMETER *plist,int e) {
 static STRING f_radixs(PARAMETER *plist, int e) {
   STRING ergebnis;
   unsigned int base=64;
-  int len=0,plen=1;
-  int value=plist->integer;
-  int sign=1;
   if(e>1) base=min(64,max(2,plist[1].integer));
-  if(value<0) {sign=-1;value=-value;}
+  if(plist->typ==PL_INT) {
+    int len=0,plen=1;
+    int value=plist->integer;
+    int sign=1;
+    if(value<0) {sign=-1;value=-value;}
 
   /*Predict length of string*/
   
-  if(value) plen=(log(value)/(double)log(base))+1;
-  if(sign<0) plen++;
-  if(e>2) len=max(plen,plist[2].integer);
-  else len=plen;
-  ergebnis.pointer=malloc(len+1);
-  ergebnis.len=len;
-  char *a=ergebnis.pointer;
+    if(value) plen=(log(value)/(double)log(base))+1;
+    if(sign<0) plen++;
+    if(e>2) len=max(plen,plist[2].integer);
+    else len=plen;
+    ergebnis.pointer=malloc(len+1);
+    ergebnis.len=len;
+    char *a=ergebnis.pointer;
   
-  if(sign<0) {*a++='-';len--;}
-  while(len>plen) {*a++='0';len--;}
-  *i2a(value,a,base)=0;
+    if(sign<0) {*a++='-';len--;}
+    while(len>plen) {*a++='0';len--;}
+    *i2a(value,a,base)=0;
+    return(ergebnis);
+  }
+  cast_to_arbint(plist);
+  ergebnis.pointer=mpz_get_str(NULL,base,*(ARBINT *)(plist->pointer));
+  ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
 
@@ -439,24 +549,23 @@ static STRING f_words(PARAMETER *plist,int e) {
 static STRING f_spaces(int n) {   
   STRING ergebnis;
   int i=0; 
-  if(n<0) {
-    xberror(11,""); /* Argument muss positiv sein */
-    n=0;
-  }
+  if(n<0) n=0;
   ergebnis.pointer=malloc(n+1);
   ergebnis.len=n;
   while(i<n) ergebnis.pointer[i++]=' ';
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
 static STRING f_lefts(PARAMETER *plist,int e) {
   STRING ergebnis;
-  if(e>=1) {
-    ergebnis.len=plist[0].integer;
-    ergebnis.pointer=malloc(ergebnis.len+1);
-    memcpy(ergebnis.pointer,plist[0].pointer,ergebnis.len);
-    if(e<2) ergebnis.len=1;
-    else ergebnis.len=min(max(plist[1].integer,0),ergebnis.len);
+  int l=1;
+  if(e>1) l=plist[1].integer;
+  if(l>0) {
+    if(l>plist->integer) l=plist->integer;
+    ergebnis.len=l;
+    ergebnis.pointer=malloc(l+1);
+    memcpy(ergebnis.pointer,plist->pointer,l);
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
@@ -548,16 +657,14 @@ static STRING f_rightofs(PARAMETER *plist,int e) {
 }
 
 static STRING f_rights(PARAMETER *plist,int e) {
-  STRING buffer,ergebnis;
-  int j;
-  if(e>=1) {
-    buffer.len=plist[0].integer;
-    buffer.pointer=plist[0].pointer;
-    if(e<2) j=1;
-    else j=min(max(plist[1].integer,0),buffer.len); 
-    ergebnis.pointer=malloc(j+1);
-    ergebnis.len=j;
-    memcpy(ergebnis.pointer,buffer.pointer+buffer.len-j,j);
+  STRING ergebnis;
+  int l=1;
+  if(e>1) l=plist[1].integer;
+  if(l>0) {
+    if(l>plist->integer) l=plist->integer;
+    ergebnis.pointer=malloc(l+1);
+    ergebnis.len=l;
+    memcpy(ergebnis.pointer,plist->pointer+plist->integer-l,l);
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
@@ -568,17 +675,17 @@ static STRING f_rights(PARAMETER *plist,int e) {
 
 
 static STRING f_mids(PARAMETER *plist,int e) {  
-  STRING buffer,ergebnis;
-  int p,l;
-  if(e>=2) {
-    buffer.len=plist->integer;
-    buffer.pointer=plist->pointer;
-    p=min(max(plist[1].integer,1),buffer.len);
-    if(e<3) l=1;
-    else l=min(max(plist[2].integer,0),buffer.len-p+1); 
+  STRING ergebnis;
+  int l=1;
+  if(e>2) l=plist[2].integer;
+  int p=plist[1].integer;
+  if(p==0) p=1;
+  if(l>0 && p>0 && p<=plist->integer) {
+    p--;
+    if(p+l>plist->integer) l=plist->integer-p;
     ergebnis.pointer=malloc(l+1);
     ergebnis.len=l;
-    memcpy(ergebnis.pointer,buffer.pointer+p-1,l);  
+    memcpy(ergebnis.pointer,plist->pointer+p,l);  
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
@@ -588,21 +695,14 @@ static STRING f_mids(PARAMETER *plist,int e) {
 }
 
 static STRING f_strings(PARAMETER *plist,int e) {
-  STRING buffer,ergebnis;
-  int i=0,j;
-  if(e>=2) {
-    j=plist->integer;
-    buffer.len=plist[1].integer;
-    buffer.pointer=plist[1].pointer;
-    if(j<0)  {
-      xberror(11,""); /* Argument muss positiv sein */
-      ergebnis.pointer=malloc(1);
-      ergebnis.len=0;
-    } else {
-      ergebnis.pointer=malloc(j*buffer.len+1);
-      ergebnis.len=j*buffer.len;
-      while(i<j) {memcpy(ergebnis.pointer+i*buffer.len,buffer.pointer,buffer.len); i++;}
-    }
+  STRING ergebnis;
+  int j=plist->integer;
+  if(j>0) {
+    int i=0;
+    ergebnis.len=j*plist[1].integer;    
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    while(i<j) {memcpy(ergebnis.pointer+i*plist[1].integer,
+                       plist[1].pointer,plist[1].integer); i++;}
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;
@@ -1091,14 +1191,14 @@ static STRING f_uncompresss(STRING n) {
   free(a.pointer);
   return(ergebnis);
 }
-
+#endif
 
 const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 
  { F_CONST|F_ARGUMENT,  "!nulldummy", (sfunc)f_nop ,0,0   ,{0}},
  { F_CONST|F_SQUICK,    "ARID$"     , f_arids ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "ARIE$"     , f_aries ,1,1   ,{PL_STRING}},
- { F_CONST|F_PLISTE,    "BIN$"      , f_bins ,1,2   ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,    "BIN$"      , f_bins ,1,2   ,{PL_NUMBER,PL_INT}},
  { F_CONST|F_SQUICK,    "BWTD$"     , f_bwtds ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "BWTE$"     , f_bwtes ,1,1   ,{PL_STRING}},
 
@@ -1119,14 +1219,14 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_PLISTE,    "ENCLOSE$" , f_encloses ,1,2   ,{PL_STRING,PL_STRING}},
  { F_CONST|F_PLISTE,    "ENCRYPT$", f_encrypts ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
- { F_CONST|F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_INT}},
  { F_PLISTE,    "FSFIRST$"    , f_fsfirsts ,1,3,  {PL_STRING,PL_STRING,PL_STRING} },
  { F_SIMPLE,    "FSNEXT$"    , f_fsnexts ,0,0   },
 
 
  { F_CONST|F_PLISTE,  "HASH$", f_hashs ,1,2   ,{PL_STRING,PL_INT}},
 
- { F_CONST|F_PLISTE,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,  "HEX$"    , f_hexs ,1,2   ,{PL_NUMBER,PL_INT}},
  { F_CONST|F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_INT}},
  { F_CONST|F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
@@ -1138,21 +1238,21 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 
  { F_CONST|F_PLISTE,    "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_CONST|F_AQUICK,    "MKA$"    , array_to_string ,1,1   ,{PL_ARRAY}},
- { F_CONST|F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_NUMBER}},
- { F_CONST|F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_FLOAT}},
+ { F_CONST|F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_FLOAT}},
  { F_CONST|F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_INT}},
  { F_CONST|F_IQUICK,    "MKL$"    , f_mkls ,1,1   ,{PL_INT}},
- { F_CONST|F_DQUICK,    "MKS$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK,    "MKS$"    , f_mkfs ,1,1   ,{PL_FLOAT}},
  { F_CONST|F_SQUICK,    "MTFD$"  , f_mtfds ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "MTFE$"  , f_mtfes ,1,1   ,{PL_STRING}},
 
- { F_CONST|F_PLISTE,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,  "OCT$"    , f_octs ,1,2   ,{PL_NUMBER,PL_INT}},
 
  { F_IQUICK,    "PARAM$"  , f_params ,1,1   ,{PL_INT}},
  { F_CONST|F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
  { F_CONST|F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "REVERSE$"  , f_reverses ,1,1   ,{PL_STRING}},
- { F_CONST|F_PLISTE,    "RADIX$"    , f_radixs ,1,3   ,{PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,    "RADIX$"    , f_radixs ,1,3   ,{PL_NUMBER,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHTOF$" , f_rightofs ,2,2   ,{PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "RLD$"  , f_rlds ,1,1   ,{PL_STRING}},

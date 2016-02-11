@@ -13,22 +13,22 @@
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
+#ifdef USE_GEM
+#include <osbind.h>
+#include <gem.h>
+#endif
+
 #include "x11basic.h"
-
 #include "graphics.h"
-
 #include "aes.h"
 #include "window.h"
 
 
 #ifdef USE_SDL
-unsigned int fcolor=0xffffffff,bcolor;
-SDL_Surface *display[MAXWINDOWS];
-#endif
-
-#ifdef USE_X11
+#elif defined USE_GEM
+#elif defined USE_X11
 char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
-
+#include "bitmaps/bombe_gross.bmp"
 #endif
 
 unsigned char marker_typ;
@@ -36,12 +36,6 @@ int marker_size=1;
 int boundary=-1;
 double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
 int ltextpflg=0;
-
-
-
-#ifdef USE_X11
-#include "bitmaps/bombe_gross.bmp"
-#endif
 
 /* Set default values */
 void graphics_setdefaults() {
@@ -58,11 +52,18 @@ void graphics_setdefaults() {
 /* Line-Funktion (fuer ltext) */
 void line(int x1,int y1,int x2,int y2) {
 #ifdef USE_X11
-  XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,y1,x2,y2);
+  XDrawLine(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x1,y1,x2,y2);
 #elif defined FRAMEBUFFER
   FB_line(x1,y1,x2,y2);
 #elif defined USE_SDL
-  lineColor(display[usewindow],x1,y1,x2,y2,fcolor);
+  lineColor(window[usewindow].display,x1,y1,x2,y2,window[usewindow].fcolor);
+#elif defined USE_GEM
+  short a[4];
+  a[0]=x1;
+  a[1]=y1;
+  a[2]=x2;
+  a[3]=y2;
+  v_pline(window[usewindow].vdi_handle,2,a);
 #else
   DrawLine(x1,y1,x2,y2);
 #endif
@@ -74,53 +75,35 @@ void pbox(int x1,int y1,int x2, int y2) {
 
 
 void mybox(int x1,int y1,int x2, int y2) {
+#ifdef USE_GEM
+  short a[10];
+  a[6]=a[8]=a[0]=x1;
+  a[3]=a[9]=a[1]=y1;
+  a[4]=a[2]=x2;
+  a[7]=a[5]=y2;
+  v_pline(window[usewindow].vdi_handle,5,a);
+#else
   DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
+#endif
 }
 int get_point(int x, int y) {
     int r;
 #if defined WINDOWS_NATIVE
   r=0;
 #elif defined USE_SDL
-  r=sdl_getpixel(display[usewindow],x,y);
+  r=sdl_getpixel(window[usewindow].display,x,y);
 #elif defined FRAMEBUFFER
   r=FB_point(x,y);
 #elif defined USE_X11
     XImage *Image;
     graphics();
-    int d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(display[usewindow]));
-    Image=XGetImage(display[usewindow],win[usewindow],
+    int d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(window[usewindow].display));
+    Image=XGetImage(window[usewindow].display,window[usewindow].win,
                 x, y, 1, 1, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     r=XGetPixel(Image, 0, 0);
     XDestroyImage(Image);
 #endif
     return(r);
-}
-
-int get_fcolor() {
-#ifdef WINDOWS_NATIVE
-  return(global_color);
-#elif defined FRAMEBUFFER
-  return(screen.fcolor);
-#elif defined USE_X11
-  XGCValues gc_val;  
-  XGetGCValues(display[usewindow], gc[usewindow],  GCForeground, &gc_val);
-  return(gc_val.foreground);
-#elif defined USE_SDL
-  return(fcolor);
-#endif
-}
-int get_bcolor() {
-#ifdef FRAMEBUFFER
-  return(screen.bcolor);
-#elif defined USE_X11
-  XGCValues gc_val;  
-  XGetGCValues(display[usewindow], gc[usewindow],  GCBackground, &gc_val);
-  return(gc_val.background);
-#elif defined USE_SDL
-  return(bcolor);
-#else 
-  return(0);
-#endif
 }
 
 #ifdef USE_X11
@@ -153,7 +136,7 @@ void set_graphmode(int n) {
     else gc_val.function=-n;
     break;
   } 
-  XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
+  XChangeGC(window[usewindow].display, window[usewindow].gc,  GCFunction, &gc_val);
 #elif defined FRAMEBUFFER
   FB_setgraphmode(n);
   switch (n) {
@@ -183,63 +166,63 @@ void set_font(char *name) {
 #ifdef USE_X11
    XGCValues gc_val;  
    XFontStruct *fs;
-   if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) fs=XLoadQueryFont(display[usewindow], FONTSMALL);
-   else if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) fs=XLoadQueryFont(display[usewindow], FONTBIG);
-   else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) fs=XLoadQueryFont(display[usewindow], FONT8x8);
-   else fs=XLoadQueryFont(display[usewindow], name);
+   if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) fs=XLoadQueryFont(window[usewindow].display, FONTSMALL);
+   else if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) fs=XLoadQueryFont(window[usewindow].display, FONTBIG);
+   else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) fs=XLoadQueryFont(window[usewindow].display, FONT8x8);
+   else fs=XLoadQueryFont(window[usewindow].display, name);
    if(fs!=NULL)  {
      gc_val.font=fs->fid;
-     XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
-     baseline=fs->ascent;
-     chh=baseline+fs->descent;
-     chw=fs->max_bounds.width;
+     XChangeGC(window[usewindow].display, window[usewindow].gc,  GCFont, &gc_val);
+     window[usewindow].baseline=fs->ascent;
+     window[usewindow].chh=window[usewindow].baseline+fs->descent;
+     window[usewindow].chw=fs->max_bounds.width;
    }
 #elif defined FRAMEBUFFER
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
-    chw=CharWidth816;
-    chh=CharHeight816;
-    baseline=chh-2;   
+    window[usewindow].chw=CharWidth816;
+    window[usewindow].chh=CharHeight816;
+    window[usewindow].baseline=window[usewindow].chh-2;   
   } else if(strcmp(name,"HUGE")==0 || strcmp(name,"24x48")==0) {
-    chw=24;
-    chh=48;
-    baseline=chh-6;
+    window[usewindow].chw=24;
+    window[usewindow].chh=48;
+    window[usewindow].baseline=window[usewindow].chh-6;
   } else if(strcmp(name,"GIANT")==0 || strcmp(name,"32x64")==0) {
-    chw=32;
-    chh=64;
-    baseline=chh-8;
+    window[usewindow].chw=32;
+    window[usewindow].chh=64;
+    window[usewindow].baseline=window[usewindow].chh-8;
   } else if(strcmp(name,"LARGE")==0 || strcmp(name,"16x32")==0) {
-    chw=CharWidth1632;
-    chh=CharHeight1632;
-    baseline=chh-4;   
+    window[usewindow].chw=CharWidth1632;
+    window[usewindow].chh=CharHeight1632;
+    window[usewindow].baseline=window[usewindow].chh-4;   
   } else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) {
-    chw=8;
-    chh=8;
-    baseline=chh-1;
+    window[usewindow].chw=8;
+    window[usewindow].chh=8;
+    window[usewindow].baseline=window[usewindow].chh-1;
   } else if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) {
-    chw=CharWidth57;
-    chh=CharHeight57;
-    baseline=chh-0;   
+    window[usewindow].chw=CharWidth57;
+    window[usewindow].chh=CharHeight57;
+    window[usewindow].baseline=window[usewindow].chh-0;   
   } else {
-    chw=CharWidth;
-    chh=CharHeight;
-    baseline=chh-0;
+    window[usewindow].chw=CharWidth;
+    window[usewindow].chh=CharHeight;
+    window[usewindow].baseline=window[usewindow].chh-0;
   }
 #elif defined USE_SDL
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
-    chw=8;
-    chh=16;
-    baseline=chh-2; 
-    gfxPrimitivesSetFont(spat_a816,chw,chh); 	
+    window[usewindow].chw=8;
+    window[usewindow].chh=16;
+    window[usewindow].baseline=window[usewindow].chh-2; 
+    gfxPrimitivesSetFont(spat_a816,window[usewindow].chw,window[usewindow].chh); 	
   } else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) {
-    chw=8;
-    chh=8;
-    baseline=chh-0;
-    gfxPrimitivesSetFont(NULL,chw,chh); 	
+    window[usewindow].chw=8;
+    window[usewindow].chh=8;
+    window[usewindow].baseline=window[usewindow].chh-0;
+    gfxPrimitivesSetFont(NULL,window[usewindow].chw,window[usewindow].chh); 	
   } else if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) {
-    chw=5;
-    chh=7;
-    baseline=chh-0;
-    gfxPrimitivesSetFont(asciiTable,chw,chh); 	
+    window[usewindow].chw=5;
+    window[usewindow].chh=7;
+    window[usewindow].baseline=window[usewindow].chh-0;
+    gfxPrimitivesSetFont(asciiTable,window[usewindow].chw,window[usewindow].chh); 	
   }
 #endif
 }
@@ -247,23 +230,23 @@ void set_font(char *name) {
 
 void draw_string(int x, int y, char *text,int len) {
 #ifdef WINDOWS_NATIVE
-  TextOut(bitcon[usewindow],x,(y-baseline),text,len);
+  TextOut(bitcon[usewindow],x,(y-window[usewindow].baseline),text,len);
 #elif defined FRAMEBUFFER
-  FB_DrawString(x,y-baseline,text,len);
+  FB_DrawString(x,y-window[usewindow].baseline,text,len);
 #elif defined USE_X11 
   #ifdef X_HAVE_UTF8_STRING 
     // TODO:
-    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
-    else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);    
+    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x,y,text,len);
+    else XDrawString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x,y,text,len);    
   #else
-    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
-    else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+    if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x,y,text,len);
+    else XDrawString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x,y,text,len);
   #endif
 #elif defined USE_SDL
   char s[len+1];
   memcpy(s,text,len);
   s[len]=0;
-  stringColor(display[usewindow],x,y-baseline+2,s,fcolor);
+  stringColor(window[usewindow].display,x,y-window[usewindow].baseline+2,s,window[usewindow].fcolor);
 #endif
 }
 
@@ -274,12 +257,12 @@ void set_fill(int c) {
 #ifdef USE_X11
   static Pixmap fill_pattern;
   static int fill_alloc=0;
-    if(fill_alloc) XFreePixmap(display[usewindow],fill_pattern);
-    fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
+    if(fill_alloc) XFreePixmap(window[usewindow].display,fill_pattern);
+    fill_pattern = XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 fill_bits+c*fill_width*fill_width/8,fill_width,fill_width);
-           /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
+           /*XSetFillStyle(window[usewindow].display, window[usewindow].gc, FillStippled); */
     fill_alloc=1;   
-    XSetStipple(display[usewindow], gc[usewindow],fill_pattern);
+    XSetStipple(window[usewindow].display, window[usewindow].gc,fill_pattern);
 #endif
 #ifdef FRAMEBUFFER
     FB_setfillpattern(fill_bits+c*16*2);
@@ -300,7 +283,7 @@ int mousex() {
   unsigned int mask_return;
 
   graphics(); 
-  XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+  XQueryPointer(window[usewindow].display, window[usewindow].win, &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
   return(win_x_return);
@@ -320,7 +303,7 @@ int mousey() {
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
   graphics(); 
-  XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+  XQueryPointer(window[usewindow].display, window[usewindow].win, &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
   return(win_y_return);
@@ -340,7 +323,7 @@ int mousek() {
    int root_x_return, root_y_return,win_x_return, win_y_return;
    unsigned int mask_return;
    graphics(); 
-   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+   XQueryPointer(window[usewindow].display, window[usewindow].win, &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
 #if defined USE_SDL
@@ -359,7 +342,7 @@ int mouses() {
    Window root_return,child_return;
    graphics();
    
-   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+   XQueryPointer(window[usewindow].display, window[usewindow].win, &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
    return(mask_return & 255);
@@ -387,17 +370,17 @@ unsigned int get_color(unsigned char r, unsigned char g, unsigned char b,unsigne
 #elif defined FRAMEBUFFER
   return(FB_get_color(r,g,b));
 #elif defined USE_SDL
-  return((unsigned int)SDL_MapRGB(display[usewindow]->format, r, g, b)<<8 |0xff);
+  return((unsigned int)SDL_MapRGB(window[usewindow].display->format, r, g, b)<<8 |0xff);
 #elif defined USE_X11
   Colormap map;
   XColor pixcolor;
 
-  map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay ( display[usewindow] ) );
+  map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay ( window[usewindow].display ) );
 
   pixcolor.red=r<<8;
   pixcolor.green=g<<8;
   pixcolor.blue=b<<8;
-  if(my_XAllocColor(display[usewindow], map, &pixcolor)==0) printf("ERROR: could allocate color.\n");
+  if(my_XAllocColor(window[usewindow].display, map, &pixcolor)==0) printf("ERROR: could allocate color.\n");
   return(pixcolor.pixel);
 #endif
 }
@@ -444,6 +427,11 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 }
 #endif
 
+#ifdef USE_GEM
+void  ffill(int x0,int y0,int fill_color, int border_color) {
+  v_contourfill(window[usewindow].vdi_handle,x0,y0, border_color);
+}
+#else
 /**** Flood Fill *********************************************************
 *	Source code is based on:
 *	"Programmer's guide to PC & PS/2 Video Systems"
@@ -456,9 +444,6 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 #define SCAN_UNTIL  0
 #define SCAN_WHILE  1
 #define FF_FILLED   (!0)
-
-
-extern ARECT sbox;
 
 struct	tagParams	{
 		int    xl;     /* leftmost pixel in run */
@@ -582,12 +567,12 @@ int ff_scan_left(int xl,int y, int ucPixel, int f ) {
   if(f==SCAN_UNTIL)  {
     if(get_point(xl,y)==ucPixel) return -1;
     do {
-      if(--xl<sbox.x) break;
+      if(--xl<window[usewindow].x) break;
     } while(get_point(xl,y)!=ucPixel);
   }  else {
     if(get_point(xl,y)!=ucPixel) return -1;
     do {
-      if(--xl<sbox.x) break;
+      if(--xl<window[usewindow].x) break;
     } while (get_point(xl,y)==ucPixel);
   }
   return ++xl;
@@ -599,12 +584,12 @@ int ff_scan_right(int xr,int y,int ucPixel,int f) {
   if(f==SCAN_UNTIL) {
     if(get_point(xr,y)==ucPixel) return -1;
     do {
-      if(++xr>=sbox.x+sbox.w) break;
+      if(++xr>=window[usewindow].x+window[usewindow].w) break;
     } while(get_point(xr,y)!=ucPixel);
   } else {
     if(get_point(xr,y)!=ucPixel) return -1;
     do  {
-      if(++xr>=sbox.x+sbox.w) break;
+      if(++xr>=window[usewindow].x+window[usewindow].w) break;
     } while(get_point(xr,y)==ucPixel);
   }
   return --xr;
@@ -638,8 +623,8 @@ void  ff_add_queue(FF_QUEUE *Q,int xl,int xr,int y,int f) {
 
 int ff_next_branch(int xl,int xr,int y,int border_color,int scan_type) {
   int xln;
-/*  printf("Next Branch: x=[%d,%d] y=%d   %d %d\n",xl,xr,y,sbox.y,sbox.h);*/
-  if((y<sbox.y)||(y>=sbox.y+sbox.h)) return(-1);
+/*  printf("Next Branch: x=[%d,%d] y=%d   %d %d\n",xl,xr,y,window[usewindow].y,window[usewindow].h);*/
+  if((y<window[usewindow].y)||(y>=window[usewindow].y+window[usewindow].h)) return(-1);
   xln=ff_scan_left(xl,y,border_color,scan_type);
   if(xln==-1) {
     xln=ff_scan_right(xl,y,border_color,(scan_type==SCAN_WHILE)?SCAN_UNTIL:SCAN_WHILE);
@@ -665,7 +650,7 @@ int ff_in_queue(FF_QUEUE *Q, int xl, int xr, int y) {
   }
   return(0);
 }
-
+#endif
 /**** End ******************* Flood Fill ********************************/
 
 #ifdef USE_X11
@@ -673,16 +658,13 @@ int ff_in_queue(FF_QUEUE *Q, int xl, int xr, int y) {
 /* Bereite die Pixmap mit dem Bomben-Icon und der Fensternummer
    vor. */
 
-void fetch_icon_pixmap(int nummer) {
-  GC gc;XGCValues gc_val;
-  char t[10];
-  sprintf(t,"%2d",nummer);
-  icon_pixmap[nummer]=XCreateBitmapFromData(display[nummer],win[nummer],
-   (char *)bombe_gross_bits,bombe_gross_width,bombe_gross_height);
-  gc = XCreateGC(display[nummer], icon_pixmap[nummer], 0, &gc_val);
-  XSetForeground(display[nummer], gc, 0);
-  XDrawString(display[nummer],icon_pixmap[nummer],gc,9,24,t,strlen(t));
-  XFreeGC(display[nummer],gc);
+void fetch_icon_pixmap(WINDOWDEF *w,int nummer) {
+  GC gc; XGCValues gc_val;
+  char t[10]; sprintf(t,"%2d",nummer);
+  w->icon_pixmap=XCreateBitmapFromData(w->display,w->win,(char *)bombe_gross_bits,bombe_gross_width,bombe_gross_height);
+  gc = XCreateGC(w->display, w->icon_pixmap, 0, &gc_val);
+  XSetForeground(w->display, gc, 0);
+  XDrawString(w->display,w->icon_pixmap,gc,9,24,t,strlen(t));
+  XFreeGC(w->display,gc);
 }
-
 #endif

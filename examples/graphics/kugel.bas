@@ -34,8 +34,6 @@ LINE @kx(0,0,0),@ky(0,0,0),@kx(1,pi/2,0),@ky(1,pi/2,0)
 LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi),@ky(1,0,-pi)
 LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*1.5),@ky(1,0,-pi*1.5)
 LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*0.5),@ky(1,0,-pi*0.5)
-
-
 for i=0 to 360 step 10  
   for j=-60 to -30 step 10
     line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,(j-10)/180*pi,i/180*pi),@ky(1,(j-10)/180*pi,i/180*pi)
@@ -79,28 +77,23 @@ FOR i=0 TO 360 STEP 10
   line @kx(0.9,-85/180*pi,i/180*pi),@ky(0.9,-85/180*pi,i/180*pi),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
 next i  
 SHOWPAGE
+print "Press any key."
 ~INP(-2)
 END
 
 DEFFN f(x)=SIN(x/180*PI*6)*20-50
 
 FUNCTION kx(r,theta,phi)
+  local x,y,z
   x=r*COS(theta)*COS(phi)
   y=r*COS(theta)*SIN(phi)
   z=r*SIN(theta)
-  xx=SIN(guckphi)*x+COS(guckphi)*y
-  'y=cos(guckphi)*x-sin(guckphi)*y
-  x=xx
-  'yy=sin(gucktheta)*y+cos(gucktheta)*z
-  'z=cos(gucktheta)*y-sin(gucktheta)*z
-  'y=yy
-  'if y>0
-  '  defline ,,2
-  'endif
-  RETURN bw/2+(x)*bw/2
+  x=SIN(guckphi)*x+COS(guckphi)*y
+  RETURN bw/2+x*bw/2
 ENDFUNC
 
 FUNCTION ky(r,theta,phi)
+  local x,y,z
   x=r*cos(theta)*cos(phi)
   y=r*cos(theta)*sin(phi)
   z=r*sin(theta)
@@ -109,10 +102,5 @@ FUNCTION ky(r,theta,phi)
   'x=xx
   'yy=sin(gucktheta)*y+cos(gucktheta)*z
   z=cos(gucktheta)*y-sin(gucktheta)*z
-  'if yy>0
-  '  color weiss
-  'else
-  '  color blau
-  'endif
-  RETURN bh/2-(z)*bh/2
+  RETURN bh/2-z*bh/2
 ENDFUNC

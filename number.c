@@ -9,7 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
+#include "config.h"
+#include "defs.h"
+#include "options.h"
+#include "x11basic.h"
+#include "variablen.h"
 #include "number.h"
 
 
@@ -58,7 +64,9 @@ int myatofc(char *n) {
   if(*n=='$') return(i+1+atohexc(++n));
   if(*n=='%') return(i+1+atobinc(++n));
   if(*n=='0' && (n[1]&0xdf)=='X') return(i+2+atohexc(n+2));
- 
+  if((*n&0xdf)=='E') return(i);  /*should not happen here*/
+  if((*n&0xdf)=='I') return(i);  /*should not happen here*/
+
   /* Count digits before decimal point or exponent, if any. */
   for(;v_digit(*n); n++) i++;;
   /* Count digits after decimal point, if any. */
@@ -75,12 +83,18 @@ int myatofc(char *n) {
     /* Get digits of exponent, if any. */
     for(;v_digit(*n); n++) i++;;
   }
+  if((*n&0xdf)=='I') { /*Check if the last digit is an I*/
+     // iscomplex=1;
+      n++;i++;
+  }
   return(i); 
 }
 /* Bestimmt, ob es sich um eine gültige Zahl handelt und liefert dann
    zurueck:
    1 = INTTYP
    2 = FLOATTYP
+   3 = COMPLEXTYP
+   5 = ARBINTTYP
    0 = INVALID
    
 */
@@ -88,16 +102,24 @@ int myisatof(char *n) {
   if(!n) return(0);
   int i=0;
   int isfloat=0;
+  int iscomplex=0;
   int l=strlen(n);
+  int mantisse=0;  /*vorauss. Informationsgehalt in bits.*/
+  int j;
   while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
   if(*n=='-' || *n=='+') { n++;i++;} /*  Get sign, if any.  */
    /* try special codings  */
-  if(*n=='$') i+=1+atohexc(++n);
-  else if(*n=='%') i+=1+atobinc(++n);
-  else if(*n=='0' && (n[1]&0xdf)=='X') i+=2+atohexc(n+2);
+  if(*n=='$') {j=atohexc(++n); mantisse+=j*4; i+=1+j;}
+  else if(*n=='%') {j=atobinc(++n); mantisse+=j; i+=1+j;}
+  else if(*n=='0' && (n[1]&0xdf)=='X') {j=atohexc(n+2); mantisse+=j*4; i+=2+j;}
+  else if((*n&0xdf)=='E') ;  /*should not happen here*/
+  else if((*n&0xdf)=='I') ;  /*should not happen here*/
   else { 
     /* Count digits before decimal point or exponent, if any. */
-    for(;v_digit(*n); n++) i++;;
+    j=i;
+    for(;v_digit(*n); n++) i++;
+    j=(i-j)*332/100;  /*Stellen zur Basis 10, 3.32 bits */
+    mantisse+=j;
     /* Count digits after decimal point, if any. */
     if(*n=='.') {
       n++;i++;
@@ -114,17 +136,48 @@ int myisatof(char *n) {
       /* Get digits of exponent, if any. */
       for(;v_digit(*n); n++) i++;;
     }
+    if((*n&0xdf)=='I') { /*Check if the last digit is an I*/
+      iscomplex=1;
+      n++;i++;
+    }
   }
-  if(i!=l) return(0);
-  if(isfloat) return(2);
-  return(1); 
+  /* Anzahl der Digits in der Mantisse zaehlen, um zu entscheiden ob es
+  ARBINT oder ARBFLOAT ist*/
+    //  printf("<%s> --> %d bits\n",n-i,mantisse);
+
+  
+  if(i!=l) return(NOTYP);
+  if(iscomplex) return(COMPLEXTYP);
+  if(isfloat) return(FLOATTYP);
+  if(mantisse<=sizeof(int)*8) return(INTTYP);
+  /*spezialfall im Übergangsbereich der Intzahlen
+    1000000000 bis 2147483647
+    hier müssen wir die Zahl genauer analysieren ob sie noch in INT passt.
+    TODO: */
+  return(ARBINTTYP); 
 }
+
+COMPLEX complex_myatof(char *n) {
+  COMPLEX ret;
+  ret.i=ret.r=0;
+  int l;
+  if(n && (l=strlen(n))>0) {
+    while(l>0 && w_space(n[l-1]) ) l--;
+    if(l>0) {
+      if((n[l-1]&0xdf)=='I') ret.i=myatof(n);
+      else ret.r=myatof(n);    
+    }
+  }
+  return(ret);
+}
+
 
 /* 
 Wandelt einen String mit einer (floating-point) Zahl in einen double 
 um.
 
 Diese funktion muss stark Geschwindigkeitsoptimiert sein
+TODO: Hier koennte man noch einen Flag zurückliefern, ob es ein real oder imaginaerteil ist.
 */
 double myatof(char *n) {
   double sign=1.0;
@@ -137,7 +190,7 @@ double myatof(char *n) {
   if(*n=='$') return(sign*(double)atohex(++n));
   if(*n=='%') return(sign*(double)atobin(++n));
   if(*n=='0' && (n[1]&0xdf)=='X') return(sign*(double)atohex(n+2));
-  
+
   /* Get digits before decimal point or exponent, if any. */
   double value=0.0;
   for(;v_digit(*n); n++) value=value*10.0+(*n-'0');
@@ -178,6 +231,24 @@ double myatof(char *n) {
   return(sign*value);
 }
 
+/*Arbitrary int number lesen... */
+void arbint_myatof(char *n, ARBINT ret) {
+  int sign=1;
+// printf("AIMYT: <%s>\n",n);
+  while (w_space(*n) ) n++;  /* Skip leading white space, if any. */
+  if(*n=='-') { /*  Get sign, if any.  */
+    sign=-1;
+    n++;
+  } else if(*n=='+') n++;
+  
+  /* try special codings  */
+  if(*n=='$') mpz_set_str(ret,++n,16);
+  else if(*n=='%') mpz_set_str(ret,++n,2);
+  else if(*n=='0' && (n[1]&0xdf)=='X') mpz_set_str(ret,n+2,16);
+  else mpz_set_str(ret,n,10);
+  if(sign==-1) mpz_neg(ret,ret);
+  return;
+}
 int f_gray(int n) { /* Gray-Code-Konversion */
   unsigned int i=1,a,d;
   if(n>=0) return(n^(n>>1));
@@ -186,11 +257,86 @@ int f_gray(int n) { /* Gray-Code-Konversion */
     if(d<=1||i==16) return(a);
   }
 }
+#if 0
 int f_fak(int k) {
   register int i,s=1;
   for(i=2;i<=k;i++) {s=s*i;}
   return(s);
 }
+#endif
+/* Operationen zum COMPLEX Datentyp */
+
+COMPLEX complex_add(COMPLEX a, COMPLEX b) {
+  COMPLEX c;
+  c.r=a.r+b.r;
+  c.i=a.i+b.i;
+  return(c);
+}
+COMPLEX complex_sub(COMPLEX a, COMPLEX b) {
+  COMPLEX c;
+  c.r=a.r-b.r;
+  c.i=a.i-b.i;
+  return(c);
+}
+COMPLEX complex_neg(COMPLEX a) {
+  a.r=-a.r;
+  a.i=-a.i;
+  return(a);
+}
+double complex_real(COMPLEX a) {return(a.r);}
+double complex_imag(COMPLEX a) {return(a.i);}
+
+COMPLEX complex_mul(COMPLEX a, COMPLEX b) {
+  COMPLEX c;
+  c.r=a.r*b.r-a.i*b.i;
+  c.i=a.i*b.r+a.r*b.i;
+  return(c);
+}
+COMPLEX complex_div(COMPLEX a, COMPLEX b) {
+  COMPLEX c;
+  double tmp=b.r*b.r+b.i*b.i;
+  c.r=(a.r*b.r+a.i*b.i)/tmp;
+  c.i=(a.i*b.r-a.r*b.i)/tmp;
+  return(c);
+}
+COMPLEX complex_pow(COMPLEX a, COMPLEX b) {
+  COMPLEX c;
+  double r=sqrt(a.r*a.r+a.i*a.i);
+  double t=atan2(a.i,a.r);
+  double p=pow(r,b.r)*exp(-b.i*t);
+  c.r=p*cos(b.r*t+b.i*log(r));
+  c.i=p*sin(b.r*t+b.i*log(r));
+  return(c);
+}
+
+
+
+/*Datentyp zu STRING funktionen */
+
+STRING INTtoSTRING(int n) {
+  STRING ret;
+  ret.pointer=malloc(100);
+  sprintf(ret.pointer,"%d",n);
+  ret.len=strlen(ret.pointer);
+  return(ret);
+}
+STRING FLOATtoSTRING(double a) {
+  STRING ret;
+  ret.pointer=malloc(100);
+  sprintf(ret.pointer,"%.13g",a);
+  ret.len=strlen(ret.pointer);
+  return(ret);
+}
+STRING COMPLEXtoSTRING(COMPLEX a) {
+  STRING ret;
+  ret.pointer=malloc(100);
+  if(a.i>=0) sprintf(ret.pointer,"(%.13g+%.13gi)",a.r,a.i);
+  else sprintf(ret.pointer,"(%.13g%.13gi)",a.r,a.i);
+  ret.len=strlen(ret.pointer);
+  return(ret);
+}
+
+
 
 
 /* 32 Bit Checksumme */

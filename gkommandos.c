@@ -19,9 +19,10 @@
 #endif
 #include "defs.h"
 #include "x11basic.h"
-#include "parameter.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "parser.h"
+#include "parameter.h"
 #include "graphics.h"
 #include "kommandos.h"
 #include "gkommandos.h"
@@ -30,13 +31,15 @@
 #include "bitmap.h"
 #include "file.h"
 #include "array.h"
-#include "parser.h"
 #include "wort_sep.h"
 #include "io.h"
 #include "virtual-machine.h"
 #ifdef FRAMEBUFFER
   #include "framebuffer.h"
   #include "raw_mouse.h"
+#elif defined USE_GEM
+  #include <osbind.h>
+  #include <gem.h>
 #endif
 
 
@@ -66,25 +69,42 @@ void c_usewindow(PARAMETER *plist,int e){
   graphics();
 }
 
-void c_vsync(char *n) {activate();}
+void c_vsync(char *n) {
+#ifdef USE_GEM
+  Vsync();
+#else
+  activate();
+#endif
+}
 
 void c_hidem(char *n) {
-    graphics();
+  graphics();
 #ifdef FRAMEBUFFER
-    FB_hide_mouse();
+  FB_hide_mouse();
+#elif defined USE_GEM
+  graf_mouse(256,NULL);
 #endif
 }
 void c_showm(char *n) {
-    graphics();
+  graphics();
 #ifdef FRAMEBUFFER
-    FB_show_mouse();
+  FB_show_mouse();
+#elif defined USE_GEM
+  graf_mouse(257,NULL);
 #endif
 }
 
 
 void c_plot(PARAMETER *plist,int e) {
     graphics();
+#ifdef USE_GEM
+  short a[4];
+  a[2]=a[0]=plist[0].integer;
+  a[3]=a[1]=plist[1].integer;
+  v_pline(window[usewindow].vdi_handle,2,a);
+#else
     DrawPoint(plist[0].integer,plist[1].integer);
+#endif
 }
 
 void c_savescreen(PARAMETER *plist,int e) {
@@ -107,19 +127,19 @@ void c_savescreen(PARAMETER *plist,int e) {
     free(data);
 #endif
 #ifdef USE_X11
-    XGetGeometry(display[usewindow],
-      RootWindow(display[usewindow],XDefaultScreen(display[usewindow])),
+    XGetGeometry(window[usewindow].display,
+      RootWindow(window[usewindow].display,XDefaultScreen(window[usewindow].display)),
       &root,&x,&y,&w,&h,&b,&d); 
-      XGetWindowAttributes(display[usewindow], root, &xwa);
+      XGetWindowAttributes(window[usewindow].display, root, &xwa);
     
-    Image=XGetImage(display[usewindow],root,
+    Image=XGetImage(window[usewindow].display,root,
                 x, y, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
 		
     if(d==8) {
-      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(window[usewindow].display));
       int i;
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
-      XQueryColors(display[usewindow], map, ppixcolor,256);
+      XQueryColors(window[usewindow].display, map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);	
     XDestroyImage(Image);
@@ -127,7 +147,7 @@ void c_savescreen(PARAMETER *plist,int e) {
     free(data);
 #elif defined USE_SDL
   /* bei SDL ist SAVESCREEN dasselbe wie SAVEWINDOW*/
-  SDL_SaveBMP(display[usewindow], plist->pointer);
+  SDL_SaveBMP(window[usewindow].display, plist->pointer);
 #endif
   }
 }
@@ -150,24 +170,24 @@ void c_savewindow(PARAMETER *plist,int e) {
     bsave(plist->pointer,(char *)data,len);
     free(data);
 #elif defined USE_X11
-    XGetGeometry(display[usewindow], win[usewindow], 
+    XGetGeometry(window[usewindow].display, window[usewindow].win, 
 	&root,&x,&y,&w,&h,&b,&d); 
-    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    XGetWindowAttributes(window[usewindow].display, window[usewindow].win, &xwa);
     
-    Image=XGetImage(display[usewindow],pix[usewindow],
+    Image=XGetImage(window[usewindow].display,window[usewindow].pix,
                 0, 0, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     if(d==8) {
-      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(window[usewindow].display));
       int i;
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
-      XQueryColors(display[usewindow], map, ppixcolor,256);
+      XQueryColors(window[usewindow].display, map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
     XDestroyImage(Image);
     bsave(plist->pointer,(char *)data,len);
     free(data);
 #elif defined USE_SDL
-  SDL_SaveBMP(display[usewindow], plist->pointer);
+  SDL_SaveBMP(window[usewindow].display, plist->pointer);
 #endif
   }
 }
@@ -186,29 +206,40 @@ void c_get(PARAMETER *plist,int e) {
   graphics();
  
 #ifdef FRAMEBUFFER
-  data=FB_get_image(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer,&len);
+  int bx,by;
+  unsigned int bw,bh;
+  bx=max(0,plist[0].integer);
+  by=max(0,plist[1].integer);
+  bw=max(0,plist[2].integer);
+  bh=max(0,plist[3].integer);
+  bx=min(window[usewindow].display->w-1,bx);
+  by=min(window[usewindow].display->h-1,bh);
+  bw=min(window[usewindow].display->w-bx,bw);
+  bh=min(window[usewindow].display->h-by,bh);
+  
+  data=FB_get_image(bx,by,bw,bh,&len);
   varcaststring_and_free(plist[4].typ,plist[4].pointer,create_string_and_free((char *)data,len));
 #elif defined USE_X11
-  XGetGeometry(display[usewindow], win[usewindow], &root,&bx,&by,&bw,&bh,&b,&d); 
-  XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
-  Image=XGetImage(display[usewindow],pix[usewindow],
+  XGetGeometry(window[usewindow].display, window[usewindow].win, &root,&bx,&by,&bw,&bh,&b,&d); 
+  XGetWindowAttributes(window[usewindow].display, window[usewindow].win, &xwa);
+  Image=XGetImage(window[usewindow].display,window[usewindow].pix,
                 plist[0].integer,plist[1].integer,plist[2].integer,
 		plist[3].integer, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     if(d==8) {
-      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(window[usewindow].display));
       int i;
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
-      XQueryColors(display[usewindow], map, ppixcolor,256);
+      XQueryColors(window[usewindow].display, map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
     varcaststring_and_free(plist[4].typ,plist[4].pointer,create_string_and_free((char *)data,len));
     XDestroyImage(Image);
 #elif defined USE_SDL
   SDL_Surface *image=SDL_CreateRGBSurface(SDL_SWSURFACE, plist[2].integer, 
-  plist[2].integer, display[usewindow]->format->BitsPerPixel, 0, 0, 0, 0);
+  plist[3].integer, window[usewindow].display->format->BitsPerPixel, 0, 0, 0, 0);
   SDL_Rect a={plist[0].integer,plist[1].integer,image->w,image->h};
 
-  SDL_BlitSurface(display[usewindow], &a,image, NULL);
+  SDL_BlitSurface(window[usewindow].display, &a,image, NULL);
   int size=image->w*image->h*4+1000; /*to be safe*/
   data=malloc(size);
   
@@ -242,7 +273,7 @@ void c_put(PARAMETER *plist,int e) {
   XWindowAttributes xwa;
   XGCValues gc_val;
 
-  XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+  XGetWindowAttributes(window[usewindow].display, window[usewindow].win, &xwa);
   ximage=xwdtoximage(plist[2].pointer,xwa.visual,xwa.depth,&xmask,0,scale);
 
     w=ximage->width;
@@ -261,25 +292,25 @@ void c_put(PARAMETER *plist,int e) {
       GC sgc=NULL;
       if(xmask) {
       /*grafik context vorher retten und nachher restoren ... */
-        sgc=XCreateGC(display[usewindow], win[usewindow], 0, &gc_val);
-        XCopyGC(display[usewindow], gc[usewindow],GCForeground|GCFunction, sgc);
+        sgc=XCreateGC(window[usewindow].display, window[usewindow].win, 0, &gc_val);
+        XCopyGC(window[usewindow].display, window[usewindow].gc,GCForeground|GCFunction, sgc);
      
         if(XInitImage(xmask)) {
-          XSetFunction(display[usewindow], gc[usewindow], GXandInverted);
+          XSetFunction(window[usewindow].display, window[usewindow].gc, GXandInverted);
 	 
-	  XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
+	  XPutImage(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,
                 xmask, x,y,plist[0].integer,plist[1].integer, w,h);
-          XSetFunction(display[usewindow], gc[usewindow], GXor); 
+          XSetFunction(window[usewindow].display, window[usewindow].gc, GXor); 
         } else xberror(53,"PUT mask"); /* Falsches Grafikformat  */
         XDestroyImage(xmask);
       }
       if(XInitImage(ximage)) {
-        XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
+        XPutImage(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,
                 ximage, x,y,plist[0].integer,plist[1].integer, w, h);
       } else xberror(53,""); /* Falsches Grafikformat  */
       if(sgc) {
-         XCopyGC(display[usewindow], sgc,GCForeground|GCFunction, gc[usewindow]);
-         XFreeGC(display[usewindow],sgc); 
+         XCopyGC(window[usewindow].display, sgc,GCForeground|GCFunction, window[usewindow].gc);
+         XFreeGC(window[usewindow].display,sgc); 
       }
     }
   XDestroyImage(ximage);
@@ -304,7 +335,7 @@ void c_put(PARAMETER *plist,int e) {
 */
   SDL_Rect a={0,0,image->w,image->h};
   SDL_Rect b={plist[0].integer,plist[1].integer,0,0};
-  SDL_BlitSurface(image, &a,display[usewindow], &b);
+  SDL_BlitSurface(image, &a,window[usewindow].display, &b);
   SDL_FreeSurface(image);
 #endif
 }
@@ -333,79 +364,90 @@ void c_sget(PARAMETER *plist,int e) {
   varcaststring(plist->integer,plist->pointer,str);
   free(str.pointer);
 #elif defined USE_X11
-    XGetGeometry(display[usewindow], win[usewindow], &root,&x,&y,&w,&h,&b,&d); 
-    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    XGetGeometry(window[usewindow].display, window[usewindow].win, &root,&x,&y,&w,&h,&b,&d); 
+    XGetWindowAttributes(window[usewindow].display, window[usewindow].win, &xwa);
     
-    Image=XGetImage(display[usewindow],pix[usewindow],0,0,w,h,AllPlanes,(d==1)?XYPixmap:ZPixmap);
+    Image=XGetImage(window[usewindow].display,window[usewindow].pix,0,0,w,h,AllPlanes,(d==1)?XYPixmap:ZPixmap);
     if(d==8) {
-      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(window[usewindow].display));
       int i;
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
-      XQueryColors(display[usewindow], map, ppixcolor,256);
+      XQueryColors(window[usewindow].display, map, ppixcolor,256);
     }
     str.pointer=(char *)imagetoxwd(Image,xwa.visual,ppixcolor,(int *)&(str.len));
 
   varcaststring(plist->integer,plist->pointer,str);
   XDestroyImage(Image);  
   free(str.pointer);
+#elif defined USE_SDL
+  unsigned char *data;
+  int len;
+  SDL_Surface *image=SDL_CreateRGBSurface(SDL_SWSURFACE, window[usewindow].display->w, 
+  window[usewindow].display->h, window[usewindow].display->format->BitsPerPixel, 0, 0, 0, 0);
+  SDL_Rect a={0,0,image->w,image->h};
+
+  SDL_BlitSurface(window[usewindow].display, &a,image, NULL);
+  int size=image->w*image->h*4+1000; /*to be safe*/
+  data=malloc(size);
+  
+  
+  SDL_RWops *rw=SDL_RWFromMem(data,size);
+  
+  SDL_SaveBMP_RW(image, rw, 0);
+  len=SDL_RWtell(rw);
+  SDL_RWclose(rw);
+  SDL_FreeSurface(image);
+  varcaststring_and_free(plist[0].typ,plist[0].pointer,create_string_and_free(data,len));
+
 #endif
 }
 
 
 void c_getgeometry(PARAMETER *plist,int e) {
-  int winnr=DEFAULTWINDOW;
-  int x,y;
-  unsigned int d,b,w,h;
 #ifdef USE_X11
   Window root;
 #endif
-  winnr=plist[0].integer;
-  if(winnr<0 || winnr>=MAXWINDOWS) xberror(98,""); /* Illegal Window number %s (0-16) */
-  else if(!winbesetzt[winnr]) xberror(99,""); /* Window %s does not exist  */
+  int winnr=usewindow;
+  if(plist->typ!=PL_LEER) winnr=plist->integer;
+
+  if(winnr<0 || winnr>=MAXWINDOWS) {xberror(98,""); /* Illegal Window number %s (0-16) */ return;}
+  graphics();
+  if(!(window[winnr].flags&WIN_CREATED)) xberror(99,""); /* Window %s does not exist  */
   else {
-    graphics();
 #ifdef FRAMEBUFFER
-    FB_get_geometry(&x,&y,&w,&h,(int *)&b,&d);
+    FB_get_geometry(&window[winnr].x,&window[winnr].y,&window[winnr].w,&window[winnr].h,(int *)&window[winnr].b,&window[winnr].d);
 #elif defined USE_X11
-    XGetGeometry(display[winnr], win[winnr], &root,&x,&y,&w,&h,&b,&d); 
-    x=y=0;  /* besser so, da versch. Windowmanager das unterschiedlich handeln.*/
-#endif
-#ifdef WINDOWS
-#endif
-#ifdef USE_SDL
-    x=y=0;
-    w=display[usewindow]->w;
-    h=display[usewindow]->h;
-    d=32;
+    XGetGeometry(window[winnr].display, window[winnr].win, &root,&window[winnr].x,&window[winnr].y,&window[winnr].w,&window[winnr].h,&window[winnr].b,&window[winnr].d); 
+    window[winnr].x=window[winnr].y=0;  /* besser so, da versch. Windowmanager das unterschiedlich handeln.*/
+#elif defined USE_SDL
+    window[winnr].w=window[usewindow].display->w;
+    window[winnr].h=window[usewindow].display->h;
+#elif defined USE_GEM
 #endif
 #if DEBUG
-    printf("get_geometry: %d %d %d %d %d %d\n",plist[0].integer,x,y,w,h,d);
+    printf("get_geometry: %d %d %d %d %d %d\n",plist->integer,window[winnr].x,window[winnr].y,window[winnr].w,window[winnr].h,window[winnr].d);
 #endif
-    if(e>6 && plist[6].typ!=PL_LEER) varcastint(plist[6].integer,plist[6].pointer,b);
-    if(e>5 && plist[5].typ!=PL_LEER) varcastint(plist[5].integer,plist[5].pointer,d);
-    if(e>4 && plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,h);
-    if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
-    if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
-    if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
+    if(e>6 && plist[6].typ!=PL_LEER) varcastint(plist[6].integer,plist[6].pointer,window[winnr].b);
+    if(e>5 && plist[5].typ!=PL_LEER) varcastint(plist[5].integer,plist[5].pointer,window[winnr].d);
+    if(e>4 && plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,window[winnr].h);
+    if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,window[winnr].w);
+    if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,window[winnr].y);
+    if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,window[winnr].x);
   } 
 }
 
 void c_getscreensize(PARAMETER *plist,int e) {
   int x,y;
   unsigned int d,b,w,h;
+  graphics();
 #ifdef USE_X11
     Window root;
-#endif
-    graphics();
-#ifdef FRAMEBUFFER
-    FB_get_geometry(&x,&y,&w,&h,(int *)&b,&d);
-#endif
-#ifdef USE_X11
-    XGetGeometry(display[usewindow],
-        RootWindow(display[usewindow],XDefaultScreen(display[usewindow]) ),
+    XGetGeometry(window[usewindow].display,
+        RootWindow(window[usewindow].display,XDefaultScreen(window[usewindow].display) ),
 	&root,&x,&y,&w,&h,&b,&d); 
-#endif
-#ifdef WINDOWS
+#elif defined FRAMEBUFFER
+    FB_get_geometry(&x,&y,&w,&h,(int *)&b,&d);
+#elif defined WINDOWS
   HWND hwnd_parent;
   RECT rc_parent;
  // RECT rw_parent;
@@ -419,19 +461,21 @@ void c_getscreensize(PARAMETER *plist,int e) {
   h=rc_parent.bottom-y;
   
   d=32;
-#else
-#ifdef USE_SDL
+#elif defined USE_SDL
     x=y=0;
-    
     SDL_VideoInfo* info = SDL_GetVideoInfo();
     w = info->current_w;
     h = info->current_h; 
-   // w=display[usewindow]->w;
-   // h=display[usewindow]->h;
+   // w=window[usewindow].display->w;
+   // h=window[usewindow].display->h;
 //    d=info->format;
 //memdump((char *)info,sizeof(SDL_VideoInfo));
     d=32;
-#endif
+#elif defined USE_GEM
+    x=y=0;
+    w=640;
+    h=400;
+    d=1;
 #endif
 #if DEBUG
     printf("get_screensize: %d %d %d %d %d %d\n",plist[0].integer,x,y,w,h,d);
@@ -455,18 +499,18 @@ void c_sput(PARAMETER *plist,int e) {
     FB_put_image(plist[0].pointer,0,0);
 #endif
 #ifdef USE_X11
-    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    XGetWindowAttributes(window[usewindow].display, window[usewindow].win, &xwa);
 // printf("Hallo %d\n",plist[0].integer);
 // memdump(plist[0].pointer,32);
     ximage=xwdtoximage(plist[0].pointer,xwa.visual,xwa.depth,NULL,0,1);
-    XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
+    XPutImage(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,
                 ximage, 0,0,0,0, ximage->width, ximage->height);
     XDestroyImage(ximage);
 #endif
   }
 }
 void c_line(PARAMETER *plist,int e) {
-  graphics(); 
+  graphics();
   line(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
 /* Kubische Bezier curve*/
@@ -507,28 +551,55 @@ void c_box(PARAMETER *plist,int e) {
 }
 #define RBOX_RADIUS 16
 void c_rbox(PARAMETER *plist,int e) {
-  graphics(); 
+  graphics();
+#ifdef USE_GEM
+  short a[4];
+  a[0]=plist[0].integer;
+  a[1]=plist[1].integer;
+  a[2]=plist[2].integer;
+  a[3]=plist[3].integer;
+  v_rbox(window[usewindow].vdi_handle,a);
+#else
   line(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[1].integer);
   line(plist[2].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
   line(plist[2].integer-RBOX_RADIUS,plist[3].integer,plist[0].integer+RBOX_RADIUS,plist[3].integer);
   line(plist[0].integer,plist[3].integer-RBOX_RADIUS,plist[0].integer,plist[1].integer+RBOX_RADIUS);
-  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
-  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
-  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
-  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+  XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
+  XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
+  XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
+  XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+#endif
 }
 void c_pbox(PARAMETER *plist,int e) {
   graphics(); 
+#ifdef USE_GEM
+  short a[4];
+  a[0]=plist[0].integer;
+  a[1]=plist[1].integer;
+  a[2]=plist[2].integer;
+  a[3]=plist[3].integer;
+  v_bar(window[usewindow].vdi_handle,a);
+#else
   pbox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
+#endif
 }
 void c_prbox(PARAMETER *plist,int e) {
   graphics(); 
+#ifdef USE_GEM
+  short a[4];
+  a[0]=plist[0].integer;
+  a[1]=plist[1].integer;
+  a[2]=plist[2].integer;
+  a[3]=plist[3].integer;
+  v_rfbox(window[usewindow].vdi_handle,a);
+#else
   pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
   pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
-  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
-  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
-  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
-  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+  XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
+  XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
+  XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
+  XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+#endif
 }
 
 void c_dotodraw(char *n) {
@@ -585,18 +656,18 @@ void c_draw(char *n) {
 
 void c_circle(PARAMETER *plist,int e) {
   int r,x,y,a1=0,a2=64*360;
-    r=plist[2].integer;
-    x=plist[0].integer;
-    y=plist[1].integer;
-    if(e>=4) a1=plist[3].integer*64;
-    if(e>=5) a2=plist[4].integer*64;
-    
-    graphics(); 
-    #ifdef USE_SDL
-    circleColor(display[usewindow],x,y,r,fcolor);
-    #else
-    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x-r,y-r,2*r,2*r,a1,a2-a1); 
-    #endif
+  r=plist[2].integer;
+  x=plist[0].integer;
+  y=plist[1].integer;
+  if(e>=4) a1=plist[3].integer*64;
+  if(e>=5) a2=plist[4].integer*64;
+  
+  graphics(); 
+  #ifdef USE_SDL
+  circleColor(window[usewindow].display,x,y,r,window[usewindow].fcolor);
+  #else
+  XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x-r,y-r,2*r,2*r,a1,a2-a1); 
+  #endif
 }
 void c_pcircle(PARAMETER *plist,int e) {
   int r,x,y,a1=0,a2=64*360;
@@ -609,9 +680,9 @@ void c_pcircle(PARAMETER *plist,int e) {
     
     graphics(); 
     #ifdef USE_SDL
-    filledCircleColor(display[usewindow],x,y,r,fcolor);
+    filledCircleColor(window[usewindow].display,x,y,r,window[usewindow].fcolor);
     #else
-    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x-r,y-r,2*r,2*r,a1,a2-a1); 
+    XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,x-r,y-r,2*r,2*r,a1,a2-a1); 
     #endif
 }
 
@@ -622,12 +693,12 @@ void c_ellipse(PARAMETER *plist,int e) {  /*  ellipse x,y,r1,r2,a1,a2    Winkel 
 
   graphics(); 
     #ifdef USE_SDL
-      ellipseColor(display[usewindow],plist[0].integer,plist[1].integer,r1,r2,fcolor);
+      ellipseColor(window[usewindow].display,plist[0].integer,plist[1].integer,r1,r2,window[usewindow].fcolor);
       /* Wir haben nix fuer Ellipsen sektoren ... */
     #else
       if(e>=5) a1=plist[4].integer*64;
       if(e>=6) a2=plist[5].integer*64;
-      XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer-r1,plist[1].integer-r2,2*r1,2*r2,a1,a2-a1);
+      XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer-r1,plist[1].integer-r2,2*r1,2*r2,a1,a2-a1);
     #endif
 }
 void c_pellipse(PARAMETER *plist,int e) {
@@ -637,12 +708,12 @@ void c_pellipse(PARAMETER *plist,int e) {
 
   graphics(); 
     #ifdef USE_SDL
-      filledEllipseColor(display[usewindow],plist[0].integer,plist[1].integer,r1,r2,fcolor);
+      filledEllipseColor(window[usewindow].display,plist[0].integer,plist[1].integer,r1,r2,window[usewindow].fcolor);
       /* Wir haben nix fuer Ellipsen sektoren ... */
     #else
       if(e>=5) a1=plist[4].integer*64;
       if(e>=6) a2=plist[5].integer*64;
-      XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer-r1,plist[1].integer-r2,2*r1,2*r2,a1,a2-a1);
+      XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,plist[0].integer-r1,plist[1].integer-r2,2*r1,2*r2,a1,a2-a1);
     #endif
 }
 
@@ -652,14 +723,20 @@ void c_color(PARAMETER *plist,int e) {
   if(e==2) {SetBackground(plist[1].integer);}
 }
 
+/* SCREEN mode%[,ladr%,padr%] */
 
 void c_screen(PARAMETER *plist,int e) {
-  graphics();
 #ifdef USE_VGA
+  graphics();
   vga_setmode(plist->integer);
-#endif
-#ifdef USE_SDL
-  
+#elif defined USE_SDL
+#elif defined USE_GEM
+  void *ladr,*padr;
+  if(e>2) padr=(void *)plist[2].integer;
+  else padr=Physbase();
+  if(e>1) ladr=(void *)plist[1].integer;
+  else ladr=Logbase();
+  Setscreen(ladr,padr,(short)plist->integer);
 #endif
 }
 
@@ -787,7 +864,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
         switch(marker_typ) {
 	case 1:
 	  for(i=0;i<anz;i++) {
-            XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,0,64*360); 
+            XDrawArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,0,64*360); 
 	  }
 	  break;
         case 2:
@@ -815,7 +892,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  break;
 	case 8:
 	  for(i=0;i<anz;i++) {
-            XFillArc(display[usewindow],pix[usewindow],gc[usewindow],points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,0,64*360); 
+            XFillArc(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,0,64*360); 
 	  }
 	  break;
 	case 9:
@@ -823,7 +900,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  break;
 	default:
 	#ifdef USE_X11
-	  XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+	  XDrawPoints(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points,anz,mode);
         #else
 	  { int i; for(i=0;i<anz;i++) DrawPoint(points[i].x,points[i].y);}
         #endif
@@ -837,7 +914,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  vx[i]=points[i].x;
 	  vy[i]=points[i].y;
 	}
-        polygonColor(display[usewindow],&vx,&vy,anz,fcolor);
+        polygonColor(window[usewindow].display,&vx,&vy,anz,window[usewindow].fcolor);
       } else if(doit==2) {
         Sint16 vx[anz],vy[anz];
 	int i;
@@ -845,12 +922,12 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  vx[i]=points[i].x;
 	  vy[i]=points[i].y;
 	}       
-        filledPolygonColor(display[usewindow],&vx,&vy,anz,fcolor);
+        filledPolygonColor(window[usewindow].display,&vx,&vy,anz,window[usewindow].fcolor);
       }
      #endif
      #ifdef USE_X11
-      else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
-      else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);    
+      else if(doit==1) XDrawLines(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points,anz,mode);
+      else if(doit==2) XFillPolygon(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points,anz,shape,mode);    
      #endif
      #ifdef FRAMEBUFFER
       else if(doit==1) {
@@ -909,12 +986,12 @@ void c_fill(PARAMETER *plist,int e) {
   int bc=-1;
   graphics();
   if(e>2) bc=plist[2].integer;
-  ffill(plist[0].integer,plist[1].integer,get_fcolor(),bc);
+  ffill(plist->integer,plist[1].integer,window[usewindow].fcolor,bc);
 }
 void c_clip(PARAMETER *plist,int e) {
   graphics();
 #ifdef USE_X11
-  if(e==1) XSetClipMask(display[usewindow], gc[usewindow], None); /*CLIP OFF */
+  if(e==1) XSetClipMask(window[usewindow].display, window[usewindow].gc, None); /*CLIP OFF */
   else if(e>3) {
     XRectangle rectangle;
     int ox=0,oy=0;
@@ -924,7 +1001,7 @@ void c_clip(PARAMETER *plist,int e) {
     rectangle.height=plist[3].integer;
     if(e>4) ox=plist[4].integer;
     if(e>5) oy=plist[5].integer;
-    XSetClipRectangles(display[usewindow], gc[usewindow], ox, oy, &rectangle, 1,Unsorted);
+    XSetClipRectangles(window[usewindow].display, window[usewindow].gc, ox, oy, &rectangle, 1,Unsorted);
   }
 #endif
 #ifdef FRAMEBUFFER
@@ -932,10 +1009,10 @@ void c_clip(PARAMETER *plist,int e) {
   else if(e>3) FB_set_clip(&screen,plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 #endif
 #ifdef USE_SDL
-  if(e==1) SDL_SetClipRect(display[usewindow], NULL); /*CLIP OFF */
+  if(e==1) SDL_SetClipRect(window[usewindow].display, NULL); /*CLIP OFF */
   else if(e>3) {
     SDL_Rect a={plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer};
-    SDL_SetClipRect(display[usewindow], &a);
+    SDL_SetClipRect(window[usewindow].display, &a);
   }
 #endif
 }
@@ -980,10 +1057,10 @@ void c_defline(PARAMETER *plist,int e) {
       }
       dlen=i;
     }
-    XSetDashes(display[usewindow], gc[usewindow],dash_offset,dl,dlen);
+    XSetDashes(window[usewindow].display, window[usewindow].gc,dash_offset,dl,dlen);
     style=LineOnOffDash;
   }
-  XSetLineAttributes(display[usewindow], gc[usewindow],width,style,cap,join);
+  XSetLineAttributes(window[usewindow].display, window[usewindow].gc,width,style,cap,join);
 #endif
 }
 void c_copyarea(PARAMETER *plist,int e) {
@@ -992,7 +1069,7 @@ void c_copyarea(PARAMETER *plist,int e) {
     #ifdef USE_SDL
       SDL_Rect a={plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer};
       SDL_Rect b={plist[4].integer,plist[5].integer,0,0};
-      SDL_BlitSurface(display[usewindow], &a,display[usewindow], &b);
+      SDL_BlitSurface(window[usewindow].display, &a,window[usewindow].display, &b);
     #else
       CopyArea(plist[0].integer,plist[1].integer,plist[2].integer,
         plist[3].integer,plist[4].integer,plist[5].integer);
@@ -1017,7 +1094,7 @@ void c_mouse(PARAMETER *plist,int e) {
    int root_x_return, root_y_return,win_x_return, win_y_return;
    unsigned int mask_return;
    graphics();
-   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+   XQueryPointer(window[usewindow].display, window[usewindow].win, &root_return, &child_return,
        &root_x_return, &root_y_return,&win_x_return, &win_y_return,&mask_return);
   if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,win_x_return);
   if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,win_y_return);
@@ -1034,6 +1111,13 @@ void c_mouse(PARAMETER *plist,int e) {
   if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,screen.mouse_x);
   if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,screen.mouse_y);
   if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,(screen.mouse_k|(screen.mouse_s<<8)));
+#elif defined USE_GEM
+   graphics();
+   short mx,my,mk,ms;
+   graf_mkstate(&mx,&my,&mk,&ms);
+  if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,mx);
+  if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,my);
+  if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,(mk|(ms<<8)));
 #elif defined WINDOWS_NATIVE
   if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,global_mousex);
   if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,global_mousey);
@@ -1058,8 +1142,8 @@ void c_setmouse(PARAMETER *plist,int e) {
     screen.mouse_y+=plist[1].integer;
   }
 #elif defined USE_X11
-    if(mode==0) XWarpPointer(display[usewindow], None, win[usewindow], 0, 0,0,0,plist[0].integer,plist[1].integer);
-    else XWarpPointer(display[usewindow], None, None, 0, 0,0,0,plist[0].integer,plist[1].integer);
+    if(mode==0) XWarpPointer(window[usewindow].display, None, window[usewindow].win, 0, 0,0,0,plist[0].integer,plist[1].integer);
+    else XWarpPointer(window[usewindow].display, None, None, 0, 0,0,0,plist[0].integer,plist[1].integer);
 #endif
 }
 
@@ -1081,10 +1165,10 @@ void c_mouseevent(PARAMETER *plist,int e) { /*MOUSEEVENT x,y,k,rx,ry,s */
   XEvent event;
   graphics();
     
-  XWindowEvent(display[usewindow], win[usewindow],ButtonPressMask|ExposureMask, &event);
+  XWindowEvent(window[usewindow].display, window[usewindow].win,ButtonPressMask|ExposureMask, &event);
   while(event.type!=ButtonPress) { 
-     handle_event(usewindow,&event);
-     XWindowEvent(display[usewindow], win[usewindow],ButtonPressMask|ExposureMask, &event);
+     handle_event(&window[usewindow],&event);
+     XWindowEvent(window[usewindow].display, window[usewindow].win,ButtonPressMask|ExposureMask, &event);
   }
    if(event.type==ButtonPress) {
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.xbutton.x);
@@ -1098,7 +1182,7 @@ void c_mouseevent(PARAMETER *plist,int e) { /*MOUSEEVENT x,y,k,rx,ry,s */
   SDL_Event event;
   if(SDL_WaitEvent(&event)==0) return;
   while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_MOUSEBUTTONUP) { 
-     handle_event(usewindow,&event);
+     handle_event(&window[usewindow],&event);
      if(SDL_WaitEvent(&event)==0) return;
   }
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.button.x);
@@ -1130,10 +1214,10 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
    FB_mouse_events(1);
 #endif
     
-   XWindowEvent(display[usewindow], win[usewindow],PointerMotionMask|ExposureMask, &event);
+   XWindowEvent(window[usewindow].display, window[usewindow].win,PointerMotionMask|ExposureMask, &event);
    while(event.type!=MotionNotify) { 
-     handle_event(usewindow,&event);
-     XWindowEvent(display[usewindow], win[usewindow],PointerMotionMask|ExposureMask, &event);
+     handle_event(&window[usewindow],&event);
+     XWindowEvent(window[usewindow].display, window[usewindow].win,PointerMotionMask|ExposureMask, &event);
    }   
    if(event.type==MotionNotify) {
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.xmotion.x);
@@ -1148,7 +1232,7 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
   SDL_Event event;
   if(SDL_WaitEvent(&event)==0) return;
   while(event.type!=SDL_MOUSEMOTION) { 
-     handle_event(usewindow,&event);
+     handle_event(&window[usewindow],&event);
      if(SDL_WaitEvent(&event)==0) return;
   }
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.motion.x);
@@ -1182,10 +1266,10 @@ void c_keyevent(PARAMETER *plist,int e) {
    XEvent event;   
    graphics();
     
-   XWindowEvent(display[usewindow], win[usewindow],KeyPressMask|ExposureMask, &event);
+   XWindowEvent(window[usewindow].display, window[usewindow].win,KeyPressMask|ExposureMask, &event);
    while(event.type!=KeyPress) { 
-     handle_event(usewindow,&event);
-     XWindowEvent(display[usewindow], win[usewindow],KeyPressMask|ExposureMask, &event);
+     handle_event(&window[usewindow],&event);
+     XWindowEvent(window[usewindow].display, window[usewindow].win,KeyPressMask|ExposureMask, &event);
    }   
    if(event.type==KeyPress) {
      STRING str;
@@ -1223,7 +1307,7 @@ void c_keyevent(PARAMETER *plist,int e) {
   graphics();
   if(SDL_WaitEvent(&event)==0) return;
   while(event.type!=SDL_KEYDOWN /* && event.type!=SDL_KEYUP */ ) { 
-     handle_event(usewindow,&event);
+     handle_event(&window[usewindow],&event);
      if(SDL_WaitEvent(&event)==0) return;
   }
   buf[0]=event.key.keysym.sym;
@@ -1244,12 +1328,12 @@ int f_eventf(int mask) {
   XEvent event;
   graphics();
  again:
-  if(XCheckWindowEvent(display[usewindow], win[usewindow],mask|ExposureMask, &event)) {
+  if(XCheckWindowEvent(window[usewindow].display, window[usewindow].win,mask|ExposureMask, &event)) {
     if(event.type==Expose) { 
-      handle_event(usewindow,&event);
+      handle_event(&window[usewindow],&event);
       goto again;
     } else {
-      XPutBackEvent(display[usewindow],&event);
+      XPutBackEvent(window[usewindow].display,&event);
     }
     return -1;
   } 
@@ -1291,11 +1375,11 @@ void c_allevent(PARAMETER *plist,int e) {
  //   printf("EVENT e=%d vnr=%d pointer=%x\n",e,plist->integer,plist->pointer);
  //   dump_parameterlist(plist,e);
     
-   XWindowEvent(display[usewindow], win[usewindow],
+   XWindowEvent(window[usewindow].display, window[usewindow].win,
          KeyPressMask|ButtonPressMask|PointerMotionMask|ExposureMask, &event);
    while(event.type==Expose) { 
-     handle_event(usewindow,&event);
-     XWindowEvent(display[usewindow], win[usewindow],KeyPressMask|ButtonPressMask|PointerMotionMask|ExposureMask, &event);
+     handle_event(&window[usewindow],&event);
+     XWindowEvent(window[usewindow].display, window[usewindow].win,KeyPressMask|ButtonPressMask|PointerMotionMask|ExposureMask, &event);
    }   
    if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.type);
    if(e>1 && plist[1].typ!=PL_LEER) {
@@ -1384,108 +1468,109 @@ void c_titlew(PARAMETER *plist,int e) {
   if(plist->typ!=PL_LEER) winnr=plist->integer;
   if(winnr>0 && winnr<MAXWINDOWS) {
     graphics();
+    if(window[winnr].flags&WIN_CREATED) {
 #ifdef WINDOWS_NATIVE
-  SetWindowText(win_hwnd[winnr],plist[1].pointer);
-#endif
-#ifdef USE_X11
-    if (!XStringListToTextProperty((char **)&(plist[1].pointer), 1, &win_name[winnr]))    
+  SetWindowText(window[winnr].win_hwnd,plist[1].pointer);
+#elif defined USE_X11
+    if (!XStringListToTextProperty((char **)&(plist[1].pointer), 1, &window[winnr].win_name))    
       printf("Couldn't set Name of Window.\n");
-    XSetWMName(display[winnr], win[winnr], &win_name[winnr]);
+    XSetWMName(window[winnr].display, window[winnr].win, &window[winnr].win_name);
+#elif defined USE_SDL
+    SDL_WM_SetCaption(plist[1].pointer,NULL);
 #endif
-#ifdef USE_SDL
-  SDL_WM_SetCaption(plist[1].pointer,NULL);
-#endif
+    if(window[winnr].title) free(window[winnr].title);
+    window[winnr].title=strdup(plist[1].pointer);
+    } else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
   int winnr=usewindow;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
   if(winnr>0 && winnr<MAXWINDOWS) {
-#ifdef USE_X11
     graphics();
-    XSetIconName(display[winnr], win[winnr],plist[1].pointer);
+    if(window[winnr].flags&WIN_CREATED) {
+#ifdef USE_X11
+    XSetIconName(window[winnr].display, window[winnr].win,plist[1].pointer);
+#elif defined USE_SDL
+    SDL_WM_SetCaption(NULL,plist[1].pointer);
 #endif
-#ifdef USE_SDL
-  SDL_WM_SetCaption(NULL,plist[1].pointer);
-#endif
+    if(window[winnr].info) free(window[winnr].info);
+    window[winnr].info=strdup(plist[1].pointer);
+    } else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 void c_clearw(PARAMETER *plist,int e) {
   int winnr=usewindow;
-  if(e) winnr=max(0,plist[0].integer);
-  if(winnr<MAXWINDOWS) {
+  if(e) winnr=plist->integer;
+  if(winnr>=0 && winnr<MAXWINDOWS) {
     graphics();
-    if(winbesetzt[winnr]) {  	
+    if(window[winnr].flags&WIN_CREATED) {  	
 #ifdef WINDOWS_NATIVE
       RECT interior;
-      GetClientRect(win_hwnd[winnr],&interior);
-      FillRect(bitcon[winnr],&interior,(HBRUSH)COLOR_WINDOW);
-#endif
-#if defined USE_X11
+      GetClientRect(window[winnr].win_hwnd,&interior);
+      FillRect(window[winnr].bitcon,&interior,(HBRUSH)COLOR_WINDOW);
+#elif defined USE_X11
       int x,y;
       unsigned int w,h,b,d;
       Window root;
       XGCValues gc_val;  
        /* Erst den Graphic-Kontext retten  */
-      GC sgc=XCreateGC(display[winnr], win[winnr], 0, &gc_val);
-      XCopyGC(display[winnr], gc[winnr],GCForeground , sgc); 
-      XGetGeometry(display[winnr],win[winnr],&root,&x,&y,&w,&h,&b,&d); 
-      XSetForeground(display[winnr],gc[winnr],get_bcolor());
-      XFillRectangle(display[winnr],pix[winnr],gc[winnr],x,y,w,h); 
+      GC sgc=XCreateGC(window[winnr].display, window[winnr].win, 0, &gc_val);
+      XCopyGC(window[winnr].display, window[winnr].gc,GCForeground , sgc); 
+      XGetGeometry(window[winnr].display,window[winnr].win,&root,&x,&y,&w,&h,&b,&d); 
+      XSetForeground(window[winnr].display,window[winnr].gc,window[winnr].bcolor);
+      XFillRectangle(window[winnr].display,window[winnr].pix,window[winnr].gc,x,y,w,h); 
 
-      /* XClearWindow(display[winnr],win[winnr]); */
+      /* XClearWindow(window[winnr].display,window[winnr].win); */
       
-      XCopyGC(display[winnr],sgc,GCForeground, gc[winnr]);
-      XFreeGC(display[winnr],sgc); 
+      XCopyGC(window[winnr].display,sgc,GCForeground, window[winnr].gc);
+      XFreeGC(window[winnr].display,sgc); 
 #elif defined USE_SDL
-      SDL_FillRect(display[winnr],NULL,0);
+      SDL_FillRect(window[winnr].display,NULL,0);
+#elif defined USE_GEM
+      v_clrwk(window[winnr].vdi_handle);
 #elif defined FRAMEBUFFER
-      FB_Clear(&screen);
+      FB_Clear(window[winnr].screen);
 #endif
-    }
-  }
+    } else xberror(99,""); /* Window %s does not exist  */
+  } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 void c_closew(PARAMETER *plist,int e) {
   int winnr=usewindow;
-  if(e) winnr=plist[0].integer;
+  if(e) winnr=plist->integer;
   if(winnr>0 && winnr<MAXWINDOWS) {
-    if(winbesetzt[winnr]) {
-      graphics();
-      close_window(winnr);
+    graphics();
+    if(window[winnr].flags&WIN_CREATED) {
+      close_window(&window[winnr]);
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 void c_openw(PARAMETER *plist,int e) {
   int winnr=DEFAULTWINDOW;
-  if(e) winnr=plist[0].integer;
+  if(e) winnr=plist->integer;
   if(winnr>0 && winnr<MAXWINDOWS) {
-    if(!winbesetzt[winnr]) {
-      graphics();
-      open_window(winnr);
-    }
+    graphics();
+    if(window[winnr].flags&WIN_CREATED) open_window(&window[winnr]);
+    else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 
 void c_sizew(PARAMETER *plist,int e) {
-  int winnr;
+  int winnr=usewindow;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
-  else winnr=usewindow;
-  
   if(winnr>0 && winnr<MAXWINDOWS) {
     graphics();
-    if(winbesetzt[winnr]) {do_sizew(winnr,plist[1].integer,plist[2].integer);}
+    if(window[winnr].flags&WIN_CREATED) {do_sizew(&window[winnr],plist[1].integer,plist[2].integer);}
     else  xberror(99,""); /* Window %s does not exist  */
   } else if(winnr==0) xberror(97,"SIZEW"); /* This operation %s is not allowed for root window  */
   else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
 void c_movew(PARAMETER *plist,int e) {
-  int winnr;
+  int winnr=usewindow;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
-  else winnr=usewindow;
-  
   if(winnr>0 && winnr<MAXWINDOWS) {
     graphics();
-    if(winbesetzt[winnr]) {do_movew(winnr,plist[1].integer,plist[2].integer);}
+    if(window[winnr].flags&WIN_CREATED) {do_movew(winnr,plist[1].integer,plist[2].integer);}
     else  xberror(99,""); /* Window %s does not exist  */
   } else if(winnr==0) xberror(97,"MOVEW"); /* This operation %s is not allowed for root window  */
   else xberror(98,""); /* Illegal Window number %s (0-16) */
@@ -1495,19 +1580,18 @@ void c_fullw(PARAMETER *plist,int e) {
   int winnr=usewindow;
   if(e) winnr=plist->integer;
   if(winnr>0 && winnr<MAXWINDOWS) {
-    if(winbesetzt[winnr]) {
+    graphics();
+    if(window[winnr].flags&WIN_CREATED) {
 #ifdef USE_X11
       Window root;
       int ox,oy;
       unsigned int ow,oh,ob;
       unsigned int d;
-      graphics();
       do_movew(winnr,0,0);
-      XGetGeometry(display[winnr],RootWindow(display[winnr],
-        DefaultScreen(display[winnr])),&root,&ox,&oy,&ow,&oh,&ob,&d);
-      do_sizew(winnr,ow,oh);
-#endif
-#ifdef USE_SDL
+      XGetGeometry(window[winnr].display,RootWindow(window[winnr].display,
+        DefaultScreen(window[winnr].display)),&root,&ox,&oy,&ow,&oh,&ob,&d);
+      do_sizew(&window[winnr],ow,oh);
+#elif defined USE_SDL
 /*Hier haben wir die chance, den fullscreenmodus zu aktivieren...*/
 #endif
     } else  xberror(99,""); /* Window %s does not exist  */
@@ -1520,10 +1604,10 @@ void c_topw(PARAMETER *plist,int e) {
   if(e) winnr=plist->integer;
   if(winnr==0) xberror(97,"TOPW"); /* This operation %s is not allowed for root window  */
   else if(winnr>0 && winnr<MAXWINDOWS) {
-    if(winbesetzt[winnr]) {
-      graphics();
+    graphics();
+    if(window[winnr].flags&WIN_CREATED) {
 #ifdef USE_X11
-      XRaiseWindow(display[winnr], win[winnr]);
+      XRaiseWindow(window[winnr].display, window[winnr].win);
 #endif
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
@@ -1533,22 +1617,22 @@ void c_bottomw(PARAMETER *plist,int e) {
   if(e) winnr=plist->integer;
   if(winnr==0) xberror(97,"BOTTOMW"); /* This operation %s is not allowed for root window  */
   else if(winnr>0 && winnr<MAXWINDOWS) {
-    if(winbesetzt[winnr]) {
+    graphics();
+    if(window[winnr].flags&WIN_CREATED) {
 #ifdef USE_X11
-      graphics();
-      XLowerWindow(display[winnr], win[winnr]);
+      XLowerWindow(window[winnr].display, window[winnr].win);
 #endif
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
-
+#ifndef USE_GEM
 #include "bitmaps/biene.bmp"
 #include "bitmaps/biene_mask.bmp"
 #include "bitmaps/hand.bmp"
 #include "bitmaps/hand_mask.bmp"
 #include "bitmaps/zeigehand.bmp"
 #include "bitmaps/zeigehand_mask.bmp"
-
+#endif
 
 void c_defmouse(PARAMETER *plist,int e) {
   int form=plist->integer;
@@ -1573,35 +1657,34 @@ void c_defmouse(PARAMETER *plist,int e) {
     XColor f,b;
     int hotx=8,hoty=8;
     if(form==2) {
-      mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausp=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)biene_bits,biene_width,biene_height);
-      mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausm=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)biene_mask_bits,biene_mask_width,biene_mask_height);
     } else if(form==3) {
       hotx=0;hoty=0;
-      mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausp=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)zeigehand_bits,zeigehand_width,zeigehand_height);
-      mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausm=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)zeigehand_mask_bits,zeigehand_mask_width,zeigehand_mask_height);
     } else if(form==4) {
-      mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausp=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)hand_bits,hand_width,hand_height);
-      mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
+      mausm=XCreateBitmapFromData(window[usewindow].display,window[usewindow].win,
                 (char *)hand_mask_bits,hand_mask_width,hand_mask_height);
 
     }
     f.pixel=1;b.pixel=0;
     f.red=0;b.red=65535;    f.green=0;b.green=65535;f.blue=0;b.blue=65535;
     
-    maus=XCreatePixmapCursor(display[usewindow],mausp,mausm,&f,&b,hotx,hoty);
-    XDefineCursor(display[usewindow], win[usewindow], maus);
-    XFreePixmap(display[usewindow],mausp);XFreePixmap(display[usewindow],mausm);
+    maus=XCreatePixmapCursor(window[usewindow].display,mausp,mausm,&f,&b,hotx,hoty);
+    XDefineCursor(window[usewindow].display, window[usewindow].win, maus);
+    XFreePixmap(window[usewindow].display,mausp);XFreePixmap(window[usewindow].display,mausm);
   } else if(formt<153 && formt>=0) {
-    maus=XCreateFontCursor(display[usewindow],formt);
-    XDefineCursor(display[usewindow], win[usewindow], maus);
+    maus=XCreateFontCursor(window[usewindow].display,formt);
+    XDefineCursor(window[usewindow].display, window[usewindow].win, maus);
   }
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   static SDL_Cursor *cursor=NULL;
   static SDL_Cursor defcursor;
 
@@ -1654,6 +1737,8 @@ void c_defmouse(PARAMETER *plist,int e) {
     cursor=SDL_CreateCursor(d2,m2,16,16,hot_x,hot_y);
     SDL_SetCursor(cursor);
   } else SDL_SetCursor(&defcursor);
+#elif defined USE_GEM
+  graf_mouse(form,NULL);
 #endif
 }
 
@@ -1664,20 +1749,20 @@ void c_defmouse(PARAMETER *plist,int e) {
 
 
 #define LINEFEED() {lin++; col=0; \
-    if(lin*chh>=sbox.h){\
+    if(lin*window[usewindow].chh>=window[usewindow].h){\
       lin--;\
-      CopyArea(0,chh,sbox.w,sbox.h-chh,0,0);\
-      bbb=get_fcolor();\
-      SetForeground(get_bcolor());\
-      FillRectangle(0,chh*lin,sbox.w,chh);\
+      CopyArea(0,window[usewindow].chh,window[usewindow].w,window[usewindow].h-window[usewindow].chh,0,0);\
+      bbb=window[usewindow].fcolor;\
+      SetForeground(window[usewindow].bcolor);\
+      FillRectangle(0,window[usewindow].chh*lin,window[usewindow].w,window[usewindow].chh);\
       SetForeground(bbb);\
     } \
  }
 
 
 #define CLEARPORTION(x,y,w,h) { \
-      bbb=get_fcolor();\
-      SetForeground(get_bcolor());\
+      bbb=window[usewindow].fcolor;\
+      SetForeground(window[usewindow].bcolor);\
       FillRectangle(x,y,w,h);\
       SetForeground(bbb);\
 }
@@ -1686,7 +1771,6 @@ void c_defmouse(PARAMETER *plist,int e) {
 
 static void g_out(char a) {
   static int lin=0,col=0;
-  extern ARECT sbox;
   int bbb;
   static int escflag=0;
   static int cursor_saved_x=0,cursor_saved_y=0,cursor_saved_flags=0;
@@ -1703,7 +1787,7 @@ static void g_out(char a) {
       cursor_saved_x=cursor_saved_y=0;
      // cursor_saved_flags=FL_NORMAL;
      // Fb_Clear2(0,ScreenHeight,tbcolor);
-     CLEARPORTION(0,0,sbox.w,sbox.h);
+     CLEARPORTION(0,0,window[usewindow].w,window[usewindow].h);
      // tcolor=LIGHTGREY;tbcolor=BLACK;flags=FL_NORMAL;attributes=AT_DEFAULT;
     } else if(a=='7') {/* Save cursor-position and attributes */
       cursor_saved_x=col;cursor_saved_y=lin;cursor_saved_flags=flags;
@@ -1774,9 +1858,9 @@ static void g_out(char a) {
       } else if(a=='A') { /* cursor up pn times - stop at top */
 	lin=max(0,lin-max(numbers[0],1));
       } else if(a=='B') { /* cursor down pn times - stop at bottom */
-	lin=min(sbox.h/chh-1,lin+max(numbers[0],1));
+	lin=min(window[usewindow].h/window[usewindow].chh-1,lin+max(numbers[0],1));
       } else if(a=='C') { /* cursor right pn times - stop at far right */
-	col=min(sbox.w/chw-1,col+max(numbers[0],1));
+	col=min(window[usewindow].w/window[usewindow].chw-1,col+max(numbers[0],1));
       } else if(a=='D') { /* cursor left pn times - stop at far left */
 	col=max(0,col-max(numbers[0],1));
       } else if(a=='s') { /* Speichern der Cursorposition */
@@ -1790,27 +1874,27 @@ static void g_out(char a) {
 	else {
 	  int i;
 	  for(i=0;i<=anznumbers;i++) {
-	    if(i==0) lin=min(max(0,numbers[i]-1),sbox.h/chh-1);
-	    if(i==1) col=min(max(0,numbers[i]-1),sbox.w/chw-1);
+	    if(i==0) lin=min(max(0,numbers[i]-1),window[usewindow].h/window[usewindow].chh-1);
+	    if(i==1) col=min(max(0,numbers[i]-1),window[usewindow].w/window[usewindow].chw-1);
 	  }
 	}
       } else if(a=='G') {  /*set cursor horizontal absolute*/
 	if(anznumbers>=1 && numbers[0]!=0) {col=numbers[0];}
       } else if(a=='J') {
         if(numbers[0]==0) {
-	  CLEARPORTION(0,(lin+1)*chh,sbox.w,sbox.h-(lin+1)*chh);
+	  CLEARPORTION(0,(lin+1)*window[usewindow].chh,window[usewindow].w,window[usewindow].h-(lin+1)*window[usewindow].chh);
 	} else if(numbers[0]==1) {
-	  CLEARPORTION(0,0,sbox.w,lin*chh);
+	  CLEARPORTION(0,0,window[usewindow].w,lin*window[usewindow].chh);
 	} else if(numbers[0]==2) {
-	  CLEARPORTION(0,0,sbox.w,sbox.h);
+	  CLEARPORTION(0,0,window[usewindow].w,window[usewindow].h);
 	}
       } else if(a=='K') {
         if(numbers[0]==0) {
-	  CLEARPORTION(col*chw,lin*chh,sbox.w-chw*col,chh);
+	  CLEARPORTION(col*window[usewindow].chw,lin*window[usewindow].chh,window[usewindow].w-window[usewindow].chw*col,window[usewindow].chh);
 	} else if(numbers[0]==1) {
-	  CLEARPORTION(0,lin*chh,chw*col,chh);
+	  CLEARPORTION(0,lin*window[usewindow].chh,window[usewindow].chw*col,window[usewindow].chh);
 	} else if(numbers[0]==2) {
-	  CLEARPORTION(0,lin*chh,sbox.w,(lin+1)*chh);
+	  CLEARPORTION(0,lin*window[usewindow].chh,window[usewindow].w,(lin+1)*window[usewindow].chh);
 	}
       }
       escflag=0;
@@ -1834,16 +1918,16 @@ static void g_out(char a) {
   case 26: escflag=0; break;
   case 27: escflag++; break;
   default:
-// printf("gout: %c (%dx%d) %d %d / %d %d \n",a,col,lin,chw,chh,sbox.w,sbox.h);
-    DrawString(col*chw,lin*chh+chh,&a,1);
+// printf("gout: %c (%dx%d) %d %d / %d %d \n",a,col,lin,chw,chh,window[usewindow].w,window[usewindow].h);
+    DrawString(col*window[usewindow].chw,lin*window[usewindow].chh+window[usewindow].chh,&a,1);
     col++;
-    if(col*chw>=sbox.w) {col=0; lin++;
-      if(lin*chh>=sbox.h) {
+    if(col*window[usewindow].chw>=window[usewindow].w) {col=0; lin++;
+      if(lin*window[usewindow].chh>=window[usewindow].h) {
         lin--;
-        CopyArea(0,chh,sbox.w,sbox.h-chh,0,0);
-        bbb=get_fcolor();
-        SetForeground(get_bcolor());
-        FillRectangle(0,chh*lin,sbox.w,chh);
+        CopyArea(0,window[usewindow].chh,window[usewindow].w,window[usewindow].h-window[usewindow].chh,0,0);
+        bbb=window[usewindow].fcolor;
+        SetForeground(window[usewindow].bcolor);
+        FillRectangle(0,window[usewindow].chh*lin,window[usewindow].w,window[usewindow].chh);
         SetForeground(bbb);
       } 
     }
@@ -1863,7 +1947,6 @@ void c_text(PARAMETER *plist,int e) {
 
 void c_gprint(PARAMETER *plist,int e) {
   graphics();
-  gem_init();
   if(e) {
     int i;
     char *v;
@@ -1899,10 +1982,10 @@ void c_ltext(PARAMETER *plist,int e) {
 void c_alert(PARAMETER *plist,int e) {
   /* setzt nur das Format in einen FORM_ALERT Aufruf um */
   STRING str;
-  char buffer[MAXSTRLEN];
-  str.pointer=malloc(MAXSTRLEN);
+  char buffer[7+2+strlen((char *)plist[1].pointer)+strlen((char *)plist[3].pointer)+16];
+  str.pointer=malloc(sizeof(buffer));
   if(e>4) {
-    sprintf(buffer,"[%d][%s][%s]",plist[0].integer,(char *)plist[1].pointer,(char *)plist[3].pointer);
+    sprintf(buffer,"[%d][%s][%s]",plist->integer,(char *)plist[1].pointer,(char *)plist[3].pointer);
     varcastint(plist[4].integer,plist[4].pointer,form_alert2(plist[2].integer,buffer,str.pointer));
     str.len=strlen(str.pointer);
   }
@@ -1913,7 +1996,7 @@ void c_alert(PARAMETER *plist,int e) {
 
 void c_fileselect(PARAMETER *plist,int e) {
   STRING str;
-  str.pointer=fsel_input(plist->pointer,plist[1].pointer,plist[2].pointer);
+  str.pointer=fileselector(plist->pointer,plist[1].pointer,plist[2].pointer);
   str.len=strlen(str.pointer);
   varcaststring(plist[3].integer,plist[3].pointer,str);
   free(str.pointer);
@@ -1924,15 +2007,12 @@ int menuaction=-1;
 int menuactiontype=0;    /*  0= menuaction ist zeilennummer
                              1= menuaction ist pointer in bytecode
 			     3= menuaction ist reelle adresse void *(function())*/
-int menuflags[MAXMENUENTRYS];
-char *menuentry[MAXMENUENTRYS];
-int menuentryslen[MAXMENUENTRYS];
-char *menutitle[MAXMENUTITLES];
-int menutitleslen[MAXMENUTITLES];
-int menutitlesp[MAXMENUTITLES];
-int menutitlelen[MAXMENUTITLES];
-int menutitleflag[MAXMENUTITLES];
-int menuanztitle=0;
+
+
+MENUENTRY menuentry[MAXMENUENTRYS];
+int anzmenuentry=0;
+int menutitle[32];
+int anzmenutitle;
 
 
 void c_menu(char *n) {
@@ -1984,31 +2064,28 @@ void c_menudef(PARAMETER *plist,int e) {
   ARRAY *arr=(ARRAY *)&(plist[0].integer);
   int pc2=plist[1].integer; /*Proc nummer*/
   STRING *varptr=(STRING *)(arr->pointer+arr->dimension*INTSIZE);
-  menuanztitle=0;
+  anzmenutitle=0;
   int count=0,i;
   int nn=anz_eintraege(arr);
  // printf("menudef: proc: %d, <%s>\n",pc2,procs[pc2].name);
  // printf("menudef: strings: %d, <%s>\n",nn,procs[pc2].name);
   for(i=0;i<nn;i++) {
-    menuentry[i]=varptr[i].pointer;
-    menuentryslen[i]=varptr[i].len;
+    free_string(&menuentry[i].text);
+    menuentry[i].flags=NORMAL;
+    menuentry[i].text=double_string(&varptr[i]);
     if(count==0 && varptr[i].len) {
-      menutitle[menuanztitle]=varptr[i].pointer;
-      menutitleslen[menuanztitle]=varptr[i].len;
-      menutitlesp[menuanztitle]=i+1;
-      menutitleflag[menuanztitle]=NORMAL;
+      menutitle[anzmenutitle++]=i;
       count++;
     } else if(varptr[i].len) {
-      if(*(varptr[i].pointer)=='-') menuflags[i]=DISABLED; else menuflags[i]=NORMAL;
+      if(*(varptr[i].pointer)=='-') menuentry[i].flags=DISABLED;
       count++;
+    } else if(count==0 && varptr[i].len==0) {
+      break;
     } else if(count) {
-      menutitlelen[menuanztitle]=count-1;
-      menuanztitle++;
       count=0;
     }
   }
-  menutitlelen[menuanztitle]=count;
-  menuanztitle++;
+  menutitle[anzmenutitle]=anzmenuentry=i;
   menuaction=pc2;
   menuactiontype=plist[1].arraytyp;
 // printf("menuactiontype=%d\n",menuactiontype);
@@ -2016,8 +2093,8 @@ void c_menudef(PARAMETER *plist,int e) {
 }
 void c_menuset(PARAMETER *plist, int e) {
   if(e==2) {
-    int nr=plist[0].integer;
-    if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=plist[1].integer;    
+    int nr=plist->integer;
+    if(nr<anzmenuentry && nr>0) menuentry[nr].flags=plist[1].integer;    
     else xberror(62,"");  /* MENU wrong */
   }
 }
@@ -2042,7 +2119,7 @@ void c_objc_delete(PARAMETER *plist,int e) {
   objc_delete((OBJECT *)plist[0].integer,plist[1].integer);
 }
 void c_xload(char *n) {
-  char *name=fsel_input("Load X11-Basic program:","./*.bas","");
+  char *name=fileselector("Load X11-Basic program:","./*.bas","");
   if(strlen(name)) {
     if(exist(name)) {
       programbufferlen=0; 

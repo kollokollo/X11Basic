@@ -19,6 +19,7 @@
 
 #include "wort_sep.h"
 #include "parameter.h"
+#include "number.h"
 
 
 /*Fuellt die Struktur PARAMETER ausgehend von ASCII w1 und solltyp.
@@ -32,50 +33,96 @@
   p->ppointer
   
   
+  Solltyp ist PL_xVAR, kann auch gemacht werden aus
+  (PL_VARGROUP|type), type aus vartype
+  
+  
   Rückgabe: 
-  >=0 -- alles OK
-  -1 -- Error
+   >=0 -- alles OK
+  -1 -- Nicht gefunden.
   
   
   */
   
+static int fit_solltyp(int typ, int solltyp) {
+  switch(solltyp) {
+  case PL_VAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP) return(1);
+    break;
+  case PL_NVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ!=STRINGTYP) return(1);
+    break;
+  case PL_IVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ==INTTYP) return(1);
+    break;
+  case PL_FVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ==FLOATTYP) return(1);
+    break;
+  case PL_CVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ==COMPLEXTYP) return(1);
+    break;
+  case PL_AIVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ==ARBINTTYP) return(1);
+    break;
+  case PL_SVAR:
+    if((typ&ARRAYTYP)!=ARRAYTYP && typ==STRINGTYP) return(1);
+    break;
+  case PL_ARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP) return(1);
+     break;
+  case PL_IARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP && (typ&TYPMASK)==INTTYP) return(1);
+     break;
+  case PL_FARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP && (typ&TYPMASK)==FLOATTYP) return(1);
+     break;
+  case PL_AIARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP && (typ&TYPMASK)==ARBINTTYP) return(1);
+     break;
+  case PL_CARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP && (typ&TYPMASK)==COMPLEXTYP) return(1);
+     break;
+  case PL_SARRAYVAR:
+     if((typ&ARRAYTYP)==ARRAYTYP && (typ&TYPMASK)==STRINGTYP) return(1);
+     break;
+  case PL_ALLVAR:  return(1);
+  default:         printf("ERROR: Fit type --> unnown %x\n",solltyp);
+  }
+  return(0);
+}
+ 
+ 
 
 int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
   char k1[strlen(w1)+1],k2[strlen(w1)+1];
   int typ=vartype(w1);
   int e=klammer_sep(w1,k1,k2);
-
   p->pointer=NULL;
   p->integer=-1;
   p->typ=NOTYP; /* Falls type mismatch auftritt, definiertes Ergebnis */
+//  printf("prepare_vvar: w1=<%s>  solltyp=%x\n",w1,solltyp);
   if(e==1 || strlen(k2)==0) {  /* Keine Argumente in Klammer oder keine klammern*/
-  // printf("---> Typ=%x Solltyp=%x  ....\n",typ,solltyp);
-    if((typ&solltyp)==typ || (solltyp==ARRAYTYP && (typ&ARRAYTYP)==ARRAYTYP)) {
+  //  printf("Keine Klammern/keine Argumente... typ=%x\n",typ);
+  //  printf("---> Typ=%x Solltyp=%x  ....\n",typ,solltyp);
+    if(fit_solltyp(typ,solltyp)) {
       char *r=varrumpf(w1);
+  //    printf("FIT.\n");
       /*p->integer soll vnr bekommen.*/
       if(typ&ARRAYTYP) {
-        p->integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+        p->integer=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
       } else p->integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
       free(r);
       /*Parameter Typ eintragen.*/
-      if(typ==ARRAYTYP) p->typ=PL_ARRAYVAR;
-      else if(typ==INTTYP) p->typ=PL_IVAR;
-      else if(typ==FLOATTYP) p->typ=PL_FVAR;
-      else if(typ==STRINGTYP) p->typ=PL_SVAR;
-      else if(typ==(ARRAYTYP|INTTYP)) p->typ=PL_IARRAYVAR;
-      else if(typ==(ARRAYTYP|FLOATTYP)) p->typ=PL_FARRAYVAR;
-      else if(typ==(ARRAYTYP|STRINGTYP)) p->typ=PL_SARRAYVAR;
+      p->typ=(PL_VARGROUP|typ);
     } 
   } else { /* Es sind indizies da. */
-    typ&=~ARRAYTYP;
-    if((typ&solltyp)==typ) {
+    typ&=TYPMASK;
+    if(fit_solltyp(typ,solltyp)) {
       char *r=varrumpf(w1);
       p->integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);  /*  vnr */
       free(r);
-      if(typ==INTTYP) p->typ=PL_IVAR;
-      else if(typ==FLOATTYP) p->typ=PL_FVAR;
-      else if(typ==STRINGTYP) p->typ=PL_SVAR;
-      else xberror(13,w1);  /* Type mismatch */
+       /*Parameter Typ eintragen.*/
+      p->typ=(PL_VARGROUP|typ);
       p->panzahl=count_parameters(k2);   /* Anzahl indizes z"ahlen*/
       p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
       /*hier die Indizies in einzelne zu evaluierende Ausdruecke
@@ -83,6 +130,7 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
       make_preparlist(p->ppointer,k2);
     } 
   }
+ // printf("----> vnr=%d\n",p->integer);
   if(p->integer<0) xberror(76,w1);   /*illegal variable name */
   else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
   return(p->integer);
@@ -103,32 +151,57 @@ int count_parameters(const char *n) {
   return(i);
 }
 
+PARAMETER double_parameter(PARAMETER *p) {
+  PARAMETER ret=*p;
+  switch(p->typ) {
+  case PL_KEY:
+  case PL_STRING:
+    ret.pointer=malloc(p->integer+1);
+    memcpy(ret.pointer,p->pointer,p->integer+1);
+    break;
+  case PL_ARBINT:
+    mpz_init(*(ARBINT *)ret.pointer);
+    mpz_set(*(ARBINT *)ret.pointer,*(ARBINT *)p->pointer);
+    break;
+  case PL_ARRAY:
+    *(ARRAY *)&(ret.integer)=double_array((ARRAY *)&(p->integer));
+  }
+  return(ret);
+} 
+
+
 
 void free_parameter(PARAMETER *p) {
   switch(p->typ) {
-    ARRAY a;
-
   case PL_STRING:
   case PL_EVAL:
   case PL_KEY:
     free(p->pointer);
   case PL_INT:
   case PL_FLOAT:
+  case PL_COMPLEX:
   case PL_LEER:
-  case PL_NUMBER:
   case PL_FILENR:
   case PL_LABEL:
   case PL_PROC:
   case PL_FUNC:
     break;
+  case PL_ARBINT:
+    mpz_clear(*((ARBINT *)p->pointer));
+    free(p->pointer);
+    break;
   case PL_ALLVAR:
   case PL_ARRAYVAR:
   case PL_IARRAYVAR:
+  case PL_AIARRAYVAR:
   case PL_FARRAYVAR:
+  case PL_CARRAYVAR:
   case PL_SARRAYVAR:
   case PL_VAR:
   case PL_IVAR:
+  case PL_AIVAR:
   case PL_FVAR:
+  case PL_CVAR:
   case PL_NVAR:
   case PL_SVAR:
     if(p->panzahl) {
@@ -138,14 +211,13 @@ void free_parameter(PARAMETER *p) {
     break;
   case PL_ARRAY:
   case PL_IARRAY:
+  case PL_AIARRAY:
   case PL_FARRAY:
+  case PL_CARRAY:
   case PL_SARRAY:
   case PL_NARRAY:
-  case PL_ANYARRAY:
-    a.typ=p->typ;
-    a.dimension=p->integer;
-    a.pointer=p->pointer;
-    free_array(&a);
+  case PL_CFARRAY:
+    free_array((ARRAY *)&(p->integer));
     break;
   default:
     printf("WARNING: free_parameter, unknown typ $%x, PC=%d.\n",p->typ,pc);
@@ -163,17 +235,26 @@ void dump_parameterlist(PARAMETER *p, int n) {
       switch(p[j].typ) {
         case PL_INT:    printf(" int %d\n",p[j].integer); break;
         case PL_FLOAT:  printf(" flt %g\n",p[j].real); break;
+        case PL_COMPLEX:printf(" cpx (%g+%gi)\n",p[j].real,p[j].imag); break;
+        case PL_ARBINT: {
+	  char *buf=mpz_get_str(NULL,10,*((ARBINT *)p[j].pointer));
+	  printf(" bigint %s\n",buf);
+	  free(buf);
+	  } 
+	  break;
         case PL_NUMBER: printf(" num %g\n",p[j].real); break;
         case PL_STRING: printf("   $ <%s> len=%d\n",(char *)p[j].pointer,p[j].integer);break;
         case PL_KEY:    printf(" KEY %d <%s>\n",p[j].arraytyp,(char *)p[j].pointer);break;
         case PL_LEER:   printf(" <empty>\n");break;
         case PL_FILENR: printf("   # %d\n",p[j].integer);break;
-        case PL_EVAL:   printf(" EVAL: <%s>\n",(char *)p[j].pointer);break;
+        case PL_EVAL:   printf(" EVAL: <%s>.%x\n",(char *)p[j].pointer,p[j].arraytyp);break;
         case PL_LABEL:  printf(" <label>\n");break;
         case PL_PROC:   printf(" <proc>\n");break;
         case PL_FUNC:   printf(" <func>\n");break;
         case PL_ARRAY:  printf(" <array,$%x,dim=%d>\n",p[j].arraytyp,p[j].integer);break;
 	case PL_FVAR:   printf(" <var,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
+	case PL_CVAR:   printf(" <var#,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
+	case PL_AIVAR:  printf(" <var&,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
 	case PL_IVAR:   printf(" <var%%,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break; 
         case PL_SVAR:   printf(" <var$,%d,%s>\n", p[j].integer,variablen[p[j].integer].name);break; 
         case PL_ALLVAR: printf(" <allvar,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
@@ -184,18 +265,184 @@ void dump_parameterlist(PARAMETER *p, int n) {
         case PL_IARRAYVAR: 
                         printf(" <array%%(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         case PL_FARRAYVAR: 
+                        printf(" <array(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
+        case PL_CARRAYVAR: 
                         printf(" <array#(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         case PL_SARRAYVAR: 
                         printf(" <array$(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         default:   printf("<typ=$%x %d %g %p>\n",p[j].typ,p[j].integer,p[j].real,(void *)p[j].pointer);
       }
-      if(p->panzahl>0 && (p[j].typ&~PL_BASEMASK)==(PL_VAR&~PL_BASEMASK)) {
+      if(p->panzahl>0 && (p[j].typ&PL_GROUPMASK)==PL_VARGROUP) {
          printf("%d Index-Parameters:\n",p->panzahl);
          if(p->ppointer) dump_parameterlist(p->ppointer,p->panzahl);
       }
     }
   }
 }
+
+
+/*Macht aus einem Ausdruck eine Parameter-Struktur, aber
+  noch nicht laufzeit, d.h. keine parser-Aufrufe! Dafür dürfen type() 
+  aufrufe verwendet werden.*/
+
+int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
+  if(!n ||*n==0) pret->typ=PL_LEER;
+  else {
+    pret->typ=ap;  /*Solltyp des Parameters*/
+    switch(ap) {
+      char *pos2,*pos;
+      int typ;
+    case PL_LABEL: 
+      pret->integer=labelnr(n);
+      if(pret->integer==-1) xberror(20,n);/* Label nicht gefunden */
+      break;
+    case PL_PROC:
+      pos=searchchr(n,'(');
+      if(pos!=NULL) {
+        *pos=0;pos++;
+        pos2=pos+strlen(pos)-1;
+        if(*pos2!=')') xberror(32,n); /* Syntax error */
+        else *pos2=0;
+      } else pos=n+strlen(n);
+      pret->integer=procnr(n,1);
+      if(pret->integer==-1) xberror(19,n); /* Procedure nicht gefunden */
+      break;
+    case PL_FILENR:   /*   TODO: Hier schon auf Konstanten testen !!!!*/
+      if((typ=type(n))&CONSTTYP) {
+        pret->typ=PL_FILENR;
+        if(*n=='#') pret->integer=(int)parser(n+1);
+	else pret->integer=(int)parser(n);
+      } else {
+        pret->typ=PL_EVAL;
+	pret->arraytyp=typ;
+	if(*n=='#') *((STRING *)&(pret->integer))=create_string(n+1);
+	else *((STRING *)&(pret->integer))=create_string(n);
+      }
+      break;
+    case PL_INT:	/* Integer */
+    case PL_FLOAT:  /* Float  */
+    case PL_COMPLEX:/* Complex */
+    case PL_ARBINT: /* Big Int */
+    case PL_NUMBER: /* Integer or FLOAT or COMPLEX or ARBINT */
+    case PL_CFAI:
+    case PL_CF:
+    case PL_ANYVALUE:	    /* Integer or FLOAT oder string*/
+    case PL_ANY:
+    case PL_STRING: /* String */
+    case PL_ARRAY:  /* Array */
+    case PL_NARRAY:  /* Array */
+    case PL_CFARRAY:  /* Array */
+    case PL_IARRAY: /* Int-Array */
+    case PL_FARRAY: /* float-Array */
+    case PL_CARRAY: /* complex-Array */
+    case PL_AIARRAY: /* big int-Array */
+    case PL_SARRAY: /* String-Array */
+      if((typ=type(n))&CONSTTYP) {
+        switch(ap) {
+        case PL_INT:	/* Integer Float, complex, arbint  convertiert nach int */
+	  eval2parnumtype(n,pret,typ); 
+	  pret->integer=p2int(pret);
+	  free_parameter(pret);
+          pret->typ=PL_INT;
+	  break;
+	case PL_ANY:       /* Integer or FLOAT oder string oder ARRAY*/
+	case PL_ANYVALUE:  /* Integer or FLOAT oder string*/
+	  eval2partype(n,pret,typ);
+	  break;
+	case PL_NUMBER:	/* Integer or FLOAT or complex or ARBINT */ 
+	  eval2parnumtype(n,pret,typ);
+	  break;
+	case PL_CFAI:	/*  FLOAT or complex or ARBINT */ 
+	  eval2parnumtype(n,pret,typ);
+	  if(pret->typ==PL_INT) cast_to_real(pret);
+	  break;
+	case PL_CF:	/*  FLOAT or complex */ 
+	  eval2parnumtype(n,pret,typ);
+	  if(pret->typ==PL_INT || pret->typ==PL_ARBINT) cast_to_real(pret);
+	  break;
+	case PL_FLOAT:  /* Float, complex, arbint oder INT convertiert nach float */
+	  eval2parnumtype(n,pret,typ); 
+	  pret->real=p2float(pret);
+	  free_parameter(pret);
+          pret->typ=PL_FLOAT;
+	  break;
+	case PL_COMPLEX:  /* Complex */
+	  eval2parnumtype(n,pret,typ); 
+	  *(COMPLEX *)&(pret->real)=p2complex(pret);
+	  free_parameter(pret);
+          pret->typ=PL_COMPLEX;
+	  break;
+	case PL_ARBINT:  /* Complex */
+	  { ARBINT a;
+	  mpz_init(a);
+	  eval2parnumtype(n,pret,typ); 
+	  p2arbint(pret,a);
+	  free_parameter(pret);
+          pret->typ=PL_ARBINT;
+	  pret->pointer=malloc(sizeof(ARBINT));
+	  mpz_init(*((ARBINT *)pret->pointer));
+          mpz_set(*((ARBINT *)pret->pointer),a);
+	  mpz_clear(a);}
+	  break;
+	case PL_STRING: /* String */
+	  pret->typ=PL_STRING;
+	  *((STRING *)&(pret->integer))=string_parser(n);
+          break;
+        case PL_ARRAY:  /* Array */
+        case PL_IARRAY: /* Int-Array */    /*Wenn es sich wirklich um ein konstantes ARRAY handelt */
+        case PL_FARRAY: /* float-Array */  
+        case PL_CARRAY: /* complex-Array */
+        case PL_AIARRAY: /* big int-Array */
+        case PL_SARRAY: /* String-Array */
+        case PL_NARRAY: /* Number-Array */
+        case PL_CFARRAY: /* Number-Array */
+	  pret->typ=PL_ARRAY;
+	  *((ARRAY *)&(pret->integer))=array_parser(n);
+	  break;
+	default:
+          pret->typ=PL_EVAL;
+          pret->arraytyp=typ;  /* für spaeter */
+	  *((STRING *)&(pret->integer))=create_string(n);
+	}
+      } else {
+        pret->typ=PL_EVAL;
+	*((STRING *)&(pret->integer))=create_string(n);
+	    /* TODO: Hier koennte man noch den Typ in Parametere eintragen, dann hat man es zu laufzeit schneller*/
+        pret->arraytyp=typ;  /* Muss man spaeter natuerlich noch auswerten....*/
+      }
+      break;
+    case PL_VAR:       
+    case PL_NVAR:      
+    case PL_SVAR:      
+    case PL_CVAR:      
+    case PL_IVAR:      
+    case PL_FVAR:      
+    case PL_AIVAR:      
+    case PL_ARRAYVAR:  
+    case PL_IARRAYVAR: 
+    case PL_FARRAYVAR: 
+    case PL_AIARRAYVAR: 
+    case PL_CARRAYVAR: 
+    case PL_SARRAYVAR: 
+    case PL_ALLVAR:
+      prepare_vvar(n,pret,ap); 
+      break;
+    case PL_KEY: /* Keyword */
+      pret->arraytyp=keyword2num(n);
+      *((STRING *)&(pret->integer))=create_string(n);
+      break;
+    case PL_EVAL:
+      pret->arraytyp=vartype(n);
+      *((STRING *)&(pret->integer))=create_string(n);
+      break;
+    default:
+      printf("ERROR: illegal parameter type $%x\n",ap);
+      return(-1);
+    }
+  }
+  return(0);
+}
+
 
 int make_pliste(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **pr){
   PARAMETER *pr1;
@@ -225,126 +472,9 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
       w1=pos;
       pos=searchchr2(pos,',');
       if(pos) *pos++=0;
-      
-     // pret[i].pointer=NULL; /* Default is NULL */
-     // pret[i].ppointer=NULL;
-     // pret[i].panzahl=0;
-     // pret[i].integer=0;
-     // pret[i].real=0.0;
       if(i>pmin && pmax==-1) ap=pliste[pmin];
       else ap=pliste[i];
-      if(strlen(w1)){
-        pret[i].typ=ap;
-      // printf("ap=%x ",ap);
-        switch(ap) {
-	  char *pos2,*pos;
-	  int typ;
-        case PL_LABEL: 
-          pret[i].integer=labelnr(w1);
-          if(pret[i].integer==-1) {
-	    xberror(20,w1);/* Label nicht gefunden */
-	  }
-          break;
-	case PL_PROC:
-	  pos=searchchr(w1,'(');
-          if(pos!=NULL) {
-            pos[0]=0;pos++;
-            pos2=pos+strlen(pos)-1;
-            if(pos2[0]!=')') {
-	      xberror(32,w1); /* Syntax error */
-            }
-            else pos2[0]=0;
-          } else pos=w1+strlen(w1);
-          pret[i].integer=procnr(w1,1);
-          if(pret[i].integer==-1) {
-            xberror(19,w1); /* Procedure nicht gefunden */
-          }
-	  break;
-	case PL_FILENR:   /*   TODO: Hier schon auf Konstanten testen !!!!*/
-          if(type(w1)&CONSTTYP) {
-            pret[i].typ=PL_FILENR;
-            if(*w1=='#') pret[i].integer=(int)parser(w1+1);
-	    else pret[i].integer=(int)parser(w1);
-	  } else {
-            pret[i].typ=PL_EVAL;
-	    if(*w1=='#') *((STRING *)&(pret[i].integer))=create_string(w1+1);
-	    else *((STRING *)&(pret[i].integer))=create_string(w1);
-          }
-	  break;
-        case PL_INT:	/* Integer */
-	case PL_FLOAT:  /* Float oder Nuber */
-        case PL_NUMBER:	/* Integer or FLOAT */
-	case PL_ANYVALUE:	/* Integer or FLOAT oder string*/
-	case PL_STRING: /* String */
-        case PL_ARRAY:  /* Array */
-        case PL_IARRAY: /* Int-Array */
-        case PL_FARRAY: /* float-Array */
-        case PL_SARRAY: /* String-Array */
-          if((typ=type(w1))&CONSTTYP) {
-	     STRING str;
-             switch(ap) {
-             case PL_INT:	/* Integer */
-	       pret[i].typ=PL_INT;
-	       pret[i].integer=(int)parser(w1);
-	       break;
-	     case PL_ANYVALUE:  /* Integer or FLOAT oder string*/
-	       if(typ&INTTYP) {
-	         pret[i].typ=PL_INT;
-	         pret[i].integer=(int)parser(w1);
-	       } else if(typ&FLOATTYP) {
-	         pret[i].typ=PL_FLOAT;
-	         pret[i].real=parser(w1);
-	       } else if(typ&STRINGTYP) {
-	         pret[i].typ=PL_STRING;
-	         str=string_parser(w1);
-	         pret[i].integer=str.len;
-	         pret[i].pointer=str.pointer;
-	       } else {
-	         printf("WARNING: unknown typ. $%x\n",typ);
-	       }
-	       break;
-	     case PL_FLOAT:  /* Float oder Nuber */
-             case PL_NUMBER:	/* Integer or FLOAT */
-	       pret[i].typ=PL_FLOAT;
-	       pret[i].real=parser(w1);
-	       break;
-	     case PL_STRING: /* String */
-	       pret[i].typ=PL_STRING;
-	       *((STRING *)&(pret[i].integer))=string_parser(w1);
-               break;
-             case PL_ARRAY:  /* Array */
-             case PL_IARRAY: /* Int-Array */
-             case PL_FARRAY: /* float-Array */
-             case PL_SARRAY: /* String-Array */
-               pret[i].typ=PL_EVAL;
-	       *((STRING *)&(pret[i].integer))=create_string(w1);
-	     }
-	  } else {
-            pret[i].typ=PL_EVAL;
-	    *((STRING *)&(pret[i].integer))=create_string(w1);
-          }
-	  break;
- 	case PL_VAR:       prepare_vvar(w1,&pret[i],INTTYP|FLOATTYP|STRINGTYP);          break;
- 	case PL_NVAR:      prepare_vvar(w1,&pret[i],INTTYP|FLOATTYP);                    break;
-        case PL_SVAR:      prepare_vvar(w1,&pret[i],STRINGTYP);                          break;
- 	case PL_ARRAYVAR:  prepare_vvar(w1,&pret[i],ARRAYTYP|INTTYP|FLOATTYP|STRINGTYP); break;
- 	case PL_IARRAYVAR: prepare_vvar(w1,&pret[i],INTTYP|ARRAYTYP);                    break;
- 	case PL_FARRAYVAR: prepare_vvar(w1,&pret[i],FLOATTYP|ARRAYTYP);                  break;
- 	case PL_SARRAYVAR: prepare_vvar(w1,&pret[i],STRINGTYP|ARRAYTYP);                 break;
-	case PL_ALLVAR:    prepare_vvar(w1,&pret[i],INTTYP|FLOATTYP|STRINGTYP|ARRAYTYP); break;
- 	case PL_KEY: /* Keyword */
-	  pret[i].arraytyp=keyword2num(w1);
-        case PL_EVAL:
-	// printf("makepliste2: w1=<%s> -->",w1);
-	  *((STRING *)&(pret[i].integer))=create_string(w1);
-	//  printf(" <%s>\n",pret[i].pointer);
-	  break;
-	default:
-          printf("illegal parameter type $%x\n",ap);
-        }
-      } else pret[i].typ=PL_LEER;           /* Hier dann Leertyp*/
-      
-      //printf(" <%s>\n",pret[i].pointer);
+      make_parameter_stage2(w1,ap,&pret[i]);
       i++;
     }
   }
@@ -353,15 +483,273 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
   return(i);
 }
 
+#define PARERR() {printf("Error: line %d make_parameter_stage3: parameter incompatibel. typ=$%x solltyp=$%x\n",pc,ip,ap);dump_parameterlist(pin,1);}
 
 
 /*Hier Ergaenzungen von pre-pliste zu aktueller (Zu Laufzeit). 
-Jetzt koennen variableninhalte
-als fix betrachtet werden.*/
-
+  Jetzt koennen variableninhalte als fix betrachtet werden.
+ */
+int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
+  unsigned short ip=pin->typ;
+  pret->typ=ap;
+  switch(ap) {
+    int vnr;  
+    int *indexliste;
+  case PL_LEER:
+    break;
+  case PL_LABEL: 
+  case PL_PROC:
+    if(ip==PL_LABEL || ip==PL_PROC) {
+      pret->integer=pin->integer;
+      pret->arraytyp=pin->arraytyp;  /* Typ */
+    } else PARERR();
+    break;
+  case PL_FILENR:
+  case PL_INT:    /* Integer */
+    switch(ip) {
+    case PL_LEER: pret->typ=PL_LEER; break;
+    case PL_EVAL: 
+      if(pin->arraytyp) eval2partype(pin->pointer,pret,pin->arraytyp); 
+      else eval2par(pin->pointer,pret); 
+      pret->integer=p2int(pret);
+      free_parameter(pret);
+      pret->typ=PL_INT;
+      break;
+    default: pret->integer=p2int(pin);
+    }
+    break;
+  case PL_NUMBER:  /* Float oder Number */
+    pret->typ=ip;
+    switch(ip) {
+    case PL_LEER:  break;
+    case PL_EVAL:
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else eval2parnum(pin->pointer,pret); 
+      break;
+    case PL_COMPLEX: pret->imag=pin->imag; /* no break */
+    case PL_FLOAT:   pret->real=pin->real; break;
+    case PL_INT:     pret->integer=pin->integer; break;
+    case PL_ARBINT:
+      pret->pointer=malloc(sizeof(ARBINT));
+      mpz_init(*((ARBINT *)pret->pointer));
+      mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
+      break;
+    default: PARERR();
+    }
+    break;
+  case PL_CFAI:  /* Float oder complex oder arbint */
+    pret->typ=ip;
+    switch(ip) {
+    case PL_LEER:  break;
+    case PL_EVAL:
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
+      else eval2parnum(pin->pointer,pret);
+      if(pret->typ==PL_INT) cast_to_real(pret);
+      break;
+    case PL_COMPLEX: pret->imag=pin->imag; /* no break */
+    case PL_FLOAT:   pret->real=pin->real; break;
+    case PL_INT:
+      pret->real=(double)pin->integer;
+      pret->typ=PL_FLOAT;
+      break;
+    case PL_ARBINT: 
+      pret->pointer=malloc(sizeof(ARBINT));
+      mpz_init(*((ARBINT *)pret->pointer));
+      mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
+      break;
+    default: PARERR();
+    }
+    break;
+  case PL_CF:  /* Float oder complex oder arbint */
+    pret->typ=ip;
+    switch(ip) {
+    case PL_LEER:  break;
+    case PL_EVAL:
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
+      else eval2parnum(pin->pointer,pret);
+      if(pret->typ==PL_INT||pret->typ==PL_ARBINT) cast_to_real(pret);
+      break;
+    case PL_COMPLEX: pret->imag=pin->imag; /* no break */
+    case PL_FLOAT:   pret->real=pin->real; break;
+    case PL_INT:
+      pret->real=(double)pin->integer;
+      pret->typ=PL_FLOAT;
+      break;
+    case PL_ARBINT: 
+      pret->real=mpz_get_d(*((ARBINT *)pin->pointer));
+      pret->typ=PL_FLOAT;
+      break;
+    default: PARERR();
+    }
+    break;
+  case PL_FLOAT:  /* Float oder Number */
+    switch(ip) {
+    case PL_LEER: pret->typ=PL_LEER; break;
+    case PL_EVAL: 
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else eval2parnum(pin->pointer,pret);
+      pret->real=p2float(pret);
+      free_parameter(pret);
+      pret->typ=PL_FLOAT;
+      break; 
+    default: pret->real=p2float(pin);
+    }
+    break;
+  case PL_COMPLEX:  /* Complex */
+    switch(ip) {
+    case PL_LEER: pret->typ=PL_LEER; break;
+    case PL_EVAL: 
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else eval2parnum(pin->pointer,pret); 
+      *(COMPLEX *)&(pret->real)=p2complex(pret);
+      free_parameter(pret);
+      pret->typ=PL_COMPLEX;
+      break; 
+    default: *(COMPLEX *)&(pret->real)=p2complex(pin);
+    }
+    break;
+  case PL_ARBINT:  /* Big int */
+    switch(ip) {
+    case PL_LEER: pret->typ=PL_LEER; break;
+    case PL_EVAL: {
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else eval2parnum(pin->pointer,pret); 
+      cast_to_arbint(pret);
+      }
+      break; 
+    default:
+      pret->pointer=malloc(sizeof(ARBINT));
+      mpz_init(*(ARBINT *)(pret->pointer));
+      p2arbint(pin,*(ARBINT *)(pret->pointer));
+    }
+    break;
+  case PL_ANY:
+  case PL_ANYVALUE:
+    pret->typ=ip;
+    switch(ip) {
+    case PL_LEER: break;
+    case PL_EVAL: 
+      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else eval2par(pin->pointer,pret); 
+      break;
+    case PL_COMPLEX: pret->imag=pin->imag;  /*no break*/
+    case PL_FLOAT:   pret->real=pin->real; break;
+    case PL_INT:     pret->integer=pin->integer; break;
+    case PL_ARBINT: 
+      pret->pointer=malloc(sizeof(ARBINT));
+      mpz_init(*((ARBINT *)pret->pointer));
+      mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
+      break;
+    case PL_STRING:  *((STRING *)&(pret->integer))=double_string((STRING *)&(pin->integer)); break;
+    default: PARERR();
+    }
+    break;
+  case PL_STRING: /* String */
+    if(ip==PL_LEER) pret->typ=PL_LEER;
+    else if(pin->typ==PL_EVAL) {
+      *((STRING *)&(pret->integer))=string_parser(pin->pointer);
+      pret->typ=PL_STRING;
+    } else if(ip==PL_STRING) {
+      *((STRING *)&(pret->integer))=double_string((STRING *)&(pin->integer));
+      pret->typ=PL_STRING;
+    } else PARERR();
+    break;
+  case PL_ARRAY:  /* Array */
+  case PL_IARRAY: /* Int-Array */
+  case PL_FARRAY: /* float-Array */
+  case PL_CARRAY: /* float-Array */
+  case PL_NARRAY:
+  case PL_CFARRAY:
+  case PL_AIARRAY: /* float-Array */
+  case PL_SARRAY: /* String-Array */
+    if(ip==PL_LEER) pret->typ=PL_LEER;
+    else if(pin->typ==PL_ARRAY || pin->typ==PL_EVAL) {
+      ARRAY arr;
+      if(pin->typ==PL_ARRAY) arr=double_array((ARRAY *)&(pin->integer));
+      else arr=array_parser(pin->pointer);
+      *((ARRAY *)&(pret->integer))=arr;
+	
+      if(ap==PL_IARRAY && (arr.typ==FLOATTYP||arr.typ==COMPLEXTYP||arr.typ==ARBINTTYP)) {
+	*((ARRAY *)&(pret->integer))=convert_to_intarray(&arr);
+	free_array(&arr);
+      } else if(ap==PL_FARRAY && (arr.typ==INTTYP||arr.typ==COMPLEXTYP||arr.typ==ARBINTTYP)) {
+	*((ARRAY *)&(pret->integer))=convert_to_floatarray(&arr);
+	free_array(&arr);
+      } else if(ap==PL_CARRAY && (arr.typ==INTTYP||arr.typ==FLOATTYP||arr.typ==ARBINTTYP)) {
+	*((ARRAY *)&(pret->integer))=convert_to_complexarray(&arr);
+	free_array(&arr);
+      } else if(ap==PL_AIARRAY && (arr.typ==INTTYP||arr.typ==FLOATTYP||arr.typ==COMPLEXTYP)) {
+	*((ARRAY *)&(pret->integer))=convert_to_arbintarray(&arr);
+	free_array(&arr);
+      } else if((ap==PL_IARRAY && arr.typ==INTTYP) ||
+             (ap==PL_FARRAY && arr.typ==FLOATTYP) ||(ap==PL_CARRAY && arr.typ==COMPLEXTYP) ||
+	     (ap==PL_SARRAY && arr.typ==STRINGTYP)) {
+	  ; /*Nix tun, alles gut.*/
+      } else if(ap==PL_NARRAY && (arr.typ==INTTYP||arr.typ==COMPLEXTYP||arr.typ==FLOATTYP||arr.typ==ARBINTTYP)) {
+	  ; /*Nix tun, alles gut.*/
+      } else if(ap==PL_CFARRAY && (arr.typ==COMPLEXTYP||arr.typ==FLOATTYP)) {
+	  ; /*Nix tun, alles gut.*/
+      } else if(ap==PL_CFARRAY && (arr.typ==INTTYP||arr.typ==ARBINTTYP)) {
+	*((ARRAY *)&(pret->integer))=convert_to_floatarray(&arr);
+	free_array(&arr);
+      } else {
+        printf("line %d: Error: Parameter is wrong (typ=%x) ARRAY (need to be $%x). Cannot convert.\n",pc,ip,ap);
+	dump_parameterlist(pin,1);
+      }
+    } else PARERR();
+    break;
+  case PL_VAR:   /* Variable */
+  case PL_NVAR:   /* Variable */
+  case PL_IVAR:   /* Variable */
+  case PL_FVAR:   /* Variable */
+  case PL_SVAR:   /* Variable */
+  case PL_CVAR:   /* Variable */
+  case PL_AIVAR:   /* Variable */
+  case PL_ARRAYVAR: /* Variable */
+  case PL_IARRAYVAR: /* Variable */
+  case PL_FARRAYVAR: /* Variable */
+  case PL_SARRAYVAR: /* Variable */
+  case PL_CARRAYVAR: /* Variable */
+  case PL_AIARRAYVAR: /* Variable */
+  case PL_ALLVAR:  /* Varname */    
+    pret->typ=ip;
+    vnr=pret->integer=pin->integer;
+    if(pin->pointer==NULL) {
+      if(pin->panzahl) {
+        indexliste=malloc(pin->panzahl*sizeof(int));
+	get_indexliste(pin->ppointer,indexliste,pin->panzahl);
+          // printf("Es sind %d indizien da.\n",pin[i].panzahl);
+      } else indexliste=NULL;
+      pret->pointer=varptr_indexliste(&variablen[vnr],indexliste,pin->panzahl);
+      free(indexliste);
+    } else pret->pointer=pin->pointer;
+      
+      // printf("Variable uebergeben. %d %s\n",vnr,varinfo(&variablen[vnr]));
+    break;
+  case PL_KEY: /* Keyword */
+    if(ip==PL_LEER) pret->arraytyp=KEYW_NONE;
+    else if(ip==PL_KEY) pret->arraytyp=pin->arraytyp;
+    else if(ip==PL_EVAL) pret->arraytyp=keyword2num(pin->pointer);
+    if(ip==PL_EVAL ||ip==PL_KEY) *((STRING *)&(pret->integer))=create_string(pin->pointer);
+    else if(ip==PL_LEER) *((STRING *)&(pret->integer))=create_string("");
+    else PARERR();
+    break;
+  case PL_EVAL: /* Keyword */
+    if(ip==PL_LEER) pret->typ=PL_LEER;
+    else if(ip==PL_EVAL ||ip==PL_KEY) {
+      pret->arraytyp=pin->arraytyp;
+      *((STRING *)&(pret->integer))=create_string(pin->pointer);
+    } else PARERR();
+    break;
+  default:
+    printf("unknown parameter type. -->$%x \n",ap);
+    return(-1);
+  }
+  return(0);
+}
 int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAMETER **pout,int ii){
   PARAMETER *pret;
-  unsigned short ap,ip;
+  unsigned short ap;
   int i;
   int anzpar;
   if(pmax==-1) anzpar=ii;
@@ -372,161 +760,10 @@ int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAME
   
   i=0;
   while(i<anzpar) {
-    // pret[i].pointer=NULL; /* Default is NULL */
-    // pret[i].integer=0;
-    // pret[i].real=0.0;
-    // pret[i].panzahl=0;
-    // pret[i].ppointer=NULL;
     if(i>pmin && pmax==-1) ap=pliste[pmin];
     else ap=pliste[i];
-    ip=pin[i].typ;
-    pret[i].typ=ap;
  //   printf("Par #%d: typ1=%x typ2=%x %s\n",i,ap,ip,plist_paramter(&pin[i]));
-  
-    switch(ap) {
-      int vnr,typ;  
-      int *indexliste;
-      STRING str;
-
-    case PL_LEER:
-      break;
-    case PL_LABEL: 
-    case PL_PROC:
-      if(ip==PL_LABEL || ip==PL_PROC) {
-        pret[i].integer=pin[i].integer;
-	pret[i].arraytyp=pin[i].arraytyp;  /* Typ */
-      } else printf("Error: Parameter %d/%d incompatibel. $%x\n",i,anzpar,ip);
-      break;
-    case PL_FILENR:
-    case PL_INT:    /* Integer */
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(ip==PL_EVAL) pret[i].integer=(int)parser(pin[i].pointer);
-      else if(ip==PL_INT)  pret[i].integer=pin[i].integer;
-      else if(ip==PL_FILENR)  pret[i].integer=pin[i].integer;
-      else if(ip==PL_FLOAT) pret[i].integer=(int)pin[i].real;
-      else {
-        printf("Error: Parameter %d/%d incompatibel. $%x\n",i,anzpar,ip);
-        dump_parameterlist(pin,anzpar);
-      }
-      break;
-    case PL_NUMBER:  /* Float oder Nuber */
-    case PL_FLOAT:  /* Float oder Nuber */
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(ip==PL_EVAL) pret[i].real=parser(pin[i].pointer);
-      else if(ip==PL_FLOAT) pret[i].real=pin[i].real;
-      else if(ip==PL_INT) pret[i].real=(double)pin[i].integer;
-      else {
-        printf("Error: Parameter %d incompatibel. $%x\n",i,ip);
-	dump_parameterlist(pin,anzpar);
-      }
-      break;
-    case PL_ANYVALUE:
- 
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(ip==PL_EVAL) {
-        typ=type(pin[i].pointer);
- 	if(typ&INTTYP) {
-	  pret[i].typ=PL_INT;
-	  pret[i].integer=(int)parser(pin[i].pointer);
-	} else if(typ&FLOATTYP) {
-	  pret[i].typ=PL_FLOAT;
-	  pret[i].real=parser(pin[i].pointer);
-	} else if(typ&STRINGTYP) {
-	  pret[i].typ=PL_STRING;
-	  str=string_parser(pin[i].pointer);
-	  pret[i].integer=str.len;
-	  pret[i].pointer=str.pointer;
-	} else {
-	  printf("WARNING: unknown typ. $%x\n",typ);
-	}
-      } else if(ip==PL_FLOAT) {
-        pret[i].real=pin[i].real;
-	pret[i].typ=PL_FLOAT;
-      } else if(ip==PL_INT) {
-        pret[i].integer=pin[i].integer;
-	pret[i].typ=PL_INT;
-      } else if(ip==PL_STRING) {
-        *((STRING *)&(pret[i].integer))=double_string((STRING *)&(pin[i].integer));
-	pret[i].typ=PL_STRING;
-      } else {
-        printf("line %d: Error: Parameter %d incompatibel. $%x\n",pc,i,ip);
-	dump_parameterlist(pin,anzpar);
-      }
-      break;
-    case PL_STRING: /* String */
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(pin[i].typ==PL_EVAL) {
-	*((STRING *)&(pret[i].integer))=string_parser(pin[i].pointer);
-      } else if(ip==PL_STRING) {
-        *((STRING *)&(pret[i].integer))=double_string((STRING *)&(pin[i].integer));
-      } else {
-        printf("line %d: Error: Parameter %d incompatibel. $%x (should be string)\n",pc,i,ip);
-	dump_parameterlist(pin,anzpar);
-      }
-      break;
-    case PL_ARRAY:  /* Array */
-    case PL_IARRAY: /* Int-Array */
-    case PL_FARRAY: /* float-Array */
-    case PL_SARRAY: /* String-Array */
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(pin[i].typ==PL_ARRAY || pin[i].typ==PL_EVAL) {
-        ARRAY arr;
-	if(pin[i].typ==PL_ARRAY) arr=double_array((ARRAY *)&(pin[i].integer));
-	else arr=array_parser(pin[i].pointer);
-        *((ARRAY *)&(pret[i].integer))=arr;
-	if(ap==PL_IARRAY && arr.typ==FLOATTYP) {
-	  *((ARRAY *)&(pret[i].integer))=convert_to_intarray(&arr);
-	  free_array(&arr);
-	} else if(ap==PL_FARRAY && arr.typ==INTTYP) {
-	  *((ARRAY *)&(pret[i].integer))=convert_to_floatarray(&arr);
-	  free_array(&arr);
-	} else if((ap==PL_IARRAY && arr.typ==INTTYP) ||
-	   (ap==PL_FARRAY && arr.typ==FLOATTYP) ||
-	   (ap==PL_SARRAY && arr.typ==STRINGTYP)) {
-	  ;
-        } else printf("line %d: Error: Parameter %d is wrong ARRAY type $%x (need to be $%x). Cannot convert.\n",pc,i,ip,ap);
-      } else {
-        printf("line %d: Error: Parameter %d incompatibel. $%x (should be Array)\n",pc,i,ip);
-	dump_parameterlist(pin,anzpar);
-      }
-      break;
-    case PL_VAR:   /* Variable */
-    case PL_NVAR:   /* Variable */
-    case PL_SVAR:   /* Variable */
-    case PL_ARRAYVAR: /* Variable */
-    case PL_IARRAYVAR: /* Variable */
-    case PL_FARRAYVAR: /* Variable */
-    case PL_SARRAYVAR: /* Variable */
-    case PL_ALLVAR:  /* Varname */    
-      pret[i].typ=ip;
-      vnr=pret[i].integer=pin[i].integer;
-      if(pin[i].pointer==NULL) {
-        if(pin[i].panzahl) {
-          indexliste=malloc(pin[i].panzahl*sizeof(int));
-	  get_indexliste(pin[i].ppointer,indexliste,pin[i].panzahl);
-          // printf("Es sind %d indizien da.\n",pin[i].panzahl);
-        } else indexliste=NULL;
-        pret[i].pointer=varptr_indexliste(&variablen[vnr],indexliste,pin[i].panzahl);
-        free(indexliste);
-      } else pret[i].pointer=pin[i].pointer;
-      
-      // printf("Variable uebergeben. %d %s\n",vnr,varinfo(&variablen[vnr]));
-      break;
-    case PL_KEY: /* Keyword */
-      if(ip==PL_LEER) pret[i].arraytyp=KEYW_NONE;
-      else if(ip==PL_KEY) pret[i].arraytyp=pin[i].arraytyp;
-      else if(ip==PL_EVAL) pret[i].arraytyp=keyword2num(pin[i].pointer);
-      if(ip==PL_EVAL ||ip==PL_KEY) *((STRING *)&(pret[i].integer))=create_string(pin[i].pointer);
-      break;
-    case PL_EVAL: /* Keyword */
-      if(ip==PL_LEER) pret[i].typ=PL_LEER;
-      else if(ip==PL_EVAL ||ip==PL_KEY) {
-        *((STRING *)&(pret[i].integer))=create_string(pin[i].pointer);
-      } else printf("Error: Parameter %d incompatibel. $%x\n",i,ip);
-      break;
-    default:
-      printf("unknown parameter type. -->$%x \n",ap);
-    }
+    make_parameter_stage3(&pin[i],ap,&pret[i]);
     i++;
   }
   return(i);
@@ -549,26 +786,11 @@ int make_preparlist(PARAMETER *p,char *n) {
   while(e) {
     if(strlen(w1)) {
       typ=type(w1);
-      if((typ&CONSTTYP)==CONSTTYP) {
-        switch(typ) {
-	case (CONSTTYP|INTTYP):
-          p[ii].typ=PL_INT;
-          p[ii].integer=(int)parser(w1);
-	  break;	  
-	case (CONSTTYP|FLOATTYP):
-          p[ii].typ=PL_FLOAT;
-          p[ii].real=parser(w1);
-	  break;	  
-	case (CONSTTYP|STRINGTYP):
-          p[ii].typ=PL_STRING;
-          *((STRING *)&(p[ii].integer))=string_parser(w1);
-	  break;
-	default:
-          p[ii].typ=PL_EVAL;
-	  *((STRING *)&(p[ii].integer))=create_string(w1);
-	}
-      } else {
+      if((typ&CONSTTYP)==CONSTTYP) {  /* Kostanten schon auswerten.*/
+        eval2partype(w1,&p[ii],typ);
+      } else {                        /*  Rest bleibt f"ur spaeter...*/
         p[ii].typ=PL_EVAL;
+	p[ii].arraytyp=typ;
 	*((STRING *)&(p[ii].integer))=create_string(w1);
       }
     } else  {
@@ -585,6 +807,8 @@ int make_preparlist(PARAMETER *p,char *n) {
 }
 
 
+
+
 /*Indexliste aus Parameterarray (mit EVAL) zu Laufzeit*/
 
 int get_indexliste(PARAMETER *p,int *l,int n) {
@@ -594,22 +818,17 @@ int get_indexliste(PARAMETER *p,int *l,int n) {
     case PL_KEY:
     case PL_EVAL:
       if(((char *)p[i].pointer)[0]==':') l[i]=-1;
-      else l[i]=(int)parser((char *)p[i].pointer);
-      break;
-    case PL_INT:
-      l[i]=p[i].integer;
-      break;
-    case PL_NUMBER:
-    case PL_FLOAT:
-      l[i]=(int)p[i].real;
+      else {
+        l[i]=(int)parser((char *)p[i].pointer);
+	if(l[i]<0) {
+	   xberror(16,""); /* Feldindex zu gross*/
+	   printf("ERROR: negative array index.<%s>\n",(char *)p[i].pointer);
+	}
+      }
       break;
     default:
-      printf("WARNING: get_indexliste: illegal type.\n");
-      l[i]=0;
+      l[i]=p2int(&p[i]);
     }
   }
   return(i);
 }
-
-
-

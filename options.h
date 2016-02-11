@@ -17,7 +17,8 @@
 
 #ifdef WINDOWS
   #undef HAVE_READLINE
-  #undef HAVE_LAPACK
+ // #undef HAVE_LAPACK
+  #undef HAVE_CLOG10
  // #undef HAVE_EXECVPE
   #undef HAVE_FUTIMENS
   #undef HAVE_PTY_H
@@ -26,7 +27,7 @@
   #undef HAVE_DLOPEN
   #undef HAVE_INOTIFY_INIT
   #undef HAVE_USB
-
+  #undef HAVE_PRIMORIAL_UI
   #define X_DISPLAY_MISSING
   #define USE_SDL
   #define HAVE_SDL 1 
@@ -35,14 +36,18 @@
   #undef HAVE_READLINE
   #undef HAVE_LAPACK
   #undef HAVE_SYS_KD_H
+  #undef HAVE_COMPLEX_H
   #undef HAVE_DLOPEN
   #undef HAVE_INOTIFY_INIT
   #undef HAVE_ALSA
   #undef HAVE_EXECVPE
+  #undef HAVE_GMP
+  #undef HAVE_CACOS
   #define X_DISPLAY_MISSING
-  #define USE_SDL
-  #define HAVE_SDL 1 
-  #define NOGRAPHICS
+ // #define USE_SDL
+ // #define HAVE_SDL 1
+  #define HAVE_GEM 1
+  #define USE_GEM 1
 #else
   #define USE_X11
 #endif

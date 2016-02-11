@@ -46,7 +46,7 @@ extern FILEINFO filenr[];
 
 
 #ifdef ANDROID 
-  #define ANZSENSORS 16
+  #define ANZSENSORS 32
 #else
   #define ANZSENSORS 0
 #endif

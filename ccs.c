@@ -420,7 +420,7 @@ void c_csvput(char *w) {
       if(vnr==-1) xberror(15,n); /* Feld nicht dimensioniert */
       else {
         int anz=min(do_dimension(vnr),nn);
-        if( !(typ & (FLOATTYP | INTTYP))) {printf("CSVPUT: Muss Float-ARRAY sein. \n");return;}
+        if((typ&TYPMASK)!=FLOATTYP && (typ&TYPMASK)!=INTTYP) {printf("CSVPUT: Muss Float-ARRAY sein. \n");return;}
 
 
 	/*  printf("CSVPUT: pid=%d, vnr=%d, nn=%d, anz=%d \n",pid,vnr,nn,anz); */
@@ -428,10 +428,10 @@ void c_csvput(char *w) {
 	if ( IS_PID_ANALOG(pid) ) {
           float *buffer=calloc(anz,sizeof(float));
 	
-	  if(typ & FLOATTYP) {
+	  if((typ&TYPMASK)==FLOATTYP) {
 	    double *varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(float)varptr[i];
-          } else if(typ & INTTYP) {
+          } else if((typ&TYPMASK)==INTTYP) {
 	    int *varptr=(int  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(float)varptr[i];
 	  }
@@ -448,10 +448,10 @@ void c_csvput(char *w) {
           free(buffer);
 	} else if ( IS_PID_DIGITAL(pid) ) {
 	  int *buffer=calloc(anz,sizeof(int));
-	  if(typ & FLOATTYP) {
+	  if((typ&TYPMASK)==FLOATTYP) {
 	    double *varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(int)varptr[i];
-          } else if(typ & INTTYP) {
+          } else if((typ&TYPMASK)==INTTYP) {
 	    int *varptr=(int  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(int)varptr[i];
 	  }
@@ -496,15 +496,15 @@ void c_csput(char *w) {
   free(test);
 /* switch appropriate to type */
 
-    if ( IS_PID_ANALOG(pid) && (type(t) & (FLOATTYP|INTTYP)) ) {
+    if ( IS_PID_ANALOG(pid) &&  ((type(t)&TYPMASK)==FLOATTYP ||(type(t)&TYPMASK)==INTTYP)) {
         f=(float)parser(t);
         ccs_put_value_secure( pid, 1, &f, &j );
 	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
-    } else if ( IS_PID_DIGITAL(pid) && (type(t) & (FLOATTYP|INTTYP))  ) {
+    } else if ( IS_PID_DIGITAL(pid) && ((type(t)&TYPMASK)==FLOATTYP ||(type(t)&TYPMASK)==INTTYP)) {
 	i=(int)parser(t);
 	ccs_put_value_secure( pid, 1, &i, &j );
 	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
-    } else if ( IS_PID_STRING(pid) && (type(t) & STRINGTYP) ) {
+    } else if ( IS_PID_STRING(pid) && ((type(t)&TYPMASK)==STRINGTYP) ) {
         test=s_parser(t);
         ccs_put_value_secure( pid, strlen(test), test, &j );
 	free(test);
@@ -535,7 +535,7 @@ void c_cssweep(char *w) {
   free(test);
 /* switch appropriate to type */
 
-    if ( IS_PID_ANALOG(pid) && (type(t) & FLOATTYP) ) {
+    if ( IS_PID_ANALOG(pid) && (type(t)&TYPMASK)==FLOATTYP) {
         float end,deltatime;
 	int nsteps;
 	e=wort_sep(t,',',TRUE,n,t);
@@ -1238,39 +1238,39 @@ void c_tineput(char *w) {
 	void *ptr=(char *)abuffer.pointer+abuffer.dimension*INTSIZE;
 	l=min(l,dout.dArrayLength);
         printf("Ist Vektor [%d]!!!\n",anz_eintraege(&abuffer));
-	if(abuffer.typ & (FLOATTYP|INTTYP)) {
+	if(abuffer.typ==FLOATTYP ||abuffer.typ==INTTYP)) {
 	  /* Tu was hier !!! */
 	  switch (LFMT(prpinfo.prpFormat)) {
 	  case CF_FLOAT:
-	    if(abuffer.typ & FLOATTYP) {
+	    if(abuffer.typ==FLOATTYP) {
   	      for(i=0;i<l;i++) ((float *)buf)[i]=(float)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((float *)buf)[i]=(float)((int *)ptr)[i];
 	    }
 	    break;
 	  case CF_DOUBLE:
-	    if(abuffer.typ & FLOATTYP) {
+	    if(abuffer.typ==FLOATTYP) {
   	      for(i=0;i<l;i++) ((double *)buf)[i]=((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((double *)buf)[i]=(double)((int *)ptr)[i];
 	    }
 	    break;
 	  case CF_BYTE:
-	    if(abuffer.typ & FLOATTYP) {
+	    if(abuffer.typ==FLOATTYP) {
   	      for(i=0;i<l;i++) ((char *)buf)[i]=(char)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((char *)buf)[i]=(char)((int *)ptr)[i];
 	    }
 	    break;
 	  case CF_SHORT:
-	    if(abuffer.typ & FLOATTYP) {
+	    if(abuffer.typ==FLOATTYP) {
   	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((int *)ptr)[i];
 	    }
 	    break;  	
 	  case CF_LONG:
-	    if(abuffer.typ & FLOATTYP) {
+	    if(abuffer.typ==FLOATTYP) {
   	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((int *)ptr)[i];
@@ -1281,7 +1281,7 @@ void c_tineput(char *w) {
 	    free_array(&abuffer);
             free(buf);return;
 	  }
-	} else if(type(t) & STRINGTYP) {
+	} else if((type(t)&TYPMASK)==STRINGTYP) {
           switch (LFMT(prpinfo.prpFormat)) {
           case CF_BYTE:
           case CF_TEXT:
@@ -1304,7 +1304,7 @@ void c_tineput(char *w) {
 	free_array(&abuffer);
       } else {
         /* switch appropriate to type */
-        if(type(t) & (FLOATTYP|INTTYP)) {
+        if((type(t)&TYPMASK)==FLOATTYP ||(type(t)&TYPMASK)==INTTYP) {
           switch (LFMT(prpinfo.prpFormat)) {
           case CF_BYTE:
             *((char *)buf)=(char)parser(t); break;
@@ -1320,7 +1320,7 @@ void c_tineput(char *w) {
             printf("output format type %d is not a number !\n",LFMT(prpinfo.prpFormat));
             free(buf);return;
           }
-        } else if(type(t) & STRINGTYP) {
+        } else if((type(t)&TYPMASK)==STRINGTYP) {
           STRING sss=string_parser(t);
 	  memcpy(buf,sss.pointer,min(sss.len,buflen));
 	  free(sss.pointer);
@@ -1376,23 +1376,25 @@ int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, s
   if(vnr==-1) return illegal_property;
   else {
     len=do_dimension(vnr);
-    if(typ & STRINGTYP) etyp=CF_TEXT;
-    else if(typ & INTTYP) etyp=CF_LONG;
-    else if(typ & FLOATTYP) etyp=CF_DOUBLE;
+    switch(typ&TYPMASK) {
+    case STRINGTYP: etyp=CF_TEXT; break;
+    case INTTYP:    etyp=CF_LONG; break;
+    case FLOATTYP:  etyp=CF_DOUBLE; break;
+    }
 
     if(access&CA_WRITE) {
       printf("write access: \n");
       if(din->dFormat!=etyp) return illegal_format;
       if(din->dArrayLength > len) return dimension_error;
       if(typ & ARRAYTYP) ;
-      else if(typ & STRINGTYP) {
+      else if((typ&TYPMASK)==STRINGTYP) {
         STRING a;
 	a.pointer=din->data.vptr;
 	a.len=din->dArrayLength;  /* wirklich ??? */
 	string_zuweis(&variablenn[vnr],a);
       }
-      else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0];
-      else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
+      else if((typ&TYPMASK)==INTTYP) variablen[vnr].opcode=din->data.lptr[0];
+      else if((typ&TYPMASK)==FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
 
     } else if(access&CA_READ) {
         printf("read access: Format=%d ALEN=%d\n",dout->dFormat,dout->dArrayLength);
@@ -1400,12 +1402,11 @@ int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, s
       if(dout->dFormat!=etyp) return illegal_format;
       if(dout->dArrayLength < len) return dimension_error;
       if(typ & ARRAYTYP) ;
-      else if(typ & STRINGTYP) {
-      
+      else if((typ&TYPMASK)==STRINGTYP) {
         dout->data.vptr=variablen[vnr].pointer;
 	dout->dArrayLength=variablen[vnr].opcode;
-      } else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode;
-      else if(typ & FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
+      } else if((typ&TYPMASK)==INTTYP) dout->data.lptr[0]=variablen[vnr].opcode;
+      else if((typ&TYPMASK)==FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
 
     }
     return(0);
@@ -1457,18 +1458,22 @@ void c_tinebroadcast(char *n) {
     } else {
       /*Hier sollte man die Variable anlegen, falls nicht existent...*/
       if(vnr==-1) vnr=variable_exist_or_create(r,typ);
-      if(typ & STRINGTYP) {
+      switch(typ&TYPMASK) {
+      case STRINGTYP:
 	  din.dFormat=CF_TEXT;
 	  din.dArrayLength=variablen[vnr].opcode;
   	  din.data.vptr=variablen[vnr].pointer;
-      } else if(typ & INTTYP) {
+	  break;
+      case INTTYP:
           din.dFormat=CF_LONG;
 	  din.dArrayLength=1;
           din.data.lptr=&variablen[vnr].opcode;
-      }  else if(typ & FLOATTYP) {
+	  break;
+      case FLOATTYP:
           din.dFormat=CF_DOUBLE;
 	  din.dArrayLength=1;
-          din.data.dptr=&variablen[vnr].zahl; 
+          din.data.dptr=&variablen[vnr].zahl;
+	  break; 
       } 
 
       din.dTag[0] = 0;
@@ -1507,18 +1512,22 @@ void c_tinelisten(char *n) {
     } else {
       /*Hier sollte man die Variable anlegen, falls nicht existent...*/
       if(vnr==-1) vnr=variable_exist_or_create(r,typ);
-      if(typ & STRINGTYP) {
+      switch(typ&TYPMASK) {
+      case STRINGTYP:
 	  dout.dFormat=CF_TEXT;
 	  dout.dArrayLength=variablen[vnr].opcode;
   	  dout.data.vptr=variablen[vnr].pointer;
-      } else if(typ & INTTYP) {
+	  break;
+      case INTTYP:
           dout.dFormat=CF_LONG;
 	  dout.dArrayLength=1;
           dout.data.lptr=&variablen[vnr].opcode;
-      }  else if(typ & FLOATTYP) {
+	  break;
+      case FLOATTYP:
           dout.dFormat=CF_DOUBLE;
 	  dout.dArrayLength=1;
-          dout.data.dptr=&variablen[vnr].zahl; 
+          dout.data.dptr=&variablen[vnr].zahl;
+	  break; 
       } 
     }
     dout.dTag[0] = 0;
@@ -1561,9 +1570,11 @@ void c_tineexport(char *n) {
         if(vnr==-1) xberror(15,w); /* Feld nicht dimensioniert */
         else len=do_dimension(vnr);
       }
-      if(typ & STRINGTYP) etyp=CF_TEXT;
-      else if(typ & INTTYP) etyp=CF_LONG;
-      else if(typ & FLOATTYP) etyp=CF_DOUBLE;
+      switch(typ&TYPMASK) {
+      case STRINGTYP:   etyp=CF_TEXT; break;
+      case INTTYP:      etyp=CF_LONG; break;
+      case FLOATTYP:    etyp=CF_DOUBLE; break;
+      }
       RegisterProperty(tine_eqn,w,len,etyp,CA_WRITE|CA_READ,"X11-Basic variable");
       /*Hier sollte man die Variable anlegen, falls nicht existent...*/
       if(vnr==-1) vnr=variable_exist_or_create(r,typ);

@@ -1,6 +1,6 @@
-' Pseudo-Compiler for X11-Basic (MS WINDOWS Version)
-' erzeugt allein lauffaehigen Code (.exe)
-' (c) Markus Hoffmann 2010-2015 2015-01-01
+' Pseudo-Compiler for X11-Basic (ATARI ST Version)
+' erzeugt allein lauffaehigen Code (.prg)
+' (c) Markus Hoffmann 2010-2014 2014-05-04
 '
 '* This file is part of X11BASIC, the BASIC interpreter / compiler
 '* ======================================================================
@@ -12,14 +12,14 @@ i=1
 compileonly=FALSE
 precomponly=FALSE
 lflag=FALSE
-CLR dyn,inputfile$,collect$,qflag
-outputfilename$="b.exe"
+CLR dyn,inputfile$,collect$
+outputfilename$="b.prg"
 bfile$="b.b"
 cfile$="c.c"
 
-IF NOT EXIST("xbvm.exe")
-  ~FORM_ALERT(1,"[3][xbc: ERROR: xbvm.exe not found.][CANCEL]")
-  PRINT "xbc: ERROR: xbvm.exe not found."
+IF NOT EXIST("xbvm.prg")
+  a=FORM_ALERT(1,"[3][xbc: ERROR: xbvm.prg not found.][CANCEL]")
+  PRINT "xbc: ERROR: xbvm.prg not found."
   QUIT
 ENDIF
 
@@ -64,7 +64,7 @@ IF qflag=0
   weiss=COLOR_RGB(1,1,1)
   COLOR weiss,schwarz
   IF LEN(inputfile$)=0
-    TEXT 10,10,"X11-Basic compiler V.1.23 (c) Markus Hoffmann 2010-2015"
+    TEXT 10,10,"X11-Basic compiler V.1.23 (c) Markus Hoffmann 2010-2014"
     FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
     IF LEN(inputfile$)
       IF NOT EXIST(inputfile$)
@@ -99,9 +99,9 @@ IF LEN(inputfile$)
     @packvm(bfile$)
   ELSE IF a=2
     @make_bytecode(inputfile$,bfile$)
-    IF NOT EXIST("xb2c.exe")
-      ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.exe not found.][CANCEL]")
-      PRINT "xbc: ERROR: xb2c.exe not found."
+    IF NOT EXIST("xb2c.ttp")
+      ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.ttp not found.][CANCEL]")
+      PRINT "xbc: ERROR: xb2c.ttp not found."
       QUIT
     ENDIF 
     SYSTEM "xb2c "+bfile$+" -o "+cfile$
@@ -145,7 +145,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.1.22 (c) Markus Hoffmann 2002-2015"
+  PRINT "X11-Basic Compiler V.1.23 (c) Markus Hoffmann 2002-2014"
   VERSION
 RETURN
 PROCEDURE using
@@ -161,15 +161,16 @@ PROCEDURE using
   PRINT "  -virtualm                use virtual machine framework insted of psydo-interpreter"
   PRINT "  -shared                  produce shared object file"
   PRINT "  -win32                   produce Windows .exe file"
+  PRINT "  -atarist                 produce ATARI ST/TOS .prg file"
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
 
 PROCEDURE make_bytecode(file$,bfile$)
-  IF NOT EXIST("xbbc.exe")
+  IF NOT EXIST("xbbc.ttp")
     IF qflag=0
-      ~FORM_ALERT(1,"[3][xbc: ERROR: xbbc.exe not found.][CANCEL]")
+      ~FORM_ALERT(1,"[3][xbc: ERROR: xbbc.ttp not found.][CANCEL]")
     ENDIF
-    PRINT "xbc: ERROR: xbbc.exe not found."
+    PRINT "xbc: ERROR: xbbc.ttp not found."
     QUIT
   ENDIF
   PRINT "INPUT: ";file$
@@ -193,12 +194,12 @@ RETURN
 
 PROCEDURE packvm(bfile$)
   LOCAL t$,l,lb,p,u$
-  OPEN "I",#1,"xbvm.exe"
+  OPEN "I",#1,"xbvm.prg"
   l=LOF(#1)
-  PRINT "xbvm.exe (lof: ",l,")"
+  PRINT "xbvm.prg (lof: ",l,")"
   CLOSE #1
   t$=SPACE$(l)
-  BLOAD "xbvm.exe",VARPTR(t$)
+  BLOAD "xbvm.prg",VARPTR(t$)
   PRINT "len(t$) ",LEN(t$)
   p=INSTR(t$,"4007111")
   PRINT p
@@ -230,8 +231,8 @@ oagain:
   if qflag=0
     default$=right$(inputfile$,len(inputfile$)-rinstr(inputfile$,"/"))
     default$=right$(default$,len(default$)-rinstr(default$,"\"))
-    default$=replace$(default$,".bas",".exe")
-    FILESELECT "select filename to write to","./*.exe",default$,outputfilename$
+    default$=replace$(default$,".bas",".prg")
+    FILESELECT "select filename to write to","./*.prg",default$,outputfilename$
     IF LEN(outputfilename$)=0
       QUIT
     ENDIF
@@ -336,9 +337,9 @@ PROCEDURE usetcc
   IF qflag=0
     default$=RIGHT$(inputfile$,LEN(inputfile$)-RINSTR(inputfile$,"/"))
     default$=RIGHT$(default$,LEN(default$)-RINSTR(default$,"\"))
-    default$=REPLACE$(default$,".bas",".exe")
+    default$=REPLACE$(default$,".bas",".prg")
     o2again:
-    FILESELECT "select filename to write to","./*.exe",default$,outputfilename$
+    FILESELECT "select filename to write to","./*.prg",default$,outputfilename$
     IF LEN(outputfilename$)=0
       QUIT
     ENDIF
@@ -349,5 +350,5 @@ PROCEDURE usetcc
       ENDIF
     ENDIF
   ENDIF
-  SYSTEM "tcc "+cfile$+" x11basic.lib libgfx.lib -o "+outputfilename$
+  SYSTEM "tcc "+cfile$+" x11basic.toslib -lgem -o "+outputfilename$
 RETURN

@@ -120,7 +120,7 @@ const char *errortxt[] = {
 /*  38*/  "Command %s not allowed in interactive mode",
 /*  39*/  "Program Error GOSUB impossible",
 /*  40*/  "CLEAR not allowed within For-Next-loops or procedures",
-/*  41*/  "CONT not possible here",
+/*  41*/  "CONT not possible",
 /*  42*/  "Not enough parameters %s",
 /*  43*/  "Expression too complex",
 /*  44*/  "Function %s not defined",
@@ -188,7 +188,7 @@ const char *errortxt[] = {
 /* 74*/  "Array %s dimensioning mismatch",
 /* 75*/  "Stack overflow!",
 /* 76*/  "Illegal variable name %s. can not create.",
-/* 77*/  "Error 77",
+/* 77*/  "Function %s not defined for complex numbers.",
 /* 78*/  "Error 78",
 /* 79*/  "Error 79",
 #ifdef GERMAN
@@ -200,7 +200,7 @@ const char *errortxt[] = {
 /* 85*/  "Transposition nur für zweidimensionale Matrizen",
 /* 86*/  "Matrix nicht quadratisch",
 /* W*/  "Transposition nicht definiert",
-/* X*/  "FACT/COMBIN/VARIAT nicht definiert",
+/* X*/  "FACT/COMBIN/VARIAT/ROOT nicht definiert",
 /* 89*/  "Das Array muss zweidimensional sein",
 #else
 /* 80*/  "Matrix operations only allowed for one or two dimensional arrays",
@@ -211,7 +211,7 @@ const char *errortxt[] = {
 /* 85*/  "Transposition only for two dimensional matrices",
 /* 86*/  "Matrix must be square",
 /* W*/   "Transposition not defined",
-/* X*/   "FACT/COMBIN/VARIAT not defined",
+/* X*/   "FACT/COMBIN/VARIAT/ROOT not defined",
 /* 89*/  "Array must be two dimensional",
 #endif
 #ifndef GERMAN
@@ -238,7 +238,7 @@ const char *errortxt[] = {
 /* 99*/  "Das Fenster %s existiert nicht",
 #endif
 
-/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2014 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2015 Markus Hoffmann",
 #ifdef GERMAN
 /* e*/  "** 1 - Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",

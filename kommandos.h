@@ -6,7 +6,7 @@
  * COPYING for details
  */
 
-void c_cont(const char *n);
+void c_cont();
 void c_dump(PARAMETER *plist,int e);
 void c_gosub(const char *n);
 void c_new(const char *n);

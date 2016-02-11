@@ -12,7 +12,8 @@ ARRAY recreate_array(const int , const int ,const int *, const ARRAY *);
 ARRAY create_int_array(const int dimension,const  int *dimlist,const int value);
 ARRAY create_float_array(const int dimension, const int *dimlist,const double value);
 ARRAY create_string_array(const int dimension, const int *dimlist,const STRING *value);
-
+ARRAY create_complex_array(const int dimension, const int *dimlist,const COMPLEX *value);
+ARRAY create_arbint_array(const int dimension, const int *dimlist,ARBINT value);
 
 ARRAY einheitsmatrix(const int ,const int ,const int *);
 ARRAY array_const(const char *);
@@ -24,7 +25,10 @@ ARRAY trans_array(ARRAY);
 ARRAY inv_array(ARRAY);
 ARRAY convert_to_floatarray(const ARRAY *a);
 ARRAY convert_to_intarray(const ARRAY *a);
+ARRAY convert_to_complexarray(const ARRAY *a);
+ARRAY convert_to_arbintarray(const ARRAY *a);
 ARRAY get_subarray(ARRAY *arr,int *indexliste);
+ARRAY convert_to_xarray(const ARRAY *a,int rt);
 
 void array_add(ARRAY a1, ARRAY a2);
 void array_sub(ARRAY a1, ARRAY a2);
@@ -37,6 +41,8 @@ void free_array(ARRAY *arr);
 void fill_string_array (const ARRAY *,const STRING );
 void fill_int_array    (const ARRAY *,const int);
 void fill_float_array  (const ARRAY *,const double);
+void fill_complex_array  (const ARRAY *,const COMPLEX);
+void fill_arbint_array  (const ARRAY *,const ARBINT);
 
 STRING array_to_string(ARRAY inhalt);
 ARRAY string_to_array(STRING in);
@@ -47,8 +53,10 @@ void anz2idx(int anz,const ARRAY *a,int *idx);
 
 int    int_array_element   (const ARRAY *a, int *idx);
 double float_array_element (const ARRAY *a, int *idx);
+COMPLEX complex_array_element (const ARRAY *a, int *idx);
 STRING string_array_element(const ARRAY *a, int *idx);
 ARRAY  array_array_element (const ARRAY *a, int *idx);
+void  arbint_array_element (const ARRAY *a, int *idx, ARBINT ret);
 
 
 double array_det(const ARRAY *a);

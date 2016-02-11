@@ -1,12 +1,12 @@
 #
-# spec file for package X11Basic (Version 1.22), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.23), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2014
+# Copyright  (c)  Markus Hoffmann 1997-2015
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
 Name: x11basic
-Version: 1.22
+Version: 1.23
 Release: 1
 License: GPL
 Group: Development/Languages
@@ -93,6 +93,8 @@ xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -
 %{_libdir}/*
 
 %changelog
+* Fri Jun 27 2014 Markus Hoffmann <kollo@users.sourceforge.net> - 1.23
+- adapted for Version 1.23
 * Fri Dec 27 2013 Markus Hoffmann <kollo@users.sourceforge.net> - 1.22
 - adapted for Version 1.22
 * Fri Apr 12 2013 Markus Hoffmann <kollo@users.sourceforge.net> - 1.21

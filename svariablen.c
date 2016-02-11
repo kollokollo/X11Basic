@@ -20,11 +20,39 @@
 
 #include "defs.h"
 #include "x11basic.h"
-#include "parameter.h"
 #include "variablen.h"
+#include "parser.h"
+#include "xbasic.h"
+#include "parameter.h"
 #include "svariablen.h"
 #include "io.h"
 #include "wort_sep.h"
+
+#ifdef DUMMY_LIST
+#define v_false NULL
+#define v_true NULL
+#define v_ccsaplid NULL
+#define v_ccserr NULL
+#define v_cols NULL
+#define v_crscol NULL
+#define v_crslin NULL
+#define v_ctimer NULL
+#define v_err NULL
+#define v_gpsalt NULL
+#define v_gpslat NULL
+#define v_gpslon NULL
+#define mousek NULL
+#define mouses NULL
+#define mousex NULL
+#define mousey NULL
+#define v_pc NULL
+#define v_pi NULL
+#define v_rows NULL
+#define v_sensorf NULL
+#define v_sp NULL
+#define v_stimer NULL
+#define v_timer NULL
+#else
 
 /* Systemvariablen vom typ Int */
 
@@ -96,7 +124,7 @@ static double v_timer() {
 }
 static double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
 static double v_pi() {return(PI);}
-
+#endif
 
 const SYSVAR sysvars[]= {  /* alphabetisch !!! */
  { NOTYP,   "!nulldummy", (pfunc)v_false},
@@ -156,14 +184,20 @@ const SYSVAR sysvars[]= {  /* alphabetisch !!! */
 };
 const int anzsysvars=sizeof(sysvars)/sizeof(SYSVAR);
 
+
 /*Stringvariablen / Systemvariablen */
 
+#ifdef DUMMY_LIST
+#define vs_error NULL
+#define vs_date NULL
+#define vs_fileevent NULL
+#define vs_inkey NULL
+#define vs_terminalname NULL
+#define vs_time NULL
+#define vs_trace NULL
+#else
 STRING vs_error()       { return(create_string("<ERROR>")); }
-
-
-
 static STRING vs_inkey()       { return(create_string(inkey())); }
-
 static STRING vs_date() {
   STRING ergebnis;
   time_t timec;
@@ -206,7 +240,7 @@ static STRING vs_fileevent() {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-
+#endif
 
 const SYSSVAR syssvars[]= {  /* alphabetisch !!! */
  { PL_LEER,   "!nulldummy", vs_error},

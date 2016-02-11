@@ -18,10 +18,14 @@
 #endif
 
 #include "defs.h"
+#ifdef HAVE_CACOS
+#include <complex.h>
+#endif
 #include "x11basic.h"
 #include "variablen.h"
-#include "parameter.h"
 #include "xbasic.h"
+#include "parser.h"
+#include "parameter.h"
 #include "gkommandos.h"
 #include "functions.h"
 #include "afunctions.h"
@@ -41,6 +45,186 @@
   #include "Windows.extension/fnmatch.h"
 #endif
 
+#define NOIMP(a)  printf("The %s function is not implemented \n" \
+  " in this version of X11-Basic because the COMPLEXMATH library \n" \
+  " was not present at compile time.\n",a)
+
+
+
+#ifdef DUMMY_LIST
+#define cimag NULL
+#define creal NULL
+#define atan2 NULL
+#define ceil NULL
+#define exp NULL
+#define floor NULL
+#define sin NULL
+#define hypot NULL
+#define log NULL
+
+
+
+
+#define f_call NULL
+#define f_det NULL
+#define f_eventf NULL
+#define f_exec NULL
+#define f_freefile NULL
+#define f_gray NULL
+#define inp8 NULL
+#define inp32 NULL
+#define inp16 NULL
+#define inpf NULL
+#define f_ioctl NULL
+#define shm_attach NULL
+#define shm_malloc NULL
+#define f_symadr NULL
+#define type NULL
+#define f_abs NULL
+#define f_acos NULL
+#define f_acosh NULL
+#define f_add NULL
+#define f_and NULL
+#define carg NULL
+#define arrptr NULL
+#define f_asc NULL
+#define f_asin NULL
+#define f_asinh NULL
+#define f_atan NULL
+#define f_atanh NULL
+#define f_atan NULL
+#define f_bchg NULL
+#define f_bclr NULL
+#define f_bset NULL
+#define f_btst NULL
+#define f_byte NULL
+#define f_call NULL
+#define f_card NULL
+#define f_cint NULL
+#define f_color_rgb NULL
+#define f_combin NULL
+#define myconj NULL
+#define myconj NULL
+#define conj NULL
+#define f_cos NULL
+#define f_cosh NULL
+#define f_crc NULL
+#define f_cspid NULL
+#define f_cssize NULL
+#define f_cvi NULL
+#define f_cvl NULL
+#define f_cvf NULL
+#define f_det NULL
+#define f_device NULL
+#define f_dimf NULL
+#define f_div NULL
+#define f_doocssize NULL
+#define f_doocstyp NULL
+#define f_dpeek NULL
+#define f_eof NULL
+#define f_even NULL
+#define f_eventf NULL
+#define f_exec NULL
+#define f_exist NULL
+#define f_exp NULL
+#define f_fak NULL
+#define fork NULL
+#define f_nop NULL
+#define f_form_alert NULL
+#define f_form_center NULL
+#define f_form_dial NULL
+#define f_form_do NULL
+#define f_freefile NULL
+#define f_gcd NULL
+#define f_get_color NULL
+#define f_glob NULL
+#define f_gray NULL
+#define f_inode NULL
+#define inp8 NULL
+#define inp32 NULL
+#define inp16 NULL
+#define inpf NULL
+#define f_instr NULL
+#define f_int NULL
+#define f_invert NULL
+#define f_ioctl NULL
+#define f_julian NULL
+#define f_lcm NULL
+#define f_len NULL
+#define f_listselect NULL
+#define f_log NULL
+#define f_loc NULL
+#define f_lof NULL
+#define f_log NULL
+#define f_log10 NULL
+#define f_lpeek NULL
+#define f_malloc NULL
+#define f_max NULL
+#define f_min NULL
+#define f_mod NULL
+#define f_mode NULL
+#define f_mshrink NULL
+#define f_mul NULL
+#define f_nextprime NULL
+#define f_nlink NULL
+#define f_not NULL
+#define f_objc_draw NULL
+#define f_objc_find NULL
+#define f_objc_offset NULL
+#define f_odd NULL
+#define f_or NULL
+#define f_peek NULL
+#define f_point NULL
+#define f_powm NULL
+#define f_point NULL
+#define rand NULL
+#define f_random NULL
+#define f_realloc NULL
+#define f_rinstr NULL
+#define f_root NULL
+#define f_rsrc_gaddr NULL
+#define f_sensor NULL
+#define f_sgn NULL
+#define f_shl NULL
+#define shm_attach NULL
+#define shm_malloc NULL
+#define f_shr NULL
+#define f_sin NULL
+#define f_sinh NULL
+#define f_size NULL
+#define f_sqrt NULL
+#define f_sqrt NULL
+#define f_srand NULL
+#define f_sub NULL
+#define f_succ NULL
+#define f_swap NULL
+#define f_symadr NULL
+#define f_tally NULL
+#define f_tan NULL
+#define f_tanh NULL
+#define f_tinesize NULL
+#define f_tinetyp NULL
+#define type NULL
+#define f_valf NULL
+#define f_variat NULL
+#define f_varptr NULL
+#define f_word NULL
+#define f_wort_sep NULL
+#define f_xor NULL
+#define f_val NULL
+#define f_round NULL
+#define f_rnd NULL
+#define f_rad NULL
+#define f_pred NULL
+#define f_ltextlen NULL
+#define f_gasdev NULL
+#define f_frac NULL
+#define f_eval NULL
+#define f_deg NULL
+#define f_cvd NULL
+
+#else
+
 #ifndef HAVE_LOGB
 static double logb(double a) {return(log(a)/log(2));}
 #endif
@@ -50,6 +234,69 @@ static double log1p(double a) {return(log(1+a));}
 #ifndef HAVE_EXPM1
 static double expm1(double a) {return(exp(a)-1);}
 #endif
+#ifndef HAVE_CACOS
+static COMPLEX cacos(COMPLEX a) {NOIMP("cacos");return(a);}
+static COMPLEX cacosh(COMPLEX a) {NOIMP("cacosh");return(a);}
+static COMPLEX casin(COMPLEX a) {NOIMP("casin");return(a);}
+static COMPLEX casinh(COMPLEX a) {NOIMP("casin");return(a);}
+static COMPLEX catan(COMPLEX a) {NOIMP("catan");return(a);}
+static COMPLEX catanh(COMPLEX a) {NOIMP("catanh");return(a);}
+static COMPLEX clog(COMPLEX a) {
+  COMPLEX b;
+  b.r=log(hypot(a.r,a.i));
+  b.i=atan2(a.i,a.r);
+  return(b);
+}
+static COMPLEX myconj(COMPLEX a)  {a.i=-a.i;return(a);}
+static COMPLEX cexp(COMPLEX a) {
+  COMPLEX b;
+  double r=exp(a.r);
+  b.r=r*(cos(a.i)-sin(a.i));
+  b.i=r*(sin(a.i)+cos(a.i));
+  return(b);
+}
+static double cimag(COMPLEX a) {return(a.i);}
+static double creal(COMPLEX a) {return(a.r);}
+static COMPLEX csin(COMPLEX a) {
+  COMPLEX i;i.r=0;i.i=1;
+  COMPLEX i2;i2.r=0;i2.i=2;
+  COMPLEX iz=complex_mul(i,a);
+  COMPLEX iz2;
+  iz2.r=-iz.r;
+  iz2.i=-iz.i;
+  return(complex_div(complex_sub(cexp(iz),cexp(iz2)),i2));
+}
+static COMPLEX ccos(COMPLEX a) {
+  COMPLEX i;i.r=0;i.i=1;
+  COMPLEX iz=complex_mul(i,a);
+  COMPLEX iz2;
+  iz2.r=-iz.r;
+  iz2.i=-iz.i;
+  return(complex_div(complex_add(cexp(iz),cexp(iz2)),FLOAT2COMPLEX(2)));
+}
+static COMPLEX ccosh(COMPLEX a) {
+  COMPLEX iz2;
+  iz2.r=-a.r;
+  iz2.i=-a.i;
+  return(complex_div(complex_add(cexp(a),cexp(iz2)),FLOAT2COMPLEX(2)));
+}
+static COMPLEX csinh(COMPLEX a) {
+  COMPLEX iz2;
+  iz2.r=-a.r;
+  iz2.i=-a.i;
+  return(complex_div(complex_sub(cexp(a),cexp(iz2)),FLOAT2COMPLEX(2)));
+}
+static COMPLEX ctan(COMPLEX a) {return(complex_div(csin(a),ccos(a)));}
+static COMPLEX ctanh(COMPLEX a) {return(complex_div(csinh(a),ccosh(a)));}
+static COMPLEX csqrt(COMPLEX a) {NOIMP("csqrt");return(a);}
+#endif
+#ifndef HAVE_CLOG10
+static COMPLEX clog10(COMPLEX a) {return(complex_div(((COMPLEX (*)())clog)(a),FLOAT2COMPLEX(10)));}
+#endif
+
+#ifdef WINDOWS
+static COMPLEX myconj(COMPLEX a)  {a.i=-a.i;return(a);}
+#endif
 extern int shm_malloc(int,int);
 extern int shm_attach(int);
 
@@ -57,9 +304,424 @@ static char   *arrptr(PARAMETER *p,int e) {return((char *)variablen[p->integer].
 
 /*Funktionen (mit f_ prefix )*/
 
-static double f_add(double v1, double v2) {return(v1+v2);}
+static PARAMETER f_random(PARAMETER *plist,int e) {
+ extern gmp_randstate_t state;
+ extern int randstate_isinit;
+ PARAMETER pret;
+  pret.typ=plist->typ;
+  switch(pret.typ) {
+  case PL_INT: 
+    pret.integer=(int)((double)rand()/RAND_MAX*((double)plist->integer));
+    break;
+  case PL_COMPLEX:
+    pret.imag=(double)rand()/RAND_MAX*plist->imag;
+  case PL_FLOAT:
+    pret.real=(double)rand()/RAND_MAX*plist->real;
+    break;
+  case PL_ARBINT:
+    if(!randstate_isinit) {
+      gmp_randinit_default(state);
+      randstate_isinit=1;
+    }
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_urandomm(*(ARBINT *)(pret.pointer),state,*(ARBINT *)(plist->pointer));
+    break;  
+  default: xberror(13,"RANDOM");  /* Type mismatch */
+  }
+  return(pret);
+}
+
+static PARAMETER f_add(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     pret.integer=plist->integer+plist[1].integer; break;
+  case PL_COMPLEX: pret.imag=plist->imag+plist[1].imag;
+  case PL_FLOAT:   pret.real=plist->real+plist[1].real;       break;
+  case PL_ARBINT:  
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_add(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+    break;
+  case PL_STRING: 
+    pret.pointer=malloc(plist->integer+(plist+1)->integer+1);
+    pret.integer=plist->integer+(plist+1)->integer;
+    memcpy(pret.pointer,plist->pointer,plist->integer);
+    memcpy(pret.pointer+plist->integer,(plist+1)->pointer,(plist+1)->integer);
+    ((char *)pret.pointer)[pret.integer]=0;
+    break;
+  default: xberror(13,"ADD");  /* Type mismatch */
+  }
+  return(pret);
+}
+static PARAMETER f_sub(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     pret.integer=plist->integer-plist[1].integer; break;
+  case PL_COMPLEX: pret.imag=plist->imag-plist[1].imag;
+  case PL_FLOAT:   pret.real=plist->real-plist[1].real;       break;
+  case PL_ARBINT:  
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_sub(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+    break;
+  default: xberror(13,"SUB");  /* Type mismatch */
+  }
+  return(pret);
+}
+static PARAMETER f_mul(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     pret.integer=plist->integer*plist[1].integer; break;
+  case PL_COMPLEX: 
+    *(COMPLEX *)&pret.real=complex_mul(*(COMPLEX *)&(plist->real),*(COMPLEX *)&(plist[1].real));
+    break;
+  case PL_FLOAT:   pret.real=plist->real*plist[1].real;       break;
+  case PL_ARBINT:  
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_mul(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+    break;
+  default: xberror(13,"MUL");  /* Type mismatch */
+  }
+  return(pret);
+}
+static PARAMETER f_div(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'/'));
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     pret.integer=plist->integer/plist[1].integer; break;
+  case PL_COMPLEX: 
+    *(COMPLEX *)&pret.real=complex_div(*(COMPLEX *)&(plist->real),*(COMPLEX *)&(plist[1].real));
+    break;
+  case PL_FLOAT:   pret.real=plist->real/plist[1].real;       break;
+  case PL_ARBINT:  
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_div(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+    break;
+  default: xberror(13,"DIV");  /* Type mismatch */
+  }
+  return(pret);
+}
+static PARAMETER f_max(PARAMETER *plist,int e) {
+  if(e==1) return(double_parameter(plist));
+  PARAMETER pret;
+  pret.typ=plist->typ;
+  int i;
+  for(i=1;i<e;i++) pret.typ=(PL_CONSTGROUP|combine_type(pret.typ&PL_BASEMASK,plist[i].typ&PL_BASEMASK,'+'));
+  for(i=0;i<e;i++) cast_to_x(&plist[i],pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     
+    pret.integer=plist->integer;
+    for(i=1;i<e;i++) {if(plist[i].integer>pret.integer) pret.integer=plist[i].integer;}    
+    break;
+  case PL_FLOAT:
+    pret.real=plist->real;
+    for(i=1;i<e;i++) {if(plist[i].real>pret.real) pret.real=plist[i].real;}    
+    break;
+  case PL_COMPLEX: 
+    pret.real=plist->real;
+    pret.imag=plist->imag;
+    for(i=1;i<e;i++) {if(plist[i].real*plist[i].real+plist[i].imag*plist[i].imag>pret.real*pret.real+pret.imag*pret.imag) {pret.real=plist[i].real;pret.imag=plist[i].imag;}}
+    break;
+  case PL_ARBINT:
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer);
+    for(i=1;i<e;i++) {
+      if(mpz_cmp(*(ARBINT *)pret.pointer,*(ARBINT *)plist[i].pointer)<0) {
+        mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist[i].pointer);
+      }
+    }
+    break;
+  default: xberror(13,"MAX");  /* Type mismatch */
+  }
+  return(pret);
+}
+static PARAMETER f_min(PARAMETER *plist,int e) {
+  if(e==1) return(double_parameter(plist));
+  PARAMETER pret;
+  pret.typ=plist->typ;
+  int i;
+  for(i=1;i<e;i++) pret.typ=(PL_CONSTGROUP|combine_type(pret.typ&PL_BASEMASK,plist[i].typ&PL_BASEMASK,'+'));
+  for(i=0;i<e;i++) cast_to_x(&plist[i],pret.typ);
+  switch(pret.typ) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
+  case PL_INT:     
+    pret.integer=plist->integer;
+    for(i=1;i<e;i++) {if(plist[i].integer<pret.integer) pret.integer=plist[i].integer;}    
+    break;
+  case PL_FLOAT:
+    pret.real=plist->real;
+    for(i=1;i<e;i++) {if(plist[i].real<pret.real) pret.real=plist[i].real;}    
+    break;
+  case PL_COMPLEX: 
+    pret.real=plist->real;
+    pret.imag=plist->imag;
+    for(i=1;i<e;i++) {if(plist[i].real*plist[i].real+plist[i].imag*plist[i].imag<pret.real*pret.real+pret.imag*pret.imag) {pret.real=plist[i].real;pret.imag=plist[i].imag;}}
+    break;
+  case PL_ARBINT:
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer);
+    for(i=1;i<e;i++) {
+      if(mpz_cmp(*(ARBINT *)pret.pointer,*(ARBINT *)plist[i].pointer)>0) {
+        mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist[i].pointer);
+      }
+    }
+    break;
+  default: xberror(13,"MIN");  /* Type mismatch */
+  }
+  return(pret);
+}
+
+
+static PARAMETER f_abs(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=plist->typ;
+  switch(pret.typ) {
+  case PL_INT: pret.integer=abs(plist->integer); break;
+  case PL_FLOAT: pret.real=fabs(plist->real); break;
+  case PL_COMPLEX: 
+    pret.real=hypot(plist->real,plist->imag); 
+    pret.imag=0;
+    break;
+  case PL_ARBINT:
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_abs(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer);
+    break;
+  }
+  return(pret);
+}
+static PARAMETER f_acos(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cacos(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=cacos(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=acos(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_acosh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cacosh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=cacosh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=acosh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_asin(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=casin(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=casin(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=asin(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_asinh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=casinh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=casinh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=asinh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_atan(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=catan(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=catan(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=atan(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_atanh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=catanh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=catanh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=atanh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_tan(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ctan(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=ctan(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=tan(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_tanh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ctanh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=ctanh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=tanh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_sin(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=csin(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=csin(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=sin(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_sinh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=csinh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=csinh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=sinh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_cos(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ccos(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=ccos(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=cos(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_cosh(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ccosh(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=ccosh(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=cosh(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_log(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifdef HAVE_COMPLEX_H
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=clog(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=clog(*(complex double *)&(plist->real));
+#endif
+  else
+#endif
+  pret.real=log(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_log10(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifdef HAVE_COMPLEX_H
+#ifndef HAVE_CLOG10
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=((COMPLEX (*)())clog10)(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=clog10(*(complex double *)&(plist->real));
+#endif
+  else
+#endif
+  pret.real=log10(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+static PARAMETER f_exp(PARAMETER *plist,int e) {
+  PARAMETER pret;
+#ifndef HAVE_CACOS
+  if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cexp(*(COMPLEX *)&(plist->real));
+#else
+  if(plist->typ==PL_COMPLEX) *(complex double *)&pret.real=cexp(*(complex double *)&(plist->real));
+#endif
+  else                       pret.real=exp(plist->real);
+  pret.typ=plist->typ;
+  return(pret);
+}
+
+static PARAMETER f_mod(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  switch(pret.typ) {
+  case PL_INT: pret.integer=(plist->integer % plist[1].integer); break;
+  case PL_FLOAT: pret.real=fmod(plist->real,plist[1].real); break;
+  case PL_COMPLEX:  /*TODO */ 
+    xberror(77,"MOD"); /*Function %s not defined for complex numbers.*/
+    pret.real=0; 
+    pret.imag=0;
+    break;
+  case PL_ARBINT:
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_mod(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist[1].pointer));
+    break;
+  }
+  return(pret);
+}
+
+static PARAMETER f_sqrt(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  switch(plist->typ) {
+  case PL_FLOAT: pret.real=sqrt(plist->real); break;
+  case PL_COMPLEX: 
+#ifndef HAVE_CACOS
+    *(COMPLEX *)&pret.real=csqrt(*(COMPLEX *)&(plist->real)); 
+#else
+    *(complex double *)&pret.real=csqrt(*(complex double *)&(plist->real)); 
+#endif
+    break;
+  case PL_ARBINT:
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_sqrt(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer);
+    break;
+  }
+  pret.typ=plist->typ;
+  return(pret);
+}
+
+
 static int    f_asc(STRING n)   {return((int)n.pointer[0]); }
-static int    f_bclr(double v1, double v2) {return((int)v1 & ~ (1 <<((int)v2)));}
 static int    f_byte(int a)     {return(a&0xff);}
 static int    f_card(int a)     {return(a&0xffff);}
 static int    f_word(int a)     {return((signed int)(signed short)(a&0xffff));}
@@ -71,12 +733,13 @@ static int    f_cvi(STRING n)   {return((int)(*((short *)n.pointer))); }
 static int    f_cvl(STRING n)   {return((int)(*((long *)n.pointer))); }
 static double f_deg(double d)   {return(d/PI*180);}
 static int    f_device(STRING n) {return(stat_device(n.pointer)); }
-static double f_div(double v1, double v2) {return(v1/v2);}
 static int    f_dpeek(int adr)  {return((int)(*(short *)adr));}
 static double f_eval(STRING n)  {return(parser(n.pointer));}
-static int    f_even(int b)     {return(b&1 ? 0:-1);}
 static int    f_exist(STRING n) {return(-exist(n.pointer)); }
 static double f_frac(double b)  {return(b-((double)((int)b)));}
+//static double f_arg(COMPLEX b) {return(atan2(b.i,b.r));}
+//static double f_imag(COMPLEX b) {return(b.i);}
+//static double f_real(COMPLEX b) {return(b.r);}
 static int    f_inode(STRING n) {return(stat_inode(n.pointer)); }
 static int    f_len(STRING n)   {return(n.len); }
 static int    f_lpeek(int adr)  {return((int)(*(long *)adr));}
@@ -84,23 +747,43 @@ static double f_ltextlen(STRING n) {return((double)ltextlen(ltextxfaktor,ltextpf
 static int    f_malloc(int size) {return((int)malloc((size_t)size));}
 static int    f_mshrink(int adr,int size) {return(0);} /*always return zero*/
 static int    f_mode(STRING n)  {return(stat_mode(n.pointer)); }
-static double f_mul(double v1, double v2) {return(v1*v2);}
 static int    f_nlink(STRING n) {return(stat_nlink(n.pointer)); }
        double f_nop(void *t)    {return(0.0);}
-static int    f_odd(int b)      {return(b&1 ? -1:0);}
+static int    f_odd(PARAMETER *plist,int e)      {
+  switch(plist->typ) {
+  case PL_ARBINT:
+    return(mpz_odd_p(*(ARBINT *)(plist->pointer))? -1:0);
+  case PL_COMPLEX:
+  case PL_FLOAT:
+       plist->integer=(int)plist->real;
+  case PL_INT:
+  default:
+    return(plist->integer&1 ? -1:0);
+  }
+}
+static int    f_even(PARAMETER *plist,int e)      {
+  switch(plist->typ) {
+  case PL_ARBINT:
+    return(mpz_even_p(*(ARBINT *)(plist->pointer))? -1:0);
+  case PL_COMPLEX:
+  case PL_FLOAT:
+       plist->integer=(int)plist->real;
+  case PL_INT:
+  default:
+    return(plist->integer&1 ? 0:-1);
+  }
+}
 static int    f_peek(int adr)   {return((int)(*(char *)adr));}
 #ifndef NOGRAPHICS
 static int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
 #endif
 static double f_rad(double d)   {return(d*PI/180);}
-static int    f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
 static int    f_realloc(int adr,int size) {return((int)realloc((char *)adr,(size_t)size));}
 static double f_rnd(double d)   {return((double)rand()/RAND_MAX);}
 
 static int    f_size(STRING n)  {return(stat_size(n.pointer)); }
 static int    f_sgn(double b)   {return(sgn(b));}
 static int    f_srand(double d) {srand((int)d);return(0);}
-static double f_sub(double v1, double v2) {return(v1-v2);}
 static int    f_succ(double b)  {return((int)(b+1));}
 
 static double f_val(STRING n)   {return(myatof(n.pointer)); }
@@ -131,21 +814,145 @@ static int f_cssize(STRING n)    {return(cssize(n.pointer)); }
 static int f_cspid(STRING n)     {return(cspid(n.pointer)); }
 #endif
 
+/*  Logische Funktionen (selten benutzt) */
+
+static PARAMETER f_xor(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
+    pret.typ=PL_INT;
+    pret.integer=plist->integer ^ plist[1].integer;
+    return(pret);
+  }
+  pret.typ=PL_ARBINT;  /*Alle anderen Typen zu big int wandeln*/
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  pret.pointer=malloc(sizeof(ARBINT));
+  mpz_init(*(ARBINT *)pret.pointer);
+  mpz_xor(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+  return(pret);
+}
+static PARAMETER f_and(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
+    pret.typ=PL_INT;
+    pret.integer=plist->integer & plist[1].integer;
+    return(pret);
+  }
+  pret.typ=PL_ARBINT;  /*Alle anderen Typen zu big int wandeln*/
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  pret.pointer=malloc(sizeof(ARBINT));
+  mpz_init(*(ARBINT *)pret.pointer);
+  mpz_and(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+  return(pret);
+}
+static PARAMETER f_or(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
+    pret.typ=PL_INT;
+    pret.integer=plist->integer | plist[1].integer;
+    return(pret);
+  }
+  pret.typ=PL_ARBINT;  /*Alle anderen Typen zu big int wandeln*/
+  cast_to_x(plist,pret.typ);
+  cast_to_x(plist+1,pret.typ);
+  pret.pointer=malloc(sizeof(ARBINT));
+  mpz_init(*(ARBINT *)pret.pointer);
+  mpz_ior(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer,*(ARBINT *)(plist+1)->pointer); 
+  return(pret);
+}
+static PARAMETER f_not(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  if(plist->typ==PL_INT) {  /*Damit es schnell geht....*/
+    pret.typ=PL_INT;
+    pret.integer=(~plist->integer);
+    return(pret);
+  }
+  pret.typ=PL_ARBINT;  /*Alle anderen Typen zu big int wandeln*/
+  cast_to_x(plist,pret.typ);
+  pret.pointer=malloc(sizeof(ARBINT));
+  mpz_init(*(ARBINT *)pret.pointer);
+  mpz_com(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer); 
+  return(pret);
+}
+
+/*  Bit manipulation functions */
+
+static int f_shr(int v1, int v2)  {return(v1>>v2);}
+static int f_shl(int v1, int v2)  {return(v1<<v2);}
+
+static int f_btst(PARAMETER *plist,int e) {
+  switch(plist->typ) {
+  case PL_INT: return(((plist->integer & (1 <<plist[1].integer))==0) ?  0 : -1);
+  case PL_FLOAT:
+  case PL_COMPLEX: cast_to_arbint(plist);
+  case PL_ARBINT:
+    return(mpz_tstbit(*(ARBINT *)(plist->pointer),plist[1].integer)?-1:0); 
+  }
+  return(0);
+}
+static PARAMETER f_bset(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  switch(plist->typ) {
+  case PL_INT:
+    pret.typ=PL_INT; 
+    pret.integer=plist->integer | (1 <<plist[1].integer);break;
+  case PL_FLOAT:
+  case PL_COMPLEX: cast_to_arbint(plist);
+  case PL_ARBINT:
+    pret.typ=PL_ARBINT;
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer); 
+    mpz_setbit(*(ARBINT *)pret.pointer,plist[1].integer); 
+    break;
+  }
+  return(pret);
+}
+static PARAMETER f_bclr(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  switch(plist->typ) {
+  case PL_INT:
+    pret.typ=PL_INT; 
+    pret.integer=plist->integer & ~(1 <<plist[1].integer);break;
+  case PL_FLOAT:
+  case PL_COMPLEX: cast_to_arbint(plist);
+  case PL_ARBINT:
+    pret.typ=PL_ARBINT;
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer); 
+    mpz_clrbit(*(ARBINT *)pret.pointer,plist[1].integer); 
+    break;
+  }
+  return(pret);
+}
+static PARAMETER f_bchg(PARAMETER *plist,int e) {
+  PARAMETER pret;
+  switch(plist->typ) {
+  case PL_INT:
+    pret.typ=PL_INT; 
+    pret.integer=plist->integer ^ (1 <<plist[1].integer);break;
+  case PL_FLOAT:
+  case PL_COMPLEX: cast_to_arbint(plist);
+  case PL_ARBINT:
+    pret.typ=PL_ARBINT;
+    pret.pointer=malloc(sizeof(ARBINT));
+    mpz_init(*(ARBINT *)pret.pointer);
+    mpz_set(*(ARBINT *)pret.pointer,*(ARBINT *)plist->pointer); 
+    mpz_combit(*(ARBINT *)pret.pointer,plist[1].integer); 
+    break;
+  }
+  return(pret);
+}
+
+#ifdef ATARI
+  double round(double a) {
+    return((double)(int)(a+0.5));
+  }
+#endif
 
 
-static int f_and(int v1, int v2) {return(v1 & v2);}
-static int f_or( int v1, int v2) {return(v1 | v2);}
-static int f_xor(int v1, int v2) {return(v1 ^ v2);}
-
-static int f_not(int v1)         {return(v1?0:-1);}
-
-
-
-static int f_bset(double v1, double v2) {return((int)v1 | (1 <<((int)v2)));}
-static int f_bchg(double v1, double v2) {return((int)v1 ^ (1 <<((int)v2)));}
-static int f_btst(double v1, double v2) {return((((int)v1 & (1 <<((int)v2)))==0) ?  0 : -1); }
-static int f_shr(double v1, double v2)  {return(((int)v1)>>((int)v2));}
-static int f_shl(double v1, double v2)  {return(((int)v1)<<((int)v2));}
 static int f_int(double b) {return((int)b);}
 static int f_cint(double b) {return((int)round(b));}
 static double f_pred(double b) {return(ceil(b-1));}
@@ -154,23 +961,49 @@ static int  f_dimf(PARAMETER *plist,int e) {
   return((double)do_dimension(&variablen[plist->integer]));
 }
 
-static int f_combin(PARAMETER *plist,int e) {
-  int n=plist[0].integer,k=plist[1].integer,i;
-  double zz=1;
-  if(k>n || n<=0 || k<=0) return(0);
-  if(k==n) return(1);
-  if(n-k>k) {k=n-k;}
-  for(i=n-k;i>=1;i--)  zz*=(n-i+1)/(double)i;
-  return((int)zz);
+static void f_combin(ARBINT ret,PARAMETER *plist,int e) {
+  if(plist[1].integer<0) xberror(88,""); /*FACT/COMBIN/VARIAT nicht definiert*/
+  mpz_bin_uiui(ret,plist->integer,plist[1].integer);
+}
+static void f_fak(ARBINT ret,PARAMETER *plist,int e) {
+  if(plist->integer<0) xberror(88,""); /*FACT/COMBIN/VARIAT nicht definiert*/
+  mpz_fac_ui(ret,plist->integer);
+}
+static void f_root(ARBINT ret,PARAMETER *plist,int e) {
+  if(plist[1].integer<=0) xberror(88,""); /*FACT/COMBIN/VARIAT/ROOT nicht definiert*/
+  mpz_root(ret,*(ARBINT *)(plist->pointer),plist[1].integer);
 }
 static int f_variat(PARAMETER *plist,int e) {
   int n=plist[0].integer,k=plist[1].integer,i;
   double zz=1;
-  if(k>n || n<=0 || k<=0) return(0);
-  if(k==n) return(1);
+  if(k==n) return(1);  
+  if(k>n || n<=0 || k<=0) {
+    xberror(88,""); /*FACT/COMBIN/VARIAT nicht definiert*/
+    return(0);
+  }
   for(i=n-k+1;i<=n;i++)  zz*=i;
   return((int)zz);
 }
+
+static void f_gcd(ARBINT ret,PARAMETER *plist,int e) {
+  mpz_gcd(ret,*(ARBINT *)plist->pointer,*(ARBINT *)plist[1].pointer);
+}
+static void f_lcm(ARBINT ret,PARAMETER *plist,int e) {
+  mpz_lcm(ret,*(ARBINT *)plist->pointer,*(ARBINT *)plist[1].pointer);
+}
+static void f_nextprime(ARBINT ret,PARAMETER *plist,int e) {
+  mpz_nextprime(ret,*(ARBINT *)plist->pointer);
+}
+static void f_invert(ARBINT ret,PARAMETER *plist,int e) {
+  int i=mpz_invert(ret,*(ARBINT *)(plist->pointer),*(ARBINT *)(plist[1].pointer));
+  if(i==0) mpz_set(ret,*(ARBINT *)(plist[1].pointer));
+}
+static void f_powm(ARBINT ret,PARAMETER *plist,int e) {
+  mpz_powm(ret,*(ARBINT *)(plist->pointer),*(ARBINT *)(plist[1].pointer),*(ARBINT *)(plist[2].pointer));
+}
+
+
+
 static double f_gasdev(double d) { /* Gaussverteilter Zufall */
   static int flag=1;
   static double gset;
@@ -227,30 +1060,6 @@ static int f_julian(STRING n) { /* Julianischer Tag aus time$ */
 }
 #undef IGREG
 
-static double f_min(PARAMETER *plist,int e) {
-  if(e==1) return(plist[0].real);
-  else if(e==2) return(min(plist[0].real,plist[1].real));
-  else {
-    int i=e-1;
-    double ret=plist[i].real;
-    while((--i)>=0) {
-      ret=min(ret,plist[i].real);
-    }
-    return(ret);
-  }
-}
-static double f_max(PARAMETER *plist,int e) {
-  if(e==1) return(plist[0].real);
-  else if(e==2) return(max(plist[0].real,plist[1].real));
-  else {
-    int i=e-1;
-    double ret=plist[i].real;
-    while((--i)>=0) {
-      ret=max(ret,plist[i].real);
-    }
-    return(ret);
-  }
-}
 
 
 static int f_crc(PARAMETER *plist,int e) { 
@@ -357,7 +1166,7 @@ static int f_form_alert(PARAMETER *plist,int e) {
   return(form_alert(plist[0].integer,plist[1].pointer));
 }
 static int f_form_center(PARAMETER *plist,int e) {
-  int x,y,w,h,ret;
+  short x,y,w,h,ret;
   graphics();
   gem_init();
   ret=form_center((OBJECT *)plist->integer,&x,&y,&w,&h);
@@ -377,21 +1186,23 @@ static int f_form_dial(PARAMETER *plist,int e) {
       plist[6].integer,plist[7].integer,plist[8].integer));
 }
 static int f_form_do(PARAMETER *plist,int e) {
+  short startob=0;
+  if(e>1) startob=plist[1].integer;
   graphics();
   gem_init();
-  return(form_do((OBJECT *)plist->integer));
+  return(form_do((OBJECT *)plist->integer,startob));
 }
 static int f_objc_draw(PARAMETER *plist,int e) {
   graphics();
   gem_init();
   return(objc_draw((OBJECT *)plist->integer,plist[1].integer
-    ,plist[2].integer,plist[3].integer,plist[4].integer));
+    ,plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,plist[6].integer));
 }
 static int f_objc_find(PARAMETER *plist,int e) {
-    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer));
+    return(objc_find((OBJECT *)plist[0].integer,0,7,plist[1].integer,plist[2].integer));
 }
 static int f_objc_offset(PARAMETER *plist,int e) {
-  int x,y,ret;
+  short x,y,ret;
 
   if(e>2 && plist[2].typ!=PL_LEER) {
     int typ;
@@ -407,7 +1218,7 @@ static int f_objc_offset(PARAMETER *plist,int e) {
     if(typ==INTTYP) y=*((int *)plist[3].pointer);
     else if(typ==FLOATTYP) y=(int)*((double *)plist[3].pointer);
   }
-  ret=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
+  ret=objc_offset((OBJECT *)plist->integer,plist[1].integer,&x,&y);
 
   if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,x);
   if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,y);
@@ -449,9 +1260,11 @@ static int f_varptr(PARAMETER *p,int e) {
   switch(p->typ) {
   case PL_IVAR:
   case PL_FVAR:
+  case PL_CVAR:
   case PL_NVAR:
   case PL_IARRAYVAR: /* Variable */
   case PL_FARRAYVAR: /* Variable */
+  case PL_AIARRAYVAR: /* Variable */
     return((int)p->pointer);
   case PL_SVAR:
     return((int)((STRING *)p->pointer)->pointer);
@@ -473,7 +1286,153 @@ static int f_varptr(PARAMETER *p,int e) {
 }
 
 
+/*  Gibt returntyp einer Funktion zurück undter beachtung des Typs der
+    Eingangsparameter (Nur der erste PL_NUMBER oder PL_ANYVALUE ist relevant)
+    */
+int returntype(int idx, PARAMETER *p,int n) {
+  int  g=(pfuncs[idx].opcode&FM_RET);
+  switch(g) {
+  case F_IRET: return(INTTYP);
+  case F_DRET: return(FLOATTYP);
+  case F_CRET: return(COMPLEXTYP);
+  case F_AIRET: return(ARBINTTYP);
+  case F_AFRET: return(ARBFLOATTYP);
+  case F_ACRET: return(ARBCOMPLEXTYP);
+  case F_SRET: return(STRINGTYP);
+  case F_ANYIRET:
+  case F_NRET:
+  case F_ANYRET:
+    if(!p ||n==0 || pfuncs[idx].pmax==0) return(NOTYP);
+    
+  /* Jetzt eingangstypen der Funktion bis n durchgehen, ersten 
+     PL_NUMBER oder PL_ANYVALUE(?) finden, danach den Returntyp
+     bestimmen. */
+  
+    if(n==1 && (pfuncs[idx].opcode&FM_TYP)==F_ARGUMENT && (p->typ==PL_KEY || p->typ==PL_EVAL)) {
+      int typ;
+      if(p->typ==PL_EVAL && p->arraytyp) typ=(p->arraytyp&TYPMASK);
+      else typ=(type(p->pointer)&TYPMASK);
+      switch(typ) {
+        case INTTYP:
+        case ARBINTTYP: return(typ);
+        case FLOATTYP:
+        case COMPLEXTYP:
+        case ARBFLOATTYP:
+        case ARBCOMPLEXTYP:
+          if(g==F_NRET || g==F_ANYRET) return(typ);
+          else if(g==F_ANYIRET) return(ARBINTTYP);
+          break;
+        case STRINGTYP:
+          if(g==F_ANYRET) return(typ);
+          break;
+      }
+      printf("ERROR: something is wrong! returntype\n");
+      return(typ);
+    }
+    if(n>0) {
+      int i;
+      for(i=0;i<n;i++) {
+        if((pfuncs[idx].pmax>-1) && i>pfuncs[idx].pmax) break;
+        if((pfuncs[idx].pmax==-1) && i>pfuncs[idx].pmin) break;
+	if(pfuncs[idx].pliste[i]==PL_ANYVALUE || pfuncs[idx].pliste[i]==PL_NUMBER) {
+	  switch(p[i].typ) {
+	  case INTTYP:
+	  case ARBINTTYP: return(p[i].typ&PL_BASEMASK);
+	  case FLOATTYP:
+	  case COMPLEXTYP:
+	  case ARBFLOATTYP:
+	  case ARBCOMPLEXTYP:
+	    if(g==F_NRET || g==F_ANYRET) return(p[i].typ&PL_BASEMASK);
+	    else if(g==F_ANYIRET) return(ARBINTTYP);
+	    break;
+	  case STRINGTYP:
+	    if(g==F_ANYRET) return(p[i].typ&PL_BASEMASK);
+	    break;
+	  }
+	} else if(pfuncs[idx].pliste[i]==PL_CFAI ||pfuncs[idx].pliste[i]==PL_CF) {
+	  switch(p[i].typ) {
+	  case PL_INT:    
+	  case PL_FLOAT:  return(FLOATTYP);
+	  case PL_COMPLEX:return(COMPLEXTYP);
+	  case ARBINTTYP: 
+	    if(pfuncs[idx].pliste[i]==PL_CF) return(FLOATTYP);
+	    else return(ARBINTTYP);
+	  }
+	} else if(pfuncs[idx].pliste[i]==PL_ARRAY || pfuncs[idx].pliste[i]==PL_NARRAY|| pfuncs[idx].pliste[i]==PL_CFARRAY) {
+	  switch(p[i].typ) {
+	  case PL_IARRAY:
+	  case PL_FARRAY:
+	  case PL_CARRAY:
+	  case PL_AIARRAY:
+	  case PL_SARRAY:
+	    return(p[i].typ&PL_BASEMASK&TYPMASK);	  
+          }
+	}
+      }
+    }
+  default: printf("ERROR: something is wrong! x324\n");
+  }
+  return(NOTYP);
+}
+int returntype2(int idx, char *n) {
+  int  g=(pfuncs[idx].opcode&FM_RET);
+  switch(g) {
+  case F_IRET: return(INTTYP);
+  case F_DRET: return(FLOATTYP);
+  case F_CRET: return(COMPLEXTYP);
+  case F_AIRET: return(ARBINTTYP);
+  case F_AFRET: return(ARBFLOATTYP);
+  case F_ACRET: return(ARBCOMPLEXTYP);
+  case F_SRET: return(STRINGTYP);
+  case F_ANYIRET:
+  case F_NRET:
+  case F_ANYRET: {
+    if(!n ||*n==0 || pfuncs[idx].pmax==0) return(NOTYP);
+    char w1[strlen(n)+1],w2[strlen(n)+1];
+    int e=wort_sep(n,',',TRUE,w1,w2);
+    int i=0;
+    int typ;
+    while(e) {
+      if((pfuncs[idx].pmax>-1) && i>pfuncs[idx].pmax) break;
+      if((pfuncs[idx].pmax==-1) && i>pfuncs[idx].pmin) break;
+      if(pfuncs[idx].pliste[i]==PL_ANYVALUE || pfuncs[idx].pliste[i]==PL_NUMBER) {
+        typ=type(w1)&(~CONSTTYP);
+	switch(typ) {
+	  case INTTYP:
+	  case ARBINTTYP: return(typ);
+	  case FLOATTYP:
+	  case COMPLEXTYP:
+	  case ARBFLOATTYP:
+	  case ARBCOMPLEXTYP:
+	    if(g==F_NRET || g==F_ANYRET) return(typ);
+	    else if(g==F_ANYIRET) return(ARBINTTYP);
+	    break;
+	  case STRINGTYP:
+	    if(g==F_ANYRET) return(typ);
+	    break;
+	}
+      } else if(pfuncs[idx].pliste[i]==PL_CFAI || pfuncs[idx].pliste[i]==PL_CF) {
+        typ=type(w1)&(~CONSTTYP);
+	switch(typ) {
+	  case PL_INT:    
+	  case PL_FLOAT:  return(FLOATTYP);
+	  case PL_COMPLEX:return(COMPLEXTYP);
+	  case ARBINTTYP: 
+	    if(pfuncs[idx].pliste[i]==PL_CF) return(FLOATTYP);
+	    else return(ARBINTTYP);
+	}
+      }
+      if(pfuncs[idx].pliste[i]==PL_ARRAY || pfuncs[idx].pliste[i]==PL_NARRAY|| pfuncs[idx].pliste[i]==PL_CFARRAY) return(type(w1)&TYPMASK);
+      i++;
+      e=wort_sep(w2,',',TRUE,w1,w2);
+    }
+    }
+  default: printf("ERROR: something is wrong! x324-2 %s\n",pfuncs[idx].name);
+  }
+  return(NOTYP);
+}
 
+#endif
 /*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
   output liefern.
   */
@@ -493,194 +1452,236 @@ static int f_varptr(PARAMETER *p,int e) {
   */
   
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
- { F_CONST|F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
- { F_CONST|F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ADD"     , f_add ,2,2     ,{PL_NUMBER,PL_NUMBER}},
-
- { F_CONST|F_IQUICK|F_IRET,    "AND"      ,(pfunc) f_and,2,2     ,{PL_NUMBER,PL_NUMBER}},
-
-
- { F_PLISTE|F_IRET,  "ARRPTR"    , (pfunc)arrptr ,1,1     ,{PL_ARRAYVAR}},
- { F_CONST|F_SQUICK|F_IRET,    "ASC"       ,(pfunc) f_asc ,1,1   ,{PL_STRING}},
- { F_CONST|F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ASINH"      , asinh ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ATAN"      , atan ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ATAN2"     , atan2 ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ATANH"     , atanh ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "ATN"       , atan ,1,1     ,{PL_NUMBER}},
-
- { F_CONST|F_DQUICK|F_IRET,    "BCHG"      , (pfunc)f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BCLR"      ,(pfunc) f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BSET"      , (pfunc)f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BTST"      ,(pfunc) f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_IQUICK|F_IRET,    "BYTE"     , (pfunc)f_byte ,1,1     ,{PL_INT}},
-
- { F_PLISTE|F_IRET,            "CALL"       , (pfunc)f_call ,1,-1     ,{PL_INT,PL_EVAL}},
- { F_CONST|F_IQUICK|F_IRET,    "CARD"     , (pfunc)f_card ,1,1     ,{PL_INT}},
- { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_IRET,    "CINT"      ,(pfunc) f_cint ,1,1     ,{PL_NUMBER}},
-#ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,            "COLOR_RGB", (pfunc)f_color_rgb ,3,4   ,{PL_NUMBER,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
-#endif
- { F_CONST|F_PLISTE|F_IRET,    "COMBIN"    , (pfunc)f_combin ,2,2     ,{PL_INT,PL_INT}},
- { F_CONST|F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_PLISTE|F_IRET,    "CRC"       ,(pfunc) f_crc ,1,2     ,{PL_STRING, PL_INT}},
-#ifdef CONTROL
- { F_SQUICK|F_DRET,  "CSGET"     , f_csget ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_DRET,  "CSMAX"     , f_csmax ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_DRET,  "CSMIN"     , f_csmin ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CSPID"     , (pfunc)f_cspid ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_DRET,  "CSRES"     , f_csres ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CSSIZE"    , (pfunc)f_cssize ,1,1   ,{PL_STRING}},
-#endif
- { F_CONST|F_SQUICK|F_DRET,  "CVD"       , f_cvd ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_DRET,  "CVF"       , f_cvf ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVI"       ,(pfunc) f_cvi ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVL"       , (pfunc)f_cvl ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVS"       , (pfunc)f_cvf ,1,1     ,{PL_STRING}},
-
- { F_CONST|F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_PLISTE|F_DRET,    "DET"       , f_det ,1,1     ,{PL_FARRAY}},
- { F_SQUICK|F_IRET,    "DEVICE"    , (pfunc)f_device,1,1   ,{PL_STRING}},
- { F_CONST|F_PLISTE|F_IRET,  "DIM?"      , (pfunc)f_dimf ,1,1      ,{PL_ARRAYVAR}},
- { F_CONST|F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
-#ifdef DOOCS
- { F_SQUICK|F_DRET,  "DOOCSGET"     , f_doocsget ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "DOOCSSIZE"    ,(pfunc) f_doocssize ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_DRET,  "DOOCSTIMESTAMP"    , f_doocstimestamp ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "DOOCSTYP"    , (pfunc)f_doocstyp ,1,1   ,{PL_STRING}},
-#endif
- { F_IQUICK|F_IRET,    "DPEEK"     , (pfunc)f_dpeek ,1,1     ,{PL_INT}},
-
- { F_PLISTE|F_IRET,    "EOF"       ,(pfunc) f_eof ,1,1     ,{PL_FILENR}},
-
- { F_CONST|F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
- { F_CONST|F_IQUICK|F_IRET,    "EVEN"       , (pfunc)f_even ,1,1     ,{PL_NUMBER}},
- { F_IQUICK|F_IRET,    "EVENT?"      , (pfunc)f_eventf ,1,1     ,{PL_INT}},
-
- { F_ARGUMENT|F_IRET,  "EXEC"       , (pfunc)f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_SQUICK|F_IRET,    "EXIST"      , (pfunc)f_exist ,1,1     ,{PL_STRING}},
- { F_CONST|F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
-
- { F_CONST|F_IQUICK|F_IRET,    "FACT"       , (pfunc)f_fak ,1,1     ,{PL_INT}},
- { F_CONST|F_DQUICK|F_DRET,    "FIX"       , trunc ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
-#ifdef HAVE_FORK
- { F_SIMPLE|F_IRET,    "FORK"     , (pfunc)fork ,0,0     },
+ { F_CONST|F_ARGUMENT|F_DRET,  "!nulldummy", f_nop             ,0,0,{0}},
+ { F_CONST|F_PLISTE|F_NRET,    "ABS"       , (pfunc)f_abs      ,1,1,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_NRET,    "ACOS"      , (pfunc)f_acos     ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "ACOSH"     , (pfunc)f_acosh    ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_ANYRET,  "ADD"       , (pfunc)f_add      ,2,2,{PL_ANYVALUE,PL_ANYVALUE}}, 
+ { F_CONST|F_PLISTE|F_ANYIRET, "AND"       , (pfunc)f_and      ,2,2,{PL_NUMBER,PL_NUMBER}},
+#ifdef HAVE_CACOS
+ { F_CONST|F_CQUICK|F_DRET,    "ARG"       , (pfunc)carg              ,1,1,{PL_COMPLEX}},
 #else
- { F_SIMPLE|F_IRET,    "FORK"     , (pfunc)f_nop ,0,0     },
+ { F_CONST|F_CQUICK|F_DRET,    "ARG"       , atan2              ,1,1,{PL_COMPLEX}},
+#endif
+ { F_PLISTE|F_IRET,            "ARRPTR"    , (pfunc)arrptr     ,1,1,{PL_ARRAYVAR}},
+ { F_CONST|F_SQUICK|F_IRET,    "ASC"       , (pfunc)f_asc      ,1,1,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_NRET,    "ASIN"      , (pfunc)f_asin     ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "ASINH"     , (pfunc)f_asinh    ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "ATAN"      , (pfunc)f_atan     ,1,1,{PL_CF}},
+ { F_CONST|F_DQUICK|F_DRET,    "ATAN2"     , atan2             ,2,2,{PL_FLOAT,PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_NRET,    "ATANH"     , (pfunc)f_atanh    ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "ATN"       , (pfunc)f_atan     ,1,1,{PL_CF}},
+
+ { F_CONST|F_PLISTE|F_ANYIRET, "BCHG"      , (pfunc)f_bchg     ,2,2,{PL_NUMBER,PL_INT}},
+ { F_CONST|F_PLISTE|F_ANYIRET, "BCLR"      , (pfunc)f_bclr     ,2,2,{PL_NUMBER,PL_INT}},
+ { F_CONST|F_PLISTE|F_ANYIRET, "BSET"      , (pfunc)f_bset     ,2,2,{PL_NUMBER,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "BTST"      , (pfunc)f_btst     ,2,2,{PL_NUMBER,PL_INT}},
+ { F_CONST|F_IQUICK|F_IRET,    "BYTE"      , (pfunc)f_byte     ,1,1,{PL_INT}},
+
+ { F_PLISTE|F_IRET,            "CALL"      , (pfunc)f_call     ,1,-1,{PL_INT,PL_EVAL}},
+ { F_CONST|F_IQUICK|F_IRET,    "CARD"      , (pfunc)f_card     ,1,1,{PL_INT}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , ceil              ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , cbrt              ,1,1,{PL_FLOAT}},
+#endif
+ { F_CONST|F_DQUICK|F_DRET,    "CEIL"      , ceil              ,1,1,{PL_FLOAT}},
+ { F_CONST|F_DQUICK|F_IRET,    "CINT"      , (pfunc) f_cint    ,1,1,{PL_FLOAT}},
+#ifndef NOGRAPHICS
+ { F_PLISTE|F_IRET,            "COLOR_RGB" , (pfunc)f_color_rgb,3,4,{PL_FLOAT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
+#endif
+ { F_CONST|F_PLISTE|F_AIRET,   "COMBIN"    , (pfunc)f_combin   ,2,2,{PL_INT,PL_INT}},
+#ifdef WINDOWS
+ { F_CONST|F_CQUICK|F_CRET,    "CONJ"     , (pfunc)myconj      ,1,1,{PL_COMPLEX}}, 
+#elif !(defined HAVE_CACOS)
+ { F_CONST|F_CQUICK|F_CRET,    "CONJ"     , (pfunc)myconj      ,1,1,{PL_COMPLEX}}, 
+#else
+ { F_CONST|F_CQUICK|F_CRET,    "CONJ"     , (pfunc)conj        ,1,1,{PL_COMPLEX}}, 
+#endif
+ { F_CONST|F_PLISTE|F_NRET,    "COS"       , (pfunc) f_cos     ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "COSH"      , (pfunc) f_cosh    ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_IRET,    "CRC"       , (pfunc) f_crc     ,1,2,{PL_STRING, PL_INT}},
+#ifdef CONTROL
+ { F_SQUICK|F_DRET,            "CSGET"     , f_csget           ,1,1,{PL_STRING}},
+ { F_SQUICK|F_DRET,            "CSMAX"     , f_csmax           ,1,1,{PL_STRING}},
+ { F_SQUICK|F_DRET,            "CSMIN"     , f_csmin           ,1,1,{PL_STRING}},
+ { F_SQUICK|F_IRET,            "CSPID"     , (pfunc)f_cspid    ,1,1,{PL_STRING}},
+ { F_SQUICK|F_DRET,            "CSRES"     , f_csres           ,1,1,{PL_STRING}},
+ { F_SQUICK|F_IRET,            "CSSIZE"    , (pfunc)f_cssize   ,1,1,{PL_STRING}},
+#endif
+ { F_CONST|F_SQUICK|F_DRET,    "CVD"       , f_cvd             ,1,1,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_DRET,    "CVF"       , f_cvf             ,1,1,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "CVI"       , (pfunc)f_cvi      ,1,1,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "CVL"       , (pfunc)f_cvl      ,1,1,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "CVS"       , (pfunc)f_cvf      ,1,1,{PL_STRING}},
+
+ { F_CONST|F_DQUICK|F_DRET,    "DEG"       , f_deg             ,1,1,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_NRET,    "DET"       , (pfunc)f_det      ,1,1,{PL_NARRAY}},
+ { F_SQUICK|F_IRET,            "DEVICE"    , (pfunc)f_device   ,1,1,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_IRET,    "DIM?"      , (pfunc)f_dimf     ,1,1,{PL_ARRAYVAR}},
+ { F_CONST|F_PLISTE|F_NRET,    "DIV"       , (pfunc)f_div      ,2,2,{PL_NUMBER,PL_NUMBER}},
+#ifdef DOOCS
+ { F_SQUICK|F_DRET,            "DOOCSGET"  , f_doocsget        ,1,1,{PL_STRING}},
+ { F_SQUICK|F_IRET,            "DOOCSSIZE" , (pfunc) f_doocssize,1,1,{PL_STRING}},
+ { F_SQUICK|F_DRET,            "DOOCSTIMESTAMP", f_doocstimestamp,1,1,{PL_STRING}},
+ { F_SQUICK|F_IRET,            "DOOCSTYP"  , (pfunc)f_doocstyp ,1,1,{PL_STRING}},
+#endif
+ { F_IQUICK|F_IRET,            "DPEEK"     , (pfunc)f_dpeek    ,1,1,{PL_INT}},
+
+ { F_PLISTE|F_IRET,            "EOF"       , (pfunc) f_eof     ,1,1,{PL_FILENR}},
+ { F_CONST|F_SQUICK|F_DRET,    "EVAL"      , f_eval            ,1,1,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_IRET,    "EVEN"      , (pfunc)f_even     ,1,1,{PL_NUMBER}},
+#ifndef NOGRAPHICS
+ { F_IQUICK|F_IRET,            "EVENT?"    , (pfunc)f_eventf   ,1,1,{PL_INT}},
+#endif
+ { F_ARGUMENT|F_IRET,          "EXEC"      , (pfunc)f_exec     ,1,2,{PL_FLOAT,PL_FLOAT}},
+ { F_SQUICK|F_IRET,            "EXIST"     , (pfunc)f_exist    ,1,1,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_NRET,    "EXP"       , (pfunc)f_exp      ,1,1,{PL_CF}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "EXPM1"     , exp               ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "EXPM1"     , expm1             ,1,1,{PL_FLOAT}},
+#endif
+ { F_CONST|F_PLISTE|F_AIRET,   "FACT"      , (pfunc)f_fak      ,1,1,{PL_INT}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "FIX"       , ceil              ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "FIX"       , trunc             ,1,1,{PL_FLOAT}},
+#endif
+ { F_CONST|F_DQUICK|F_DRET,    "FLOOR"     , floor             ,1,1,{PL_FLOAT}},
+#ifdef HAVE_FORK
+ { F_SIMPLE|F_IRET,            "FORK"      , (pfunc)fork       ,0,0     },
+#else
+ { F_SIMPLE|F_IRET,            "FORK"      , (pfunc)f_nop      ,0,0     },
 #endif
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "FORM_ALERT", (pfunc)f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
- { F_PLISTE|F_IRET,    "FORM_CENTER", (pfunc)f_form_center ,1,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { F_PLISTE|F_IRET,    "FORM_DIAL", (pfunc)f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "FORM_DO",   (pfunc)f_form_do ,1,1   ,{PL_INT}},
+ { F_PLISTE|F_IRET,            "FORM_ALERT", (pfunc)f_form_alert,2,2,{PL_INT,PL_STRING}},
+ { F_PLISTE|F_IRET,            "FORM_CENTER", (pfunc)f_form_center,1,5,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { F_PLISTE|F_IRET,            "FORM_DIAL" , (pfunc)f_form_dial,9,9,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,            "FORM_DO"   , (pfunc)f_form_do  ,1,2,{PL_INT,PL_INT}},
 #endif
- { F_CONST|F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
- { F_SIMPLE|F_IRET,    "FREEFILE"  , (pfunc)f_freefile ,0,0  },
+ { F_CONST|F_DQUICK|F_DRET,    "FRAC"      , f_frac            ,1,1,{PL_FLOAT}},
+ { F_SIMPLE|F_IRET,            "FREEFILE"  , (pfunc)f_freefile ,0,0  },
 
- { F_CONST|F_DQUICK|F_DRET,    "GAMMA"       , tgamma ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,0,1     ,{PL_NUMBER}},
-#ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "GET_COLOR", (pfunc)f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "GAMMA"     , sin               ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "GAMMA"     , tgamma            ,1,1,{PL_FLOAT}},
 #endif
- { F_CONST|F_PLISTE|F_IRET,    "GLOB"     ,(pfunc) f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
- { F_CONST|F_IQUICK|F_IRET,    "GRAY"     ,(pfunc) f_gray ,1,1     ,{PL_INT}},
-
- { F_CONST|F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
-
- { F_SQUICK|F_IRET,    "INODE"     ,(pfunc) f_inode,1,1   ,{PL_STRING}},
- { F_PLISTE|F_IRET,  "INP"       , (pfunc)inp8 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP%"      , (pfunc)inp32 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP&"      , (pfunc)inp16 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP?"      ,(pfunc) inpf ,1,1      ,{PL_FILENR}},
- { F_CONST|F_PLISTE|F_IRET,  "INSTR"     ,(pfunc) f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
-
- { F_CONST|F_DQUICK|F_IRET,    "INT"       ,(pfunc) f_int ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_IRET,    "IOCTL"     , (pfunc)f_ioctl ,2,3     ,{PL_FILENR,PL_INT,PL_INT}},
- { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    ,(pfunc) f_julian ,1,1     ,{PL_STRING}},
-
- { F_CONST|F_SQUICK|F_IRET,    "LEN"       ,(pfunc) f_len ,1,1   ,{PL_STRING}},
- { F_CONST|F_DQUICK|F_DRET,    "LGAMMA"       , lgamma ,1,1     ,{PL_NUMBER}},
-#ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "LISTSELECT", (pfunc)f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
-#endif
- { F_CONST|F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
-
- { F_PLISTE|F_IRET,    "LOC"       , (pfunc)f_loc ,1,1     ,{PL_FILENR}},
- { F_PLISTE|F_IRET,    "LOF"       , (pfunc)f_lof ,1,1     ,{PL_FILENR}},
-
- { F_CONST|F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
- { F_IQUICK|F_IRET,    "LPEEK"    , (pfunc)f_lpeek ,1,1     ,{PL_INT}},
- { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
-
- { F_IQUICK|F_IRET,    "MALLOC"    ,(pfunc) f_malloc ,1,1     ,{PL_INT}},
- { F_CONST|F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_SQUICK|F_IRET,    "MODE"     , (pfunc)f_mode,1,1   ,{PL_STRING}},
- { F_IQUICK|F_IRET,    "MSHRINK"    , (pfunc)f_mshrink ,2,2     ,{PL_INT,PL_INT}},
- { F_CONST|F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
-
- { F_SQUICK|F_IRET,    "NLINK"     , (pfunc)f_nlink,1,1   ,{PL_STRING}},
- { F_CONST|F_IQUICK|F_IRET,    "NOT"      , (pfunc)f_not,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,            "GASDEV"    , f_gasdev          ,0,1,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_AIRET,   "GCD"       , (pfunc)f_gcd      ,2,2,{PL_ARBINT,PL_ARBINT}},
 
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "OBJC_DRAW",(pfunc) f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "OBJC_FIND", (pfunc)f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "OBJC_OFFSET", (pfunc)f_objc_offset ,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
+ { F_PLISTE|F_IRET,            "GET_COLOR" , (pfunc)f_get_color,3,3,{PL_INT,PL_INT,PL_INT}},
 #endif
- { F_CONST|F_IQUICK|F_IRET,    "ODD"       ,(pfunc) f_odd ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_IQUICK|F_IRET,    "OR"      ,(pfunc) f_or,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_IRET,    "GLOB"      , (pfunc) f_glob    ,2,3,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_IQUICK|F_IRET,    "GRAY"      , (pfunc) f_gray    ,1,1,{PL_INT}},
 
- { F_IQUICK|F_IRET,    "PEEK"      , (pfunc)f_peek ,1,1     ,{PL_INT}},
-#ifndef NOGRAPHICS
- { F_DQUICK|F_IRET,    "POINT"     , (pfunc)f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_DRET,    "HYPOT"     , hypot             ,2,2,{PL_FLOAT,PL_FLOAT}},
+
+ { F_CONST|F_CQUICK|F_DRET,    "IMAG"      , cimag             ,1,1,{PL_COMPLEX}},
+ { F_SQUICK|F_IRET,            "INODE"     , (pfunc) f_inode   ,1,1,{PL_STRING}},
+ { F_PLISTE|F_IRET,            "INP"       , (pfunc)inp8       ,1,1,{PL_FILENR}},
+ { F_PLISTE|F_IRET,            "INP%"      , (pfunc)inp32      ,1,1,{PL_FILENR}},
+ { F_PLISTE|F_IRET,            "INP&"      , (pfunc)inp16      ,1,1,{PL_FILENR}},
+ { F_PLISTE|F_IRET,            "INP?"      , (pfunc) inpf      ,1,1,{PL_FILENR}},
+ { F_CONST|F_PLISTE|F_IRET,    "INSTR"     , (pfunc) f_instr   ,2,3,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_DQUICK|F_IRET,    "INT"       , (pfunc) f_int     ,1,1,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_AIRET,   "INVERT"    , (pfunc) f_invert  ,2,2,{PL_ARBINT,PL_ARBINT}},
+ { F_PLISTE|F_IRET,            "IOCTL"     , (pfunc) f_ioctl   ,2,3,{PL_FILENR,PL_INT,PL_INT}},
+
+ { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    , (pfunc) f_julian  ,1,1,{PL_STRING}},
+
+ { F_CONST|F_PLISTE|F_AIRET,   "LCM"       , (pfunc)f_lcm      ,2,2,{PL_ARBINT,PL_ARBINT}},
+ { F_CONST|F_SQUICK|F_IRET,    "LEN"       ,(pfunc) f_len      ,1,1,{PL_STRING}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "LGAMMA"    , sin               ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "LGAMMA"    , lgamma            ,1,1,{PL_FLOAT}},
 #endif
- { F_CONST|F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
- { F_DQUICK|F_IRET,    "PTST"     , (pfunc)f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+ { F_PLISTE|F_IRET,            "LISTSELECT", (pfunc)f_listselect ,2,3,{PL_STRING,PL_SARRAY,PL_INT}},
+#endif
+ { F_CONST|F_PLISTE|F_NRET,    "LN"        , (pfunc)f_log      ,1,1,{PL_CF}},
+ { F_PLISTE|F_IRET,            "LOC"       , (pfunc)f_loc      ,1,1,{PL_FILENR}},
+ { F_PLISTE|F_IRET,            "LOF"       , (pfunc)f_lof      ,1,1,{PL_FILENR}},
+ { F_CONST|F_PLISTE|F_NRET,    "LOG"       , (pfunc)f_log      ,1,1,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "LOG10"     , (pfunc)f_log10    ,1,1,{PL_CF}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET,    "LOG1P"     , log               ,1,1,{PL_FLOAT}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOGB"      , log               ,1,1,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET,    "LOG1P"     , log1p             ,1,1,{PL_FLOAT}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOGB"      , logb              ,1,1,{PL_FLOAT}},
+#endif
+ { F_IQUICK|F_IRET,            "LPEEK"     , (pfunc)f_lpeek    ,1,1,{PL_INT}},
+ { F_SQUICK|F_DRET,            "LTEXTLEN"  , f_ltextlen        ,1,1,{PL_STRING}},
+
+ { F_IQUICK|F_IRET,            "MALLOC"    ,(pfunc) f_malloc   ,1,1,{PL_INT}},
+ { F_CONST|F_PLISTE|F_NRET,    "MAX"       , (pfunc)f_max      ,1,-1,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_NRET,    "MIN"       , (pfunc)f_min      ,1,-1,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_NRET,    "MOD"       , (pfunc)f_mod      ,2,2,{PL_NUMBER,PL_NUMBER}},
+ { F_SQUICK|F_IRET,            "MODE"      , (pfunc)f_mode     ,1,1,{PL_STRING}},
+ { F_IQUICK|F_IRET,            "MSHRINK"   , (pfunc)f_mshrink  ,2,2,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE|F_NRET,    "MUL"       , (pfunc)f_mul      ,2,2,{PL_NUMBER,PL_NUMBER}},
+ 
+ { F_CONST|F_PLISTE|F_AIRET,   "NEXTPRIME" , (pfunc)f_nextprime,1,1,{PL_ARBINT}},
+ { F_SQUICK|F_IRET,            "NLINK"     , (pfunc)f_nlink    ,1,1,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_ANYIRET, "NOT"       , (pfunc)f_not      ,1,1,{PL_NUMBER}},
+
+#ifndef NOGRAPHICS
+ { F_PLISTE|F_IRET,            "OBJC_DRAW" , (pfunc)f_objc_draw,7,7,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,            "OBJC_FIND" , (pfunc)f_objc_find,3,3,{PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,            "OBJC_OFFSET",(pfunc)f_objc_offset,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
+#endif
+ { F_CONST|F_PLISTE|F_IRET,    "ODD"       , (pfunc) f_odd     ,1,1,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_ANYIRET, "OR"        , (pfunc) f_or      ,2,2,{PL_NUMBER,PL_NUMBER}},
+
+ { F_IQUICK|F_IRET,            "PEEK"      , (pfunc) f_peek    ,1,1,{PL_INT}},
+#ifndef NOGRAPHICS
+ { F_DQUICK|F_IRET,            "POINT"     , (pfunc)f_point    ,2,2,{PL_FLOAT, PL_FLOAT }},
+#endif
+ { F_CONST|F_PLISTE|F_AIRET,   "POWM"      , (pfunc) f_powm    ,3,3,{PL_ARBINT,PL_ARBINT,PL_ARBINT}},
+ { F_CONST|F_DQUICK|F_DRET,    "PRED"      , f_pred            ,1,1,{PL_FLOAT}},
+#ifndef NOGRAPHICS
+ { F_DQUICK|F_IRET,            "PTST"      , (pfunc)f_point    ,2,2,{PL_FLOAT, PL_FLOAT }},
 #endif
 
- { F_CONST|F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "RAND"      ,(pfunc) rand ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "RANDOM"    , (pfunc)f_random ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_FLOAT}},
+ { F_DQUICK|F_IRET,    "RAND"      ,(pfunc) rand ,1,1     ,{PL_FLOAT}},
+ { F_PLISTE|F_NRET,    "RANDOM"    , (pfunc)f_random ,1,1     ,{PL_NUMBER}},
+
+ { F_CONST|F_CQUICK|F_DRET,    "REAL"    , creal ,1,1     ,{PL_COMPLEX}},
  { F_IQUICK|F_IRET,    "REALLOC"    , (pfunc)f_realloc ,2,2     ,{PL_INT,PL_INT}},
  { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , (pfunc)f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
- { F_DQUICK|F_DRET,    "RND"       , f_rnd ,0,1     ,{PL_NUMBER}},
- { F_CONST|F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_NUMBER,PL_INT}},
+ { F_DQUICK|F_DRET,    "RND"       , f_rnd ,0,1     ,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_AIRET,   "ROOT"      , (pfunc)f_root      ,2,2,{PL_ARBINT,PL_INT}},
+ { F_CONST|F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_FLOAT,PL_INT}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "RSRC_GADDR", (pfunc)f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
 #endif
 
  { F_IQUICK|F_DRET,    "SENSOR"       ,(pfunc) f_sensor ,1,1     ,{PL_INT}},
- { F_CONST|F_DQUICK|F_IRET,    "SGN"       , (pfunc)f_sgn ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_IRET,    "SHL"      , (pfunc)f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SGN"       , (pfunc)f_sgn ,1,1     ,{PL_FLOAT}},
+ { F_CONST|F_IQUICK|F_IRET,    "SHL"      , (pfunc)f_shl,2,2     ,{PL_INT,PL_INT}},
  { F_IQUICK|F_IRET,    "SHM_ATTACH"    , (pfunc)shm_attach ,1,1     ,{PL_INT}},
  { F_IQUICK|F_IRET,    "SHM_MALLOC"    , (pfunc)shm_malloc ,2,2     ,{PL_INT,PL_INT}},
- { F_CONST|F_DQUICK|F_IRET,    "SHR"      , (pfunc)f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
- { F_SQUICK|F_IRET,    "SIZE"     , (pfunc)f_size,1,1   ,{PL_STRING}},
- { F_CONST|F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "SRAND"     ,(pfunc) f_srand ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_DQUICK|F_IRET,    "SUCC"      ,(pfunc) f_succ ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "SHR"      , (pfunc)f_shr,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE|F_NRET,    "SIN"       , (pfunc) f_sin ,1,1     ,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "SINH"      , (pfunc) f_sinh ,1,1     ,{PL_CF}},
+ { F_SQUICK|F_IRET,            "SIZE"     , (pfunc)f_size,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE|F_NRET,    "SQR"       , (pfunc)f_sqrt ,1,1,{PL_CFAI}},
+ { F_CONST|F_PLISTE|F_NRET,    "SQRT"      , (pfunc)f_sqrt ,1,1,{PL_CFAI}},
+ { F_DQUICK|F_IRET,            "SRAND"     ,(pfunc) f_srand ,1,1     ,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_NRET,    "SUB"     , (pfunc)f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SUCC"      ,(pfunc) f_succ ,1,1     ,{PL_FLOAT}},
  { F_CONST|F_IQUICK|F_IRET,    "SWAP"     , (pfunc)f_swap ,1,1     ,{PL_INT}},
- { F_PLISTE|F_IRET,    "SYM_ADR"   ,(pfunc) f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
+ { F_PLISTE|F_IRET,            "SYM_ADR"   ,(pfunc) f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
 
  { F_CONST|F_PLISTE|F_IRET,    "TALLY"     ,(pfunc) f_tally ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
- { F_CONST|F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_NRET,    "TAN"       , (pfunc) f_tan ,1,1     ,{PL_CF}},
+ { F_CONST|F_PLISTE|F_NRET,    "TANH"      , (pfunc) f_tanh ,1,1     ,{PL_CF}},
+
 #ifdef TINE
  { F_SQUICK|F_DRET,  "TINEGET"     , f_tineget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "TINEMAX"     , f_tinemax ,1,1   ,{PL_STRING}},
@@ -688,7 +1689,11 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,  "TINESIZE"    , (pfunc)f_tinesize ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_IRET,  "TINETYP"    , (pfunc)f_tinetyp ,1,1   ,{PL_STRING}},
 #endif
- { F_CONST|F_DQUICK|F_DRET, "TRUNC"     , trunc ,1,1     ,{PL_NUMBER}},
+#ifdef ATARI
+ { F_CONST|F_DQUICK|F_DRET, "TRUNC"     , ceil ,1,1     ,{PL_FLOAT}},
+#else
+ { F_CONST|F_DQUICK|F_DRET, "TRUNC"     , trunc ,1,1     ,{PL_FLOAT}},
+#endif
  { F_ARGUMENT|F_IRET,       "TYP?"       , (pfunc)type ,1,1     ,{PL_ALLVAR}},
 
  { F_CONST|F_SQUICK|F_DRET, "VAL"       , f_val ,1,1     ,{PL_STRING}},
@@ -699,8 +1704,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_IQUICK|F_IRET, "WORD"     , (pfunc)f_word ,1,1     ,{PL_INT}},
  { F_PLISTE|F_IRET,         "WORT_SEP" , (pfunc)f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 
- { F_CONST|F_IQUICK|F_IRET, "XOR"      , (pfunc) f_xor,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_ANYIRET,"XOR"      , (pfunc) f_xor,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
 };
 const int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);
-

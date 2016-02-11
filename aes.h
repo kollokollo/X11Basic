@@ -8,14 +8,18 @@
 #ifndef __aes__
 #define __aes__
 
-#define GEMFONT      "-*-fixed-*-r-normal-*-16-*-iso8859-*"
-#define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
+//#define GEMFONT      "-*-fixed-*-r-normal-*-15-*-ISO10646-1"
+#define GEMFONT      "*8x16*"
+//#define GEMFONTSMALL "-*-fixed-*-r-normal-*-8-*-ISO10646-1"
+#define GEMFONTSMALL "*5x8*"
 
 #define WORD short
 #define LONG unsigned long
 
 
-
+#ifdef USE_GEM
+#include <gem.h>
+#endif
 /* Object Drawing Types */
 						/* Graphic types of obs	*/
 #define G_BOX 20
@@ -62,10 +66,6 @@
   #undef BLUE     
   #undef YELLOW   
   #undef MAGENTA  
-
-
-
-
 						/* Object colors	*/
 #define WHITE 0
 #define BLACK 1
@@ -102,10 +102,13 @@
 #define FONT_LARGE 20
 #define FONT_DEFAULT FONT_IBM
 
+
+#ifndef USE_GEM
 #define EDSTART 0
 #define EDINIT 1
 #define EDCHAR 2
 #define EDEND 3
+#endif
 
 #define TE_LEFT 0
 #define TE_RIGHT 1
@@ -136,19 +139,49 @@
 #define HDR_LENGTH (RS_SIZE + 1) * 2		/* in bytes	*/
 
 
+
+#ifdef USE_GEM
 /* AES-Definitionen   */
 typedef struct {
-	int	x;
-	int	y;
-	unsigned int	w;
-	unsigned int	h;
+  short	x;
+  short	y;
+  unsigned short w;
+  unsigned short h;
 } ARECT;
+#else
+/* AES-Definitionen   */
+typedef struct {
+  int	x;
+  int	y;
+  unsigned int w;
+  unsigned int h;
+} ARECT;
+#endif
 
 
 
-
-
+#ifndef USE_GEM
 #define OBJECT struct object
+#define TEDINFO struct text_edinfo
+#define GRECT struct grect
+#define ORECT	struct orect
+#define ICONBLK struct icon_block
+#define BITBLK struct bit_block
+#define USERBLK struct user_blk
+#define PARMBLK struct parm_blk
+
+typedef union obspecptr
+{
+	long		index;		
+	union obspecptr	*indirect;	
+	// BFOBSPEC 	obspec;		
+	TEDINFO		*tedinfo;	
+	BITBLK		*bitblk;	
+	ICONBLK		*iconblk;	
+	// CICONBLK 	*ciconblk;	
+	struct user_block *userblk;	
+	char		*free_string;	
+} OBSPEC;
 
 OBJECT
 {
@@ -158,14 +191,13 @@ OBJECT
 	unsigned WORD		ob_type;	/* type of object- BOX, CHAR,...*/
 	unsigned WORD		ob_flags;	/* flags			*/
 	unsigned WORD		ob_state;	/* state- SELECTED, OPEN, ...	*/
-	LONG		ob_spec;	/* "out"- -> anything else	*/
+	OBSPEC		ob_spec;	/* "out"- -> anything else	*/
 	WORD		ob_x;		/* upper left corner of object	*/
 	WORD		ob_y;		/* upper left corner of object	*/
 	WORD		ob_width;	/* width of obj			*/
 	WORD		ob_height;	/* height of obj		*/
 };
 
-#define ORECT	struct orect
 
 ORECT
 {
@@ -177,7 +209,6 @@ ORECT
 } ;
 
 
-#define GRECT struct grect
 
 GRECT
 {
@@ -190,25 +221,23 @@ GRECT
 
 
 
-#define TEDINFO struct text_edinfo
 
 TEDINFO
 {
-	LONG		te_ptext;	/* ptr to text (must be 1st)	*/
-	LONG		te_ptmplt;	/* ptr to template		*/
-	LONG		te_pvalid;	/* ptr to validation chrs.	*/
+	char		*te_ptext;	/* ptr to text (must be 1st)	*/
+	char		*te_ptmplt;	/* ptr to template		*/
+	char		*te_pvalid;	/* ptr to validation chrs.	*/
 	WORD		te_font;	/* font				*/
-	WORD		te_junk1;	/* junk word			*/
+	WORD		te_fontid;	/* junk word 1			*/
 	WORD		te_just;	/* justification- left, right...*/
 	WORD	        te_color;	/* color information word	*/
-	WORD		te_junk2;	/* junk word			*/
+	WORD		te_fontsize;	/* junk word 2			*/
 	WORD		te_thickness;	/* border thickness		*/
 	WORD		te_txtlen;	/* length of text string	*/
 	WORD		te_tmplen;	/* length of template string	*/
 };
 
 
-#define ICONBLK struct icon_block
 
 ICONBLK
 {
@@ -231,7 +260,6 @@ ICONBLK
 	WORD	ib_htext;
 };
 
-#define BITBLK struct bit_block
 
 BITBLK
 {
@@ -245,14 +273,12 @@ BITBLK
 
 };
 
-#define USERBLK struct user_blk
 USERBLK
 {
 	LONG	ub_code;
 	LONG	ub_parm;
 };
 
-#define PARMBLK struct parm_blk
 PARMBLK
 {
 	LONG	pb_tree;
@@ -265,10 +291,6 @@ PARMBLK
 };
 
 
-
-
-
-
 typedef struct objc_colorword {
    unsigned borderc : 4;
    unsigned textc   : 4;
@@ -276,6 +298,7 @@ typedef struct objc_colorword {
    unsigned pattern : 3;
    unsigned fillc   : 4;
 } OBJC_COLORWORD;
+#endif
 
 typedef struct {
     unsigned character   :  8;
@@ -286,6 +309,8 @@ typedef struct {
     unsigned fillpattern :  3;
     unsigned interiorcol :  4;
 } bfobspec;
+
+#ifndef USE_GEM
 
 typedef struct rshdr
 {
@@ -308,7 +333,7 @@ typedef struct rshdr
 	WORD		rsh_nimages;
 	WORD		rsh_rssize;	/* total bytes in resource	*/
 }RSHDR;
-
+#endif
 typedef struct rshdrv3
 {
 	WORD		rsh_vrsn;	/* must same order as RT_	*/
@@ -337,32 +362,26 @@ typedef struct { unsigned char r,g,b;} AESRGBCOLOR;
 /* Prototypes */
 
 extern RSHDR *rsrc;
-extern unsigned int chw,chh,baseline,depth;
 extern int gem_colors[];
-extern ARECT sbox;
 
 
 void gem_init();
 void load_GEMFONT(int n);
-void box_center(ARECT *b);
-int form_alert(int dbut,char *n);
-int form_alert2(int dbut,char *n, char *tval);
-
-int form_center(OBJECT *tree, int *x, int *y, int *w, int *h);
-
-int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr);
-int rsrc_free();
-
+#ifndef USE_GEM
+short form_alert(short dbut,char *n);
+short form_center(OBJECT *tree,short *x,short *y,short *w,short *h);
+short rsrc_free();
 void objc_add(OBJECT *tree,int p,int c);
 void objc_delete(OBJECT *tree,int object);
-int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty);
-
-int objc_offset(OBJECT *tree,int object,int *x,int *y);
-int objc_find(OBJECT *tree,int x,int y);
+short rsrc_load(const char *filename);
+short objc_offset(OBJECT *tree,short object,short *x,short *y);
+short objc_find(OBJECT *tree,short startob, short depth,short x,short y);
+short objc_draw(OBJECT *tree,short startob, short depth,short x,short y, short w, short h);
+short rsrc_gaddr(short re_gtype, unsigned short re_gindex, char **re_gaddr);
 int finded(OBJECT *tree,int start, int r);
 void draw_edcursor(OBJECT *tree,int ndx);
 int rootob(OBJECT *tree,int onr);
 void relobxy(OBJECT *tree,int ndx,int *x, int *y);
-int rsrc_load(char *filename);
-
+#endif
+int form_alert2(int dbut,char *n, char *tval);
 #endif

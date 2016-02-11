@@ -292,5 +292,31 @@ Release notes for Version 1.21 (Apr 2013-Nov 2013)
 - fixed bug in compiler (array operations)
 - fixed bug in ELLIPSE, PELLIPE, RBOX and PRBOX (Android Version)
 
+Release notes for Version 1.22 (Dec 2013-June 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- improved crash reports (Android)
+- Bugfix ARRAY (create, init)
+- new: ABSOLUTE command
+- new: VAR statement allows parameters "by reference"
+- added UTF-8 (unicode) support for LTEXT
+- added UTF-8 (unicode) support for console/terminal (Android)
+- added unicode bitmap font for greek/kyrillic for console/terminal (Android)
+- MENUDEF now compiles without error
+- AFTER/EVERY works in bytecode now
+- new functions: FSFIRST$(), FSNEXT$()
+- new example program: stepdir.bas
+- fixed bug in MOUSEK, MOUSE (Windows version)
+- small bugfixes in CASE,PAUSE,INSTR(), SORT, USING$(), PRINT USING
+- fixed bug in VAL?(), DET(), and GPRINT
+- fixed bug in ON ERROR, ON BREAK and ON MENU
+- fixed bug in String compare
+- fixed bug in HEX constants "0x" (Android)
+- new string function RADIX$()
+- fixed bug in framebuffer version (linux) 
+- fixed bugs in parser
+- new statement: ENDPROCEDURE (optional)
+- improved speed of bytecode
+- bugfix in compiler, improved error messages
+- fixed bug in DIM, VAL?(), PLIST
 
 --------------------------------------------------------------------------------

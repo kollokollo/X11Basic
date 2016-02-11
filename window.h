@@ -22,21 +22,66 @@
   #define MAXWINDOWS 16
 #endif
 
+
+/*Hold information about windows*/
+
+/*Window flags*/
+#define WIN_CREATED 1
+#define WIN_OPENED  2
+
+typedef struct {
+  int x,y;
+  unsigned int w,h,b,d;
+  unsigned int fcolor,bcolor;
+  char *title;
+  char *info;
+  unsigned long flags;
+  unsigned short chw,chh,baseline;
+#ifdef WINDOWS_NATIVE
+  HDC bitcon;
+  HBITMAP backbit;
+  HANDLE wthandle; /* handle of win thread */
+  HPEN pen;
+  HBRUSH brush;
+  HFONT font;
+  HWND win_hwnd;
+#elif defined USE_X11
+  Window win;
+  Pixmap pix;
+  Display *display;
+  GC gc;                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
+  XSizeHints size_hints;       /* Hinweise fuer den WIndow-Manager..*/
+  XWMHints wm_hints;
+  XClassHint class_hint;
+  XTextProperty win_name, icon_name;
+  Pixmap icon_pixmap;
+#elif defined USE_SDL
+  SDL_Surface *display;
+#elif defined FRAMEBUFFER
+  G_CONTEXT *screen;
+#elif defined USE_GEM
+  short vdi_handle,aesvdi_handle;
+#endif
+  
+} WINDOWDEF;
+
+WINDOWDEF window[MAXWINDOWS];
+
+
+
+
 /* Function Prototypes */
 
-void handle_window(int);
+void handle_window(WINDOWDEF *);
 int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned int);
-void open_window( int);
-void close_window(int);
-int rsrc_load(char *);
+void open_window(WINDOWDEF *);
+void close_window(WINDOWDEF *);
 void put_bitmap(char *adr,int x,int y,int w, int h);
-int form_dial(int fo_diflag, int x1,int y1,int w1,int h1,int x2,int y2,int w2,int h2);
 void graphics();
 void activate();
-int form_do(OBJECT *tree);
-
-#ifdef USE_X11
-void handle_event(int, XEvent *);
+#ifndef USE_GEM
+short form_dial(unsigned short fo_diflag,short x1,short y1,short w1,short h1,short x2,short y2,short w2,short h2);
+short form_do(OBJECT *tree,short startob);
 #endif
 void do_menu_open(int);
 void do_menu_close();
@@ -45,7 +90,6 @@ void do_menu_draw();
 /* globale Variablen */
 
 extern int usewindow;
-int winbesetzt[MAXWINDOWS];
 #ifdef WINDOWS_NATIVE
 /* Event-Typen  */
 #define Expose 1
@@ -57,20 +101,13 @@ int winbesetzt[MAXWINDOWS];
 #define MotionNotify 64
 
 extern HINSTANCE hInstance;
-HDC bitcon[MAXWINDOWS];
-HBITMAP backbit[MAXWINDOWS];
-HANDLE wthandle[MAXWINDOWS]; /* handle of win thread */
-HPEN pen[MAXWINDOWS];
-HBRUSH brush[MAXWINDOWS];
-HFONT font[MAXWINDOWS];
 WNDCLASSEX win_class;
-HWND win_hwnd[MAXWINDOWS];
 extern HANDLE keyevent,buttonevent,motionevent;
 
 #endif
 #ifdef WINDOWS
 int global_mousex,global_mousey,global_mousek,global_mouses;
-int global_color,global_keycode,global_ks,global_eventtype;
+int global_keycode,global_ks,global_eventtype;
 #endif
 #ifdef USE_SDL
 #define ButtonPress 0
@@ -78,69 +115,64 @@ int global_color,global_keycode,global_ks,global_eventtype;
 #endif
 #ifdef FRAMEBUFFER
 extern int global_mousex,global_mousey,global_mousek,global_mouses;
-extern int global_color,global_bcolor;
-#endif
-#ifdef USE_X11
-Window win[MAXWINDOWS];
-Pixmap pix[MAXWINDOWS];
-Display *display[MAXWINDOWS];
-GC gc[MAXWINDOWS];                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
-XSizeHints size_hints[MAXWINDOWS];       /* Hinweise fuer den WIndow-Manager..*/
-XWMHints wm_hints[MAXWINDOWS];
-XClassHint class_hint[MAXWINDOWS];
-XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
-Pixmap icon_pixmap[MAXWINDOWS];
+#elif defined USE_X11
+#elif defined USE_GEM
+short work_in[11],work_out[57];
 #endif
 
+typedef struct {
+  int flags;
+  STRING text;
+} MENUENTRY;
+extern MENUENTRY menuentry[MAXMENUENTRYS];
+extern int anzmenuentry;
+extern int menutitle[32];
+extern int anzmenutitle;
 
-extern int menuflags[];
-extern char *menuentry[];
-extern char *menutitle[];
-extern int menutitleslen[];
-extern int menuentryslen[];
-extern int menutitlesp[];
-extern int menutitlelen[];
-extern int menutitleflag[];
-extern int menuanztitle;
 extern int schubladeff;
 extern int schubladenr;
 extern int schubladex,schubladey,schubladew,schubladeh;
 
-void do_sizew(int,int,int);
+void do_sizew(WINDOWDEF *,int,int);
 void do_movew(int,int,int);
+
+char *fileselector(const char *titel, const char *pfad, const char *sel);
+
+#ifndef USE_GEM
 char *fsel_input(const char *,const char *,const char *);
+#endif
 int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel);
 
 #ifdef USE_SDL
 #define XEvent union SDL_Event
 #define Expose 0
+#elif defined USE_GEM
+#define XEvent int
+
 #endif
 
 
 
 
 #if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
-void handle_event(int,XEvent *);
+void handle_event(WINDOWDEF *,XEvent *);
 #endif
 
 #if defined USE_X11
-  #define do_movew(winnr,x,y) if(winnr) XMoveWindow(display[winnr], win[winnr], x, y)
+  #define do_movew(winnr,x,y) if(winnr) XMoveWindow(window[winnr].display, window[winnr].win, x, y)
 #elif defined WINDOWS_NATIVE
-  #define do_movew(winnr,x,y) if(winnr) MoveWindow(win_hwnd[winnr], x, y,640,400,1)
+  #define do_movew(winnr,x,y) if(winnr) MoveWindow(window[winnr].win_hwnd, x, y,640,400,1)
 #else
   #define do_movew(winnr,x,y) 
 #endif
 
-
-
-
-#define ROOT 0
-#define NIL -1
 						/* keybd states		*/
 #define K_RSHIFT 0x0001
 #define K_LSHIFT 0x0002
 #define K_CTRL 0x0004
+#ifndef USE_GEM
 #define K_ALT 0x00008
+#endif
 						/* max string length	*/
 #define MAX_LEN 81
 						/* max depth of search	*/
@@ -175,10 +207,3 @@ void handle_event(int,XEvent *);
 #define FIS_PATTERN 2
 #define FIS_HATCH 3
 #define FIS_USER 4
-
-
-
-
-
-
-

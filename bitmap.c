@@ -381,7 +381,7 @@ XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMas
       if(depth==24 || depth==32) extend_mask(mask,mask2,h*w,32);
       else extend_mask16(mask,mask2,h*w,32);
       free(mask);
-      *XMask=XCreateImage(display[usewindow],visual,depth,ZPixmap,0,(char *)mask2,w,h,8,bpl);
+      *XMask=XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)mask2,w,h,8,bpl);
     } else {
        free(mask);
       if(XMask) *XMask=NULL;
@@ -398,7 +398,7 @@ XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMas
 	free(oadr);
       }
     }
-    return(XCreateImage(display[usewindow],visual,depth,ZPixmap,0,(char *)adr,w,h,8,bpl));
+    return(XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)adr,w,h,8,bpl));
   } else {
     unsigned long swaptest = 1;
    if(XMask) *XMask=NULL;
@@ -418,12 +418,12 @@ XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMas
     if(((XWDFileHeader *)data)->file_version!=(CARD32)XWD_FILE_VERSION) {
       printf("Achtung: Falsche XWD Version: %d\n",(int)((XWDFileHeader *)data)->file_version);
       adr=malloc(32*32*depth/8);
-      return(XCreateImage(display[usewindow],visual,depth,ZPixmap,0,(char *)adr,32,32,8,32*depth/8));  
+      return(XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)adr,32,32,8,32*depth/8));  
     } else {
       adr=malloc(((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
       memcpy(adr,data+((XWDFileHeader *)data)->header_size+((XWDFileHeader *)data)->ncolors*sizeof(XWDColor),((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
     }
-    return(XCreateImage(display[usewindow],visual,
+    return(XCreateImage(window[usewindow].display,visual,
     ((XWDFileHeader *)data)->pixmap_depth,
     ((XWDFileHeader *)data)->pixmap_format,
     ((XWDFileHeader *)data)->xoffset,

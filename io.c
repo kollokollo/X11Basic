@@ -42,6 +42,7 @@
 #endif
 
 #include "x11basic.h"
+#include "xbasic.h"
 #include "parser.h"
 #include "svariablen.h"
 #include "number.h"
@@ -103,7 +104,7 @@ double sensordata[ANZSENSORS];
 #include "file.h"
 #include "variablen.h"
 #include "parameter.h"
-#include "xbasic.h"
+
 #include "wort_sep.h"
 #include "array.h"
 #include "sfunctions.h"
@@ -194,6 +195,10 @@ FILEINFO get_fileptr(int n) {
     ret.typ=FT_NONE;
     ret.dptr=NULL;
   } else if(filenr[n].typ) return(filenr[n]);
+  else {
+    ret.typ=FT_NONE;
+    ret.dptr=NULL;
+  }
   return(ret);
 }
 
@@ -260,6 +265,9 @@ STRING f_fsnexts() {
   if(retc==-1) io_error(errno,filename);
   if(S_ISDIR(fstats.st_mode)) ergebnis.pointer[0]='d';
  // else if(S_ISLNK(fstats.st_mode)) ergebnis.pointer[0]='s';
+  else
+#elif defined ATARI
+  if(0) ;
   else
 #else
   if(ep->d_type==DT_DIR) ergebnis.pointer[0]='d';
@@ -339,6 +347,10 @@ void c_print(PARAMETER *plist,int e) {
 	    if(i!=e-1) fputc('\011',fff.dptr);
 	  }
 	  break;
+      case PL_STRING:
+        fwrite(plist[i].pointer,1,plist[i].integer,fff.dptr);
+        if(i!=e-1) fputc('\011',fff.dptr);
+        break;
       case PL_FILENR:
         if(i==0) {
 	  fff=get_fileptr(plist[i].integer);
@@ -406,7 +418,7 @@ void c_input(const char *n) {
        */
       } else u=input(fff,inbuf,MAXSTRLEN);
   //    printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
-      if(type(s) & STRINGTYP) {
+      if(vartype(s)==STRINGTYP) {
         STRING str;
 	str.len=strlen(u);
 	str.pointer=u;
@@ -508,7 +520,7 @@ void c_lineinput(const char *n) {
       if(fff.dptr==stdin) {
         u=do_gets(text);
 	if(!u) return;   /*  EOF or such */
-        if(typ & STRINGTYP) {
+        if((typ&TYPMASK)==STRINGTYP) {
 	  STRING str;
 	  str.len=strlen(u);
 	  str.pointer=u;
@@ -517,7 +529,7 @@ void c_lineinput(const char *n) {
         } else zuweis(s,parser(u));
       } else {
         STRING a=longlineinput(fff.dptr);
-        if(typ & STRINGTYP) zuweis_string_and_free(s,a);
+        if((typ&TYPMASK)==STRINGTYP) zuweis_string_and_free(s,a);
         else {
 	  zuweis(s,parser(a.pointer));
           free(a.pointer);
@@ -770,16 +782,22 @@ static void RS232_enable(int fp,int what) {
 #ifdef TIOCMGET
   if(ioctl(fp, TIOCMGET, &status) == -1) perror("unable to get portstatus");
   status |= what;    /* turn on something */
-  if(ioctl(fp, TIOCMSET, &status) == -1) perror("unable to set portstatus");
 #endif
+#ifdef TIOCMSET
+  if(ioctl(fp, TIOCMSET, &status) == -1) 
+#endif
+  perror("unable to set portstatus");
 }
 static void RS232_disable(int fp,int what) {
   int status;
 #ifdef TIOCMGET
   if(ioctl(fp, TIOCMGET, &status) == -1) perror("unable to get portstatus");
   status &= ~what;    /* turn off something */
-  if(ioctl(fp, TIOCMSET, &status) == -1) perror("unable to set portstatus");
 #endif
+#ifdef TIOCMSET
+  if(ioctl(fp, TIOCMSET, &status) == -1) 
+#endif
+ perror("unable to set portstatus");
 }
 
 #endif
@@ -1121,111 +1139,6 @@ address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
   }
 }
 
-static const struct {int sf; char xf; } ioemaptable[] = {
-    { 0,   7 }, /* 0: No error status currently */
-    { EPERM,   -51 }, /* 1: Not super-user */
-    { ENOENT,  -33 }, /* 2: No such file or directory*/
-    { ESRCH,    -3 }, /* 3: No such process*/
-    { EINTR,   -53 }, /* 4: Interrupted system call*/
-    { EIO,      -1 }, /* 5: Allgemeiner IO-Fehler */
-    { ENXIO,   -36 }, /* 6: No such device or address */
-    { E2BIG,    -7 }, /* 7: Arg list too long */
-    { ENOEXEC, -66 }, /* 8: Exec format error */
-    { EBADF,   -37 }, /* 9: Bad file number*/
-    { ECHILD,  -55 }, /* 10: No children*/
-    { EAGAIN,  -72 }, /* 11: Try again*/
-    { ENOMEM,  -12 }, /* 12: Not enough core*/
-    { EACCES,  -13 }, /* 13: Permission denied*/
-    { EFAULT,  -57 }, /* 14: Bad address*/
-#ifdef ENOTBL
-    { ENOTBLK, -58 }, /* 15: Block device required*/
-#endif
-    { EBUSY,   -59 }, /* 16: Mount device busy*/
-    { EEXIST,  -17 }, /* 17: File exists*/
-    { EXDEV,   -18 }, /* 18: Cross-device link*/
-    { ENODEV,  -19 }, /* 19: No such device*/
-    { ENOTDIR, -20 }, /* 20: Not a directory*/
-    { EISDIR,  -21 }, /* 21: Is a directory*/
-    { EINVAL,  -22 }, /* 22: Invalid argument*/
-    { ENFILE,  -23 }, /* 23: File table overflow */
-    { EMFILE,  -24 }, /* 24: Too many open files */
-    { ENOTTY,  -25 }, /* 25: Not a typewriter */
-#ifdef ETXTBSY
-    { ETXTBSY, -26 }, /* 26: Text file busy */
-#endif
-    { EFBIG,   -27 }, /* 27: File too large */
-    { ENOSPC,  -28 }, /* 28: No space left on device */
-    { ESPIPE,  -29 }, /* 29: Illegal seek */
-    { EROFS,   -30 }, /* 30: Read-Only File-System */
-    { EMLINK,  -31 }, /* 31: Too many links*/
-    { EPIPE,   -32 }, /* 32: Broken pipe*/
-    { EDOM,    -62 }, /* 33: Math arg out of domain of func*/
-    { ERANGE,  -63 }, /* 34: Math result not representable*/
-    { EDEADLK,      -69 }, /* 35: Resource deadlock would occur*/
-    { ENAMETOOLONG, -70 }, /* 36: File name too long */
-
-    { ENOSYS,       -38 }, /* 38: Function not implemented */
-    { ENOTEMPTY,    -39 }, /* 39: Directory not empty */
-#ifdef ELOOP
-    { ELOOP,        -71 }, /* 40: Too many symbolic links encountered */
-#endif
-#ifdef EWOULDBLOCK
-    { EWOULDBLOCK,  -41 }, /* 41: Operation would block */
-#endif
-#ifdef ENOMSG
-    { ENOMSG,       -42 }, /* 42: No message of desired type*/
-#endif
-#ifdef EIDRM
-    { EIDRM,        -43 }, /* 43: Identifier removed*/
-#endif
-#ifdef ELNRNG
-    { ELNRNG,       -48 }, /* 48: Link number out of range*/
-#endif
-#ifdef EBADE 
-    { EBADE,        -52 }, /* 52: Invalid exchange*/
-#endif
-#ifdef EXFULL
-    { EXFULL,       -54 }, /* 54: Exchange full*/
-#endif
-#ifdef ENOSTR
-    { ENOSTR,       -60 }, /* 60: Device not a stream */
-#endif  
-#ifdef ENOTSOCK
-    { ENOTSOCK,     -88 }, /* 88: Socket operation on non-socket */
-
-    { EOPNOTSUPP,   -95 }, /* 95: Operation not supported on transport endpoint */
-
-    { EADDRINUSE,   -98 }, /* 98: Address already in use */
-    { EADDRNOTAVAIL,-99 }, /* 99: Cannot assign requested address */
-
-    { ENETDOWN,    -100 }, /* 100: Network is down */
-    { ENETUNREACH, -101 }, /* 101: Network is unreachable */
-
-    { ENETRESET,   -102 }, /* 102: Network dropped connection because of reset */
-    { ECONNABORTED,-103 }, /* 103: Software caused connection abort */
-
-    { ECONNRESET,  -104 }, /* 104: Connection reset by peer*/
-
-    { ENOBUFS,     -105 }, /* 105: No buffer space available */
-    { EISCONN,     -106 }, /* 106: Transport endpoint is already connected*/
-    { ENOTCONN,    -107 }, /* 107: Transport endpoint is not connected */
-    { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
-    { ECONNREFUSED,-111 }  /* 111: Connection refused */
-#endif  
-  };
-static const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
-  
-void io_error(int n, const char *s) {
-  int i;
-  for(i=0;i<anztabs;i++) {
-    if(n==ioemaptable[i].sf) {
-      xberror(ioemaptable[i].xf,s);
-      return;    
-    }
-  }
-  printf("errno=%d\n",n);
-  xberror(-1,s);  /* Allgemeiner IO-Fehler */
-}
 
 /* Schliesse alle Files (und sockets und USB verbindungen). macht kein UNLINK. (evtl. TODO)*/
 void close_all_files() {
@@ -1630,57 +1543,42 @@ char *terminalname(int fp) {
   #endif
 }
 
-
+/*  OUT #1,a       */
 
 void c_out(PARAMETER *plist,int e) {
-  FILEINFO fff=get_fileptr(plist->integer);
-  // printf("OUT #%d mit %d args.\n",plist->integer,e);
-  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */
-  else {
-    int i,typ;
-    for(i=1;i<e;i++) {
-      switch(plist[i].typ) {
-      case PL_EVAL:
-	typ=type(plist[i].pointer);
-	// printf("arg: %s typ=%x\n",plist[i].pointer,typ);
-	if(typ & ARRAYTYP) {
-	  int j,a=1;
-	  ARRAY zzz=array_parser(plist[i].pointer);
-	  for(j=0;j<zzz.dimension;j++) a=a*(((int *)zzz.pointer)[j]);
-	  if(zzz.typ & FLOATTYP) {
-            double *varptr=(double *)(zzz.pointer+zzz.dimension*INTSIZE);
-            
-	    fwrite(varptr,sizeof(double),a,fff.dptr);
-	  } else if(zzz.typ & INTTYP) {
-	    int *varptr=(int *)(zzz.pointer+zzz.dimension*INTSIZE);
-	    fwrite(varptr,sizeof(int),a,fff.dptr);
-	  } else if(zzz.typ & STRINGTYP) {
-            STRING *varptr=(STRING *)(zzz.pointer+zzz.dimension*INTSIZE);
-	    for(j=0;j<a;j++) {
-	      fwrite(varptr[j].pointer,sizeof(char),varptr[j].len,fff.dptr);
-	    }
-	  }
+  FILEINFO fff;  
+  if(plist->typ==PL_FILENR ||plist->typ==PL_INT) fff=get_fileptr(plist->integer);
+  else if(plist->typ==PL_LEER) fff=get_fileptr(-4);  /* stdout */ 
+  else {xberror(24,""); /* File nicht geoeffnet */ return;}
+  if(fff.typ==0) {xberror(24,""); /* File nicht geoeffnet */ return;}
 
-	  free_array(&zzz);
-	} else if(typ & FLOATTYP) {
-          double zzz=parser(plist[i].pointer);
-          fwrite(&zzz,sizeof(double),1,fff.dptr);
-	} else if(typ & INTTYP) {
-	  int zzz=(int)parser(plist[i].pointer);
-          fwrite(&zzz,sizeof(int),1,fff.dptr);
-	} else if(typ & STRINGTYP){
- 	  STRING zzz=string_parser(plist[i].pointer);
-          fwrite(zzz.pointer,sizeof(char),zzz.len,fff.dptr);
-          free_string(&zzz);
-	} else xberror(32,"OUT"); /* Syntax error */
+  // printf("OUT #%d mit %d args.\n",plist->integer,e);
+  // dump_parameterlist(plist,e);
+  int i;
+  unsigned char c;
+  for(i=1;i<e;i++) {
+    switch(plist[i].typ) {
+      case PL_INT:
+        c=plist[i].integer;
+        fwrite(&c,sizeof(char),1,fff.dptr);
+        break;
+      case PL_FLOAT:
+      case PL_COMPLEX:
+        c=(unsigned char)(int)plist[i].real;
+        fwrite(&c,sizeof(char),1,fff.dptr);
+        break;
+      case PL_STRING:
+        fwrite(plist[i].pointer,sizeof(char),plist[i].integer,fff.dptr);
         break;
       default:
         dump_parameterlist(plist,e);
         xberror(32,"OUT"); /* Syntax error */
 	return;
-      }
     }
   }
+#ifdef ANDROID
+  if(plist->typ==PL_LEER) invalidate_screen();
+#endif
 }
 #ifndef WINDOWS
 /* kbhit-Funktion   */
@@ -1779,13 +1677,21 @@ STRING print_arg(const char *ausdruck) {
 	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
 	typ=type(a1);
 	
-	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
-	  if(typ & STRINGTYP) ;
+	if(typ&ARRAYTYP) {/* Hier koennte man .... */
+	  if((typ&TYPMASK)==STRINGTYP) ;
 	  else ;
-	} else if(typ & STRINGTYP) {
-	  int i;
+	  printf("not implemented yet: print array.\n");
+	  break;
+
+	
+	} else {
+	
+	switch(typ&TYPMASK) {
+	case STRINGTYP:
+	  {
           STRING a3=string_parser(a1);
 	  if(ee==2) {
+	    int i;
 	    STRING e2=string_parser(w4);
 	    if(e2.len<a3.len) {
 	      for(i=0;i<e2.len;i++) e2.pointer[i]='*';
@@ -1817,7 +1723,37 @@ STRING print_arg(const char *ausdruck) {
 	  }
 	  ergebnis.pointer[ergebnis.len]=0;
 	  free(a3.pointer);
-        } else {
+	  }
+	  break;
+	case COMPLEXTYP:
+	  {
+	  COMPLEX a=complex_parser(a1);
+	  STRING b=COMPLEXtoSTRING(a);
+	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+b.len+1);
+	  memcpy(ergebnis.pointer+ergebnis.len,b.pointer,b.len);
+	  ergebnis.len+=b.len;
+	  free(b.pointer);
+	  }
+	  break;
+	case ARBINTTYP:
+	  {
+	  ARBINT a;
+	  mpz_init(a);
+	  arbint_parser(a1,a);
+	  char *c=mpz_get_str(NULL,10,a);
+	  int l=strlen(c);
+	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+l+1);
+	  memcpy(ergebnis.pointer+ergebnis.len,c,l);
+	  ergebnis.len+=l;
+	  free(c);
+	  mpz_clear(a);
+	  }
+          break;
+	case ARBFLOATTYP:
+	case ARBCOMPLEXTYP:
+	  printf("not implemented yet: print arbitrary precision number.\n");
+	  break;
+        default:
 	  if(ee==2) {
 	    STRING a3=string_parser(w4);
 	    STRING e2=do_using(parser(a1),a3);
@@ -1834,6 +1770,7 @@ STRING print_arg(const char *ausdruck) {
 	    ergebnis.len+=strlen(b);
           }
 	}
+      }
       }
     }
     ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+1);
@@ -2029,44 +1966,6 @@ STRING do_using(double num,STRING format) {
     }
   }
   return(dest);
-}
-/* This is a handy helper function which prints out a 
-   hex dump of the memory arey pointed to by adr of length l
-   The output is in magenta and fints on a 80 char screen.
-   (c) by Markus Hoffmann 1997 */
-
-void memdump(const unsigned char *adr,int l) {
-  int i;
-  printf("\033[35m");
-  while(l>16) {
-    printf("%p: ",(void *)adr);	
-    for(i=0;i<16;i++) printf("%02x ",adr[i]);
-    printf(" ");
-    for(i=0;i<16;i++) {
-      if(adr[i]>31) printf("%c",adr[i]);
-      else printf(".");
-    }
-    printf("\n");
-    adr+=16;
-    l-=16;
-  }
-  if(l>0) {
-    printf("%p: ",(void *)adr);
-    for(i=0;i<16;i++) {
-      if(i<l) printf("%02x ",adr[i]);
-      else printf("   ");
-    }
-    printf(" ");
-    for(i=0;i<l;i++) {
-      if(adr[i]>31) printf("%c",adr[i]);
-      else printf(".");
-    }
-    printf("\n");
-  }
-  printf("\033[m");
-#ifdef ANDROID
-  invalidate_screen();
-#endif
 }
 
 /* Sound the speaker */

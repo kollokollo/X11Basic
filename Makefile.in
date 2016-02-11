@@ -1,5 +1,5 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
-# Version 10.03.2014 modified by Markus Hoffmann
+# Version 10.12.2014 modified by Markus Hoffmann
 
 # Insert the defs for your machine
 
@@ -18,6 +18,9 @@ MANDIR=@mandir@
 INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
+
+RELEASE=17
+
 
 # Register variables (-ffixed-reg) -Wall
 REGS= @regs@ -Wall 
@@ -59,7 +62,7 @@ CFLAGS= $(INC) $(DEF) $(OPT)
 
 # these are the objects which go into libx11basic
 
-LIBOBJS=xbasic.o file.o io.o parser.o variablen.o svariablen.o \
+LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o svariablen.o \
         array.o parameter.o fft.o mathematics.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
@@ -80,7 +83,11 @@ LIBCSRC=$(LIBOBJS:.o=.c)
 FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
 LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
 
-WINLIBOBJS= $(LIBOBJS) Windows.extension/fnmatch.o
+WINLIBOBJS= $(LIBOBJS) Windows.extension/fnmatch.o 
+
+
+
+
 TOSLIBOBJS= $(LIBOBJS) 
 CSRC=    $(LIBOBJS:.o=.c) 5x7-rev.c $(EXTRAOBJS:.o=.c) $(MAINOBJS:.o=.c)
 
@@ -153,6 +160,7 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
         examples/compiler/bas2x11basic.bas \
         examples/compiler/gui2bas.bas \
         examples/compiler/xbc-win.bas \
+        examples/compiler/xbc-st.bas \
         examples/c-usage/c-demo.c \
         examples/c-usage/c-demo2.c \
         examples/c-usage/library.bas \
@@ -177,12 +185,16 @@ BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 
 WINDIST=Windows-Installer/setup.exe Windows.extension/lib/SDL.dll \
         Windows.extension/lib/README-SDL.txt \
+        Windows.extension/lib/README-GMP.txt \
+        Windows.extension/lib/README-LAPACK.txt \
         Windows-Installer/readme.txt Windows-Installer/demo.bas \
 	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
 	Windows-Installer/x11basic.ico Windows-Installer/x11bver.txt \
 	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico
 
-TOSDIST=xbasic.tos xbvm.tos xbbc.tos xbc.tos xb2c.tos
+TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp Atari-ST-Installer/AUTO/VT100EMU.PRG \
+        Atari-ST-Installer/readme.txt Atari-ST-Installer/demo.bas Atari-ST-Installer/RELEASE_NOTES \
+	Atari-ST-Installer/X11-Basic-manual.txt
 
 
 DIST2=$(LIBOBJS:.o=.c) main.c
@@ -209,7 +221,10 @@ CONSOLELIBS= @libs@ @xtra@
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
 TOSLIBS = -lm  -lgem
 
-MYWINLIBS = x11basic.lib Windows.extension/lib/libgfx.lib
+MYWINLIBS = x11basic.lib Windows.extension/lib/libgfx.lib Windows.extension/lib/libgmp.a \
+            Windows.extension/clapack/lapack.lib \
+	    Windows.extension/blas/blas.lib Windows.extension/f2c/f2c.lib 
+
 MYTOSLIBS = x11basic.toslib
 
 all :    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic 
@@ -293,28 +308,28 @@ libx11basic.dll : x11basic.lib
 
 x11basic.lib : $(WINLIBOBJS)
 	rm -f *.o
-	$(WINCC) -DWINDOWS -c $(DIST2) -I./Windows.extension/include
-	$(WINCC) -DWINDOWS -c mathematics.c -I./Windows.extension/include
+	$(WINCC) -DWINDOWS -c $(DIST2) -I./Windows.extension/include -I./Windows.extension/include/GMP
+	$(WINCC) -DWINDOWS -c mathematics.c -I./Windows.extension/include -I./Windows.extension/include/GMP
 	i586-mingw32msvc-ar -ru $@ $(WINLIBOBJS) 
 	rm -f *.o
 
 # Make the exe for MS WINDOWS
 
 xbasic.exe: x11basic.lib main.c
-	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
+	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
 	 $(WINLIBS)
 	strip $@
 xbbc.exe: x11basic.lib bytecode.h bytecode.c xbbc.c 
-	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
+	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
 	$(MYWINLIBS) $(WINLIBS)
 	strip $@
 xb2c.exe: x11basic.lib xb2c.c 
-	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xb2c.c  \
+	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xb2c.c  \
 	$(MYWINLIBS) $(WINLIBS)
 	strip $@
 
 xbvm.exe: x11basic.lib bytecode.h xbvm.c 
-	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
+	$(WINCC) -DWINDOWS $(OPT) -I./Windows.extension/include -I./Windows.extension/include/GMP  $(WINLINKFLAGS) -o $@ xbvm.c \
 	 $(MYWINLIBS) $(WINLIBS)
 	strip $@
 
@@ -328,10 +343,24 @@ xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
 ###################################################
 # Make the exe for ATARI ST
 
-xbasic.tos: x11basic.toslib main.c
+xbasic.prg: x11basic.toslib main.c
 	$(TOSCC) -DATARI $(OPT) $(WINLINKFLAGS) main.c -o $@ $(MYTOSLIBS) \
 	 $(TOSLIBS)
 	m68k-atari-mint-strip $@
+xbbc.ttp: bytecode.h bytecode.c x11basic.toslib
+	$(TOSCC) -DATARI  $(OPT)  -o $@ xbbc.c bytecode.c $(MYTOSLIBS) $(TOSLIBS)
+	m68k-atari-mint-strip $@
+xbvm.prg: x11basic.toslib bytecode.h xbvm.c 
+	$(TOSCC) -DATARI $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
+	 $(MYTOSLIBS) $(TOSLIBS)
+	m68k-atari-mint-strip $@
+xbc.prg : xbasic examples/compiler/xbc-st.bas xbvm.prg xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-st.bas -o $@
+	chmod 755 $@ 
+xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c
+	$(TOSCC) -DATARI -DDUMMY_LIST $(OPT) -o $@ xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c svariablen.c file.c
+	m68k-atari-mint-strip $@
+	
 # Make the (static) library for ATARI ST
 
 x11basic.toslib : $(DIST2) mathematics.c
@@ -453,12 +482,12 @@ TomTom: $(DIR33).zip
 
 
 windows: $(WINDIST) xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe
-	rm -f X11-Basic-@version@.zip
-	zip -j -D  -o X11-Basic-@version@-win.zip $(WINDIST)
+	rm -f X11-Basic-@version@-$(RELEASE)-win.zip
+	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-win.zip $(WINDIST)
 
 # Make an ATARI ST version
 
-tos: $(TOSDIST) xbasic.tos xbvm.tos xbbc.tos xbc.tos xb2c.tos
+tos: $(TOSDIST) xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp
 	rm -f X11-Basic-atari-@version@.zip
 	zip -j -D  -o X11-Basic-@version@-st.zip $(TOSDIST)
 
@@ -521,13 +550,25 @@ myzip : xbc
 	strip myzip
 	strip myunzip
 
+afunctions_d.o: afunctions.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
+sfunctions_d.o: sfunctions.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
+svariablen_d.o: svariablen.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
+kommandos_d.o: kommandos.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
+functions_d.o: functions.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
+xb2c_d.o: xb2c.c
+	$(CC) -c $(CFLAGS) -DDUMMY_LIST -o $@ $<
 
 # make the X11-Basic to C translator
 xb2c :  xb2c.o
 	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
 	strip $@
-xb2c.static : xb2c.o x11basic.a
-	$(CC) -o $@ xb2c.o x11basic.a  -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o
+	$(CC) -o $@ xb2c_d.o functions_d.o tools.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 	strip $@
 xb2c.debug : xb2c.c $(LIBCSRC)
 	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)
@@ -619,9 +660,9 @@ rpm :	$(DIR).tar.gz x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
 deb :	$(BINDIST)
 	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
-	--pkgrelease 97 --arch i386 \
+	--pkgrelease $(RELEASE)  \
 	--maintainer kollo@users.sourceforge.net \
-        --requires libasound2,libreadline6,liblapack3 --backup  \
+        --requires libasound2,libreadline6,liblapack3,libgmp10 --backup  \
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz

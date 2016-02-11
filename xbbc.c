@@ -31,6 +31,9 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "bytecode.h"
+#include "variablen.h"
+#include "xbasic.h"
+#include "parser.h"
 #include "parameter.h"
 #include "file.h"
 #include "io.h"
@@ -50,7 +53,11 @@ extern int prglen;
 #else
 char ifilename[128]="new.bas";   /* Standard inputfile  */
 char ofilename[128]="b.b";       /* Standard outputfile     */
+#ifdef ATARI
+int verbose=1;
+#else
 int verbose=0;
+#endif
 int loadfile=FALSE;
 int dostrip=0;                   /* dont write symbol tables */
 BYTECODE_SYMBOL *symtab;
@@ -60,22 +67,30 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
-const char version[]="1.22"; /* Version Number. Put some useful information here */
-const char vdate[]="2014-01-02";   /* Creation date.  Put some useful information here */
+const char version[]="1.23"; /* Version Number. Put some useful information here */
+const char vdate[]="2015-01-01";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 
+#ifdef DUMMY_LIST
+/*Kurzform der Error-Routine, tritt hier nur bei IO-Errors auf.*/
+void xberror(char errnr, const char *bem) {
+  printf("ERROR: #%d %s\n",errnr,bem);
+  perror(strerror(errno));
+}
+#else 
+void xberror(char errnr, const char *bem);
+#endif
+
+
+
+
 
 STRING strings;     /* Holds comments and sybol names */
-
 int anzsymbols;
-
 extern char *rodata;
 int rodatalen=0;
 int bssdatalen=0;
-
-
-
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -87,6 +102,7 @@ int bssdatalen=0;
 int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   if(fdis==-1) return(-1);
+  if(verbose) {printf("--> %s [",name);fflush(stdout);}
   BYTECODE_HEADER h;
   bzero(&h,sizeof(BYTECODE_HEADER));
   add_rodata(ifilename,strlen(ifilename));
@@ -121,35 +137,52 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
            "  Size of String-Segment: %d\n",(int)h.bssseglen,(int)h.stringseglen);
     printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h.symbolseglen,anzsymbols);
   }
+  #ifdef ATARI
+  WSWAP((char *)&h.version);
+  LWSWAP((short *)&h.textseglen);
+  LWSWAP((short *)&h.rodataseglen);
+  LWSWAP((short *)&h.sdataseglen);
+  LWSWAP((short *)&h.dataseglen);
+  LWSWAP((short *)&h.bssseglen);
+  LWSWAP((short *)&h.symbolseglen);
+  LWSWAP((short *)&h.stringseglen);
+  LWSWAP((short *)&h.relseglen);
+  WSWAP((char *)&h.flags);
+  #endif
   if(write(fdis,&h,sizeof(BYTECODE_HEADER))==-1) io_error(errno,"write");
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
   if(rodatalen) {if(write(fdis,rodata,rodatalen)==-1) io_error(errno,"write");}
   if(dlen) {if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");}
-  if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write");
-  if(write(fdis,symtab,h.symbolseglen)==-1) io_error(errno,"write");
+  #ifdef ATARI
+  LWSWAP((short *)&h.symbolseglen);
+  LWSWAP((short *)&h.stringseglen);
+  LWSWAP((short *)&h.relseglen);
+  #endif
+  
+  if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write strings");
+#ifdef ATARI
+  int i;
+  int n=h.symbolseglen/sizeof(BYTECODE_SYMBOL);
+  if(n>0) {
+    for(i=0;i<n;i++) {
+        LWSWAP((short *)&symtab[i].name);
+        LWSWAP((short *)&symtab[i].adr);
+    }
+  }
+#endif
+  if(write(fdis,symtab,h.symbolseglen)==-1) io_error(errno,"write symtab");
+  if(verbose) printf("] done.\n");
   return(close(fdis));
 }
 
 
 #ifndef ANDROID
-static void doit(char *ausdruck) {
-  PARAMETER *p;
-  int n;
-  bcpc.len=0;
-  printf("Expression: %s\n",ausdruck);
-  bc_parser(ausdruck);
-  memdump((unsigned char *)bcpc.pointer,bcpc.len);
-  printf("Virtual Machine: %d Bytes\n",bcpc.len);
-  p=virtual_machine(bcpc,0,&n,NULL,0);
-  dump_parameterlist(p,n);
-  free_pliste(n,p);
-}
-
+char *rodata;
 static void intro(){
   puts("*************************************************************\n"
        "*           X11-Basic bytecode compiler                     *\n"
-       "*                    by Markus Hoffmann 1997-2014 (c)       *");
-  printf("* library V. %s date:   %30s    *\n",libversion,libvdate);
+       "*                    by Markus Hoffmann 1997-2015 (c)       *");
+  printf("* V.%s/%04x date:   %30s    *\n",version,BC_VERSION,vdate);
   puts("*************************************************************\n");
 }
 static void usage(){
@@ -173,21 +206,15 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"-h")==FALSE) {
       intro();
       usage();
-    } else if (strcmp(argumente[count],"-e")==FALSE) {
-      doit(argumente[++count]);
     } else if (strcmp(argumente[count],"-n")==FALSE) {
       donops=!donops;
     } else if (strcmp(argumente[count],"-c")==FALSE) {
       docomments=!docomments;
-    } else if (strcmp(argumente[count],"-s")==FALSE) {
-      dostrip=!dostrip;
-    } else if (strcmp(argumente[count],"-v")==FALSE) {
-      verbose++;
-    } else if (strcmp(argumente[count],"-q")==FALSE) {
-      verbose--;
-    } else if (strcmp(argumente[count],"--help")==FALSE) {
-      intro();
-      usage();
+    } else if (strcmp(argumente[count],"-s")==FALSE) dostrip=!dostrip;
+    else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
+    else if (strcmp(argumente[count],"-q")==FALSE) verbose--;
+    else if (strcmp(argumente[count],"--help")==FALSE) {
+      intro();usage();
     } else {
       if(!loadfile) {
         loadfile=TRUE;
@@ -197,30 +224,60 @@ static void kommandozeile(int anzahl, char *argumente[]) {
    }
 }
 
+#ifdef ATARI
+#define MAX_CODE 16000
+#else
 #define MAX_CODE 256000
-
+#endif
 int main(int anzahl, char *argumente[]) {
   /* Initialize data segment buffer */
   if(anzahl<2) {    /* Kommandomodus */
     intro();usage();
   } else {
-    bcpc.pointer=malloc(MAX_CODE);
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
         int ret;
+	#ifdef ATARI
+	intro();
+	printf("<-- %s\n",ifilename);
+	#endif
         loadprg(ifilename);
+
+    bcpc.pointer=malloc(MAX_CODE);
+#ifdef ATARI
+    if(bcpc.pointer==NULL) {
+      perror("malloc");
+      printf("ERROR: Need at least %d Bytes free memory. %d\n",MAX_CODE,malloc(-1));
+      sleep(5);
+      exit(-1);
+    } else printf("Buffer at %p\n",bcpc.pointer);
+#endif
+
+
+	#ifdef ATARI
+	printf("Compile ... \n");
+	#endif
 	compile(verbose);
 	// printf("%p LEN=%d\n",bcpc.pointer,bcpc.len);
 	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
 	if(ret==-1) exit(EX_CANTCREAT);
+	#ifdef ATARI
+	printf("done.\n");
+	#endif
       } else {
         printf("%s: ERROR: %s: file not found!\n",argumente[0],ifilename);
+	#ifdef ATARI
+	sleep(2);
+	#endif
         exit(EX_NOINPUT);
       }
     } else exit(EX_NOINPUT);
     free(bcpc.pointer);
   }
+  #ifdef ATARI
+  sleep(4);
+  #endif
   return(EX_OK);
 }
 #endif

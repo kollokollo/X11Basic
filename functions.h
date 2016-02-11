@@ -20,3 +20,5 @@
 
 double f_nop(void *t);
 
+int returntype(int idx, PARAMETER *p,int n);
+int returntype2(int idx, char *n);

@@ -18,22 +18,23 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "array.h"
-#include "parameter.h"
 #include "xbasic.h"
 #include "parser.h"
+#include "parameter.h"
 #include "number.h"
 
 #include "functions.h"
 #include "wort_sep.h"
 #include "bytecode.h"
+#include "virtual-machine.h"
 
 #define BCADD(a) bcpc.pointer[bcpc.len++]=a
 static int compile_zeile;
 
 #define BCADDPUSHX(a) if(a) {BCADD(BC_PUSHX);BCADD(strlen(a));\
                       {int adr=add_rodata(a,strlen(a));\
-		      memcpy(&bcpc.pointer[bcpc.len],&adr,sizeof(int));}\
-                      bcpc.len+=sizeof(int); } else { \
+		      CP4(&bcpc.pointer[bcpc.len],&adr,bcpc.len);}\
+                      } else { \
 		      printf("Compiler-ERROR: Null pointer in X-String. at line %d\n",compile_zeile); \
 		      exit(0);}
 
@@ -69,21 +70,30 @@ HINSTANCE hInstance;
 static int typstack[128];
 static int typsp=0;
 
-#define TP(a) typstack[typsp++]=(a)
+static inline void TP(int a) {typstack[typsp]=(a);typsp++;}
 #define TR(a) typstack[typsp-1]=(a)
 #define TO()  if(--typsp<0) printf("WARNING: typestack <zero! at line %d.\n",compile_zeile)
 #define TA(a)  if((typsp-=(a))<0) printf("WARNING: typestack zero or below! at line %d.\n",compile_zeile)
 #define TL    typstack[typsp-1]
 #define TL2    typstack[typsp-2]
-
+static inline void TEXCH() {
+  int tmp=typstack[typsp-1];
+  typstack[typsp-1]=typstack[typsp-2];
+  typstack[typsp-2]=tmp;
+}
 static void bc_jumptosr2(int ziel);
 static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int pmax);
 
 static void bc_push_float(double d) {
   BCADD(BC_PUSHF);
   TP(PL_FLOAT);
-  memcpy(&bcpc.pointer[bcpc.len],&d,sizeof(double));
-  bcpc.len+=sizeof(double);
+  CP8(&bcpc.pointer[bcpc.len],&d,bcpc.len);
+}
+static void bc_push_complex(COMPLEX c) {
+  BCADD(BC_PUSHC);
+  TP(PL_COMPLEX);
+  CP8(&bcpc.pointer[bcpc.len],&(c.r),bcpc.len);
+  CP8(&bcpc.pointer[bcpc.len],&(c.i),bcpc.len);
 }
 static void bc_push_string(STRING str) {
   int i;
@@ -92,10 +102,18 @@ static void bc_push_string(STRING str) {
   TP(PL_STRING);
   i=str.len;
   adr=add_rodata(str.pointer,str.len);
-  memcpy(&bcpc.pointer[bcpc.len],&i,sizeof(int));
-  bcpc.len+=sizeof(int);
-  memcpy(&bcpc.pointer[bcpc.len],&adr,sizeof(int));
-  bcpc.len+=sizeof(int);
+  CP4(&bcpc.pointer[bcpc.len],&i,bcpc.len);
+  CP4(&bcpc.pointer[bcpc.len],&adr,bcpc.len);
+}
+static void bc_push_arbint(ARBINT a) {
+  char *buf=mpz_get_str(NULL,32,a);
+  BCADD(BC_PUSHAI);
+  TP(PL_ARBINT);
+  int i=strlen(buf);
+  int adr=add_rodata(buf,i);
+  free(buf);
+  CP4(&bcpc.pointer[bcpc.len],&i,bcpc.len);
+  CP4(&bcpc.pointer[bcpc.len],&adr,bcpc.len);
 }
 
 static void bc_push_array(ARRAY arr) {
@@ -106,11 +124,8 @@ static void bc_push_array(ARRAY arr) {
   STRING str=array_to_string(arr);
   i=str.len;
   adr=add_rodata(str.pointer,str.len);
-  memcpy(&bcpc.pointer[bcpc.len],&i,sizeof(int));
-  bcpc.len+=sizeof(int);
-  memcpy(&bcpc.pointer[bcpc.len],&adr,sizeof(int));
-  bcpc.len+=sizeof(int);
-//  memdump(str.pointer,str.len);
+  CP4(&bcpc.pointer[bcpc.len],&i,bcpc.len);
+  CP4(&bcpc.pointer[bcpc.len],&adr,bcpc.len);
   free(str.pointer);
 }
 
@@ -126,12 +141,10 @@ static void bc_push_integer(int i) {
   } else if(i<0x7fff && i>-32768) {
     short ss=(short)i;
     BCADD(BC_PUSHW);
-    memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-    bcpc.len+=sizeof(short);
+    CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
   } else {
     BCADD(BC_PUSHI);
-    memcpy(&bcpc.pointer[bcpc.len],&i,sizeof(int));
-    bcpc.len+=sizeof(int);
+    CP4(&bcpc.pointer[bcpc.len],&i,bcpc.len);
   }
   TP(PL_INT);
 }
@@ -141,95 +154,66 @@ static void bc_pushv(int vnr);
 
 static void bc_pushv_name(char *var) {
   char w1[strlen(var)+1],w2[strlen(var)+1];
-  int typ=type(var);
+  int typ=vartype(var);
   char *r=varrumpf(var);
   int vnr;
   short f,ss;
   int e=klammer_sep(var,w1,w2);
   if((typ& ARRAYTYP)) {     /*  Ganzes Array */ 
-    vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+    vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
     bc_pushv(vnr);
   } else {
     if(e>1) {  /*   Array Element */
-      vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+      vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
       f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
       ss=vnr;
       e=wort_sep(w2,',',TRUE,w1,w2);
       while(e) {
         bc_parser(w1);  /*  jetzt Indizies Zeugs aufm stack */
-	if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
         e=wort_sep(w2,',',TRUE,w1,w2);
       }
       
     /* Hier muesste man noch cheken, ob alle indizies integer sind.
        sonst ggf. umwandeln. Hierfuer brauchen wir ROLL */
       BCADD(BC_PUSHARRAYELEM);
-      memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-      bcpc.len+=sizeof(short);
-      memcpy(&bcpc.pointer[bcpc.len],&f,sizeof(short));
-      bcpc.len+=sizeof(short);
+      CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+      CP2(&bcpc.pointer[bcpc.len],&f,bcpc.len);
       TA(f);
-      if(variablen[vnr].typ==INTTYP) TP(PL_INT);
-      else if(variablen[vnr].typ==FLOATTYP)  TP(PL_FLOAT);
-      else if(variablen[vnr].typ==STRINGTYP) TP(PL_STRING);
-      else if(variablen[vnr].typ==ARRAYTYP) TP(variablen[vnr].pointer.a->typ);
-      else TP(PL_LEER);
+      typ=variablen[vnr].typ;
+      if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
+      TP(PL_CONSTGROUP|typ);
     } else {  /*  Normale Variable */
-      vnr=add_variable(r,typ,0,V_DYNAMIC,NULL);
+      vnr=add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL);
       bc_pushv(vnr);
     } 
   }
   free(r);
 }
-/* Push variable inhalt on stack */
 
+/* Push variable inhalt on stack */
 static void bc_pushv(int vnr) {
   short ss=vnr;
   BCADD(BC_PUSHV);
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
-  if(variablen[vnr].typ==INTTYP) TP(PL_INT);
-  else if(variablen[vnr].typ==FLOATTYP) TP(PL_FLOAT);
-  else if(variablen[vnr].typ==STRINGTYP) TP(PL_STRING);
-  else if(variablen[vnr].typ==ARRAYTYP) TP(PL_ARRAY);
-  else TP(PL_LEER);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+  TP(PL_CONSTGROUP|variablen[vnr].typ);
 }
 static void bc_pushvv(int vnr) {
   short ss=vnr;
   BCADD(BC_PUSHVV);
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
-  switch(variablen[vnr].typ) {
-  case INTTYP:    TP(PL_IVAR);     break;
-  case FLOATTYP:  TP(PL_FVAR);     break;
-  case STRINGTYP: TP(PL_SVAR);     break;
-  case ARRAYTYP:  
-    switch(variablen[vnr].pointer.a->typ) {
-    case INTTYP:    TP(PL_IARRAYVAR); break;
-    case FLOATTYP:  TP(PL_FARRAYVAR); break;
-    case STRINGTYP: TP(PL_SARRAYVAR); break;
-    default: TP(PL_ARRAYVAR); 
-    }
-    break;
-  default:
-    printf("compiler ERROR: unknown typ at line %d.\n",compile_zeile);
-    TP(PL_LEER);
-  }
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+  int typ=variablen[vnr].typ;
+  if(typ==ARRAYTYP) typ|=variablen[vnr].pointer.a->typ;
+  TP(PL_VARGROUP|typ);
 }
 static void bc_pushvvindex(int vnr,int anz) {
   short ss=vnr;
   BCADD(BC_PUSHVVI);
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
   ss=anz;
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
   TA(anz);
-  if(variablen[vnr].typ==INTTYP) TP(PL_IVAR);
-  else if(variablen[vnr].typ==FLOATTYP) TP(PL_FVAR);
-  else if(variablen[vnr].typ==STRINGTYP) TP(PL_SVAR);
-  else if(variablen[vnr].typ==ARRAYTYP) TP(PL_ARRAYVAR);
-  else TP(PL_LEER);
+  TP(PL_VARGROUP|variablen[vnr].typ);
 }
 
 /* Put content from stack in variable */
@@ -237,12 +221,34 @@ static void bc_pushvvindex(int vnr,int anz) {
 static void bc_zuweis(int vnr) {
   short ss=vnr;
  // printf("bc-zuweis: TL=%x, v-typ=%x\n",TL,variablen[vnr].typ);
-  if(TL==PL_FLOAT && variablen[vnr].typ==FLOATTYP) BCADD(BC_ZUWEISf);
-  else if(TL==PL_INT && variablen[vnr].typ==INTTYP) BCADD(BC_ZUWEISi);
-  else BCADD(BC_ZUWEIS);
- 
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
+  switch(variablen[vnr].typ) {
+  case INTTYP:
+    if(TL!=PL_INT) BCADD(BC_X2I);
+    BCADD(BC_ZUWEISi);
+    break;
+  case FLOATTYP:
+    if(TL==PL_INT) BCADD(BC_I2F);
+    else if(TL!=PL_FLOAT) BCADD(BC_X2F);
+    BCADD(BC_ZUWEISf);
+    break;
+  case COMPLEXTYP:
+    if(TL==PL_INT) {BCADD(BC_I2F);BCADD(BC_F2C);}
+    else if(TL==PL_FLOAT) BCADD(BC_F2C);
+    else if(TL!=PL_COMPLEX) BCADD(BC_X2C);
+    BCADD(BC_ZUWEISc);
+    break;
+  default:
+    BCADD(BC_ZUWEIS);
+  }
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+  TO();
+  if(verbose>1) printf("ZUWEIS ");
+}
+static void bc_zuweis_nopretyp(int vnr) {
+  short ss=vnr;
+ // printf("bc-zuweis: TL=%x, v-typ=%x\n",TL,variablen[vnr].typ);
+  BCADD(BC_ZUWEIS);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
   TO();
   if(verbose>1) printf("ZUWEIS ");
 }
@@ -252,8 +258,7 @@ static void bc_zuweis(int vnr) {
 static void bc_local(int vnr) {
   short ss=vnr;
   BCADD(BC_LOCAL);
-  memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-  bcpc.len+=sizeof(short);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
 }
 
 /* Hier ist schon was auf dem Stack. */
@@ -265,29 +270,27 @@ static void bc_zuweis_name(char *var) {
   short f,ss;
   int e=klammer_sep(var,w1,w2);
   if(typ & ARRAYTYP) {     /*  Ganzes Array */ 
-    vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+    vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
     if(TL!=PL_ARRAY) printf("WARNING: no ARRAY for assignment! at line %d.\n",compile_zeile);
     bc_zuweis(vnr);
   } else {
     if(e>1) {  /*   Array Element */
-      vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
+      vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
       f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
       ss=vnr;
       e=wort_sep(w2,',',TRUE,w1,w2);
       while(e) {
         bc_parser(w1);  /*  jetzt Indizies Zeugs aufm stack */
-	if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
         e=wort_sep(w2,',',TRUE,w1,w2);
       }
       BCADD(BC_ZUWEISINDEX);
-      memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-      bcpc.len+=sizeof(short);
-      memcpy(&bcpc.pointer[bcpc.len],&f,sizeof(short));
-      bcpc.len+=sizeof(short);
+      CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+      CP2(&bcpc.pointer[bcpc.len],&f,bcpc.len);
       TA(f);
       TO();
     } else {  /*  Normale Variable */
-      vnr=add_variable(r,typ,0,V_DYNAMIC,NULL);
+      vnr=add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL);
       bc_zuweis(vnr);
     } 
   }
@@ -299,45 +302,6 @@ static void bc_zuweisung(char *var,char *arg) {
 }
 
 
-/*
-static void bc_zuweis_vnr(int vnr, int *indexliste, int dim) {
-  char *var;
-  char w1[strlen(var)+1],w2[strlen(var)+1];
-  int typ=vartype(var);
-  char *r=varrumpf(var);
-
-  short f,ss;
-  int e=klammer_sep(var,w1,w2);
-  if(typ & ARRAYTYP) {  // ganzes Array   
-    vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
-    if(TL!=PL_ARRAY) printf("WARNING: no ARRAY for assignment!\n");
-    bc_zuweis(vnr);
-  } else {
-    if(e>1) {  //   Array Element 
-      vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
-      f=count_parameters(w2);   // Anzahl indizes z"ahlen
-      ss=vnr;
-      e=wort_sep(w2,',',TRUE,w1,w2);
-      while(e) {
-        bc_parser(w1);  //  jetzt Indizies Zeugs aufm stack 
-	if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-        e=wort_sep(w2,',',TRUE,w1,w2);
-      }
-      BCADD(BC_ZUWEISINDEX);
-      memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-      bcpc.len+=sizeof(short);
-      memcpy(&bcpc.pointer[bcpc.len],&f,sizeof(short));
-      bcpc.len+=sizeof(short);
-      TA(f);
-      TO();
-    } else {  //  Normale Variable 
-      vnr=add_variable(r,typ,0);
-      bc_zuweis(vnr);
-    } 
-  }
-  free(r);
-}
-*/
 /*Indexliste aus Parameterarray (mit EVAL) auf stack */
 
 static int bc_indexliste(PARAMETER *p,int n) {
@@ -347,13 +311,97 @@ static int bc_indexliste(PARAMETER *p,int n) {
       if(((char *)p[i].pointer)[0]==':') bc_push_integer(-1);
       else {
         bc_parser((char *)p[i].pointer);
-	if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       }
     } else bc_push_integer(0);
   }
   return(i);
 }
 static int push_typeliste(const char *argument, int *varlist,int n);
+
+/*Binaere logische operation, das kann normal int sein oder ARBINT.*/
+
+static void bc_logic(const char *w1,const char *w2,unsigned char operator,unsigned char operator2) {
+  bc_parser(w1);
+  switch(TL) {
+  case PL_INT: break;
+  case PL_ARBINT: break;
+  default:
+    BCADD(BC_X2AI);
+    TR(PL_ARBINT);
+  }
+  int typ1=TL;
+  bc_parser(w2);
+  switch(TL) {
+  case PL_INT: break;
+  case PL_ARBINT: break;
+  default:
+    BCADD(BC_X2AI);
+    TR(PL_ARBINT);
+  }
+  int typ2=TL;
+  if(typ1==PL_INT && typ2==PL_INT) BCADD(operator2);
+  else BCADD(operator);
+  TO();
+  TR(PL_CONSTGROUP|combine_type(typ1&PL_BASEMASK,typ2&PL_BASEMASK,'+'));
+}
+static void bc_not() {
+  if(TL==PL_INT) BCADD(BC_NOTi);
+  else if(TL!=PL_ARBINT) {BCADD(BC_X2AI);BCADD(BC_NOT);TR(PL_ARBINT);}
+  else BCADD(BC_NOT);
+}
+/* Richtiges vorhersagen des ergebnistyps (ohne sonderfaelle): MOD DIV */
+
+static void bc_binaer1(const char *w1,const char *w2,unsigned char operator) {
+  bc_parser(w1);
+  int typ1=TL;
+  bc_parser(w2);
+  int typ2=TL;
+  BCADD(operator);
+  TO();
+  TR(PL_CONSTGROUP|combine_type(typ1&PL_BASEMASK,typ2&PL_BASEMASK,'+'));
+}
+static void bc_mul(){
+  int t1=TL;
+  int t2=TL2;
+  int tr=PL_CONSTGROUP|combine_type(t1&PL_BASEMASK,t2&PL_BASEMASK,'*');
+  if(t1==PL_INT && t2==PL_INT) BCADD(BC_MULi);
+  else if(t1==PL_FLOAT && t2==PL_FLOAT) BCADD(BC_MULf);
+  else if(t1==PL_COMPLEX && t2==PL_COMPLEX) BCADD(BC_MULc);
+  else if(t1==PL_INT && t2==PL_FLOAT) {BCADD(BC_I2F);BCADD(BC_MULf);}
+  else if(t1==PL_FLOAT && t2==PL_INT) {BCADD(BC_EXCH);BCADD(BC_I2F);BCADD(BC_MULf);}
+  else BCADD(BC_MUL);
+  TO();
+  TR(tr);
+}
+static void bc_add(){
+  int t1=TL;
+  int t2=TL2;
+  int tr=PL_CONSTGROUP|combine_type(t1&PL_BASEMASK,t2&PL_BASEMASK,'+');
+  if(t1==PL_INT && t2==PL_INT) BCADD(BC_ADDi);
+  else if(t1==PL_FLOAT && t2==PL_FLOAT) BCADD(BC_ADDf);
+  else if(t1==PL_COMPLEX && t2==PL_COMPLEX) BCADD(BC_ADDc);
+  else if(t1==PL_STRING && t2==PL_STRING) BCADD(BC_ADDs);
+  else if(t1==PL_INT && t2==PL_FLOAT) {BCADD(BC_I2F);BCADD(BC_ADDf);}
+  else if(t1==PL_FLOAT && t2==PL_INT) {BCADD(BC_EXCH);BCADD(BC_I2F);BCADD(BC_ADDf);}
+  else BCADD(BC_ADD);
+  TO();
+  TR(tr);
+}
+static void bc_sub(){
+  int t1=TL;
+  int t2=TL2;
+  int tr=PL_CONSTGROUP|combine_type(t1&PL_BASEMASK,t2&PL_BASEMASK,'-');
+  if(t1==PL_INT && t2==PL_INT) BCADD(BC_SUBi);
+  else if(t1==PL_FLOAT && t2==PL_FLOAT) BCADD(BC_SUBf);
+  else if(t1==PL_COMPLEX && t2==PL_COMPLEX) BCADD(BC_SUBc);
+  else if(t1==PL_INT && t2==PL_FLOAT) {BCADD(BC_I2F);BCADD(BC_SUBf);}
+  else if(t1==PL_FLOAT && t2==PL_INT) {BCADD(BC_EXCH);BCADD(BC_I2F);BCADD(BC_EXCH);BCADD(BC_SUBf);}
+  else BCADD(BC_SUB);
+  TO();
+  TR(tr);
+}
+
 
 int bc_parser(const char *funktion){  /* Rekursiver Parser */
   char *pos,*pos2;
@@ -393,52 +441,68 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       free_array(&a);
       if(verbose>1) printf("<-array->.c ");
       return(bcerror);
-    } else if(typ&INTTYP) {
+    } 
+    switch(typ&TYPMASK) {
+    case INTTYP: {
       int si;
-      
-    //  printf("inttyp ");fflush(stdout);
       if(typ&FILENRTYP) bc_push_integer(si=(int)parser(funktion+1));
       else  bc_push_integer(si=(int)parser(funktion));
-    //  printf("inttyp %d ",si);fflush(stdout);
       if(verbose>1) printf("<%d>.c ",si);
-     // printf("-->iparser(%s) --> %d\n",funktion,si);
       return(bcerror);
-    } else if (typ&FLOATTYP) {
+      }
+    case FLOATTYP: {
       double d=parser(funktion);
-     // printf("-->parser(%s) --> %g\n",funktion,d);
       bc_push_float(d);
       if(verbose>1) printf("<%g>.cf ",d);
       return(bcerror);
-    } else if (typ&STRINGTYP) {
+      }
+    case COMPLEXTYP: {
+      COMPLEX d=complex_parser(funktion);
+      bc_push_complex(d);
+      if(verbose>1) printf("<%g+%gi>.cc ",d.r,d.i);
+      return(bcerror); 
+      }   
+    case STRINGTYP: {
       STRING str=string_parser(funktion);
+ //     memdump(str.pointer,str.len+1);
       bc_push_string(str);
       if(verbose>1) printf("<\"%s\">.c ",str.pointer);
       free(str.pointer);
+      }
       return(bcerror);
+    case ARBINTTYP: {
+      ARBINT a;
+      mpz_init(a);
+      arbint_parser(funktion,a);
+      bc_push_arbint(a);
+      if(verbose>1) gmp_printf("<\"%Zd\">.c ",a);
+      mpz_clear(a);
+      return(bcerror);
+      }
     }
-  }
+  }   /*  CONSTTYP */
 
 
   /* Logische Operatoren AND OR NOT ... */
   if(*s==0) {BCADD(BC_PUSHLEER);TP(PL_LEER);return(bcerror);}
   if(searchchr2_multi(s,"&|")!=NULL) {
-    if(wort_sepr2(s,"&&",TRUE,w1,w2)>1) {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_AND);TO();return(bcerror);}
-    if(wort_sepr2(s,"||",TRUE,w1,w2)>1) {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_OR);TO();return(bcerror);}    
+    if(wort_sepr2(s,"||",TRUE,w1,w2)>1) {bc_logic(w1,w2,BC_OR,BC_ORi); return(bcerror);}    
+    if(wort_sepr2(s,"&&",TRUE,w1,w2)>1) {bc_logic(w1,w2,BC_AND,BC_ANDi);return(bcerror);}
   }
 
   if(searchchr2(s,' ')!=NULL) {
-    if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_OR);TO(); return(bcerror);}
-    if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_AND);TO();return(bcerror);}	/* von rechts !!  */
-    if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_AND);TO();BCADD(BC_NOT);return(bcerror);}
-    if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_OR); TO();BCADD(BC_NOT);return(bcerror);}
-    if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_XOR);TO();return(bcerror);}
-    if(wort_sepr2(s," EOR ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_XOR);TO();return(bcerror);}  
-    if(wort_sepr2(s," EQV ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_XOR);TO();BCADD(BC_NOT);return(bcerror);}
-    if(wort_sepr2(s," IMP ",TRUE,w1,w2)>1)  {bc_parser(w1);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_XOR);TO();BCADD(BC_NOT);bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_OR);TO();return(bcerror);}
-    if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  {bc_parser(w1);bc_parser(w2);BCADD(BC_MOD);if(TL==PL_FLOAT || TL2==PL_FLOAT) {TO();TR(PL_FLOAT);} else TO(); return(bcerror);}
-    if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1) {bc_parser(w1);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);bc_parser(w2);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);BCADD(BC_DIV);TO();if(TL!=PL_INT) BCADD(BC_X2I);return(bcerror);}
+    if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   {bc_logic(w1,w2,BC_OR,BC_ORi); return(bcerror);}
+    if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_AND,BC_ANDi);return(bcerror);}
+    if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) {bc_logic(w1,w2,BC_AND,BC_ANDi);bc_not();return(bcerror);}
+    if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_OR,BC_ORi); bc_not();return(bcerror);}
+    if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_XOR,BC_XORi);return(bcerror);}
+    if(wort_sepr2(s," EOR ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_XOR,BC_XORi);return(bcerror);}  
+    if(wort_sepr2(s," EQV ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_XOR,BC_XORi);bc_not();return(bcerror);}
+    if(wort_sepr2(s," IMP ",TRUE,w1,w2)>1)  {bc_logic(w1,w2,BC_XOR,BC_XORi);bc_not();bc_parser(w2);if(TL!=PL_INT && TL!=PL_ARBINT) {BCADD(BC_X2I);TR(PL_INT);}BCADD(BC_OR);TO();return(bcerror);}
+    if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  {bc_binaer1(w1,w2,BC_MOD);return(bcerror);}
+    if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1)  {bc_binaer1(w1,w2,BC_DIV);if(TL!=PL_INT && TL!=PL_ARBINT) {BCADD(BC_X2I);TR(PL_INT);}return(bcerror);}
     if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {
-      if(strlen(w1)==0) {bc_parser(w2);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);BCADD(BC_NOT);return(bcerror);}    /* von rechts !!  */
+      if(strlen(w1)==0) {bc_parser(w2);bc_not();return(bcerror);}    /* von rechts !!  */
       /* Ansonsten ist NOT Teil eines Variablennamens */
     }
   }
@@ -446,10 +510,10 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
   /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
   if(searchchr2_multi(s,"<=>")!=NULL) {
     if(wort_sep2(s,"==",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);return(bcerror);}
-    if(wort_sep2(s,"<>",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);BCADD(BC_NOT);return(bcerror);}
-    if(wort_sep2(s,"><",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);BCADD(BC_NOT);return(bcerror);}
-    if(wort_sep2(s,"<=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_GREATER);TO();TR(PL_INT);BCADD(BC_NOT);return(bcerror);}
-    if(wort_sep2(s,">=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_LESS);TO();TR(PL_INT);BCADD(BC_NOT);return(bcerror);}
+    if(wort_sep2(s,"<>",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);bc_not();return(bcerror);}
+    if(wort_sep2(s,"><",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);bc_not();return(bcerror);}
+    if(wort_sep2(s,"<=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_GREATER);TO();TR(PL_INT);bc_not();return(bcerror);}
+    if(wort_sep2(s,">=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);BCADD(BC_LESS);TO();TR(PL_INT);bc_not();return(bcerror);}
     if(wort_sep(s,'=',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);BCADD(BC_EQUAL);TO();TR(PL_INT);return(bcerror);}
     if(wort_sep(s,'<',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);BCADD(BC_LESS);TO();TR(PL_INT);return(bcerror);}
     if(wort_sep(s,'>',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);BCADD(BC_GREATER);TO();TR(PL_INT);return(bcerror);}
@@ -477,42 +541,38 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       char c=*pos;
       *pos=0;
       bc_parser(s);bc_parser(pos+1);
-      
-        if(c=='+' && typstack[typsp-2]==PL_STRING && typstack[typsp-1]==PL_STRING) {
-          BCADD(BC_ADDs);
-	  TO();
-        } else if(typstack[typsp-2]==PL_INT && typstack[typsp-1]==PL_INT) {
-          BCADD(c=='+'?BC_ADDi:BC_SUBi);
-	  TO();
-        } else if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_FLOAT) {
-          BCADD(c=='+'?BC_ADDf:BC_SUBf);
-	  TO();
-        } else if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_INT) {
-          BCADD(BC_X2F);
-	  typstack[typsp-1]=PL_FLOAT;
-          BCADD(c=='+'?BC_ADDf:BC_SUBf);
-	  TO();
-        } else if(typstack[typsp-2]==PL_INT && typstack[typsp-1]==PL_FLOAT) {
+      int tr=combine_type(typstack[typsp-2]&PL_BASEMASK,typstack[typsp-1]&PL_BASEMASK,c);
+      switch(tr) {
+      case STRINGTYP: BCADD(BC_ADDs);  break;
+      case INTTYP:    BCADD(c=='+'?BC_ADDi:BC_SUBi);  break;
+      case FLOATTYP:
+        if(typstack[typsp-1]==PL_INT) BCADD(BC_I2F);
+        if(typstack[typsp-2]==PL_INT) {
 	  BCADD(BC_EXCH);
-          BCADD(BC_X2F);
+          BCADD(BC_I2F);
 	  if(c=='-') {BCADD(BC_EXCH);}
-          BCADD(c=='+'?BC_ADDf:BC_SUBf);
-	  TO();TR(PL_FLOAT);
-        } else if(typstack[typsp-2]==PL_ARRAY && typstack[typsp-1]==PL_ARRAY) {
-          BCADD(c=='+'?BC_ADD:BC_SUB);
-          TO();
-	} else {
-          BCADD(c=='+'?BC_ADD:BC_SUB);
-  	  printf("\nADD/SUB of TYP: A=%d, b=%d  <%s>\n",typstack[typsp-2],typstack[typsp-1],funktion);
-
-	  if(typstack[typsp-2]!=typstack[typsp-1]) {
-	    printf("compile ERROR: ADD/SUB: Type mismatch at line %d.\n",compile_zeile);
-  	    TO();TR(PL_LEER);
-	  } else {
-	    TO();
-	    /*TR(typstack[typsp-1]); =NOP Das kann man auch weglassen*/
-	  }
 	}
+	BCADD(c=='+'?BC_ADDf:BC_SUBf);  break;
+      case COMPLEXTYP:
+         if(typstack[typsp-1]==PL_INT) {BCADD(BC_I2F);typstack[typsp-1]=PL_FLOAT;}
+         if(typstack[typsp-1]==PL_FLOAT) BCADD(BC_F2C);
+         if(typstack[typsp-2]==PL_INT) {
+ 	   BCADD(BC_EXCH);
+           BCADD(BC_I2F); 
+	   BCADD(BC_F2C);
+	   if(c=='-') {BCADD(BC_EXCH);}
+	 } else if(typstack[typsp-2]==PL_FLOAT) {
+  	   BCADD(BC_EXCH);
+           BCADD(BC_F2C);
+	   if(c=='-') {BCADD(BC_EXCH);}
+	 }
+         BCADD(c=='+'?BC_ADDc:BC_SUBc); break;
+      case NOTYP:  printf("compile ERROR: ADD/SUB: Type mismatch at line %d. %x <--> %x <%s>\n",compile_zeile,
+	  typstack[typsp-2],typstack[typsp-1],funktion);
+      default:     /* Alle anderen Typenkombinationen kommen so in den Bytecode*/
+         BCADD(c=='+'?BC_ADD:BC_SUB);
+      }
+      TO();TR(PL_CONSTGROUP|tr);
       return(bcerror);
     } 
     pos=searchchr2_multi_r(s,"+-",pos);  /* Finde n"achsten Kandidaten  von rechts*/
@@ -534,23 +594,38 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
         } else if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_FLOAT) {
           BCADD(BC_MULf);
 	  TO();
+        } else if(typstack[typsp-2]==PL_COMPLEX && (typstack[typsp-1]==PL_FLOAT || typstack[typsp-1]==PL_INT)) {
+  	  BCADD(BC_X2C);
+          BCADD(BC_MULc);
+	  TO();
+	  TR(PL_COMPLEX);	  
+        } else if((typstack[typsp-2]==PL_INT || typstack[typsp-2]==PL_FLOAT) && typstack[typsp-1]==PL_COMPLEX) {
+	  BCADD(BC_EXCH);
+          BCADD(BC_X2C);
+          BCADD(BC_MULc);
+	  TO();TR(PL_COMPLEX);
+        } else if(typstack[typsp-2]==PL_COMPLEX && typstack[typsp-1]==PL_COMPLEX) {
+          BCADD(BC_MULc);
+	  TO();
         } else if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_INT) {
-          BCADD(BC_X2F);
+          BCADD(BC_I2F);
           BCADD(BC_MULf);
 	  TO();TR(PL_FLOAT);
         } else if(typstack[typsp-2]==PL_INT && typstack[typsp-1]==PL_FLOAT) {
 	  BCADD(BC_EXCH);
-          BCADD(BC_X2F);
+          BCADD(BC_I2F);
           BCADD(BC_MULf);
 	  TO();TR(PL_FLOAT);
         } else if(typstack[typsp-2]==PL_ARRAY && typstack[typsp-1]==PL_ARRAY) {
           BCADD(BC_MUL);
           TO();
-	} else {
-	printf("\nMUL of TYP: A=%d, b=%d\n",typstack[typsp-2],typstack[typsp-1]);
+	} else {   /* Alle anderen Typenkombinationen kommen so in den Bytecode*/
+	  int tr=combine_type(typstack[typsp-2]&PL_BASEMASK,typstack[typsp-1]&PL_BASEMASK,'+');
+	  if(tr==NOTYP) printf("compile ERROR: MUL: Type mismatch at line %d. %x <--> %x <%s>\n",compile_zeile,
+	                        typstack[typsp-2],typstack[typsp-1],funktion);
   	  BCADD(BC_MUL);
 	  TO();
-	  TR(PL_LEER);
+	  TR(PL_CONSTGROUP|tr);
 	}
 	return(bcerror);
       } else {
@@ -560,15 +635,46 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
     }
     if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
       if(strlen(w1)) {
-        bc_parser(w1);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-        bc_parser(w2);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-        BCADD(BC_DIV);TO();
+        bc_parser(w1);bc_parser(w2);
+        if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_FLOAT) {
+          BCADD(BC_DIVf);
+	  TO();
+        } else if(typstack[typsp-2]==PL_COMPLEX && (typstack[typsp-1]==PL_FLOAT || typstack[typsp-1]==PL_INT)) {
+  	  BCADD(BC_X2C);
+          BCADD(BC_DIVc);
+	  TO();
+	  TR(PL_COMPLEX);	  
+        } else if((typstack[typsp-2]==PL_INT || typstack[typsp-2]==PL_FLOAT) && typstack[typsp-1]==PL_COMPLEX) {
+	  BCADD(BC_EXCH);
+          BCADD(BC_X2C);
+	  BCADD(BC_EXCH);
+          BCADD(BC_DIVc);
+	  TO();TR(PL_COMPLEX);
+        } else if(typstack[typsp-2]==PL_COMPLEX && typstack[typsp-1]==PL_COMPLEX) {
+          BCADD(BC_DIVc);
+	  TO();
+        } else if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_INT) {
+          BCADD(BC_I2F);
+          BCADD(BC_DIVf);
+	  TO();TR(PL_FLOAT);
+        } else if(typstack[typsp-2]==PL_INT && typstack[typsp-1]==PL_FLOAT) {
+	  BCADD(BC_EXCH);
+          BCADD(BC_I2F);
+	  BCADD(BC_EXCH);
+          BCADD(BC_DIVf);
+	  TO();TR(PL_FLOAT);
+	} else {   /* Alle anderen Typenkombinationen kommen so in den Bytecode*/
+	  int tr=combine_type(typstack[typsp-2]&PL_BASEMASK,typstack[typsp-1]&PL_BASEMASK,'/');
+	  if(tr==NOTYP) printf("compile ERROR: DIV: Type mismatch at line %d. %x <--> %x <%s>\n",compile_zeile,
+	                        typstack[typsp-2],typstack[typsp-1],funktion);
+  	  BCADD(BC_DIV);TO();TR(PL_CONSTGROUP|tr);
+	}
         return(bcerror);
       } else { xberror(51,w2); return(bcerror); }/* "Parser: Syntax error?! "  */
     }
     if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
       if(strlen(w1)) {
-        bc_parser(w1);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
+        bc_parser(w1);
 	bc_parser(w2);
 	if(TL==PL_INT && bcpc.pointer[bcpc.len-1]==BC_PUSH2) {
 	//  printf("Quadrat gefunden !\n");
@@ -576,10 +682,14 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 	  TO();
 	  BCADD(BC_DUP);
 	  if(TL==PL_INT) BCADD(BC_MULi);
-	  else BCADD(BC_MULf);
+	  else if(TL==PL_FLOAT) BCADD(BC_MULf);
+	  else if(TL==PL_COMPLEX) BCADD(BC_MULc);
+	  else BCADD(BC_MUL);
 	} else {
-  	  if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-	  BCADD(BC_POW);TO();
+  	  int tr=combine_type(typstack[typsp-2]&PL_BASEMASK,typstack[typsp-1]&PL_BASEMASK,'+');
+	  if(tr==NOTYP) printf("compile ERROR: POW: Type mismatch at line %d. %x <--> %x <%s>\n",compile_zeile,
+	                        typstack[typsp-2],typstack[typsp-1],funktion);
+	  BCADD(BC_POW);TO();TR(PL_CONSTGROUP|tr);
 	}
 	return(bcerror);
       }    /* von rechts !!  */
@@ -660,9 +770,9 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       } else {
         bc_jumptosr2(procs[pc2].zeile);
         TO();
-        TA(anzpar);   
-        if(type(s+1)&STRINGTYP) TP(PL_STRING);
-        else TP(PL_FLOAT);
+        TA(anzpar);
+	int t=type(s+1);
+	TP(PL_CONSTGROUP|(t&TYPMASK));
       }
       /*Der Rueckgabewert sollte nach Rueckkehr auf dem Stack liegen.*/
       return(bcerror);
@@ -673,20 +783,19 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 //printf("func %s: \n",pfuncs[i].name);      
       if((pfuncs[i].opcode&FM_TYP)==F_SIMPLE || pfuncs[i].pmax==0) {
         BCADD(BC_PUSHFUNC);BCADD(i);BCADD(0);
-	if(pfuncs[i].opcode&F_IRET) TP(PL_INT);
-	else TP(PL_FLOAT);                     /* Fuer den Rueckgabewert*/
+	TP(PL_CONSTGROUP|returntype(i,NULL,0));
         return(bcerror);
       } else if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
         BCADDPUSHX(pos);
         BCADD(BC_PUSHFUNC);BCADD(i);BCADD(1);
-	if(pfuncs[i].opcode&F_IRET) TP(PL_INT);
-	else TP(PL_FLOAT);                     /* Fuer den Rueckgabewert*/
+        TP(PL_CONSTGROUP|returntype2(i,pos));
         return(bcerror);
       } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE || 
         (pfuncs[i].opcode&FM_TYP)==F_DQUICK ||
 	 (pfuncs[i].opcode&FM_TYP)==F_IQUICK ||
+	 (pfuncs[i].opcode&FM_TYP)==F_CQUICK ||
 	 (pfuncs[i].opcode&FM_TYP)==F_SQUICK ||
-	 (pfuncs[i].opcode&FM_TYP)==F_AQUICK) {                
+	 (pfuncs[i].opcode&FM_TYP)==F_AQUICK) {
 
 	int anz;
 	anz=count_parameters(pos);
@@ -717,8 +826,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 	}
 	BCADD(BC_PUSHFUNC);BCADD(i);BCADD(anz);
 	TA(anz);
-	if(pfuncs[i].opcode&F_IRET) TP(PL_INT);
-	else TP(PL_FLOAT);                     /* Fuer den Rueckgabewert*/
+	TP(PL_CONSTGROUP|returntype2(i,pos));
 	return(bcerror);
       } else {
         printf("Internal ERROR. Function not correktly defined. %s at line %d.\n",s,compile_zeile);
@@ -779,6 +887,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       } else if(psfuncs[i].pmax==1 && ((psfuncs[i].opcode&FM_TYP)==F_SQUICK ||
                                        (psfuncs[i].opcode&FM_TYP)==F_AQUICK ||
                                        (psfuncs[i].opcode&FM_TYP)==F_IQUICK ||
+                                       (psfuncs[i].opcode&FM_TYP)==F_CQUICK ||
                                        (psfuncs[i].opcode&FM_TYP)==F_DQUICK
 				      )) {
         bc_parser(pos);
@@ -803,32 +912,32 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       while(c<(sysvars[a].name)[b] && a>i) a--;
       if(i>=a) break;
     }
-  if(strcmp(s,sysvars[i].name)==0) {    
+    if(strcmp(s,sysvars[i].name)==0) {    
       /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/
       BCADD(BC_PUSHSYS);
       BCADD(i);
-      if(sysvars[i].opcode&INTTYP) TP(PL_INT);
+      if((sysvars[i].opcode&TYPMASK)==INTTYP) TP(PL_INT);
       else TP(PL_FLOAT);
-    return(bcerror);
-  } 
-  /* Stringsysvars */
-  /* Liste durchgehen */
-  i=0;
-  c=*s;
-  a=anzsyssvars-1;
-  l=strlen(s);
-  for(b=0; b<l; c=s[++b]) {
-    while(c>(syssvars[i].name)[b] && i<a) i++;
-    while(c<(syssvars[a].name)[b] && a>i) a--;
-    if(i>=a) break;
-  }
-  if(strcmp(s,syssvars[i].name)==0) {
+      return(bcerror);
+    } 
+    /* Stringsysvars */
+    /* Liste durchgehen */
+    i=0;
+    c=*s;
+    a=anzsyssvars-1;
+    l=strlen(s);
+    for(b=0; b<l; c=s[++b]) {
+      while(c>(syssvars[i].name)[b] && i<a) i++;
+      while(c<(syssvars[a].name)[b] && a>i) a--;
+      if(i>=a) break;
+    }
+    if(strcmp(s,syssvars[i].name)==0) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",syssvars[i].name,i);*/
-    BCADD(BC_PUSHSSYS);
-    BCADD(i);
-    TP(PL_STRING);
-    return(bcerror);
-  }
+      BCADD(BC_PUSHSSYS);
+      BCADD(i);
+      TP(PL_STRING);
+      return(bcerror);
+    }
 
   /* Arraysysvars 
     //TODO  */
@@ -856,31 +965,40 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
     if(verbose>1) printf("function procnr=%d\n",pc2);
     bc_jumptosr2(procs[pc2].zeile);
     TO();
-    if(type(s+1)&STRINGTYP) TP(PL_STRING);
-    else TP(PL_FLOAT);
+    TP(PL_CONSTGROUP|(type(s+1)&TYPMASK));
     /*Der Rueckgabewert sollte nach Rueckkehr auf dem Stack liegen.*/
     return(bcerror);
-  } else if(*s=='#') { /* Filenummer ?*/
+  } 
+  if(*s=='#') { /* Filenummer ?*/
       int i=0;
       if(verbose>1) printf("file number: %s\n",s);
       while(s[++i]) s[i-1]=s[i];
       s[i-1]=s[i];
-    }
+  }
     /* Testen ob und was fuer eine Konstante das ist. */
     e=type(s);
     if(e&CONSTTYP) {
-      if (e&INTTYP) {
-        bc_push_integer((int)parser(s));
-        return(bcerror);
-      } else if (e&FLOATTYP) {  
-        bc_push_float(parser(s));
-        return(bcerror);
-      } else if (e&STRINGTYP) {
+      switch(e&TYPMASK) {
+      case INTTYP:      bc_push_integer((int)parser(s));   return(bcerror);
+      case FLOATTYP:    bc_push_float(parser(s));          return(bcerror);
+      case COMPLEXTYP:  bc_push_complex(complex_parser(s));return(bcerror);
+      case STRINGTYP: {
         STRING str=string_parser(s);
 	bc_push_string(str);
         free(str.pointer);
+	}
         return(bcerror);
-      }  
+      case ARBINTTYP: {
+        ARBINT a;
+	mpz_init(a);
+	arbint_parser(s,a);
+	bc_push_arbint(a);
+        mpz_clear(a);
+	}
+        return(bcerror);
+      default:
+        printf("ERROR: /xx/ cannot handle this const type=%x: %s\n",e,s); 
+      }
     } else {           /* Keine Konstante, also Variable */
       bc_pushv_name(s);
       return(bcerror);
@@ -928,7 +1046,10 @@ int add_rodata(char *data,int len) {
     rodatalen=len;
     return(0);
   } else {
+ // printf("addrodata: p=%p rl=%d data=<%s> l=%d\n",rodata, rodatalen,data,len);
     char *a=memmem(rodata, rodatalen,data,len);
+// memdump(rodata,rodatalen+1);
+// printf("\n");
     if(a==NULL) {
       rodata=realloc(rodata,(rodatalen+len+3)&0xfffffffc); /* auf loglaenge bringen*/
     //  printf("realloc %p %d->%d\n",rodata,rodatalen,rodatalen+len);
@@ -1032,16 +1153,16 @@ static void bc_kommando(int idx) {
 #ifdef DEBUG
       if(b<strlen(w1)) printf("Befehl %s vervollstaendigt --> %s\n",w1,comms[i].name);
 #endif
-      if(comms[i].opcode&P_IGNORE) {BCADD(BC_NOOP);return;}
-      if((comms[i].opcode&PM_TYP)==P_ARGUMENT){
+      switch(comms[i].opcode&PM_TYP) {
+      case P_IGNORE: BCADD(BC_NOOP);return;
+      case P_ARGUMENT:
         BCADD(BC_PUSHX);BCADD(strlen(w2));
         memcpy(&bcpc.pointer[bcpc.len],w2,strlen(w2));
 	bcpc.len+=strlen(w2);
         BCADD(BC_PUSHCOMM);BCADD(i);BCADD(1);
         return;
-      } 
-      if((comms[i].opcode&PM_TYP)==P_SIMPLE) {BCADD(BC_PUSHCOMM);BCADD(i);BCADD(0);return;}
-      if((comms[i].opcode&PM_TYP)==P_PLISTE) {
+      case P_SIMPLE: BCADD(BC_PUSHCOMM);BCADD(i);BCADD(0);return;
+      case P_PLISTE: 
         if(strlen(w2)) bc_parser(w2);
 	/* Anzahl Prameter herausfinden */
         /* Warnen wenn zuwenig oder zuviel parameter */
@@ -1049,7 +1170,8 @@ static void bc_kommando(int idx) {
 	BCADD(count_parameters(w2));
 	TA(count_parameters(w2));
         return;
-      } else xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
+      default: xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
+      }
     } else if(i!=a) {
        printf("Command uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name);
     }  else xberror(32,w1);  /* Syntax Error */
@@ -1058,8 +1180,7 @@ static void bc_kommando(int idx) {
 static void bc_restore(int offset) {
   if(verbose>1) printf("RESORE:offset=%d ",offset);
   bcpc.pointer[bcpc.len++]=BC_RESTORE;
-  memcpy(&bcpc.pointer[bcpc.len],&offset,sizeof(int));
-  bcpc.len+=sizeof(int);        
+  CP4(&bcpc.pointer[bcpc.len],&offset,bcpc.len);
 }
 
 static void bc_jumpto(int from, int ziel, int eqflag) {
@@ -1079,22 +1200,19 @@ static void bc_jumpto(int from, int ziel, int eqflag) {
 	  short o=b-1-sizeof(short);
           if(verbose>1) printf(" %s ",(eqflag?"BEQ":"BRA"));
 	  bcpc.pointer[bcpc.len++]=(eqflag?BC_BEQ:BC_BRA);
-          memcpy(&bcpc.pointer[bcpc.len],&o,sizeof(short));
-          bcpc.len+=sizeof(short);        
+          CP2(&bcpc.pointer[bcpc.len],&o,bcpc.len);
 	} else {
           if(verbose>1) printf(" %s ",(eqflag?"JEQ":"JMP"));
           bcpc.pointer[bcpc.len++]=(eqflag?BC_JEQ:BC_JMP);
-          memcpy(&bcpc.pointer[bcpc.len],&a,sizeof(int));
-          bcpc.len+=sizeof(int);
+          CP4(&bcpc.pointer[bcpc.len],&a,bcpc.len);
 	}
 	if(verbose>1) printf("---> $%x ",a);
-      } else {
-        if(verbose>1) printf(" %s ",(eqflag?"JEQ":"JMP"));
-        bcpc.pointer[bcpc.len++]=(eqflag?BC_JEQ:BC_JMP);
-        memcpy(&bcpc.pointer[bcpc.len],&ziel,sizeof(int));
-        relocation[anzreloc++]=bcpc.len;
-        bcpc.len+=sizeof(int);      
-      }
+  } else {
+     if(verbose>1) printf(" %s ",(eqflag?"JEQ":"JMP"));
+     bcpc.pointer[bcpc.len++]=(eqflag?BC_JEQ:BC_JMP);	    
+     CP4(&bcpc.pointer[bcpc.len],&ziel,bcpc.len);
+     relocation[anzreloc++]=bcpc.len-4;
+  }
   if(eqflag) TO();
 }
 
@@ -1109,54 +1227,160 @@ static void bc_jumptosr(int from, int ziel) {
 	  short o=b-1-sizeof(short);
           if(verbose>1) printf(" BSR ");
 	  BCADD(BC_BSR);
-          memcpy(&bcpc.pointer[bcpc.len],&o,sizeof(short));
-          bcpc.len+=sizeof(short);        
+          CP2(&bcpc.pointer[bcpc.len],&o,bcpc.len);
 	} else {
           if(verbose>1) printf(" JSR ");
           BCADD(BC_JSR);
-          memcpy(&bcpc.pointer[bcpc.len],&a,sizeof(int));
-          bcpc.len+=sizeof(int);        
+          CP4(&bcpc.pointer[bcpc.len],&a,bcpc.len);
 	}
-      } else {
-        if(verbose>1) printf(" JSR ");
-        BCADD(BC_JSR);
-        memcpy(&bcpc.pointer[bcpc.len],&ziel,sizeof(int));
-        relocation[anzreloc++]=bcpc.len;
-        bcpc.len+=sizeof(int);      
-      }
+  } else {
+    if(verbose>1) printf(" JSR ");
+    BCADD(BC_JSR);
+    CP4(&bcpc.pointer[bcpc.len],&ziel,bcpc.len);
+    relocation[anzreloc++]=bcpc.len-4;
+  }
 }
 
 static void bc_jumptosr2(int ziel) {
-       /* Hier jetzt ein JUMP realisieren */
-        if(verbose>1) printf(" JSR ");
-        BCADD(BC_JSR);
-        memcpy(&bcpc.pointer[bcpc.len],&ziel,sizeof(int));
-        relocation[anzreloc++]=bcpc.len;
-        bcpc.len+=sizeof(int);      
+  /* Hier jetzt ein JUMP realisieren */
+  if(verbose>1) printf(" JSR ");
+  BCADD(BC_JSR);
+  CP4(&bcpc.pointer[bcpc.len],&ziel,bcpc.len);
+  relocation[anzreloc++]=bcpc.len-4;
 }
 
 static void bc_pushlabel(int ziel) {
   BCADD(BC_PUSHLABEL);TP(PL_LABEL);
-  memcpy(&bcpc.pointer[bcpc.len],&ziel,sizeof(int));
-  relocation[anzreloc++]=bcpc.len;
-  bcpc.len+=sizeof(int);
+  CP4(&bcpc.pointer[bcpc.len],&ziel,bcpc.len);
+  relocation[anzreloc++]=bcpc.len-4;
 }
 static void bc_pushproc(int ziel) {
   BCADD(BC_PUSHPROC);TP(PL_PROC);
-  memcpy(&bcpc.pointer[bcpc.len],&ziel,sizeof(int));
-  relocation[anzreloc++]=bcpc.len;
-  bcpc.len+=sizeof(int);
+  CP4(&bcpc.pointer[bcpc.len],&ziel,bcpc.len);
+  relocation[anzreloc++]=bcpc.len-4;
+}
+static void bc_pushnumparameter(PARAMETER *p) {
+  switch(p->typ) {
+  case PL_LEER:   BCADD(BC_PUSHLEER);TP(PL_LEER);break;
+  case PL_EVAL:   bc_parser(p->pointer);	 break;
+  case PL_FLOAT:  bc_push_float(p->real);	 break;
+  case PL_INT:
+  case PL_FILENR: bc_push_integer(p->integer); break;
+  case PL_COMPLEX:bc_push_complex(*((COMPLEX *)&(p->real)));break;
+  case PL_ARBINT: bc_push_arbint(*((ARBINT *)(p->pointer)));break;
+  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  }
+}
+static void bc_pushvalueparameter(PARAMETER *p) {
+  switch(p->typ) {
+  case PL_LEER:   BCADD(BC_PUSHLEER);TP(PL_LEER);break;
+  case PL_EVAL:   bc_parser(p->pointer);	 break;
+  case PL_FLOAT:  bc_push_float(p->real);	 break;
+  case PL_INT:
+  case PL_FILENR: bc_push_integer(p->integer); break;
+  case PL_COMPLEX:bc_push_complex(*((COMPLEX *)&(p->real)));break;
+  case PL_ARBINT: bc_push_arbint(*((ARBINT *)(p->pointer)));break;
+  case PL_STRING: {
+    STRING str;
+    str.len=p->integer;
+    str.pointer=p->pointer;
+    bc_push_string(str);
+    } break;
+  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  }
+}
+static void bc_pushanyparameter(PARAMETER *p) {
+  switch(p->typ) {
+  case PL_LEER:   BCADD(BC_PUSHLEER);TP(PL_LEER);break;
+  case PL_EVAL:   bc_parser(p->pointer);	 break;
+  case PL_FLOAT:  bc_push_float(p->real);	 break;
+  case PL_INT:
+  case PL_FILENR: bc_push_integer(p->integer); break;
+  case PL_COMPLEX:bc_push_complex(*((COMPLEX *)&(p->real)));break;
+  case PL_ARBINT: bc_push_arbint(*((ARBINT *)(p->pointer)));break;
+  case PL_STRING: {
+    STRING str;
+    str.len=p->integer;
+    str.pointer=p->pointer;
+    bc_push_string(str);
+    } break;
+  case PL_ARRAY:
+  case PL_IARRAY:
+  case PL_FARRAY:
+  case PL_CARRAY:
+  case PL_AIARRAY:
+  case PL_NARRAY:
+  case PL_SARRAY: {
+    ARRAY arr=*(ARRAY *)&(p->integer);
+    bc_push_array(arr);
+    } break;
+  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  }
 }
 
-
+static void bc_print_arg(const char *ausdruck,char *code) {
+  char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
+  char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
+  // printf("bc_print_arg: >%s<  code=<%s>\n",ausdruck,code);
+  int e=arg2(ausdruck,TRUE,w1,w2);
+  while(e) {
+   // printf("Teilausdruck: <%s>  e=%d\n",w1,e);
+    if(strncmp(w1,"AT(",3)==0) {
+      w1[strlen(w1)-1]=0;
+      wort_sep(w1+3,',',TRUE,w3,w4);
+      if(strlen(code)) strcat(code,"+");
+      sprintf(code+strlen(code),"CHR$(27)+\"[\"+STR$(INT(%s))+\";\"+STR$(INT(%s))+\"H\"",w3,w4);
+    } else if(strncmp(w1,"TAB(",4)==0) {
+       w1[strlen(w1)-1]=0;
+       if(strlen(code)) strcat(code,"+");
+       sprintf(code+strlen(code),"CHR$(13)+CHR$(27)+\"[\"+STR$(INT(%s))+\"C\"",w1+4);
+    } else if(strncmp(w1,"SPC(",4)==0) {
+       w1[strlen(w1)-1]=0;
+       if(strlen(code)) strcat(code,"+");
+       sprintf(code+strlen(code),"CHR$(27)+\"[\"+STR$(INT(%s))+\"C\"",w1+4);
+    } else if(strncmp(w1,"COLOR(",6)==0) {
+      w1[strlen(w1)-1]=0;
+      wort_sep(w1+6,',',TRUE,w3,w4);
+      if(strlen(code)) strcat(code,"+");
+      sprintf(code+strlen(code),"CHR$(27)+\"[\"+STR$(INT(%s))+",w3);
+      int i=wort_sep(w4,',',TRUE,w3,w4);
+      while(i) {
+        sprintf(code+strlen(code),"\";\"+STR$(INT(%s))+",w3);
+        i=wort_sep(w4,',',TRUE,w3,w4);
+      }
+      sprintf(code+strlen(code),"\"m\"");
+    } else {
+      /* Hier noch PRINT USING abfangen ...*/
+    
+      int ee=wort_sep2(w1," USING ",TRUE,w1,w4);
+      if(ee==2) {
+        if(strlen(code)) strcat(code,"+");
+        sprintf(code+strlen(code),"USING$(%s,%s)",w1,w4);
+      } else if(strlen(w1)) {
+        if(strlen(code)) strcat(code,"+");
+	if((type(w1)&(~CONSTTYP))==STRINGTYP) sprintf(code+strlen(code),"%s",w1);
+	else sprintf(code+strlen(code),"STR$(%s)",w1);
+      }
+    }  /* Hier liegt nun irgendeine Art String auf dem STack.*/
+    
+    if(e==2) ;
+    else if(e==3) {
+      if(strlen(code)) strcat(code,"+CHR$(9)");
+      else strcat(code,"CHR$(9)");
+    } else if(e==4) {
+      if(strlen(code)) strcat(code,"+\" \"");
+      else strcat(code,"\" \"");
+    }
+    e=arg2(w2,TRUE,w1,w2);
+  }
+}
 
 static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int pmax) {
-  int i,ii,anzpar;
+  int i,anzpar;
   unsigned short ap,ip;
   if(pmax==-1) anzpar=anz;
   else anzpar=min(anz,pmax);
   if(anzpar<pmin) printf("Not enough parameters. at line %d.\n",compile_zeile);
-
   i=0;
   while(i<anzpar) {
     if(i>pmin && pmax==-1) ap=pliste[pmin];
@@ -1166,7 +1390,7 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
       int vnr;  
     case PL_LEER:
       BCADD(BC_PUSHLEER);TP(PL_LEER);
-      if(verbose>1) printf("%d: empty \n",ii);
+      if(verbose>1) printf(" empty \n");
       break;
     case PL_LABEL: 
       bc_pushlabel(labels[pin[i].integer].zeile);
@@ -1176,51 +1400,39 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
       break;
     case PL_FILENR:
     case PL_INT:    /* Integer */
-      if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
-      else if(ip==PL_EVAL) {
-        bc_parser(pin[i].pointer);if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-      } else if(ip==PL_INT || ip==PL_FILENR) {
-        bc_push_integer(pin[i].integer);	
-	if(verbose>1) printf("<%d> ",pin[i].integer);
-      } else printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
+      bc_pushnumparameter(&pin[i]);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       break;
-    case PL_NUMBER:  /* Float oder Number */
+    case PL_COMPLEX:
+      bc_pushnumparameter(&pin[i]);
+      if(TL!=PL_COMPLEX) BCADD(BC_X2C);TR(PL_COMPLEX);
+      break;  
+    case PL_ARBINT:
+      bc_pushnumparameter(&pin[i]);
+      if(TL!=PL_ARBINT) BCADD(BC_X2AI);TR(PL_ARBINT);
+      break;  
+    case PL_NUMBER:  /* Float, Int, Complex oder ARBINT */
+      bc_pushnumparameter(&pin[i]);
+      break;
+    case PL_CFAI:  /* Float oder complex oder arbint */
+      bc_pushnumparameter(&pin[i]);
+      if(TL==PL_INT) {BCADD(BC_I2F);TR(PL_FLOAT);}
+      break;
+    case PL_CF:  /* Float oder complex*/
+      bc_pushnumparameter(&pin[i]);
+      if(TL==PL_INT) {BCADD(BC_I2F);TR(PL_FLOAT);}
+      else if(TL==PL_ARBINT) {BCADD(BC_X2F);TR(PL_FLOAT);}
+      break;
     case PL_FLOAT:  /* Float oder Number */
-      if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
-      else if(ip==PL_EVAL) {
-        bc_parser(pin[i].pointer);if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-      } else if(ip==PL_NUMBER || ip==PL_FLOAT) {
-	if(verbose>1) printf("<%g>.f ",pin[i].real);
-        bc_push_float(pin[i].real);
-      } else printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
+      bc_pushnumparameter(&pin[i]);
+      if(TL==PL_INT) {BCADD(BC_I2F);TR(PL_FLOAT);}
+      else if(TL!=PL_FLOAT) {BCADD(BC_X2F);TR(PL_FLOAT);}
+      break;
+    case PL_ANY:
+      bc_pushanyparameter(&pin[i]);
       break;
     case PL_ANYVALUE:
-      if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
-      else if(ip==PL_EVAL) {
-        int typ=type(pin[i].pointer);
-	bc_parser(pin[i].pointer);
- 	if(typ&INTTYP) {
-	  if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-	} else if(typ&FLOATTYP) {
-	  if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-	} else if(typ&STRINGTYP) {
-	  if(TL!=PL_STRING) printf("WARNING: something is wrong. Hier ist kein String rausgekommen!\n %s",(char *)pin[i].pointer);
-	} else {
-	  printf("WARNING: unknown type. $%x\n",typ);
-	}
-      } else if(ip==PL_NUMBER || ip==PL_FLOAT) {
-	if(verbose>1) printf("<%g>.f ",pin[i].real);
-        bc_push_float(pin[i].real);
-      } else if(ip==PL_INT || ip==PL_FILENR) {
-        bc_push_integer(pin[i].integer);	
-	if(verbose>1) printf("<%d> ",pin[i].integer);
-      } else if(ip==PL_STRING) {
-        STRING str;
-	str.len=pin[i].integer;
-	if(verbose>1) printf("\"%s\" ",(char *)pin[i].pointer);
-	str.pointer=pin[i].pointer;
-	bc_push_string(str);
-      } else printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
+      bc_pushvalueparameter(&pin[i]);
       break;
     case PL_STRING: /* String */
       if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
@@ -1231,7 +1443,7 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
 	str.len=pin[i].integer;
 	if(verbose>1) printf("\"%s\" ",(char *)pin[i].pointer);
 	str.pointer=pin[i].pointer;
-	bc_push_string(str);
+	bc_push_string(str);	
       } else printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
 
       break;
@@ -1256,45 +1468,18 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
  	/* Hier muss die PLISTE noch erstellt werden....*/
         PARAMETER pret;
 	pret.panzahl=0;
-        switch(ap) {
-          case PL_VAR:   /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,INTTYP|FLOATTYP|STRINGTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;
-          case PL_NVAR:   /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,INTTYP|FLOATTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;
-          case PL_SVAR:   /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,STRINGTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;	  
-          case PL_ARRAYVAR: /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,ARRAYTYP|INTTYP|FLOATTYP|STRINGTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;	  	  
-          case PL_IARRAYVAR: /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,ARRAYTYP|INTTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;	  	  
-          case PL_FARRAYVAR: /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,ARRAYTYP|FLOATTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;
-          case PL_SARRAYVAR: /* Variable */
-	    if(prepare_vvar(pin[i].pointer,&pret,ARRAYTYP|STRINGTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;	  
-          case PL_ANYVAR:  /* Varname */
-	    if(prepare_vvar(pin[i].pointer,&pret,INTTYP|FLOATTYP|STRINGTYP|ARRAYTYP)) printf("WARNING: something is wrong at line %d!\n",compile_zeile);
-	    break;
-	  default:
-	    printf("WARNING: something is wrong at line %d! %s\n",compile_zeile,(char *)pin[i].pointer);
-	    dump_parameterlist(&pin[i],1);
-#ifndef ANDROID
-	    exit(2);
-#endif
+	if(prepare_vvar(pin[i].pointer,&pret,ap)==-1) {
+	  printf("WARNING: something is wrong at line %d!\n",compile_zeile);
+	  dump_parameterlist(&pin[i],1);
+	} else {
+          // dump_parameterlist(&pret,1);
+	  vnr=pret.integer;
+          if(pret.panzahl) {
+	    bc_indexliste(pret.ppointer,pret.panzahl);
+	    bc_pushvvindex(vnr,pret.panzahl);
+          } else bc_pushvv(vnr);
+	  free_parameter(&pret);
         }
-        // dump_parameterlist(&pret,1);
-	vnr=pret.integer;
-        if(pret.panzahl) {
-	  bc_indexliste(pret.ppointer,pret.panzahl);
-	  bc_pushvvindex(vnr,pret.panzahl);
-        } else bc_pushvv(vnr);
-	free_parameter(&pret);
       } else {
         vnr=pin[i].integer;
         if(pin[i].panzahl) {
@@ -1321,8 +1506,7 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
       break;
     default:
       printf("unknown parameter type.$%x\n",ap);
-    }
-    
+    }    
     i++;
   }
 }
@@ -1338,15 +1522,17 @@ static int push_indexliste(PARAMETER *p,int n) {
 	bc_push_integer(-1);
       } else {
         bc_parser((char *)p[i].pointer);
-        if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+        if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       }
       break;
     case PL_INT:
       bc_push_integer(p[i].integer);
       break;
     case PL_NUMBER:
+    case PL_CF:
+    case PL_CFAI:
     case PL_FLOAT:
-      bc_push_integer((int)p[i].real);
+      bc_push_integer(p2int(&p[i]));
       break;
     default:
       printf("WARNING: get_indexliste: unknown type.\n");
@@ -1379,7 +1565,7 @@ static int push_typeliste(const char *argument, int *varlist,int n) {
       typ=variablen[vnr].typ;
      // printf("<%s> --> vnr=%d, typ=%x \n",w1,vnr,typ);
       if(typ==ARRAYTYP) typ|=variablen[vnr].pointer.a->typ;
-      if(prepare_vvar(w1,&p,typ)) return(-1);
+      if(prepare_vvar(w1,&p,(PL_VARGROUP|typ))==-1) return(-1);
       // dump_parameterlist(&p,1);
       bc_pushvv(p.integer); 
       free_parameter(&p);
@@ -1406,6 +1592,7 @@ static int push_typeliste(const char *argument, int *varlist,int n) {
 void compile(int verbose) {
   int i,a,b;
   int expected_typsp=0;
+  int last_proc_number=NOTYP;
   /* If a bytecode has already been loaded, it need to be removed */
   /*Alle Strukturen, welche bytecode und zugehoerige Daten Enthalten freigeben
     TODO: wenn zum zweiten mal compiliert wird, dann geht speicher verloren.
@@ -1438,24 +1625,170 @@ void compile(int verbose) {
     bc_index[i]=bcpc.len;
     compile_zeile=i;
     if(typsp!=expected_typsp) printf("COMPILER WARNING: typsp=%d at line %d.\n",typsp,i);
-    if(verbose>1) printf("%3d:$%08x %x_[%08xx%d](%d)%s \t |",i,bcpc.len,pcode[i].etyp,(unsigned int)pcode[i].opcode,pcode[i].integer,
+    if(verbose>1) {
+      printf("\n%3d:$%08x %x_[%08xx%d](%d)%s \t |",i,bcpc.len,pcode[i].etyp,(unsigned int)pcode[i].opcode,pcode[i].integer,
       pcode[i].panzahl,program[i]);
-fflush(stdout);
-/* Sonderbehandlungen fuer ... */
+      fflush(stdout);
+    }
+    if(pcode[i].opcode&P_INVALID) xberror(32,program[i]); /*Syntax nicht korrekt*/
+
+    /* PREFETCH heisst immer, dass das Kommando ansonsten ignoriert werden kann, 
+       ELSE, LOOP, WEND, BREAK, auch CONTINUE und GOTO*/
+    
+    if((pcode[i].opcode&P_PREFETCH) && !((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF)) {
+      bc_jumpto(i,pcode[i].integer,0);
+      continue;
+    }
+    
+    /*  Direkte Kommandos: */
+    switch(pcode[i].opcode) {
+      case P_PROC: {
+        int e;
+        int *ix;
+        last_proc_number=pcode[i].integer;  /*Um den returntype zu rekonstruieren...*/
+        if(verbose>1) printf(" PROC_%d %s ",pcode[i].integer,(char *)procs[pcode[i].integer].parameterliste);
+
+        add_symbol(bcpc.len,procs[pcode[i].integer].name,STT_FUNC,0);
+
+        BCADD(BC_BLKSTART); /* Stackponter erhoehen etc. */
+        BCADD(BC_POP); /* Das waere jetzt die anzahl der Parameter als int auf stack*/
+        /* Wir muessen darauf vertrauen, dass die anzahl Parameter stimmt */
+        /* Jetzt von Liste von hinten aufloesen */
+        e=procs[pcode[i].integer].anzpar;
+        ix=procs[pcode[i].integer].parameterliste;
+        while(--e>=0) {
+          bc_local(ix[e]&(~V_BY_REFERENCE));  /* Rette alten varinhalt */
+          typsp=1;
+	  /* Hier ist es nun ein Problem, da wir nicht wissen, welche
+	  Parametertype tatsaechlich auf dem Stack liegen....  TODO....*/
+          bc_zuweis_nopretyp(ix[e]&(~V_BY_REFERENCE)); /* Weise vom stack zu */
+        }
+        typsp=0;
+      }
+      case P_NOTHING: /*  Leerzeile */
+      case P_LABEL:   /*  Label */
+      case P_DEFFN:
+        continue;
+      case P_ZUWEIS: {
+        int vnr=pcode[i].integer;
+        int ii=pcode[i].panzahl;
+        // int dim=variablen[vnr].pointer.a->dimension;
+        int typ=variablen[vnr].typ;
+        bc_parser(pcode[i].argument);
+        if((typ&TYPMASK)==INTTYP) {
+          if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+        } else if((typ&TYPMASK)==FLOATTYP) {
+          if(TL==PL_INT)        {BCADD(BC_I2F);TR(PL_FLOAT);}
+          else if(TL!=PL_FLOAT) {BCADD(BC_X2F);TR(PL_FLOAT);}
+        } else if((typ&TYPMASK)==STRINGTYP) {
+          if(TL!=PL_STRING) printf("ERROR: cannot convert <%s> (Typ=%x) to string.\n",pcode[i].argument,TL);
+        } 
+        if(ii) {
+          short ss=vnr;
+	  short f=ii;
+	  push_indexliste(pcode[i].ppointer,ii);
+	//  if((typ&ARRAYTYP) && ii!=dim) xberror(18,"");  /* Falsche Anzahl Indizies */
+          BCADD(BC_ZUWEISINDEX);
+          CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+          CP2(&bcpc.pointer[bcpc.len],&f,bcpc.len);
+          TA(f);
+          TO();
+        } else {
+          if(typ&ARRAYTYP) {
+            if(TL!=PL_ARRAY) printf("ERROR: cannot convert to array.\n");
+          }
+          bc_zuweis(vnr);
+        }  
+      }
+      continue;
+    }  /*  switch */
+
+/*  Einzelne Sonderbehandlungen nun hier:*/
+
+/* Sonderbehandlungen fuer PRINT ... */
+#if 1
+/* Das ganze geht noch nicht. PRINT USING (fur Strings) wird noch nicht korrekt behandelt, weiterhin
+Parameter 0 und negativ bei PRINT AT() COLOR(), TAB(), SPC() etc...
+Hier ist also noch ziemlicher Bahnhof ! */
+ 
+    if((pcode[i].opcode&PM_COMMS)==find_comm("PRINT") || 
+       (pcode[i].opcode&PM_COMMS)==find_comm("?")) {
+      if(pcode[i].panzahl>0) {
+      //  printf("PRINT Sonderbehandlung: \n");
+      //  printf("%d parameter:\n",pcode[i].panzahl);
+      //  dump_parameterlist(pcode[i].ppointer,pcode[i].panzahl);
+	/* Im Wesendlichen wollen wir hier den ganzen PRINT-Austruck in einen OUT STRING ausdruck umwandeln.*/
+	
+        int j;
+	
+	PARAMETER *p=pcode[i].ppointer;
+	char *n;
+	int count=0;
+	#ifdef ATARI
+	char code[200];
+	#else
+	char code[1000];
+	#endif
+	code[0]=0;
+        for(j=0;j<pcode[i].panzahl;j++) {
+	  if(p[j].typ==PL_EVAL) {
+	    n=(char *)p[j].pointer;
+	    if(j==0) {
+   	      if(*n=='#') {
+	        bc_parser(n+1);
+	        //if(TL==PL_FLOAT) {BCADD(BC_F2I);TR(PL_INT);}
+	        // else 
+	        if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+	        BCADD(BC_I2FILE);TR(PL_FILENR);
+		continue;
+	      } else {BCADD(BC_PUSHLEER);TP(PL_LEER); bc_print_arg(n,code);count++;}
+	    } else {
+	      if(count) strcat(code,"+CHR$(9)");
+	      bc_print_arg(n,code);  /* Ergebnis ist dann ein String-Parameter auf dem Stack.*/
+	      count++;
+	    }
+	    if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'') strcat(code,"+CHR$(10)");;
+	  } else plist_to_stack(p+j,(short *)comms[find_comm("PRINT")].pliste,1,0,-1);
+	}
+	 //  printf("Codezeile: <%s>\n",code);
+	if(TL!=PL_LEER && TL!=PL_FILENR) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
+	bc_parser(code);
+	if(TL!=PL_STRING) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
+        /* Hier muessen 2 Parameter auf dem Stack liegen: 
+	   1. Filenr oder leer
+	   2. STRING
+	   */
+        BCADD(BC_PUSHCOMM);BCADD(find_comm("OUT"));
+        BCADD(2);
+        TA(2);
+      } else {
+        BCADD(BC_PUSHCOMM);BCADD(find_comm("PRINT"));
+        BCADD(pcode[i].panzahl);
+        TA(pcode[i].panzahl);
+      }
+      continue;
+    } 
+#endif
 #if 0
     if((pcode[i].opcode&PM_COMMS)==find_comm("INC")) {
       int vnr;
       if(verbose>1) printf(" INC ");
-    //  printf("INC hat fehler! int=%d\n",pcode[i].integer);
-    //  printf("INC hat fehler! panz=%d\n",pcode[i].panzahl);
       vnr=(pcode[i].ppointer)->integer;
       bc_pushv(vnr);  /* Variable */
       BCADD(BC_PUSH1);
       
         /* Hier herausfinden, was fuer eine Variable das ist und dann versch.adds benutzen.*/
-      BCADD(BC_ADD);
+      if(TL==PL_INT) {
+        BCADD(BC_ADDi);
+      } else if(TL==PL_FLOAT) {
+        BCADD(BC_I2F);
+        BCADD(BC_ADDf);
+      } else {
+        BCADD(BC_ADD);
+      }
       bc_zuweis(vnr); /* Zuweisung */
-    } else 
+      continue;
+    } 
     if((pcode[i].opcode&PM_COMMS)==find_comm("DEC")) {
       int vnr;
       if(verbose>1) printf(" DEC ");
@@ -1467,26 +1800,21 @@ fflush(stdout);
       if(TL==PL_INT) {
         BCADD(BC_SUBi);
       } else if(TL==PL_FLOAT) {
-        BCADD(BC_X2F);
+        BCADD(BC_I2F);
         BCADD(BC_SUBf);
       } else {
         BCADD(BC_SUB);
       }
       bc_zuweis(vnr); /* Zuweisung */
-    } else 
+      continue;
+    } 
 #endif
     if((pcode[i].opcode&PM_COMMS)==find_comm("LOCAL")) {
       int e=pcode[i].panzahl;
       while(--e>=0) bc_local((pcode[i].ppointer)[e].integer);
+      continue;
     }
-/* Jetzt behandlungen nach Pcode */
-    else if((pcode[i].opcode&PM_SPECIAL)==P_DATA) {
-      /*Erzeugt keinen Code...*/
-    }
-//    else if((pcode[i].opcode&PM_COMMS)==find_comm("DIM")) {
-  //    printf("DIM:\n");
- //   }
-    else if((pcode[i].opcode&PM_COMMS)==find_comm("RESTORE")) {
+    if((pcode[i].opcode&PM_COMMS)==find_comm("RESTORE")) {
       int j;
       if(verbose>1) printf(" RESTORE ");
       if(strlen(pcode[i].argument)) {
@@ -1501,19 +1829,22 @@ fflush(stdout);
         bc_restore(0);
 	if(verbose>1) printf(" \n");
       }
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_EXITIF) {
-      char w1[strlen(pcode[i].argument)+1];
-      char w2[strlen(pcode[i].argument)+1];
+      continue;
+    }
+   
+    /* Jetzt behandlungen nach Pcode PM_SPECIAL */
+    
+    switch(pcode[i].opcode&PM_SPECIAL) {
+    case P_EXITIF: 
       if(verbose>1) printf(" EXIT IF ");
-      wort_sep(pcode[i].argument,' ',TRUE,w1,w2);
-      if(verbose>1) printf(" <%s> <%s> ",w1,w2);
-      bc_parser(w2);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-      BCADD(BC_NOT);
-      bc_jumpto(i,pcode[i].integer,1);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_SELECT) {
       bc_parser(pcode[i].argument);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+      BCADD(BC_NOTi);
+      bc_jumpto(i,pcode[i].integer,1);
+    case P_DATA: continue;  /*Erzeugt keinen Code...*/
+    case P_SELECT: {
+      bc_parser(pcode[i].argument);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" SELECT ");
       /*Vergleichswert liegt jetzt auf dem Stack.*/ 
       expected_typsp++;
@@ -1536,28 +1867,28 @@ fflush(stdout);
           while(e) {
 	    BCADD(BC_DUP);TP(TL);   /* Vergleichswert auf Stack duplizieren fuer den folgenden Test */
             bc_parser(w2);
-	    if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-	    BCADD(BC_EQUAL);TO();TR(PL_INT);BCADD(BC_NOT);
+	    if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+	    BCADD(BC_EQUAL);TO();TR(PL_INT);BCADD(BC_NOTi);
 	    bc_jumpto(i,npc,1);
 	    e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
           }
           npc=pcode[npc-1].integer;
 	  if(npc==-1) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
-       } else if((pcode[npc-1].opcode&PM_SPECIAL)==P_DEFAULT){
-          
+        } else if((pcode[npc-1].opcode&PM_SPECIAL)==P_DEFAULT) {          
           bc_jumpto(i,npc,0);
           npc=pcode[npc-1].integer;
-	  if(npc==-1) xberror(36,"SELECT/DEFAULT"); /*Programmstruktur fehlerhaft */
-	  
-       } else break;
-    } 
+	  if(npc==-1) xberror(36,"SELECT/DEFAULT"); /*Programmstruktur fehlerhaft */  
+        } else break;
+      } 
      
      /*Wenn er vorher weggesprungen ist, dann verbleibt ein Wert auf dem Stack !!*/
      /*TODO */
-     } else if((pcode[i].opcode&PM_SPECIAL)==P_ENDSELECT) { 
-       {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
+    } continue;
+    case P_ENDSELECT: 
+       BCADD(BC_POP);TO(); /* Stack korrigieren und weitermachen */
        expected_typsp--;
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_CASE) { 
+       continue;
+    case P_CASE: {
       if(verbose>1) printf(" CASE ");
       int j,f=0,o=0;
       for(j=i+1; (j<prglen && j>=0);j++) {
@@ -1568,7 +1899,8 @@ fflush(stdout);
       }
       if(j==prglen) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDSELECT) bc_jumpto(i,j,0); 
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_DEFAULT) { 
+    } continue;
+    case P_DEFAULT: { 
       if(verbose>1) printf(" DEFAULT ");
         int j,f=0,o=0;
       for(j=i+1; (j<prglen && j>=0);j++) {
@@ -1579,10 +1911,11 @@ fflush(stdout);
       }
       if(j==prglen) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDSELECT) bc_jumpto(i,j,0); 
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) {
+    } continue; 
+    case P_IF: {
       int j,f=0,o=0;
       bc_parser(pcode[i].argument);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" IF ");
      /*  a=pcode[i].integer; zeigt auf ENDIF */
       for(j=i+1; (j<prglen && j>=0);j++) {
@@ -1593,27 +1926,19 @@ fflush(stdout);
       }
       if(j==prglen) xberror(36,"IF"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
-      else if(o==P_ELSEIF) {
-        bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
-      } else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF) {
-      int j,f=0,o=0;
-      char w1[strlen(pcode[i].argument)+1];
-      char w2[strlen(pcode[i].argument)+1];
-      pcode[i].opcode&=~P_PREFETCH;
+      else if(o==P_ELSEIF) bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
+      else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
+    } continue; 
+    case P_ELSEIF: {
       bc_jumpto(i,pcode[i].integer,0); /* von oben draufgelaufen, gehe zum endif */
-      /* Korrigiere bc_index */
-      bc_index[i]=bcpc.len;
-      /* Wenn wir vom Sprung kommen, landen wir hier */
+      /* Korrigiere nun bc_index */
+      bc_index[i]=bcpc.len;   /* Wenn wir vom Sprung kommen, landen wir hier */
       if(verbose>1) printf(" ELSE IF (corr=$%x) ",bcpc.len);
+      int j,f=0,o=0;
 
-      /* Bedingung separieren */
-      wort_sep(pcode[i].argument,' ',TRUE,w1,w2);
-      
       /* Bedingung auswerten */
-      bc_parser(w2);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-        
+      bc_parser(pcode[i].argument); if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+
       for(j=i+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDIF || o==P_ELSE|| o==P_ELSEIF)  && f==0) break;
@@ -1622,10 +1947,10 @@ fflush(stdout);
       }
       if(j==prglen) xberror(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
-      else if(o==P_ELSEIF) {
-        bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
-      } else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_GOSUB) {
+      else if(o==P_ELSEIF) bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
+      else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
+    } continue;
+    case P_GOSUB:
       if(pcode[i].integer==-1) bc_kommando(i);
       else {
         char buf[strlen(pcode[i].argument)+1];
@@ -1659,54 +1984,58 @@ fflush(stdout);
 	bc_jumptosr(i,procs[pcode[i].integer].zeile);
 	TO();
 	TA(anzpar);
-
       }
-    } else if((pcode[i].opcode&(PM_SPECIAL|P_NOCMD))==P_PROC) {
-      int e;
-      int *ix;
-
-      if(verbose>1) printf(" PROC_%d %s ",pcode[i].integer,(char *)procs[pcode[i].integer].parameterliste);
-
-      add_symbol(bcpc.len,procs[pcode[i].integer].name,STT_FUNC,0);
-
-      BCADD(BC_BLKSTART); /* Stackponter erhoehen etc. */
-      BCADD(BC_POP); /* Das waere jetzt die anzahl der Parameter als int auf stack*/
-      /* Wir muessen darauf vertrauen, dass die anzahl Parameter stimmt */
-      /* Jetzt von Liste von hinten aufloesen */
-      e=procs[pcode[i].integer].anzpar;
-      ix=procs[pcode[i].integer].parameterliste;
-      while(--e>=0) {
-        bc_local(ix[e]&(~V_BY_REFERENCE));  /* Rette alten varinhalt */
-        typsp=1;
-        bc_zuweis(ix[e]&(~V_BY_REFERENCE)); /* Weise vom stack zu */
-      }
-      typsp=0;
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_RETURN) {
+      continue; 
+    case P_RETURN:
       if(verbose>1) printf(" RETURN %s ",pcode[i].argument);
       if(pcode[i].argument && strlen(pcode[i].argument)) {
         bc_parser(pcode[i].argument);
-	TO();
+	
+	/*Jetzt noch den Returntype chekcen:*/
+	
+	switch(procs[last_proc_number].rettyp){
+	  case INTTYP:
+	    if(TL!=PL_INT) BCADD(BC_X2I);
+            break;	
+	  case FLOATTYP:
+	    if(TL==PL_INT) BCADD(BC_I2F);
+	    else if(TL!=PL_FLOAT) BCADD(BC_X2F);
+            break;	
+	  case COMPLEXTYP:
+	    if(TL!=PL_COMPLEX) BCADD(BC_X2C);
+            break;	
+	  case ARBINTTYP:
+	    if(TL!=PL_ARBINT) BCADD(BC_X2AI);
+            break;	
+	  case STRINGTYP:
+	    if(TL!=PL_STRING) printf("compile error: Returntype mismatch!\n");
+            break;	
+	}
+	TO();  /*Jetzt sollten wir wieder bei  typsp=0; auskommen....*/
       }      
       BCADD(BC_BLKEND);
       BCADD(BC_RTS);
-      typsp=0;
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_WHILE) {
+      continue;
+    case P_WHILE:
       bc_parser(pcode[i].argument);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" WHILE ");
-      bc_jumpto(i,pcode[i].integer,1);      
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_UNTIL) {
+      bc_jumpto(i,pcode[i].integer,1);
+      continue;
+    case P_UNTIL:
       bc_parser(pcode[i].argument);
-      if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" UNTIL ");
-      bc_jumpto(i,pcode[i].integer,1);      
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) {
+      bc_jumpto(i,pcode[i].integer,1);
+      continue;
+    case P_FOR: {
       char w1[strlen(pcode[i].argument)+1],w2[strlen(pcode[i].argument)+1];
       wort_sep(pcode[i].argument,' ',TRUE,w1,w2);
       wort_sep(w1,'=',TRUE,w1,w2);
       if(verbose>1) printf(" FOR ");
       bc_zuweisung(w1,w2);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_NEXT) {
+      } continue;
+    case P_NEXT: {
       int pp=pcode[i].integer;  /* Zeile it dem zugehoerigen For */
       if(pp==-1) xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */
       else {
@@ -1758,26 +2087,26 @@ fflush(stdout);
 	  BCADD(BC_MULi);TO();
 	  BCADD(BC_PUSH1);TP(PL_INT);
 	  BCADD(BC_ADDi);TO(); 
-	  BCADD(BC_EXCH);
+	  BCADD(BC_EXCH); TEXCH();
 	  /* jetzt liegen auf stack:
 	     groesserkleinerflag, step value */
           bc_pushv_name(var);/* Variable */
-	  BCADD(BC_ADD);TO(); 
-	  
+	  bc_add();	  
 	  BCADD(BC_DUP);TP(TL);   /* Ergebnis duplizieren fuer den folgenden Test */
           bc_zuweis_name(var); /* Zuweisung */
   	  /* jetzt liegen auf stack:
 	     groesserkleinerflag, variable+step-value */
           bc_parser(limit);/* Jetzt auf Schleifenende testen */
-	  BCADD(BC_SUB);TO(); 
-	  BCADD(BC_MUL);TO();
+	  bc_sub(); 
+	  bc_mul();
 	  BCADD(BC_PUSH0);TP(PL_INT);
 	  BCADD(BC_GREATER);TO();TR(PL_INT);
 	} else {  /* Kein STEP wurde angegeben */
-	  if(ss) {BCADD(BC_PUSHM1);TP(PL_INT);} /* Bei downto negativ (-1) */
-	  else {BCADD(BC_PUSH1);TP(PL_INT);}
           bc_pushv_name(var);/* Variable */
-	  BCADD(BC_ADD);TO(); 
+	  if(ss) BCADD(BC_PUSHM1); /* Bei downto negativ (-1) */
+	  else BCADD(BC_PUSH1);
+	  TP(PL_INT); 
+	  bc_add();
           BCADD(BC_DUP);TP(TL);   /* Ergebnis duplizieren fuer den folgenden Test */
           bc_zuweis_name(var); /* Zuweisung */
           bc_parser(limit);/* Jetzt auf Schleifenende testen */
@@ -1788,105 +2117,86 @@ fflush(stdout);
         free(w1);free(w2);free(w3);free(var);free(step);free(limit);
         bc_jumpto(i,pp+1,1);
       }	
-    } 
-    else if((pcode[i].opcode&PM_SPECIAL)==P_ENDPROC) {
+    } continue;
+    case P_ENDPROC: 
       if(verbose>1) printf(" * ");
       BCADD(BC_BLKEND);
       BCADD(BC_RTS);
       typsp=0;
-    } else if(pcode[i].opcode==P_ZUWEIS) {
-      int vnr=pcode[i].integer;
-      int ii=pcode[i].panzahl;
-     // int dim=variablen[vnr].pointer.a->dimension;
-      int typ=variablen[vnr].typ;
-      
-      bc_parser(pcode[i].argument);
-      if(typ&INTTYP) {
-        if(TL!=PL_INT) BCADD(BC_X2I);TR(PL_INT);
-      } else if(typ&FLOATTYP) {
-        if(TL!=PL_FLOAT) BCADD(BC_X2F);TR(PL_FLOAT);
-      } else if(typ&STRINGTYP) {
-        if(TL!=PL_STRING) printf("ERROR: cannot convert <%s> (Typ=%x) to string.\n",pcode[i].argument,TL);
-      } 
-      if(ii) {
-        short ss=vnr;
-	short f=ii;
-	  push_indexliste(pcode[i].ppointer,ii);
-	//  if((typ&ARRAYTYP) && ii!=dim) xberror(18,"");  /* Falsche Anzahl Indizies */
-          BCADD(BC_ZUWEISINDEX);
-          memcpy(&bcpc.pointer[bcpc.len],&ss,sizeof(short));
-          bcpc.len+=sizeof(short);
-          memcpy(&bcpc.pointer[bcpc.len],&f,sizeof(short));
-          bcpc.len+=sizeof(short);
-          TA(f);
-          TO();
-      } else {
-        if(typ&ARRAYTYP) {
-          if(TL!=PL_ARRAY) printf("ERROR: cannot convert to array.\n");
-        }
-        bc_zuweis(vnr);
-      }
-    }
-    else if(pcode[i].opcode&P_IGNORE) {if(verbose>1) printf(" * ");}
-    else if(pcode[i].opcode&P_INVALID) xberror(32,program[i]); /*Syntax nicht korrekt*/
-    else if(pcode[i].opcode&P_EVAL)  {
+      continue;
+    } /* switch */
+    
+    /* Jetzt behandlung nach Typ:*/
+
+    switch(pcode[i].opcode&PM_TYP) {
+    case P_IGNORE:
+      if(verbose>1) printf(" * ");
+      continue;
+    case P_EVAL:
       if(verbose>1) printf(" EVAL ");
       bc_kommando(i);
-    } else if((pcode[i].opcode&PM_COMMS)>=anzcomms) {
-      puts("Precompiler error...");
-      bc_kommando(i);
-    } else if((pcode[i].opcode&PM_TYP)==P_SIMPLE) {
-        if(verbose>1) printf(" SIMPLE_COMM ");
-        BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(0);
-      } else {
-      if((pcode[i].opcode&PM_TYP)==P_ARGUMENT) {
-        if(verbose>1) printf(" ARGUMENT_COMM ");
-	BCADDPUSHX(pcode[i].argument);
-	BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(1);
-      }
-      else if((pcode[i].opcode&PM_TYP)==P_PLISTE) {
-        int j=(pcode[i].opcode&PM_COMMS);
-        if(verbose>1) printf(" PLISTE(%d) ",pcode[i].panzahl);
-	if(verbose>1) printf("COMMS=%d(%d)\n",j,comms[j].pmax);
-
-	plist_to_stack((PARAMETER *)pcode[i].ppointer,(short *)comms[j].pliste,pcode[i].panzahl,comms[j].pmin,comms[j].pmax);
-        BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(pcode[i].panzahl);
-	TA(pcode[i].panzahl);
-	if(pcode[i].panzahl<comms[j].pmin)  xberror(42,""); /* Zu wenig Parameter  */
-        if(comms[j].pmax!=-1 && (pcode[i].panzahl>comms[j].pmax)) xberror(45,""); /* Zu viele Parameter  */
-      }
-      else bc_kommando(i);
-    }
-    if(pcode[i].opcode&P_PREFETCH) {
-      bc_jumpto(i,pcode[i].integer,0);
-    }
-     if(verbose>1) printf("\n");
-  }  
+      continue;
+    case P_SIMPLE:
+      if(verbose>1) printf(" SIMPLE_COMM ");
+      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(0);
+      continue;
+    case P_ARGUMENT:
+      if(verbose>1) printf(" ARGUMENT_COMM ");
+      BCADDPUSHX(pcode[i].argument);
+      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(1);
+      continue;
+    case P_PLISTE: {
+      int j=(pcode[i].opcode&PM_COMMS);
+      if(verbose>1) printf(" PLISTE(%d) ",pcode[i].panzahl);
+      if(verbose>1) printf("COMMS=%d(%d)\n",j,comms[j].pmax);
+      plist_to_stack((PARAMETER *)pcode[i].ppointer,(short *)comms[j].pliste,pcode[i].panzahl,comms[j].pmin,comms[j].pmax);
+      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(pcode[i].panzahl);
+      TA(pcode[i].panzahl);
+      if(pcode[i].panzahl<comms[j].pmin)  xberror(42,""); /* Zu wenig Parameter  */
+      if(comms[j].pmax!=-1 && (pcode[i].panzahl>comms[j].pmax)) xberror(45,""); /* Zu viele Parameter  */
+    } continue;
+    } /*  switch */
+printf("Compiler error, unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
+    if((pcode[i].opcode&PM_COMMS)>=anzcomms) puts("Precompiler error...");
+    bc_kommando(i);
+  } /*  for */
+  
+  
+#ifdef ATARI
+  printf(" labels....");
+  fflush(stdout);
+#endif
+ 
+   
   /* Jetzt alle Labels in Symboltabelle eintragen:*/
   if(anzlabels) {
     for(i=0;i<anzlabels;i++) {
       add_symbol(bc_index[labels[i].zeile]-sizeof(BYTECODE_HEADER),labels[i].name,STT_LABEL,0);
     }
   }
+
+#ifdef ATARI
+  printf(" variables ...");
+  fflush(stdout);
+#endif
+
   /* Jetzt alle Variablen in Symboltabelle eintragen:*/
   if(anzvariablen) {
     int typ;
     int adr=0;
     for(i=0;i<anzvariablen;i++) {
       typ=variablen[i].typ;
-      if(typ==INTTYP) adr=add_bss(sizeof(int));
-      else if(typ==FLOATTYP) adr=add_bss(sizeof(double));
-      else if(typ==STRINGTYP) adr=add_bss(sizeof(STRING));
-      else if(typ==ARRAYTYP) adr=add_bss(sizeof(ARRAY));      
+      adr=add_bss(typlaenge(typ));
       if(typ==ARRAYTYP) typ|=variablen[i].pointer.a->typ;
       add_symbol(adr,variablen[i].name,STT_OBJECT,typ);
     }
   }
   if(verbose>1) printf("PASS B: %d relocations\n",anzreloc);
   else if(verbose) printf("%d\trelocations.\n",anzreloc);
+  int dummy=0;
   for(i=0;i<anzreloc;i++) {
     b=relocation[i];
-    memcpy(&a,&bcpc.pointer[relocation[i]],sizeof(int));
+    CP4(&a,&bcpc.pointer[relocation[i]],dummy);
     if(verbose>1) printf("%d:$%08x ziel=%d ---> $%x\n",i,b,a,bc_index[a]);
 
     /* Wenn a negativ, dann zeigt er in das data-Segment */
@@ -1898,7 +2208,7 @@ fflush(stdout);
       a=bcpc.len-a;
       add_symbol(a-sizeof(BYTECODE_HEADER),NULL,STT_DATAPTR,0);
     }
-    memcpy(&bcpc.pointer[relocation[i]],&a,sizeof(int));
+    CP4(&bcpc.pointer[relocation[i]],&a,dummy);
   }
   free(relocation);
   free(bc_index);

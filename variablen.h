@@ -11,12 +11,20 @@
 
 /* Variablen Typen (unsigned char)*/
 
+#define TYPMASK         0x7  /*Maske fuer Basistypen */
+#define BASETYPMASK     0xf  /* Marker für Basistypen incl. Arrays*/
+
 #define NOTYP             0
 #define INTTYP            1
 #define FLOATTYP          2
-#define STRINGTYP         4
-#define INDIRECTTYP       8
-#define ARRAYTYP       0x10
+#define ARBINTTYP         3
+#define ARBFLOATTYP       4
+#define COMPLEXTYP        5
+#define ARBCOMPLEXTYP     6  
+#define STRINGTYP         7
+
+#define ARRAYTYP          8
+#define INDIRECTTYP    0x10
 #define CONSTTYP       0x20
 #define FILENRTYP      0x40
 
@@ -44,6 +52,7 @@ nicht freigegeben werden.*/
 
 void clear_variable(VARIABLE *);
 void erase_variable(VARIABLE *);
+void remove_variable(VARIABLE *);
 
 int var_exist(const char *name, unsigned char typ,unsigned char subtyp, int l);
 int add_variable(const char *name, unsigned char  typ, unsigned char subtyp, unsigned int flags, void *adr);
@@ -57,13 +66,14 @@ int vartype(const char *name);
 char *varrumpf(const char *n);
 void set_var_adr(int vnr,void *adr);
 void local_vars_loeschen(int p);
+void zuweis_v_parameter(VARIABLE *v,PARAMETER *p);
 int zuweisbyindex(int vnr,int *indexliste,double wert);
 int zuweisibyindex(int vnr,int *indexliste,int,int wert);
 int zuweissbyindex(int vnr,int *indexliste,STRING wert);
 void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p);
 int zuweis(const char *name, double wert);
 int izuweis(const char *name, int wert);
-void zuweisxbyindex(int vnr,int *indexliste,int,char *ausdruck);
+void zuweisxbyindex(int vnr,int *indexliste,int,char *ausdruck,short atyp);
 void feed_subarray_and_free(int vnr,char *pos, ARRAY wert);
 int zuweiss(char *name, char *inhalt);
 int zuweissbuf(char *name, char *inhalt,int len);
@@ -95,8 +105,8 @@ char *dump_arr(int);
 
 /* entferne Variablen.*/ 
 
-#define erase_all_variables() { \
-  while(anzvariablen) erase_variable(&variablen[--anzvariablen]); \
+#define remove_all_variables() { \
+  while(anzvariablen) remove_variable(&variablen[--anzvariablen]); \
 }
 /*Variablen werden mit 0 oder "" initialisiert. Arrays mit ... 
   entfernt werden die Variablen niemals.*/ 
@@ -119,10 +129,30 @@ static inline const int typlaenge(const int typ) {
   switch(typ) {
   case INTTYP: return(sizeof(int));
   case FLOATTYP: return(sizeof(double));
+  case COMPLEXTYP: return(sizeof(COMPLEX));
   case STRINGTYP: return(sizeof(STRING));
   case ARRAYTYP: return(sizeof(ARRAY));
+  case ARBINTTYP: return(sizeof(ARBINT));
   default: return(0);
   }
+}
+static inline const char *suffix(int typ) {
+  switch(typ&BASETYPMASK) {
+  case INTTYP: return("%");
+  case FLOATTYP: return("");
+  case COMPLEXTYP: return("#");
+  case ARBINTTYP: return("&");
+  case ARBFLOATTYP: return("!!");
+  case ARBCOMPLEXTYP: return("##");
+  case STRINGTYP: return("$");
+  case ARRAYTYP: return("?()");
+  case (ARRAYTYP|FLOATTYP):   return("()");
+  case (ARRAYTYP|INTTYP):     return("%()");
+  case (ARRAYTYP|ARBINTTYP):  return("&()");
+  case (ARRAYTYP|COMPLEXTYP): return("#()");
+  case (ARRAYTYP|STRINGTYP):  return("$()");
+  }
+  return "?";
 }
 
 static inline STRING create_string_and_free(char *n,int l) {

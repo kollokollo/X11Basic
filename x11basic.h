@@ -18,6 +18,74 @@
 #define PI       3.141592653589793
 #define E        2.718281828459
 
+#ifdef HAVE_GMP
+#include <gmp.h>
+#define ARBINT mpz_t
+#define ARBFLOAT mpf_t
+typedef struct {
+  ARBFLOAT r;
+  ARBFLOAT i;
+} ARBCOMPLEX;
+
+#else
+#define ARBINT int
+#define ARBFLOAT double
+#define ARBCOMPLEX COMPLEX
+#define mpz_init(a) ;
+#define mpz_init_set(a,b) a=b
+#define mpz_clear(a) a=0
+#define mpz_sub(a,b,c) a=b-(c)
+#define mpz_sub_ui(a,b,c) a=b-(c)
+#define mpz_add(a,b,c) a=b+c
+#define mpz_add_ui(a,b,c) a=b+c
+#define mpz_mul(a,b,c) a=(b)*(c)
+#define mpz_div(a,b,c) a=(b)/(c)
+#define mpz_mod(a,b,c) a=(b)%(c)
+#define mpz_bin_uiui(a,b,c) a=0
+#define mpz_mul_si(a,b,c) a=(b)*(c)
+#define mpz_addmul(a,b,c) a+=(b)*(c)
+#define mpz_root(a,b,c) a=0
+#define mpz_fac_ui(a,b) a=1
+#define mpz_neg(a,b) a=-b
+#define mpz_sqrt(a,b) a=(int)sqrt((double)b)
+#define mpz_set(a,b) a=b
+#define mpz_set_d(a,b) a=(int)b
+#define mpz_set_si(a,b) a=b
+#define mpz_setbit(a,b) a=0
+#define mpz_clrbit(a,b) a=0
+#define mpz_combit(a,b) a=0
+#define mpz_tstbit(a,b) a==0
+#define mpz_get_str(a,b,c) strdup("not supported")
+#define mpz_get_d(a) (double)(a)
+#define mpz_get_ui(a) (unsigned int)(a)
+#define mpz_get_si(a) (int)(a)
+#define mpz_odd_p(a) (a&1)
+#define mpz_even_p(a) (!(a&1))
+#define mpz_set_str(a,b,c) a=atoi(b)
+#define gmp_randstate_t long
+#define gmp_randinit_default(a) srand(a)
+#define gmp_randinit_ui(a,b) srand(a)
+#define gmp_randseed_ui(a,b) srand(a=b)
+#define mpz_urandomm(a,b,c) a=rand()
+#define mpz_eor(a,b,c) a=(b)^(c)
+#define mpz_xor(a,b,c) a=(b)^(c)
+#define mpz_ior(a,b,c) a=(b)|(c)
+#define mpz_and(a,b,c) a=(b)&(c)
+#define mpz_pow_ui(a,b,c) a=b
+#define mpz_primorial_ui(a,b)  a=0
+#define mpz_lucnum_ui(a,b)  a=0
+#define mpz_fib_ui(a,b)  a=0
+#define mpz_gcd(a,b,c)  a=0
+#define mpz_lcm(a,b,c)  a=0
+#define mpz_powm(a,b,c,d)  a=0
+#define mpz_invert(a,b,c)  a=0
+#define mpz_com(a,b) a=~(b)
+#define mpz_nextprime(a,b) a=0
+#define mpz_cmp_si(a,b) (a-b)
+#define mpz_cmp(a,b) (a-b)
+#define mpz_abs(a,b) a=abs(b)
+#define gmp_printf printf
+#endif
 
 /*Variablen Typen*/
 
@@ -25,6 +93,13 @@ typedef struct {
   unsigned int len;
   char *pointer;
 } STRING;
+
+typedef struct {
+  double r;
+  double i;
+} MYCOMPLEX;
+#define COMPLEX MYCOMPLEX
+
 
 typedef struct {
   int dimension;
@@ -41,6 +116,10 @@ typedef struct {
     double *f;
     STRING *s;
     ARRAY *a;
+    COMPLEX *c;
+    ARBINT *ai;
+    ARBFLOAT *af;
+    ARBCOMPLEX *ac;
   } pointer;
   int local;
 } VARIABLE;
@@ -49,9 +128,10 @@ typedef struct {
 
 struct PARAMETER {
   unsigned short typ;
-  double real;
+  double real;     /*   das kann auch als COMPLEX pointer dienen*/
+  double imag;
   int integer;     /*   das kann auch als STRING pointer und ARRAY pointer dienen*/
-  void *pointer;
+  void *pointer;   /*  Pointer f"ur STRING ARRAY und ARBINT*/
   unsigned short arraytyp; /* reserviert, damit man auch ARRAY pointer machen kann*/
   short panzahl;
   struct PARAMETER *ppointer;   /*Unterparameter wie indizies */
@@ -63,6 +143,8 @@ typedef struct PARAMETER PARAMETER;
 typedef double (*pfunc)();
 typedef STRING (*sfunc)();
 typedef ARRAY (*afunc)();
+typedef COMPLEX (*cfunc)();
+typedef PARAMETER (*ppfunc)();
 
 typedef struct {
   unsigned long opcode;
@@ -81,6 +163,15 @@ typedef struct {
   signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } FUNCTION;
+
+typedef struct {
+  unsigned long opcode;
+  const char *name;
+  COMPLEX (*routine)();
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} CFUNCTION;
 
 typedef struct {
   unsigned long opcode;
@@ -111,7 +202,8 @@ typedef struct {
 
 typedef struct {
   char *name;       /*Name der Procedure (incl Rueckgabetyp)*/
-  int typ;          /* 1=PROC 2=FUNC 4=DEFFN */
+  unsigned short typ;          /* 1=PROC 2=FUNC 4=DEFFN */
+  unsigned short rettyp;       /* R"uckgabetyp */
   int zeile;
   int anzpar;
   int *parameterliste;  /* Liste mit Variablennummern*/
@@ -143,6 +235,8 @@ extern const int anzcomms;
 extern const COMMAND comms[];
 extern const int anzpfuncs;
 extern const FUNCTION pfuncs[];
+extern const int anzcfuncs;
+extern const CFUNCTION cfuncs[];
 extern const int anzpsfuncs;
 extern const SFUNCTION psfuncs[];
 
@@ -221,7 +315,6 @@ void set_fill(int);
  
 void activate();
 void next_data_line();
-void handle_window(int);
 void programmlauf();
 void set_font(char *);
 void set_graphmode(int);

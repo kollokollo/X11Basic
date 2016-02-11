@@ -14,24 +14,41 @@ patches, program examples, bug tracking, help and documentation writing,
 financial support, judicious remarks, and so on...   
 
 And here thanks to people, who helped me recently:
+
 in 2012:
 * Marcos Cruz (beta testing and bug fixing)
 * Bernhard Rosenkraenzer (send me a patch for 64bit version)
+
 in 2013:
 * Matthias Vogl (\verb|va_copy| patch for 64bit version)
 * Eckhard Kruse (for permission to include ballerburg.bas in the samples)
 * Stewart C. Russell (helped me fix some compilation bugs on Raspberry PI)
 * Marcos Cruz (beta testing and bug fixing)
 * James V. Fields (beta testing and correcting the manual)
+
 in 2014:
-* John Clemens, Slawomir Donocik, Izidor cicnapuz, Christian Amler,
-  Marcos Cruz, and John Sheales (beta testing and bug fixing),
+* John Clemens, Slawomir Donocik, Izidor Cicnapuz, Christian Amler,
+  Marcos Cruz, Charles Rayer, Bill Hoyt, and John Sheales (beta testing and 
+  bug fixing),
   Nic Warne and Duncan Roe for helpful patches for the linux target.
 
-
+in 2015:
 
 X11-Basic is build on top of many free softwares, and could not exist without 
 them.
+
+X11-Basic uses functionallity of the gmp library, 
+the GNU multiple precision arithmetic library, Version 5.1.3.
+   Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+
+For details, see: https://gmplib.org/
+
+X11-Basic also uses functionallity if the LAPACK library. 
+LAPACK (Linear Algebra Package) is a standard software library for 
+numerical linear algebra. 
+
+For details, see: http://www.netlib.org/lapack/
 
 So I would like to thank every people involved in the following projects:
 

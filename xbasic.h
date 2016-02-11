@@ -34,24 +34,27 @@
    
 					       */
 #define PM_COMMS        0x000FF  /* Maske fuer Befehlsnr. */
-#define P_NOCMD         0x000ff  /* Falls der Pcode kein Kommando darstellt */
+#define P_NOCMD         0x000ff  /* Falls der Pcode kein Kommando aus liste darstellt */
 
-#define P_PREFETCH      0x00100  /* PC lesen */
+#define PM_TYP          0x00700  /*  Maske f"ur Typ des Kommandos, Art der Argumente, Art des Aufrufs*/
+#define P_EVAL          0x00000  /* Eval "uber Programmzeile....*/
+#define P_ARGUMENT      0x00100  /* Befehl mit Parameter im P_CODE.argument */
+#define P_SIMPLE        0x00200  /* Befehl ohne Parameter */
+#define P_PLISTE        0x00300  /* Befehl mit Parameterliste */
+#define P_IGNORE        0x00400  /*  Befehl ohne effekt...*/
+#define P_BYTECODE      0x00500  /*  */
 
-#define PM_TYP          0x00600  /*  Maske */
-#define P_BYTECODE      0x00000  /* */
-#define P_ARGUMENT      0x00200  /* Befehl mit Parameter im P_CODE.argument */
-#define P_SIMPLE        0x00400  /* Befehl ohne Parameter */
-#define P_PLISTE        0x00600  /* Befehl mit Parameterliste */
+#define PM_FLAGS        0x01800
 
+#define P_PREFETCH      0x00800  /* PC lesen */
+#define P_INVALID       0x01000  /*Marker f"ur unverstaendlichen Code*/
 
-#define P_IGNORE        0x00800  /* Ist auch Maske, muss 1 Bit sein! */
-
-#define P_INVALID       0x01000
   /* Label:          0x00002000  */
   /* Proc:           0x00004000  */
   
-#define P_EVAL          0x08000  /* 1 Bit Befehl geht ueber den Parser */
+#define PM_GROUP        0x0e000
+#define P_IFGROUP       0x02000
+#define P_SELECTGROUP   0x04000
 
 
 #define PM_LEVEL     0x00030000
@@ -59,7 +62,7 @@
 #define P_LEVELOUT   0x00020000
 #define P_LEVELINOUT 0x00030000
 
-#define PM_SPECIAL   0x00f3ff00 /* Suchmaske */
+#define PM_SPECIAL   0x00ffff00 /* Suchmaske */
 
 
 #define P_SPECIAL0   0x00000000 /* Labels, wonach gesucht werden kann */
@@ -72,44 +75,47 @@
 #define P_SPECIAL7   0x00700000
 
 
-#define P_IF       (P_LEVELIN|P_ARGUMENT|P_SPECIAL0)
-#define P_ELSE     (P_LEVELINOUT|P_ARGUMENT|P_IGNORE|P_PREFETCH|P_SPECIAL0)
-#define P_ELSEIF   (P_LEVELINOUT|P_ARGUMENT|P_IGNORE|P_PREFETCH|P_SPECIAL4)
-#define P_ENDIF    (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL0)
+#define P_IF       (P_LEVELIN|P_PLISTE|P_SPECIAL0)
+#define P_ELSE     (P_LEVELINOUT|P_IGNORE|P_PREFETCH|P_SPECIAL0)
+#define P_ELSEIF   (P_LEVELINOUT|P_PLISTE|P_PREFETCH|P_SPECIAL4)
+#define P_ENDIF    (P_LEVELOUT|P_IGNORE|P_SPECIAL0)
 
 #define P_SELECT   (P_LEVELIN |P_PLISTE|P_SPECIAL1)
 #define P_CASE     (P_LEVELINOUT |P_ARGUMENT|P_SPECIAL1)
 #define P_DEFAULT  (P_LEVELINOUT|P_SIMPLE|P_SPECIAL1)
-#define P_ENDSELECT (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL1)
+#define P_ENDSELECT (P_LEVELOUT|P_IGNORE|P_SPECIAL1)
 
-#define P_DO       (P_LEVELIN|P_SIMPLE|P_IGNORE|P_SPECIAL2)
-#define P_REPEAT   (P_LEVELIN|P_SIMPLE|P_IGNORE|P_SPECIAL3)
-#define P_WHILE    (P_LEVELIN|P_ARGUMENT|P_SPECIAL2)
+#define P_DO       (P_LEVELIN|P_IGNORE|P_SPECIAL4)
+#define P_REPEAT   (P_LEVELIN|P_IGNORE|P_SPECIAL3)
+#define P_WHILE    (P_LEVELIN|P_PLISTE|P_SPECIAL2)
 #define P_FOR      (P_LEVELIN|P_ARGUMENT|P_SPECIAL3)
 
-#define P_LOOP     (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL2|P_PREFETCH)
-#define P_UNTIL    (P_LEVELOUT|P_ARGUMENT|P_SPECIAL2)
-#define P_WEND     (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL3|P_PREFETCH)
+#define P_LOOP     (P_LEVELOUT|P_IGNORE|P_SPECIAL2|P_PREFETCH)
+#define P_UNTIL    (P_LEVELOUT|P_PLISTE|P_SPECIAL2)
+#define P_WEND     (P_LEVELOUT|P_IGNORE|P_SPECIAL3|P_PREFETCH)
 #define P_NEXT     (P_LEVELOUT|P_PLISTE|P_SPECIAL3)
 
-#define P_GOTO     (P_PREFETCH|P_IGNORE)
+#define P_GOTO     (P_PREFETCH|P_ARGUMENT)
 #define P_GOSUB    (P_ARGUMENT|P_SPECIAL5)
 
 
-#define P_DATA     (P_IGNORE|P_ARGUMENT|P_SPECIAL4) 
+#define P_DATA     (P_IGNORE|P_SPECIAL4) 
 #define P_BREAK    (P_PREFETCH|P_IGNORE|P_SPECIAL4)
-#define P_EXITIF   (P_ARGUMENT|P_SPECIAL4)
-#define P_REM      (P_IGNORE|P_ARGUMENT)
-#define P_CONTINUE (P_PREFETCH|P_IGNORE|P_SIMPLE|P_SPECIAL5)
+#define P_EXITIF   (P_PLISTE|P_SPECIAL4)
+#define P_REM      (P_IGNORE|P_SPECIAL5)
+#define P_CONTINUE (P_PREFETCH|P_SIMPLE|P_SPECIAL5)
 
 
 #define P_LABEL    (P_LEVELINOUT|P_IGNORE|P_NOCMD|0x00002000)
-#define P_PROC     (P_LEVELIN|P_NOCMD|0x00004000)
+#define P_PROC     (P_LEVELIN|P_SIMPLE|P_NOCMD|0x00004000)
 #define P_ENDPROC  (P_LEVELOUT|P_SIMPLE)
 #define P_RETURN   (P_ARGUMENT|P_SPECIAL6)
 #define P_DEFFN    (P_LEVELINOUT|P_IGNORE|P_NOCMD|0x00004000)
 
-#define P_ZUWEIS    P_SPECIAL7
+/*Leerzeile etc...*/
+#define P_NOTHING  (P_IGNORE|P_NOCMD)
+
+#define P_ZUWEIS   (P_SPECIAL7|P_NOCMD)
 
 
 /* F-Code-Definitionen   long */
@@ -141,16 +147,29 @@
 #define F_SIMPLE     0x00000  /* Befehl ohne Parameter */
 #define F_ARGUMENT   0x00100  /* Befehl mit Parameter im P_CODE.argument */
 #define F_PLISTE     0x00200
+#define F_CQUICK     0x00300
 #define F_DQUICK     0x00400
 #define F_IQUICK     0x00500
 #define F_SQUICK     0x00600
 #define F_AQUICK     0x00700
 #define F_IGNORE     0x00800
 
-#define F_INVALID    0x01000
-#define F_IRET       0x02000
-#define F_DRET       0x00000
-#define F_CONST      0x08000
+
+/* Return typ */
+#define FM_RET       0x0f000
+
+#define F_ANYRET     0x00000
+#define F_IRET       0x01000
+#define F_DRET       0x02000
+#define F_AIRET      0x03000
+#define F_AFRET      0x04000
+#define F_CRET       0x05000
+#define F_ACRET      0x06000
+#define F_SRET       0x07000
+#define F_ANYIRET    0x08000
+#define F_NRET       0x09000
+
+#define F_CONST      0x10000
 
 
 
@@ -169,16 +188,18 @@
 
 
 
-
+/* Definition einer X11-Basic Zeile*/
 
 
 typedef struct {
-  long opcode;
+  long opcode;    /* Art des Kommandos P_* */
   int integer;
-  short panzahl;
-  PARAMETER *ppointer;
-  char *argument;
-  short etyp;           /* typ of the extra information */
+  short panzahl;  /* Anzahl der Parameter bei ppointer*/
+  PARAMETER *ppointer; /*Parameter des kommandos, oder z.B. indizies bei zuweisung*/
+  PARAMETER *rvalue;   /*  Bei ZUWEIS, Stage 2 parameter*/
+  char *argument;  /*  Argument als nicht aufgelöter Textstring*/
+  short atyp;           /* type of the argument */
+  short etyp;           /* type of the extra information */
   void *extra;          /* Pointer to extra Information */
 } P_CODE;
 
@@ -194,13 +215,7 @@ typedef struct {
 } AFUNCTION;
 
 
-typedef union {
-  ARRAY a;
-  STRING str;
-  double f;
-  int i;
-} UNIVAR;
-extern UNIVAR returnvalue;
+extern PARAMETER returnvalue;
 
 
 /*Variablen*/
@@ -246,11 +261,14 @@ extern const char *keywords[];
 void clear_program();
 int init_program(int prglen);
 char *bytecode_init(char *adr);
+// int fix_bytecode_header(BYTECODE_HEADER *bytecode);
 
 char *indirekt2(const char *funktion);
+unsigned int type_list(const char *ausdruck);
 
 void free_pcode(int l);
 unsigned int type(const char *ausdruck);
+unsigned int combine_type(unsigned int rtyp,unsigned int ltyp,char c);
 
 
 #ifndef ANDROID
@@ -263,7 +281,26 @@ unsigned int type(const char *ausdruck);
 #define structure_warning(lin,comment)  {printf("WARNING: corrupt program structure at line %d ==> %s.\n",lin,comment); invalidate_screen();}
 #endif
 
+/*Funktionen für die Umwandlung */
 
+static inline void WSWAP(char *adr) {
+  char a=*adr;
+  *adr=adr[1];
+  adr[1]=a;
+}
+static inline void LSWAP(short *adr) {
+  short a=*adr;
+  *adr=adr[1];
+  adr[1]=a;
+}
+static inline void LWSWAP(short *adr) {
+  short a;
+  WSWAP((char *)&adr[0]);
+  WSWAP((char *)&adr[1]);
+  a=*adr;
+  *adr=adr[1];
+  adr[1]=a;
+}
 
 
 
@@ -281,7 +318,7 @@ inline static int suchep(int begin, int richtung, int such, int w1, int w2) {
   return(-1);
 }
 
-inline static int procnr(char *n,int typ) {
+inline static int procnr(const char *n,int typ) {
   register int i=anzprocs;
   while(--i>=0) {
     if((procs[i].typ&typ) && strcmp(procs[i].name,n)==0) return(i);

@@ -9,9 +9,13 @@
 
 
 int do_parameterliste(const char *pos, const int *,int);
+void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar);
+
 double parser(const char *funktion);
-ARRAY array_parser(char *funktion);
+ARRAY array_parser(const char *funktion);
 STRING string_parser(const char *);
+COMPLEX complex_parser(const char *);
+void arbint_parser(const char *,ARBINT);
 char *s_parser(const char *funktion);
 
 STRING vs_error();

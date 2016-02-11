@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.22
+                       VERSION 1.23
 
-            (C) 1997-2014 by Markus Hoffmann
+            (C) 1997-2015 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.22                              Vendor: Markus Hoffmann
+Version     : 1.23                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
@@ -59,7 +59,7 @@ Description :
 
   You will find the compiler sourcecode and some other sample programs in 
   /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-  can be found in X11-Basic-examples-1.22.zip, which you can download from the 
+  can be found in X11-Basic-examples-1.23.zip, which you can download from the 
   homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
   of the manual can be found there.
 

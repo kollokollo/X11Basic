@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.22], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.23], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -95,7 +95,7 @@ if test "x$no_x" = yes; then
 fi
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/kd.h png.h jpeglib.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
+AC_CHECK_HEADERS([sys/kd.h complex.h png.h jpeglib.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
 
 
 
@@ -115,6 +115,8 @@ AC_CHECK_LIB([m], [logb], AC_DEFINE(HAVE_LOGB,1,[logb in Mathlib]))
 AC_CHECK_LIB([m], [sqrt], AC_DEFINE(HAVE_SQRT,1,[sqrt in Mathlib]))
 AC_CHECK_LIB([m], [pow], AC_DEFINE(HAVE_POW,1,[pow in Mathlib]))
 AC_CHECK_LIB([m], [expm1], AC_DEFINE(HAVE_EXPM1,1,[expm1 in Mathlib]))
+AC_CHECK_LIB([m], [clog10], AC_DEFINE(HAVE_CLOG10,1,[clog10 in Mathlib]))
+AC_CHECK_LIB([m], [cacos], AC_DEFINE(HAVE_CACOS,1,[cacos in Mathlib]))
 AC_CHECK_LIB([m], [log1p], AC_DEFINE(HAVE_LOG1P,1,[log1p in Mathlib]))
 
 # `-ltermcap':
@@ -161,6 +163,18 @@ AC_DEFINE(HAVE_READLINE,1,[readline in readline])
 AC_CHECK_LIB([lapack], [dgelss_], [
 libs="$libs -llapack"
 AC_DEFINE(HAVE_LAPACK,1,[dgelss_ in lapack])
+],,[$libs])
+
+# `-lgmp':
+AC_CHECK_LIB([gmp], [__gmpz_init], [
+libs="$libs -lgmp"
+AC_DEFINE(HAVE_GMP,1,[mpz_init in gmp])
+],,[$libs])
+
+# `-lgmp':
+AC_CHECK_LIB([gmp], [__gmpz_primorial_ui], [
+libs="$libs -lgmp"
+AC_DEFINE(HAVE_PRIMORIAL_UI,1,[mpz_primorial_ui in gmp])
 ],,[$libs])
 
 # `-lusb':
