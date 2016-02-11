@@ -1,0 +1,255 @@
+AC_INIT(defs.h)
+version="1.00"
+AC_SUBST(version)
+echo "#define VERSION \"$version\"">version.h
+#### PROGRAMS
+AC_PROG_CC
+AC_ISC_POSIX
+static=
+if test "n$CC" != ngcc; then
+cat <<'EOF'
+Note: using gcc will improve the speed of emulation significantly!
+EOF
+else
+copt="-O3"
+changequote(,)dnl
+v=`gcc -v 2>&1|grep version|sed 's/^.*\([0-9]\.[0-9]\.[0-9]\).*/\1/g'`
+if test `echo $v|sed 's/\.//g'` -lt 245; then
+	echo "You have only version $v, please install a newer version of gcc!"
+	exit 1
+else
+	echo "Using gcc version $v"
+fi
+changequote([,])dnl
+fi
+AC_CHECK_PROG(MAKEDEPEND, makedepend, ok, no)
+if test "n$MAKEDEPEND" = nno; then
+cat <<'EOF'
+You don't seem to have `makedepend', but I'll continue the configuration
+process. It will fail at the end when I'll try to do a `make depend', you're
+on your own then... (Yes, I know I could use gcc -MM etc. but I was too lazy)
+EOF
+fi
+#### LIBRARIES
+AC_PATH_XTRA
+if test "x$no_x" = yes; then
+	echo "Sorry, I can't find any trace of the X Window installation (X11) on your"
+	echo "system! Please use --x-includes=DIR and --x-libraries=DIR if you have them."
+	exit 1
+fi
+test -n "$x_includes" && inc="$inc -I$x_includes"
+test -n "$x_libraries" && xlibs="$xlibs -L$x_libraries"
+AC_SUBST(inc)
+AC_SUBST(xlibs)
+AC_SUBST(X_CFLAGS)
+AC_SUBST(X_LIBS)
+AC_SUBST(X_EXTRA_LIBS)
+AC_SUBST(X_PRE_LIBS)
+AC_MSG_CHECKING(for MIT-SHM extension)
+TMPLIBS=$LIBS
+LIBS="$LIBS $X_PRE_LIBS $xlibs -lXext -lX11 $X_EXTRA_LIBS -lc"
+AC_TRY_LINK([
+#include <X11/Xlib.h>
+#include <X11/extensions/XShm.h>],
+[
+int a,b; Bool c; Display *d;
+XShmQueryVersion (d, &a, &b, &c);
+],
+def="$def -DSH_MEM"
+shm=ok,
+LIBS=$TMPLIBS
+shm=no)
+AC_MSG_RESULT($shm)
+#### Functions
+AC_TRY_LINK([#include <stdlib.h>],[atexit(exit);],[echo "atexit() found"],[
+AC_TRY_LINK([#include <stdlib.h>],[on_exit(main);],[echo "using on_exit()"
+def="$def -DUSE_ON_EXIT=1"],
+def="$def -DNO_ATEXIT=1"
+echo "You need either atexit() or on_exit() for X11Basic to work correctly!")])
+#### SYSTEM
+echo "Running config.guess to determine your system type..."
+t=`./config.guess`
+echo 'You seem to have a `'$t"'"
+endian=dunno
+conf="config/generic.h"
+case $t in
+sparc-sun-sunos*)
+	echo "Congratulations! You've got the same system type as I! ;-)"
+	conf="config/sparc-sun-sunos.h"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-O4"
+fi
+	;;
+sparc-sun-solaris*)
+	echo "A Sun with Solaris 2.x"
+	conf="config/sparc-sun-solaris.h"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-O4"
+fi
+	;;
+i*86-*-linux)
+	echo 'Oh no, a 80x86-based Linux box... My condolences! :-)'
+	regs="-fomit-frame-pointer"
+	conf="config/x86-linux.h"
+	;;
+i*86-*bsd*)
+ 	echo 'A 80x86-based BSD box...'
+ 	regs="-fomit-frame-pointer -ffixed-ebx -ffixed-ebp"
+ 	copt="-O3"
+ 	conf="config/x86-bsd.h"
+ 	;;
+mips-sgi-irix*)
+	echo 'Wow, an SGI!'
+	conf="config/mips-sgi-irix.h"
+	defs="$defs -D_BSD_SIGNALS"
+	xtra="$xtra -laudio -lm"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-O2"
+fi
+	;;
+mips-dec-ultrix*)
+	echo "A DECstation..."
+	conf="config/decstation.h"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-O2"
+fi
+	;;
+hppa*-hp-hpux)
+	echo "A HP with HP-UX and PA-RISC processor"
+	conf="config/hpux.h"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+	static="-static"
+else
+	echo "You need gcc on HP-UX, sorry!"
+	exit 1
+fi
+	;;
+alpha-dec-osf*)
+	echo "Wow, an Alpha/OSF!"
+	xtra="$xtra -ldnet_stub -lots"
+	conf="config/alpha.h"
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-migrate -non_shared -std1 -O5 -ifo -om"
+fi
+	;;
+m68k-next-bsd)
+	echo "A NeXTStation with NEXTSTEP and MC680x0 processor"
+	conf="config/next68k.h"
+if test "n$CC" = ngcc; then
+	regs="-posix -fomit-frame-pointer"
+else
+	regs="-posix"
+	copt="-O3"
+fi
+	;;
+*)	echo "X11Basic has not been ported to this system ($t), please let me"
+	echo "know if you can compile and run it successfully!"
+	echo "Determining this system's endianness and short/int sizes..."
+if test "n$CC" = ngcc; then
+	regs="-fomit-frame-pointer"
+else
+	regs=
+	copt="-O2"
+fi
+	$CC -o conftest config/endianness.c
+	if endian=`./conftest`; then
+		echo "Sizes are OK..."
+	else
+		echo "Sorry, sizeof(short),sizeof(int) must be 2,4!"
+		exit 1
+	fi
+	rm -f ./conftest
+case $endian in 
+	big)	echo "You're using a big-endian processor, very good!";;
+	little)	echo "You're using a little-endian processor, too bad...";;
+	*)	
+	echo "Your machine seems to have a weird byte-ordering format, which I can't deal"
+	echo "with - sorry!."
+	;;
+esac
+esac
+case $endian in 
+	big) def="$def -DIS_BIG_ENDIAN=1";;
+	little)	def="$def -DIS_BIG_ENDIAN=0";;
+esac
+AC_C_INLINE
+if test "n$ac_cv_c_inline" = "nno"; then
+  inline=
+else
+  inline="$ac_cv_c_inline"
+fi
+AC_SUBST(inline)
+echo "Looking for some functions..."
+AC_CHECK_FUNC(strdup,,def="$def -DNO_STRDUP")
+AC_CHECK_FUNC(bzero,,def="$def -DNO_BZERO")
+AC_MSG_CHECKING(if statfs() and stat() work as I want them to)
+statfs=no
+AC_TRY_LINK([
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>],
+[struct statvfs s; struct stat st; statvfs("/",&s); stat("/",&st);
+ return s.f_bavail+s.f_blocks+st.st_blksize;],
+statfs=STATFS_USE_STATVFS)
+if test $statfs = no; then
+AC_TRY_LINK([
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/vfs.h>],
+[struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
+ return s.f_bavail+s.f_blocks+st.st_blksize;],
+statfs=STATFS_USE_VFS)
+fi
+if test $statfs = no; then
+AC_TRY_LINK([
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#include <sys/mount.h>],
+[struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
+ return s.f_bavail+s.f_blocks+st.st_blksize;],
+statfs=STATFS_USE_MOUNT)
+fi
+if test $statfs = no; then
+AC_TRY_LINK([
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/statfs.h>
+#include <sys/vmount.h>],
+[struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
+ return s.f_bavail+s.f_blocks+st.st_blksize;],
+statfs=STATFS_USE_STATFS_VMOUNT)
+fi
+if test $statfs = no; then
+echo
+echo "Sorry, this doesn't seem to work. Please let me know what system you are"
+echo "using, and I'll try to fix this problem. Will continue."
+
+fi
+AC_MSG_RESULT($statfs)
+def="$def -D$statfs"
+rm -f config.h; ln -s $conf config.h
+AC_SUBST(regs)
+AC_SUBST(def)
+AC_SUBST(xtra)
+AC_SUBST(copt)
+AC_SUBST(static)
+test -f Makefile.devel || touch Makefile.devel
+AC_OUTPUT(Makefile,
+make depend)

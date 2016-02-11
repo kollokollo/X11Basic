@@ -1,0 +1,109 @@
+.SUFFIXES: 	.m4 .bmp .S 
+
+SHELL=/bin/sh
+# Register variables (-ffixed-reg)
+REGS= @regs@
+
+# Optimization and debugging options
+OPT=@copt@
+
+# Additional header file paths
+INC=@X_CFLAGS@ -I/sgt4/include -I${CCSROOT}/include
+
+# for MONITOR=1 we need a System V compatible curses library - I need to
+# write an Autoconf macro to test for that...
+#Linux:
+#INC=@X_CFLAGS@ -I/usr/include/ncurses
+
+# X11 library path
+XLIBS=@X_LIBS@
+SFLAGS=
+# MONITOR=1:
+#Linux:
+#XLIBS=@X_LIBS@ -L../../binutils-2.4 -lopcodes -lbfd -liberty -lncurses
+
+#Linux SVGALIB support :
+#XLIBS=@X_LIBS@ -lvgagl -lvga 
+#SFLAGS=-DUSE_SVGALIB
+
+DEF= @def@ -DINLINE=@inline@
+
+# Compiler
+#CC=@CC@ @static@ $(REGS)
+CC=@CC@ $(REGS)
+
+# Preprocessor
+CPP=@CPP@
+
+CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
+
+ 
+
+DISTOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
+        mathemat_dummy.o runtime.o wort_sep.o xtrim.o ltext.o\
+	kommandos.o gkommandos.o do_gets.o errortxt.o window.o
+
+OBJS=$(DISTOBJS)
+
+AOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o mathematics.o runtime.o\
+	kommandos.o gkommandos.o do_gets.o errortxt.o window.o wort_sep.o xtrim.o ltext.o
+
+
+CSRC=$(OBJS:.o=.c)
+DISTCSRC=$(DISTOBJS:.o=.c)
+
+DIST=$(DISTCSRC) xbasic.h fdata.c window.h file.h options.h\
+	Makefile.in\
+	configure config/*.[hc]\
+	config.guess \
+        configure.in\
+        bitmaps/* doc/* examples/*
+
+DEPSRC=$(CSRC) $(MOREOBJ:.o=.c)
+
+DIR=X11Basic-@version@
+
+LINKFLAGS = -L/usr/lib/termcap
+
+LIBS = -lm -lX11 -lreadline -ltermcap @xtra@
+
+all :    configure Makefile xbasic
+
+configure : configure.in
+	autoconf
+
+fft : $(AOBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(AOBJS) \
+		$(LIBS) $(XLIBS)
+
+xbasic : $(OBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(OBJS) \
+		$(LIBS) $(XLIBS)
+
+install : all
+	cp xbasic ${HOME}/bin/xbasic
+
+clean :
+	rm -f xbasic *.o
+
+distclean : clean
+	rm -f Makefile config.cache config.status
+
+dist :	$(DIST)
+	rm -rf /tmp/$(DIR)
+	mkdir /tmp/$(DIR)
+	tar cf - $(DIST)|(cd /tmp/$(DIR); tar xpf -)
+	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
+
+depend : $(DEPSRC) 
+	cp Makefile Makefile.bak
+	chmod +w Makefile
+	makedepend $(INC) $(DEF) $(DEPSRC) 
+	sed -n '/^# DO NOT DELETE/,$$p' < Makefile > Makefile.tmp
+	sed -n '1,/^# DO NOT DELETE/p' < Makefile > Makefile.new
+	tail +2 Makefile.tmp|\
+	sed 's/^\([A-Za-z0-9_]*\)\.o:/\1.o \1.ln:/g'>>Makefile.new
+	rm -f Makefile.tmp
+	mv Makefile.new Makefile
+
+# DO NOT DELETE

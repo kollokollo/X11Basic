@@ -1,0 +1,171 @@
+    X     X    1   1        BBBB
+    X     X    1   1        B   B                   i
+      X X      1   1        B   B            sss
+       X       1   1 -----  BBBB    aaaa    s   s   i   cccc
+      X X      1   1        B   B  a   a      s     i  c
+    X     X    1   1        B   B  a   a    s   s   i  c   
+    X     X    1   1        BBBB    aaaaa    sss    i   cccc
+    
+    
+    
+                       VERSION 1.00 
+
+            (C) 1997-1999 by Markus Hoffmann
+                 (m.hoffmann@uni-bonn.de)
+      (http://www.cips02.physik.uni-bonn.de/~hoffmann/)
+
+	          ALL RIGHTS RESERVED
+ THIS PROGRAM IS PROVIDED "AS IS" WITHOUT A WARRANTY OF ANY KIND
+
+
+      See the file `COPYING' for licensing information
+
+         Last change to this file: June 2, 1999
+
+This file is separated into 4 sections:
+
+  1.  About X11-Basic (general description)
+  2.  Frequently Asked Questions
+  3.  The Future 
+  4.  History
+  5.  Known Bugs
+--------------------------------------------------------------------------------
+
+ 1. ABOUT X11-Basic
+ ###################
+
+Copyright information
+~~~~~~~~~~~~~~~~~~~~~
+X11-Basic is free software and distributed under the GNU License. Read the file
+COPYING for details.
+
+Intruduction
+~~~~~~~~~~~~
+X11-Basic is a non-standart Basic interpreter with full X capability and some
+other special features. Syntax is most similar to the old GFA-Basic ATARI ST
+implementation. Old gfa-prgrams should run with only few changes. 
+
+The actual implementation run on Unix workstations and Linux-PCs with the X
+Window system.
+
+
+Why use an interpreter? 
+~~~~~~~~~~~~~~~~~~~~~~~~ 
+
+Of course a compiler is often what the programmer wants. But think of  the
+advantages of interpreters like shells. In X11-Basic it is even possible to
+write self modifying code, which is not with a compiler. One of the main
+purposes is to allow software written for Gfa-Basic on Atari ST computer to be
+used on other systems. 
+
+What can X11-Basic do?
+~~~~~~~~~~~~~~~~~~~~~~
+
+X11-Basic was initially meant to be a very `low-level' Basic interpreter with
+calculation features and a simple graphics interface,  and the possiblility to
+use self modifying code. Also many of the system specific library functions
+should be accessible. Which it does quite well at the moment. 
+
+For a list of the Commands which are actually implemented please read the file 
+x11basic.txt.
+
+
+--------------------------------------------------------------------------------
+
+ 2. FREQUENTLY ASKED QUESTIONS
+ #############################
+
+Q: Why can't I compile X11Basic on my Computer with Zintorola 86060 processor and
+   Sluggix 0.8 Beta O.S.?
+A: If you have GNU-C and X11R5/6 for this system, and X11Basic still won't compile,
+   please let me know as soon as possible, I will try to fix it.
+
+Q: How do I leave the interpreter `gently'?
+A: type quit or press ctrl-c (twice)
+
+Q: What do all the warnings mean?
+A: Well, isn't proper ported to your (any?) system. 
+
+Q: Why do the graphics look funny?
+A: Some X-Servers do not clean newly allocated Pixmaps. So rubbish is displayed 
+   if the window is maped. Please do a clearw 1 as a first command.
+
+Q: Program XXX doesn't run, what should I do?
+A: Well this question is too difficult to answer. 
+
+Q: Where can I get the newest version of X11-Basic? 
+A: Probably at ftp.??? or 
+   http://cips02.physik.uni-bonn.de/~hoffmann/software.html
+   Don't bet on it though! :-) 
+
+
+Q: What can I do to speed up the development of X11-Basic?
+A: You can try to bribe me with any amount of money, any type of hardware or
+   software (no pirated stuff please).
+   A nice postcard might suffice too. :-)
+   If you like to implement some new features and/or commands to x11basic,
+   please send me your new sources with description. But I only will implement
+   this stuff if I like it .-)
+
+--------------------------------------------------------------------------------
+
+ 3. THE FUTURE
+ #############
+
+Things left to do:
+- Speed up the interpretation  with precompiled tokens
+- Optimize a bit more
+- Dynamic linking of elf-object-Files
+- Fix the bugs
+(etc. etc.)
+
+--------------------------------------------------------------------------------
+
+ 4. HISTORY
+ ##########
+
+In the beginning there were absurd plans, long sleepless nights, and incredible
+boredom.
+
+Very First Version (1990)
+--------------------------
+It was a Mailbox-Program with Basic features (only character-Graphics with
+Vt100EMU) on my ATARI ST (!).
+
+
+First version with a version number - Version 0.1    ( 1997)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Mailbox-Program was rewritten in c on my Linux-PC
+- first X11-Commands
+
+
+Version 0.2 Alpha (1998)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- improved X11-Basic for use at the physics institute in Bonn
+- Fixed last Problems of the Parser (didn't like -1*(4-3) )
+- Added more X-features (redraw)
+- First portation to a HP-Workstation
+- Readline library in use
+
+Version 1.00 (Mar 1999)
+~~~~~~~~~~~~~~~~~~~~~~
+- Makefile and configure script adapted from STonX
+- True-color Displays
+- X rootwindow, multiple windows
+- INKEY$
+- First GPL-Distribution
+- FILESELECT,ALERT
+
+Version 1.01 (Jun 1999)
+~~~~~~~~~~~~~~~~~~~~~~
+- POINT()
+
+
+
+ 5. BUG's
+ ########
+ 
+- Integer-Artmetrik sehr(!) unvollstaendig
+- EXIT IF         behoben !
+- PRINT
+- RIGHT$

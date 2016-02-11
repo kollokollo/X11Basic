@@ -1,0 +1,16 @@
+29.03.1999
+
+I would like to thak some people, which helped me to realize this package.
+
+
+I know that there are many problems with the actual compilation of X11-Basic. I
+hope I will fix them soon. Now there is a source-distribution available with 
+some  Makefiles which I have stolen from Marinos Yannikos (STonX).
+
+
+Unfortuantely the numerical recepies are not allowed to be distributed. So I had
+to remove the FFT-Features from XBasic for this distribution. (see
+mathemat_dummy.c).
+
+Please report any errors to m.hoffmann@uni-bonn.de.
+
