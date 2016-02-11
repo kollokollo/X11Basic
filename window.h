@@ -190,34 +190,40 @@ extern int schubladex,schubladey,schubladew,schubladeh;
 
 
 
-
+#ifndef WINDOWS
 /* Wegen alignment (auf 4 !) */
-typedef struct {char a;char b; char c; char d;} TT;
 
 typedef struct {                     /**** BMP file header structure ****/
-    unsigned short bfType;           /* Magic number for file */
-    TT        bfSize;           /* Size of file */
-    unsigned short bfReserved1;      /* Reserved */
-    unsigned short bfReserved2;      /* ... */
-    TT   bfOffBits;        /* Offset to bitmap data */
+    unsigned short bfType;           /*0 Magic number for file */
+    char        bfSize;                /*2 Size of file */
+    char a; char aa; char aaa;
+    unsigned short bfReserved1;      /*6 Reserved */
+    unsigned short bfReserved2;      /*8 ... */
+    char     bfOffBits;              /*10 Offset to bitmap data */
+    char b;
+    char c;
+    char d;
 } BITMAPFILEHEADER;
+#endif
 
 #define BF_TYPE 0x4D42             /* "MB" */
 #define BITMAPFILEHEADERLEN 14
 
+#ifndef WINDOWS
 typedef struct   {                   /**** BMP file info structure ****/
-    unsigned int   biSize;           /* Size of info header */
-    int            biWidth;          /* Width of image */
-    int            biHeight;         /* Height of image */
-    unsigned short biPlanes;         /* Number of color planes */
-    unsigned short biBitCount;       /* Number of bits per pixel */
-    unsigned int   biCompression;    /* Type of compression to use */
-    unsigned int   biSizeImage;      /* Size of image data */
-    int            biXPelsPerMeter;  /* X pixels per meter */
-    int            biYPelsPerMeter;  /* Y pixels per meter */
-    unsigned int   biClrUsed;        /* Number of colors used */
-    unsigned int   biClrImportant;   /* Number of important colors */
+    unsigned int   biSize;           /*14 Size of info header */
+    int            biWidth;          /*18 Width of image */
+    int            biHeight;         /*22 Height of image */
+    unsigned short biPlanes;         /*26 Number of color planes */
+    unsigned short biBitCount;       /*28 Number of bits per pixel */
+    unsigned int   biCompression;    /*30 Type of compression to use */
+    unsigned int   biSizeImage;      /*34 Size of image data */
+    int            biXPelsPerMeter;  /*38 X pixels per meter */
+    int            biYPelsPerMeter;  /*42 Y pixels per meter */
+    unsigned int   biClrUsed;        /*46 Number of colors used */
+    unsigned int   biClrImportant;   /*50 Number of important colors */
 } BITMAPINFOHEADER;
+#endif
 #define BITMAPINFOHEADERLEN sizeof(BITMAPINFOHEADER)
 
 /*
@@ -229,13 +235,14 @@ typedef struct   {                   /**** BMP file info structure ****/
 #  define BI_RLE4      2             /* 4-bit run-length compression */
 #  define BI_BITFIELDS 3             /* RGB bitmap with RGB masks */
 
-
+#ifndef WINDOWS
 typedef struct  {                    /**** Colormap entry structure ****/
     unsigned char  rgbBlue;          /* Blue value */
     unsigned char  rgbGreen;         /* Green value */
     unsigned char  rgbRed;           /* Red value */
     unsigned char  rgbReserved;      /* Reserved */
 } RGBQUAD;
+#endif
 
 void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth);
 

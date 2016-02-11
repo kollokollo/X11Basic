@@ -76,7 +76,7 @@ void break_handler( int signum) {
 #ifdef DOOCS
     doocssig_handler(signum);
 #endif  
-    signal(SIGINT, obh);
+    signal(SIGINT, SIG_DFL);
     raise(signum);
   }
 }

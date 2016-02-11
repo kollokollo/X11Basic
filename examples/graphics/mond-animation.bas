@@ -379,15 +379,46 @@ plune9$=plune9$+"@P^U0LPcP:5TW3()AO*$6[<MGWTaX&<X@\N9Eb,c]X_:*EVN`2Z52,>H8X/FNUC
 plune9$=plune9$+"CDa.%aA;573ZCO7VDG9>\/7C/RK4;P;,6Ib$0)T;KB:*c*RKSMM[-E4N$4$$"
 plune9_bmp$=UNCOMPRESS$(INLINE$(plune9$))
 
+color 0
+pbox 0,0,320,200
+color get_color(40000,30000,0)
+deftext 1
+text 10,30,"MOON-Phase-Animation with X11-Basic"
 
 do
 for i=1 to 28
   t$="a$=plune"+str$(i)+"_bmp$"
   &t$
   put 100,100,a$
+  text 100,150,str$(i)+" "
+  print i
   vsync
   pause 0.1  
 next i
 loop
 
+
+' nph=0  Neumond
+' nph=1  1. viertel
+' nph=2  Vollmond
+' nph=3  letztes viertel
+
+' Rueckgabe ist julianischer tag
+
+function mondtag(n,nph)
+  local c,t,t2,as,am,jd
+  c=n+nph/4
+  t=c/1236.85
+  as=359.2242+29.105356*c+((1.178e-4)-(1.55e-7)*t)*t^2
+  am=306.0253+385.816918*c+0.010730*t^2
+  jd=2415020+28*n+7*nph+0.75933+1.53058868*c
+  if nph=0 or nph=2
+    add jd,(0.1734-3.93e-4*t)*sin(rad(as))-0.4068*sin(rad(am))
+  else if nph=1 or nph=3
+    add jd,(0.1721-4e-4*t)*sin(rad(as))-0.6280*sin(rad(am))
+  else
+    return 0
+  endif  
+  return jd
+endfunction
 

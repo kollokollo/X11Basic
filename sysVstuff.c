@@ -11,6 +11,11 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#ifdef WINDOWS
+#define EX_OK 0
+#else
+#include <sysexits.h>
+#endif
  
 #include <sys/types.h>
 
@@ -136,22 +141,14 @@ void createsem(int *sid, key_t key, int members) {
   union semun semopts;
 
   if(members > SEMMSL) {
-	  printf("Sorry, max number of semaphores in a set is %d\n",
-		   SEMMSL);
-	  exit(1);
+	  printf("Sorry, max number of semaphores in a set is %d\n",SEMMSL);
+	  exit(EX_OSERR);
   }
-
-
-        printf("Attempting to create new semaphore set with %d members\n",
-                                 members);
-
-
-        if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666))
-                         == -1)
-        {
+  printf("Attempting to create new semaphore set with %d members\n",members);
+  if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666))== -1) {
                 fprintf(stderr, "Semaphore set already exists!\n");
-                exit(1);
-        }
+                exit(EX_OSERR);
+  }
 
 
         semopts.val = SEM_RESOURCE_MAX;
@@ -175,24 +172,17 @@ void locksem(int sid, int member)
 
 
         /* Attempt to lock the semaphore set */
-        if(!getval(sid, member))
-        {
+        if(!getval(sid, member)) {
                  fprintf(stderr, "Semaphore resources exhausted (no lock)!\n");
-                 exit(1);
+                 exit(EX_OSERR);
         }
-
 
         sem_lock.sem_num = member;
 
-
-        if((semop(sid, &sem_lock, 1)) == -1)
-        {
+        if((semop(sid, &sem_lock, 1)) == -1) {
                  fprintf(stderr, "Lock failed\n");
-                 exit(1);
-        }
-        else
-                 printf("Semaphore resources decremented by one (locked)\n");
-
+                 exit(EX_OSERR);
+        } else printf("Semaphore resources decremented by one (locked)\n");
 
         dispval(sid, member);
 }
@@ -213,21 +203,16 @@ void unlocksem(int sid, int member)
         semval = getval(sid, member);
         if(semval == SEM_RESOURCE_MAX) {
                  fprintf(stderr, "Semaphore not locked!\n");
-                 exit(1);
+                 exit(EX_OSERR);
         }
         sem_unlock.sem_num = member;
 
 
         /* Attempt to lock the semaphore set */
-        if((semop(sid, &sem_unlock, 1)) == -1)
-        {
+        if((semop(sid, &sem_unlock, 1)) == -1) {
                 fprintf(stderr, "Unlock failed\n");
-                exit(1);
-        }
-        else
-                printf("Semaphore resources incremented by one (unlocked)\n");
-
-
+                exit(EX_OSERR);
+        } else printf("Semaphore resources incremented by one (unlocked)\n");
         dispval(sid, member);
 }
 
@@ -257,28 +242,19 @@ int getval(int sid, int member) {
 }
 
 
-void changemode(int sid, char *mode)
-{
-        int rc;
-        union semun semopts;
-        struct semid_ds mysemds;
-
+void changemode(int sid, char *mode) {
+  int rc;
+  union semun semopts;
+  struct semid_ds mysemds;
 
         /* Get current values for internal data structure */
 
-
-
         semopts.buf = &mysemds;
-
-
         rc = semctl(sid, 0, IPC_STAT, semopts);
-
-
         if (rc == -1) {
                  perror("semctl");
-                 exit(1);
+                 exit(EX_OSERR);
         }
-
 
         printf("Old permissions were %o\n", semopts.buf->sem_perm.mode);
 

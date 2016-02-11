@@ -23,9 +23,6 @@
 
 #ifdef FRAMEBUFFER
 #include "framebuffer.h"
-#endif
-
-#ifdef FRAMEBUFFER
   int global_mousex,global_mousey,global_mousek,global_mouses;
 #endif
 
@@ -280,7 +277,9 @@ void c_sget(char *n) {
 #endif
 }
 
+
 void c_getgeometry(PARAMETER *plist,int e) {
+#ifndef WINDOWS
   int winnr=DEFAULTWINDOW;
   int d,b,x,y,w,h;
 #ifndef FRAMEBUFFER
@@ -322,8 +321,11 @@ void c_getgeometry(PARAMETER *plist,int e) {
       else if(plist[1].integer==FLOATTYP) *((double *)plist[1].pointer)=(double)x;
     }   
   } else printf("Ungültige Windownr. %d. Max: %d. Or Window not yet opened.\n",winnr,MAXWINDOWS);
+#endif
 }
+
 void c_getscreensize(PARAMETER *plist,int e) {
+#ifndef WINDOWS
   int d,b,x,y,w,h;
 #ifndef FRAMEBUFFER
     Window root;
@@ -359,9 +361,8 @@ void c_getscreensize(PARAMETER *plist,int e) {
       if(plist[0].integer==INTTYP)        *((int *)plist[0].pointer)=x;
       else if(plist[0].integer==FLOATTYP) *((double *)plist[0].pointer)=(double)x;
     }   
+#endif
 }
-
-
 
 void c_sput(PARAMETER *plist,int e) {
   if(e) {

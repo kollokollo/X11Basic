@@ -10,7 +10,7 @@ Summary: A Basic Interpreter with X11-Graphics capabilities
 Vendor: Markus Hoffmann
 Name: X11Basic
 Version: 1.15
-Release: 1
+Release: 3
 Copyright: GPL
 Group: Development/Languages
 Source: http://x11-basic.sourceforge.net/X11Basic-1.15.tar.gz
@@ -52,9 +52,9 @@ Authors:
 %setup -q
 
 %build
-(sh install.sh; cd ./src)
+(cd ./src ; ./configure )
 %install
-(cd ./src ; ln -s mathemat_dummy.c mathematics.c ; make dyn lib x11basic.a xbvm bytecode xbc bas2x11basic)
+(cd ./src ; make xbasic x11basic.a xbvm bytecode xbc bas2x11basic)
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_mandir}/man1
 mkdir $RPM_BUILD_ROOT/usr/bin
@@ -78,7 +78,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc README COPYING INSTALL doc/ACKNOWLEGEMENTS doc/AUTHORS doc/RELEASE_NOTES
+%doc README COPYING INSTALL ACKNOWLEGEMENTS AUTHORS RELEASE_NOTES
 %doc doc/X11-Basic-manual.txt doc/editors
 %doc examples
 %doc %{_mandir}/man1/xbasic.1.gz

@@ -11,6 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WINDOWS
+#define EX_OK 0
+#else
+#include <sysexits.h>
+#endif
 #include "defs.h"
 
 void reset_input_mode();
@@ -126,7 +131,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
 HINSTANCE hInstance;
 #endif
 extern char *simple_gets(char *);
-main(int anzahl, char *argumente[]) {
+int main(int anzahl, char *argumente[]) {
   char buffer[MAXSTRLEN],*zw;
 #ifdef WINDOWS
   hInstance=GetModuleHandle(NULL);
@@ -163,4 +168,5 @@ main(int anzahl, char *argumente[]) {
       kommando(buffer);
     }
   }
+  return(EX_OK);
 }

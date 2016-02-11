@@ -13,6 +13,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#ifdef WINDOWS
+#define EX_OK 0
+#else
+#include <sysexits.h>
+#endif
 #include <ctype.h>
 #include "defs.h"
 #include <time.h>
@@ -87,7 +92,8 @@ void c_spawn(char *n) {
   
   pc2=procnr(buffer,1);
   if(pc2==-1)	xberror(19,buffer); /* Procedure nicht gefunden */
-  else { 
+  else {
+    #ifndef WINDOWS
     pid_t forkret=fork();
     if(forkret==-1) io_error(errno,"SPAWN");
     if(forkret==0) {
@@ -101,9 +107,10 @@ void c_spawn(char *n) {
           xberror(39,buffer); /* Program Error Gosub impossible */
         }      
         programmlauf();
-        exit(1);
+        exit(EX_OK);
       }
     }
+    #endif
   }
   free(buffer);
 }
@@ -1436,7 +1443,7 @@ void c_shm_free(PARAMETER *plist,int e) {
 }
 void c_pause(PARAMETER *plist,int e) {
 #ifdef WINDOWS
-  sleep((int)(1000*plist[0].real));
+  Sleep((int)(1000*plist[0].real));
 #else
   double zeit=plist[0].real;
   int i=(int)zeit;

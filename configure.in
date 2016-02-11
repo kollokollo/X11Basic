@@ -54,7 +54,7 @@ xbasic -e version
 fi
 
 AC_PROG_CC
-AC_PROG_INSTALL
+#AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CPP
 
@@ -340,5 +340,5 @@ AC_SUBST(libs)
 AC_SUBST(xtra)
 AC_SUBST(copt)
 AC_SUBST(static)
-AC_OUTPUT([../examples/compiler/xbc.bas Makefile],
+AC_OUTPUT([examples/compiler/xbc.bas Makefile],
 make depend)

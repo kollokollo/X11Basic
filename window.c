@@ -384,7 +384,10 @@ winbesetzt[nummer]=1;
   }
   return(nummer);
 }
+
+#ifndef WINDOWS
 void handle_event(int,XEvent *);
+#endif
 
 void open_window(int nr) {
  if(winbesetzt[nr]) {
@@ -660,7 +663,8 @@ char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
 
 void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth) {
   unsigned short *ptr1  = (unsigned short*)fbp;
-  int r,g,b,i,j,w,h,offset,ncol,d,ib,ic=0;
+  int r,g,b,i,j,w,h,offset,d,ib,ic=0;
+  unsigned int compression,ncol;
   char *buf2,*buf3;
   
   if(data==NULL) return;
@@ -670,10 +674,23 @@ void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth) {
 
   if(header->bfType!=BF_TYPE) {
     printf("Put-Image: Error: wrong bitmap format!\n");
+    memdump(data,64);
     return;
   }
-  if(iheader->biCompression!=BI_RGB) {
-    printf("Put-Image: Compressed Bitmaps are not supported !\n");
+  /* diese komische Akrobatik muss wohl sein (jedenfalls fuer den ARM-linux compiler */
+  compression=data[30]| (data[31]<<8) | (data[32]<<16)| (data[33]<<24); 
+
+  if(compression!=BI_RGB) {
+    printf("\033[H BITMAPINFOHEADERLEN=%d  \n",BITMAPINFOHEADERLEN);
+    printf("&iheader-data      =%d \n",(long)iheader-(long)data);
+    printf("bisize-data        =%d %d  \n",(long)(&(iheader->biSize))-(long)data,iheader->biSize);
+    printf("biwidth-data       =%d %d  \n",(long)(&(iheader->biWidth))-(long)data,iheader->biWidth);
+    printf("biHeight-data      =%d %d  \n",(long)(&(iheader->biHeight))-(long)data,iheader->biHeight);
+    printf("biPlanes-data      =%d %d  \n",(long)(&(iheader->biPlanes))-(long)data,iheader->biPlanes);
+    printf("biBitCount-data    =%d %d  \n",(long)(&(iheader->biBitCount))-(long)data,iheader->biBitCount);
+    printf("biCompression-data =%d %d  \n",(long)(&(iheader->biCompression))-(long)data,iheader->biCompression);
+    printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
+    memdump(data,64);
     return;
   }
   ncol=iheader->biClrUsed;
@@ -681,9 +698,15 @@ void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth) {
   
   w=iheader->biWidth;
   h=iheader->biHeight;
-  d=iheader->biBitCount;
-  
-  offset=*((int *)(data+10));
+ /* d=iheader->biBitCount;  */
+  d=data[28]| (data[29]<<8); 
+
+  if(d==0) {
+    printf("w=%d, h=%d, d=%d\n",w,h,d);
+    return;
+  }
+  offset=data[10]| (data[11]<<8) | (data[12]<<16)| (data[13]<<24); 
+
   if(w<=0||h<=0|| x+w>bw||h>bh) return;
   buf3=buf2=data+offset;
   

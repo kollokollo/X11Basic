@@ -1,6 +1,21 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
+# Version 08.08.2007 modified by Markus Hoffmann
+
+# Insert the defs for your machine
 
 SHELL=/bin/sh
+
+# Directories
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+BINDIR=@bindir@
+DATADIR=@datadir@
+LIBDIR=@libdir@
+MANDIR=@mandir@
+
+LIBNO=@version@
+
 # Register variables (-ffixed-reg)
 REGS= @regs@
 
@@ -28,7 +43,7 @@ CC=@CC@ $(REGS)
 # Cross-Compiler fuer Windows-Excecutable
 
 # WINCC=i386-mingw32msvc-gcc
-WINCC=i686-pc-mingw32-gcc
+WINCC=i586-mingw32msvc-gcc
 
 # Cross-Compiler fuer ARM-Linux-Excecutable
 
@@ -39,14 +54,6 @@ CPP=@CPP@
 
 CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
-# Directories
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-
-BINDIR=@bindir@
-DATADIR=@datadir@
-LIBDIR=@libdir@
-MANDIR=@mandir@
 
 OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
         runtime.o wort_sep.o ltext.o functions.o\
@@ -58,7 +65,7 @@ LIBOBJS= $(OBJS) mathematics.o
 WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
 AOBJS=   main.o $(LIBOBJS)
 BOBJS=   main.o blowfish.o $(LIBOBJS)
-CSRC=    $(DISTOBJS:.o=.c)
+CSRC=    $(DISTOBJS:.o=.c) fdata.c
 DISTCSRC=$(DISTOBJS:.o=.c)
 DEPSRC=  $(CSRC) 
 
@@ -69,46 +76,12 @@ HSRC=  array.h defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
        framebuffer.h
 
 
-DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
-      doc/AUTHORS doc/HISTORY doc/RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/*  \
-      src/xbasic.c \
-      src/file.c \
-      src/main.c \
-      src/ccs.c \
-      src/io.c \
-      src/parser.c \
-      src/variablen.c \
-      src/array.c src/array.h \
-      src/mathemat_dummy.c \
-      src/runtime.c \
-      src/wort_sep.c \
-      src/ltext.c \
-      src/kommandos.c \
-      src/kommandos.h \
-      src/gkommandos.c \
-      src/gkommandos.h \
-      src/functions.c \
-      src/functions.h \
-      src/framebuffer.c \
-      src/framebuffer.h \
-      src/do_gets.c \
-      src/errortxt.c \
-      src/window.c \
-      src/sysVstuff.c \
-      src/bytecode.c \
-      src/virtual-machine.c \
-      src/xbvm.c \
-      src/defs.h src/config.h.in \
-      src/globals.h \
-      src/xbasic.h src/fdata.c \
-      src/window.h src/file.h src/protos.h src/options.h \
-	src/Makefile.in src/ptypes.h src/vtypes.h src/bytecode.h\
-	src/configure \
-	src/config.guess \
-        src/configure.in\
-        src/x11basic.spec \
-        src/bitmaps/* \
+DIST= README INSTALL COPYING doc/man-pages/*.1 ACKNOWLEGEMENTS \
+      AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
+      doc/editors/*  $(HSRC) $(CSRC) \
+      config.h.in Makefile.in configure config.guess configure.in \
+        x11basic.spec \
+        bitmaps/* \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
         examples/compiler/bas2x11basic.bas \
@@ -117,10 +90,23 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 	examples/tests/* \
 	examples/graphics/* 
 
+BINDIST=README INSTALL COPYING doc/man-pages/*.1 ACKNOWLEGEMENTS \
+      AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
+      doc/editors/* xbasic xbc bas2x11basic xbvm \
+      examples/compiler/xbc.bas.in \
+      examples/compiler/inline.bas \
+      examples/compiler/bas2x11basic.bas \
+      examples/compiler/gui2bas.bas \
+      examples/compiler/c-demo.c \
+      examples/tests/* \
+      examples/graphics/* 
+
+
 DIST2=$(DISTOBJS:.o=.c)
 
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
+DIR3=X11Basic-bin-@version@
 TINEDIR=tinexbasic-@version@
 TINEDIST=$(DIST) doc/tine-xbasic.html examples2/DESY/*
 DOOCSDIR=doocsxbasic-@version@
@@ -131,20 +117,22 @@ LINKFLAGS =
 WINLINKFLAGS =
 
 LIBS =  @libs@ @xtra@ @X_EXTRA_LIBS@
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
+WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 
 TINEWINLIBS = -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 
-all :    configure Makefile xbasic
+all :    configure Makefile xbasic xbc bas2x11basic      
 
 configure : configure.in
 	autoconf
 Makefile : Makefile.in
-	./configure
+	./configure --prefix=/usr
  
 #.c.o:
 #	$(CC) -c $(CFLAGS) -o $@ $<
 .cc.o:
 	g++ -c $(INC) -o $@ $<
+mathematics.c:	mathemat_dummy.c
+	test -e mathematics.c || (echo "mathematics.c is not installed. using dummy..." ; ln -s $< $@ )
 xbasic.fft : $(AOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
 	strip $@
@@ -169,8 +157,8 @@ framebuffer :  xbasic.framebuffer
 xbasic.static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) $(XLIBS)
 	strip $@
-static : xbasic.static
-	
+
+static : xbasic.static	
 xbasic.staticreadline : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a\
 		/usr/lib/libreadline.a -ldl -lm -lncurses -lX11  $(XLIBS)
@@ -186,7 +174,8 @@ psydo : psydo.o lib
 psydostatic : psydo.o x11basic.a
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
 		$(LIBS) $(XLIBS)
-windows: x11basic.lib	
+windows: x11basic.lib xbasic.exe
+xbasic.exe: x11basic.lib
 	$(WINCC) -DWINDOWS -c main.c
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe main.o x11basic.lib \
 		$(WINLIBS)
@@ -229,20 +218,17 @@ doocsxbasic : $(OBJS) main.o mathematics.o doocs-wrapper.o
 	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS) -lpthread
 	strip $@
 
-xbasic : $(DISTOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(DISTOBJS) $(LIBS) $(XLIBS)
-	strip $@
 
 csxbasic : $(OBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
 	strip $@
-
-libx11basic.so : $(LIBOBJS)
-	$(CC) -shared -o $@ $(LIBOBJS)
+lib:	libx11basic.so x11basic.a
+libx11basic.so: libx11basic.so.$(LIBNO)
+	ln -s -f $< libx11basic.so.1
+	ln -s -f libx11basic.so.1 libx11basic.so
+libx11basic.so.$(LIBNO) : $(LIBOBJS)
+	$(CC) -fPIC -shared -Wl,-soname,$@ -o $@ $(LIBOBJS)
 	strip $@
-	
-lib : libx11basic.so
-
 winlib : x11basic.lib
 	$(WINCC) -shared -o libx11basic.dll x11basic.lib
 
@@ -252,28 +238,27 @@ libtinex11basic.so : $(LIBOBJS)
 x11basic.a : $(LIBOBJS)
 	 ar -ru $@ $(LIBOBJS) 
 
-x11basic.lib : clean
+x11basic.lib : $(DIST2) mathematics.c
 	$(WINCC) -DWINDOWS -c $(DIST2)
 	$(WINCC) -DWINDOWS -c mathematics.c
-	i686-pc-mingw32-ar -ru $@ $(WINLIBOBJS) 
+	i586-mingw32msvc-ar -ru $@ $(WINLIBOBJS) 
 
 tinex11basic.a : $(LIBOBJS)
 	 ar -ru $@ $(LIBOBJS)  
 
-xbasic.dyn : lib main.o
+xbasic : libx11basic.so main.o
 	$(CC) -L. $(LINKFLAGS) -o $@ main.o $(LIBS) -lx11basic $(XLIBS)
 	strip $@
-dyn : xbasic.dyn
 	
-xbc : dyn 
-	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o $@
+xbc : xbasic libx11basic.so
+	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@
 	strip $@
 bas2x11basic : xbc
-	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o $@
+	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@
 	strip $@
 myzip : xbc
-	xbc ../examples2/utils/myzip.bas --dynamic -o myzip
-	xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
+	./xbc ../examples2/utils/myzip.bas --dynamic -o myzip
+	./xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
 	strip myzip
 	strip myunzip
 bytecode : bytecode.h bytecode.c virtual-machine.o
@@ -284,41 +269,52 @@ xbvm : bytecode.h xbvm.c virtual-machine.o bytecode.h
 	gcc -o $@ xbvm.c virtual-machine.o -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline	
 xbvmstatic : bytecode.h xbvm.c virtual-machine.o bytecode.h x11basic.a
 	gcc -o xbvm xbvm.c virtual-machine.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline	
-installhome : xbasic
-	install -s -m 755 xbasic ${HOME}/bin/xbasic
-installdyn : dyn lib
-	install -s -m 755 xbasic.dyn ${HOME}/bin/xbasic
-	install -m 755 libx11basic.so $(LIBDIR)/
-install : dyn lib x11basic.a
-	install -s -m 755 xbasic.dyn $(BINDIR)/xbasic
-	install -m 755 libx11basic.so $(LIBDIR)/
+install : xbasic libx11basic.so x11basic.a xbvm bytecode xbc bas2x11basic
+	install -s -m 755 xbasic $(BINDIR)/
+	install -m 755 libx11basic.so.$(LIBNO) $(LIBDIR)/
+	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
+	ln -s -f $(LIBDIR)/libx11basic.so.1 $(LIBDIR)/libx11basic.so
 	install -m 644 x11basic.a $(LIBDIR)/
-	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
-	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
-xbcinstall : xbc install
+	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
+	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
 	install -s -m 755 xbc $(BINDIR)/
-	install ../doc/man-pages/xbc.1 $(MANDIR)/man1/xbc.1
+	install -s -m 755 xbvm $(BINDIR)/
+	install -s -m 755 bytecode $(BINDIR)/
+	install -s -m 755 bas2x11basic $(BINDIR)/
+	install doc/man-pages/xbc.1 $(MANDIR)/man1/
+	install doc/man-pages/xbbc.1 $(MANDIR)/man1/
+	install doc/man-pages/xbvm.1 $(MANDIR)/man1/
+	install doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
 uninstall :
-	rm -f $(LIBDIR)/libx11basic.so
+	rm -f $(LIBDIR)/libx11basic.so*
 	rm -f $(LIBDIR)/x11basic.a
-	rm -f $(BINDIR)/xbasic $(BINDIR)/xbc 
+	rm -f $(BINDIR)/xbasic 
+	rm -f $(BINDIR)/xbc 
+	rm -f $(BINDIR)/xbvm 
+	rm -f $(BINDIR)/bytecode 
+	rm -f $(BINDIR)/bas2x11basic 
 	rm -f $(MANDIR)/man1/xbasic.1
-	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1
+	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1 $(MANDIR)/man1/xbbc.1 $(MANDIR)/man1/xbvm.1
+	rm -f $(MANDIR)/man1/bas2x11basic.1
 clean :
-	rm -f xbasic *.dyn xbasic.static xbc xbvm bytecode *.o *.so a.out *.a \
-	myzip myunzip bas2x11basic X11-Basic-examples-@version@.tar.myz \
-	X11-Basic-examples-@version@.tar tinexbasic doocsxbasic
+	rm -f *.o a.out b.b \
+	backup-*.tgz
 
 distclean : clean
-	rm -f Makefile config.cache config.status config.log 
-	rm -f X11-Basic-examples-@version@.zip
+	rm -f Makefile config.cache config.status config.log xbasic xbc xbvm \
+	X11-Basic-examples-@version@.zip bytecode xbasic.static \
+	tinexbasic doocsxbasic xbasic.exe xbasic.dyn xbasic.staticreadline \
+	myzip myunzip bas2x11basic libx11basic.so* x11basic.lib
 	rm -rf autom4te.cache
 
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
-	(cd ..; tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
+	(tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
+	mv /tmp/$(DIR).tar.gz .
+bindist : $(DIR3).zip
+
 tinedist : $(DIST2)
 	rm -rf /tmp/$(TINEDIR)
 	mkdir /tmp/$(TINEDIR)
@@ -329,18 +325,34 @@ doocsdist : $(DIST2)
 	mkdir /tmp/$(DOOCSDIR)
 	(cd ..; tar cf - $(DOOCSDIST))|(cd /tmp/$(DOOCSDIR); tar xpf -)
 	(cd /tmp; tar cf - $(DOOCSDIR)|gzip -9 > $(DOOCSDIR).tar.gz)
-rpm :	dist
-	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
-	rpm -ba --clean x11basic.spec
-rpm2 :	dist
-	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
+rpm :	$(DIR).tar.gz x11basic.spec
+	cp $(DIR).tar.gz /usr/src/packages/SOURCES/
+#	rpm -ba --clean x11basic.spec
 	rpmbuild -ba --clean x11basic.spec
-tinerpm :	tinedist
-	cp /tmp/$(TINEDIR).tar.gz /usr/src/packages/SOURCES/$(TINEDIR).tar.gz
+deb :	$(BINDIST)
+	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ --arch i368 \
+	--maintainer kollo@users.sourceforge.net --requires libreadline5 --backup \
+	--pkggroup Interpreters --provides libx11basic --provides xbasic
+tinerpm : $(TINEDIR).tar.gz tinexbasic.spec
+	cp $(TINEDIR).tar.gz /usr/src/packages/SOURCES/
 	rpmbuild -ba --clean tinexbasic.spec
-doocsrpm :	doocsdist
-	cp /tmp/$(DOOCSDIR).tar.gz /usr/src/packages/SOURCES/$(DOOCSDIR).tar.gz
+doocsrpm : $(DOOCSDIR).tar.gz doocsxbasic.spec
+	cp $(DOOCSDIR).tar.gz /usr/src/packages/SOURCES/
 	rpmbuild -ba --clean doocsxbasic.spec
+$(DIR3).zip : $(BINDIST)
+	rm -rf /tmp/$(DIR3)
+	mkdir /tmp/$(DIR3)
+	mkdir /tmp/$(DIR3)/bin
+	mkdir /tmp/$(DIR3)/man
+	rsync -a README /tmp/$(DIR3)/
+	rsync -a INSTALL /tmp/$(DIR3)/
+	rsync -a RELEASE_NOTES /tmp/$(DIR3)/
+	rsync -a xbasic /tmp/$(DIR3)/bin/
+	rsync -a xbc /tmp/$(DIR3)/bin/
+	rsync -a doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
+	rsync -a doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
+	(cd /tmp ; zip -r $(DIR3).zip $(DIR3))
+	mv /tmp/$(DIR3).zip .	
 
 # create DSL package (for Damn Small Linux MyDSL)	
 dslpackage : xbasic.staticreadline
@@ -365,11 +377,11 @@ depend : $(DEPSRC)
 	cp Makefile Makefile.bak
 	chmod +w Makefile
 	makedepend $(INC) $(DEF) $(DEPSRC) 
-	sed -n '/^# DO NOT DELETE/,$$p' < Makefile > Makefile.tmp
-	sed -n '1,/^# DO NOT DELETE/p' < Makefile > Makefile.new
-	tail +2 Makefile.tmp|\
-	sed 's/^\([A-Za-z0-9_]*\)\.o:/\1.o \1.ln:/g'>>Makefile.new
-	rm -f Makefile.tmp
-	mv Makefile.new Makefile
+#	sed -n '/^# DO NOT DELETE/,$$p' < Makefile > Makefile.tmp
+#	sed -n '1,/^# DO NOT DELETE/p' < Makefile > Makefile.new
+#	tail +2 Makefile.tmp|\
+#	sed 's/^\([A-Za-z0-9_]*\)\.o:/\1.o \1.ln:/g'>>Makefile.new
+#	rm -f Makefile.tmp
+#	mv Makefile.new Makefile
 
-# DO NOT DELETE
+# DO NOT DELETE THIS LINE -- make depend depends on it.

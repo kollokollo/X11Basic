@@ -813,6 +813,7 @@ const struct {int sf; char xf; } ioemaptable[] = {
 #ifdef ENOSTR
     { ENOSTR,       -60 }, /* 60: Device not a stream */
 #endif  
+#ifdef ENOTSOCK
     { ENOTSOCK,     -88 }, /* 88: Socket operation on non-socket */
 
     { EOPNOTSUPP,   -95 }, /* 95: Operation not supported on transport endpoint */
@@ -833,6 +834,7 @@ const struct {int sf; char xf; } ioemaptable[] = {
     { ENOTCONN,    -107 }, /* 107: Transport endpoint is not connected */
     { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
     { ECONNREFUSED,-111 }  /* 111: Connection refused */
+#endif  
   };
 const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
   
@@ -950,6 +952,7 @@ void c_pipe(PARAMETER *plist,int e) {
     if(filenr[i] || filenr[j]) xberror(22,"");  /* File schon geoeffnet  */
     else {
       int filedes[2];
+#ifndef WINDOWS
       if(pipe(filedes)) io_error(errno,"PIPE");
       else {
         dptr[i]=fdopen(filedes[0],"r");
@@ -959,6 +962,9 @@ void c_pipe(PARAMETER *plist,int e) {
 	if(dptr[j]==NULL) printf("Error with fdopen! should not happen\n");
 	else filenr[j]=1;
       }
+#else
+      io_error(errno,"PIPE");
+#endif
     }
   }
 }
@@ -1404,9 +1410,12 @@ int f_ioctl(PARAMETER *plist,int e) {
     fff=get_fileptr(plist[0].integer);
     if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
     sock=fileno(fff);
+#ifndef WINDOWS
     if (e==2) ret=ioctl(sock,plist[1].integer);
     else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
-    if(ret==-1) io_error(errno,"ioctl");
+    if(ret==-1) 
+#endif
+      io_error(errno,"ioctl");
   }
   return(ret);
 }
