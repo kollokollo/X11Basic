@@ -1,0 +1,1474 @@
+    X     X    1   1        BBBB
+    X     X    1   1        B   B                   i
+      X X      1   1        B   B            sss
+       X       1   1 -----  BBBB    aaaa    s   s   i   cccc
+      X X      1   1        B   B  a   a      s     i  c
+    X     X    1   1        B   B  a   a    s   s   i  c   
+    X     X    1   1        BBBB    aaaaa    sss    i   cccc
+    
+    
+    
+                       VERSION 1.07
+
+            (C) 1997-2002 by Markus Hoffmann
+                 (m.hoffmann@uni-bonn.de)
+       (http://www-cip.physik.uni-bonn.de/~hoffmann/)
+
+	             ALL RIGHTS RESERVED
+ THIS PROGRAM IS PROVIDED "AS IS" WITHOUT A WARRANTY OF ANY KIND
+
+
+      See the file `COPYING' for licensing information
+
+         Last change to this file: Aug 29, 2002
+
+==>                                                         <==
+ Structured-BASIC-Interpreter with X11 graphic capabilities                          
+ - using the functionality of GFA-BASIC on AtariST     
+   with GEM/TOS (GFA-BASIC ported to UNIX-environment) 
+ - can be used as a shell
+ - can be used to write cgi-Scripts
+ - a psydocompiler can be used to make stand-alone-Binaries
+
+ FEATURES 
+ ======== 
+ Structured-BASIC-Interpreter                     
+ - without line-numbers                           
+ - GOTO / GOSUB-labels are symbolic names         
+ - Structure elements:                            
+     WHILE - EXIT IF - WEND                        
+     REPEAT - EXIT IF - UNTIL                      
+     DO - EXIT IF - LOOP                           
+     IF - ELSE IF - ELSE - ENDIF                   
+     FOR - EXIT IF - NEXT                          
+     PROCEDURE() - RETURN                  
+     FUNCTION() - RETURN - ENDFUNCTION                   
+ - Variable types indicated by appendix to name:  
+     varname     REAL (double)                    
+     varname%    INTEGER (long)                   
+     varname!    BOOLEAN          (*)              
+     varname$    STRING                   
+ - PROCEDURE and FUNCTION can have formal parameters 
+             and local variables                  
+ - DEFFN defines an inline-function (*)               
+ - integrated graphic instructions                
+
+ - A self compiling Pseudo-compiler is available
+
+(*) not implemented yet
+
+This file is separated into following sections:
+
+  1.  About X11-Basic (general description)
+  2.  Language Description
+  3.  How to use the Psydo-Compiler
+  4.  Frequently Asked Questions 
+  5.  History
+  6.  Known Bugs
+
+
+1. ABOUT X11-Basic
+
+
+1.1 Copyright information
+
+X11-Basic is free software and distributed under the GNU License. Read the file
+COPYING for details.
+
+1.2 Short History of BASIC
+
+BASIC was developed to introduce people to computer programming.  Little
+background was needed, so novices could write useful programs in only hours or
+days.  Writing a first program was as simple as:
+
+  PRINT "Hello World"
+
+BASIC was interactive, so programs could be written, run, edited, and rerun
+easily.  This quick positive feedback encouraged people to write more and more
+sophisticated programs.  As BASIC programs grew larger, however, they became
+unwieldy.  To cope, many programmers switched to structured languages like C
+and PASCAL.  Others gave up programming, because these other languages require
+much more up-front study and the learning of many unfamiliar concepts.
+
+
+
+1.3 Abstract
+
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates fratures like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on moden 
+computers.
+
+The syntax is most similar to the old GFA-Basic ATARI ST
+implementation. Old gfa-programs should run with only few changes. 
+
+The actual implementation runs on Unix workstations (like HP/UX, DEC alpha 
+and maybe others) and Linux-PCs with the X-Window system. A MS-Windows version 
+might be supported in near future. Also Hand-held PC Versions or adaptations to 
+VxWorks are actually been thought of.
+
+X11-Basic is as well suited to novices as programming wizards, and is
+appropriate for virtually all programming tasks. For science and engineering
+X11-Basic has already prooved its capability of handling complex simulation and
+control problems. For system programs, X11-Basic has high level language
+replacements for low level programming features that are much easier to read,
+understand, and maintain. For all applications, X11-Basic designed to support
+rapid development of compact, efficient, reliable, readable, portable, well
+structured programs.
+
+The X11-Basic environment contains a library of GUI
+functions.  This makes writing GUI programs in X11-Basic faster and easier than
+programming with native GUI tools.
+
+Structured Programming
+
+X11-Basic is a structured programming language.  Structure is a form of visual and
+functional encapsulation in which multiple-line sections of program look and
+act like single units.  The beginning and end of blocks are marked by
+descriptive keyword delimiters.  Lines within blocks are generally indented to
+make the block visible.  
+
+
+
+1.4 Usage
+
+command line parameters are as follows:  
+
+xbasic <filename>   --- run Basic-Programm [input.bas]
+
+-l                  --- load only, don't execute
+-e <kommando>       --- excecute basic command 
+--eval <ausdruck>   --- evaluate numerical expression  
+--daemon            --- swich off prompting and echoing
+
+Examples:
+
+xbasic testme.bas
+xbasic -l dontrunme.bas
+xbasic -e 'alert 1,"Hallo !",1," OK ",b'
+xbasic --eval 1+3-4*3
+
+1.3.1 X11-Basic as daemon:
+
+wird X11-Basic mit
+xbasic --daemon
+gestartet, so erscheint bei der Kommandoeingabe kein Prompt und es erfolgt kein 
+Echo der Tastatureingabe.
+
+1.3.2 X11-Basic as shell:
+
+X11-Basic Programme können auch wie Shell-Scripts gestartet werden.
+Hierzu installiert man xbasic in /bin/. Mit der Anweisung
+#!/bin/xbasic
+in der ersten Zeile des Scipts wird es als X11-Basic-Programm ausgeführt.
+
+
+
+2. Description of the X11-Basic language
+
+2.1 Variables
+
+Der Interpreter kennt 64-Bit Floatingpoint Variablen, 32-Bit Integervariablen,
+Zeichenketten und beliebigdimensionale Felder obengenannter Typen.
+Eine Deklaration der Variablen ist nicht nötig (Außer bei Feldern --> DIM),
+da der Interpreter den Typ an der Endung der Variable erkennt:
+Integervariablen tragen die Endung %, Zeichenketten ein $, Felder ein ().
+Variablen ohne Endung werden als float interpretiert.
+Pointer sind Integer, Funktionsergebnisse werden durch @ gekennzeichnet
+Logische Ausdrücke sind ebenfalls vom Typ Integer.
+Typenumwandlungen werden bei Bedarf automatisch vorgenommen, wo dies möglich
+ist. 
+
+Die Variablen werden dynamisch verwaltet, so sind beliebig große Zeichenketten
+und Felder möglich. Die Grenze ist hier nur der maximal allozierbare Speicher
+und max. 31 Bit für die Indizierung. Das sollte vorerst ausreichen.
+
+
+Beispiele:
+
+Integer-Variablen:      i%=25
+			a%=varptr(b$)
+			b%=malloc(100000)
+Float-Variablen:        a=1.2443e17
+			b=@f(x)
+Zeichenkettenvariablen: t$="Das ist ein Text"
+Felder/Arrays:          i%(),a(),t$()
+
+Logische Ausdrücke:    (a=2 AND b=5) sind vom Typ Integer (TRUE=-1, FALSE=0)
+
+Strings
+
+X11-Basic string variables automatically resize to hold whatever length string is
+assigned to them.  A wealth of intrinsics and functions are provided to support
+efficient string processing.  
+
+Arrays
+
+X11-Basic arrays can contain variables of any data type, including strings.  
+All arrays, even multi-dimensional arrays, can be redimensioned without
+altering the contents.
+
+Subroutines
+
+Subroutines are blocks of code that can be called from elsewhere in a
+function.  Subroutines can take arguments but return no results. They can
+access all variables available but also may have local variables (--> LOCAL).
+
+Functions
+
+X11-Basic functions are fully encapsulated and bullet-proof by default. 
+Variables are global unless declared local. For local variables changes outside a
+function have no effect within the function except as explicitly specified
+within the function.  Functions arguments can be variables and arrays of any
+data types.  Functions can return variables of any data type. By default,
+arguments are passed by value. 
+
+
+2.2 Operators
+
+Man unterscheidet zwischen numerischen, Zeichenketten- und Feld- bzw.
+Matritzenoperatoren, je nachdem, ob das Ergebnis der Operation eine Zahl oder
+eine Zeichenkette ist.
+ 
+-- Zeichenkettenoperatoren ---
+
++	Dier Verkettung von Zeichenketten.
+	Dabei werden die durch + verbundenen Strings lückenlos
+	aneinandergefügt.
+
+	Beispiel: a$="X11", b$="-" und c$="BASIC", dann ergibt sich 
+        d$=a$+b$+c$ die Zeichenkette "X11-BASIC" 
+
+$()     Zeichenkettenfunktionen:
+	z.B. LEFT$, RIGHT$, MID$, SPACE$, STRING$, STR$ ...
+
+-- Numerische Operatoren --
+
+Die numerischen Operatoren können in vier Kategorien gegliedert werden:
+
+*	Arithmetische Operatoren
+*	Vergleichsoperatoren
+*	Logische Operatoren
+*	Numerische Funktionen
+
+-- Matritzenoperatoren --
+
+Matritzenoperatoren oder allgemein Feld-Operatoren operieren auf Feldern.
+Je nach Feldtyp und Dimension können sie unterschiedliche Bedeutung haben.
+
+        $    F   I   D2 D3 Dn  Sonstige Bemerkungen
++       *    *   *    *  *  *
+-       -    *   *    *  *  *
+*       -    *   *    *  -  -  M1=N2 , auch skalar
+INV()   -    *   *    *  -  -  M=N
+TRANS() *    *   *    *  -  -  M=N
+
+Weiterhin gibt es Operatorn/Funktionen, die zwischen verschiedenen
+Variablenklassen Operieren: z.B.
+a%=INT(b), c=DET(d()), s=SMUL(a(),b()), a()=NULL(2,4,5), ...
+
+Insbesondere sei auf den Reduktionsoperator hingewiesen:
+b()=a(:,3) ist ein eindimensionaler Vektor, nämlich die Spalte Nr. 3 der
+        Matrix a. 
+
+
+-- Integer und Float-Variablen ---
+()           Klammerung
++ - * /      Grundrechenarten
+^            Potenz
+
+MOD          Modulo
+DIV          Ganzzahliger Teiler
+
+
+Vergleichsoperatoren: = <> < > <= >=
+====================================
+
+Vergleichsoperatoren können zwischen zwei Ausdrüchen gleichen Typs stehen, also
+zwischen Zeichenkettenausdrücken, numerischen Ausdrücken oder Feld-Ausdrücken.
+Abhängig vom Wahrheitswert (wahr oder falsch) wird dem Vergleich entweder der
+Wert -1 (wahr) oder 0 (falsch) zugeordnet.
+(Da sich in jedem Fall eine Zahl ergibt, zählt auch der Vergleich von
+Zeichenketten zu den numerischen Operatoren.)
+
+Folgende Vergleichsoperatoren sind verfügbar:
+
+	=	equal
+	>	greater than
+	<	less than
+	<>	not equal
+	>=	grater or equal
+	<=	less or equal
+
+Zum Vergleich von numerischen Ausdrücken sollen hier nur einige Beispiele
+aufgeführt werden:
+
+PRINT 3=1.5*2  übergibt den Wert  -1   (wahr)
+PRINT 5>5      übergibt den Wert   0   (falsch)
+
+Der Vergleich von Zeichenketten vollzieht sich nach folgenden Regeln: 
+
+*	Zwei Zeichenketten sind gleich, wenn sie vollständig übereinstimmen.
+	(Dabei werden alle Zeichen der Strings, auch Leerzeichen und Satzzeichen,
+	verglichen. So gilt z.B. " 123 v fdh.-," = " 123 v fdh.-,")
+
+*	Bein Größenvergleich zweier Strings wird folgendermaßen verfahren:
+	Die Zeichenketten werden Zeichenweise verglichen, solange, bis der
+	ASCII-Code des Zeichens des einen Strings kleiner ist als der des
+	Zeichens  des anderen Strings, oder das Zeichenkettenende eines Strings
+	erreicht wird. Dieser Ist dann kleiner als der andere.
+
+	Beispiele:
+	"X11">"X11"     ergibt  0
+        "X11"<"x11"     ergibt -1
+        "123"<"abc"     ergibt -1
+        "123">"1234"    ergibt  0
+
+Logische Operatoren: AND OR NAND OR NOT XOR EQV IMP 
+====================================================
+
+Mit Hilfe der logischen Operatoren können Ausdrücke oder Beziehungen zwischen
+Ausdrücken miteinander verbunden werden.
+
+In der Regel werden mit logischen Operatoren Wahrheitswerte verknüpft und als
+Ergebnis wiederum Wahrheitswerte ausgegeben.
+Dabei wird jedem numerischen Ausdruck ungleich 0 der Wahrheitswert 0 und jedem
+Ausdruck, dessen Wert gleich 0 ist, der Wahrheitswert falsch zugeordnet.
+Die von den Logischen Operatoren erzeugten Wahrheitswerte ergeben sich aus
+der Bit-weisen Operation, wenn die Operanden als 32-Bit Integerwerte
+angesehen werden. Deshalb gehört zum Wahrheitswert 0 (falsch) der
+Wahrheitswert -1 (wahr). Hierfür gibt es auch die Systemvariablen TRUE=-1
+und FALSE=0. Dies kann man auch in numerischen Ausdrücken Verwenden, z.B.:
+a=ABS(x=0)*100+ABS(x=1)*200   je nach dem Wert von x erhält die Variable a die
+Werte 100 oder 200.
+
+AND   Konjunktion
+      Das Ergebnis von AND ist nur dann w, wenn beide Argumente w sind:
+
+      A  |  B  |  A AND B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    f
+      f  |  f  |    f
+
+      Beispiele:
+      Print 3=3 AND 4>2        ergibt  -1 (w)
+      Print 3>3 AND 5>3        ergibt   0 (f)
+
+OR   Disjunktion
+     Das Ergebnis von OR ist nur dann f, wenn beide Argumente f sind:
+
+      A  |  B  |  A OR B
+    -----+-----+-----------
+      w  |  w  |    w  
+      w  |  f  |    w
+      f  |  w  |    w
+      f  |  f  |    f
+      
+      Beispiele:
+      Print "A"<"a" OR 3=5     ergibt  -1 (w)
+      Print 2>7 OR 10=20       ergibt   0 (f)
+
+XOR  Exclusives (oder ausschließendes) Oder
+     Das Ergebnis von XOR ist  f, wenn die Argumente gleiche Wahrheitswerte
+     haben:
+      
+      A  |  B  |  A XOR B   
+    -----+-----+-----------
+      w  |  w  |    f
+      w  |  f  |    w
+      f  |  w  |    w
+      f  |  f  |    f
+
+      Beispiele:
+      Print 3=3 XOR 6=6     ergibt   0 (f)
+      Print 3>5 XOR 3<5     ergibt  -1 (w)
+
+NOT   Die Negation vertauscht Wahrheitswerte in ihr Gegenteil.
+
+      A  |  NOT A
+    -----+----------
+      w  |   f 
+      f  |   w  
+
+      Beispiel:
+      Print NOT 3=3      ergibt   0 (f)
+
+IMP  Implikation
+     Das Resultat der Operation ist dann falsch, wenn falsch auf wahr folgt. 
+      
+      A  |  B  |  A IMP B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    w
+      f  |  f  |    w
+
+EQV  Äquivalenz 
+     Die Operation ist identisch mit (A IMP B) AND (B IMP A)
+                                                                           
+      A  |  B  |  A EQV B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    f
+      f  |  f  |    w
+
+Die logischen Operatoren werden hauptsächlich dazu benutzt, um abhängig vom
+Wahrheitswert verbundener Ausdrücke verschiedene Programmabläufe zu ermöglichen
+(z.B. über die Befehle IF, WHILE, EXIT IF ...)
+Logische Operatoren können aber auch dazu benutzt werden, um Bitfolgen zu
+verknüpfen.
+
+Math Functions
+
+
+Introduction
+
+The math function library contains a comprehensive set of mathematics
+functions, including:
+
+	trigonometric
+	arc-trigonometric
+	hyperbolic
+	arc-hyperbolic
+	logarithmic  ( base e and base 10 )
+	exponential  ( base e and base 10 )
+	miscellaneous  ( square root, power, etc. )
+
+
+Angles
+
+Angles are always radians, for both arguments and return values.
+
+To convert degrees to radians, use RAD().
+To convert radians to degrees, use DEG().
+
+Math Functions - Summary
+
+SIN()     sine
+COS()     cosine
+TAN()     tangent
+COT()     cotangent
+SEC()     secant
+CSC()     cosecant
+
+ASIN()    arc-sine
+ACOS()    arc-cosine
+ATAN()    arc-tangent
+ACOT()    arc-cotangent
+ASEC()    arc-secant
+ACSC()    arc-cosecant
+
+SINH()    hyperbolic sine
+COSH()    hyperbolic cosine
+TANH()    hyperbolic tangent
+COTH()    hyperbolic cotangent
+SECH()    hyperbolic secant
+CSCH()    hyperbolic cosecant
+
+ASINH()   hyperbolic arc-sine
+ACOSH()   hyperbolic arc-cosine
+ATANH()   hyperbolic arc-tangent
+ACOTH()   hyperbolic arc-cotangent
+ASECH()   hyperbolic arc-secant
+ACSCH()   hyperbolic arc-cosecant
+
+LOG()     base e logarithm (natural log)
+LOG10()   base 10 logarithm
+EXP()     base e "anti-log"  (e to the x)
+EXP10()   base 10 "anti-log"  (10 to the x)
+SQRT()    square root
+POWER()   power  (x to the y)
+
+
+
+
+
+2.3 Strukturiertes Programmieren
+
+Der Interpreter nennt sich zwar Basic, jedoch gibt es gegenüber den 
+Uralt-Basic-Dialekten Einschränkungen und Erweiterungen, die strukturiertes
+Programmieren erlaubt. Die Programme sind dann übersichtlicher.
+Zeilennummern gibt es nicht und in jeder Zeile kann höchstens eine Anweisung
+stehen.
+Sprünge mit GOTO sind zwar möglich, aber nicht nötig, da alle gängigen
+Schleifentypen zur Verfügung stehen, einschließlich einem Befehl für weitere
+Abbruchbedingungen (--> EXIT IF).
+Selbstdefinierte Prozeduren und Funktionen mit Parameterliste und 
+Rückgabewerten jeden Typs sind möglich.
+Die Programmstruktur eines Programms erlaubt also üblicherweise ein Hauptteil,
+z.B. eine Schleife, von der aus Unterprogramme aufgerufen werden.
+Mit einem Kommando (--> MERGE) lassen sich so auch ganze Bibliotheken 
+hinzubinden.
+
+
+------ Anweisungen -------------
+Allgemeines:
+
+Nach Befehlen sind Kommentare erlaubt, die mit einem "!" vom Befehl abzusetzen
+sind.
+DO    ! Endlosschleife
+LOOP  ! und nix drin
+
+Diese Kommentare sind natürlich nicht erlaubt nach DATA (und REM).
+
+Der &-Operator gefolgt von einem Zeichenkettenausdruck evaluiert deren inhalt 
+als Programm-Code.
+
+Beispiel:
+
+clr i
+a$="print a$"
+label1:
+inc i
+if i>10 
+  b$="label2"
+else
+  b$="label1"
+endif
+&a$
+goto &b$
+label2:
+end
+
+erzeugt 10x die Ausgabe "print a$".
+Dies führt leicht zu unübersichtlichem Code, aber schließlich schimpft sich
+der Interpreter ja Basic.
+
+***********************************************************
+
+
+At the moment, X11-Basic only recognizes 2 kind of vars; Strings and Doubles.
+The integers are not yet fully implemented. So please do not use them at the
+moment.
+
+Variablenames and commands are case insensitive. Names of variables are limited
+of a number of characters or digits specified in defs.h and have to
+begin with a character. Each name is bound to only one kind of variable; A$  is
+a whole different variable(value) then A wich is different from A(1,1) or
+A$(1,1).
+
+Space between commands will be ignored, but note that no space is allowed 
+between the name of a variable or command and the '(' of its parameter list. 
+So, ASC("A") is good, ASC(     "A"     ) also,
+but ASC ("A") isn't.
+
+There are some reserved variables. Some Keywords may not work as varable names
+as well. Although  there is no checking done, parsing errors could occure.
+Please try the command LET in such cases. In general, as long as an ending of
+an variable name is different then any command or keyword, it's  usable as
+name.
+
+Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
+Those definitions are defined in defs.h and could be changed, but that
+is not recommended. Because BASIC doesn't have a seperate boolean operators for
+conditions and expressions, using an boolean operator (AND,OR,XOR,NOT) may give
+spurious results. When on each site a value of an 0 or -1 is used, it's assumed
+as an condition, if it's not, it considered an expression. Problems could
+occure if you use boolean operators with negative numbers, but that is also
+unrecommended because the outcome of such an expression is highly platform
+depended.
+
+Numbers may preceed &x or &X to represent hex values and &o or &O for
+octal values.
+
+Precedence is defined as follows (highest first) :
+
+1. ^
+2. * /
+3. \               ??? was ist das ???
+4. - +
+5. MOD             ??? ueberpruefen, ob das wirklich so ist
+6. < > = <> <= >=
+7. AND OR XOR      ??? hier gibt es dch noch mehr !
+
+Although GOSUB..RETURN FOR..NEXT and WHILE..WEND use different stacks, jumping
+around and wrong nesting isn't advisable and not garanteed for future releases.
+
+
+String Variables
+
+String variables are sequences of characters.  Strings generally contain
+ASCII text, but can hold arbitrary byte sequences.  Strings are automatically
+elastic, meaning they automatically resize to contain whatever number of bytes
+are put into them.  When a string resizes, its location in memory may change,
+as when a longer string is assigned and there is insufficient room after the
+string to store the extra bytes.  
+
+
+------ Abk"urzungen ------------------------
+
+'                     -- Abkürzung für REM
+?                     -- Abkürzung für PRINT
+@                     -- Abkürzung für GOSUB, bzw Funktionsaufruf
+~                     -- Abkürzung für VOID
+!                     -- Kommentar hinter einer Zeile
+&                     -- Indirektes Kommando
+
+
+------ Systemvariablen ----------
+
+TRUE                  -1
+FALSE                 0
+CRSCOL			n.n.
+CRSLIN			n.n.
+PI                    3.141592...
+TIMER                 Systemtimer, float, erhöht sich mehr oder weniger 
+                      kontinuierlich mit der Zeit, pro Sekunde um eins
+STIMER                Dasselbe nur ganzzahlig
+CTIMER                Dasselbe nur in Einheiten der CPU-Zeit
+PC                    Zeilennummer der nächsten auszuführenden Zeile
+SP                    interner Stackpointer (Verschachtelungstiefe)
+ERR                   Fehlernummer des letzten Fehlers
+
+
+MOUSEX                X-Koordinate der Mausposition relativ zum Fensterursprung
+MOUSEY                Y-Koordinate der Mausposition
+MOUSEK                Bitrepräsentation der gedrückten Maustasten, 
+                      Button 1=Bit 0,Button 2=Bit 1 usw.
+MOUSES                Status der Umschalttasten 
+
+INKEY$                Inhalt des Tastaturpuffers
+TERMINALNAME$         Devicename des Standart-Terminals
+TIME$                 Aktuelle Zeit 
+DATE$                 Aktuelles Datum
+
+==================== commands :  Befehle ==============================
+
+ADD a,b			-- gleiche Wirkung wie a=a+b
+AFTER n,procedure       -- Nach n Sekunden wird die Procedure einmal ausgeführt
+ALERT a%,b$,c%,d$,var[,ret$]-- Warn- und Infobox                    
+                    a%     sign: 1=! 2=? 3=STOP        
+                    b$     textstring lines separated by | 
+                    c%     default button
+                    d$     string for buttons  separated by |    
+                    var    return # of button selected 
+                    ret$   contents of the editable fields separated by ascii 13
+
+ARRAYFILL a(),b         -- Füllt ganzes Array mit Wert
+ARRAYCOPY ziel(),b()    -- Kopiert ganzes Array inclusive Dimensionierung
+
+BEEP			-- Warnton auf der Console Auslösen
+BELL			-- dasselbe wie BEEP
+BGET #f,a%,n%		-- Liest n% Bytes aus File #f nach Adresse a%
+BLOAD f$,a%[,l%]	-- Lädt File an Adresse
+BMOVE q%,z%,n%          -- Kopiert n% Bytes großen Speicherbereich
+BOX x1%,y1%,x2%,y2%	-- Rechteck zeichenen
+BPUT
+BREAK                   -- entspricht EXIT IF true
+BSAVE f$,a%,l%		-- Speichert l% Bytes ab Adresse a% in File f$
+
+CALL adr%[,par,...]     -- siehe Exec
+CASE const              -- siehe SELECT * CASE * DEFAULT * ENDSELECT
+CHAIN
+CIRCLE x%,y%,r%
+CLEAR                   -- alle Variablen und Inhalte löschen
+CLEARW [[#]n%]          -- Fenster mit Hintergrundfarbe ausfüllen
+CLOSE  [[#]n%]          -- I/O-Kanal schließen
+CLOSEW [[#]n%]          -- Fenster schließen
+CLR a,b%,c(),f$		-- Löscht Variableninhalte
+CLS                     -- Löscht Textscreen/Console
+COLOR n%[,b%]		-- Set foreground color n% (and background color b%)
+CONT                    -- Programmausführung fortfahren
+
+
+DATA 1,"Hallo",...	-- Definiert Konstanten im Programmcode
+DEC var                 -- Decrementiere var
+DEFAULT                 -- see SELECT * CASE * DEFAULT * ENDSELECT
+DEFFILL c,a,b
+DEFLINE a,b
+DEFMARK c,a,g      -+- define: colour, size, type (POLYMARK)        
+                    |  c     colour                         
+                    |  a     type of marker                 
+                    |        (1=. 2=+ 3=* 4=[] 5=+ 6=#)     
+                    +- g     size of marker (0,20,40,60,80,100)                        
+
+DEFMOUSE i%		-- ändert das Erscheinungsbild des Mauscursors.
+DEFTEXT c,s,r,g
+DIM                     -- Dimensionierung von Arrays
+DIV a,b                 -- entspricht a=a/b
+DO * LOOP		-- Endlosschleife
+DPOKE adr%,word%        -- Schreibt den 2-Byte-Wert an Adresse adr%
+DRAW [[x1,y1] TO] x2,y2
+DUMP			-- lists all used variable names
+DUMP "@"                -- list of Funktionen und Prozeduren
+DUMP ":"                -- list of all labels
+DUMP "#"                -- list of open Files
+DUMP "K"                -- list of implementierten Kommandos
+DUMP "F"                -- list of internal functions
+
+ECHO {ON|OFF}           -- Programmzeilenechomodus ein-/ausschalten
+EDIT              set edit-mode and perform the following actions
+                 - SAVE "name.~~~"   writes the BASIC-program 
+                   into a temporary file,                     
+                 - calls the editor '$EDITOR'                      
+                 - NEW  clears internal values                
+                 - LOAD "name.~~~"   reads the BASIC-program  
+                   from the temporary file.                   
+ELLIPSE x,y,a,b[,a1,a2] -- Zeichnet Ellipse bzw. Sektor
+ELSE                    -- see IF * ELSE * ENDIF
+END			-- Programmende, kehrt zurück in den Direktmodus
+ENDFUNCTION             -- see FUNCTION * ENDFUNCTION
+ENDIF                   -- see IF * ELSE * ENDIF
+ENDSELECT               -- see SELECT * CASE * DEFAULT * ENDSELECT 
+ERASE a()[,b$(),...]    -- Löscht felder
+ERROR n%                -- löst Fehler Nr. n% aus
+EVENT
+EVERY
+EXEC adr%[,var%[,...]]	-- Ruft Unterroutine an Adresse adr% auf. Die Parameter 
+                           aus der Parameterliste werden auf dem Stack
+			   übergeben. Typen werden mit D: (double)
+			   oder L: (integer) festgelegt. 
+			   Die Adresse adr% kann Adresse eines Symbols
+			   sein, welches sich in einem zugelinkten
+			   shared-object-File befindet. (siehe sym_adr()) 
+EXIT IF a		-- Verlässt Schleife wenn Bedingung a erfüllt ist
+
+FFT a(),i		-- Fouriertransformation. i=-1 Rücktransformation
+			   Dim?(a()) muss Zweierpotenz sein.
+FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box            
+                    titel$   Titel
+		    pfad$    search-path + selector  
+                    default$ filename                
+                    f$   return selected filename with path or ""
+FLUSH [#n]              -- Output flushen
+
+FOR * NEXT		-- For Next Schleife
+FORM_INPUT t$           -- Stringeingabe mit Editierm"oglichkeit
+FUNCTION * ENDFUNC      -- Funktionen mit Rueckgabe (s. RETURN)
+
+GET x,y,w,h,g$          -- Grafik-Ausschnitt in g$ speichern
+
+GOSUB procedure(varliste) -- Unterroutine aufrufen
+GOTO label              -- An stelle label springen
+GPRINT                  -- like PRINT, but the output goes to the graphic window
+GRAPHMODE mode      set graphic-mode                 
+                    mode: 1=replace 2=transparent    
+                          3=xor 4=reverse transparent
+
+HELP <expr>             -- prints short help on expr              
+HOME                    -- Textcursor home
+
+
+IF * ELSE IF * ELSE * ENDIF 
+INC a%                  -- increments a%
+INFOW
+INPUT [#unit,] ["text";] varlist
+                read values for variables separated by comma   
+                    #unit  logical device number (OPEN)            
+                    "text"  is printed before reading the values   
+                    varlist:   list of variables separated by comma
+
+KEYEVENT a,b            -- Waits until Key is Pressed
+
+LET a=b                 -- Erzwingt Zuweisung
+LINE
+LINEINPUT [#unit,] ["text";] varlist 
+                    read values for variables separated by newline 
+LINK #n,t$              -- Lädt shared object file t$
+LIST [s,e]		-- Listet Programmcode von Zeile s bis e
+LLIST [s,e]             -- writes the BASIC-program-listing from line s to 
+                           line e with linenumbers into the file 
+			   "<programname>.prme" and prints it on demand            
+LOAD a$			-- Lädt Programm (Dateiname in a$), parses the 
+                           BASIC-program text and generates the internal data 
+			   structures 
+LOCAL var[,var2,...]    -- specifies a list of vars to be local in Procedure
+LOCATE column,row 	-- Place cursor on column and row (counting from 0,0 upper left)
+LOOP                    -- see DO * LOOP
+LPOKE adr%,long%        -- Schreibt den 4-Byte-Wert an Adresse adr%
+LSET t$=a$
+LTEXT x%,y%,t$          -- Linegraphic-Text
+
+MENUDEF array$(),proc   read text for menu-header from array$() 
+                    the string-array contains the text      
+                    for menu-line and menu-rows             
+                    - end of row: empty string ""           
+                    - end of menu-text: empty string ""
+		    proc is a procedure with one parameter
+		    which is the number of the selected item
+		    to call when item was selected     
+MENUSET n,x         change menu-point #n with value x       
+                    x=0  ' '  normal, reset marker '^'      
+                    x=1  '^'  set marker                    
+                    x=2  '='  set menu-point non selectable 
+                    x=3  ' '  set menue-point selectable    
+                         '-'  permanent non selectable      
+MENU STOP           switch off the menu                     
+ON MENU GOSUB p1    define PROCEDURE p1 to handle an action   
+                    if a menue-point was selected             
+ONMENU              execute the menu and                      
+MENU                wait for menue-events  
+
+MERGE f$                -- Merges bas-file to actual program code
+MID$(t$,i,j)=b$
+MOUSE x,y,k             -- gets position and state of mouse
+MOUSEEVENT
+MOTIONEVENT
+MOVEW
+MUL a,b			-- same as a=a*b
+
+NEW			-- Löscht alle Variablen und hält Programmausführung an.
+NEXT                    -- see FOR * NEXT
+NOP                     -- do nothing
+NOOP                    -- do nothing
+
+ON * GOSUB proc1[,proc2,...]
+ON BREAK GOSUB proc
+ON ERROR GOSUB proc
+OPEN mode$,#n,filename$	-- Öffnet ein file
+                    mode$="I"   for input                  
+                    mode$="O"   for output                  
+                    mode$="A"   append                  
+                    mode$="S"   socket                  
+
+OPENW n
+OUT #n,a
+
+PAUSE sec		-- Hält Programmausführung für sec Sekunden an
+PBOX  x1,y1,x2,y2       -- filled box
+PCIRCLE x,y,r[,a1,a2]   -- filled cirle
+PELLIPSE x,y,a,b[,a1,a2]-- filled ellipse
+PLIST                   -- Formatiertes Listing
+PLOT x,y                -- Punkt an Bildschirmkoordinate x,y zeichnen 
+POKE adr%,byte%         -- Schreibt byte an Adresse adr%
+POLYLINE n,x(),y()  draw polygon in (x(),y())        
+                    the first point = last point to draw
+                      a closed polygon
+POLYFILL n,x(),y()  draw filled polygon                
+                    connects first point with last point
+                      and fills the resulting polygon with
+                      pattern defined in DEFFILL
+POLYMARK n,x(),y()  draw polygon points                
+                    type of points defined in DEFMARK
+                    n        # of points
+                    x(),y()  arrays with (x,y)-values of points
+PRINT a;b$              -- Ausgewachsener BASIC-Standard-Befehl
+PRINT USING             -- mit Formatierung
+PROCEDURE procname [(p1 [,p2] ... )]  * RETURN
+
+
+
+PSAVE a$                -- writes the reformatted BASIC-program into file with 
+                           the name a$      
+PUT x,y,g$              -- Grafik in g$ an x,y Ausgeben
+PUTBACK [#n,]a%         -- Zeichen mit ASCII-Code a% an inputkanal zurückgeben
+PUT_BITMAP t$,i%,i%,i%,i%
+
+QUIT                    -- Verlässt den X11-BASIC-Interpreter
+
+RANDOMIZE [seed%]	-- Sets seed for random generator, normally TIMER is used for this
+RBOX i%,i%,i%,i%
+READ var                -- reads constant from DATA statement
+RELSEEK #n,d		-- Place filepointer on new relative position d
+REM Kommentar           -- Kommentarzeile 
+REPEAT                  -- siehe REPEAT * UNTIL
+RESTORE [label]         -- (re)sets pointer for READ-statement to "label" 
+RESUME
+RETURN                  --   define the end of a PROCEDURE          
+RETURN expr             --   return value from FUNCTION          
+RSRC_LOAD filename$
+RSRC_FREE
+RUN            -- Startet die Programmausführung
+
+SAVE [a$]        -- writes the BASIC-program into file with the name a$      
+SCOPE a(),typ,yscale,yoffset   -- Schnelles Plotten des Feldes a()
+SCOPE y(),x(),typ,yscale,yoffset,xscale,xoffset   -- 2D Plot
+SEEK #n,d		-- Place filepointer on new absolute position d
+SETENV t$=a$   -- Sets environmentvar t$ using value a$
+SGET screen$   -- Fensterinhalt in screen$ speichern
+SHOWPAGE       -- Aktualisiert die Grafikausgabe
+SPUT screen$   -- (xwd) Grafik in screen$ auf Window
+SUB a,b        -- same as a=a-b
+SWAP
+SYSTEM t$      -- Führt Shell-Kommando aus
+                  e.g. SYSTEM "ls"  prints current directory 
+TEXT x,y,t$    -- Text im Grafik-Fenster an Position x%,y%
+TROFF          -- Trace mode off
+TRON           -- Trace mode on  (for debugging)
+
+UNLINK #n      -- unlinks shared object #n
+UNTIL exp      -- if exp is false goto REPEAT
+
+VERSION        -- shows X11-Basic version number and date
+VOID a         -- Berechnet Ausdruck a und vergisst Ergebnis
+VSYNC          -- Aktualisiert die Grafikausgabe
+
+WORT_SEP t$,d$,mode,a$,b$ -- Teilt String t$ auf in a$ und b$
+
+XLOAD          -- wie load, mit FILESELECTOR
+XRUN           -- load und run, mit FILESELECTOR
+
+=============== Funktionen  =========================
+
+DEFFN fname(parlist)=expression                 
+DEFFN fname$(parlist)=$-expression                 
+                    define an inline-function     
+              e.g.: DEFFN av(x,y)=SQR(x^2+y^2)  
+              e.g.: a=@av(b,c)   ! call av       
+              e.g.: DEFFN add$(a$,b$)=a$+b$
+FUNCTION fname(parlist)    !  define a function     
+FUNCTION fname$(parlist)    !  define a $-function     
+              e.g.: FUNCTION av(x,y)               
+                      LOCAL z                        
+                      z = SQR(x^2+y^2)             
+                      RETURN 2*z                     
+                    ENDFUNCTION
+
+b=ABS(a)               -- Absolutbetrag
+c=ADD(a,b)             -- Addiere, binär
+a%=ARRPTR(b())         -- Adresse des Array-Descriptors
+a%=ASC(t$)             -- ASCII-Wert des ersten Zeichens von t$
+                          ASCII code of first letter of string
+b=ATN(a)               -- Arcustangens
+b=ATAN(a)              -- Arcustangens
+b=ATAN2(a,c)           -- Arcustangens alle 4 Sektoren
+
+b$=BIN$(a%[,n%])       -- Stellt a% als Binärzahl mit n% Stellen
+
+t$=CHR$(a%)            -- Zeichen mit ASCII-Code a%
+a%=CINT(b)             -- Truncated number (NOTE: differs from INT ! )
+b=COS(a)               -- Cosinus
+b%=CVI(a$)             -- Wandelt Zeichenkette in 2-Byte-Integer
+b%=CVL(a$)             -- Wandelt Zeichenkette in 4-Byte-Integer
+b=CVS(a$)              -- identisch mit CVF
+b=CVF(a$)              -- Wandelt Zeichenkette in 4-Byte-Float
+b=CVD(a$)              -- Wandelt Zeichenkette in 8-Byte-Double
+
+DFREE
+y=DEG(x)               -- entspricht y=180*x/pi 
+DIM?(a())              -- Ruckgabe ist Anzahl der Elemente von a()
+i%=DPEEK(adr%)
+
+t$=ENV$(n$)             -- Inhalt der Environmentvariable mit Namen n$
+
+EOF(#n)                 -- -1 wenn Ende des Files #n erreicht, sonst 0
+b=EVEN(a%)		-- TRUE wenn a% gerade
+EXIST(fname$)           -- -1 wenn File fname$ existiert, sonst 0
+ret%=EXEC(adr%[,var%])  -- siehe Befehl EXEC mit int-Rückgabeparameter
+b=EXP(a)		-- Exponentialfuntion
+
+a%=FORM_ALERT(n%,t$)
+a%=FORM_DIAL(i%,i%,i%,i%,i%,i%,i%,i%,i%)
+a%=FORM_DO(i%)
+b=FRAC(a)		-- Liefert den nichtganzzahligen Anteil an a
+FRE(n)			-- Keine Funtion, nur aus Kompatibilitätsgründen da.
+a=FREEFILE()            -- Returns first free filenumber or -1
+
+c%=GET_COLOR(r%,g%,b%) -- Alloziert eine Farbe in der Farbtabelle und gibt die
+                          Nummer zurück. Ist in der Farbtabelle kein Platz
+			  mehr, so wird die Nummer derjenigen Farbe
+			  zurückgegeben, die der angeforderten am nächsten
+			  kommt.
+f%=GLOB(a$,b$[,flags%])     -- Testet, ob a$ in das Pattern b$ passt
+
+t$=HEX$(a%[,n%])        -- a% als Hexadezimalzahl
+HYPOT(num,num)
+
+t$=INLINE$(a$)          -- 7Bit-ASCII to Binary conversion, can be used to include
+                           Binary data in the source code.
+c%=INP(#n)		-- Liest ein Zeichen (Byte) vom Kanal. Kanal -2 ist stdin
+c%=INP?(#n)		-- Gibt die Anzahl von Zeichen, die vom Kanal gelesen werden 
+			   k"onnen. Kanal -2 ist stdin
+INP&(#n)
+i%=INP%(#n)
+
+
+t$=INPUT$(#n,anz%)
+a%=INSTR(s1$,s2$[,n])   -- tests if s2$ is contained in s1$, then      
+                           returns start-position of s2$, else 0.
+                           start comparison at pos. n (default=1)
+i=INT(a)		-- Schneidet die Nachkommastellen ab, liefert ganze Zahl
+
+LEFT$(a$[,n%])          -- extraxts from string a$ the first (left) n characters
+l%=LEN(t$)              -- length of string
+b=LN(a)			-- Natürlicher Logarithmus
+p%=LOC(#n)		-- Position des Filepointers (--> SEEK/RELSEEK)
+			   Returns value of file position indicator
+l%=LOF(#n)		-- Länge des files
+a=LOG(b)                -- Natuerlicher Logarithmus
+a=LOG10(b)              -- 10er Logarithmus
+b%=LPEEK(adr%)          -- reads long (4 Bytes) from adress
+LPOS
+
+m=MAX(a,b,c,...)
+m=MAX(f())
+m$=MID$(t$,s[,l])       -- extraxts from string t$ a string from position s 
+                           with l characters
+m=MIN(a,b,c,...)
+m=MIN(f())
+
+t$=MKI$(i%)             -- Wandelt Integer in 2-Byte String
+t$=MKL$(i%)             -- Wandelt integer in 4-Byte String
+t$=MKF$(a)              -- Wandelt Realzahl in 4 Byte String
+t$=MKD$(a)              -- Wandelt Realzahl in 8 Byte String
+
+OBJC_DRAW(i%,i%,i%,i%,i%)
+OBJC_FIND(tree%,x%,y%)
+o$=OCT$(d%,n%)
+a=ODD(d%)               -- liefert TRUE wenn d% ungerade
+
+d%=PEEK(a%)             -- reads Byte from adress
+c%=POINT(x%,y%)         -- Liefert Farbwert des Punkts der Grafik im aktuellen Fenster
+POS
+t$=PRG$(i)              -- Programmzeile i (Quelltext)
+
+
+RANDOM(n%)              -- Zufallszahl zwischen [0 und n%[
+RIGHT$(a$,n%)
+a%=RINSTR(s1$,s2$[,n])  -- tests if s2$ is contained in s1$, then      
+                           returns start-position of s2$, else 0.
+                           start comparison at pos. n (default=1)
+                           start comparison at right
+RSRC_GADDR(typ%,nr%)
+
+b=SIN(a)		-- Sinus
+i%=SGN(a)		-- Vorzeichen (-1,0,1)
+			-- Returns -1 if value is negative, 0 if zero and 1 if positive
+t$=SPACE$(i%)		-- gibt einen String mit lauter Blanks
+SPC(i%)
+b=SQR(a)		-- Wurzel
+b=SQRT(a)		-- Wurzel
+t$=STR$(a[,b%,c%])      -- Wandelt Zahl in String der Laenge b% 
+                           mit c% signifikanten Stellen
+t$=STRING$(w$,i%)       -- Vervielfaeltigt w$ i% mal
+adr%=SYM_ADR(#n,s$)     -- liefert Adresse des Symbols mit Namen s$ aus shared
+                           Object File #n
+t$=SYSTEM$(n$)          -- Ausgabe des Shell-Kommandos n$
+
+TAB(i%)
+b=TAN(a)		-- Tangens
+t$=TERMINALNAME$(#n)    -- Devicename des Terminals an Kanal n
+b=TRUNC(a)
+
+u$=UCASE$(t$)		-- identisch mit UPPER$()
+u$=UPPER$(t$)		-- liefert t$ in Großbuchstaben
+
+a=VAL(t$)		-- Wandelt String in Zahl, falls der String eine
+			   Zahlendarstellung enthält.
+i%=VAL?(t$)		-- Liefert die Anzahl der umwandelbaren Zeichen
+a%=VARPTR(v)		-- Adresse der Variablen v
+
+
+
+##############################################################################
+
+Befehl: OPEN
+============
+Syntax:  OPEN mode$,[#]n%,f$[,port%]
+
+Beschreibung:
+
+Mit diesem Befehl werden Dateien (streams) geöffnet. Es kann sich hierbei nicht
+nur um reguläre Files handeln, sondern es können auch spezielle Files und
+Sockets geöffnet werden. 
+
+mode$  "O" = output (write only), "I" = input (read only), "U" = read and write
+       "A" = append
+       Der Zweite Buchstabe spezifiziert den Typ:
+       ""   default ist reguläres File
+       "C"  Socket connect
+       "S"  Socket listen
+       "A"  Socket accept connection
+       "X"  Sondereinstellungen 
+       (z.B. Geschwindigkeit der seriellen Schnittstelle)
+       (nur bei tty-streams)
+       
+f$     Filename oder Hostname
+n%     Kanalnummer
+port%  gibt den Port für die Verbindung (Socket) an.
+       oder ein Bitmuster fuer die TTY-Einstellungen
+
+Beispiele:
+  OPEN "I",#1,"data.dat"    ---- Öffnet File "data.dat" zum Lesen
+
+  OPEN "UC",#1,"localhost",80 ---- Öffnet Port 80 zum Lesen und Schreiben
+
+  OPEN "UX",#1,"/dev/ttyS1",8+5+6*8 ---- Öffnet COM2 zum Lesen und Schreiben
+					  mit 9600:8:N:1
+
+#############################################################################
+
+
+Befehl: CLOSE
+=============
+Syntax:  CLOSE [[#]n%]
+
+Beschreibung:
+
+Mit diesem Befehl wird ein zuvor geöffneter Kanal geschlossen.
+
+n%     Kanalnummer
+
+Wird keine Kanal angegeben, werden alle offenen Kanäle geschlossen
+
+#############################################################################
+
+
+Befehl: LINK, UNLINK, SYM_ADR()
+================================
+Syntax:  LINK #n%,t$
+         UNLINK #n%
+         adr%=SYM_ADR(#n%,sym$)
+
+Beschreibung:
+
+Mit LINK wird eine Shared-Library (*.so in /var/lib) dynamisch hinzugelinkt, und
+kann über eine Kanalnummer angesprochen werden. Die Adressen der einzelnen
+Symbole liefert SYM_ADR, der man den Symbolnamen übergibt.
+
+#############################################################################
+
+
+Befehl: CALL, EXEC, EXEC()
+===========================
+Syntax:  CALL adr%[,parameterliste]
+         EXEC adr%[,parameterliste]
+         r%=EXEC adr%[,parameterliste]
+
+Beschreibung:
+
+Mit diesem Befehl wird eine Unterroutine an Adresse adr%
+ausgeführt. Die Parameterübergabe ist wie in C über den Stack.
+Defaultmäßig werden integers übergeben. Wird D: vorangestellt, wird
+ein double, mit F: ein Float, mit L: ein long int übergeben.
+Rückgabe ist immer int.
+
+Beispiel:
+
+dim result(100)
+link #1,"simlib.so"
+adr=sym_adr(#1,"CalcBeta")
+CALL adr,D:1.2,L:0,L:varptr(result(0))
+unlink #1
+
+#############################################################################
+
+
+Befehl: SYSTEM, SYSTEM$()
+===========================
+Syntax:  SYSTEM cmd$
+         t$=SYSTEM$(cmd$)
+
+Beschreibung:
+
+Mit diesem Befehl wird ein Shellkomando ausgefuehrt.
+Mit dem SYSTEM-Kommando geschieht die Text-Ein- und Ausgabe wie gewohnt 
+"uber das Terminal.
+Die SYSTEM$-Funktion f"angt die stdout-Ausgabe auf und speichert sie in 
+t$.
+
+Beispiel:
+
+system "mkdir testordner"
+d$=system$("ls")
+print d$
+
+#############################################################################
+
+
+Funktion: GLOB()
+===========================
+Syntax:  t$=GLOB(name$,pattern$[,flags%])
+
+
+Beschreibung:
+
+GLOB() "uberpr"uft, ob name$ das Wildcard-Pattern pattern$ erf"ullt
+       und liefert -1 zurueck, wenn erf"ullt, sonst 0. Mit flags% kann
+       die Art der "uberpr"ufung beeinflu"st werden.
+       flags%
+         0    -- default, kein Zeichen wird extra behandelt
+	 1    -- bei name$ handelt es sich um einen Filenamen
+	         (die Zeichen '/' werden nicht im Pattern gefunden)
+         2    -- Backslashes quote special characters
+         4    -- Spezialbehandlung von '.'
+         8    -- bei name$ handelt es sich um einen Filenamen und es
+	         wird nur die Pfadangabe getestet
+        16    -- Gross und Kleinschreibung ignorieren
+
+Beispiel:
+
+glob("abcd","abc?")         ergibt -1
+glob("abcd","*")            ergibt -1
+glob("abc","ab??")          ergibt 0
+glob("*a[0-9]*","sad33333") ergibt 0                       
+
+
+#############################################################################
+
+Funktion: ROUND
+===============
+Syntax: a=ROUND(b[,n])
+
+Beschreibung:
+
+Liefert auf n Nachkommastellen gerundeten Wert von b.
+n<0: Es wird vor dem Komma gerundet
+
+#############################################################################
+
+Funktion: SWAP
+===============
+Syntax: a%=SWAP(b%)
+
+Beschreibung:
+
+Liefert Wert durch Vertauschen der High und Low-Words von b%.
+
+Siehe auch: BYTE(), CARD(), WORD()
+#############################################################################
+
+Funktion: BYTE
+===============
+Syntax: a%=BYTE(b%)
+
+Beschreibung:
+
+Liefert untere 8 Bits von von b%. (identisch mit a%=b% AND 255)
+
+Siehe auch: CARD(), WORD(), SWAP()
+#############################################################################
+
+Funktion: CARD
+===============
+Syntax: a%=CARD(b%)
+
+Beschreibung:
+
+Liefert untere 16 Bits von von b%. (identisch mit a%=b% AND (2^16-1))
+
+Siehe auch: BYTE(), WORD(), SWAP()
+#############################################################################
+
+Funktion: WORD
+===============
+Syntax: a%=WORD(b%)
+
+Beschreibung:
+
+Liefert untere 16 Bits von von b% und erweitert vorzeichenrichtig.
+
+Siehe auch: BYTE(), CARD(), SWAP()
+#############################################################################
+
+----------------------------------------------------------------------------
+Adress spaces:
+==============
+The full accessible Program memory can be accessed by PEEK/POKE, LPEEK/LPOKE, 
+DPEEK/DPOKE. Be careful. You can manipulate all symbols ov the interpreter and or 
+dynamically linked libraries and your program. Adressspaces belonging to other 
+programs which are not shared memory blocks can not be accessed. You will get a 
+segmentation fault on trying this.
+
+
+--------------------------------------------------------------------------------
+
+3. The pseudo compiler
+
+The X11-Basic package is shipped with a pseudo compiler, which makes 
+stand-alone binaries out of Basic source code. Actually this "compiler" is not
+a real compiler, since the source code is still interpreted on runtime. But the
+source code is linked to the X11-Basic library so there results one 
+independant executable. Another advantage is that it is quite hard to extract a
+full running *.bas File from this binary since the code is compressd in a way. 
+
+ You can find the compiler in examples/utils/compiler.bas. Yes, the compiler
+ compiles itself. Yust make sure you have built the shared library 
+ libx11basic.so and the library for static linking before 
+ (make lib; make x11basic.a) and moved it to /usr/lib.
+  Then do
+  xbasic compiler.bas
+  select compiler.bas in the Fileselector.
+  choose if it shall be linked dynamically or statically
+  select compiler or whatever the binary filename should be in the next Fileselector.
+
+  after finishing, you will find a psydo-code.o in the actal directory. You may
+  want to delete this.
+
+  Please note: If you link your programs dynamically, you will eventually have
+  to compile them again when the x11basic.so will have changed due to a
+  version update of your X11-Basic package.
+
+
+4. FAQ frequently asked questions
+
+Q: Why can't I compile X11Basic on my Computer with Zintorola 86060 processor and
+   Sluggix 0.8 Beta O.S.?
+A: If you have GNU-C and X11R5/6 for this system, and X11Basic still won't compile,
+   please let me know as soon as possible, I will try to fix it.
+
+Q: How do I leave the interpreter `gently'?
+A: type quit or press ctrl-c (twice)
+
+Q: What do all the warnings mean?
+A: Well, isn't proper ported to your (any?) system. 
+
+Q: Why do the graphics look funny?
+A: Some X-Servers do not clean newly allocated Pixmaps. So rubbish is displayed 
+   if the window is maped. Please do a clearw 1 as a first command.
+
+F: Kann ich meine alten Atari Programme "einfach" rüberziehen oder müssen
+   die noch irgendwie ( speziell Gem Programme ) angepasst werden?
+A: Die müssen noch angepasst werden. Es gibt kleinere Unterschiede in der
+   Syntax, Systemaufrufe (XBIOS,BIOS,VDISYS etc), Inline-Blöcke gehen
+   natürlich nicht, short int
+   Variablen gibt es nicht etc. Also man muss nochmal mit der Hand
+   drübergehen. Aber es gibt nichts, was nicht irgendwie auch geht.
+   Bei kleinen Programmen (ca. 100 Zeilen) ist es ein Kinderspiel. Bei
+   größeren (mehere 1000 Zeilen) ist es schon was arbeit. 10000-Zeilen
+   Programme habe ich noch nicht portiert. Es lohnt wahrscheinlich nicht.
+   Für Programme, an denen man nichts mehr machen will, empfehle ich dann
+   doch lieber STonX oder sowas.
+
+Q: Program XXX doesn't run, what should I do?
+A: Well this question is too difficult to answer. 
+
+Q: Can I use X11-Basic as a shell ? 
+A: Yes, simply copy the xbasic executable to /usr/bin .
+   The shell scripst then should have in their first line
+   #!/bin/xbasic 
+
+Q: Can I use X11-Basic as an internet daemon ? 
+A: Yes, start xbasic with the option -daemon .
+   This feature is still experimental. So use it on your own risk since this 
+   opens several security holes to your system.
+
+Q: Can X11-Basic generate stand-alone programs, which may run 
+   without the xbasic executable ?
+A: No. X11-Basic does not translate its input into assembly, you always need 
+   the xbasic executable. On the other hand: the xbasic executable is rather 
+   small (&lt;200 kB), so you might spread it around with your X11-Basic 
+   programs. If you really need stand alone programs try the pseudo-compiler.
+   
+Q: May I charge for my X11-Basic programs ?
+A: Yes, you may. But you should state clearly, that xbasic itself is available 
+   free of charge. Refer to the File COPYING for details.
+
+Q: Where can I get the newest version of X11-Basic? 
+A: Probably at 
+   http://www-cip.physik.uni-bonn.de/~hoffmann/X11-Basic/
+   Don't bet on it though! :-) 
+
+
+Q: What can I do to speed up the development of X11-Basic?
+A: You can try to bribe me with any amount of money, any type of hardware or
+   software (no pirated stuff please).
+   A nice postcard might suffice too. :-)
+   If you like to implement some new features and/or commands to x11basic,
+   please send me your new sources with description. But I only will implement
+   this stuff if I like it .-)
+
+--------------------------------------------------------------------------------
+
+5. Version history
+
+In the beginning there were absurd plans, long sleepless nights, and incredible
+boredom.
+
+Very First Version (1990)
+--------------------------
+It was a Mailbox-Program with Basic features (only character-Graphics with
+Vt100EMU) on my ATARI ST (!).
+
+Version 0.1 First version with a version number    (1997)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Mailbox-Program was rewritten in c on my Linux-PC
+- first X11-Commands
+
+Version 0.2 Alpha (1998)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- improved X11-Basic for use at the physics institute in Bonn
+- Fixed last Problems of the Parser (didn't like -1*(4-3) )
+- Added more X-features (redraw)
+- First portation to a HP-Workstation
+- Readline library in use
+
+Version 1.00 (Mar 1999)
+~~~~~~~~~~~~~~~~~~~~~~
+- Makefile and configure script adapted from STonX
+- True-color Displays
+- X rootwindow, multiple windows
+- INKEY$
+- First GPL-Distribution
+- FILESELECT,ALERT
+
+Version 1.01 (Jun 1999)
+~~~~~~~~~~~~~~~~~~~~~~
+- POINT()
+
+Version 1.02 (Jun 2000)
+~~~~~~~~~~~~~~~~~~~~~~
+- rsrc_load
+- shell, daemon
+
+Version 1.03 (Mar 2001)
+~~~~~~~~~~~~~~~~~~~~~~~
+- copyarea, sget, sput, get,put
+- fill-Patterns
+- drop down menues
+- String-Variables may now contain nul-characters.
+- POKE,DPOKE,LPOKE,EVEN(),ODD()
+- LINK,UNLINK
+- CVI(),CVD(),CVF(),CVL()
+- MKI$(),MKD$(),MKL$(),MKF$()
+- ON x GOSUB proc1,proc2,...
+- ON x GOTO label1,label2,...
+- INSTR(),RINSTR()
+
+Version 1.04 (Apr. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- splitted off shared library libx11basic.so (300kB)
+- bug fixed which caused print a,b to segmentation fault
+- DUMP "#"
+- SYM_ADR()
+- CALL, EXEC, EXEC()  with parameter list
+- DUMP "K" DUMP "F"
+
+Version 1.05 (Aug. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- PRINT USING
+- SYSTEM$()
+- GLOB()
+- RBOX, PRBOX
+- EDIT, SAVE
+- HELP
+- new system errors
+- started to translate everything into english
+
+Version 1.06 (Jan. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+- included serial device support
+- improved FILESELECT
+- modified ALERT
+- improved COLOR
+- FORM_DIAL(), FORM_DO(), OBJC_DRAW()
+- GPRINT
+
+Version 1.07 (Aug. 2002)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Fehler mit Exponentialdarstellungen von Zahlen mit negativem Exponent
+  ist nun endlich behoben !!!
+- Anbindung an tine-Bibliothek und Kontrollsystem ist nun moeglich
+
+--------------------------------------------------------------------------------
+
+
+Things left to do:
+==================
+- Speed up the interpretation  with precompiled tokens
+- Optimize a bit more
+- Fix the bugs
+(etc. etc.)
+
+
+BUGS:
+=====
+
+- Integer-Artmetrik sehr(!) unvollständig
+
+noch nicht alles implementiert.  Syntax nicht idiotensicher.
+

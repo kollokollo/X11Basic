@@ -63,14 +63,87 @@ int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
     return(2);
   }
 }
+/* Spezielle Abwandlung zum erkennen von Exponentialformat */
+
+int is_operator(char c) {
+  return(!strchr("|&~!*/+-<>^ =",c)==NULL);
+}
+
+int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2)    {
+  int f=0, klam=0, i=0, j=0,skip=0,zahl=0;
+
+  if(strlen(t)==0) { w1[0]=w2[0]=0;  return(0); }
+#if 0
+  printf("wsep: <%s>\n",t);
+  printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
+#endif
+  while(t[i]!=0 && (t[i]!=c || f || klam>0 || skip)) {
+    skip=0;
+    if(t[i]=='"') f=!f;
+    else if(t[i]=='(' && klamb && !f) klam++;
+    else if(t[i]==')' && klamb && !f) klam--;
+    else if(t[i]=='E' && klam==0 && !f && zahl) skip=1;
+    if(i==0 || is_operator(t[i-1])) zahl=1;
+    zahl=(!(strchr("-.1234567890",t[i])==NULL) && zahl); 
+    w1[j++]=t[i++];
+#if 0
+    printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
+#endif
+  }
+  if(t[i]==0) {
+    w2[0]=0;
+    w1[j]=0;
+    return(1);
+  } else {
+    w1[j]=0;
+    strcpy(w2,t+i+1);
+    return(2);
+  }
+}
+
+int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
+  register int i;
+  int f=0, klam=0,j,zahl=0;
+  
+  if(strlen(t)==0) {w1[0]=w2[0]=0; return(0);}
+
+  i=strlen(t)-1;
+#if 0
+  printf("wsep: <%s>\n",t);
+#endif
+
+  while(i>=0) {
+    if(t[i]!=c || f || klam<0) {
+      if(t[i]=='"') f=!f;
+      else if(t[i]=='(' && klamb && !f) klam++;
+      else if(t[i]==')' && klamb && !f) klam--;
+      if(i==strlen(t)-1 || is_operator(t[i+1])) zahl=1;
+      zahl=(!(strchr("1234567890",t[i])==NULL) && zahl); 
+    } else {
+#if 0
+      printf("Halt bei i=%d   zahl=%d\n",i,zahl);
+#endif
+      if(!zahl || i<2 || t[i-1]!='E') break;
+      j=i-2;
+      while(j>=0 && !(strchr("1234567890.",t[j])==NULL)) j--;
+      if(j>=0 && !is_operator(t[j])) break;
+    }
+    i--;
+#if 0
+    printf("i=%d t[i]=%d zahl=%d\n",i,t[i],zahl); 
+#endif
+  }
+  strcpy(w1,t);
+  if(i<0) {w2[0]=0;return(1);}
+  else {w1[i]=0;strcpy(w2,t+i+1);return(2);}
+}
 
 int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0, j=0;
   
   if(strlen(t)==0) {
-     w1[0]=0;
-     w2[0]=0;
+     w1[0]=w2[0]=0;
     return(0);
   }
 

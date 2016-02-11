@@ -61,7 +61,7 @@ long lof( FILE *n) {
 }
 
 
-int eof(FILE *n) {
+int myeof(FILE *n) {
   char c=fgetc(n);
   ungetc(c,n);
   return c==EOF;

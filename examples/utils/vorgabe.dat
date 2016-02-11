@@ -1,9 +1,0 @@
-Die Folien werden mit der Pneumatik in Position gebracht. Zur Kontrolle kann an
-einen Weggeber-Schiebewiderstand ein Multimeter angeschlossen werden. 
-Der Strahl wird mit einer Blende abgeblendet. Um festzustellen, ob der
-Strahl auch wirklich eine Folie trifft und nicht z.B. die Halterung, werden die
-Pulse von den Detektoren auf dem Oszilloskop beobachtet. Wird eine Folie
-getroffen, erkennt man ein sehr ausgepraegtes elastisches Band. Trifft man die
-Halterung, so ueberwiegt der inelastische Anteil. Dies kann im Prinzip auch mit
-dem Pulshoehenspektrographen beobachtet werden, jedoch geht es schneller und
-praktischer direkt mit den Pulsen auf dem Oszi.

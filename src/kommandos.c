@@ -18,6 +18,7 @@
 #include "vtypes.h"
 #include "globals.h"
 #include "protos.h"
+#include "options.h"
 #include "kommandos.h"
 
 
@@ -586,7 +587,7 @@ void c_dump(char *n) {
     }
   }
   if(kkk=='#') {
-    for(i=0;i<100;i++) {
+    for(i=0;i<ANZFILENR;i++) {
       if(filenr[i]==1) {
         printf("#%d: %s [FILE]\n",i,"");
       } else if(filenr[i]==2) {
@@ -926,7 +927,11 @@ void c_cls(char *n) { printf("\033[2J\033[H");}
 void c_home(char *n) { printf("\033[H");}
 void c_version(char *n) { printf("X11-BASIC Version: %s vom %s \n",version,vdate);}
 
+#ifndef WINDOWS
 #include <fnmatch.h>
+#else
+#define FNM_NOESCAPE 0
+#endif
 void c_help(char *w) {
   if(strlen(w)==0) {
     printf("HELP [topic]\n");

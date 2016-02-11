@@ -1,8 +1,5 @@
-Release notes for version 1.05
+Release notes for version 1.06
 ===============================
-- PRINT USING
-- SYSTEM$()
-- GLOB()
-- RBOX, PRBOX
-- EDIT, SAVE
-- new system errors
+- included serial device support
+- improved FILESELECT
+- modified ALERT

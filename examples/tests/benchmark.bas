@@ -29,7 +29,7 @@ until i>=10000
 print "REPEAT: ";ctimer-t;" Sekunden."
 iii:
 print
-pause 2
+pause 1
 t=ctimer
 i=0
 repeat
@@ -54,10 +54,14 @@ repeat
   i=i+1
 until i>=30000
 print "REPEAT: zuweis  ";ctimer-t;" Sekunden."
+t=ctimer
+repeat
+  a=sin(cos(exp(1)))+3-4
+  inc i
+until i>=80000
+print "REPEAT: Formel  ";ctimer-t;" Sekunden."
 
-
-
-end
+quit
 
 PROCEDURE test
 ' Testroutine

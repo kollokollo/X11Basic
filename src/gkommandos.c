@@ -182,6 +182,14 @@ void c_put(PARAMETER *plist,int e) {
   }
 }
 
+void c_put_bitmap(PARAMETER *plist,int e) {  
+   if(e==5) {
+    graphics();    
+    put_bitmap(plist[0].pointer,plist[1].integer,plist[2].integer,
+    plist[3].integer,plist[4].integer);
+  }
+}
+
 void c_sget(char *n) {
     int d,b,x,y,w,h,len,i;
     char *data;
@@ -372,9 +380,10 @@ void c_pellipse(PARAMETER *plist,int e) {
 }
 
 
-void c_color(char *n) {  
+void c_color(PARAMETER *plist,int e) {  
   graphics();
-  XSetForeground(display[usewindow],gc[usewindow],(int)parser(n));
+  XSetForeground(display[usewindow],gc[usewindow],plist[0].integer);
+  if(e==2) XSetBackground(display[usewindow],gc[usewindow],plist[1].integer);
   return;
 }
 
@@ -382,6 +391,11 @@ int get_fcolor() {
    XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCForeground, &gc_val);
   return(gc_val.foreground);
+}
+int get_bcolor() {
+   XGCValues gc_val;  
+  XGetGCValues(display[usewindow], gc[usewindow],  GCBackground, &gc_val);
+  return(gc_val.background);
 }
 
 void c_graphmode(char *n) {
@@ -918,16 +932,16 @@ void c_clearw(char *n) {
       XGCValues gc_val;  
        /* Erst den Graphic-Kontext retten  */
     sgc=XCreateGC(display[winnr], win[winnr], 0, &gc_val);
-    XCopyGC(display[winnr], gc[winnr],GCForeground , sgc);
-      XGetGeometry(display[winnr],win[winnr],&root,&x,&y,&w,&h,&b,&d);
-      XSetForeground(display[winnr],gc[winnr],0);
+    XCopyGC(display[winnr], gc[winnr],GCForeground , sgc); 
+      XGetGeometry(display[winnr],win[winnr],&root,&x,&y,&w,&h,&b,&d); 
+      XSetForeground(display[winnr],gc[winnr],get_bcolor());
       XFillRectangle(display[winnr],pix[winnr],gc[winnr],x,y,w,h); 
 
       /* XClearWindow(display[winnr],win[winnr]); */
       
       XCopyGC(display[winnr], sgc,GCForeground, gc[winnr]);
       XFreeGC(display[winnr],sgc); 
-   
+      
     }
   }
 }
@@ -1084,6 +1098,86 @@ void c_text(char *n) {
   free(v);free(t);free(buffer);
 }
 
+void g_out(char a) {
+  static int lin=0,col=0;
+  extern int chh,chw;
+  extern RECT sbox;
+  int bbb;
+  switch(a) {
+  case 0: break;
+  case 7: printf("\007");break;
+  case 8: if(col) col--; break;
+  case 10: lin++; col=0; 
+    if(lin*chh>=sbox.h){
+      lin--;
+      XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
+    0,chh,sbox.w,
+    sbox.h-chh,0,0);
+    bbb=get_fcolor();
+      XSetForeground(display[usewindow],gc[usewindow],get_bcolor());
+      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
+      0,chh*lin,sbox.w,chh);
+      XSetForeground(display[usewindow],gc[usewindow],bbb);
+    } 
+    break;
+  case 13: col=0; break;
+  default:
+    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
+    col*chw,lin*chh+chh,&a,1);
+    col++;
+    if(col*chw>=sbox.w) {col=0; lin++;
+        if(lin*chh>=sbox.h){
+      lin--;
+      XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
+    0,chh,sbox.w,
+    sbox.h-chh,0,0);
+    bbb=get_fcolor();
+      XSetForeground(display[usewindow],gc[usewindow],get_bcolor());
+      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
+      0,chh*lin,sbox.w,chh);
+      XSetForeground(display[usewindow],gc[usewindow],bbb);
+    } 
+
+    }
+  }
+  
+}
+void g_outs(STRING t){
+  int i;
+  if(t.len) {
+    for(i=0;i<t.len;i++) {
+      g_out(t.pointer[i]);
+    }
+  }
+}
+
+void c_gprint(char *n) {
+  char v[strlen(n)+1];
+  char c;
+  int i;
+  strcpy(v,n);
+
+  if(strlen(v)) {  
+     graphics();
+     gem_init();
+      if(v[strlen(v)-1]==';' || v[strlen(v)-1]==',' || v[strlen(v)-1]=='\'') {
+        STRING buffer;
+        c=v[strlen(v)-1];
+        v[strlen(v)-1]=0;
+        buffer=print_arg(v);    
+	g_outs(buffer);
+        if(c=='\'') g_out(' ');
+        else if(c==',') g_out('\011');
+	free(buffer.pointer);
+      } else {
+        STRING buffer=print_arg(v);
+	g_outs(buffer);
+        g_out('\n');
+	free(buffer.pointer);
+      }
+  } else g_out('\n');
+}
+
 
 void c_ltext(char *n) {
   int x,y,e;
@@ -1103,10 +1197,13 @@ void c_ltext(char *n) {
 void c_alert(PARAMETER *plist,int e) {
   /* setzt nur das Format in einen FORM_ALERT Aufruf um */
   char buffer[MAXSTRLEN];
-  
-  if(e==5) {
+  char buffer2[MAXSTRLEN];
+  if(e>=5) {
     sprintf(buffer,"[%d][%s][%s]",plist[0].integer,plist[1].pointer,plist[3].pointer);
-    zuweis(plist[4].pointer,(double)form_alert(plist[2].integer,buffer));
+    zuweis(plist[4].pointer,(double)form_alert2(plist[2].integer,buffer,buffer2));
+  }
+  if(e==6) {
+    zuweiss(plist[5].pointer,buffer2);
   } 
 }
 
@@ -1264,75 +1361,6 @@ void c_rsrc_load(char *n) {
 }
 void c_rsrc_free(char *n) {
   if(rsrc_free()) puts("Fehler bei RSRC_FREE.");
-}
-void c_form_do(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int backval;
-  int i=0,e;
-  char *varname=NULL;
-  int tnr=0;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-       if(strlen(w1)) {
-       switch(i) {
-         case 0: { tnr=(int)parser(w1); break; }
-	 case 1: {
-	   varname=malloc(strlen(w1)+1);
-	   strcpy(varname,w1);
-	   break;
-	   } 
-         default: break;
-       }
-     }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i>=1) {	  
-    OBJECT *tree;
-    graphics();
-    gem_init();
-    rsrc_gaddr(R_TREE,tnr,&tree);
-    backval=form_do(tree);
-    zuweis(varname,(double)backval);
-  } else error(42,""); /* Zu wenig Parameter  */
-  free(varname);
-}
-void c_alert_do(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int backval;
-  int i=0,e;
-  char *varname=NULL;
-  int tnr=0,def=1;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-       if(strlen(w1)) {
-       switch(i) {
-        case 0: {tnr=(int)parser(w1);break;}
-        case 1: {
-	   def=(int)parser(w1);
-	   break;
-	   }
-	 
-	 case 2: {
-	   varname=malloc(strlen(w1)+1);
-	   strcpy(varname,w1);
-	   break;
-	   } 
-         default: break;
-       }
-     }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i>=2) {	  
-    char *tree;
-    graphics();
-    gem_init();
-    rsrc_gaddr(R_FRSTR,tnr,&tree);
-    backval=form_alert(def,tree);
-    zuweis(varname,(double)backval);
-  } else error(42,""); /* Zu wenig Parameter  */
-  free(varname);
 }
 
 void c_xload(char *n) {

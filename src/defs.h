@@ -5,8 +5,11 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+ 
 #ifndef __X11BASICDEFS
 #define __X11BASICDEFS
+
+#include "options.h"
  
 #define FALSE    0
 #define TRUE     (!FALSE)
@@ -18,6 +21,7 @@
 #define MAXPRGLEN 100000   /* in Bytes */
 #define MAXLINELEN  4096
 #define MAXVARNAMLEN  64
+#define ANZFILENR    100
 #define STACKSIZE    512
 #define ANZVARS     1024
 #define ANZLABELS   1024

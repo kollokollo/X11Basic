@@ -488,7 +488,7 @@ void c_close(char *w) {
     }
     else error(24,w); /* File nicht geoeffnet...*/
   } else {
-    for(i=0;i<100;i++) {
+    for(i=0;i<ANZFILENR;i++) {
 	if(filenr[i]==1) {
           if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
 	  else filenr[i]=0;

@@ -67,6 +67,7 @@ void cs_init();
 void cs_exit();
 double csget(char *);
 char *csgets(char *);
+STRING tinegets(char *);
 double do_funktion(char *,char *);
 STRING do_sfunktion(char *,char *);
 
@@ -107,6 +108,7 @@ char *searchchr(char *, char);
 /* Kontrollsystem */
 
 ARRAY *csvget(char *,int,int);
+ARRAY *tinevget(char *,int,int);
 int cssize(char *);
 int cstyp(char *);
 int cspid(char *);
@@ -116,6 +118,9 @@ double csget(char *);
 double csmin(char *);
 double csmax(char *);
 double csres(char *);
+double tineget(char *);
+double tinemin(char *);
+double tinemax(char *);
 #ifdef CONTROL
 void c_csput(char *);
 void c_csvput(char *);
@@ -124,4 +129,7 @@ void c_cssweep(char *);
 void c_csclearcallbacks(char *);
 void c_cssetcallback(char *);
 void sweep_value(int,float,float,float,int);
+#endif
+#ifdef TINE
+void c_tinemonitor(char *);
 #endif

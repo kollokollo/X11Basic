@@ -4,4 +4,4 @@ int exist( char *);
 char *lineinput( FILE *, char *);
 char *input( FILE *, char *);
 long lof( FILE *);
-int eof( FILE *);
+int myeof( FILE *);

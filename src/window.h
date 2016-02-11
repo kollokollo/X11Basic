@@ -6,11 +6,12 @@
  * COPYING for details
  */
 
+#ifndef WINDOWS
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#endif
 
-
-#define GEMFONT      "-*-lucidatypewriter-medium-r-normal-*-14-*-iso8859-*"
+#define GEMFONT      "-*-fixed-*-r-normal-*-16-*-iso8859-*"
 #define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
 
 #define max(a,b) ((a>b)?a:b)
@@ -21,8 +22,9 @@
 #define LONG unsigned int
 #define MAXWINDOWS 16
 
-void handle_event(int,XEvent *);
+#ifndef WINDOWS
 void handle_window(int);
+void handle_event(int,XEvent *);
 int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned int);
 void open_window( int);
 void close_window(int);
@@ -31,20 +33,23 @@ void do_menu_open(int);
 void do_menu_close();
 void do_menu_edraw();
 void do_menu_draw();
-
+#endif
 /* globale Variablen */
 
 int winbesetzt[MAXWINDOWS];
+#ifndef WINDOWS
 Window win[MAXWINDOWS];                 
 Pixmap pix[MAXWINDOWS];
 Display *display[MAXWINDOWS];            
 GC gc[MAXWINDOWS];                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
-
+#endif
 extern int usewindow;
+#ifndef WINDOWS
 XSizeHints size_hints[MAXWINDOWS];       /* Hinweise fuer den WIndow-Manager..*/
 XWMHints wm_hints[MAXWINDOWS];
 XClassHint class_hint[MAXWINDOWS];
 XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
+#endif
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];
 extern int menuflags[];
@@ -145,6 +150,7 @@ typedef struct objc_colorword {
 #define G_FBOXTEXT 30
 #define G_ICON 31
 #define G_TITLE 32
+#define G_ALERTTYP 42
 						/* Object flags		 */
 #define NONE 0x0
 #define SELECTABLE 0x1
@@ -248,9 +254,12 @@ TEDINFO
 
 ICONBLK
 {
-	LONG	ib_pmask;
-	LONG	ib_pdata;
-	LONG	ib_ptext;
+	WORD	ib_pmask;
+	WORD dummy1;
+	WORD	ib_pdata;
+	WORD dummy2;
+	WORD	ib_ptext;
+	WORD dummy3;
 	WORD	ib_char;
 	WORD	ib_xchar;
 	WORD	ib_ychar;
@@ -269,7 +278,7 @@ ICONBLK
 BITBLK
 {
 	WORD	bi_pdata;		/* ptr to bit forms data	*/
-        WORD dummy;
+        WORD dummy;         /* LINUX-Spezifisch ! */
 	WORD	bi_wb;			/* width of form in bytes	*/
 	WORD	bi_hl;			/* height in lines		*/
 	WORD	bi_x;			/* source x in bit form		*/
@@ -364,4 +373,26 @@ typedef struct rshdr
 	WORD		rsh_nimages;
 	WORD		rsh_rssize;	/* total bytes in resource	*/
 }RSHDR;
+
+typedef struct rshdrv3
+{
+	WORD		rsh_vrsn;	/* must same order as RT_	*/
+	LONG		rsh_object;
+	LONG		rsh_tedinfo;
+	LONG		rsh_iconblk;	/* list of ICONBLKS		*/
+	LONG		rsh_bitblk;
+	LONG		rsh_frstr;
+	LONG		rsh_string;
+	LONG		rsh_imdata;	/* image data			*/
+	LONG		rsh_frimg;
+	LONG		rsh_trindex;
+	WORD		rsh_nobs;	/* counts of various structs	*/
+	WORD		rsh_ntree;
+	WORD		rsh_nted;
+	WORD		rsh_nib;
+	WORD		rsh_nbb;
+	WORD		rsh_nstring;
+	WORD		rsh_nimages;
+	LONG		rsh_rssize;	/* total bytes in resource	*/
+}RSHDRV3;
 

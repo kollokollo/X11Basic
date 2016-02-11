@@ -14,11 +14,16 @@
 
 
 /* Kontrollsystemanbindung. Nur wichtig fuer Benutzer bei ELSA in Bonn /*
-/* sonst bitte abschalten */
+/* und DESY in Hamburg. sonst bitte abschalten */
 
 /*#ifndef CONTROL
   #define CONTROL
 #endif */
+
+/*#ifndef TINE
+  #define TINE
+#endif */
+
 
 /*#undef CONTROL*/
 

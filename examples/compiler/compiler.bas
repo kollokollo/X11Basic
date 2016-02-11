@@ -92,7 +92,7 @@ else if a=1
 else 
 
 endif
-system "rm -f /tmp/psydo-code.c"
+system "rm -f /tmp/psydo-code.c psydo-code.o"
 quit
 function ersetze$(era$,erb$,erc$)
   local tta$,ttb$

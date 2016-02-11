@@ -48,9 +48,13 @@ void fatal_error_handler( int signum) {
   int obatch=batch;
   switch(signum) {
   case SIGILL: error(104,""); break;
+#ifndef WINDOWS
   case SIGBUS: error(102,""); break;
+#endif
   case SIGSEGV: error(101,""); break;
+#ifndef WINDOWS
   case SIGPIPE: error(110,""); break;
+#endif
   default:
     printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
     batch=0;
@@ -105,7 +109,9 @@ void x11basicStartup() {
   obh=signal(SIGINT, break_handler);
   signal(SIGILL, fatal_error_handler);
   signal(SIGSEGV, fatal_error_handler);
+#ifndef WINDOWS
   signal(SIGBUS, fatal_error_handler);
   signal(SIGPIPE, fatal_error_handler);
   signal(SIGALRM, timer_handler);
+#endif
 }

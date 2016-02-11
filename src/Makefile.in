@@ -32,6 +32,10 @@ DEF= @def@ -DINLINE=@inline@
 #CC=@CC@ @static@ $(REGS)
 CC=@CC@ $(REGS)
 
+# Compiler fuer Windows-Excecutable
+
+WINCC=i386-mingw32msvc-gcc
+
 # Preprocessor
 CPP=@CPP@
 
@@ -97,6 +101,7 @@ DIR2=X11Basic-src-@version@
 LINKFLAGS = -L/usr/lib/termcap -L/opt/readline/lib
 
 LIBS = -lm -lX11 -lreadline -ldl -ltermcap @xtra@
+CCSLIBS = ${CCSROOT}/lib/libtine.a
 
 all :    configure Makefile xbasic
 
@@ -118,6 +123,10 @@ psydo : psydo.o lib
 psydostatic : psydo.o x11basic.a
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
 		$(LIBS) $(XLIBS)
+windows: clean
+	$(WINCC) -DWINDOWS -c $(DIST2)
+	$(WINCC) -DWINDOWS $(OPT) $(LINKFLAGS) -o xbasic.exe $(DISTOBJS) \
+		$(LIBS) $(XLIBS)
 
 xbasic : $(DISTOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(DISTOBJS) \
@@ -126,10 +135,21 @@ xbasic : $(DISTOBJS)
 csxbasic : $(OBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
+
+tinexbasic : $(OBJS) main.o mathematics.o
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o tinexbasic $(AOBJS) \
+		$(LIBS) $(CCSLIBS) $(XLIBS)
+
 lib : $(LIBOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -shared -o libx11basic.so $(LIBOBJS)
+
+tlib : $(LIBOBJS)
+	$(CC) $(OPT) $(LINKFLAGS) -shared -o libtinex11basic.so $(LIBOBJS) $(CCSLIBS)
+
 x11basic.a : $(LIBOBJS)
 	 ar -ru x11basic.a $(LIBOBJS) 
+tx11basic.a : $(LIBOBJS)
+	 ar -ru tx11basic.a $(LIBOBJS)  $(CCSLIBS)
 
 dyn : lib main.o
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o xbasic.dyn main.o \

@@ -49,8 +49,6 @@ This will generate a `Makefile', link `config.h' to the appropriate file from
 the `config' subdirectory and generate dependencies for the Makefile. It will
 also generate some more sources.
 
-If the `configure' script fails, please contact me at m.hoffmann@uni-bonn.de 
-and send me the output it generated. 
 
 
 ADDITIONAL CONFIGURATION OPTIONS

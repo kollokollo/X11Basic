@@ -51,17 +51,20 @@ extern const char libvdate[];
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
 #else
+#ifdef TINE
+const char xbasic_name[]="tinexbasic";
+#else
 const char xbasic_name[]="xbasic";
 #endif
-
+#endif
 int pc=0,sp=0,echo=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int everytime=0,alarmpc=-1;
 
 int stack[STACKSIZE];
 
 /* fuer die Dateiverwaltung     */
-FILE *dptr[100];
-int filenr[100];
+FILE *dptr[ANZFILENR];
+int filenr[ANZFILENR];
 
 
 VARIABLE variablen[ANZVARS];
@@ -81,8 +84,7 @@ const COMMAND comms[]= {
     
  { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
  { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2 },
- { P_PLISTE,     "ALERT"    , c_alert     ,5, 5,{PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR}},
- { P_ARGUMENT,   "ALERT_DO" , c_alert_do  ,3, 3,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
+ { P_PLISTE,     "ALERT"    , c_alert     ,5, 6,{PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
  { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2},
  { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2},
 
@@ -106,7 +108,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1,{PL_INT}},
  { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1},
  { P_SIMPLE, "CLS"      , c_cls    ,0,0},
- { P_ARGUMENT,   "COLOR"    , c_color  ,1,1,{PL_INT}},
+ { P_PLISTE,   "COLOR"    , c_color  ,1,2,{PL_INT,PL_INT}},
  { P_SIMPLE, "CONT"     , c_cont   ,0,0},
  { P_PLISTE, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 /* Kontrollsystembefehle  */
@@ -158,13 +160,13 @@ const COMMAND comms[]= {
  { P_PLISTE,   "FILESELECT", c_fileselect,4,4,{PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
  { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
  { P_FOR,    "FOR"      , c_for,1,-1,{PL_KEY}},
- { P_ARGUMENT,    "FORM_DO"      , c_form_do,2,2},
  { P_ARGUMENT,    "FREE"      , c_free,1,1,{PL_INT}},
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_KEY}},
 
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
  { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1,{PL_PROC}},
  { P_ARGUMENT,   "GOTO"     , c_goto,1,1,{PL_LABEL}},
+ { P_ARGUMENT,   "GPRINT"    , c_gprint,       0,-1},
  { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
 
  { P_ARGUMENT,   "HELP"    , c_help,0,1,{PL_KEY}},
@@ -233,6 +235,7 @@ const COMMAND comms[]= {
  */
  { P_PLISTE,   "PUT"  , c_put,      3,4,{PL_INT,PL_INT,PL_STRING,PL_INT}},
  { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,-1},
+ { P_PLISTE,   "PUT_BITMAP"  , c_put_bitmap, 5,5,{PL_STRING,PL_INT,PL_INT,PL_INT,PL_INT}},
 
  { P_SIMPLE, "QUIT"     , c_quit,       0,0},
 
@@ -245,7 +248,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1,{PL_LABEL}},
  { P_ARGUMENT,   "RETURN"   , c_return,     0,1},
  { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
- { P_SIMPLE, "RSRC_FREE", c_rsrc_load,0,0},
+ { P_SIMPLE, "RSRC_FREE", c_rsrc_free,0,0},
  { P_ARGUMENT, "RSRC_LOAD", c_rsrc_load,1,1,{PL_STRING}},
 
  { P_SIMPLE, "RUN"      , c_run,        0,0},
@@ -276,6 +279,9 @@ const COMMAND comms[]= {
  { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1,{PL_STRING}},
 
  { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
+#ifdef TINE
+ { P_ARGUMENT,   "TINEMONITOR", c_tinemonitor,2,-1},
+#endif
  { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2,{PL_INT,PL_STRING}},
  { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
