@@ -19,7 +19,10 @@ int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned
 void open_window( int);
 void close_window(int);
 char *imagetoxwd(XImage *,Visual *,XColor *, int *);
-
+void do_menu_open(int);
+void do_menu_close();
+void do_menu_edraw();
+void do_menu_draw();
 
 /* globale Variablen */
 
@@ -36,6 +39,16 @@ XClassHint class_hint[MAXWINDOWS];
 XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];
+extern int menuflags[];
+extern char *menuentry[];
+extern char *menutitle[];
+extern int menutitlesp[];
+extern int menutitlelen[];
+extern int menutitleflag[];
+extern int menuanztitle;
+extern int schubladeff;
+extern int schubladenr;
+extern int schubladex,schubladey,schubladew,schubladeh;
 
 /* AES-Definitionen   */
 

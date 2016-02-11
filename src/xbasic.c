@@ -38,10 +38,10 @@ const char vdate[]=VERSION_DATE;
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
 #else
-const char xbasic_name[]="x11basic";
+const char xbasic_name[]="xbasic";
 #endif
 
-int pc=0,sp=0,prglen=0,echo=0,batch=0,errcont=0,everyflag=0;
+int pc=0,sp=0,prglen=0,echo=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int everytime=0,alarmpc=-1;
 char ifilename[100]="input.bas";       /* Standartfile             */
 int loadfile=FALSE;
@@ -81,8 +81,8 @@ COMMAND comms[]= {
  { P_SIMPLE, "BELL"     , c_beep      ,0, 0},
  { P_ARGUMENT,   "BGET"     , c_bget      ,3, 3},
  { P_ARGUMENT,   "BLOAD"    , c_bload     ,1,-1},
- { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3,{PL_INT,PL_INT,PL_INT} }, 
- { P_ARGUMENT,   "BOX"      , c_box       ,4, 4},
+ { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3, {PL_INT,PL_INT,PL_INT} }, 
+ { P_ARGUMENT,   "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BPUT"     , c_bput      ,3, 3},
  { P_BREAK,  "BREAK"    , c_break     ,0, 0}, 
  { P_ARGUMENT,   "BSAVE"    , c_bsave     ,1,-1},
@@ -96,8 +96,9 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1},
  { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1},
  { P_SIMPLE, "CLS"      , c_cls    ,0,0},
- { P_ARGUMENT,   "COLOR"    , c_color  ,1,1},
+ { P_ARGUMENT,   "COLOR"    , c_color  ,1,1,{PL_INT}},
  { P_SIMPLE, "CONT"     , c_cont   ,0,0},
+ { P_ARGUMENT, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 /* Kontrollsystembefehle  */
 #ifdef CONTROL 
 
@@ -118,9 +119,9 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "DEFTEXT"  , c_deftext,1,-1},
  { P_ARGUMENT,   "DIM"      , c_dim ,1,-1},
  { P_ARGUMENT,   "DIV"      , c_div ,2,2},
- { P_DO,     "DO"       , c_do  ,0,0},
+ { P_DO,     "DO"       , c_do  ,0,0}, 
+ { P_ARGUMENT,   "DPOKE"    , c_dpoke,       2,2,{PL_INT,PL_INT}},
  { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1},
-
  { P_ARGUMENT,   "DUMP"     , c_dump ,0,1},
 
  { P_ARGUMENT,   "ECHO"     , c_echo ,1,1},
@@ -137,6 +138,7 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "ERROR"    , c_error,0,1},
  { P_ARGUMENT,   "EVENT"    , c_allevent,0,-1},
  { P_ARGUMENT,   "EVERY"    , c_every,0,-1},
+ { P_ARGUMENT,   "EXEC"     , c_exec,1,2},
  { P_ARGUMENT,   "EXIT"     , c_exit,0,-1},
 /*
  { P_ARGUMENT,   "EXPORT"     , c_export,1,2, {PL_ALL, PL_NUMBER}},  
@@ -148,6 +150,7 @@ COMMAND comms[]= {
  { P_ARGUMENT,    "FORM_DO"      , c_form_do,2,2},
  { P_PROC,   "FUNCTION" , c_end,1,-1},
 
+ { P_ARGUMENT,   "GET"      , c_get,5,5},
  { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1},
  { P_ARGUMENT,   "GOTO"     , c_goto,1,1},
  { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1},
@@ -165,14 +168,21 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "LET"      , c_let,1,-1},
  { P_ARGUMENT,   "LINE"     , c_line,4,4},
  { P_ARGUMENT,   "LINEINPUT", c_lineinput,1,2},
+ { P_ARGUMENT,   "LINK"     , c_link,       2,2},
  
  { P_SIMPLE, "LIST"     , c_list,0,0},
  { P_ARGUMENT,   "LOAD"     , c_load,1,1},
  { P_ARGUMENT,   "LOCAL"    , c_local,1,-1},
- { P_LOOP,   "LOOP"     , bidnm,0,0},
+ { P_LOOP,   "LOOP"     , bidnm,0,0}, 
+ { P_ARGUMENT,   "LPOKE"    , c_lpoke,       2,2},
+
  { P_ARGUMENT,   "LTEXT"    , c_ltext,0,-1},
 
  { P_ARGUMENT,   "MERGE"    , c_merge,1,1},
+ { P_SIMPLE,     "MENU"    , c_menu,0,0},
+ { P_ARGUMENT,   "MENUDEF"  , c_menudef,1,2},
+ { P_SIMPLE,     "MENUKILL" , c_menukill,0,0},
+ { P_ARGUMENT,   "MENUSET"  , c_menuset,2,2},
  { P_ARGUMENT,   "MOUSE"    , c_mouse,1,4},
  { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,-1},
  { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,-1},
@@ -196,12 +206,18 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "PELLIPSE"  , c_pellipse,   4,5},
  { P_SIMPLE, "PLIST"    , c_plist,      0,0},
  { P_ARGUMENT,   "PLOT"     , c_plot,       2,2},
+ { P_ARGUMENT,   "POKE"     , c_poke,       2,2},
+ { P_ARGUMENT,   "POLYFILL" , c_polyfill,   3,7},
+ { P_ARGUMENT,   "POLYLINE" , c_polyline,   3,6},
+ { P_ARGUMENT,   "POLYMARK" , c_polymark,   3,6},
+
  { P_ARGUMENT,  "PRINT"    , c_print,       0,-1},
  { P_PROC,   "PROCEDURE", c_end  ,      0,0},
  { P_IGNORE, "PROGRAM"  , c_nop  ,      0,0},
  /* Ausdruck als Message queuen
   { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALL,PL_NUMBER}},
  */
+ { P_ARGUMENT,   "PUT"  , c_put,      3,3},
  { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,2},
 
  { P_SIMPLE, "QUIT"     , c_quit,       0,0},
@@ -230,8 +246,10 @@ COMMAND comms[]= {
  */
  { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1},
  { P_ARGUMENT,	"SETMOUSE" , c_setmouse,   1,-1},
+ { P_ARGUMENT,	"SGET" , c_sget,   1,1},
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
  { P_ARGUMENT,	"SIZEW"    , c_sizew,      1,-1},
+ { P_ARGUMENT,	"SPUT"    , c_sput,      1,1},
  { P_SIMPLE,	"STOP"     , c_stop,       0,0},
  { P_ARGUMENT,	"SUB"      , c_sub,        2,2},
  { P_ARGUMENT,	"SWAP"     , c_swap,       2,2},
@@ -243,6 +261,7 @@ COMMAND comms[]= {
  { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
 
+ { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1},
  { P_UNTIL,	"UNTIL"    , c_until,      1,1},
  { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1},
 
@@ -256,7 +275,6 @@ COMMAND comms[]= {
  
  { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
  { P_SIMPLE,	"XRUN"     , c_xrun,     0,0},
-
 
 };
 int anzcomms=sizeof(comms)/sizeof(COMMAND);
@@ -282,13 +300,11 @@ void break_handler( int signum) {
 }
 void fatal_error_handler( int signum) {
   printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
-
   if(batch) {
     if(pc>=0) {
       printf("Zeile  pc-1   : %s\n",program[pc-2]);
       printf("Zeile: Pc=%d  : %s\n",pc-1,program[pc-1]);
       printf("Zeile  pc+1   : %s\n",program[pc]);
-
     } else printf("PC negativ !\n");
       printf("Stack-Pointer: SP=%d\n",sp);
       batch=0;

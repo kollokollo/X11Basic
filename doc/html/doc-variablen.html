@@ -1,0 +1,36 @@
+<html>
+<head>
+
+
+
+<h2>Variablenkonzept:</h2>
+
+Der Interpreter kennt 64-Bit Floatingpoint Variablen, 32-Bit Integervariablen,
+Zeichenketten und beliebigdimensionale Felder obengenannter Typen.
+Eine Deklaration der Variablen ist nicht noetig (Ausser bei Feldern --> DIM),
+da der Interpreter den Typ an der Endung der Variable erkennt:
+Integervariablen tragen die Endung %, Zeichenketten ein $, felder ein ().
+Variablen ohne Endung werden als float interpretiert.
+Pointer sind Integer, Funktionsergebnisse werden durch @ gekennzeichnet
+Logische Ausdruecke soind ebenfalls vom Typ Interger.
+<p>
+Die Variablen werden dynamisch verwaltet, so sind beliebig grosse Zeichenketten
+und Felder moeglich. Die Grenze ist hier nur der maximal allozierbare Speicher
+und max. 31 Bit fuer die Indizierung. Das sollte vorerst ausreichen.
+<p>
+<pre>
+Beispiele:
+
+Integer-Variablen:      i%=25
+			a%=varptr(b$)
+			b%=malloc(100000)
+Float-Variablen:        a=1.2443e17
+			b=@f(x)
+Zeichenkettenvariablen: t$="Das ist ein Text"
+Felder/Arrays:          i%(),a(),t$()
+
+Logische Ausdruecke:    (a=2 AND b=5) sind vom Typ Integer (TRUE=-1, FALSE=0)
+
+</pre>
+</body>
+</html>

@@ -39,9 +39,7 @@ void c_gosub(char *n) {
 	  pc2=procs[pc2].zeile;
 	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
 	  else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
-	 
 	}
-	
     }
     free(buffer);
 }
@@ -440,6 +438,7 @@ void c_arrayfill(char *n) {
   if(wort_sep(n,',',TRUE,v,w)==2) {
      int typ,vnr;
      char *r;
+     
      xtrim(v,TRUE,v);
      xtrim(w,TRUE,w);
      /* Typ bestimmem. Ist es Array ? */
@@ -452,9 +451,9 @@ void c_arrayfill(char *n) {
       if(vnr==-1) error(15,v); /* Feld nicht dimensioniert */ 
       else {
         if(typ & STRINGTYP) {
-	  r=s_parser(w);
-	  fill_string_array(vnr,r);
-	  free(r); 
+	  STRING str=string_parser(w);
+	  fill_string_array(vnr,str);
+	  free(str.pointer); 
         } else if(typ & INTTYP) fill_int_array(vnr,(int)parser(w)); 
         else if(typ & FLOATTYP) fill_float_array(vnr,parser(w));
       }
@@ -538,6 +537,16 @@ void c_dump(char *n) {
       printf("%d|%s [%d]\n",procs[i].typ,procs[i].name,procs[i].zeile);
     }
   }
+  if(kkk=='#') {
+    for(i=0;i<100;i++) {
+      if(filenr[i]==1) {
+        printf("#%d: %s [FILE]\n",i,"");
+      } else if(filenr[i]==2) {
+        printf("#%d: %s [SHARED OBJECT]\n",i,"");
+      }
+    }
+  }
+  
 }
 
 void c_end(char *n) {
@@ -545,24 +554,44 @@ void c_end(char *n) {
 }
 
 void c_on(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  
-  wort_sep(n,' ',TRUE,w1,w2);
-  if(strcmp(w1,"")==0) error(32,"ON"); /* Syntax error */
-  else if(strcmp(w1,"ERROR")==0) c_onerror(w2);
-  else if(strcmp(w1,"BREAK")==0) c_onbreak(w2);
-  else if(strcmp(w1,"MENU")==0) c_onmenu(w2);
-
-  else  printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);
+  char w1[strlen(n)+1],w2[strlen(n)+1],w3[strlen(n)+1];
+  int e=wort_sep(n,' ',TRUE,w1,w2);
+  int mode=0;
+  if(e==0) error(32,"ON"); /* Syntax error */
+  else {
+    wort_sep(w2,' ',TRUE,w2,w3);
+    if(strcmp(w2,"CONT")==0) mode=1;
+    else if(strcmp(w2,"GOTO")==0) mode=2;
+    else if(strcmp(w2,"GOSUB")==0) mode=3;
+    else mode=0;
+    
+    if(strcmp(w1,"ERROR")==0) {
+      errcont=(mode==1);
+      
+    } else if(strcmp(w1,"BREAK")==0) {
+      breakcont=(mode==1);
+    } else if(strcmp(w1,"MENU")==0) {
+      if(mode==0)  c_menu("");  
+      else if(mode==3) {
+       int pc2=procnr(w3,1);
+       if(pc2==-1) error(19,w3); /* Procedure nicht gefunden */
+       else menuaction=pc2;
+      } else  printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);  
+    } else { /* on n goto ...  */
+      if(mode<2) printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);
+      else {
+        int i,gi=max(0,(int)parser(w1));
+	if(gi) {
+	  while(gi) { e=wort_sep(w3,',',TRUE,w2,w3); gi--;}
+	  if(e) {
+            if(mode==3) c_gosub(w2);
+	    else if(mode==2) c_goto(w2);
+          }
+	}
+      }
+    }
+  }
 }
-
-void c_onerror(char *n) {
-  if(strcmp(n,"CONT")==0) errcont=1;
-  else if(strcmp(n,"GOSUB")==0) printf("Befehl noch nicht moeglich!\n");
-  else errcont=0;
-}
-void c_onbreak(char *n) { ;}
-void c_onmenu(char *n) { ;}
 
 void c_add(char *n) {c_addsubmuldiv(n,1);}
 void c_sub(char *n) {c_addsubmuldiv(n,2);}
@@ -688,7 +717,7 @@ void c_return(char *n) {
   if(sp>0) {
     if(strlen(n)) {
       if(type2(n) & STRINGTYP) {
-        returnvalue.str=s_parser(n); /* eigentlich muss auch der Funktionstyp 
+        returnvalue.str=string_parser(n); /* eigentlich muss auch der Funktionstyp 
                                        	 abgefragt werden */
       } else {
         returnvalue.f=parser(n);
@@ -838,11 +867,10 @@ void c_break(char *n) {
   int i,f=0,o;
   for(i=pc; (i<prglen && i>=0);i++) {
     o=pcode[i].opcode&PM_SPECIAL;
-    if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f==0) break;
-    else if(o & P_LEVELIN) f++;
-    else if(o & P_LEVELOUT) f--;
-    f=max(f,0);
-  }
+    if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
+    if(o & P_LEVELIN) f++;
+    if(o & P_LEVELOUT) f--;
+   }
   if(i==prglen) { error(36,"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */return;}
   pc=i+1;
 }
@@ -1011,4 +1039,37 @@ int do_wort_sep(char *n) {
     error(32,"WORT_SEP"); /*Syntax Error */
     return(0);
   } else return(ergeb);
+}
+void c_poke(char *n) {
+  char v[strlen(n)+1],t[strlen(n)+1];
+  int e;
+  char *adr;
+  e=wort_sep(n,',',TRUE,v,t);
+  if(e<2) printf("Zuwenig Parameter !\n");
+  else {
+    adr=(char *)((int)parser(v));
+    *adr=(char)parser(t);
+  }
+}
+void c_dpoke(char *n) {
+  char v[strlen(n)+1],t[strlen(n)+1];
+  int e;
+  short *adr;
+  e=wort_sep(n,',',TRUE,v,t);
+  if(e<2) printf("Zuwenig Parameter !\n");
+  else {
+    adr=(short *)((int)parser(v));
+    *adr=(short)parser(t);
+  }
+}
+void c_lpoke(char *n) {
+  char v[strlen(n)+1],t[strlen(n)+1];
+  int e;
+  long *adr;
+  e=wort_sep(n,',',TRUE,v,t);
+  if(e<2) printf("Zuwenig Parameter !\n");
+  else {
+    adr=(long *)((int)parser(v));
+    *adr=(long)parser(t);
+  }
 }

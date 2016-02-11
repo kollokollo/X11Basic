@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 
 
@@ -102,15 +103,18 @@ long bload( char *name, char *adr, long len)
 	fclose(fdis);
 	return(gelesen);
 }
-
-int exist( char *name )
-
-{	int   fdis;
-		
-	fdis=open(name,0x8000);
-	if (fdis==-1) return(FALSE);
-	close(fdis);
-	return(TRUE);
+#if 0
+int exist( char *name ) {	
+  int   fdis=open(name,0x8000);
+  if (fdis==-1) return(FALSE);
+  close(fdis);
+  return(TRUE);
 }
-
-
+#else
+int exist(char *filename) {
+  struct stat fstats;
+  int retc = stat (filename, &fstats);
+  if(retc==-1) return(FALSE);
+  return(TRUE);
+}
+#endif

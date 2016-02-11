@@ -6,21 +6,22 @@
 </head>
 
 <BODY BGCOLOR="#b0a0ff" text=0 link=ffff00 vlink=d0d010>
-
-<h2>Kann ich X11Basic als shell benutzen ?</h2>
-ja, einfach das binary xbasic nach /usr/bin kopieren.
-Die Scrips muessen dann als erste Zeile <pre>
-#!/bin/xbasic 
-</pre>
-enthalten. Mit chmod 755 macht man sie executable.
-<h2>Kann ich X11Basic als internetdaemon benutzen ?</h2>
-ja, hierzu muss xbasic mit der option -daemon aufgerufen werden.
-Diese Feature ist aber noch experimentell und oeffnet natuerlich
-Sicherheitsluecken.
-<hr>
 <h1>Frequently Asked Questions</h1>
 <p>Here are some of the most common questions along with answers. This Faq is 
 still short, but expected to grow on your input.</p>
+
+<b>Question: </b>Can I use X11-Basic as a shell ?<br> <b>Answer: </b>
+Yes, simply copy the xbasic executable to /usr/bin .
+The shell scripst then should have in their first line<pre>
+#!/bin/xbasic 
+</pre>
+.
+<b>Question: </b>Can I use X11-Basic as an internet daemon ?<br> <b>Answer: </b>
+Yes, start xbasic with the option <t>-daemon</t>.
+This feature is still experimental. So use it on your own risk since this opens several security holes
+to your system.
+
+<hr>
 <p><b>Question: </b>Can X11-Basic generate stand-alone programs, which may run 
 without the xbasic executable ?<br> <b>Answer: </b>No. X11-Basic does not 
 translate its input into assembly, you always need the xbasic executable. On the other 

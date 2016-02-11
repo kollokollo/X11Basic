@@ -87,7 +87,7 @@ DIR=X11Basic-@version@
 
 LINKFLAGS = -L/usr/lib/termcap
 
-LIBS = -lm -lX11 -lreadline -ltermcap @xtra@
+LIBS = -lm -lX11 -lreadline -ldl -ltermcap @xtra@
 
 all :    configure Makefile xbasic
 

@@ -10,6 +10,7 @@
 
 #ifndef _PTYPES_
 #define _PTYPES_
+#include "vtypes.h"
 
 typedef struct {
   char *name;
@@ -117,12 +118,15 @@ typedef struct {
 /* 0000 0000  0000 0000  0000 0000  0000 0000		
    |			 |||| ||||  |||| ||||
    | 			 |||| ||||  ++++-++++--- Funktionsnr, pfunc.   00, ff reserviert
-   | 			 |||| |||+-------------- reserviert
-   |			 |||| |++--------------- 0: Funktion hat keine Parameter
-   | 			 |||| | 		 1: nimmt Parameter als Zeichenkette
-   | 			 |||| | 		 2: nimmt Parameter als PLISTE
-   | 			 |||| | 		 3: nimmt Parameter als double
-   | 			 |||| +----------------- Funktion ignorieren (nixtun)
+   |			 |||| ++++-------------- 0: Funktion hat keine Parameter
+   | 			 ||||   		 1: nimmt Parameter als Argument-Zeichenkette
+   | 			 ||||   		 2: nimmt Parameter als PLISTE
+   | 			 ||||   		 3: reserviert
+   | 			 ||||   		 4: Alle Parameter sind DOUBLE
+   | 			 ||||   		 5: Alle Parameter sind INT
+   | 			 ||||   		 6: Alle Parameter sind STRING
+   | 			 ||||   		 7: reserviert
+   | 			 ||||                    8: Funktion ignorieren (nixtun)
    | 			 |||+------------------- Funktion illegal
    |||| ||||  |||| ||||  ||+-------------------- 1: return int, sonst double
    |+++-++++--++++-++++--+++-------------------- reserviert 
@@ -134,15 +138,18 @@ typedef struct {
 #define F_NOCMD      0x000ff  /* Falls der Pcode kein Kommando darstellt */
 
 
-#define FM_TYP       0x00600
-#define F_ARGUMENT   0x00200  /* Befehl mit Parameter im P_CODE.argument */
+#define FM_TYP       0x00f00
 #define F_SIMPLE     0x00000  /* Befehl ohne Parameter */
-#define F_PLISTE     0x00400
+#define F_ARGUMENT   0x00100  /* Befehl mit Parameter im P_CODE.argument */
+#define F_PLISTE     0x00200
+#define F_DQUICK     0x00400
+#define F_IQUICK     0x00500
+#define F_SQUICK     0x00600
+
 #define F_IGNORE     0x00800
 #define F_INVALID    0x01000
 #define F_IRET       0x02000
 #define F_DRET       0x00000
-#define F_DQUICK     0x00600
 
 
 
@@ -176,6 +183,15 @@ typedef struct {
   short pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[16];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } FUNCTION;
+
+typedef struct {
+  int opcode;
+  char name[32];
+  STRING (*routine)();
+  short pmin;        /* Mindestanzahl an Parametern */
+  short pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  short pliste[16];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} SFUNCTION;
 
 
 /* Kommandoparametertypen */

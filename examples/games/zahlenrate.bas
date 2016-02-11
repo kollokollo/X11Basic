@@ -9,10 +9,10 @@ PRINT "eine Zahl zwischen 1 und 1000 zu erraten."
 print
 ' varload best.user.zahlenr$,best.vers.zahlenr,zahlenrdate$
 do
-	print "Der Bisherig beste User ist";
+	print "Der Bisherig beste User ist ";
 
 	if best.vers.zahlenr
-		print 'best.user.zahlenr$'"mit"'best.vers.zahlenr'"Versuchen am"'zahlenrdate$'"."
+		print best.user.zahlenr$'"mit"'best.vers.zahlenr'"Versuchen am"'zahlenrdate$'"."
 	else
 		print " bisher niemand."
 	endif
@@ -25,15 +25,13 @@ do
 	DO
 		INPUT "Die Ratezahl eingeben:",r
 		inc k
-		
+		EXIT IF r=z
 		if r<0 or r>1000
 		        print "Es hat wenig Sinn, negative Zahlen oder Zahlen groesser 1000 einzugeben ! "
 			input "Wollen Sie das Spiel beenden ? 1=ja ",yn
 			if yn=1
 			  end
 			endif
-		else IF r=z
-			EXIT IF TRUE
 		ELSE IF r>z
 			print "Die Zahl"'r'"ist zu groﬂ !"
 		else

@@ -120,11 +120,11 @@ PROCEDURE m(x)
     color schwarz
   ENDIF
   IF e<>ee(sc)
-    color 1
+    color weiss
     LINE ee(sc)-3,liy,ee(sc)-3,liy+5
     LINE ee(sc)+3,liy+5,ee(sc)+3,liy
     '
-    color 0
+    color schwarz
     '
     LINE e-3,liy,e-3,liy+5
     LINE e+3,liy+5,e+3,liy
@@ -132,13 +132,13 @@ PROCEDURE m(x)
     ee(sc)=e
   ENDIF
   IF x<>xx(sc)
-    color 1
+    color weiss
     LINE @kx(xx(sc))-3,liy,@kx(xx(sc))+3,liy+5
     LINE @kx(xx(sc))-3,liy+5,@kx(xx(sc))+3,liy
     '
     LINE 320,my,320+ll*SIN(xx(sc)),my+ll*COS(xx(sc))
     PCIRCLE 320+ll*SIN(xx(sc)),my+ll*COS(xx(sc)),8
-    color 0
+    color schwarz
     '
     LINE @kx(x)-3,liy,@kx(x)+3,liy+5
     LINE @kx(x)-3,liy+5,@kx(x)+3,liy

@@ -249,3 +249,12 @@ char *rsearchchr2(char *start,char c,char *end) {
   }
   return(start);
 }
+#define min(a,b) ((a<b)?a:b)
+char *rmemmem(char *s1,int len1,char *s2,int len2) {
+  char *pos=s1+len1;
+  while(pos>=s1) {
+    if(memcmp(pos,s2,min(len2,s1-pos+len1+1))==0) return(pos);
+    pos--;
+  }
+  return(NULL);
+}

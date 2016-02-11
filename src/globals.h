@@ -14,8 +14,10 @@ extern const char vdate[];
 extern const char xbasic_name[];
 extern char ifilename[];
 int loadfile,runfile,daemonf;
-int pc,sp,prglen,echo,batch,err,errcont,everyflag;
+int pc,sp,prglen,echo,batch,err,errcont,breakcont,everyflag;
 int everytime,alarmpc;
+extern int menuaction;
+
 extern int stack[];
 char *program[MAXPRGLEN];
 P_CODE pcode[MAXPRGLEN];
@@ -46,7 +48,7 @@ int anzlabels, anzprocs;
 int anzcomms;
 
 union {double f;
-       char *str;} returnvalue;
+       STRING str;} returnvalue;
 
 int turtlex,turtley;
 extern int usewindow;

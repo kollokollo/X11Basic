@@ -168,14 +168,14 @@ void erase_string_array(int vnr) {
   for(j=0;j<anz;j++)  free(varptr[j].pointer); 
 }
 
-void fill_string_array(int vnr, char *inh) {
+void fill_string_array(int vnr, STRING inh) {
   int anz=do_dimension(vnr),j; 
   STRING *varptr;
   varptr=(STRING *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE); 
   for(j=0;j<anz;j++) {
-    varptr[j].pointer=realloc(varptr[j].pointer,strlen(inh)+1);
-    strcpy(varptr[j].pointer,inh);
-    varptr[j].len=strlen(inh); 
+    varptr[j].pointer=realloc(varptr[j].pointer,inh.len+1);
+    memcpy(varptr[j].pointer,inh.pointer,inh.len);
+    varptr[j].len=inh.len; 
   }	
 }
 void copy_string_array(int vnr1, int vnr2) {
@@ -648,15 +648,15 @@ int neue_int_variable(char *name, int wert, int sp) {
   } else return(-1);
 }
 
-int neue_string_variable(char *name, char *wert, int sp) { 
+int neue_string_variable(char *name, char *wert,int len, int sp) { 
         
   if(anzvariablen<ANZVARS) {
     variablen[anzvariablen].name=malloc(strlen(name)+1); 
     strcpy(variablen[anzvariablen].name,name);
-    variablen[anzvariablen].opcode=strlen(wert);
+    variablen[anzvariablen].opcode=len;
     variablen[anzvariablen].local=sp;
-    variablen[anzvariablen].pointer=malloc(strlen(wert)+1);
-    strcpy(variablen[anzvariablen].pointer,wert);
+    variablen[anzvariablen].pointer=malloc(len+1);
+    memcpy(variablen[anzvariablen].pointer,wert,len+1);
     variablen[anzvariablen].typ=STRINGTYP;
     anzvariablen++;
     return(0);
@@ -830,6 +830,10 @@ ARRAY *array_info(int vnr) {
 /* Weist einer $-Variable eine Zeichenkette zu */
 
 int zuweiss(char *name, char *inhalt) {
+   return(zuweissbuf(name,inhalt,strlen(inhalt)));
+}
+
+int zuweissbuf(char *name, char *inhalt,int len) {
   int i,s=0;
   char *ss,*t,*v,*pos,*pos2,*w;
   
@@ -885,11 +889,10 @@ int zuweiss(char *name, char *inhalt) {
    /* printf("Zuweisung: %s dim:%d anz:%d ll:%d,%d \n",w,ndim,anz,((int
    *)pos)[0],((int *)(pos+2))[0]);  */
       
-          ((int *)pos)[0]=strlen(inhalt);
+          ((int *)pos)[0]=len;
 	  pos+=sizeof(int);
-	  ((char **)pos)[0]=realloc(((char **)pos)[0],strlen(inhalt)+1);
-	  strcpy(((char **)pos)[0],inhalt);
-	   
+	  ((char **)pos)[0]=realloc(((char **)pos)[0],len+1);
+	  memcpy(((char **)pos)[0],inhalt,len+1);
 	 }
 	 free(ss);free(t);
       }
@@ -901,11 +904,11 @@ int zuweiss(char *name, char *inhalt) {
   /* ist variable schon vorhanden ? */
  
     if((i=variable_exist(w,STRINGTYP))!=-1) {
-	  variablen[i].opcode=strlen(inhalt);
-	  variablen[i].pointer=realloc(variablen[i].pointer,strlen(inhalt)+1);
-	  strcpy(variablen[i].pointer,inhalt);
+	  variablen[i].opcode=len;
+	  variablen[i].pointer=realloc(variablen[i].pointer,len+1);
+	  memcpy(variablen[i].pointer,inhalt,len+1);
 	  
-    }   else { if(neue_string_variable(w,inhalt,0)==-1) 
+    }   else { if(neue_string_variable(w,inhalt,len,0)==-1) 
               printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
   }
@@ -931,9 +934,9 @@ void xzuweis(char *name, char *inhalt) {
      ARRAY *buffer3=array_parser(buffer2);
      array_zuweis_and_free(buffer1, buffer3);
   } else if(typ & STRINGTYP) {
-     char *buffer3=s_parser(buffer2);
-     zuweiss(buffer1,buffer3);
-     free(buffer3);
+     STRING buffer3=string_parser(buffer2);
+     zuweissbuf(buffer1,buffer3.pointer,buffer3.len);
+     free(buffer3.pointer);
   } else if(typ & INTTYP) zuweisi(buffer1,parser(buffer2));
   else zuweis(buffer1,parser(buffer2));
   free(buffer1);free(buffer2);
@@ -1015,9 +1018,9 @@ void c_dolocal(char *name, char *inhalt) {
      buffer4[strlen(buffer4)-1]=0;
      if(strlen(inhalt)) {
        buffer3=s_parser(inhalt);
-       neue_string_variable(buffer4,buffer3,sp);
+       neue_string_variable(buffer4,buffer3,strlen(buffer3),sp);
        free(buffer3);
-     } else  neue_string_variable(buffer4,"",sp);
+     } else  neue_string_variable(buffer4,"",0,sp);
      free(buffer4);
   } else if(type2(name) & INTTYP) {
     if(strlen(inhalt)) neue_int_variable(buffer1,(int)parser(inhalt),sp);

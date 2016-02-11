@@ -196,7 +196,7 @@ PROCEDURE l.i
   lt$=lt$+"* * * * * * * *   Das Programm, auf das die Welt gewartet hat ! Es ist ein weiteres Spiel von RF Soft !    Es heit     ---> UND ... UND ... <---              Das große Spiel "
   lt$=lt$+"um kleine Teilchen (Atome)  !   Wir wünschen Ihnen mit diesem Programm viel Spaß ! "
   lt$=lt$+"--> --> --> --> -->  UND ... UND ... wurde programmiert von Thorsten "
-  lt$=lt$+" Frei und Michael Rennekamp. (ATARI-VERSION und XBASIC-Version Markus Hoffmann) Eventuelle Geld- und Sachspenden bitte an eine der folgenden Adressen:     Michael Rennekamp , Oststrae 55 (Am Ostbunker) , 4500 Osnabrck "
+  lt$=lt$+" Frei und Michael Rennekamp. (ATARI-VERSION und X11-BASIC-Version Markus Hoffmann) Eventuelle Geld- und Sachspenden bitte an eine der folgenden Adressen:     Michael Rennekamp , Oststrae 55 (Am Ostbunker) , 4500 Osnabrck "
   lt$=lt$+"   oder      Thorsten Frei  , Max-Reger-Strae 26 , 4500 Osnabrück      Wir bedanken uns ganz herzlich bei unserem Informatiklehrer fr die Flasche Sekt (Alles Gute fr Moritz auf seinem weiteren Leidensweg). Wir gren Onkel Thomas. Es "
   lt$=lt$+"folgen ein paar Worte in seiner Muttersprache: ™hä Bööhrrr! Mageritte, kernig! Ihr fliegenden Sackratten! NEIN! Ihr Schrumpfhirne!    "
   lt$=lt$+"Wenn Ihnen UND ... UND ... gefällt (oder auch nicht), dann sollten Sie es auf keinen Fall vers„umen, uns eine eine Geld- oder Sachspende zukommen zu lassen. RF Soft bedankt sich schon mal im voraus. HALT!!! Wir gren auch Gnther und "
@@ -998,7 +998,7 @@ loop
 endfunction
 
 procedure info
-alert 1,"      A T O M I U M|| (c) Markus Hoffmann 1991| |Dieses Programm darf nur zusammen |mit dem Paket XBASIC weiter-|gegeben werden.",1," OK ",dummy
+alert 1,"      A T O M I U M|| (c) Markus Hoffmann 1991| |Dieses Programm darf nur zusammen |mit dem Paket X11-BASIC weiter-|gegeben werden.",1," OK ",dummy
 return
 
 procedure led(x,y,c)

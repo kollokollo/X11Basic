@@ -138,6 +138,133 @@ void c_savewindow(char *n) {
     free(data);
     free(name);
 }
+XImage *xwdtoximage(char *,Visual *);
+
+void c_get(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int d,b,x,y,w,h,bx,by,bw,bh,len,i=0;
+  char *data;
+  XImage *Image;
+  Window root;
+  Colormap map;
+  XColor ppixcolor[256];
+  XWindowAttributes xwa;
+  char name[strlen(n)+1];
+  int e=wort_sep(n,',',TRUE,w1,w2);
+    
+  while(e) {
+       switch(i) {
+         case 0: {  x=(int)parser(w1);break;}
+	 case 1: {  y=(int)parser(w1);break;} 
+	 case 2: {  w=(int)parser(w1);break;} 
+	 case 3: {  h=(int)parser(w1);break;} 
+	 case 4: {  strcpy(name,w1);break;} 
+         default: break;
+       }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i<5) error(42,""); /* Zu wenig Parameter  */
+  else {
+    
+    
+    graphics();
+    
+    XGetGeometry(display[usewindow], win[usewindow], 
+	&root,&bx,&by,&bw,&bh,&b,&d); 
+    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    
+    Image=XGetImage(display[usewindow],pix[usewindow],
+                x, y, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
+    if(d==8) {
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      for(i=0;i<256;i++) ppixcolor[i].pixel=i;
+      XQueryColors(display[usewindow], map, ppixcolor,256);
+    }
+    data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
+    zuweissbuf(name,data,len);
+    XDestroyImage(Image);
+    free(data);
+  }
+}
+void c_put(char *n) {  
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int x,y,mode;
+  char name[strlen(n)+1];    
+  STRING str;
+  XImage *ximage;
+  XWindowAttributes xwa;
+
+  int i=0,e=wort_sep(n,',',TRUE,w1,w2);  
+      while(e) {
+       switch(i) {
+         case 0: {  x=(int)parser(w1);break;}
+	 case 1: {  y=(int)parser(w1);break;} 
+	 case 2: {  strcpy(name,w1);break;} 
+	 case 3: {  mode=(int)parser(w1);break;} 
+         default: break;
+       }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i<3) error(42,""); /* Zu wenig Parameter  */
+  else {
+    str=string_parser(name);
+    graphics();    
+    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    ximage=xwdtoximage(str.pointer,xwa.visual);
+    if(xwa.depth!=ximage->depth)
+      printf("Grafik hat die falsche Farbtiefe !\n");
+    else {
+      XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
+                ximage, 0,0,x,y, ximage->width, ximage->height);
+    }
+    XDestroyImage(ximage);
+    free(str.pointer);
+  }
+}
+
+void c_sget(char *n) {
+    int d,b,x,y,w,h,len,i;
+    char *data;
+    XImage *Image;
+    Window root;
+    Colormap map;
+    XColor ppixcolor[256];
+    XWindowAttributes xwa;
+    
+    graphics();
+    
+    XGetGeometry(display[usewindow], win[usewindow], 
+	&root,&x,&y,&w,&h,&b,&d); 
+    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+    
+    Image=XGetImage(display[usewindow],pix[usewindow],
+                0, 0, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
+    if(d==8) {
+      map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
+      for(i=0;i<256;i++) ppixcolor[i].pixel=i;
+      XQueryColors(display[usewindow], map, ppixcolor,256);
+    }
+    data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
+    zuweissbuf(n,data,len);
+    XDestroyImage(Image);
+    free(data);
+}
+void c_sput(char *n) {
+    STRING str=string_parser(n);
+    XImage *ximage;
+    XWindowAttributes xwa;
+
+    graphics();    
+    XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
+
+    ximage=xwdtoximage(str.pointer,xwa.visual);
+    XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
+                ximage, 0,0,0,0, ximage->width, ximage->height);
+    XDestroyImage(ximage);
+    free(str.pointer);
+}
 
 void c_box(char *n) {
  c_x4(n,1);
@@ -405,10 +532,103 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
     }
   }
 }
+void c_polymark(char *n) {
+  do_polygon(0,n);
+}
+void c_polyline(char *n) {
+  do_polygon(1,n);
+}
+void c_polyfill(char *n) {
+  do_polygon(2,n);
+}
+void do_polygon(int doit,char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int e,i=0,anz=0,shape=Nonconvex;
+  int vnrx=-1,vnry=-1,typ,mode=CoordModeOrigin,xoffset=0,yoffset=0;
+  char *r;
+  
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+     if(strlen(w1)) {
+       switch(i) {
+         case 1: { /* Array mit x-Werten */     
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnrx=variable_exist(r,typ);
+             free(r);
+	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     else anz=min(anz,do_dimension(vnrx));
+	   } else printf("POLYLINE/FILL/MARK: Kein ARRAY. \n");
+	   break;
+	   }
+	 case 2: {   /* Array mit x-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnry=variable_exist(r,typ);
+             free(r);
+	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     anz=min(anz,do_dimension(vnry));
+	   } else printf("POLYLINE/FILL/MARK: Kein ARRAY. \n");
+	   break;
+	   } 
+	 
+	 case 0: { anz=max(0,(int)parser(w1)); break; } 
+	 case 3: { xoffset=(int)parser(w1); break; } 
+	 case 4: { yoffset=(int)parser(w1); break;} 
+	 case 5: { mode=(((int)parser(w1))&1) ?CoordModePrevious:CoordModeOrigin; break;} 
+	 case 6: { shape=(int)parser(w1); break;} 
+	   
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(vnrx!=-1 && vnry!=-1 && anz>0) {
+    if((variablen[vnry].typ & FLOATTYP)) {   /* Was machen wir mit int-Arrays ????  */
+      XPoint points[anz];
+      double *varptry=(double  *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE);
+      double *varptrx=(double  *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE);
+      for(i=0;i<anz;i++) {
+        points[i].x=(int)(varptrx[i])+xoffset;
+        points[i].y=(int)(varptry[i])+yoffset;
+      }
+      graphics();
+      if(doit==0) XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+      else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+     else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);
+    }
+  }
+}
 
-void set_graphmode(int n) {
-   XGCValues gc_val;  
-  gc_val.function=n;
+
+
+
+
+void set_graphmode(int n) { 
+/*            n=1 copy src
+              n=2 src xor dest
+              n=3 invert (not dest)
+              n=4 src and dest
+              n=5 not (src xor dest)
+              n<0 uebergibt -n an X-Server
+ */  
+  XGCValues gc_val;  
+  switch (n) {
+    case 1:gc_val.function=GXcopy;break;
+    case 2:gc_val.function=GXxor;break;
+    case 3:gc_val.function=GXinvert;break;
+    case 4:gc_val.function=GXand;break;
+    case 5:gc_val.function=GXequiv;break;
+    default:
+    if(n>=0) gc_val.function=n;
+    else gc_val.function=-n;
+    break;
+  } 
   XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
 }
 void set_font(char *name) {
@@ -426,6 +646,7 @@ int get_graphmode() {
   XGetGCValues(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
   return(gc_val.function);
 }
+#include "bitmaps/fill.xbm"
 
 void c_deffill(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
@@ -435,17 +656,28 @@ void c_deffill(char *n) {
   while(e) {
      if(strlen(w1)) {
        switch(i) {
-         case 0: break;
-	 case 1: {
+	 case 0: {
 	   int fs;
 	   fs=(int)parser(w1);
 	   if(fs>=0 && fs<2) XSetFillRule(display[usewindow], gc[usewindow], fs);
 	   break;
 	   } 
-	 case 2: {
+	 case 1: {
 	   int fs;
 	   fs=(int)parser(w1);
 	   if(fs>=0 && fs<4) XSetFillStyle(display[usewindow], gc[usewindow], fs);
+	   break;
+	   }
+	  case 2: {
+	   Pixmap fill_pattern;
+	   int pa;
+	   pa=(int)parser(w1);
+	   pa=max(0,min(fill_height/fill_width,pa));
+	   fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
+                fill_bits+pa*fill_width*fill_width/8,fill_width,fill_width);
+           /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
+	   
+           XSetStipple(display[usewindow], gc[usewindow],fill_pattern );
 	   break;
 	   }
          default: break;
@@ -491,6 +723,29 @@ void c_defline(char *n) {
      i++;
   }
   XSetLineAttributes(display[usewindow], gc[usewindow], width, style,cap,join);
+}
+void c_copyarea(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int e,i=0;
+  int x1,x2,y1,y2,w,h;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+     if(strlen(w1)) {
+       switch(i) {
+         case 0: {x1=parser(w1);break;}
+         case 1: {y1=parser(w1);break;}
+         case 2: {w=parser(w1);break;}
+         case 3: {h=parser(w1);break;}
+         case 4: {x2=parser(w1);break;}
+         case 5: {y2=parser(w1);break;}
+         default: break;
+       }
+     }  
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  graphics();   
+  XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],x1,y1,w,h,x2,y2);
 }
 
 double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
@@ -973,6 +1228,7 @@ void c_movew(char *n) {
 #include "bitmaps/hand_mask.bmp"
 #include "bitmaps/zeigehand.bmp"
 #include "bitmaps/zeigehand_mask.bmp"
+
 void c_defmouse(char *n) {
   int form=(int)parser(n),formt;
   Cursor maus;
@@ -1101,8 +1357,7 @@ void c_alert(char *n) {
 
 char *fsel_input(char *,char *,char *);
 
-void c_fileselect(char *n) {
-  
+void c_fileselect(char *n) { 
   char w1[strlen(n)+1],w2[strlen(n)+1];
   char *backval;
   int i=0,e;
@@ -1111,60 +1366,169 @@ void c_fileselect(char *n) {
   while(e) {
        if(strlen(w1)) {
        switch(i) {
-         case 0: {
-	   titel=s_parser(w1);
-	   break;
-	   }
-	 case 1: {   
-	   pfad=s_parser(w1);
-	   break;
-	   } 
-	 
-	 case 2: {
-	   sel=s_parser(w1);
-	   break;
-	   } 
-	 case 3: {
-	   varname=malloc(strlen(w1)+1);
-	   strcpy(varname,w1);
-	   break;
-	   } 
-	 
-	 
+         case 0: { titel=s_parser(w1); break; }
+	 case 1: { pfad=s_parser(w1); break; } 
+	 case 2: { sel=s_parser(w1); break; } 
+	 case 3: { varname=malloc(strlen(w1)+1); strcpy(varname,w1); break; } 
          default: break;
        }
      }
-  
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
   if(i>=3) {
     backval=fsel_input(titel,pfad,sel);
-    
     zuweiss(varname,backval);
-    
     free(backval);
   } else error(42,""); /* Zu wenig Parameter  */
-  
   free(sel);free(varname);free(pfad);free(titel);
 }
+#define MAXMENUENTRYS 200
+#define MAXMENUTITLES 80
+
+int menuaction=-1;
+int menuflags[MAXMENUENTRYS];
+char *menuentry[MAXMENUENTRYS];
+char *menutitle[MAXMENUTITLES];
+int menutitlesp[MAXMENUTITLES];
+int menutitlelen[MAXMENUTITLES];
+int menutitleflag[MAXMENUTITLES];
+int menuanztitle=0;
+
+void c_menu(char *n) {
+  int sel;
+  int pc2;
+  char pos[20];
+  if(menuaction!=-1) {
+    sel=do_menu_select();
+    if(sel>=0) {
+      sprintf(pos,"%d",sel);
+      if(do_parameterliste(pos,procs[menuaction].parameterliste)) error(42,pos); /* Zu wenig Parameter */
+      else {
+        batch=1;
+        pc2=procs[menuaction].zeile;
+        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+      }
+    }
+  }
+}
+void c_menudef(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int i=0,e;
+  int count=0,nn,vnr=-1,typ,pc2=-1;
+  char *r;
+  STRING *varptr;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+       switch(i) {
+         case 0: {
+	   typ=type2(w1);
+	   if(typ & STRINGARRAYTYP) {
+             r=varrumpf(w1);
+             vnr=variable_exist(r,typ);
+             free(r);
+	     if(vnr==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else printf("MENUDEF: Kein ARRAY. \n");
+	   break;
+	   }
+	 case 1: {   
+	     pc2=procnr(w1,1);
+	 break;
+	   } 	 
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i<2) {
+    error(42,""); /* Zu wenig Parameter  */
+  } else {
+    if(pc2==-1)   error(19,w2); /* Procedure nicht gefunden */
+    else {
+      if(vnr>-1) {
+ 	nn=do_dimension(vnr);
+	varptr=(STRING *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
+	menuanztitle=0;
+	count=0;
+	for(i=0;i<nn;i++) {
+	  menuentry[i]=varptr[i].pointer;
+	  if(count==0 && varptr[i].len) {
+	    menutitle[menuanztitle]=varptr[i].pointer;
+	    menutitlesp[menuanztitle]=i+1;
+	    menutitleflag[menuanztitle]=NORMAL;
+	    count++;
+	  } else if(varptr[i].len) {
+	    if(*(varptr[i].pointer)=='-') menuflags[i]=DISABLED; else menuflags[i]=NORMAL;
+	    count++;
+	  } else if(count) {
+	    menutitlelen[menuanztitle]=count-1;
+	    menuanztitle++;
+	    count=0;
+	  }
+	}
+	menutitlelen[menuanztitle]=count;
+	menuanztitle++;
+        menuaction=pc2;
+        do_menu_draw(); 
+      }
+    }
+  }
+}
+void c_menuset(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int i=0,e;
+  int nr,flag;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+       switch(i) {
+         case 0: {
+	   nr=parser(w1);
+	   break;
+	   }
+	 case 1: {   
+	   flag=parser(w1);
+	   break;
+	   } 	 
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i<2) {
+    error(42,""); /* Zu wenig Parameter  */
+  } else {
+  
+  if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=flag;    
+  else printf("Nr. des Menueintrags zu gross. Max %d.\n",MAXMENUENTRYS);
+  }
+}
+void c_menukill(char *n) {
+  if(menuaction!=-1) {
+    menuaction=-1;
+  }
+}
+
+
+/*********************************************************/
+
+
 
 int rsrc_load(char *);
 
 void c_rsrc_load(char *n) {
   char *pname=s_parser(n);
-
-  
-    if(rsrc_load(pname)) printf("Fehler bei RSRC_LOAD.\n");
-    
-  
+  if(rsrc_load(pname)) printf("Fehler bei RSRC_LOAD.\n");
   free(pname);
 }
 void c_rsrc_free(char *n) {
   if(rsrc_free()) printf("Fehler bei RSRC_FREE.\n");
 }
 void c_form_do(char *n) {
-
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int backval;
   int i=0,e;

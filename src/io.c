@@ -17,6 +17,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+/* fuer Dynamisches Linken von shared Object-Files   */
+#include <dlfcn.h>
 
 #include "file.h"
 #include "defs.h"
@@ -110,43 +112,40 @@ void c_input(char *n) {
   }
   
 }
-char *lineinputs(char *n) {
+STRING f_lineinputs(char *n) {
   int i=get_number(n);
-  char *inbuf;
+  STRING inbuf;
   if(filenr[i]) {
     FILE *fff=dptr[i];
-    inbuf=malloc(MAXSTRLEN);
-    lineinput(fff,inbuf);
+    inbuf.pointer=malloc(MAXSTRLEN);
+    lineinput(fff,inbuf.pointer);
   } else {
-    inbuf=malloc(10);
-    strcpy(inbuf,"<ERROR>");
+    inbuf.pointer=malloc(10);
+    strcpy(inbuf.pointer,"<ERROR>");
     error(24,""); /* File nicht geoeffnet */
   }
+  inbuf.len=strlen(inbuf.pointer);
   return(inbuf);
 }
-char *inputs(char *n) {
+STRING f_inputs(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,s,t);
-  char *inbuf;
+  STRING inbuf;
   if(e==2) {
     int i=get_number(s);
     int anz=(int)parser(t);
     FILE *fff=stdin;
     if(filenr[i]) {
       fff=dptr[i];
-      inbuf=malloc(anz+1);
-      fread(inbuf,1,anz,fff);
-      inbuf[anz]=0;
-    } else {
-      inbuf=malloc(10);
-      strcpy(inbuf,"<ERROR>");
-      error(24,""); /* File nicht geoeffnet */
-    }
-  } else {
-    inbuf=malloc(10);
-    strcpy(inbuf,"<ERROR>");
-    error(32,"INPUT$"); /* Syntax Error */
-  }
+      inbuf.pointer=malloc(anz+1);
+      inbuf.len=(int)fread(inbuf.pointer,1,anz,fff);
+      inbuf.pointer[anz]=0;
+      return(inbuf);
+    } else error(24,""); /* File nicht geoeffnet */
+  } else error(32,"INPUT$"); /* Syntax Error */
+  inbuf.pointer=malloc(10);
+  strcpy(inbuf.pointer,"<ERROR>");  
+  inbuf.len=strlen(inbuf.pointer);
   return(inbuf);
 }
 void c_lineinput(char *n) {
@@ -338,7 +337,33 @@ void c_open(char *n) {
   free(filename);
 }
 
-
+void c_link(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int number=1,e,i=0;
+  char *filename=NULL;
+  
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+     if(strlen(w1)) {
+       switch(i) {
+	 case 0: {  number=get_number(w1);    /* Nummer */ break; } 
+	 case 1: { filename=s_parser(w1); break; } 	   
+         default: break;
+       }
+     }
+     i++;
+     e=wort_sep(w2,',',TRUE,w1,w2);
+  }
+  
+  if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
+  else if(number>99 || number<1) error(23,"");  /* File # falsch  */
+  else {
+      dptr[number]=dlopen(filename,RTLD_LAZY);
+      if(dptr[number]==NULL) io_error(errno,"LINK");
+      else  filenr[number]=2;
+  }
+  free(filename);
+}
 
 
 
@@ -387,20 +412,24 @@ void c_close(char *w) {
 
   if(strlen(w)) {
     i=get_number(w);
-    if(filenr[i]) { 
+    if(filenr[i]==1) { 
       if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
       else filenr[i]=0;
-    } else error(24,w); /* File nicht geoeffnet...*/
-
+    } else if(filenr[i]==2) { 
+      if(dlclose(dptr[i])==EOF) io_error(errno,"UNLINK");
+      else filenr[i]=0;
+    }
+    else error(24,w); /* File nicht geoeffnet...*/
   } else {
     for(i=0;i<100;i++) {
-	if(filenr[i]) {
+	if(filenr[i]==1) {
           if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
 	  else filenr[i]=0;
         }
     }
   }
 }
+
 
 void c_bload(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
@@ -418,6 +447,35 @@ void c_bload(char *n) {
     if(g==-1) io_error(errno,"BLOAD");
   }
 }
+/* Fuehrt Code an Adresse aus */
+void c_exec(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int e=wort_sep(n,',',TRUE,w1,w2);
+  void (*adr)();
+  if(e==0) printf("EXEC: Zuwenig Parameter !\n");
+  else if(e==1) {
+    adr=(void (*)())((int)parser(w1));
+    adr();
+  } else {
+    adr=(void (*)())((int)parser(w1));
+    adr((void *)((int)parser(w2)));
+  }
+}
+int f_exec(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int e=wort_sep(n,',',TRUE,w1,w2);
+  int (*adr)();
+  if(e==0) printf("EXEC: Zuwenig Parameter !\n");
+  else if(e==1) {
+    adr=(int (*)())((int)parser(w1));
+    return(adr());
+  } else {
+    adr=(int (*)())((int)parser(w1));
+    return(adr((void *)((int)parser(w2))));
+  }
+  return(0);
+}
+
 void c_bsave(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   char *filename;
@@ -601,6 +659,39 @@ void set_input_mode_echo(int onoff) {
 void reset_input_mode() {
   if(isatty(STDIN_FILENO)) tcsetattr(STDIN_FILENO,TCSANOW,&saved_attributes);
 }
+
+/* Dynamisches Linken von Shared-Object-Files */
+
+
+void *dyn_symbol(void *handle,char *name){
+  char *error;
+  char *cosine;
+  cosine=dlsym(handle, name);
+  if ((error = dlerror()) != NULL)  {
+    printf("ERROR: %s\n",error);
+    return(NULL);
+  }
+  return(cosine);
+}
+int f_symadr(char *n) { 
+  char v[strlen(n)+1],w[strlen(n)+1];
+  int e=wort_sep(n,',',TRUE,v,w);
+  int adr=0;
+  if(e>1) {
+    int i=get_number(v);
+    
+    if(filenr[i]==2) {
+      char *sym=s_parser(w);
+      char *error;
+      adr = (int)dlsym(dptr[i],sym);
+      if ((error = dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",error);
+      free(sym);
+    } else error(24,v); /* File nicht geoeffnet */
+  } else error(32,"SYM_ADR"); /* Syntax error */
+  return(adr);
+}
+
+
 char *terminalname() {
   char *name=NULL,*erg;
   if(isatty(STDIN_FILENO)) name=ttyname(STDIN_FILENO);

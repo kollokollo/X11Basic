@@ -3,6 +3,11 @@ alert 3,"Dieses Programm laeuft noch |nicht richtig !||trotzdem fortfahren ?",2,
 if a=2
   quit
 endif
+c=0
+weiss=get_color(65535,65535,65535)
+schwarz=get_color(0,0,0)
+gelb=get_color(65535,65535,0)
+
 DIM c(255),b(255)
 DO
   clearw
@@ -28,7 +33,7 @@ DO
   print "Viel Spass garantiert                                             Markus Hoffmann"
   text 0,20,"Text laden:"
   FOR i=ASC("A") TO ASC("Z")
-    text (i-ASC("A"))*16,380,CHR$(i)+" "
+    text (i-ASC("A"))*16,395,CHR$(i)+" "
   NEXT i
    text (i-ASC("A"))*16,380,"ž Ž ™ š  9"
   FOR i=0 TO 100 STEP 10
@@ -51,14 +56,24 @@ DO
   '
 
   FOR i=0 TO l-1
-    u=peek(a+i)
-    INC c(u)
+    u=asc(upper$(chr$(peek(a+i))))
+    c(u)=c(u)+1
     IF (i MOD 1000)=0
-      PRINT AT(1,4);"Lese: ";i
+      color weiss
+      pbox 15,25,180,43
+      color schwarz
+      text 20,40,"Lese: "+str$(i)
+      vsync
     ENDIF
   NEXT i
-  PRINT AT(1,4);"Lese: ";i-1
+        color weiss
+      pbox 15,25,180,43
+      color schwarz
+
+  text 20,40,"Lese: "+str$(i)
+
 nn:
+  color gelb
   v=l-c(32)-c(10)-c(13)
   FOR i=ASC("A") TO ASC("Z")
     PBOX (i-65)*16+1,383,(i-65)*16+8,383-((c(i)+c(i+ASC("a")-ASC("A")))/v)*383*4
@@ -73,7 +88,6 @@ nn:
   NEXT i
   PBOX 30*16+9,383,30*16+8+8,383-(z/v)*383*4
   vsync
-  ~INP(-2)
   PRINT "Interpretation:"
   PRINT " Einen Moment bitte...";CHR$(13)'
   b$=SPACE$(32500)

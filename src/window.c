@@ -374,16 +374,37 @@ char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
     if (*(char *) &swaptest)    swapdws(data, sizeof(XWDFileHeader));
     return((char *)data);
 }
+XImage *xwdtoximage(char *data,Visual *visual) {
+    char *adr;
+    unsigned long swaptest = 1;    
+    if (*(char *) &swaptest)    swapdws(data, sizeof(XWDFileHeader));
+#if DEBUG
+    printf("xwd-Name: %s\n",data+sizeof(XWDFileHeader));
+    printf("Version: %d\n",((XWDFileHeader *)data)->file_version);
+    printf("pixmap_format: %d\n",((XWDFileHeader *)data)->pixmap_format);
+    printf("pixmap_depth: %d\n",((XWDFileHeader *)data)->pixmap_depth);
+    printf("ncolors: %d\n",((XWDFileHeader *)data)->ncolors);
+    printf("xoffset: %d\n",((XWDFileHeader *)data)->xoffset);
+    printf("pixmap_width: %d\n",((XWDFileHeader *)data)->pixmap_width);
+    printf("pixmap_height: %d\n",((XWDFileHeader *)data)->pixmap_height);
+    printf("bitmap_pad: %d\n",((XWDFileHeader *)data)->bitmap_pad);
+    printf("bytes_per_line: %d\n",((XWDFileHeader *)data)->bytes_per_line);
+#endif
+    if(((XWDFileHeader *)data)->file_version!=(CARD32)XWD_FILE_VERSION)
+      printf("Achtung: XWD Version: %d\n",((XWDFileHeader *)data)->file_version);
 
-
-
-
-
-
-
-
-
-
+    adr=malloc(((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
+    memcpy(adr,data+((XWDFileHeader *)data)->header_size+((XWDFileHeader *)data)->ncolors*sizeof(XWDColor),((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
+    return(XCreateImage(display[usewindow],visual,
+    ((XWDFileHeader *)data)->pixmap_depth,
+    ((XWDFileHeader *)data)->pixmap_format, 
+    ((XWDFileHeader *)data)->xoffset, 
+    adr, 
+    ((XWDFileHeader *)data)->pixmap_width, 
+    ((XWDFileHeader *)data)->pixmap_height, 
+    ((XWDFileHeader *)data)->bitmap_pad,
+    ((XWDFileHeader *)data)->bytes_per_line));
+}
 
 
 
@@ -1150,8 +1171,8 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
   XCopyGC(display[usewindow], gc[usewindow],GCForeground|
                               GCFunction |GCLineWidth |GCLineStyle|
 			      GCFont, sgc);
-  set_graphmode(GXcopy);
-    
+  gc_val.function=GXcopy;
+  XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);  
     /* Hintergrund retten  */
   spix=XCreatePixmap(display[usewindow],win[usewindow],w2+8,h2+8,depth);
   XCopyArea(display[usewindow], pix[usewindow],spix,gc[usewindow],x2-3,y2-3,w2+8,h2+8,0,0);
@@ -1381,6 +1402,185 @@ int rsrc_load(char *filename) {
 }
 
 
+int do_menu_select() {   
+  int nr,i,j,textx,sel=-1;   
+  Window root_return,child_return;
+
+  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  graphics();    
+
+  XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+       &root_x_return, &root_y_return,
+       &win_x_return, &win_y_return,&mask_return);
+
+  for(i=0;i<menuanztitle-1;i++) {
+   if(menutitleflag[i]) sel=i; 
+  }
+
+
+  /* Maus in der Titelleiste ? */
+  if(win_y_return<=sbox.y+chh && win_y_return>=0) {
+  /* Maus auf gueltigem Titel ? */
+    textx=chw;nr=-1;
+    for(i=0;i<menuanztitle-1;i++) {
+      if(win_x_return>textx && win_x_return<textx+chw*(strlen(menutitle[i])+2)) nr=i;     
+      textx+=chw*(strlen(menutitle[i])+2);
+    }
+
+   if(nr>-1) {
+     /* Wenn titel noch nicht selektiert, dann */
+      if((menutitleflag[nr] & SELECTED)==0) {
+        /* unselektiere alle Titel */
+        for(i=0;i<menuanztitle-1;i++) menutitleflag[i]=NORMAL;
+        /* schliesse alle Schubladen */
+         do_menu_close();
+        /* selektiere Titel */
+         menutitleflag[nr]|=SELECTED;
+         do_menu_draw();
+        /* oeffne schublade */
+         do_menu_open(nr);
+      }
+
+   }
+
+  }
+  
+  /* Schublade geoeffnet ? */
+  if(sel>-1 && schubladeff) {
+  /* Maus auf gueltigem Eintrag, der selektierbar ist  ?*/
+    if(win_x_return>schubladex && win_x_return<schubladex+schubladew &&
+    win_y_return>schubladey && win_y_return<schubladey+schubladeh) {
+      nr=-1;
+      for(i=0;i<menutitlelen[schubladenr];i++) {
+        if(win_y_return>schubladey+i*chh && win_y_return<schubladey+(i+1)*chh) nr=i; 
+      } 
+      if(nr>-1) {
+        if(!(menuflags[menutitlesp[schubladenr]+nr] & SELECTED) && !(menuflags[menutitlesp[schubladenr]+nr] & DISABLED)) {
+        /* unselektiere alles  */
+	  for(i=0;i<menutitlelen[schubladenr];i++) {
+            menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
+          } 
+
+        /* selektiere Eintrag */
+	  menuflags[menutitlesp[schubladenr]+nr]|=SELECTED;
+          do_menu_edraw();
+        }
+   
+    /* Taste Gedrueckt ? */
+    if(mask_return && !(menuflags[menutitlesp[schubladenr]+nr] & DISABLED)) {
+      /* Menus schliessen, Titel deselektieren und mit nr zurueck */
+      for(i=0;i<menuanztitle-1;i++) {
+        menutitleflag[i]=0;
+      }
+      for(i=0;i<menutitlelen[schubladenr];i++) {
+        menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
+      } 
+      do_menu_close();
+      do_menu_draw();
+      return(menutitlesp[schubladenr]+nr);
+    }
+    }
+    } else {
+    /* Unselektiere alles  */
+      for(i=0;i<menutitlelen[schubladenr];i++) {
+        menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
+      } 
+
+    
+    }
+  }
+  /* Tast Gedrueckt, dann schliesse Menu deselektiere Titel */
+  if(sel>-1 && mask_return) {
+    for(i=0;i<menuanztitle-1;i++) {
+      menutitleflag[i]=0;
+    }
+    do_menu_close();
+    do_menu_draw();
+  }
+  return(-1);
+}
+Pixmap schubladepix; 
+int schubladeff=0;
+int schubladenr;
+int schubladex,schubladey,schubladew,schubladeh;
+void do_menu_open(int nr) {
+  int i,textx;
+  if(schubladeff) do_menu_close();    
+  textx=chw;
+    for(i=0;i<nr;i++) {  
+      textx+=chw*(strlen(menutitle[i])+2);
+    }
+    schubladex=sbox.x+textx-2;
+    schubladey=sbox.y+chh+1;
+    schubladew=10;
+    for(i=0;i<menutitlelen[nr];i++) {
+      schubladew=max(schubladew,strlen(menuentry[menutitlesp[nr]+i])*chw);
+    } 
+    schubladeh=chh*menutitlelen[nr]+2;
+    
+    /* Hintergrund retten  */
+  schubladepix=XCreatePixmap(display[usewindow],win[usewindow],schubladew,schubladeh,depth);
+  XCopyArea(display[usewindow], pix[usewindow],schubladepix,gc[usewindow],schubladex,schubladey,schubladew,schubladeh,0,0);
+  schubladeff=1;
+  schubladenr=nr;
+  do_menu_edraw();
+}
+void do_menu_edraw() {
+  int i;
+    XSetForeground(display[usewindow],gc[usewindow],weiss);
+    XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
+    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey,schubladew-1,schubladeh-1); 
+    for(i=0;i<menutitlelen[schubladenr];i++) {      
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],schwarz);
+      else XSetForeground(display[usewindow],gc[usewindow],weiss);
+      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey+i*chh,schubladew,chh);
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
+      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) XSetForeground(display[usewindow],gc[usewindow],grau);
+      else XSetForeground(display[usewindow],gc[usewindow],schwarz);
+      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],strlen(menuentry[menutitlesp[schubladenr]+i]));
+      if(menuflags[menutitlesp[schubladenr]+i] & CHECKED) {
+        XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
+        XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],schubladex+5,schubladey+chh-3+chh*i,schubladex+chw,schubladey+chh*i);
+      }
+    }     
+
+    XSetForeground(display[usewindow],gc[usewindow],schwarz);
+    XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey,schubladew-1,schubladeh-1); 
+
+  activate();
+
+}
+void do_menu_close() {
+   if(schubladeff) {
+
+    XCopyArea(display[usewindow], schubladepix,pix[usewindow],gc[usewindow],0,0,schubladew,schubladeh
+    ,schubladex,schubladey);
+    XFreePixmap(display[usewindow],schubladepix);
+    schubladeff=0;
+    }
+}
+void do_menu_draw() {
+   int i,j,textx;
+    graphics();
+    gem_init();
+    XSetForeground(display[usewindow],gc[usewindow],weiss);
+    XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
+    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],sbox.x,sbox.y,sbox.w,chh); 
+    XSetForeground(display[usewindow],gc[usewindow],schwarz);
+    XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
+    textx=chw;
+    for(i=0;i<menuanztitle-1;i++) {
+      if(menutitleflag[i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],schwarz);
+      else XSetForeground(display[usewindow],gc[usewindow],weiss);
+      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],sbox.x+textx,sbox.y,chw*(2+strlen(menutitle[i])),chh);
+      if(menutitleflag[i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
+      else XSetForeground(display[usewindow],gc[usewindow],schwarz);
+      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],strlen(menutitle[i]));
+      textx+=chw*(strlen(menutitle[i])+2);
+    }
+
+  activate();
+}
 
 
 /* Fileselector-Routine. Dem GEM nachempfunden.

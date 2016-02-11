@@ -18,6 +18,7 @@ int wort_sep (char *,char ,int ,char *, char *);
 int wort_sepr(char *,char ,int ,char *, char *);
 int wort_sep2(char *,char *,int ,char *, char *);
 int wort_sepr2(char *,char *,int ,char *, char *);
+char *rmemmem(char *,int,char *,int);
 int xtrim(char *,int, char *);
 char *error_text(char , char *);
 char *do_gets (char *); 
@@ -31,8 +32,8 @@ void clear_parameters();
 void clear_labelliste();
 void clear_procliste();
 char *varrumpf(char *);
-char *inputs(char *);
-char *lineinputs(char *);
+STRING f_inputs(char *);
+STRING f_lineinputs(char *);
 char *float_to_string(char *);
 char *hexoct_to_string(char,char *);
 char *bin_to_string(char *);
@@ -50,6 +51,7 @@ int type2(char *),do_wort_sep(char *),inp16(char *),inp32(char *);
 int init_parser();
 double parser(char *);
 char *s_parser(char *);
+STRING string_parser(char *);
 ARRAY *array_parser(char *);
 
 int buchstabe(char);
@@ -60,7 +62,7 @@ void cs_exit();
 double csget(char *);
 char *csgets(char *);
 double do_funktion(char *,char *);
-char *do_sfunktion(char *,char *);
+STRING do_sfunktion(char *,char *);
 
 /*Variablen */
 
@@ -68,6 +70,7 @@ ARRAY *array_info(int);
 void array_zuweis_and_free(char *, ARRAY *);
 void c_dolocal(char *, char *);
 void xzuweis(char *, char *);
+int xzuweissbuf(char *, char *,int);
 void *varptr(char *);
 ARRAY *copy_var_array(int);
 ARRAY *inv_array(ARRAY *);
@@ -79,6 +82,7 @@ ARRAY *einheitsmatrix(int , int ,int *);
 
 /* Kommandos */
 void bidnm(char *);
+void c_poke(char *),c_dpoke(char *),c_lpoke(char *);
 void c_local(char *),c_flush(char *);
 void c_nop(char *),c_do(char *),c_else(char *);
 void c_arrayfill(char *),c_arraycopy(char *),c_cls(char *),c_clr(char *);
@@ -102,6 +106,7 @@ void do_restore();
 void c_dolocal(char *,char *);
 void next_data_line();
 void c_onbreak(char *),c_seek(char *),c_relseek(char *);
+void c_link(char *),c_exec(char *);
 void c_onmenu(char *),c_case(char *),c_select(char *),c_endselect(char *);
 void c_onerror(char *),c_system(char *),c_let(char *);
 void c_on(char *),c_restore(char *),c_swap(char *);
@@ -114,7 +119,9 @@ void programmlauf();
 /* Grafikroutinen */
 
 void c_alert(char *),c_setfont(char *),c_defmouse(char *),c_allevent(char *);
+void c_menu(char *),c_menuset(char *),c_menudef(char *),c_menukill(char *);
 void set_graphmode(int),set_font(char *),c_vsync(char *);
+void c_copyarea(char *),c_sget(char *),c_sput(char *),c_get(char *),c_put(char *);
 void c_scope(char *), c_color(char *), c_deffill(char *);
 void c_defline(char *), c_deftext(char *), c_text(char *),c_setmouse(char *);
 void c_rootwindow(char *), c_norootwindow(char *),c_usewindow(char *);
@@ -126,8 +133,13 @@ void c_pellipse(char *), c_plot(char *),c_sizew(char *),c_titlew(char *);
 void c_fileselect(char *),c_xload(char *),c_xrun(char *);
 void c_savescreen(char *),c_savewindow(char *);
 void c_box(char *),c_pbox(char *),c_line(char *);
-
+void c_polyfill(char *),c_polyline(char *),c_polymark(char *);
+void do_menu_draw();
+int  do_menu_select();
+void do_polygon(int,char *);
+ 
 void activate();
+
 char *rsearchchr(char *, char);
 char *rsearchchr2(char *,char,char *);
 char *searchchr(char *, char);

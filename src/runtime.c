@@ -28,20 +28,19 @@ extern int programbufferlen;
 void usage(){
   printf("\n Bedienungsanleitung: \n");
   printf(" -------------------- \n\n");
-  printf("Das Programm kann mit folgenden Parametern aufgerufen werden:  \n");
-  printf("\n");
-  printf("%s <filename> --- Basic-Programm ausfuehren  [%s]\n",xbasic_name,ifilename);
+  printf("%s [-e -h -l] [<filename>] --- Basic-Programm ausfuehren  [%s]\n",xbasic_name,ifilename);
   printf("\n"); 
   printf("-l                  --- Programm nur laden \n");
   printf("-e <kommando>       --- Basic Kommando ausfuehren \n");
   printf("--eval <ausdruck>   --- Num. Ausdruck auswerten  \n");
+  printf("-h --help           --- Usage  \n");
+/*  printf("--help <topic>      --- Print help on topic \n");  */
   printf("\n");
 }
 void intro(){
   printf("***************************************************************\n");
-  printf("*             %s                 V. %s                *\n",xbasic_name, version);
-  printf("*                   von Markus Hoffmann 1997                  *\n");
-  printf("*                                                             *\n");
+  printf("*               %s                 V. %s                *\n",xbasic_name, version);
+  printf("*                   von Markus Hoffmann 1997-2001 (c)         *\n");
   printf("*                                                             *\n");
   printf("* Programmversion vom %s           *\n",vdate);
   printf("*                                                             *\n");
@@ -65,6 +64,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"--exec")==FALSE) {
       kommando(argumente[++count]);
       quitflag=1;
+    } else if (strcmp(argumente[count],"-h")==FALSE) {
+      intro();
+      usage();
+      quitflag=1;   
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();
       usage();
@@ -83,7 +86,6 @@ void kommandozeile(int anzahl, char *argumente[]) {
 }
 
 void loadprg(char *filename) {
-
   programbufferlen=prglen=pc=sp=0;
-    mergeprg(filename);
+  mergeprg(filename);
 }
