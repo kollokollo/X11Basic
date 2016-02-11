@@ -32,7 +32,6 @@ void c_do       (char *);
 void c_dpoke    (PARAMETER *,int);
 void c_echo     (char *);
 void c_edit     (char *);
-void c_else     (char *);
 void c_end      (char *);
 void c_erase    (char *);
 void c_error    (PARAMETER *,int);

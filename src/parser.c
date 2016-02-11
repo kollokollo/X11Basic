@@ -18,6 +18,7 @@
 #include "defs.h"
 #include "globals.h"
 #include "protos.h"
+#include "array.h"
 #include "functions.h"
 
 #ifdef WINDOWS
@@ -1846,12 +1847,10 @@ STRING string_parser(char *funktion) {
 		free(test.pointer);
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_AQUICK) {
                 ARRAY test=array_parser(pos);
-	//	printf("ARRAY PArser <%s> dim=%d\n",pos,test.dimension);
 	        ergebnis=(psfuncs[i].routine)(test);
 		free_array(test);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",v);
-	   /* Nicht in der Liste ? Dann kann es noch ARRAY sein   */
-	    } else {
+	    } else {/* Nicht in der Liste ? Dann kann es noch ARRAY sein   */
 	     int vnr;
 	     v[strlen(v)-1]=0;
 	
@@ -1860,46 +1859,15 @@ STRING string_parser(char *funktion) {
 	       ergebnis.pointer=malloc(1);
 	       ergebnis.len=0;
              } else {
-	       char *ss,*t;
-	       int idxn,i,*bbb,ndim=0,anz=0;
-	
-	     /*************/
-	
-	     /* Dimensionen bestimmen   */
-
-               ss=malloc(strlen(pos)+1);
-               t=malloc(strlen(pos)+1);
-               strcpy(ss,pos);
-               i=wort_sep(ss,',',TRUE,ss,t);
-               if(i==0) puts("Arrayverarbeitung an dieser Stelle nicht möglich!");
-
-               bbb=(int *)variablen[vnr].pointer;
-               /*printf("C: %d %s %s %s t: %s\n",vnr,v,pos,ss,t);*/
-               while(i) {
-                 xtrim(ss,TRUE,ss);
-	         if(ndim<variablen[vnr].opcode){
-                   idxn=(int)parser(ss);
-	           if(idxn>=bbb[ndim]) {error(16,ss); /* Feldindex zu gross*/ break;}
-                   else anz=idxn+anz*bbb[ndim];
-                 }
-                 ndim++;
-                 i=wort_sep(t,',',TRUE,ss,t);
-              }
-	
-              if(ndim!=variablen[vnr].opcode) {
-	         error(18,"");  /* Falsche Anzahl Indizies */
-		 ergebnis.pointer=malloc(1);
-		 ergebnis.len=0;
-              } else {
-
-	        pos=(char *)(variablen[vnr].pointer+ndim*INTSIZE+anz*(sizeof(int)+sizeof(char *)));
-	
-                ergebnis.pointer=malloc(((int *)pos)[0]+1);
-		ergebnis.len=((int *)pos)[0];
-	        pos+=sizeof(int);
-	        memcpy(ergebnis.pointer,((char **)pos)[0],ergebnis.len);
-	      }
-	      free(ss);free(t);
+	       int dim=variablen[vnr].opcode;
+	       int indexliste[dim];
+	       
+	       if(make_indexliste(dim,pos,indexliste)==0)
+	         ergebnis=varstringarrayinhalt(vnr,indexliste);
+	       else {
+	         ergebnis.pointer=malloc(1);
+	         ergebnis.len=0;
+	       }
 	    }
 	  }
         }

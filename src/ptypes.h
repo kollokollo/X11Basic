@@ -33,10 +33,10 @@ typedef struct {
    | 			 |||| |||+-------------- Lese PC
    |			 |||| |++--------------- 0: Befehl hat keine Parameter
    | 			 |||| | 		 1: Parameter ueber PCODE.argument
-   | 			 |||| | 		 2: Parameter ueber PLISTE
-   | 			 |||| | 		 3: reserviert (beides)
+   | 			 |||| | 		 2: Befehl ohne Parameter
+   | 			 |||| | 		 3: befehl hat Parameterliste
    | 			 |||| +----------------- Befehl ignorieren (nixtun)
-   | 			 |||+------------------- Befehl illegal
+   | 			 |||+------------------- Befehl invalid
    | 			 ||+-------------------- Label
    | 			 |+--------------------- Procedurdef.
    |||| ||||  |||| ||||  +---------------------- Befehl liegt als Zeichenkette vor, muss geparst werden
@@ -51,18 +51,25 @@ typedef struct {
 					       
    
 					       */
-#define PM_COMMS     0x000FF  /* Maske fuer Befehlsnr. */
-#define P_NOCMD      0x000ff  /* Falls der Pcode kein Kommando darstellt */
+#define PM_COMMS        0x000FF  /* Maske fuer Befehlsnr. */
+#define P_NOCMD         0x000ff  /* Falls der Pcode kein Kommando darstellt */
 
-#define P_PREFETCH   0x00100  /* PC lesen */
+#define P_PREFETCH      0x00100  /* PC lesen */
 
-#define PM_TYP       0x00600
-#define P_ARGUMENT   0x00200  /* Befehl mit Parameter im P_CODE.argument */
-#define P_SIMPLE     0x00000  /* Befehl ohne Parameter */
-#define P_PLISTE     0x00400
-#define P_IGNORE     0x00800
-#define P_INVALID    0x01000
-#define P_EVAL       0x08000
+#define PM_TYP          0x00600
+#define P_UNDEF         0x00000  /* This causes an ERROR */
+#define P_ARGUMENT      0x00200  /* Befehl mit Parameter im P_CODE.argument */
+#define P_SIMPLE        0x00400  /* Befehl ohne Parameter */
+#define P_PLISTE        0x00600  /* Befehl mit Parameterliste */
+
+
+#define P_IGNORE        0x00800  /* Ist auch Maske, muss 1 Bit sein! */
+
+#define P_INVALID       0x01000
+  /* Label:          0x00002000  */
+  /* Proc:           0x00004000  */
+  
+#define P_EVAL          0x08000  /* 1 Bit Befehl geht ueber den Parser */
 
 
 #define PM_LEVEL     0x00030000
@@ -85,6 +92,7 @@ typedef struct {
 
 #define P_IF       (P_LEVELIN|P_ARGUMENT|P_SPECIAL0)
 #define P_ELSE     (P_LEVELINOUT|P_ARGUMENT|P_IGNORE|P_PREFETCH|P_SPECIAL0)
+#define P_ELSEIF   (P_LEVELINOUT|P_ARGUMENT|P_IGNORE|P_PREFETCH|P_SPECIAL4)
 #define P_ENDIF    (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL0)
 
 #define P_SELECT   (P_LEVELIN |P_ARGUMENT|P_SPECIAL1)
@@ -102,15 +110,20 @@ typedef struct {
 #define P_WEND     (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL3|P_PREFETCH)
 #define P_NEXT     (P_LEVELOUT|P_ARGUMENT|P_SPECIAL3)
 
+#define P_GOTO     (P_PREFETCH|P_IGNORE)
+#define P_GOSUB    (P_ARGUMENT|P_SPECIAL5)
+
 
 #define P_DATA     (P_IGNORE|P_ARGUMENT|P_SPECIAL4) 
-#define P_BREAK    (P_SIMPLE)
+#define P_BREAK    (P_PREFETCH|P_IGNORE|P_SPECIAL4)
+#define P_EXITIF   (P_ARGUMENT|P_SPECIAL4)
 #define P_REM      (P_IGNORE|P_ARGUMENT)
 
 
 #define P_LABEL    (P_LEVELINOUT|P_IGNORE|P_NOCMD|0x00002000)
 #define P_PROC     (P_LEVELIN|P_NOCMD|0x00004000)
 #define P_ENDPROC  (P_LEVELOUT|P_SIMPLE)
+#define P_RETURN   (P_ARGUMENT|P_SPECIAL6)
 
 
 /* F-Code-Definitionen   long */
@@ -147,6 +160,7 @@ typedef struct {
 #define F_SQUICK     0x00600
 #define F_AQUICK     0x00700
 #define F_IGNORE     0x00800
+
 #define F_INVALID    0x01000
 #define F_IRET       0x02000
 #define F_DRET       0x00000

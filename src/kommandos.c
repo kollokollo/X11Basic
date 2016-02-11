@@ -35,12 +35,16 @@
 void c_gosub(char *n) {
     char *buffer,*pos,*pos2,*pos3;
     int pc2;
+   
     buffer=indirekt2(n);
     pos=searchchr(buffer,'(');
     if(pos!=NULL) {
       pos[0]=0;pos++;
       pos2=pos+strlen(pos)-1;
-      if(pos2[0]!=')') puts("Syntax error bei Parameterliste");
+      if(pos2[0]!=')') {
+        puts("Syntax error bei Parameterliste");
+        error(39,buffer); /* Program Error Gosub impossible */
+      }	
       else pos2[0]=0;
     } else pos=buffer+strlen(buffer);
     
@@ -51,7 +55,10 @@ void c_gosub(char *n) {
 	else { batch=1;
 	  pc2=procs[pc2].zeile;
 	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-	  else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+	  else {
+	    printf("Stack-Overflow ! PC=%d\n",pc); 
+	    error(39,buffer); /* Program Error Gosub impossible */
+	  }
 	}
     }
     free(buffer);
@@ -248,30 +255,37 @@ void do_restore() {
   datazeile=0;
   next_data_line();
 }
+char *databuffer=NULL;
 void next_data_line() {
   datazeile=suche(datazeile+1,1,"DATA","BEFEHLGIBTESNICHT","BEFEHLGIBTESNICHT2");
   if(datazeile>=0) {
     int i=0;
     while(!isalnum((program[datazeile])[i])) i++;
-    
+    databuffer=realloc(databuffer,strlen(program[datazeile])+1);
     strcpy(databuffer,program[datazeile]+i+5);
-    
-  } else databuffer[0]=0;
+  } else {
+    free(databuffer);
+    databuffer=NULL;
+  }
 }
 char *get_next_data_entry() {
-  int e;
+  int e=0;
   char *ergebnis=NULL;
   char t[MAXSTRLEN];
-  e=wort_sep(databuffer,',',FALSE,t,databuffer);
-   if(e==0) {
-     next_data_line();
-     e=wort_sep(databuffer,',',FALSE,t,databuffer);
-   }
-   if(e) {
-     ergebnis=malloc(strlen(t)+1);
-     strcpy(ergebnis,t);
-     return(ergebnis);
-   } else return(NULL);
+  /* printf("Databuffer $%08x contains: <%s>\n",(long)databuffer,databuffer); */
+  if(databuffer==NULL) next_data_line();
+  if(databuffer) {
+    e=wort_sep(databuffer,',',FALSE,t,databuffer);
+    if(e==0) {
+      next_data_line();
+      if(databuffer) e=wort_sep(databuffer,',',FALSE,t,databuffer);
+    }
+  }  
+  if(e) {
+      ergebnis=malloc(strlen(t)+1);
+      strcpy(ergebnis,t);
+      return(ergebnis);
+  } else return(NULL);
 }
 
 void c_read(char *n) {
@@ -809,14 +823,6 @@ void c_arrayfill(char *n) {
 void c_memdump(PARAMETER *plist,int e) {
   memdump((char *)plist[0].integer,plist[1].integer);
 }
-extern const int anzpfuncs;
-extern const FUNCTION pfuncs[];
-extern const int anzpsfuncs;
-extern const FUNCTION psfuncs[];
-extern const int anzsysvars;
-extern const int anzsyssvars;
-extern const SYSVAR sysvars[];
-extern const SYSSVAR syssvars[];
 void c_dump(char *n) {
   int i;
   char kkk=0;
@@ -1493,14 +1499,17 @@ void c_exit(char *n) {
 
 void c_break(char *n) {
   int i,f=0,o;
-  for(i=pc; (i<prglen && i>=0);i++) {
-    o=pcode[i].opcode&PM_SPECIAL;
-    if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
-    if(o & P_LEVELIN) f++;
-    if(o & P_LEVELOUT) f--;
-   }
-  if(i==prglen) { error(36,"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */return;}
-  pc=i+1;
+  i=pcode[pc-1].integer;
+  if(i==-1) {
+    for(i=pc; (i<prglen && i>=0);i++) {
+      o=pcode[i].opcode&PM_SPECIAL;
+      if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
+      if(o & P_LEVELIN) f++;
+      if(o & P_LEVELOUT) f--;
+     }
+    if(i==prglen) { error(36,"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */return;}
+    pc=i+1;
+  } else pc=i;
 }
 
 void c_if(char *n) {
@@ -1511,14 +1520,14 @@ void c_if(char *n) {
   
     for(i=pc; (i<prglen && i>=0);i++) {
       o=pcode[i].opcode&PM_SPECIAL;
-      if((o==P_ENDIF || o==P_ELSE)  && f==0) break;
+      if((o==P_ENDIF || o==P_ELSE|| o==P_ELSEIF)  && f==0) break;
       else if(o==P_IF) f++;
       else if(o==P_ENDIF) f--;
     }
     
     if(i==prglen) { error(36,"IF"); /*Programmstruktur fehlerhaft */return;}
     pc=i+1;
-    if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) {
+    if(o==P_ELSEIF) {
       xtrim(program[i],TRUE,w1);
       wort_sep(w1,' ',TRUE,w2,w3);
       wort_sep(w3,' ',TRUE,w1,w2);
@@ -1528,30 +1537,30 @@ void c_if(char *n) {
 }
 
 void c_select(char *n) {
-  int i,wert,f=0,o;
+  int i,wert,wert2,f=0,o;
   char w1[MAXSTRLEN],w2[MAXSTRLEN],w3[MAXSTRLEN];
   
   wert=(int)parser(n);
   
   /* Case-Anweisungen finden */
-  
-  for(i=pc; (i<prglen && i>=0);i++) {
-    o=pcode[i].opcode&PM_SPECIAL;
-    if((o==P_DEFAULT || o==P_CASE)  && f==0) break;
-    else if(o==P_SELECT) f++;
-    else if(o==P_ENDSELECT) f--;
-  }
+  while(1) {
+    for(i=pc; (i<prglen && i>=0);i++) {
+      o=pcode[i].opcode&PM_SPECIAL;
+      if((o==P_DEFAULT || o==P_CASE)  && f==0) break;
+      else if(o==P_SELECT) f++;
+      else if(o==P_ENDSELECT) f--;
+    }
     
-   if(i==prglen) { error(36,"SELECT"); /*Programmstruktur fehlerhaft */return;}
-   pc=i;
-   xtrim(program[pc],TRUE,w1);
-   wort_sep(w1,' ',TRUE,w2,w3);
-   pc++;
-   if((pcode[i].opcode&PM_SPECIAL)==P_ELSE){
-     wort_sep(w3,' ',TRUE,w1,w2);
-     if(strcmp(w1,"IF")==0) c_if(w2);
-   }
-  
+     if(i==prglen) { error(36,"SELECT"); /*Programmstruktur fehlerhaft */return;}
+     pc=i;
+     if(pcode[i].opcode&PM_SPECIAL==P_CASE) {
+       xtrim(program[pc],TRUE,w1);
+       wort_sep(w1,' ',TRUE,w2,w3);
+       wert2=parser(w3);
+       if(wert==wert2) break;
+     } else break;
+  }  
+  pc++;  
 }
 
 void bidnm(char *n) {

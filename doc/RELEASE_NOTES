@@ -1,7 +1,10 @@
-Release notes for Version 1.13 (Feb 2006)
+Release notes for Version 1.14 (Apr 2007)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- fixed bug in INPUT$()
-- woked in the TINE implementation (TINELISTEN, TINEBROADCAST)
-- new MKA$(), CVA()
-- fixed bug in PAUSE/DELAY
-- implemented ioctl() function
+- improved the init_program routines
+- woked on the bytecode compiler
+- new programs xbbc and xbvm  + man pages
+- the bytecodecompiler and virtual machine are still full of bugs
+- some sample programs can already be compiled to bytecode, 
+  they run 4 to 10 times faster 
+- Bug fixed which caused "Command  not allowed in interactive mode" errors
+  This bug was introduced in Version 1.14 since release 1

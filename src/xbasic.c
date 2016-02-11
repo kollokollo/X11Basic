@@ -14,7 +14,7 @@
 
 
 
-                       VERSION 1.13
+                       VERSION 1.14
 
             (C) 1997-2007 by Markus Hoffmann
               (kollo@users.sourceforge.net)
@@ -23,6 +23,7 @@
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
  **  letzte Bearbeitung: Feb. 2003   von Markus Hoffmann		   **
  **  letzte Bearbeitung: Feb. 2005   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: Feb. 2007   von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -125,17 +126,17 @@ const COMMAND comms[]= {
 #endif
  { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1,{PL_FILENR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "CLOSEW"   , c_closew ,0,1,{PL_FILENR}},
+ { P_PLISTE,     "CLOSEW"   , c_closew ,0,1,{PL_FILENR}},
 #endif
  { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1,{PL_ALLVAR}},
- { P_SIMPLE, "CLS"      , c_cls    ,0,0},
+ { P_SIMPLE,     "CLS"      , c_cls    ,0,0},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "COLOR"    , c_color  ,1,2,{PL_INT,PL_INT}},
+ { P_PLISTE,     "COLOR"    , c_color  ,1,2,{PL_INT,PL_INT}},
 #endif
- { P_PLISTE, "CONNECT"     , c_connect   ,2,3,{PL_FILENR,PL_STRING,PL_INT}},
- { P_SIMPLE, "CONT"     , c_cont   ,0,0},
+ { P_PLISTE,     "CONNECT"     , c_connect   ,2,3,{PL_FILENR,PL_STRING,PL_INT}},
+ { P_SIMPLE,     "CONT"     , c_cont   ,0,0},
 #ifndef NOGRAPHICS
- { P_PLISTE, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
 /* Kontrollsystembefehle  */
 #ifdef CONTROL
@@ -204,8 +205,8 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
 #endif
- { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1,{PL_PROC}},
- { P_ARGUMENT,   "GOTO"     , c_goto,1,1,{PL_LABEL}},
+ { P_GOSUB,     "GOSUB"    , c_gosub,1,1,{PL_PROC}},
+ { P_GOTO,       "GOTO"     , c_goto,1,1,{PL_LABEL}},
 #ifndef NOGRAPHICS
  { P_ARGUMENT,   "GPRINT"    , c_gprint,       0,-1},
  { P_PLISTE,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
@@ -318,7 +319,7 @@ const COMMAND comms[]= {
  { P_REM,    "REM"      , c_nop  ,      0,0},
  { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
  { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1,{PL_LABEL}},
- { P_ARGUMENT,   "RETURN"   , c_return,     0,1},
+ { P_RETURN,   "RETURN"   , c_return,     0,1},
 #ifndef NOGRAPHICS
  { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
  { P_SIMPLE, "RSRC_FREE", c_rsrc_free,0,0},
@@ -443,7 +444,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  }
 	} else if(pliste[i]==PL_FILENR) {
            pret[i].integer=get_number(w1);
-	   if(pret[i].integer>99 || pret[i].integer<1) {
+	   if(pret[i].integer>99 || pret[i].integer<-2) {
 	     error(23,"");  /* File # falsch  */
 	     free_pliste(i,pret);
              return(-1);
@@ -510,19 +511,6 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
   }
   return(i);
 }
-void free_pliste(int anz,PARAMETER *pret){
-  int i;
-  for(i=0;i<anz;i++) {
-    if(pret[i].pointer!=NULL && (pret[i].typ&PL_SARRAY)) {
-      ARRAY a;
-      a.typ=pret[i].typ;
-      a.dimension=pret[i].integer;
-      a.pointer=pret[i].pointer;
-      free_array(a);
-    } else if(pret[i].pointer!=NULL && !(pret[i].typ&PL_VAR)) free(pret[i].pointer);
-  }
-  if(pret!=NULL) free(pret);
-}
 
 void loadprg(char *filename) {
   clear_parameters();
@@ -582,8 +570,79 @@ void structure_warning(char *comment) {
   printf("Warning: corrupt program structure ==> %s.\n",comment);
 #endif
 }
+
+
+int find_comm(char *w1) {
+  int i=0,a=anzcomms-1,b;
+  /* Kommandoliste durchsuchen, moeglichst effektiv ! */
+  for(b=0; b<strlen(w1); b++) {
+    while(w1[b]>(comms[i].name)[b] && i<a) i++;
+    while(w1[b]<(comms[a].name)[b] && a>i) a--;
+    if(i==a) break;
+  }
+  if((i==a && strncmp(w1,comms[i].name,strlen(w1))==0) ||
+     (i!=a && strcmp(w1,comms[i].name)==0) ) {
+#ifdef DEBUG
+      if(b<strlen(w1)) printf("Command %s completed --> %s\n",w1,comms[i].name);
+#endif
+     return(i);
+  }
+  return(-1);
+}
+int find_func(char *w1) {
+  int i=0,a=anzpfuncs-1,b;
+  /* Funktionsliste durchsuchen, moeglichst effektiv ! */
+  for(b=0; b<strlen(w1); b++) {
+      while(w1[b]>(pfuncs[i].name)[b] && i<a) i++;
+      while(w1[b]<(pfuncs[a].name)[b] && a>i) a--;
+      if(i==a) break;
+  }
+  if(strcmp(w1,pfuncs[i].name)==0) {
+     return(i);
+  }
+  return(-1);
+}
+int find_afunc(char *w1) {
+  int i=0,a=anzpafuncs-1,b;
+  /* Funktionsliste durchsuchen, moeglichst effektiv ! */
+  for(b=0; b<strlen(w1); b++) {
+      while(w1[b]>(pafuncs[i].name)[b] && i<a) i++;
+      while(w1[b]<(pafuncs[a].name)[b] && a>i) a--;
+      if(i==a) break;
+  }
+  if(strcmp(w1,pafuncs[i].name)==0) {
+     return(i);
+  }
+  return(-1);
+}
+int find_sfunc(char *w1) {
+  int i=0,a=anzpsfuncs-1,b;
+  /* Funktionsliste durchsuchen, moeglichst effektiv ! */
+  for(b=0; b<strlen(w1); b++) {
+      while(w1[b]>(psfuncs[i].name)[b] && i<a) i++;
+      while(w1[b]<(psfuncs[a].name)[b] && a>i) a--;
+      if(i==a) break;
+  }
+  if(strcmp(w1,psfuncs[i].name)==0) {
+     return(i);
+  }
+  return(-1);
+}
+int count_parameter(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int c=0,e;
+  xtrim(n,TRUE,w2); /* hier Parameter abseparieren */
+  e=wort_sep(w2,',',TRUE,w1,w2);
+  while(e) {
+    e=wort_sep(w2,',',TRUE,w1,w2);
+    c++;
+  }
+  return(c);
+}
+
 int init_program() {
-  char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,typ;
+  char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  
+  int i,typ;
 
   clear_labelliste();
   clear_procliste();
@@ -600,6 +659,7 @@ int init_program() {
     pcode[i].ppointer=NULL;
     pcode[i].argument=NULL;
     pcode[i].etyp=PE_NONE;
+    pcode[i].integer=-1;
 
     wort_sep2(zeile," !",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
     xtrim(zeile,TRUE,zeile);
@@ -616,6 +676,10 @@ int init_program() {
       pcode[i].opcode=P_REM;
       pcode[i].argument=malloc(strlen(buffer)+1);
       strcpy(pcode[i].argument,buffer);
+    } else if(zeile[0]=='@') {
+      pcode[i].argument=malloc(strlen(zeile)+1);
+      strcpy(pcode[i].argument,zeile+1);
+      pcode[i].opcode=P_GOSUB|find_comm("GOSUB");  /* Hier fehlt die comms nr */
     } else if(zeile[strlen(zeile)-1]==':') {
       zeile[strlen(zeile)-1]=0;
 #ifdef DEBUG
@@ -653,20 +717,28 @@ int init_program() {
 	
       /* Rest Transformieren    */
 
-        for(j=0;j<anzcomms; j++) {
-	  if(strcmp(zeile,comms[j].name)==0) {
+        j=find_comm(zeile);
+	if(j==-1) { /* Kein Befehl passt... */
+	  pcode[i].opcode=P_EVAL|P_NOCMD;
+	  pcode[i].panzahl=0;
+	  pcode[i].ppointer=NULL;
+	  pcode[i].argument=malloc(strlen(zeile)+strlen(buffer)+2);
+	  strcpy(pcode[i].argument,zeile);
+	  strcat(pcode[i].argument," ");
+	  strcat(pcode[i].argument,buffer);
+	
+	 /* printf("Warnung: Zeile %d Unbek. Befehl: <%s>\n",i,zeile);*/
+	} else {
 	    pcode[i].opcode=comms[j].opcode|j;
-	    if(comms[j].pmax==0 || (pcode[i].opcode & P_SIMPLE)) {
+	    if(comms[j].pmax==0 || (pcode[i].opcode&PM_TYP)==P_SIMPLE) {
 	      pcode[i].panzahl=0;
 	      pcode[i].ppointer=NULL;
 	    } else {
 	      int e,ii=0;
 	      char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
-	
 	      xtrim(buffer,TRUE,buffer); /* hier Parameter abseparieren */
 	      pcode[i].argument=malloc(strlen(buffer)+1);
 	      strcpy(pcode[i].argument,buffer);
-	
 	      /* Parameter finden */
 	      e=wort_sep(buffer,',',TRUE,w1,w2);
               while(e) {
@@ -679,10 +751,8 @@ int init_program() {
 	        pcode[i].ppointer=NULL;
 	      } else {
 	        pcode[i].ppointer=malloc(sizeof(PARAMETER)*ii);
-		
                 e=wort_sep(buffer,',',TRUE,w1,w2); ii=0;
 		while(e) {
-		
 	          if(strlen(w1)) {
                     pcode[i].ppointer[ii].typ=PL_EVAL;
 		    pcode[i].ppointer[ii].pointer=malloc(strlen(w1)+1);
@@ -710,20 +780,15 @@ int init_program() {
 	    } else  if(strcmp(zeile,"UNTIL")==0) { /*Zugehoeriges REPEAT suchen */
               pcode[i].integer=suchep(i-1,-1,P_REPEAT,P_UNTIL,P_REPEAT);
               if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */
-	    }
-	    break;
+	  } else  if(strcmp(zeile,"EXIT")==0) { /*Pruefen ob es EXIT IF ist. */
+            char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
+	    wort_sep(buffer,' ',TRUE,w1,w2);
+	    if(strcmp(w1,"IF")==0) pcode[i].opcode=P_EXITIF|j; 
+	  } else  if(strcmp(zeile,"ELSE")==0) { /*Pruefen ob es ELSE IF ist. */
+            char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
+	    wort_sep(buffer,' ',TRUE,w1,w2);
+	    if(strcmp(w1,"IF")==0) pcode[i].opcode=P_ELSEIF|j; 
 	  }
-	}
-	if(j==anzcomms) { /* Kein Befehl passt... */
-	  pcode[i].opcode=P_EVAL|P_NOCMD;
-	  pcode[i].panzahl=0;
-	  pcode[i].ppointer=NULL;
-	  pcode[i].argument=malloc(strlen(zeile)+strlen(buffer)+2);
-	  strcpy(pcode[i].argument,zeile);
-	  strcat(pcode[i].argument," ");
-	  strcat(pcode[i].argument,buffer);
-	
-	 /* printf("Warnung: Zeile %d Unbek. Befehl: <%s>\n",i,zeile);*/
 	}
       }
     }
@@ -733,10 +798,12 @@ int init_program() {
 #endif
   /* Pass 2 */
   for(i=0; i<prglen;i++) {
-
     if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
       if(pcode[i].integer==0)  structure_warning("ELSE"); /*Programmstruktur fehlerhaft */
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF) { /* Suche Endif */
+      pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
+      if(pcode[i].integer==0)  structure_warning("ELSE IF"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
       if(pcode[i].integer==0)  structure_warning("IF"); /*Programmstruktur fehlerhaft */
@@ -746,6 +813,49 @@ int init_program() {
     } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) { /* Suche NEXT */
       pcode[i].integer=suchep(i+1,1,P_NEXT,P_FOR,P_NEXT)+1;
       if(pcode[i].integer==0)  structure_warning("FOR"); /*Programmstruktur fehlerhaft */
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_BREAK ||
+              (pcode[i].opcode&PM_SPECIAL)==P_EXITIF) { /* Suche ende Schleife*/
+      int j,f=0,o;
+      for(j=i+1; (j<prglen && j>=0);j++) {
+        o=pcode[j].opcode&PM_SPECIAL;
+        if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
+        if(o & P_LEVELIN) f++;
+        if(o & P_LEVELOUT) f--;
+      }
+      if(j==prglen) { 
+        structure_warning("BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
+        pcode[i].integer=-1;
+      } else pcode[i].integer=j+1;
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_GOSUB) { /* Suche Procedure */
+      if(*(pcode[i].argument)=='&') pcode[i].integer=-1;
+      else {
+        char buf[strlen(pcode[i].argument)+1];
+	char *pos,*pos2;
+        strcpy(buf,pcode[i].argument);
+        pos=searchchr(buf,'(');
+        if(pos!=NULL) {
+          pos[0]=0;pos++;
+          pos2=pos+strlen(pos)-1;
+          if(pos2[0]!=')') {
+	    puts("GOSUB: Syntax error bei Parameterliste");
+	    structure_warning("GOSUB"); /*Programmstruktur fehlerhaft */
+          } else pos2[0]=0;
+        } else pos=buf+strlen(buf);
+        pcode[i].integer=procnr(buf,1);
+      }
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_GOTO) { /* Suche Label */
+    /*  printf("Goto-Nachbearbeitung, <%s> \n",pcode[i].argument); */
+      /* Wenn indirect, dann PREFETCH und IGNORE aufheben */
+      if(*(pcode[i].argument)=='&') pcode[i].opcode&=~(P_PREFETCH|P_IGNORE);
+      else {
+        pcode[i].integer=labelnr(pcode[i].argument);
+        /* Wenn label nicht gefunden, dann PREFETCH und IGNORE aufheben */
+        if(pcode[i].integer==-1)  {
+	  printf("Label %s not found!\n",pcode[i].argument);
+          structure_warning("GOTO"); /*Programmstruktur fehlerhaft */
+	  pcode[i].opcode&=~(P_PREFETCH|P_IGNORE);
+        }
+      }
     }
   }
   free(buffer);free(zeile);
@@ -949,19 +1059,19 @@ void kommando(char *cmd) {
   if((i==a && strncmp(w1,comms[i].name,strlen(w1))==0) ||
      (i!=a && strcmp(w1,comms[i].name)==0) ) {
 #ifdef DEBUG
-      if(b<strlen(w1)) printf("Befehl %s vervollstaendigt --> %s\n",w1,comms[i].name);
+      if(b<strlen(w1)) printf("Command %s completed --> %s\n",w1,comms[i].name);
 #endif
-      if(comms[i].opcode & P_IGNORE) return;
-      if(comms[i].opcode==P_ARGUMENT) (comms[i].routine)(w2);
-      else if(comms[i].opcode==P_SIMPLE) (comms[i].routine)();
-      else if(comms[i].opcode==P_PLISTE) {
+      if((comms[i].opcode&PM_TYP)==P_IGNORE) return;
+      if((comms[i].opcode&PM_TYP)==P_ARGUMENT) (comms[i].routine)(w2);
+      else if((comms[i].opcode&PM_TYP)==P_SIMPLE) (comms[i].routine)();
+      else if((comms[i].opcode&PM_TYP)==P_PLISTE) {
         PARAMETER *plist;
         int e=make_pliste(comms[i].pmin,comms[i].pmax,(short *)comms[i].pliste,w2,&plist);
         (comms[i].routine)(plist,e);
 	if(e!=-1) free_pliste(e,plist);
       } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
     } else if(i!=a) {
-       printf("Befehl uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name);
+       printf("Command needs to be more specific ! <%s...%s>\n",comms[i].name,comms[a].name);
     }  else error(32,w1);  /* Syntax Error */
 }
 
@@ -989,9 +1099,9 @@ void programmlauf(){
         puts("Precompiler error...");
         kommando(program[opc]);
       } else {
-        if(pcode[opc].opcode&P_ARGUMENT)
+        if((pcode[opc].opcode&PM_TYP)==P_ARGUMENT)
           (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].argument);
-        else if(pcode[opc].opcode&P_PLISTE) {
+        else if((pcode[opc].opcode&PM_TYP)==P_PLISTE) {
 	  PARAMETER *plist;
 	  int i=pcode[opc].opcode&PM_COMMS;
           int e=make_pliste(comms[i].pmin,comms[i].pmax,(short *)comms[i].pliste,pcode[opc].argument,&plist);

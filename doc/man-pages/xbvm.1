@@ -1,0 +1,96 @@
+.TH XBVM 1 09-Apr-2007 "Version 1.14" "Linux Basic Compiler"
+.SH NAME
+xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter 
+.SH SYNOPSIS
+.B xbvm
+.RI "[ " option " ] " <filename>
+
+.SH DESCRIPTION
+
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates fratures like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on moden 
+computers.
+
+.IR xbvm
+can be used to execute bytecode-binaries which where compiled with 
+.I xbbc(1)
+ . These bytecode 
+files run about 4 to 10 times faster than the interpreted .bas files. 
+
+.B For a desciption of the X11-basic language and Usage of the interpreter see
+.I xbasic(1).
+
+.SH Filenames
+
+Xbvm processes one input file. The Suffix of the input file is usually .b.
+
+.SH OPTIONS
+.TP
+.BI "\-q "
+Be quiet and print less debug information 
+ .
+.SS \--version
+shows version, program and other information and exits
+.SS -h --help
+print a short help
+
+For detailed help and description of the implemented basic commands take a 
+look at the README file. 
+
+
+.SH EXAMPLES
+.nf
+xbvm testme.b
+xbbc -q testme.b
+.fi
+
+You can find many sample programs in 
+.I /usr/share/doc/packages/X11Basic/examples.
+.SH The virtual machine
+Actually this interpreter is a stack machine. The bytecode is very compact and similar
+to machine code. It would not be a big step to compile it to assembler.  
+This interpreter is highly optimized, so that the gain in 
+excecution speed is immense. Especially complex formulas are 
+speed up by a factor 10.
+There is no way to recreate the source code from the bytecode. 
+But still the bytecode is platform independant.
+
+.SH VERSION
+Page was created for V.1.14
+.SH BUG REPORTS       
+
+If you find a bug in the X11-Basic virtual machine, you should
+report it. But first,  you  should make sure that it really is
+a bug, and that it appears in the latest version of the
+X11-Basic package that you have.
+
+Once  you have determined that a bug actually exists, mail a
+bug report to kollo@users.sourceforge.net. If you have a fix,
+you  are  welcome  to  mail that as well!  Suggestions  may 
+be  mailed  to the x11-basic mailing list on 
+www.sourceforge.net/projects/x11-basic  or posted to the bug
+tracking system.
+
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to kollo@users.sourceforge.net.
+.SH BUGS
+Still some bugs
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2007 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software;  you  can  redistribute  it
+and/or modify it under the terms of the GNU General Public
+License as published  by  the  Free  Software  Foundation;
+either  version  2 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that  it  will  be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+PURPOSE.   See  the  GNU  General  Public License for more
+details.
+.SH SEE ALSO
+xbasic(1), xbbc(1), xbc(1)

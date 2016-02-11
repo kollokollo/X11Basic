@@ -12,6 +12,12 @@
 
 /* Hilfsfunktionen */
 
+int find_comm(char *);
+int find_func(char *);
+int find_afunc(char *);
+int find_sfunc(char *);
+int count_parameter(char *);
+
 void break_handler( int);
 void memdump(unsigned char *, int);
 void fatal_error_handler( int);
@@ -20,6 +26,7 @@ double ltext(int, int, double, double, double , int, char *);
 char *inkey();
 int make_pliste(int,int,short *,char *,PARAMETER **);
 void free_pliste(int,PARAMETER *);
+void free_parameter(PARAMETER);
 int wort_sep (char *,char ,int ,char *, char *);
 int wort_sepr(char *,char ,int ,char *, char *);
 int wort_sep2(char *,char *,int ,char *, char *);
@@ -33,6 +40,9 @@ char *do_gets (char *);
 char *simple_gets(char *);
 void erase_string_array(int);
 double floatarrayinhalt(int, char*);
+double varfloatarrayinhalt(int, int *);
+int varintarrayinhalt(int, int *);
+STRING varstringarrayinhalt(int, int *);
 char *indirekt2(char *);
 STRING print_arg(char *);
 STRING do_using(double,STRING);
@@ -65,8 +75,6 @@ char *s_parser(char *);
 STRING string_parser(char *);
 ARRAY array_parser(char *);
 ARRAY array_const(char *);
-ARRAY string_to_array(STRING);
-STRING array_to_string(ARRAY);
 
 int buchstabe(char);
 
@@ -82,8 +90,12 @@ STRING do_sfunktion(char *,char *);
 
 /*Variablen */
 
-ARRAY array_info(int);
-void array_zuweis_and_free(char *, ARRAY);
+int zuweissbyindex(int,int *,STRING);
+int zuweisibyindex(int,int *,int);
+int zuweisbyindex(int,int *,double);
+
+
+
 void string_zuweis_by_vnr(int, STRING);
 void c_dolocal(char *, char *);
 void xzuweis(char *, char *);
@@ -91,15 +103,6 @@ int xzuweissbuf(char *, char *,int);
 void varcastint(int,void *,int);
 void varcastfloat(int,void *,double);
 void *varptr(char *);
-ARRAY double_array(ARRAY);
-ARRAY copy_var_array(int);
-ARRAY inv_array(ARRAY);
-ARRAY mul_array(ARRAY,ARRAY);
-ARRAY trans_array(ARRAY);
-ARRAY create_array(int , int ,int *);
-ARRAY form_array(int , int ,int *,char *);
-ARRAY nullmatrix(int , int ,int *);
-ARRAY einheitsmatrix(int , int ,int *);
 
 char *argument(char *);
 char *varrumpf(char *);

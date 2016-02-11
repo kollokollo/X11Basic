@@ -760,7 +760,7 @@ const struct {int sf; char xf; } table[] = {
     { ENOMEM,  -12 }, /* 12: Not enough core*/
     { EACCES,  -13 }, /* 13: Permission denied*/
     { EFAULT,  -57 }, /* 14: Bad address*/
-#ifndef WINDOWS
+#ifdef ENOTBL
     { ENOTBLK, -58 }, /* 15: Block device required*/
 #endif
     { EBUSY,   -59 }, /* 16: Mount device busy*/
@@ -773,7 +773,7 @@ const struct {int sf; char xf; } table[] = {
     { ENFILE,  -23 }, /* 23: File table overflow */
     { EMFILE,  -24 }, /* 24: Too many open files */
     { ENOTTY,  -25 }, /* 25: Not a typewriter */
-#ifndef WINDOWS
+#ifdef ETXTBSY
     { ETXTBSY, -26 }, /* 26: Text file busy */
 #endif
     { EFBIG,   -27 }, /* 27: File too large */
@@ -789,11 +789,18 @@ const struct {int sf; char xf; } table[] = {
 
     { ENOSYS,       -38 }, /* 38: Function not implemented */
     { ENOTEMPTY,    -39 }, /* 39: Directory not empty */
-#ifndef WINDOWS
+#ifdef ELOOP
     { ELOOP,        -71 }, /* 40: Too many symbolic links encountered */
+#endif
+#ifdef EWOULDBLOCK
     { EWOULDBLOCK,  -41 }, /* 41: Operation would block */
+#endif
+#ifdef ENOMSG
     { ENOMSG,       -42 }, /* 42: No message of desired type*/
+#endif
+#ifdef EIDRM
     { EIDRM,        -43 }, /* 43: Identifier removed*/
+#endif
 #ifdef ELNRNG
     { ELNRNG,       -48 }, /* 48: Link number out of range*/
 #endif
@@ -826,7 +833,6 @@ const struct {int sf; char xf; } table[] = {
     { ENOTCONN,    -107 }, /* 107: Transport endpoint is not connected */
     { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
     { ECONNREFUSED,-111 }  /* 111: Connection refused */
-#endif
   };
 const int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
   

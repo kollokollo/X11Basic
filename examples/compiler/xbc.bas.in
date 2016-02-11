@@ -4,12 +4,15 @@
 ' (c) Markus Hoffmann Dec. 2002 (letzte Bearbeitung: 10.09.2005)
 ' 10.2004: Produziert nun auch Object-Files ohne main()
 ' 10.2005: Produziert nun auch WINDOWS .exe files
+' 04.2007: now can produce .b bytecode files
 
 i=1
 compileonly=FALSE
 precomponly=FALSE
 lflag=FALSE
 win32=FALSE
+bytecode=FALSE
+virtualm=FALSE
 CLR inputfile$,dyn,collect$
 outputfilename$="b.out"
 WHILE LEN(param$(i))
@@ -27,6 +30,10 @@ WHILE LEN(param$(i))
       if outputfilename$="b.out"
         outputfilename$="b.exe"
       endif
+    ELSE IF param$(i)="-bytecode"
+      bytecode=true
+    ELSE IF param$(i)="-virtualm"
+      virtualm=true
     ELSE IF param$(i)="-b"
       precomponly=TRUE
       compileonly=TRUE
@@ -61,8 +68,20 @@ IF LEN(inputfile$)
   wort_sep a$,".",1,rumpf$,typ$
   if typ$="o"
     @link
+  else if typ$="b"
+    @compilevm
+    if not compileonly
+      @link
+    endif
   else if typ$="bas"
-    @compile
+    if virtualm or bytecode
+      @dobytecode
+    endif  
+    if virtualm
+      @compilevm
+    else
+      @compile
+    endif
     if not compileonly
       @link
     endif
@@ -74,7 +93,7 @@ else
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2004"
+  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2007"
   VERSION
 RETURN
 PROCEDURE using
@@ -86,10 +105,34 @@ PROCEDURE using
   PRINT "  -b                       only precompile"
   PRINT "  -c                       precompile and compile, but do not link"
   PRINT "  -l                       produce linkable object file (no executable)"
+  PRINT "  -bytecode                produce a bytecode file"
+  PRINT "  -virtualm                use virtual machine framework insted of psydo-interpreter"
   PRINT "  -shared                  produce shared object file"
   PRINT "  -win32                   produce Windows .exe file"
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
+procedure dobytecode
+  system "cbbc -o "+rumpf$+".b"+" "+inputfile$
+return
+procedure compilevm
+  open "O",#2,rumpf$+".c"
+  print #2,"/* PSEUDO-Code-VM.c ("+f$+")"
+  print #2,"   X11-BAsic-Pseudo-Compiler Version @version@"
+  print #2,"   (c) Markus Hoffmann"
+  print #2,"*/"
+    print "Sorry, bytecode files can not be compiled to any other"
+    print "format yet. Use xbvm to run them."
+  CLOSE #2
+  IF NOT precomponly
+    if win32
+      system "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
+    else
+      system "@CC@ @copt@ -c "+rumpf$+".c"
+    endif
+    system "rm -f "+rumpf$+".c"
+  ENDIF
+return
+
 procedure compile
   open "O",#2,rumpf$+".c"
   print #2,"/* PSEUDO-Code.c ("+f$+")"

@@ -31,7 +31,7 @@ extern char *programbuffer;
 extern int programbufferlen;
 int datazeile;              /* fuer Restore, read , DATA */
 char *datapos;
-char databuffer[MAXSTRLEN];
+extern char *databuffer;
 
 
 /* fuer die Dateiverwaltung     */
@@ -41,6 +41,16 @@ extern int filenr[];
 
 extern VARIABLE variablen[];
 extern int anzvariablen;
+extern const int anzsysvars;
+extern const SYSVAR sysvars[];
+extern const int anzpfuncs;
+extern const FUNCTION pfuncs[];
+extern const SYSSVAR syssvars[];
+extern const int anzsyssvars;
+extern const AFUNCTION pafuncs[];
+extern const int anzpafuncs;
+extern const SFUNCTION psfuncs[];
+extern const int anzpsfuncs;
 
 extern const COMMAND comms[];
 extern LABEL labels[];

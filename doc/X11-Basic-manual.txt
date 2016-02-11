@@ -11,9 +11,9 @@
         ###############################################################
   
  
- 		    		  VERSION 1.13
+ 		    		  VERSION 1.14
 
- 		       (C) 1997-2006 by Markus Hoffmann
+ 		       (C) 1997-2007 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
  		    (see http://x11-basic.sourceforge.net/)
 
@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Do MÃ¤r 15 20:46:41 CET 2007
+          Last change to this file:  Sa Mai 12 22:23:14 CEST 2007
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -261,15 +261,32 @@ SuSE-Linux and RedHat
  -rw-r--r--  164366  X11-Basic-manual.txt -- the manual                      
  drwxr-xr-x    1024  editors/             -- files for editors               
  drwxr-xr-x    1024  examples/            -- few example programs            
-                                                                             
+                  
+		  
+Debian based distributions
+
+  As with Ubuntu linux the popularity of debian based linux distributions  has
+  dramatically increases in the recent past. RPM is not used for  debian based
+  distributions. But with the RPM to DEB converter alien,  a .deb package can
+  be created out of the .rpm files. If you hesitate to do so,  there are also
+  ready-made debian packages available on various sources. You  just need to
+  look for them on the internet. Al though they are maintained by  third party
+  volunteers, the file system structure should be similar to what is  described
+  in the previous chapter, so you should expect to find the same files  at the
+  same place. 
+
+		  
+		                                                             
 Other linux distributions                                                    
-                                                                             
-   Maybe RPM is supported for your distribution, then you can follow the     
-   instructions above. If not, you might look for a debian package or a      
-   package for HPUX. So far there exist no packages for any other system.    
+
+  Maybe RPM is supported for your distribution, then you can follow the 
+  instructions above. If not, you might look for a debian package. Also the
+  existence of a package for HPUX is known (unfortunately it contains the very
+  old version 1.04 and seems not to be maintained any more).  So far (as I
+  know) there exist no packages for any other system.
                                                                              
    For all other systems you will have to get the source-package             
-   X11Basic-1.09.tar.gz and compile the sources (which is very easy, by      
+   X11Basic-1.14.tar.gz and compile the sources (which is very easy, by      
    the way). This should work for all linux distributions, and probably      
    with little modifications also for HPUX, for DEC/alpha and FreeBSD and    
    maybe others.                                                             
@@ -343,6 +360,29 @@ make the pseudo-compiler work, libraries
                                                                              
    After doing all this, you will also find a xbasic.dyn executabe. This     
    is the interpreter, dynamically linked and much shorter.                  
+
+The bytecode compiler and the virtual machine
+
+  Both programs xbbc and xbbc are new to this package. The idea  is to increase
+  the excecution speed of X11-basic programs a lot by compiling  it to a
+  bytecode before execution. The bytecode then can be run much faster  with the
+  bytecode interpreter, the so-called virtual machine. The conversion  to
+  bytecode is a real compilation (in contrast to what the pseudo compiler 
+  xbc does). The step to assembler or machine code is not far. Also a 
+  conversion to C or to JAVA or any other language will be straigt forward, 
+  although the code will practically not be readable to humans anymore. As with
+  JAVA, the bytecode is still platform independant and can be run  on any
+  system, which has a virtual machine ported to. 
+
+  One point to mention (whether this is a feature or a disadvantage): 
+  X11-basic bytecode can not be converted back to source code (.bas).
+
+  Because this is a new feature which is incomplete and still has a lot of bugs
+  the feature is not incorporated into the interpreter xbasic itself.
+
+  Please try the bytecode compiler out and maybe you want to report errors
+  etc.  
+
 
 Support                                                                      
                                                                              
@@ -1717,7 +1757,7 @@ XXXX \=     X11-Basic Error messages:           \kill    \\
 92 \> Resume (next) nicht möglich   Fatal, For oder Local\\
 93 \> Stapel-Fehler\\
 
-100 \> X11BASIC Version 1.13  Copyright (c) 1997-2006 Markus Hoffmann\\
+100 \> X11BASIC Version 1.14  Copyright (c) 1997-2007 Markus Hoffmann\\
 101 \> ** 1 - Segmentation fault : Speicherschutzverletzung\\
 102 \> ** 2 - Bus Error Peek/Poke falsch?\\
 103 \> ** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?\\
@@ -7043,6 +7083,11 @@ Version 1.13 (Feb 2006)
 - new MKA$(), CVA()
 - fixed bug in PAUSE/DELAY
 - implemented ioctl() function
+
+Version 1.14 (Apr 2007)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 --------------------------------------------------------------------------------
 *Acknowlegements

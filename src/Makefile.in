@@ -45,7 +45,7 @@ DATADIR=@datadir@
 LIBDIR=@libdir@
 MANDIR=@mandir@
 
-OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o\
+OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
         runtime.o wort_sep.o ltext.o functions.o\
 	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
 	sysVstuff.o
@@ -61,8 +61,8 @@ DEPSRC=  $(CSRC)
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
-       options.h protos.h xbasic.h window.h vtypes.h ptypes.h
+HSRC=  array.h defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
+       options.h protos.h xbasic.h window.h vtypes.h ptypes.h bytecode.h
 
 
 DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
@@ -75,6 +75,7 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       src/io.c \
       src/parser.c \
       src/variablen.c \
+      src/array.c src/array.h \
       src/mathemat_dummy.c \
       src/runtime.c \
       src/wort_sep.c \
@@ -89,11 +90,14 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       src/errortxt.c \
       src/window.c \
       src/sysVstuff.c \
+      src/bytecode.c \
+      src/virtual-machine.c \
+      src/xbvm.c \
       src/defs.h src/config.h.in \
       src/globals.h \
       src/xbasic.h src/fdata.c \
       src/window.h src/file.h src/protos.h src/options.h \
-	src/Makefile.in src/ptypes.h src/vtypes.h\
+	src/Makefile.in src/ptypes.h src/vtypes.h src/bytecode.h\
 	src/configure \
 	src/config.guess \
         src/configure.in\
@@ -237,6 +241,14 @@ myzip : xbc
 	xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
 	strip myzip
 	strip myunzip
+bytecode : bytecode.h bytecode.c virtual-machine.o
+	gcc -o $@ bytecode.c virtual-machine.o -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline	
+bytecodestatic : bytecode.h bytecode.c virtual-machine.o x11basic.a
+	gcc -o bytecode bytecode.c virtual-machine.o x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline	
+xbvm : bytecode.h xbvm.c virtual-machine.o bytecode.h
+	gcc -o $@ xbvm.c virtual-machine.o -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline	
+xbvmstatic : bytecode.h xbvm.c virtual-machine.o bytecode.h x11basic.a
+	gcc -o xbvm xbvm.c virtual-machine.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline	
 installhome : xbasic
 	install -s -m 755 xbasic ${HOME}/bin/xbasic
 installdyn : dyn lib
@@ -246,11 +258,11 @@ install : dyn lib x11basic.a
 	install -s -m 755 xbasic.dyn $(BINDIR)/xbasic
 	install -m 755 libx11basic.so $(LIBDIR)/
 	install -m 644 x11basic.a $(LIBDIR)/
-	install -m 644 ../man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
-	install -m 644 ../man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
+	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
+	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
 xbcinstall : xbc install
 	install -s -m 755 xbc $(BINDIR)/
-	install ../man-pages/xbc.1 $(MANDIR)/man1/xbc.1
+	install ../doc/man-pages/xbc.1 $(MANDIR)/man1/xbc.1
 uninstall :
 	rm -f $(LIBDIR)/libx11basic.so
 	rm -f $(LIBDIR)/x11basic.a
@@ -258,7 +270,7 @@ uninstall :
 	rm -f $(MANDIR)/man1/xbasic.1
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1
 clean :
-	rm -f xbasic xbasic.dyn xbasic.static xbc *.o *.so a.out *.a \
+	rm -f xbasic xbasic.dyn xbasic.static xbc xbvm bytecode *.o *.so a.out *.a \
 	myzip myunzip bas2x11basic X11-Basic-examples-@version@.tar.myz \
 	X11-Basic-examples-@version@.tar
 
