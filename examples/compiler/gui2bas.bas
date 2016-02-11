@@ -1,13 +1,16 @@
 ' Utility to convert gui Files with Formulars or other Graphical user interface
 ' Objects to X11Basic executable programs
 ' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.08.2003)
-'
+'                                               27.01.2005
 '
 dim iz$(1000)
+dim fstr$(1000)
+dim fstrnam$(1000)
 anziz=0
 
 anzstring=0
 anztree=0
+anzfreestring=0
 anzobj=0
 clr anztedinfo,anzdata,anzbitblk,anziconblk
 
@@ -25,27 +28,125 @@ while not eof(#1)
 wend
 close #1
 
-print "' gui2bas V.1.01   (c) Markus Hoffmann 2003"
+print "' gui2bas V.1.02   (c) Markus Hoffmann 2003-2005"
 print "' convertetd "+inputfile$+"  "+date$+" "+time$
-print "bx=0          ! standard screen dimensions"
-print "by=20"
-print "bw=640"
-print "bh=400"
-print "@formular     ! execute form"
+print "@init         ! initialization"
+print "@doit         ! execute forms"
 print "quit"
-print "procedure formular"
-print "  local ret"
-klammer=0
-spaces=1
-count=0
-~@doit2(-1)
-@addtree(0,anzobj-1)
-print "return"
-quit
 
+while count<anziz
+  t$=iz$(count)
+  inc count
+  exit if t$="}"
+  if left$(t$)="'" or left$(t$)="#"
+    print t$
+  else
+    if wort_sep(t$,":",1,a$,b$)=2
+      name$=trim$(a$)
+      t$=trim$(b$)
+    else
+      name$=""
+      t$=a$
+    endif
+    wort_sep t$," ",1,typ$,t$
+    if upper$(typ$)="TREE"
+       if t$="{"
+         @dotree(name$)
+       endif
+    else if upper$(typ$)="FREESTR"
+      @dofreestr(t$)
+    else if upper$(typ$)="RSC"
+       if t$="{"
+         @dorsc(name$)
+       endif 
+    else
+      dec count
+      @dotree("FREETREE_"+name$)
+    endif
+  endif
+wend
+
+print "PROCEDURE init"
+if anzfreestring>0
+  print "  DIM freestring$("+str$(anzfreestring)+")"
+  for i=0 to anzfreestring-1
+    if len(fstrnam$(i))
+      print fstrnam$+"="+str$(i)
+    endif
+    t$=replace$(fstr$(i),chr$(34),"<&&&gaense>")
+    t$=replace$(t$,"<&&&gaense>",chr$(34)+"+chr$(34)+"+chr$(34))
+    print "  freestring$("+str$(i)+")="+chr$(34)+fstr$(i)+chr$(34)
+  next i
+endif
+print "RETURN"
+
+
+print "PROCEDURE doit"
+if anztree>0
+  for i=0 to anztree-1
+    print "  @formular"+str$(i)
+  next i
+endif
+if anzfreestring>0
+  for i=0 to anzfreestring-1
+    print "  ~form_alert(1,freestring$("+str$(i)+"))"
+  next i
+endif
+print "RETURN"
+
+quit
+procedure dotree(n$)
+
+  klammer=0
+  spaces=1
+  anzobj=0
+  if len(n$)
+    print "' TREE NAME: "+n$
+  endif
+  print "PROCEDURE formular"+str$(anztree)
+  print "  LOCAL ret,x,y,w,h"
+    ~@doit2(-1)
+ ' while count<anziz
+ '   t$=iz$(count)
+ '   inc count
+ '   exit if t$="}"
+    
+ '   ~@doit2(-1)
+
+
+    
+ '   print t$
+ ' wend
+ @addtree(aobj,anzobj-1)
+  print "RETURN"
+  inc anztree
+return
+procedure dorsc(n$)
+  local t$
+  print "' RSC information "+n$
+  while count<anziz
+    t$=iz$(count)
+    inc count
+    exit if t$="}"
+    t$=replace$(t$,"#","!")
+    print "' "+t$
+  wend
+return
+procedure dofreestr(b$)
+  local text$
+   text$=@getval$(b$,"STRING")
+   if left$(text$)=chr$(34)
+     text$=right$(text$,len(text$)-1)  
+   endif
+   if right$(text$)=chr$(34)
+     text$=left$(text$,len(text$)-1)  
+   endif
+   fstr$(anzfreestring)=text$
+   inc anzfreestring
+return
 function doit2(parent)
   local t$,klammer,idx,typ$,label$,obnext,obtail,obhead,parameter$
-  print "'# DOIT2: ",parent,count
+ ' print "'# DOIT2: ",parent,count
   idx=-1
   while count<anziz
     t$=iz$(count)
@@ -93,8 +194,7 @@ function doit2(parent)
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
     endif
   wend
-   print "'# END DOIT2: ",parent,count
-
+ '  print "'# END DOIT2: ",parent,count
   return idx
 endfunc
 
@@ -173,15 +273,16 @@ return -1
 endfunc
 
 procedure doobj(idx,obnext,obhead,obtail,a$,b$)
-  if upper$(a$)="TREE"
-    if anztree
-      @addtree(treestart,anzobj-1)
-    endif
-    treelabel$=label$
-    treestart=anzobj-1
-    if len(treelabel$)
-      print "TREE_";treelabel$;"=",anztree
-    endif
+  if upper$(a$)="FREESTR"
+      text$=@getval$(b$,"STRING")
+      if left$(text$)=chr$(34)
+        text$=right$(text$,len(text$)-1)  
+      endif
+      if right$(text$)=chr$(34)
+        text$=left$(text$,len(text$)-1)  
+      endif
+      fstr$(anzfreestring)=text$
+    inc anzfreestring
   else
       obx=val(@getval$(b$,"X"))*chw
       oby=val(@getval$(b$,"Y"))*chh
@@ -191,8 +292,8 @@ procedure doobj(idx,obnext,obhead,obtail,a$,b$)
       state$=@getval$(b$,"STATE")
       obflags=@doflags(flags$)
       obstate=@dostate(state$)
-    if upper$(a$)="BOX"
-      obtype=20
+    if upper$(a$)="BOX" or upper$(a$)="BOXCHAR"
+      obtype=20*abs(upper$(a$)="BOX")+27*abs(upper$(a$)="BOX")
       char$=@getval$(b$,"CHAR")
       if len(char$)=1
         char=asc(char$)
@@ -293,7 +394,8 @@ procedure doobj(idx,obnext,obhead,obtail,a$,b$)
     else if upper$(a$)="UNKNOWN"
       print "' UNKNOWN: ";b$
     else
-      print a$,parent
+      print "' unsupported: "+a$,parent
+      return
     endif
     print "+mki$(";obx;")+mki$(";oby;")+mki$(";obw;")+mki$(";obh;")"
   endif
@@ -313,14 +415,14 @@ procedure addtree(aob,oobj)
     endif
   next i
   print space$(spaces*2)+t$
-  print "  ~form_dial(0,0,0,0,0,bx,by,bw,bh)"
-  print "  ~form_dial(1,0,0,0,0,bx,by,bw,bh)"
-  print "'  ~objc_draw(varptr(tree"+str$(anztree)+"$),0,-1,0,0)"
+  print "  ~form_center(varptr(tree"+str$(anztree)+"$),x,y,w,h)"
+  print "  ~form_dial(0,0,0,0,0,x,y,w,h)"
+  print "  ~form_dial(1,0,0,0,0,x,y,w,h)"
+  print "  ~objc_draw(varptr(tree"+str$(anztree)+"$),0,-1,0,0)"
   print "  ret=form_do(varptr(tree"+str$(anztree)+"$))"
-  print "  ~form_dial(2,0,0,0,0,bx,by,bw,bh)"
-  print "  ~form_dial(3,0,0,0,0,bx,by,bw,bh)"
+  print "  ~form_dial(2,0,0,0,0,x,y,w,h)"
+  print "  ~form_dial(3,0,0,0,0,x,y,w,h)"
   print "  vsync"
-  inc anztree
 return
 procedure addstring(r$)
   print "string"+str$(anzstring)+"$="+chr$(34)+r$+chr$(34)+"+chr$(0)"
@@ -382,31 +484,31 @@ function doflags(t$)
   if right$(t$)=")"
     t$=left$(t$,len(t$)-1)  
   endif
-
   wort_sep t$,"+",1,a$,t$
   while len(a$)
-  if a$="SELECTABLE"
-    ret=ret or 1
-  else if a$="DEFAULT"
-    ret=ret or 2
-  else if a$="EXIT"
-    ret=ret or 4
-  else if a$="EDITABLE"
-    ret=ret or 8
-  else if a$="RADIOBUTTON"
-    ret=ret or 16
-  else if a$="LASTOB"
-    ret=ret or 32
-  else if a$="TOUCHEXIT"
-    ret=ret or 64
-  else if a$="HIDETREE"
-    ret=ret or 128
-  else if a$="INDIRECT"
-    ret=ret or 256
-  else
-    print "Unknown flag:",a$
-  endif
-  wort_sep t$,"+",1,a$,t$
+    if a$="NONE"
+    else if a$="SELECTABLE"
+      ret=ret or 1
+    else if a$="DEFAULT"
+      ret=ret or 2
+    else if a$="EXIT"
+      ret=ret or 4
+    else if a$="EDITABLE"
+      ret=ret or 8
+    else if a$="RADIOBUTTON"
+      ret=ret or 16
+    else if a$="LASTOB"
+      ret=ret or 32
+    else if a$="TOUCHEXIT"
+      ret=ret or 64
+    else if a$="HIDETREE"
+      ret=ret or 128
+    else if a$="INDIRECT"
+      ret=ret or 256
+    else
+      print "Unknown flag:",a$
+    endif
+    wort_sep t$,"+",1,a$,t$
   wend
   return ret
 endfunc
@@ -421,26 +523,29 @@ function dostate(t$)
   endif
   wort_sep t$,"+",1,a$,t$
   while len(a$)
-  if a$="SELECTED"
-    ret=ret or 1
-  else if a$="CROSSED"
-    ret=ret or 2
-  else if a$="CHECKED"
-    ret=ret or 4
-  else if a$="DISABLED"
-    ret=ret or 8
-  else if a$="OUTLINED"
-    ret=ret or 16
-  else if a$="SHADOWED"
-    ret=ret or 32
-  else if a$="WHITEBAK"
-    ret=ret or 64
-  else if a$="DRAW3D"
-    ret=ret or 128
-  else
-    print "Unknown state:",a$
-  endif
-
+    if a$="NORMAL"
+      ' do nothing
+    else if a$="SELECTED"
+      ret=ret or 1
+    else if a$="CROSSED"
+      ret=ret or 2
+    else if a$="CHECKED"
+      ret=ret or 4
+    else if a$="DISABLED"
+      ret=ret or 8
+    else if a$="OUTLINED"
+      ret=ret or 16
+    else if a$="SHADOWED"
+      ret=ret or 32
+    else if a$="WHITEBAK"
+      ret=ret or 64
+    else if a$="WHITEBACK"
+      ret=ret or 64
+    else if a$="DRAW3D"
+      ret=ret or 128
+    else
+      print "Unknown state:",a$
+    endif
     wort_sep t$,"+",1,a$,t$
   wend
   return ret

@@ -795,6 +795,9 @@ void c_arrayfill(char *n) {
     } else error(32,"ARRAYFILL: Kein ARRAY.");
   } else error(32,"ARRAYFILL"); /* Syntax error */
 }
+void c_memdump(PARAMETER *plist,int e) {
+  memdump((char *)plist[0].integer,plist[1].integer);
+}
 extern const int anzpfuncs;
 extern const FUNCTION pfuncs[];
 extern const int anzpsfuncs;
@@ -843,8 +846,8 @@ void c_dump(char *n) {
         int j;
         printf("%s%%(",variablen[i].name);
         for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]-1);
-	  else  printf("%d",((int *)variablen[i].pointer)[j]-1);
+          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
+	  else  printf("%d",((int *)variablen[i].pointer)[j]);
         }
         puts(")");
       }
@@ -857,8 +860,8 @@ void c_dump(char *n) {
         int j;
         printf("%s(",variablen[i].name);
         for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]-1);
-  	  else  printf("%d",((int *)variablen[i].pointer)[j]-1);
+          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
+  	  else  printf("%d",((int *)variablen[i].pointer)[j]);
         }
         printf(")  [%d]\n",variablen[i].local);
       }
@@ -870,8 +873,8 @@ void c_dump(char *n) {
         int j;
         printf("%s$(",variablen[i].name);
         for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]-1);
-  	  else  printf("%d",((int *)variablen[i].pointer)[j]-1);
+          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
+  	  else  printf("%d",((int *)variablen[i].pointer)[j]);
         }
         puts(")");
       }

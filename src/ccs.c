@@ -6,6 +6,9 @@
  * COPYING for details
  */
 
+/*  bug mit notify-handler behoben      18.01.2005    (c) Markus Hoffmann*/
+/*  ccs_err fuer tine verbessert        18.01.2005    (c) Markus Hoffmann*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -65,8 +68,15 @@ void cs_exit() {
 }
 #endif
 #endif
+#ifdef CONTROL
+  #define CT
+#endif  
+#ifdef TINE
+  #define CT
+#endif  
 
-#ifdef CONTROL 
+
+#ifdef CT
 int notify_handler(int pid, int overflow, int entries) {
   int i,pc2,flag=0;
   for(i=0;i<pidanz;i++) {
@@ -87,6 +97,8 @@ int notify_handler(int pid, int overflow, int entries) {
   }
   if(flag==0) printf("Uninitialisierter Interrupt: pid=%d, over=%d, ent=%d \n",pid,overflow,entries);
 }
+#endif
+#ifdef CONTROL
 int cssize(char *n) {
   int pid;
   ROUTE route;
@@ -637,11 +649,10 @@ void fix_tine_start() {
     defaultClientTimeout=100;
 }
 int my_ExecLinkEx(char *dev, char *prop, DTYPE *dout, DTYPE *din,short access,int buflen) {
-  int rc,retry=2;
+  int rc,retry=0;
   fix_tine_start();
   rc=ExecLinkEx(dev,prop,dout,din,access,buflen);
-  if(rc==98) {retry=5; defaultClientTimeout=1000;MaxPollingRate = MinPollingRate = 200;}
-  if(rc==97 || rc==92 || rc==33) retry=0;
+  if(rc==98) {retry=4; defaultClientTimeout=1000;MaxPollingRate = MinPollingRate = 200;}
   while(retry-- && rc!=0) {
     if(rc) printf("retry(%d) with %d\n",retry,rc);
     rc=ExecLinkEx(dev,prop,dout,din,access,buflen);
@@ -659,8 +670,8 @@ int GetPropertyInformation(char *srv,char *prp,PropertyQueryStruct *srvProps){
   dout.dFormat = CF_STRUCT;
   dout.dArrayLength = PROPERTYQUERYSTRUCT_SIZE;
   dout.data.vptr = srvProps;
-  if ((cc=my_ExecLinkEx(srv,"PROPS",&dout,&din,CA_READ,200)) != 0) return cc;
-  srvProps->prpSize = ISWAP(srvProps->prpSize);
+  if((cc=my_ExecLinkEx(srv,"PROPS",&dout,&din,CA_READ,200))!=0) return cc;
+  srvProps->prpSize=ISWAP(srvProps->prpSize);
   return 0;
 }
 #if 0
@@ -721,38 +732,33 @@ int convert_name_convention(char *input,char *device, char *property){
     if(*input==']' && flag) flag--;
     else if(*input=='[') flag++;
     *property=*input; property++;input++;
-    
   }
    if(*input!=']') return(-2);
- *property=0;
+  *property=0;
   return(0);
 }
 int tinesize(char *n) {
   char dev[strlen(n)+1],prop[strlen(n)+1];
-  int rc;
-  if(convert_name_convention(n,dev,prop)) 
-    printf("Syntax-Error in Parameter-Name %s\n",n);
+  if(convert_name_convention(n,dev,prop)) printf("Syntax-Error in Parameter-Name %s\n",n);
   else {
     PropertyQueryStruct prpinfo;
-    
     /* get size of Vector */
-    if(rc=GetPropertyInformation(dev,prop,&prpinfo)) 
-      printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+    if(ccs_err=GetPropertyInformation(dev,prop,&prpinfo)) 
+      printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
     else return(prpinfo.prpSize);
   }
   return(0);
 }
 int tinetyp(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
-  int rc;
-  if(convert_name_convention(n,w1,w2)) 
-	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
+  if(ccs_err=convert_name_convention(n,w1,w2)) 
+	printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,n);
   else {
     PropertyQueryStruct prpinfo;
     
     /* get size of Vector */
-    rc=GetPropertyInformation(w1,w2,&prpinfo);
-    if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+    ccs_err=GetPropertyInformation(w1,w2,&prpinfo);
+    if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
     else {
       int typ=0,f=LFMT(prpinfo.prpFormat);
       if(f==CF_BYTE) typ=typ|STRINGTYP;
@@ -773,14 +779,13 @@ int tinetyp(char *n) {
 char *tineunit(char *n) {
   char *unit=malloc(80);
   char w1[strlen(n)+1],w2[strlen(n)+1];
-  int rc=convert_name_convention(n,w1,w2);
-  if(rc) 
-	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-   else {
+  ccs_err=convert_name_convention(n,w1,w2);
+  if(ccs_err) printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,n);
+  else {
     float mmax,mmin;
     fix_tine_start();    
-    rc=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
-     if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+    ccs_err=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
+    if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
   }
   return(unit);
 }
@@ -788,6 +793,7 @@ char *tineinfo(char *n) {
   char *des=malloc(80);
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
+  ccs_err=rc;
   if(rc) 
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
   else {    
@@ -802,6 +808,7 @@ double tinemin(char *n) {
   char unit[80];float mmax,mmin;
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
+  ccs_err=rc; 
   if(rc) 
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
    else {
@@ -816,13 +823,13 @@ double tinemax(char *n) {
   char unit[80];float mmax,mmin;
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
-  if(rc) 
-	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-   else {
-    fix_tine_start();
-     
+  ccs_err=rc; 
+  if(rc)  printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
+  else {
+    fix_tine_start(); 
     rc=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
-     if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+    ccs_err=rc; 
+    if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
   }
   return((double)mmax);
 }
@@ -957,7 +964,7 @@ STRING tinequery(char *n,int start) {
       dout.data.vptr = buf;
       din.dArrayLength = 1;
       din.dFormat = CF_LONG;
-      din.data.lptr = &start;
+      din.data.lptr = (long *)&start;
       rc=my_ExecLinkEx(w1,w2,&dout,&din,CA_READ,buflen);
       if(rc) {
         printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
@@ -973,19 +980,19 @@ STRING tinequery(char *n,int start) {
   ccs_err=rc;
   return(ergebnis);
 }
-ARRAY *tinevget(char *n,int nn, int o) {
+ARRAY tinevget(char *n,int nn, int o) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
   char *buf;
   int buflen;
   int f,j;
-  ARRAY *ergebnis=malloc(sizeof(ARRAY));
+  ARRAY ergebnis;
   
-  ergebnis->dimension=1;
+  ergebnis.dimension=1;
   if(rc) {
     printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-    ergebnis->pointer=malloc(40);
-    ((int *)ergebnis->pointer)[0]=1;
+    ergebnis.pointer=malloc(40);
+    ((int *)ergebnis.pointer)[0]=1;
   } else {
       /* get size of Vector */
 
@@ -995,8 +1002,8 @@ ARRAY *tinevget(char *n,int nn, int o) {
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
-      ergebnis->pointer=malloc(40);
-      ((int *)ergebnis->pointer)[0]=1;
+      ergebnis.pointer=malloc(40);
+      ((int *)ergebnis.pointer)[0]=1;
       return(ergebnis);
     }     
     if(nn==0) nn=prpinfo.prpSize;
@@ -1008,87 +1015,87 @@ ARRAY *tinevget(char *n,int nn, int o) {
     dout.dTag[0] = 0;
     dout.data.vptr = buf;
     rc=my_ExecLinkEx(w1,w2,&dout,NULL,CA_READ,buflen);
+    ccs_err=rc; 
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
       free(buf);
-      ergebnis->pointer=malloc(40);
-      ((int *)ergebnis->pointer)[0]=1;
+      ergebnis.pointer=malloc(40);
+      ((int *)ergebnis.pointer)[0]=1;
       return(ergebnis);
     }
-      
+    
     /* switch appropriate to type */
 
     f=LFMT(prpinfo.prpFormat);
     if(f==CF_FLOAT) {
       double *varptr;
-      ergebnis->typ=FLOATARRAYTYP;
-      ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
-      ((int *)ergebnis->pointer)[0]=nn;
-      varptr=ergebnis->pointer+INTSIZE;
+      ergebnis.typ=FLOATARRAYTYP;
+      ergebnis.pointer=malloc(1*INTSIZE+nn*sizeof(double));
+      ((int *)ergebnis.pointer)[0]=nn;
+      varptr=ergebnis.pointer+INTSIZE;
       for(j=0;j<nn;j++) varptr[j]=(double)(((float *)buf)[j+o]);
       free(buf);
     } else if(f==CF_DOUBLE) {
       double *varptr;
-      ergebnis->typ=FLOATARRAYTYP;
-      ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
-      ((int *)ergebnis->pointer)[0]=nn;
-      varptr=ergebnis->pointer+INTSIZE;
+      ergebnis.typ=FLOATARRAYTYP;
+      ergebnis.pointer=malloc(1*INTSIZE+nn*sizeof(double));
+      ((int *)ergebnis.pointer)[0]=nn;
+      varptr=ergebnis.pointer+INTSIZE;
       for(j=0;j<nn;j++) varptr[j]=(double)(((double *)buf)[j+o]);
       free(buf);
     } else if(f==CF_BYTE) {
       double *varptr;
-      ergebnis->typ=FLOATARRAYTYP;
-      ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
-      ((int *)ergebnis->pointer)[0]=nn;
-      varptr=ergebnis->pointer+INTSIZE;
+      ergebnis.typ=FLOATARRAYTYP;
+      ergebnis.pointer=malloc(1*INTSIZE+nn*sizeof(double));
+      ((int *)ergebnis.pointer)[0]=nn;
+      varptr=ergebnis.pointer+INTSIZE;
       for(j=0;j<nn;j++) varptr[j]=(double)(((char *)buf)[j+o]);
       free(buf);
     } else if(f==CF_SHORT) {
       double *varptr;
-      ergebnis->typ=FLOATARRAYTYP;
-      ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
-      ((int *)ergebnis->pointer)[0]=nn;
-      varptr=ergebnis->pointer+INTSIZE;
+      ergebnis.typ=FLOATARRAYTYP;
+      ergebnis.pointer=malloc(1*INTSIZE+nn*sizeof(double));
+      ((int *)ergebnis.pointer)[0]=nn;
+      varptr=ergebnis.pointer+INTSIZE;
       for(j=0;j<nn;j++) varptr[j]=(double)(((short *)buf)[j+o]);
       free(buf);
     } else if(f==CF_LONG) {
       double *varptr;
-      ergebnis->typ=FLOATARRAYTYP;
-      ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
-      ((int *)ergebnis->pointer)[0]=nn;
-      varptr=ergebnis->pointer+INTSIZE;
+      ergebnis.typ=FLOATARRAYTYP;
+      ergebnis.pointer=malloc(1*INTSIZE+nn*sizeof(double));
+      ((int *)ergebnis.pointer)[0]=nn;
+      varptr=ergebnis.pointer+INTSIZE;
       for(j=0;j<nn;j++) varptr[j]=(double)(((long *)buf)[j+o]);
       free(buf);
     } else {
       printf("output format type %d is not implemented !\n",LFMT(prpinfo.prpFormat));
       error(46,n); /* Parameter hat falschen Typ */
       free(buf);
-      ergebnis->pointer=malloc(40);
-      ((int *)ergebnis->pointer)[0]=1;
+      ergebnis.pointer=malloc(40);
+      ((int *)ergebnis.pointer)[0]=1;
     }
   }
  return(ergebnis);
 }
-ARRAY *tinehistory(char *n,int start, int stop) {
+ARRAY tinehistory(char *n,int start, int stop) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
   char *buf;
   int buflen,nn;
   int f,j;
-  ARRAY *ergebnis=malloc(sizeof(ARRAY));
+  ARRAY ergebnis;
   UINT32 startstopArray[3];
   DTYPE dout,din;
   double *varptr;
   
-  ergebnis->dimension=2;
-
+  ergebnis.dimension=2;
   
   if(rc) {
     printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-    ergebnis->pointer=malloc((4+2)*sizeof(int));
-    ergebnis->typ=INTTYP;
-    ((int *)ergebnis->pointer)[0]=1;
-    ((int *)ergebnis->pointer)[1]=1;
+    ergebnis.pointer=malloc((4+2)*sizeof(int));
+    ergebnis.typ=INTTYP;
+    ((int *)ergebnis.pointer)[0]=1;
+    ((int *)ergebnis.pointer)[1]=1;
   } else {
       /* get size of History */
      
@@ -1106,23 +1113,24 @@ ARRAY *tinehistory(char *n,int start, int stop) {
     din.dFormat = CF_LONG;
     din.data.lptr = startstopArray;
     rc=my_ExecLinkEx(w1,w2,&dout,&din,CA_READ,buflen);
+    ccs_err=rc;
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
       free(buf);
-      ergebnis->pointer=malloc((4+2)*sizeof(int));
-      ergebnis->typ=INTTYP;
-      ((int *)ergebnis->pointer)[0]=1;
-      ((int *)ergebnis->pointer)[1]=1;
+      ergebnis.pointer=malloc((4+2)*sizeof(int));
+      ergebnis.typ=INTTYP;
+      ((int *)ergebnis.pointer)[0]=1;
+      ((int *)ergebnis.pointer)[1]=1;
       return(ergebnis);
     }
   /*    nn=((int *)buf)[1];  */
   /*  nn=dout.dArrayLength;  */
     nn=GetCompletionDataSize(-1);
-    ergebnis->typ=FLOATARRAYTYP;
-    ergebnis->pointer=malloc(2*INTSIZE+2*nn*sizeof(double));
-    ((int *)ergebnis->pointer)[0]=nn;
-    ((int *)ergebnis->pointer)[1]=2;
-    varptr=ergebnis->pointer+2*INTSIZE;
+    ergebnis.typ=FLOATARRAYTYP;
+    ergebnis.pointer=malloc(2*INTSIZE+2*nn*sizeof(double));
+    ((int *)ergebnis.pointer)[0]=nn;
+    ((int *)ergebnis.pointer)[1]=2;
+    varptr=ergebnis.pointer+2*INTSIZE;
       for(j=0;j<nn;j++) {
         varptr[2*j]=(double)(((float *)buf)[2*j]);  /*+2 entfernt*/
         varptr[2*j+1]=(double)(((int *)buf)[2*j+1]);/*+2 entfernt*/
@@ -1150,6 +1158,7 @@ void c_tinemonitor(char *n) {
         
       DTYPE dout;
       rc=GetPropertyInformation(dev,prop,&prpinfo);
+      ccs_err=rc;
       if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
       else {
         pc2=procnr(w2,1);
@@ -1165,6 +1174,7 @@ void c_tinemonitor(char *n) {
         rc=AttachLink(dev,prop,&dout,NULL,CA_READ,buflen,tmonitorCallback,CM_POLL);
         if(rc<0) {
 	  printf("Tine-Error AttachLink: %d  %s\n",-rc,erlst[-rc]);
+	  ccs_err=-rc;
 	  free(buf);
         } else
 	  newpid=rc;
@@ -1187,7 +1197,7 @@ void c_tinemonitor(char *n) {
 
 void c_tineput(char *w) {
   char n[strlen(w)+1],t[strlen(w)+1];
-  int pid,j,e,i,rc;
+  int pid,j,e,i;
   float f;
   e=wort_sep(w,',',TRUE,n,t);
   if(e<2) {
@@ -1196,23 +1206,18 @@ void c_tineput(char *w) {
   } else {
     char *test=s_parser(n);
     char w1[strlen(test)+1],w2[strlen(test)+1];
-    rc=convert_name_convention(test,w1,w2);
+    ccs_err=convert_name_convention(test,w1,w2);
     free(test);
-    if(rc) {
-	printf("Syntax-Error %d in Parameter-Name %s\n",rc,test);
-    } else {
+    if(ccs_err) printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,test);
+    else {
       PropertyQueryStruct prpinfo;  
       DTYPE dout;
       int buflen;
       char *buf;
     /* get size of Vector */
-      rc=GetPropertyInformation(w1,w2,&prpinfo);
-      if(rc) {
-        printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
-        return;
-      }
-      if((type2(t) & (FLOATTYP|INTTYP)) && prpinfo.prpSize!=1) {
-        printf("Error: Property ist Vektor (%d)!\n",prpinfo.prpSize);
+      ccs_err=GetPropertyInformation(w1,w2,&prpinfo);
+      if(ccs_err) {
+        printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
         return;
       }
       buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
@@ -1222,28 +1227,100 @@ void c_tineput(char *w) {
       dout.dTag[0] = 0;
       dout.data.vptr = buf;
       
-/* switch appropriate to type */
-      if(type2(t) & (FLOATTYP|INTTYP)) {
-      switch (LFMT(prpinfo.prpFormat)) {
-      case CF_BYTE:
-        *((char *)buf)=(char)parser(t); break;
-      case CF_SHORT:
-        *((short *)buf)=(short)parser(t);break;
-      case CF_LONG:
-        *((long *)buf)=(long)parser(t);break;
-      case CF_FLOAT:
-        *((float *)buf)=(float)parser(t);break;
-      case CF_DOUBLE:
-        *((double *)buf)=(double)parser(t);break;
-      default: 
-        printf("output format type %d is not a number !\n",LFMT(prpinfo.prpFormat));
-        free(buf);return;
-      }
-      } else if(type2(t) & STRINGTYP) {
-        STRING sss=string_parser(t);
-	memcpy(buf,sss.pointer,min(sss.len,buflen));
-	free(sss.pointer);
-	buflen=min(sss.len,buflen);
+      if(type2(t)&ARRAYTYP) {
+        ARRAY abuffer=array_parser(t);
+	int l=anz_eintraege(abuffer);
+	int i;
+	void *ptr=(char *)abuffer.pointer+abuffer.dimension*INTSIZE;
+	l=min(l,dout.dArrayLength);
+        printf("Ist Vektor [%d]!!!\n",anz_eintraege(abuffer));
+	if(abuffer.typ & (FLOATTYP|INTTYP)) {
+	  /* Tu was hier !!! */
+	  switch (LFMT(prpinfo.prpFormat)) {
+	  case CF_FLOAT:
+	    if(abuffer.typ & FLOATTYP) {
+  	      for(i=0;i<l;i++) ((float *)buf)[i]=(float)((double *)ptr)[i];
+	    } else {
+  	      for(i=0;i<l;i++) ((float *)buf)[i]=(float)((int *)ptr)[i];
+	    }
+	    break;
+	  case CF_DOUBLE:
+	    if(abuffer.typ & FLOATTYP) {
+  	      for(i=0;i<l;i++) ((double *)buf)[i]=((double *)ptr)[i];
+	    } else {
+  	      for(i=0;i<l;i++) ((double *)buf)[i]=(double)((int *)ptr)[i];
+	    }
+	    break;
+	  case CF_BYTE:
+	    if(abuffer.typ & FLOATTYP) {
+  	      for(i=0;i<l;i++) ((char *)buf)[i]=(char)((double *)ptr)[i];
+	    } else {
+  	      for(i=0;i<l;i++) ((char *)buf)[i]=(char)((int *)ptr)[i];
+	    }
+	    break;  
+	  case CF_SHORT:
+	    if(abuffer.typ & FLOATTYP) {
+  	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((double *)ptr)[i];
+	    } else {
+  	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((int *)ptr)[i];
+	    }
+	    break;  	  
+	  case CF_LONG:
+	    if(abuffer.typ & FLOATTYP) {
+  	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((double *)ptr)[i];
+	    } else {
+  	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((int *)ptr)[i];
+	    }
+	    break;  	  
+	  default:
+            printf("output format type %d is not numeric !\n",LFMT(prpinfo.prpFormat));
+	    free_array(abuffer); 
+            free(buf);return;
+	  }
+	} else if(type2(t) & STRINGTYP) {
+          switch (LFMT(prpinfo.prpFormat)) {
+          case CF_BYTE:
+          case CF_TEXT:         
+          case CF_NAME8:         
+          case CF_NAME16:         
+          case CF_NAME16FI:         
+          case CF_NAME32:
+          case CF_NAME48:
+          case CF_STRUCT:
+	  /* Tu was hier !!! */
+	  printf("Art der Uebergabe noch nicht realisiert !\n");
+          break;
+          default: 
+            printf("output format type %d is not a Stringtype !\n",LFMT(prpinfo.prpFormat));
+            free(buf);free_array(abuffer); return;
+          }
+
+	}
+	
+	free_array(abuffer); 
+      } else {
+        /* switch appropriate to type */
+        if(type2(t) & (FLOATTYP|INTTYP)) {
+          switch (LFMT(prpinfo.prpFormat)) {
+          case CF_BYTE:
+            *((char *)buf)=(char)parser(t); break;
+          case CF_SHORT:
+            *((short *)buf)=(short)parser(t);break;
+          case CF_LONG:
+            *((long *)buf)=(long)parser(t);break;
+          case CF_FLOAT:
+            *((float *)buf)=(float)parser(t);break;
+          case CF_DOUBLE:
+            *((double *)buf)=(double)parser(t);break;
+          default: 
+            printf("output format type %d is not a number !\n",LFMT(prpinfo.prpFormat));
+            free(buf);return;
+          }
+        } else if(type2(t) & STRINGTYP) {
+          STRING sss=string_parser(t);
+	  memcpy(buf,sss.pointer,min(sss.len,buflen));
+	  free(sss.pointer);
+	  buflen=min(sss.len,buflen);
 #if 0
         printf("output format type %d  !\n",dout.dFormat);
 	dout.dFormat=CF_NAME16FI;
@@ -1268,12 +1345,99 @@ void c_tineput(char *w) {
       }
       printf("Gebe #%d Daten\n",buflen);  
 #endif
+        } 
       }
-      rc=my_ExecLinkEx(w1,w2,NULL,&dout,CA_WRITE,buflen);
-      if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
-      ccs_err=rc;
+      ccs_err=my_ExecLinkEx(w1,w2,NULL,&dout,CA_WRITE,buflen);
+      if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
       free(buf);
     }
   }
 }
+
+char tine_eqn[32]="X11BASIC";
+int tineexportvars[100];
+int anztineexportvars=0;
+int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, short access) {
+  int devicenumber=0,vnr=-1,typ,etyp,len;
+  char *r;
+  if(devName[0] == '#') devicenumber=atoi(&devName[1]);
+  else devicenumber=GetDeviceNumber(tine_eqn,devName);
+  printf("Got request for %s \n",Property);
+  typ=vartype(Property);
+  r=varrumpf(Property);
+  vnr=variable_exist(r,typ);
+  free(r);
+  if(vnr==-1) return illegal_property;
+  else {
+    len=do_dimension(vnr);
+    if(typ & STRINGTYP) etyp=CF_TEXT; 
+    else if(typ & INTTYP) etyp=CF_LONG; 
+    else if(typ & FLOATTYP) etyp=CF_DOUBLE;
+    
+    if(access&CA_WRITE) {
+      if(din->dFormat!=etyp) return illegal_format;
+      if(din->dArrayLength > len) return dimension_error;
+    if(typ & ARRAYTYP) ; 
+    else if(typ & STRINGTYP) ; 
+    else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0]; 
+    else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
+      
+    } else if(access&CA_READ) {
+      if(dout->dFormat!=etyp) return illegal_format;
+      if(dout->dArrayLength < len) return dimension_error;
+     if(typ & ARRAYTYP) ; 
+    else if(typ & STRINGTYP) ; 
+    else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode; 
+    else if(typ & FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
+    
+    }
+    return(0);
+  }
+}
+void c_tineserver(PARAMETER *plist, int e) { 
+  int i,cc;
+  if(e>0) strncpy(tine_eqn,plist[0].pointer,31);
+  /* init RPC server: */
+  if((cc=SystemInit(FALSE))!=0) {
+	printf("SystemInit error: %s\n",erlst[cc]);
+  } else {
+    if((i=RegisterFecNameEx(tine_eqn,"X11-Basic appication","UNIX","Geb.30","X11Basic","M. Hoffmann",0,"DEFAULT"))!=0)
+      printf("Register FecName %s error: %d ",tine_eqn,i);
+    else RegisterEquipmentModule(tine_eqn,tine_eqn,1,tineserver_callback,NULL,NULL,1000,NULL);
+  }
+}
+void c_tineexport(char *n) { 
+  char v[strlen(n)+1],w[strlen(n)+1],*r;
+  int p;
+  int len=1;
+  int typ,vnr,etyp;
+  strcpy(v,n);
+  p=wort_sep(v,',',TRUE,w,v);
+  while(p) {
+    xtrim(w,TRUE,w);  
+    typ=type2(w);
+    if(typ & CONSTTYP) error(32,"TINEEXPORT");  /* Syntax error */
+    else {
+      r=varrumpf(w);
+      vnr=variable_exist(r,typ);
+      if(typ & ARRAYTYP) { /* ganzes Array  */
+        if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */ 
+        else len=do_dimension(vnr);
+      }
+      if(typ & STRINGTYP) etyp=CF_TEXT; 
+      else if(typ & INTTYP) etyp=CF_LONG; 
+      else if(typ & FLOATTYP) etyp=CF_DOUBLE;
+      RegisterProperty(tine_eqn,w,len,etyp,CA_WRITE|CA_READ,"X11-Basic variable");
+      /*Hier sollte man die Variable anlegen, falls nicht existent...*/
+      if(vnr==-1) vnr=variable_exist_or_create(r,typ);
+      tineexportvars[anztineexportvars++]=vnr;
+      free(r);
+    }
+    p=wort_sep(v,',',TRUE,w,v); 
+  }
+}
+void c_tinecycle(char *n) { 
+  SystemCycle(FALSE);
+}
+
 #endif

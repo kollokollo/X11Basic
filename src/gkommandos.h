@@ -19,6 +19,7 @@ void c_color    (PARAMETER *,int);
 void c_copyarea  (PARAMETER *,int);
 void c_deffill    (PARAMETER *,int);
 void c_defline     (PARAMETER *,int);
+void c_defmark    (PARAMETER *,int);
 void c_defmouse    (char *);
 void c_deftext     (PARAMETER *,int);
 void c_draw        (char *);

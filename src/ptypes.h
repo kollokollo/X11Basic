@@ -145,6 +145,7 @@ typedef struct {
 #define F_DQUICK     0x00400
 #define F_IQUICK     0x00500
 #define F_SQUICK     0x00600
+#define F_AQUICK     0x00400
 
 #define F_IGNORE     0x00800
 #define F_INVALID    0x01000
@@ -194,6 +195,15 @@ typedef struct {
   char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } SFUNCTION;
+
+typedef struct {
+  int opcode;
+  char name[20];
+  ARRAY (*routine)();
+  char pmin;        /* Mindestanzahl an Parametern */
+  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} AFUNCTION;
 
 typedef struct {
   int opcode;

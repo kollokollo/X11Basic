@@ -1,3 +1,7 @@
+
+' Demonstration of POLYLINE and POLYFILL
+' X11-Basic (c) Markus Hoffmann
+
 dim x(5),y(5)
 x(0)=-50
 y(0)=-50

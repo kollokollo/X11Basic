@@ -24,7 +24,7 @@
 
 typedef struct {
   char *name;
-  int typ;
+  unsigned int typ;
   int local;
   int opcode;
   double zahl;
@@ -32,7 +32,7 @@ typedef struct {
 } VARIABLE;
 
 typedef struct {
-  int typ;
+  unsigned int typ;
   int dimension;
   void *pointer;
 } ARRAY;

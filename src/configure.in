@@ -1,8 +1,8 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic],[1.11], [kollo@users.sourceforge.net])
-version="1.11"
+AC_INIT([X11-Basic],[1.12], [kollo@users.sourceforge.net])
+version="1.12"
 vdate=`date`
 AC_SUBST(version)
 AC_CONFIG_HEADERS([config.h])

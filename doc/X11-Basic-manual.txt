@@ -11,9 +11,9 @@
         ###############################################################
   
  
- 		    		  VERSION 1.11
+ 		    		  VERSION 1.12
 
- 		       (C) 1997-2004 by Markus Hoffmann
+ 		       (C) 1997-2005 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
  		    (see http://x11-basic.sourceforge.net/)
 
@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Fr Dez 17 17:30:06 CET 2004
+          Last change to this file:  Do Mär 3 13:18:43 CET 2005
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -1717,7 +1717,7 @@ XXXX \=     X11-Basic Error messages:           \kill    \\
 92 \> Resume (next) nicht möglich   Fatal, For oder Local\\
 93 \> Stapel-Fehler\\
 
-100 \> X11BASIC Version 1.10  Copyright (c) 1997-2004 Markus Hoffmann\\
+100 \> X11BASIC Version 1.12  Copyright (c) 1997-2005 Markus Hoffmann\\
 101 \> ** 1 - Segmentation fault : Speicherschutzverletzung\\
 102 \> ** 2 - Bus Error Peek/Poke falsch?\\
 103 \> ** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?\\
@@ -2914,11 +2914,28 @@ DESCRIPTION:
 
 SEE ALSO: LINE, DEFFILL
 ##############################################################################
-DEFMARK c,a,g      -+- define: colour, size, type (POLYMARK)        
-                    |  c     colour                         
-                    |  a     type of marker                 
-                    |        (1=. 2=+ 3=* 4=[] 5=+ 6=#)     
-                    +- g     size of marker (0,20,40,60,80,100)                        
+
+Command:    DEMARK
+Syntax:     DEMARK <color>,<style>,<size>
+
+DESCRIPTION:
+
+         Sets colour,type and size of the corner points to be
+         marked using the command POLYMARK.
+         The color value will be ignored. The color of the points can be
+	 set with the COLOR command. 
+	 The following typesare possible :
+	   0=point
+           1=dot (circle)
+           2=plus sign
+           3=asterisk
+           4=square
+           5=cross
+           6=hash
+           8=filled circle
+           9=filled square
+ 
+SEE ALSO: POLYMARK, DEFLINE, COLOR
 ##############################################################################
 
 Command:    DEMOUSE
@@ -3602,7 +3619,7 @@ DESCRIPTION:
 
 	Fills a bordered area with a color commencing at
            the co-ordinates 'x,y'. If a border color (bc) is specified,            
-           The fill stops at boundaries with this color. If no border color 
+           the fill stops at boundaries with this color. If no border color 
 	   is given, the fill will stop at any oter color than the one of 
 	   the starting coordinate. 
 	   The fill color can be chosen with the command COLOR.
@@ -5221,20 +5238,60 @@ DESCRIPTION:
 
 SEE ALSO: PLOT
 ##############################################################################
+Command:  POKE
+Syntax:   POKE adr%,byte%         
 
+DESCRIPTION:
 
-POKE adr%,byte%         -- writes Byte to address adr%
-POLYLINE n,x(),y()      -- draw polygon in (x(),y())        
-                    the first point = last point to draw
-                      a closed polygon
-POLYFILL n,x(),y()  draw filled polygon                
-                    connects first point with last point
-                      and fills the resulting polygon with
-                      pattern defined in DEFFILL
-POLYMARK n,x(),y()  draw polygon points                
-                    type of points defined in DEFMARK
-                    n        # of points
-                    x(),y()  arrays with (x,y)-values of points
+	writes Byte to address adr%
+
+SEE ALSO: PEEK(),DPOKE,LPOKE
+##############################################################################
+Command:  POLYLINE
+Syntax:   POLYLINE n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+	POLYLINE  draws  a polygon with  n  corners.  The  x,y 
+        coordinates for the corner points are given in  arrays 
+        x() and y(). The optional parameters  x_off,y_off
+        can be added to these coordinates.
+
+	To draw a closed polygon, the first point hast to be equal to the 
+	last point.
+	
+
+SEE ALSO: LINE, DEFLINE, COLOR, POLYFILL, POLYMARK
+##############################################################################
+Command:  POLYFILL
+Syntax:   POLYFILL n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+	POLYFILL draws  a filled polygon with  n  corners.  The  x,y 
+        coordinates for the corner points are given in  arrays 
+        x() and y(). The optional parameters  x_off,y_off
+        can be added to these coordinates.
+	POLYFILL fills the polygon with the color and pattern previously 
+        defined by COLOR and DEFFILL.
+	
+SEE ALSO: COLOR, DEFFILL, POLYLINE, POLYMARK
+##############################################################################
+Command:  POLYMARK
+Syntax:   POLYMARK n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+POLYMARK  marks  the  corner  points  of an invisible polygon with  n  corners.  The  x,y 
+        coordinates for the corner points are given in  arrays 
+        x() and y(). The optional parameters  x_off,y_off
+        can be added to these coordinates.
+
+        POLYMARK  marks  the points with  the  shape defined by DEFMARK.
+
+SEE ALSO: COLOR, DEFLINE, POLYLINE, POLYFILL
+##############################################################################
+
 POS
 PRBOX x1,y1,x2,y2       -- filled rounded box
 t$=PRG$(i)              -- Programmzeile i (Quelltext)
@@ -5494,14 +5551,31 @@ Syntax:  RESUME
 DESCRIPTION:
 
 	 
-	The  RESUME command is only meaningful with  error  capture 
+	The  RESUME command is especially meaningful with error  capture 
         (ON ERROR GOSUB) where it allows a reaction to an error.
+        Anyway, X11-Basic allows the us of RESUME <label> everywhere in the
+	program (instead of GOTO <label>), and can be used to jump out of 
+	a subroutine. If you jump into another Subroutine, you must not reach 
+	its RETURN statement. RESUME is a bad command and I dislike it 
+	very much.
 
         RESUME repeats the erroneous command.  
         RESUME NEXT resumes program execution after an incorrect 
         command.
         RESUME <label> branches to the <label>.
         If a fatal error occurs only RESUME <label> is possible 
+
+        **** RESUME is still not working. If you use ON ERROR GOSUB to a
+	subroutine then RESUME NEXT is the default if the subroutine 
+	reaches a RETURN. If you want to resume somwhere else you can just GOTO
+	out of the subroutine. This is possible, but leaves the internal stack 
+	pointer incremented, so you should not do this too often during runtime. 
+        otherwise there will be a stack overflow after 200 events.
+	**** looks like this also happens with ON ERROR GOTO. 
+	*** In future versions of X11-Basic there might be a RESUME <label> 
+	command which properly resets the stack. If you want this to be fixed, 
+	please send me an email with your test program. 
+
 
 SEE ALSO: ON ERROR, GOTO, ERROR
 
@@ -5515,7 +5589,7 @@ DESCRIPTION:
 
 	RETURN terminates  a  PROCEDURE  reached  via  GOSUB and
 	resumes execution after the calling line. Note that code reached via ON
-	JERROR  GOSUB  should  be  terminated  with  a RESUME NEXT, not with
+	ERROR  GOSUB should be  terminated  with  a RESUME NEXT, not with
 	RETURN.
 
 	RETURN <expression> states the result of the expression as a result of a
@@ -6651,6 +6725,17 @@ Version 1.11 (Oct 2004)
 - fixed little bug in INPUT
 - new chapters in manual
 - new commands: TOPW, BOTTOMW, INFOW, FULLW, CLIP
+- found bug in ON ERROR and ON BREAK
+- new FILL command
+- changed TAB treatement in sourcecode
+- worked on TINE implementation
+- worked on the ARRAY functions
+- new SHL(), SHR() function
+
+Version 1.12 (Mar 2005)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- fixed bug with DEFMARK
+- experimental LISTSELECT
 
 
 

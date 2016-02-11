@@ -35,6 +35,7 @@ void c_help     (char *);
 void c_lpoke    (PARAMETER *,int);
 void c_local    (char *);
 void c_locate   (PARAMETER *,int);
+void c_memdump  (PARAMETER *,int);
 void c_nop       (char *);
 void c_objc_add   (PARAMETER *,int);
 void c_objc_delete (PARAMETER *,int);

@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "defs.h"
+#include "vtypes.h"
 
 #ifdef WINDOWS
   #include "Windows.extension/fnmatch.h"
@@ -740,16 +741,227 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 
 #endif
 
+/**** Flood Fill *********************************************************/
+
+#define QUEUESIZE   256		/* The size of Queue (400) */
+
+#define FF_UP	    1
+#define FF_DN	   -1
+
+#define SCAN_UNTIL  0
+#define SCAN_WHILE  1
+#define FF_FILLED   (!0)
 
 
+struct	tagParams	{
+		int    xl;     /* leftmost pixel in run */
+		int    xr;     /* rightmost pixel in run */
+		int y;	    /* y-coordinate of run */
+		unsigned char f; /* TRUE if run is filled (blocked) */
+};
 
+struct tagQUEUE	{
+	struct tagQUEUE	*pQ;     /* pointer to opposite queue */
+	int 	    d;	    /* direction (UP or DN) */
+	int 	    n;	    /* number of unfilled runs in queue */
+	int 	    h;	    /* index of head of queue */
+	int 	    t;	    /* index of tail of queue */
+	struct tagParams *run;
+};
+
+typedef	struct tagQUEUE	FF_QUEUE;
+
+int 	ff_scan_left(int, int, int, int );
+int 	ff_scan_right(int,int, int, int );
+void    ff_add_queue(FF_QUEUE *,int,int, int, int );
+int	ff_next_branch(int,int,int,int,int);
+int	ff_in_queue(FF_QUEUE *,int,int,int);
 
 
 void  ffill(int x0,int y0,int fill_color, int border_color) {
-/* Wird evtl spaeter implementiert */
+  int y=y0,x,xl=x0,xr=x0,xln,xrn;
+  int qp,bcd;
+  int scan_type;
+  struct tagParams ff_buf1[QUEUESIZE];
+  struct tagParams ff_buf2[QUEUESIZE];
+  FF_QUEUE Qup,Qdn,*Q;
+
+   /* do nothing if the seed pixel is a border pixel */
+  if(border_color==-1)  {
+    border_color=get_point(x0,y0);
+    scan_type=SCAN_WHILE;
+  } else  scan_type=SCAN_UNTIL;
+  if(scan_type==SCAN_UNTIL) {
+    if(get_point(x0,y0)==border_color) return;
+  } else {
+    if(get_point(x0,y0)==fill_color) return;
+  }
+  Qup.run = ff_buf1;
+  Qdn.run = ff_buf2;
+  Qup.pQ = &Qdn;		/* pointer to opposite queue */
+  Qup.d = FF_UP; 		/* direction for queue */
+  Qup.h = -1;
+  Qup.t = 0;
+  Qup.n = 0;
+
+  Qdn.pQ = &Qup;
+  Qdn.d = FF_DN;
+  Qdn.h = -1;
+  Qdn.t = 0;
+  Qdn.n = 0;
+  /* put the seed run in the up queue */
+  Q = &Qup;
+  ff_add_queue(Q,ff_scan_left(x0,y0,border_color,scan_type),
+		ff_scan_right(x0,y0,border_color,scan_type),y0,!FF_FILLED);
+
+  for(;;) {
+    if(Q->n==0) { 
+      Q=Q->pQ;
+      if(Q->n==0) break;
+    }
+    qp = Q->h;
+    while(qp>=Q->t) {
+      if(!Q->run[qp].f) {
+	y=Q->run[qp].y;
+	xl=Q->run[qp].xl;
+	xr=Q->run[qp].xr;
+	line(xl,y,xr+1,y);      /* fill the run */
+	activate();
+	Q->run[qp].f=FF_FILLED;
+	Q->n--;
+	break;
+      } else qp-- ;
+    }
+/*    printf("Queue(%d) [%d,%d]:  n=%d\n",Q->d,Q->h,Q->t,Q->n);*/
+    if(Q->d==FF_UP) {
+      while((Q->h>qp)&&(Q->run[Q->h].y<(y-1))) Q->h--;
+    } else {
+      while((Q->h>qp)&&(Q->run[Q->h].y>(y+1))) Q->h--;
+    }
+    xln=ff_next_branch(xl,xr,y+Q->d,border_color,scan_type);
+    while(xln>=0) {
+      x=(xln>xl)?xln:xl;
+      xrn=ff_scan_right(x,y+Q->d,border_color,scan_type);
+      if(!ff_in_queue(Q,xln,xrn,y+Q->d)) ff_add_queue(Q,xln,xrn,y+Q->d,!FF_FILLED);
+      if(xrn>(xr-2)) break;
+      else {
+        x=xrn+2;
+	xln=ff_next_branch(x,xr,y+Q->d,border_color,scan_type);
+      }
+    }
+    bcd=0;
+    xln=ff_next_branch(xl,xr,y-Q->d,border_color,scan_type);
+    while(xln>=0) {
+      x=(xln>xl)?xln:xl;
+      xrn=ff_scan_right(x,y-Q->d,border_color,scan_type);
+      if(!ff_in_queue(Q,xln,xrn,y-Q->d)) {
+        ff_add_queue( Q->pQ, xln, xrn, y-Q->d,!FF_FILLED);
+        bcd=1;
+      }
+      if(xrn>(xr-2)) break;
+      else {
+        x=xrn+2;
+	xln=ff_next_branch(x,xr,y-Q->d,border_color,scan_type);
+      }
+    }
+    if(bcd) {
+      Q=Q->pQ;
+      ff_add_queue(Q,xl,xr,y,FF_FILLED);
+    }
+  }
+}
+int ff_scan_left(int xl,int y, int ucPixel, int f ) {
+/*  printf("Scan-left: x=%d,y=%d  ",xl,y);*/
+  if(f==SCAN_UNTIL)  {
+    if(get_point(xl,y)==ucPixel) return -1;
+    do {
+      if(--xl<sbox.x) break;
+    } while(get_point(xl,y)!=ucPixel);
+  }  else {
+    if(get_point(xl,y)!=ucPixel) return -1;
+    do {
+      if(--xl<sbox.x) break;
+    } while (get_point(xl,y)==ucPixel);
+  }
+  return ++xl;
 }
 
 
+int ff_scan_right(int xr,int y,int ucPixel,int f) {
+/*  printf("Scan-right: x=%d,y=%d  ",xr,y); */
+  if(f==SCAN_UNTIL) {
+    if(get_point(xr,y)==ucPixel) return -1;
+    do {
+      if(++xr>=sbox.x+sbox.w) break;
+    } while(get_point(xr,y)!=ucPixel);
+  } else {
+    if(get_point(xr,y)!=ucPixel) return -1;
+    do  {
+      if(++xr>=sbox.x+sbox.w) break;
+    } while(get_point(xr,y)==ucPixel);
+  }
+  return --xr;
+}
+
+void  ff_add_queue(FF_QUEUE *Q,int xl,int xr,int y,int f) {
+  int   qp,i;
+/*    printf("Add-queue: x=%d..%d,y=%d\n",xl,xr,y); */
+  if(Q->d==FF_UP) {
+    for ( qp = Q->t; qp <= Q->h; qp++ )
+      if ( Q->run[qp].y <= y ) break;
+  } else {
+    for ( qp = Q->t; qp <= Q->h; qp++ )
+      if ( Q->run[qp].y >= y ) break;
+  }
+  if(qp<=Q->h) {
+    Q->h++;
+    for(i=Q->h;i>qp;--i) {
+      Q->run[i].xl=Q->run[i-1].xl;
+      Q->run[i].xr=Q->run[i-1].xr;
+      Q->run[i].y=Q->run[i-1].y;
+      Q->run[i].f=Q->run[i-1].f;
+    }
+  } else Q->h++;
+  Q->run[qp].xl=xl;
+  Q->run[qp].xr=xr;
+  Q->run[qp].y=y;
+  Q->run[qp].f=f;
+  if(!f) Q->n++ ;
+}
+
+int ff_next_branch(int xl,int xr,int y,int border_color,int scan_type) {
+  int xln;
+/*  printf("Next Branch: x=[%d,%d] y=%d   %d %d\n",xl,xr,y,sbox.y,sbox.h);*/
+  if((y<sbox.y)||(y>=sbox.y+sbox.h)) return(-1);
+  xln=ff_scan_left(xl,y,border_color,scan_type);
+  if(xln==-1) {
+    xln=ff_scan_right(xl,y,border_color,(scan_type==SCAN_WHILE)?SCAN_UNTIL:SCAN_WHILE);
+    if(xln<xr) xln++ ;
+    else xln=-1;
+  }
+  return xln;
+}
+int ff_in_queue(FF_QUEUE *Q, int xl, int xr, int y) {
+  int  qp;
+  if(Q->d==FF_UP) {
+    for(qp=Q->h;qp>=0;--qp) {
+      if( Q->run[qp].y>y ) break;
+      if((Q->run[qp].y==y) && (Q->run[qp].xl==xl) && (Q->run[qp].xr==xr)) 
+	return(1);
+    }  
+  } else {
+    for(qp=Q->h;qp>=0;--qp) {
+      if(Q->run[qp].y<y) break;
+      if((Q->run[qp].y==y) && (Q->run[qp].xl==xl) && (Q->run[qp].xr==xr)) 
+	return(1);
+    }
+  }
+  return(0);
+}
+
+
+
+/**** End ******************* Flood Fill ********************************/
 
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
@@ -835,8 +1047,8 @@ int form_alert2(int dbut,char *n, char *tval) {
   char *pos;
   char **ein=bzeilen;
   int i=0,j=strlen(n),k=0,l=0;
-  TEDINFO tedinfo[30];
-  OBJECT objects[40]={{-1,1,1,G_BOX, 0, OUTLINED, 0x00021100, 0,0,100,100}};
+  TEDINFO tedinfo[32];
+  OBJECT objects[64]={{-1,1,1,G_BOX, 0, OUTLINED, 0x00021100, 0,0,100,100}};
   int objccount=1;
   int x,y,w,h;
 #ifdef DEBUG
@@ -948,6 +1160,7 @@ int form_alert2(int dbut,char *n, char *tval) {
 	    tedinfo[anztedinfo].te_tmplen=strlen((char *)tedinfo[anztedinfo].te_ptext);
 	    anztedinfo++;
             objccount++;
+	  /*  printf("Objcount: %d\n",objccount);*/
 	  }
 	}
       }
@@ -979,7 +1192,7 @@ int form_alert2(int dbut,char *n, char *tval) {
 
     form_dial(0,0,0,0,0,x,y,w,h);
     form_dial(1,0,0,0,0,x,y,w,h);
-
+    objc_draw(objects,0,-1,0,0);
     sbut=form_do(objects);
 
     form_dial(3,0,0,0,0,x,y,w,h);
@@ -1745,7 +1958,7 @@ int form_do(OBJECT *tree) {
     /* erstes editierbare Objekt finden */
  
   edob=finded(tree,0,0);
-  objc_draw(tree,0,-1,0,0); 
+ /* objc_draw(tree,0,-1,0,0); */
 	  
   /* Cursor plazieren */
 	  
@@ -2481,6 +2694,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   form_dial(0,0,0,0,0,x,y,w,h);
   form_dial(1,0,0,0,0,x,y,w,h);
   while(sbut!=1 && sbut!=2) {
+    objc_draw(objects,0,-1,0,0);
     sbut=form_do(objects);
     if(sbut==3) {    /* HOME */
       char buf[128];
@@ -2643,4 +2857,289 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   else ergebnis[0]=0;
   return(ergebnis);
 }
+void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfiles,int showstart){
+  int i,j;
+  TEDINFO *ted;
+  for(i=0;i<ANZSHOW;i++) {
+    j=showstart+i;
+    ted=(TEDINFO *)objects[15+2*i].ob_spec;
+    objects[15+2*i+1].ob_spec&=0x00ffffff;
+      if(j<anzfiles) {      
+        if(filenamensel[j]==1) objects[15+2*i].ob_state=SELECTED;
+        else objects[15+2*i].ob_state=NORMAL;
+        ted->te_ptext=(LONG)name[j].pointer;
+	objects[15+2*i].ob_flags=SELECTABLE|TOUCHEXIT|RBUTTON;
+	objects[15+2*i+1].ob_spec|=0x20000000;
+      } else {
+        ted->te_ptext=(LONG)"";
+        objects[15+2*i].ob_state=NORMAL;
+        objects[15+2*i].ob_flags=NONE;	
+        objects[15+2*i+1].ob_spec|=0x20000000;
+    }
+  }
+}
+void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
+  float hoehe,xpos;
+  
+  if(anzfiles>ANZSHOW){
+    hoehe=min(1.0,max(0.1,(float)ANZSHOW/anzfiles));
+    xpos=(float)showstart/(anzfiles-ANZSHOW);
+  } else {
+    hoehe=1;
+    xpos=0;
+  }
+  objects[13].ob_height=(int)(hoehe*objects[12].ob_height);
+  objects[13].ob_y=(int)(xpos*(objects[12].ob_height-objects[13].ob_height));
+}  
+
+/* List-Select */
+
+int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
+  char btitel[128],mask[128],dpfad[128],buffer[128];
+  char feld2[128],xfeld1[50],findmsk[50];
+  int ergebnis;
+  int i,j,k;
+  int sbut=-1;
+#ifndef WINDOWS
+  XEvent event;
+#endif
+  int filenamensel[anzfiles];
+  int showstart=0;
+  strcpy(findmsk,"");
+  strcpy(mask,"*");
+  TEDINFO tedinfo[4+ANZSHOW]={
+  {(LONG)btitel,(LONG)btitel,(LONG)btitel,FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
+  {(LONG)mask,(LONG)mask,(LONG)mask,FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
+  {(LONG)findmsk,(LONG)xfeld1,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
+  };
+  int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
+  OBJECT objects[15+2*ANZSHOW]={
+/* 0*/  {-1,1, 6,G_BOX, NONE, OUTLINED, 0x00021100, 0,0,40,21},
+/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,(LONG)"OK", 10,19,9,1},
+/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, (LONG)"CANCEL",    24,19,9,1},
+/* 3*/  {4,-1,-1,G_TEXT,  NONE, NORMAL, (LONG)&tedinfo[0],      1,1,38,1},
+/* 4*/  {5,-1,-1,G_FTEXT,  EDITABLE, NORMAL, (LONG)&tedinfo[2], 12,3,FWW-4-12,1},
+/* 5*/  {6,-1,-1,G_STRING,NONE, NORMAL, (LONG)"Find:", 2,3,2,1},
+
+/* 6*/  {0,7,14,G_BOX, NONE, NORMAL, 0x00fe1120, 2,4,FWW+2,ANZSHOW+1},
+/* 7*/  {8,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, (LONG)"<", 0,0,2,1},
+/* 8*/  {9,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, (LONG)"^", FWW,1,2,1},
+/* 9*/  {10,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, (LONG)"v", FWW,ANZSHOW,2,1},
+/*10*/  {11,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, (LONG)"?",     FWW,0,2,1},
+/*11*/  {12,-1,-1,G_BOXTEXT, SELECTABLE|EXIT, NORMAL, (LONG)&tedinfo[1],2,0,FWW-2,1},
+/*12*/  {14,13,13,G_BOX, TOUCHEXIT, NORMAL, 0x00ff1459, FWW,2,2,ANZSHOW-2},
+/*13*/  {12,-1,-1,G_BOX, TOUCHEXIT, NORMAL, 0x00ff1100, 0,0,2,2},
+/*14*/  {6,15,14+2*ANZSHOW,G_BOX, NONE, NORMAL, 0x00ff1100, 0,1,FWW,ANZSHOW}
+  };
+  int objccount=sizeof(objects)/sizeof(OBJECT);
+  int x,y,w,h;
+  int obx,oby;
+
+#define LISTSELECT_OK       1
+#define LISTSELECT_CANCEL   2
+#define LISTSELECT_BACK     7
+#define LISTSELECT_UP       8
+#define LISTSELECT_DOWN     9
+#define LISTSELECT_INFO    10
+#define LISTSELECT_MASK    11
+#define LISTSELECT_SCALERP 12
+#define LISTSELECT_SCALER  13
+
+
+  if(titel!=NULL) strncpy(btitel,titel,38);
+  else strcpy(btitel,"LISTSELCT");
+  
+  tedinfo[0].te_txtlen=strlen(btitel);
+  tedinfo[0].te_tmplen=strlen(btitel);  
+  tedinfo[1].te_junk1=24;
+  tedinfo[1].te_junk2=strlen(mask);
+  tedinfo[2].te_txtlen=24;
+  tedinfo[2].te_tmplen=24;  
+  tedinfo[2].te_junk1=24;
+  tedinfo[2].te_junk2=strlen(findmsk);
+
+  for(i=0;i<ANZSHOW;i++){
+    tedinfo[4+i].te_ptext=(LONG)"Hallo";
+    tedinfo[4+i].te_ptmplt=(LONG)buffer;
+    tedinfo[4+i].te_pvalid=(LONG)btitel;
+    tedinfo[4+i].te_font=FONT_IBM;
+    tedinfo[4+i].te_just=TE_LEFT;
+    tedinfo[4+i].te_color=0x1110;
+    tedinfo[4+i].te_txtlen=128;
+    tedinfo[4+i].te_tmplen=FWW-4;
+    objects[15+2*i].ob_next=15+2*i+1;
+    objects[15+2*i].ob_head=-1;
+    objects[15+2*i].ob_tail=-1;
+    objects[15+2*i].ob_type=G_FTEXT;
+    objects[15+2*i].ob_flags=SELECTABLE|RBUTTON|TOUCHEXIT;
+    objects[15+2*i].ob_state=NORMAL;
+    objects[15+2*i].ob_spec=(LONG)&tedinfo[4+i];
+    objects[15+2*i].ob_x=2;
+    objects[15+2*i].ob_y=i;
+    objects[15+2*i].ob_width=FWW-3;
+    objects[15+2*i].ob_height=1;
+    objects[15+2*i+1].ob_next=15+2*i+2;
+    objects[15+2*i+1].ob_head=-1;
+    objects[15+2*i+1].ob_tail=-1;
+    objects[15+2*i+1].ob_type=G_BOXCHAR;
+    objects[15+2*i+1].ob_flags=HIDETREE;
+    objects[15+2*i+1].ob_state=NORMAL;
+    objects[15+2*i+1].ob_spec=0x20000100;
+    objects[15+2*i+1].ob_x=0;
+    objects[15+2*i+1].ob_y=i;
+    objects[15+2*i+1].ob_width=2;
+    objects[15+2*i+1].ob_height=1;
+  }
+  objects[15+2*ANZSHOW-1].ob_next=14;
+  objects[objccount-1].ob_flags|=LASTOB;
+
+  graphics();
+  gem_init();
+  for(i=0;i<objccount;i++){
+    objects[i].ob_x*=chw;
+    objects[i].ob_y*=chh;
+    objects[i].ob_width*=chw;
+    objects[i].ob_height*=chh;
+  }
+  if(sel>=anzfiles) sel=-1;
+  for(i=0;i<anzfiles;i++) filenamensel[i]=0;
+  if(sel>=0) filenamensel[sel]=1;
+  
+  make_list(objects,strs,filenamensel,anzfiles,showstart);
+  make_scaler2(objects,anzfiles,showstart);
+  form_center(objects, &x,&y,&w,&h);  /* Objektbaum Zentrieren */
+  form_dial(0,0,0,0,0,x,y,w,h);
+  form_dial(1,0,0,0,0,x,y,w,h);
+  while(sbut!=LISTSELECT_OK && sbut!=LISTSELECT_CANCEL) {
+    objc_draw(objects,0,-1,0,0);
+    sbut=form_do(objects);
+    if(sbut==LISTSELECT_BACK) {    /* < */
+      char buf[128];
+//      tedinfo[2].te_junk1=strlen(feld1); 
+//      tedinfo[2].te_junk2=0;
+      showstart=max(0,min(showstart,anzfiles-ANZSHOW));
+//      make_list(objects,filenamen,filenamensel,anzfiles,showstart);
+      make_scaler2(objects,anzfiles,showstart);
+      objects[sbut].ob_state=NORMAL;
+    } else if(sbut==LISTSELECT_UP) {    /* ^ */
+      if(showstart) {
+        showstart--;
+        make_list(objects,strs,filenamensel,anzfiles,showstart);
+	make_scaler2(objects,anzfiles,showstart);
+      }objects[sbut].ob_state=NORMAL;
+    } else if(sbut==LISTSELECT_DOWN) {    /* v */
+      if(showstart<anzfiles-ANZSHOW) {
+        showstart++;
+        make_list(objects,strs,filenamensel,anzfiles,showstart);
+        make_scaler2(objects,anzfiles,showstart);
+      }objects[sbut].ob_state=NORMAL;
+    } else if(sbut==LISTSELECT_INFO) {    /* ? */
+      char buf[128];
+      sprintf(buf,"[1][%d list entrys.][ OK ]",anzfiles);
+      form_alert(1,buf);objects[sbut].ob_state=NORMAL;
+    } else if(sbut==LISTSELECT_MASK) {    /* MASK */
+     /* printf("Hier jetzt suchen nach %s \n",findmsk); */
+      strcpy(mask,"*");
+      strcat(mask,findmsk);
+      strcat(mask,"*");
+      sel=-1;
+      for(k=0;k<anzfiles;k++) {
+        if(fnmatch(mask,strs[k].pointer,FNM_NOESCAPE)==0) sel=k;
+        filenamensel[k]=0;
+      }
+      if(sel!=-1) {
+        filenamensel[sel]=1;
+        if(sel<showstart || sel>=showstart+ANZSHOW) showstart=sel;
+      }
+      
+      showstart=max(0,min(showstart,anzfiles-ANZSHOW));
+      make_list(objects,strs, filenamensel,anzfiles,showstart);
+      make_scaler2(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
+    } else if(sbut==LISTSELECT_SCALERP) {    /* Scalerhintergrund */
+      #ifndef WINDOWS
+      XWindowEvent(display[usewindow], win[usewindow],
+       ButtonReleaseMask|ExposureMask , &event);
+      switch (event.type) {
+        
+    /* Das Redraw-Event */  
+      case Expose:
+        XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
+          event.xexpose.x,event.xexpose.y,
+          event.xexpose.width,event.xexpose.height,
+          event.xexpose.x,event.xexpose.y);
+        break;
+	case ButtonRelease:
+	  relobxy(objects,LISTSELECT_SCALER,&obx, &oby);
+           if(event.xbutton.y<oby) {
+	     showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));
+             make_list(objects,strs,filenamensel,anzfiles,showstart);
+             make_scaler2(objects,anzfiles,showstart);
+	   } else if(event.xbutton.y>oby+objects[LISTSELECT_SCALER].ob_height) {
+	     showstart=max(0,min(showstart+ANZSHOW,anzfiles-ANZSHOW));
+             make_list(objects,strs,filenamensel,anzfiles,showstart);
+             make_scaler2(objects,anzfiles,showstart);
+	   }
+	break;
+      }
+      #endif
+    } else if(sbut==LISTSELECT_SCALER) {    /* ScalerSchieber */
+      int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;   
+      int ssold=showstart;
+      int sssold=showstart;
+      #ifndef WINDOWS
+      Window root_return,child_return;
+       XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+       &root_x_return, &root_y_return,
+       &win_x_return, &win_y_return,&mask_return);
+
+      while(ex==0) {
+       XWindowEvent(display[usewindow], win[usewindow],
+       ButtonReleaseMask|PointerMotionMask|ExposureMask , &event);
+      switch (event.type) {
+        
+    /* Das Redraw-Event */  
+      case Expose:
+        XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
+          event.xexpose.x,event.xexpose.y,
+          event.xexpose.width,event.xexpose.height,
+          event.xexpose.x,event.xexpose.y);
+        break;
+	case ButtonRelease:
+          ex=1;
+	break;
+          case MotionNotify:
+         /* printf("Motion %d\n",event.xmotion.y-win_y_return);*/
+          showstart=ssold+(event.xmotion.y-win_y_return)/
+		     (objects[LISTSELECT_SCALERP].ob_height*(1-min(1,(float)(ANZSHOW)/anzfiles)))
+		     *(anzfiles-ANZSHOW);
+	  showstart=max(0,min(showstart,anzfiles-ANZSHOW));
+          if(showstart!=sssold) {
+            make_list(objects,strs,filenamensel,anzfiles,showstart);
+            make_scaler2(objects,anzfiles,showstart);
+            objc_draw(objects,0,-1,0,0);
+	    activate();
+	    sssold=showstart;
+	  }
+          break; 
+     }}
+     #endif
+        
+    } else if(sbut>=15 && sbut<ANZSHOW*2+15) {    /* Auswahlliste */
+      int j=(sbut-15)/2;
+      if(showstart+j<anzfiles) {	         
+          for(k=0;k<anzfiles;k++) filenamensel[k]=0;
+	  sel=showstart+j;
+	  filenamensel[sel]=1;
+      } else {objects[sbut].ob_state=NORMAL;sel=-1;}
+    } else {
+      if(sbut==LISTSELECT_OK) ergebnis=sel;
+      else ergebnis=-1;
+    }
+  }
+  form_dial(3,0,0,0,0,x,y,w,h);
+  form_dial(2,0,0,0,0,x,y,w,h);
+  return(ergebnis);
+}
+
+
 #endif /* nographics */

@@ -14,15 +14,15 @@
     
     
     
-                       VERSION 1.11
+                       VERSION 1.12
 
-            (C) 1997-2004 by Markus Hoffmann
+            (C) 1997-2005 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
    
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
  **  letzte Bearbeitung: Feb. 2003   von Markus Hoffmann		   **
- **  letzte Bearbeitung: Feb. 2004   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: Feb. 2005   von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -152,6 +152,7 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,{PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "DEFLINE"  , c_defline ,1,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "DEFMARK"  , c_defmark,1,3,{PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1,{PL_INT}},
  { P_PLISTE,   "DEFTEXT"  , c_deftext,1,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 #endif
@@ -239,13 +240,16 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "LTEXT"    , c_ltext,0,-1},
 #endif
 
- { P_ARGUMENT,   "MERGE"    , c_merge,1,1,{PL_STRING}},
+ { P_PLISTE,     "MEMDUMP"    , c_memdump,2,2,{PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
  { P_SIMPLE,     "MENU"    , c_menu,0,0},
  { P_ARGUMENT,   "MENUDEF"  , c_menudef,1,2},
  { P_SIMPLE,     "MENUKILL" , c_menukill,0,0},
  { P_ARGUMENT,   "MENUSET"  , c_menuset,2,2,{PL_INT,PL_INT}},
+#endif
+ { P_ARGUMENT,   "MERGE"    , c_merge,1,1,{PL_STRING}},
  { P_PLISTE,    "MFREE"      , c_free,1,1,{PL_INT}},
+#ifndef NOGRAPHICS
  { P_PLISTE,   "MOUSE"    , c_mouse,1,5,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
  { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,6},
  { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,5},
@@ -362,8 +366,11 @@ const COMMAND comms[]= {
  { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
 #endif
 #ifdef TINE
+ { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
+ { P_ARGUMENT,   "TINEEXPORT", c_tineexport,1,-1},
  { P_ARGUMENT,   "TINEMONITOR", c_tinemonitor,2,-1},
  { P_ARGUMENT,   "TINEPUT"    , c_tineput ,2,-1,{PL_STRING}},
+ { P_PLISTE,     "TINESERVER" , c_tineserver,0,1,{PL_STRING}},
  { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,{PL_STRING}},
 #endif
 #ifndef NOGRAPHICS
@@ -461,6 +468,16 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  str.pointer=realloc(str.pointer,str.len+1);
 	  str.pointer[str.len]=0;
 	  pret[i].pointer=str.pointer;
+	} else if(pliste[i]==PL_ARRAY) {  /* Array */
+          ARRAY arr=array_parser(w1);
+	  pret[i].typ=arr.typ;
+	  pret[i].integer=arr.dimension;
+	  pret[i].pointer=arr.pointer;
+	} else if(pliste[i]==PL_SARRAY) {  /* String-Array */
+          ARRAY arr=array_parser(w1);
+	  pret[i].typ=arr.typ;
+	  pret[i].integer=arr.dimension;
+	  pret[i].pointer=arr.pointer;
 	} else if((pliste[i] & PL_NVAR)) { ; /* Variable */
            pret[i].integer=type2(w1);
 	   if(!(pret[i].integer&FLOATTYP) && !(pret[i].integer&INTTYP)) error(58,n); /* Variable hat falschen Typ */
@@ -488,7 +505,13 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 void free_pliste(int anz,PARAMETER *pret){
   int i;
   for(i=0;i<anz;i++) {
-    if(pret[i].pointer!=NULL && !(pret[i].typ&PL_VAR)) free(pret[i].pointer);
+    if(pret[i].pointer!=NULL && (pret[i].typ&PL_SARRAY)) {
+      ARRAY a;
+      a.typ=pret[i].typ;
+      a.dimension=pret[i].integer;
+      a.pointer=pret[i].pointer;
+      free_array(a);
+    } else if(pret[i].pointer!=NULL && !(pret[i].typ&PL_VAR)) free(pret[i].pointer);
   }
   if(pret!=NULL) free(pret);
 }
@@ -539,7 +562,7 @@ int mergeprg(char *fname) {
       programbuffer[i]=0;
       program[prglen++]=pos;
       pos=programbuffer+i+1;
-    }
+    } else if(programbuffer[i]==9) programbuffer[i]==' '; /* TABs entfernen*/
     i++;
   }
   return(init_program());

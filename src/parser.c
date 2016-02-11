@@ -54,6 +54,8 @@ int f_bclr(double v1, double v2) { return((int)v1 & ~ (1 <<((int)v2))); }
 int f_bset(double v1, double v2) { return((int)v1 | (1 <<((int)v2))); }
 int f_bchg(double v1, double v2) { return((int)v1 ^ (1 <<((int)v2))); }
 int f_btst(double v1, double v2) { return((((int)v1 & (1 <<((int)v2)))==0) ?  0 : -1); }
+int f_shr(double v1, double v2) { return(((int)v1)>>((int)v2)); }
+int f_shl(double v1, double v2) { return(((int)v1)<<((int)v2)); }
 
 int f_instr(PARAMETER *,int);
 int f_rinstr(PARAMETER *,int);
@@ -240,6 +242,19 @@ double f_max(PARAMETER *plist,int e) {
     return(ret);
   }
 }
+int lsel_input(char *,STRING *,int,int);
+
+int f_listselect(PARAMETER *plist,int e) { 
+  int sel=-1;
+  if(e==3) sel=plist[2].integer;
+  if(e>=2) {
+    ARRAY a;
+    a.pointer=plist[1].pointer;
+    a.dimension=plist[1].integer;
+    a.typ=plist[1].typ;
+    return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(a),sel));
+  } 
+}
 
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
@@ -340,6 +355,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
 
  { F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
+#ifndef NOGRAPHICS
+ { F_PLISTE|F_IRET,    "LISTSELECT", f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
+#endif
  { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
 
  { F_PLISTE|F_IRET,    "LOC"       , f_loc ,1,1     ,{PL_FILENR}},
@@ -389,8 +407,10 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 #endif
 
  { F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "SHL"      , f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_IQUICK|F_IRET,    "SHM_ATTACH"    , shm_attach ,1,1     ,{PL_INT}},
  { F_IQUICK|F_IRET,    "SHM_MALLOC"    , shm_malloc ,2,2     ,{PL_INT,PL_INT}},
+ { F_DQUICK|F_IRET,    "SHR"      , f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
  { F_SQUICK|F_IRET,    "SIZE"     , f_size,1,1   ,{PL_STRING}},
@@ -1011,7 +1031,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}},
 
 };
-const int anzpsfuncs=sizeof(psfuncs)/sizeof(FUNCTION);
+const int anzpsfuncs=sizeof(psfuncs)/sizeof(SFUNCTION);
 
 int f_fak(int k) {
   int i,s=1;
@@ -1369,7 +1389,66 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
   return(0);
 }
 
-ARRAY *array_parser(char *funktion) { /* Array-Parser  */
+ARRAY f_smula(PARAMETER *plist, int e) {
+	   ARRAY ergeb;
+	   ergeb.typ=plist[0].typ;
+	   ergeb.dimension=plist[0].integer;
+	   ergeb.pointer=plist[0].pointer;
+	   ergeb=double_array(ergeb);
+	   array_smul(ergeb,plist[1].real);
+	   return(ergeb);
+}
+ARRAY f_nullmat(PARAMETER *plist, int e) {
+    int dimlist[2]={plist[0].integer,plist[1].integer};
+    return(nullmatrix(FLOATARRAYTYP,e,dimlist));
+}
+ARRAY f_einsmat(PARAMETER *plist, int e) {
+    int dimlist[2]={plist[0].integer,plist[0].integer};
+    return(einheitsmatrix(FLOATARRAYTYP,2,dimlist));
+}
+
+#ifdef CONTROL
+ARRAY f_csvgeta(char *pos) {
+  int o=0,nn=0;
+  if(e>1) nn=plist[1].integer;
+  if(e>2) o=plist[2].integer;
+  return(csvget(plist[0].pointer,nn,o));
+}
+#endif
+#ifdef TINE
+ARRAY f_tinegeta(PARAMETER *plist, int e) {
+  int o=0,nn=0;
+  if(e>1) nn=plist[1].integer;
+  if(e>2) o=plist[2].integer;
+  return(tinevget(plist[0].pointer,nn,o));
+}
+ARRAY f_tinehistorya(PARAMETER *plist, int e) {
+	  return(tinehistory(plist[0].pointer,plist[1].integer,plist[2].integer));
+}
+#endif
+const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
+ { F_ARGUMENT,  "!nulldummy",  f_nop ,0,0   ,{0}},
+ { F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
+ { F_PLISTE,    "1"         , f_einsmat ,1,1   ,{PL_INT}},
+#ifdef CONTROL
+ { F_PLISTE,    "CSGET"     , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_PLISTE,    "CSVGET"    , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+#endif
+
+ { F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
+ { F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
+
+#ifdef TINE
+ { F_PLISTE,    "TINEGET"     , f_tinegeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_PLISTE,    "TINEVGET"    , f_tinegeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_PLISTE,    "TINEHISTORY" , f_tinehistorya ,3,3   ,{PL_STRING,PL_INT,PL_INT}},
+#endif
+ { F_AQUICK,    "TRANS"     , trans_array ,1,1   ,{PL_ARRAY}},
+
+};
+const int anzpafuncs=sizeof(pafuncs)/sizeof(AFUNCTION);
+
+ARRAY array_parser(char *funktion) { /* Array-Parser  */
 /* Rekursiv und so, dass dynamische Speicherverwaltung ! */
 /* Trenne ersten Token ab, und uebergebe rest derselben Routine */
 
@@ -1382,177 +1461,145 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 
 
   char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
-  char *pos,*pos2,*inhalt;
-  ARRAY *ergebnis,*zw1,*zw2;
-  int e,vnr;
-  char *r;
-
+  char *pos;
+  int e;
   strcpy(s,funktion);
   xtrim(s,TRUE,s);  /* Leerzeichen vorne und hinten entfernen */
-#ifdef DEBUG
-  printf("%d:array_parser: %s \n",depth,funktion);
-  depth++;
-#endif
 
-
- if(wort_sep(s,'+',TRUE,w1,w2)>1) {
-   if(strlen(w1)) {
-     zw1=array_parser(w1); zw2=array_parser(w2);
-     array_add(zw1,zw2);
-     free_array(zw2); 
-     return(zw1);
-   } else return(array_parser(w2)); 
- } else if(wort_sepr(s,'-',TRUE,w1,w2)>1) { 
-   if(strlen(w1)) {
-     zw1=array_parser(w1); zw2=array_parser(w2);
-     array_sub(zw1,zw2);
-     free_array(zw2); 
-     return(zw1);
-   } else {
-     zw2=array_parser(w2);
-     array_smul(zw2,-1);
-     return(zw2);
-   } 
- } else if(wort_sepr(s,'*',TRUE,w1,w2)>1) {           
+  if(wort_sep(s,'+',TRUE,w1,w2)>1) {
+    if(strlen(w1)) {
+      ARRAY zw1=array_parser(w1); 
+      ARRAY zw2=array_parser(w2);
+      array_add(zw1,zw2);
+      free_array(zw2); 
+      return(zw1);
+    } else return(array_parser(w2)); 
+  } else if(wort_sepr(s,'-',TRUE,w1,w2)>1) { 
+    if(strlen(w1)) {
+      ARRAY zw1=array_parser(w1); 
+      ARRAY zw2=array_parser(w2);
+      array_sub(zw1,zw2);
+      free_array(zw2); 
+      return(zw1);
+    } else {
+      ARRAY zw2=array_parser(w2);
+      array_smul(zw2,-1);
+      return(zw2);
+    } 
+  } else if(wort_sepr(s,'*',TRUE,w1,w2)>1) {           
     if(strlen(w1)) {
       if(type2(w1) & ARRAYTYP) {
-        zw1=array_parser(w1); zw2=array_parser(w2);
-        ergebnis=mul_array(zw1,zw2);
+        ARRAY zw1=array_parser(w1); 
+	ARRAY zw2=array_parser(w2);
+        ARRAY ergebnis=mul_array(zw1,zw2);
         free_array(zw1); free_array(zw2);
         return(ergebnis);
       } else {    /* Skalarmultiplikation */
-        zw2=array_parser(w2);
+        ARRAY zw2=array_parser(w2);
 	array_smul(zw2,parser(w1));
 	return(zw2);
       }  
     } else error(51,""); /*Syntax Error*/
   } else if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-    zw1=array_parser(w1);
+    ARRAY zw2,zw1=array_parser(w1);
     e=(int)parser(w2);
     if(e<0) error(51,""); /*Syntax Error*/
     else if(e==0) {
       zw2=zw1;
-      zw1=einheitsmatrix(zw2->typ,zw2->dimension,zw2->pointer); 
+      zw1=einheitsmatrix(zw2.typ,zw2.dimension,zw2.pointer); 
       free_array(zw2);
     } else if(e>1) {
       int i;
       for(i=1;i<e;i++) {
-      
+        zw2=mul_array(zw1,zw1);
+	free_array(zw1);
+	zw1=zw2;
       }
     }
     return(zw1);  
   } else if(s[0]=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
     s[strlen(s)-1]=0;
-    return(array_parser(s+1));
-    
-    /* SystemFunktionen Subroutinen und Arrays */  
-  } else {
+    return(array_parser(s+1));    
+  } else {/* SystemFunktionen, Konstanten etc... */
     if(*s=='[' && s[strlen(s)-1]==']') {  /* Konstante */
       s[strlen(s)-1]=0;
       return(array_const(s+1));
     }
-   
     pos=searchchr(s,'(');
     if(pos!=NULL) {
-      pos2=s+strlen(s)-1;
+      char *pos2=s+strlen(s)-1;
       *pos++=0;      
       if(*pos2!=')') {
          error(51,w2); /* "Parser: Syntax error?! "  */
       } else {                         /* $-Funktionen und $-Felder   */
-         pos2[0]=0;        
-	 if(strcmp(s,"INV")==0)        return(inv_array(array_parser(pos)));
-	 else if(strcmp(s,"TRANS")==0) return(trans_array(array_parser(pos)));
-	 else if(strcmp(s,"SMUL")==0) {
-	   char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	   ARRAY *ergeb;
-	   wort_sep(pos,',',TRUE,w1,w2);
-	   ergeb=array_parser(w1);
-	   array_smul(ergeb,parser(w2));
-	   return(ergeb);
-#ifdef CONTROL
-         } else if(strcmp(s,"CSVGET")==0) {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
-	  char *zzz;
-	  int o=0,nn=0;
-	  ARRAY *ergeb;
-	  
-	  wort_sep(pos,',',TRUE,w1,w2);
-	  e=wort_sep(w2,',',TRUE,w2,w3);
-	  nn=(int)parser(w2);
-	  if(e==2) o=(int)parser(w3);
-	   zzz=s_parser(w1);
-	   ergeb=csvget(zzz,nn,o);
-	   free(zzz);
-	   return(ergeb);
-#endif
-#ifdef TINE   
-	  } else if(strcmp(s,"TINEVGET")==0) {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
-	  char *zzz;
-	  int o=0,nn=0;
-	  ARRAY *ergeb;
-	  
-	  wort_sep(pos,',',TRUE,w1,w2);
-	  e=wort_sep(w2,',',TRUE,w2,w3);
-	  nn=(int)parser(w2);
-	  if(e==2) o=(int)parser(w3);
-	   zzz=s_parser(w1);
-	   ergeb=tinevget(zzz,nn,o);
-	   free(zzz);
-	   return(ergeb);
-	  } else if(strcmp(s,"TINEHISTORY")==0) {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
-	  char *zzz;
-	  ARRAY *ergeb;
-	  
-	  wort_sep(pos,',',TRUE,w1,w2);
-	  e=wort_sep(w2,',',TRUE,w2,w3);
-	  zzz=s_parser(w1);
-	  ergeb=tinehistory(zzz,(int)parser(w2),(int)parser(w3));
-	  free(zzz);
-	  return(ergeb);
-#endif
-	 } else if(strcmp(s,"INP%")==0) {
+	  /* Liste durchgehen */
+	  int i=0,a=anzpafuncs-1,b,l=strlen(s);
+          *pos2=0;        
+          for(b=0; b<l; b++) {
+            while(s[b]>(pafuncs[i].name)[b] && i<a) i++;
+            while(s[b]<(pafuncs[a].name)[b] && a>i) a--;
+            if(i==a) break;
+          }
+	  if(strcmp(s,pafuncs[i].name)==0) {
+	    /*  printf("Funktion %s gefunden. Nr. %d\n",pafuncs[i].name,i); */
+	      if((pafuncs[i].opcode&FM_TYP)==F_SIMPLE || pafuncs[i].pmax==0) {
+		return((pafuncs[i].routine)());
+	      } else if((pafuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
+	     	return((pafuncs[i].routine)(pos));
+	      } else if((pafuncs[i].opcode&FM_TYP)==F_PLISTE) {
+		 PARAMETER *plist;
+                 int e=make_pliste(pafuncs[i].pmin,pafuncs[i].pmax,(short *)pafuncs[i].pliste,pos,&plist);
+                 ARRAY a=(pafuncs[i].routine)(plist,e);
+	         if(e!=-1) free_pliste(e,plist);
+	         return(a);
+	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
+	        ARRAY ergebnis,a=array_parser(pos);
+		ergebnis=(pafuncs[i].routine)(a);
+		free_array(a);
+	      	return(ergebnis);
+	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",s);   
+          }/* Nicht in der Liste ?    */  
+         if(strcmp(s,"INP%")==0) {
 	   char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	   int i,nn;
-	   ARRAY *ergeb=malloc(sizeof(ARRAY));
+	   ARRAY ergeb;
            FILE *fff=stdin;
 	   wort_sep(pos,',',TRUE,w1,w2);
 	   i=get_number(w1);
 	   nn=(int)parser(w2);
 	  
-           ergeb->typ=INTARRAYTYP;
-	   ergeb->dimension=1;
-	   ergeb->pointer=malloc(INTSIZE+nn*sizeof(int));
-	   ((int *)(ergeb->pointer))[0]=nn;
+           ergeb.typ=INTARRAYTYP;
+	   ergeb.dimension=1;
+	   ergeb.pointer=malloc(INTSIZE+nn*sizeof(int));
+	   ((int *)(ergeb.pointer))[0]=nn;
            if(filenr[i]) {
-	     int *varptr=ergeb->pointer+INTSIZE;
+	     int *varptr=ergeb.pointer+INTSIZE;
              fff=dptr[i];
              fread(varptr,sizeof(int),nn,fff);
              return(ergeb);
            } else error(24,""); /* File nicht geoeffnet */
            return(ergeb);
 	 } else {
+	    int vnr;
+	    char *r=varrumpf(s);
+	    ARRAY ergebnis;
 	   /* Hier sollten keine Funktionen mehr auftauchen  */
 	   /* Jetzt uebergebe spezifiziertes Array, evtl. reduziert*/
 	   if(strlen(pos)==0) {
-	     r=varrumpf(s);
 	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1)  ergebnis=copy_var_array(vnr);
 	     else if((vnr=variable_exist(r,INTARRAYTYP))!=-1)    ergebnis=copy_var_array(vnr);
-	     else if((vnr=variable_exist(s,STRINGARRAYTYP))!=-1) ergebnis=copy_var_array(vnr);
+	     else if((vnr=variable_exist(r,STRINGARRAYTYP))!=-1) ergebnis=copy_var_array(vnr);
              else error(15,s);  /* Feld nicht dimensioniert  */
-	     free(r);
 	   } else {
-	     r=varrumpf(s);
 	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1) {
 	       char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	       int i,e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
 	       int indexe[variablen[vnr].opcode];
 	       int indexo[variablen[vnr].opcode];
 	       int indexa[variablen[vnr].opcode];
-	       ergebnis=malloc(sizeof(ARRAY));
+	  
 	     /* Dimension des reduzierten Arrays bestimmen */
-	       ergebnis->typ=FLOATARRAYTYP;
+	       ergebnis.typ=FLOATARRAYTYP;
 	       e=wort_sep(pos,',',TRUE,w1,w2);
 	       while(e) {
 	         if(w1[0]!=':' && w1[0]!=0) {
@@ -1564,22 +1611,22 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	       }
 	       
              /* Dimensionierung uebertragen */
-	       ergebnis->dimension=max(variablen[vnr].opcode-rdim,1);
-	       ergebnis->pointer=malloc(INTSIZE*ergebnis->dimension);
+	       ergebnis.dimension=max(variablen[vnr].opcode-rdim,1);
+	       ergebnis.pointer=malloc(INTSIZE*ergebnis.dimension);
 	       rdim=0;ndim=0;anz=1;
 	       e=wort_sep(pos,',',TRUE,w1,w2);
 	       while(e) {
 	         indexa[rdim]=anz;		 
 	         if(w1[0]==':' || w1[0]==0) {
 		 
-		   ((int *)(ergebnis->pointer))[ndim++]=((int *)(variablen[vnr].pointer))[rdim];
+		   ((int *)(ergebnis.pointer))[ndim++]=((int *)(variablen[vnr].pointer))[rdim];
 		   anz=anz*(((int *)variablen[vnr].pointer)[rdim]);
 		 } 
 		 rdim++;
 	         e=wort_sep(w2,',',TRUE,w1,w2);
 	       }	       
 
- 	       ergebnis->pointer=realloc(ergebnis->pointer,INTSIZE*ergebnis->dimension+anz*sizeof(double));
+ 	       ergebnis.pointer=realloc(ergebnis.pointer,INTSIZE*ergebnis.dimension+anz*sizeof(double));
 
 	      /*Loop fuer die Komprimierung */
                
@@ -1606,10 +1653,8 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 
 		 /* jetzt kopieren */
 		 
-		 ((double *)(ergebnis->pointer+INTSIZE*ergebnis->dimension))[j]=((double *)(variablen[vnr].pointer+INTSIZE*variablen[vnr].opcode))[anz2];
-		 
-	       }
-	     
+		 ((double *)(ergebnis.pointer+INTSIZE*ergebnis.dimension))[j]=((double *)(variablen[vnr].pointer+INTSIZE*variablen[vnr].opcode))[anz2]; 
+	       }     
 	     } else if((vnr=variable_exist(r,INTARRAYTYP))!=-1) {
 	       puts("Noch nicht möglich...");
 	     }  else if((vnr=variable_exist(s,STRINGARRAYTYP))!=-1) {
@@ -1619,20 +1664,16 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	       e=1;
   	       ergebnis=einheitsmatrix(FLOATARRAYTYP,1,&e);
 	     }
-	     free(r);
 	   }
+	   free(r);
 	   return(ergebnis);
         }
       }
     }
   }
-  printf("Array nicht aufgeloest: %s\n",s);
-  e=1;
-  ergebnis=einheitsmatrix(FLOATARRAYTYP,1,&e);
-#ifdef DEBUG
-  depth--;
-#endif
-  return(ergebnis);
+  /* Offenbar war der String leer oder so */
+  e=0;
+  return(nullmatrix(FLOATARRAYTYP,0,&e));
 }
 
 STRING string_parser(char *);
@@ -1875,6 +1916,9 @@ double do_funktion(char *name,char *argumente) {
     free(buffer);
     return(0.0);  
  }
+ 
+ /* loese die Parameterliste auf und weise die Werte auf die neuen lokalen
+    Variablen zu */
  
 int do_parameterliste(char *pos, char *pos2) {
   char w3[strlen(pos)+1],w4[strlen(pos)+1];

@@ -1042,19 +1042,18 @@ void c_out(char *n) {
       while(e) {
         typ=type2(v);
 	if(typ & ARRAYTYP) {
-	  ARRAY *zzz;
-	  zzz=array_parser(v);    
-	  for(j=0;j<zzz->dimension;j++) a=a*(((int *)zzz->pointer)[j]);
+	  ARRAY zzz=array_parser(v);    
+	  for(j=0;j<zzz.dimension;j++) a=a*(((int *)zzz.pointer)[j]);
 
-	  if(zzz->typ & FLOATTYP) {
-            double *varptr=(double *)(zzz->pointer+zzz->dimension*INTSIZE);
+	  if(zzz.typ & FLOATTYP) {
+            double *varptr=(double *)(zzz.pointer+zzz.dimension*INTSIZE);
             
 	    fwrite(varptr,sizeof(double),a,fff);
-	  } else if(zzz->typ & INTTYP) {
-	    int *varptr=(int *)(zzz->pointer+zzz->dimension*INTSIZE);
+	  } else if(zzz.typ & INTTYP) {
+	    int *varptr=(int *)(zzz.pointer+zzz.dimension*INTSIZE);
 	    fwrite(varptr,sizeof(int),a,fff);
-	  } else if(zzz->typ & STRINGTYP) {
-            STRING *varptr=(STRING *)(zzz->pointer+zzz->dimension*INTSIZE);
+	  } else if(zzz.typ & STRINGTYP) {
+            STRING *varptr=(STRING *)(zzz.pointer+zzz.dimension*INTSIZE);
 	    for(j=0;j<a;j++) {
 	      fwrite(varptr[j].pointer,sizeof(char),varptr[j].len,fff);
 	    }
@@ -1261,6 +1260,43 @@ STRING do_using(double num,STRING format){
   }
   return(dest);
 }
+
+
+void memdump(unsigned char *adr,int l) {
+  int i;
+  printf("\033[35m");
+  while(l>16) {
+    printf("$%x: ",(int)adr);	
+    for(i=0;i<16;i++) printf("%02x ",adr[i]);
+    printf(" ");
+    for(i=0;i<16;i++) {
+      if(adr[i]>31) printf("%c",adr[i]);
+      else printf(".");
+    }
+    printf("\n");
+    adr+=16;
+    l-=16;
+  }
+  if(l>0) {
+    printf("$%x: ",(int)adr);
+    for(i=0;i<16;i++) {
+      if(i<l) printf("%02x ",adr[i]);
+      else printf("   ");
+    }
+    printf(" ");
+    for(i=0;i<l;i++) {
+      if(adr[i]>31) printf("%c",adr[i]);
+      else printf(".");
+    }
+    printf("\n");
+  }
+  printf("\033[m");
+}
+
+
+
+
+
 
 /* Sound the speaker */
 void speaker(int frequency) {

@@ -129,6 +129,17 @@ Version 1.11 (Oct 2004)
 - new chapters in manual
 - new commands: TOPW, BOTTOMW, INFOW, FULLW, CLIP
 - found bug in ON ERROR and ON BREAK
+- new FILL command
+- changed TAB treatement in sourcecode
+- worked on TINE implementation
+- worked on the ARRAY functions
+- new SHL(), SHR() function
+
+Version 1.12 (Mar 2005)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- fixed bug with DEFMARK
+- experimental LISTSELECT
+
 
 
 --------------------------------------------------------------------------------

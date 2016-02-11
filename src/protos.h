@@ -13,6 +13,7 @@
 /* Hilfsfunktionen */
 
 void break_handler( int);
+void memdump(unsigned char *, int);
 void fatal_error_handler( int);
 void timer_handler( int);
 double ltext(int, int, double, double, double , int, char *);
@@ -62,8 +63,8 @@ int init_parser();
 double parser(char *);
 char *s_parser(char *);
 STRING string_parser(char *);
-ARRAY *array_parser(char *);
-ARRAY *array_const(char *);
+ARRAY array_parser(char *);
+ARRAY array_const(char *);
 
 int buchstabe(char);
 
@@ -79,22 +80,25 @@ STRING do_sfunktion(char *,char *);
 
 /*Variablen */
 
-ARRAY *array_info(int);
-void array_zuweis_and_free(char *, ARRAY *);
+ARRAY array_info(int);
+void array_zuweis_and_free(char *, ARRAY);
 void c_dolocal(char *, char *);
 void xzuweis(char *, char *);
 int xzuweissbuf(char *, char *,int);
 void varcastint(int,void *,int);
 void varcastfloat(int,void *,double);
 void *varptr(char *);
-ARRAY *copy_var_array(int);
-ARRAY *inv_array(ARRAY *);
-ARRAY *mul_array(ARRAY *,ARRAY *);
-ARRAY *trans_array(ARRAY *);
-ARRAY *create_array(int , int ,int *);
-ARRAY *nullmatrix(int , int ,int *);
-ARRAY *einheitsmatrix(int , int ,int *);
+ARRAY double_array(ARRAY);
+ARRAY copy_var_array(int);
+ARRAY inv_array(ARRAY);
+ARRAY mul_array(ARRAY,ARRAY);
+ARRAY trans_array(ARRAY);
+ARRAY create_array(int , int ,int *);
+ARRAY nullmatrix(int , int ,int *);
+ARRAY einheitsmatrix(int , int ,int *);
 
+char *argument(char *);
+char *varrumpf(char *);
 
 void do_menu_draw();
 int  do_menu_select();
@@ -116,9 +120,9 @@ char *searchchr(char *, char);
 
 /* Kontrollsystem */
 
-ARRAY *csvget(char *,int,int);
-ARRAY *tinevget(char *,int,int);
-ARRAY *tinehistory(char *,int,int);
+ARRAY csvget(char *,int,int);
+ARRAY tinevget(char *,int,int);
+ARRAY tinehistory(char *,int,int);
 int cssize(char *);
 int cstyp(char *);
 int cspid(char *);
@@ -141,6 +145,9 @@ void c_cssetcallback(char *);
 void sweep_value(int,float,float,float,int);
 #endif
 #ifdef TINE
+void c_tineexport(char *);
 void c_tinemonitor(char *);
+void c_tineserver(PARAMETER *,int);
+void c_tinecycle(char *);
 void c_tineput(char *);
 #endif

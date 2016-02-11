@@ -38,6 +38,7 @@ void box(int x1,int y1,int x2, int y2) {
 void pbox(int x1,int y1,int x2, int y2) {
   FillRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
 }
+int marker_typ=0,marker_size=1;
 
 
 
@@ -592,8 +593,46 @@ void do_polygon(int doit,char *n) {
         points[i].y=(int)(varptry[i])+yoffset;
       }
       graphics();
-      if(doit==0) XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
-      else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+      if(doit==0) {
+        if(marker_typ==1) {
+	  for(i=0;i<anz;i++) {
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],
+  points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,
+  0,64*360); 
+	  }
+        } else if(marker_typ==2) {
+	  for(i=0;i<anz;i++) {
+	    line(points[i].x-marker_size,points[i].y,points[i].x+marker_size,points[i].y);
+	    line(points[i].x,points[i].y-marker_size,points[i].x,points[i].y+marker_size);
+	  }
+	} else if(marker_typ==3) {
+	  for(i=0;i<anz;i++) {
+	    line(points[i].x-marker_size,points[i].y,points[i].x+marker_size,points[i].y);
+	    line(points[i].x,points[i].y-marker_size,points[i].x,points[i].y+marker_size);
+	    line(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
+	    line(points[i].x+marker_size,points[i].y-marker_size,points[i].x-marker_size,points[i].y+marker_size);
+	  }
+	} else if(marker_typ==4) {
+	  for(i=0;i<anz;i++) {
+	    box(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
+	  }
+	} else if(marker_typ==5) {
+	  for(i=0;i<anz;i++) {
+	    line(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
+	    line(points[i].x+marker_size,points[i].y-marker_size,points[i].x-marker_size,points[i].y+marker_size);
+	  }
+	} else if(marker_typ==8) {
+	  for(i=0;i<anz;i++) {
+  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],
+  points[i].x-marker_size,points[i].y-marker_size,2*marker_size,2*marker_size,
+  0,64*360); 
+	  }
+	} else if(marker_typ==9) {
+	  for(i=0;i<anz;i++) {
+	    pbox(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
+	  }
+	} else XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+      } else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
      else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);
     }
   }
@@ -679,6 +718,23 @@ void c_deffill(PARAMETER *plist,int e) {
   }
 #endif  
 }
+void c_defmark(PARAMETER *plist,int e) {
+  graphics();
+
+  if(e>=1 && plist[0].typ!=PL_LEER){
+    /* Marker color not supported */
+  } 
+  if(e>=2 && plist[1].typ!=PL_LEER){
+    marker_typ=plist[1].integer;
+  }
+  if(e>=3 && plist[2].typ!=PL_LEER){
+    marker_size=max(0,plist[2].integer);
+  }
+  
+}
+
+
+
 extern void ffill(int,int,int,int);
 void c_fill(PARAMETER *plist,int e) {
   int bc=-1;

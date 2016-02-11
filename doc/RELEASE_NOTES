@@ -1,4 +1,4 @@
-Release notes for Version 1.11 (Oct 2004)
+Release notes for Version 1.12 (Mar 2005)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Parser now accepts unique short commands
-- fixed little bug in INPUT
+- fixed bug with DEFMARK
+- experimental LISTSELECT
