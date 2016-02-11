@@ -22,7 +22,7 @@ void c_div(char *),c_dec(char *),c_dim(char *);
 void c_loop(char *),c_version(char *),c_chain(char *);
 void c_while(char *),c_echo(char *),c_end(char *),c_edit(char *),c_save(char *);
 void c_return(char *),c_for(char *),c_inc(char *);
-void c_if(char *), c_fft(char *),c_error(char *);
+void c_if(char *),c_sort(char *), c_fft(char *),c_fit(char *),c_fit_linear(char *),c_error(char *);
 void c_load(char *),c_goto(char *),c_gosub(char *);
 void c_merge(char *),c_home(char *),c_input(char *);
 void c_new(char *),c_read(char *),c_cont(char *);

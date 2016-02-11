@@ -19,26 +19,39 @@
 #include "gkommandos.h"
 #include "window.h"
 
-/* Line-Funktion fuer ltext */
+#ifdef WINDOWS
+  extern HANDLE keyevent,buttonevent,motionevent;
+#endif
 
-void line(int x1,int y1,int x2, int y2) {
-   XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,y1,x2,y2); 
+/* Line-Funktion fuer ltext */
+void line(int x1,int y1,int x2,int y2) {
+  DrawLine(x1,y1,x2,y2);
 }
+
 void box(int x1,int y1,int x2, int y2) {
-  int x,y,w,h;
-  x=min(x1,x2);
-  y=min(y1,y2);
-  w=abs(x2-x1);
-  h=abs(y2-y1);
-  XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],x,y,w,h); 
+#ifdef WINDOWS
+   RECT rc;
+  rc.left=min(x1,x2);
+  rc.top=min(y1,y2);
+  rc.right=max(x1,x2);
+  rc.bottom=max(y1,y2);
+ 
+  FrameRect(bitcon[usewindow],&rc,pen[usewindow]);
+#else
+  DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
+#endif
 }
 void pbox(int x1,int y1,int x2, int y2) {
-  int x,y,w,h;
-  x=min(x1,x2);
-  y=min(y1,y2);
-  w=abs(x2-x1);
-  h=abs(y2-y1);
-  XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],x,y,w,h); 
+#ifdef WINDOWS
+  RECT rc;
+  rc.left=min(x1,x2);
+  rc.top=min(y1,y2);
+  rc.right=max(x1,x2);
+  rc.bottom=max(y1,y2);
+  FillRect(bitcon[usewindow],&rc,brush[usewindow]);
+#else
+  XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
+#endif
 }
 
 
@@ -52,7 +65,7 @@ void c_norootwindow(char *n){
   graphics();
 }
 void c_usewindow(char *n){
-  usewindow=max(0,min(MAXWINDOWS,(int)parser(n)));
+  usewindow=max(0,min(MAXWINDOWS-1,(int)parser(n)));
   graphics();
 }
 
@@ -63,12 +76,16 @@ void c_vsync(char *n) {
 void c_plot(PARAMETER *plist,int e) {
   if(e==2) {
     graphics();
-    XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],
-    plist[0].integer,plist[1].integer);
+#ifdef WINDOWS
+    SetPixelV(bitcon[usewindow],plist[0].integer,plist[1].integer,global_color);
+#else
+    XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer);
+#endif
   }
 }
 int get_point(int x, int y) {
     int d,r;
+#ifndef WINDOWS
     XImage *Image;
     graphics();
     d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(display[usewindow]));
@@ -76,6 +93,7 @@ int get_point(int x, int y) {
                 x, y, 1, 1, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     r=XGetPixel(Image, 0, 0);
     XDestroyImage(Image);
+#endif
     return(r);
 }
 
@@ -83,6 +101,7 @@ void c_savescreen(char *n) {
     int d,b,x,y,w,h,len,i;
     char *name=s_parser(n);
     char *data;
+#ifndef WINDOWS
     XImage *Image;
     Window root;
     Colormap map;
@@ -106,11 +125,13 @@ void c_savescreen(char *n) {
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);	
     bsave(name,data,len);
     XDestroyImage(Image);free(name);free(data);
+#endif
 }
 void c_savewindow(char *n) {
     int d,b,x,y,w,h,len,i;
     char *name=s_parser(n);
     char *data;
+#ifndef WINDOWS
     XImage *Image;
     Window root;
     Colormap map;
@@ -135,12 +156,15 @@ void c_savewindow(char *n) {
     XDestroyImage(Image);
     free(data);
     free(name);
+#endif    
 }
+#ifndef WINDOWS
 XImage *xwdtoximage(char *,Visual *);
-
+#endif
 void c_get(PARAMETER *plist,int e) {
   int d,b,bx,by,bw,bh,len,i;
   char *data;
+#ifndef WINDOWS
   XImage *Image;
   Window root;
   Colormap map;
@@ -164,8 +188,10 @@ void c_get(PARAMETER *plist,int e) {
     XDestroyImage(Image);
     free(data);
   }
+#endif  
 }
 void c_put(PARAMETER *plist,int e) {  
+#ifndef WINDOWS
   XImage *ximage;
   XWindowAttributes xwa;
    if(e==3 || e==4) {
@@ -180,6 +206,7 @@ void c_put(PARAMETER *plist,int e) {
     }
     XDestroyImage(ximage);
   }
+#endif  
 }
 
 void c_put_bitmap(PARAMETER *plist,int e) {  
@@ -193,6 +220,7 @@ void c_put_bitmap(PARAMETER *plist,int e) {
 void c_sget(char *n) {
     int d,b,x,y,w,h,len,i;
     char *data;
+#ifndef WINDOWS
     XImage *Image;
     Window root;
     Colormap map;
@@ -216,9 +244,11 @@ void c_sget(char *n) {
     zuweissbuf(n,data,len);
     XDestroyImage(Image);
     free(data);
+#endif
 }
 void c_sput(char *n) {
     STRING str=string_parser(n);
+#ifndef WINDOWS
     XImage *ximage;
     XWindowAttributes xwa;
 
@@ -229,6 +259,7 @@ void c_sput(char *n) {
     XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
                 ximage, 0,0,0,0, ximage->width, ximage->height);
     XDestroyImage(ximage);
+#endif
     free(str.pointer);
 }
 
@@ -247,10 +278,12 @@ void c_rbox(PARAMETER *plist,int e) {
   line(plist[2].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
   line(plist[2].integer-RBOX_RADIUS,plist[3].integer,plist[0].integer+RBOX_RADIUS,plist[3].integer);
   line(plist[0].integer,plist[3].integer-RBOX_RADIUS,plist[0].integer,plist[1].integer+RBOX_RADIUS);
+#ifndef WINDOWS
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+#endif
 }
 void c_pbox(PARAMETER *plist,int e) {
   graphics(); 
@@ -260,11 +293,12 @@ void c_prbox(PARAMETER *plist,int e) {
   graphics(); 
   pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
   pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
+#ifndef WINDOWS
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
-
+#endif
 }
 
 void c_dotodraw(char *n) {
@@ -324,13 +358,17 @@ void c_circle(PARAMETER *plist,int e) {
   if(e>=3) {
     x=plist[0].integer-plist[2].integer;
     y=plist[1].integer-plist[2].integer;
-    r=2*plist[2].integer;
+    r=plist[2].integer;
 
     if(e>=4) a1=plist[3].integer*64;
     if(e>=5) a2=plist[4].integer*64;
     
     graphics(); 
-    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r,r,a1,a2-a1); 
+#ifdef WINDOWS
+  Arc(bitcon[usewindow],x,y,x+2*r,y+2*r,0,0,0,0);    
+#else
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r,2*r,a1,a2-a1); 
+#endif
   }
 }
 void c_pcircle(PARAMETER *plist,int e) {
@@ -338,13 +376,17 @@ void c_pcircle(PARAMETER *plist,int e) {
   if(e>=3) {
     x=plist[0].integer-plist[2].integer;
     y=plist[1].integer-plist[2].integer;
-    r=2*plist[2].integer;
+    r=plist[2].integer;
 
     if(e>=4) a1=plist[3].integer*64;
     if(e>=5) a2=plist[4].integer*64;
     
     graphics(); 
-    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r,r,a1,a2-a1); 
+#ifdef WINDOWS
+    Ellipse(bitcon[usewindow],x,y,x+2*r,y+2*r);
+#else
+    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r,2*r,a1,a2-a1); 
+#endif
   }
 }
 
@@ -353,14 +395,18 @@ void c_ellipse(PARAMETER *plist,int e) {
   if(e>=4) {
     x=plist[0].integer-plist[2].integer;
     y=plist[1].integer-plist[3].integer;
-    r1=2*plist[2].integer;
-    r2=2*plist[3].integer;
+    r1=plist[2].integer;
+    r2=plist[3].integer;
 
     if(e>=5) a1=plist[4].integer*64;
     if(e>=6) a2=plist[5].integer*64;
 
     graphics(); 
-    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r1,r2,a1,a2-a1);
+#ifdef WINDOWS
+    Arc(bitcon[usewindow],x,y,x+2*r1,y+2*r2,0,0,0,0);    
+#else
+    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r1,2*r2,a1,a2-a1);
+#endif
   }
 }
 void c_pellipse(PARAMETER *plist,int e) {
@@ -368,34 +414,45 @@ void c_pellipse(PARAMETER *plist,int e) {
   if(e>=4) {
     x=plist[0].integer-plist[2].integer;
     y=plist[1].integer-plist[3].integer;
-    r1=2*plist[2].integer;
-    r2=2*plist[3].integer;
+    r1=plist[2].integer;
+    r2=plist[3].integer;
 
     if(e>=5) a1=plist[4].integer*64;
     if(e>=6) a2=plist[5].integer*64;
 
     graphics(); 
-    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r1,r2,a1,a2-a1);
+#ifdef WINDOWS
+    Ellipse(bitcon[usewindow],x,y,x+2*r1,y+2*r2);
+#else
+    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r1,2*r2,a1,a2-a1);
+#endif
   }
 }
 
 
 void c_color(PARAMETER *plist,int e) {  
   graphics();
-  XSetForeground(display[usewindow],gc[usewindow],plist[0].integer);
-  if(e==2) XSetBackground(display[usewindow],gc[usewindow],plist[1].integer);
-  return;
+  SetForeground(plist[0].integer);
+  if(e==2) {SetBackground(plist[1].integer);}
 }
 
 int get_fcolor() {
+#ifdef WINDOWS
+  return(global_color);
+#else
    XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCForeground, &gc_val);
   return(gc_val.foreground);
+#endif
 }
 int get_bcolor() {
+#ifndef WINDOWS
    XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCBackground, &gc_val);
   return(gc_val.background);
+#else
+return(0);
+#endif
 }
 
 void c_graphmode(char *n) {
@@ -477,9 +534,11 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
           x1=(int)(varptrx[i]*xscale)+xoffset;
           x2=(int)(varptrx[i+1]*xscale)+xoffset;
         } else {x1=i*xscale+xoffset;x2=(i+1)*xscale+xoffset;}
+#ifndef WINDOWS
         if(mode==0) XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,y1,x2,y2);
 	else if(mode==1 && vnrx!=-1) XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],x1,y1);
         else XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,yoffset,x1,y2); 
+#endif
       }
     }
   }
@@ -489,6 +548,7 @@ void c_polyline(char *n) { do_polygon(1,n);}
 void c_polyfill(char *n) { do_polygon(2,n);}
 void do_polygon(int doit,char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
+#ifndef WINDOWS
   int e,i=0,anz=0,shape=Nonconvex;
   int vnrx=-1,vnry=-1,typ,mode=CoordModeOrigin,xoffset=0,yoffset=0;
   char *r;
@@ -549,6 +609,7 @@ void do_polygon(int doit,char *n) {
      else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);
     }
   }
+#endif
 }
 
 
@@ -560,6 +621,7 @@ void set_graphmode(int n) {
               n=5 not (src xor dest)
               n<0 uebergibt -n an X-Server
  */  
+#ifndef WINDOWS
   XGCValues gc_val;  
   switch (n) {
     case 1:gc_val.function=GXcopy;break;
@@ -573,8 +635,10 @@ void set_graphmode(int n) {
     break;
   } 
   XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
+#endif
 }
 void set_font(char *name) {
+#ifndef WINDOWS
    XGCValues gc_val;  
    XFontStruct *fs;
    fs=XLoadQueryFont(display[usewindow], name);
@@ -582,17 +646,26 @@ void set_font(char *name) {
      gc_val.font=fs->fid;
      XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
    }
+#endif
 }
 
 int get_graphmode() {
+#ifndef WINDOWS
    XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
   return(gc_val.function);
+#else
+return(0);
+#endif
 }
+
+#ifndef WINDOWS
 #include "bitmaps/fill.xbm"
+#endif
 
 void c_deffill(PARAMETER *plist,int e) {
   graphics();
+#ifndef WINDOWS
   if(e>=1 && plist[0].typ!=PL_LEER){
     int fs=plist[0].integer;
     if(fs>=0 && fs<2) XSetFillRule(display[usewindow], gc[usewindow], fs);
@@ -609,8 +682,9 @@ void c_deffill(PARAMETER *plist,int e) {
                 fill_bits+pa*fill_width*fill_width/8,fill_width,fill_width);
            /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
 	   
-           XSetStipple(display[usewindow], gc[usewindow],fill_pattern );
+    XSetStipple(display[usewindow], gc[usewindow],fill_pattern );
   }
+#endif  
 }
 void c_defline(PARAMETER *plist,int e) { 
   static int style=0,width=0,cap=0,join=0;
@@ -619,13 +693,14 @@ void c_defline(PARAMETER *plist,int e) {
   if(e>=3 && plist[2].typ!=PL_LEER)   cap=plist[2].integer;
   if(e>=4 && plist[3].typ!=PL_LEER)  join=plist[3].integer;
   graphics();
+#ifndef WINDOWS
   XSetLineAttributes(display[usewindow], gc[usewindow],width,style,cap,join);
+#endif
 }
 void c_copyarea(PARAMETER *plist,int e) {
   if(e==6) {
     graphics();   
-    XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
-    plist[0].integer,plist[1].integer,plist[2].integer,
+    CopyArea(plist[0].integer,plist[1].integer,plist[2].integer,
     plist[3].integer,plist[4].integer,plist[5].integer);
   }
 }
@@ -640,51 +715,70 @@ void c_deftext(PARAMETER *plist,int e) {
   if(e>=4 && plist[3].typ!=PL_LEER)  ltextwinkel=plist[3].real;
 }
 
-
 int mousex() {
-   Window root_return,child_return;
-   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
-   graphics();
-   
-   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
+#ifdef WINDOWS
+  return(global_mousex);
+#else
+  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  Window root_return,child_return;
+  graphics(); 
+  XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
-   return(win_x_return);
+  return(win_x_return);
+#endif
 }
 int mousey() {
-   Window root_return,child_return;
-   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+#ifdef WINDOWS
+  return(global_mousey);
+#else
+    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  Window root_return,child_return;
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
    return(win_y_return);
+#endif
 }
 int mousek() {
-   Window root_return,child_return;
+#ifdef WINDOWS
+  return(global_mousek);
+#else
    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+   Window root_return,child_return;
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
    return(mask_return>>8);
+#endif
 }
 int mouses() {
+ #ifdef WINDOWS
+  return(global_mouses);
+#else
+  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
    Window root_return,child_return;
-   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
    return(mask_return & 255);
+#endif
 }
 
 void c_mouse(PARAMETER *plist,int e) {
-   Window root_return,child_return;
+#ifdef WINDOWS
+  if(e>=1 && plist[0].typ!=PL_LEER) zuweis(plist[0].pointer,(double)global_mousex);
+  if(e>=2 && plist[1].typ!=PL_LEER) zuweis(plist[1].pointer,(double)global_mousey);
+  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)(global_mousek|(global_mouses<<8)));
+#else
    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+   Window root_return,child_return;
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
@@ -693,10 +787,10 @@ void c_mouse(PARAMETER *plist,int e) {
 
   if(e>=1 && plist[0].typ!=PL_LEER) zuweis(plist[0].pointer,(double)win_x_return);
   if(e>=2 && plist[1].typ!=PL_LEER) zuweis(plist[1].pointer,(double)win_y_return);
-  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)mask_return);
+  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)(((mask_return>>8)|(mask_return<<8)) & 0xffff));
   if(e>=4 && plist[3].typ!=PL_LEER) zuweis(plist[3].pointer,(double)root_x_return);
   if(e>=5 && plist[4].typ!=PL_LEER) zuweis(plist[4].pointer,(double)root_y_return);
-
+#endif
 #ifdef DEBUG
   printf("Mouse: x=%d y=%d m=%d\n",win_x_return,win_y_return,mask_return);
 #endif
@@ -707,18 +801,39 @@ void c_setmouse(PARAMETER *plist,int e) {
   if(e>=2) {
     if(e==3) mode=plist[2].integer;
     graphics();
+#ifndef WINDOWS
     if(mode==0) XWarpPointer(display[usewindow], None, win[usewindow], 0, 0,0,0,plist[0].integer,plist[1].integer);
     else if(mode==1) XWarpPointer(display[usewindow], None, None, 0, 0,0,0,plist[0].integer,plist[1].integer);
+#endif
   }
 }
 
 
 void c_mouseevent(char *n) {
-   XEvent event;
-
    int e,i=0;
    char w1[strlen(n)+1],w2[strlen(n)+1];
-   
+
+#ifdef WINDOWS
+  graphics();
+  ResetEvent(buttonevent);
+  WaitForSingleObject(buttonevent,INFINITE);
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+         switch(i) {
+         case 0: {zuweis(w1,(double)global_mousex);     break;}
+	 case 1: {zuweis(w1,(double)global_mousey);     break;} /* Dicke */
+	 case 2: {zuweis(w1,(double)global_mousek);break;} 
+	 case 5: {zuweis(w1,(double)global_mouses); break;}  
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+    }
+
+#else
+   XEvent event;
    graphics();
     
    XWindowEvent(display[usewindow], win[usewindow],ButtonPressMask|ExposureMask, &event);
@@ -744,14 +859,33 @@ void c_mouseevent(char *n) {
      i++;
     }
   } 
+#endif  
 }
 
 void c_motionevent(char *n) {
-   XEvent event;
-
-   int e,i=0;
+  int e,i=0;
    char w1[strlen(n)+1],w2[strlen(n)+1];
-   
+
+#ifdef WINDOWS
+  graphics();
+  ResetEvent(motionevent);
+  WaitForSingleObject(motionevent,INFINITE);
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+         switch(i) {
+         case 0: {zuweis(w1,(double)global_mousex);     break;}
+	 case 1: {zuweis(w1,(double)global_mousey);     break;} /* Dicke */
+	 case 4: {zuweis(w1,(double)global_mouses); break;}  
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+    }
+
+#else
+   XEvent event;   
    graphics();
     
    XWindowEvent(display[usewindow], win[usewindow],PointerMotionMask|ExposureMask, &event);
@@ -776,13 +910,40 @@ void c_motionevent(char *n) {
      i++;
     }
   }
+#endif
 }
 
 void c_keyevent(char *n) {
-   XEvent event;
-
    int e,i=0;
    char w1[strlen(n)+1],w2[strlen(n)+1];
+#ifdef WINDOWS
+  graphics();
+
+  ResetEvent(keyevent);
+  WaitForSingleObject(keyevent,INFINITE);
+  while(global_eventtype!=KeyChar) {
+    ResetEvent(keyevent);
+    WaitForSingleObject(keyevent,INFINITE); 
+  }
+
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+         switch(i) {
+         case 0: {zuweis(w1,(double)global_keycode);break;}
+	 case 1: {zuweis(w1,(double)global_ks);     break;} 
+         case 4: {zuweis(w1,(double)global_mousex); break;}
+	 case 5: {zuweis(w1,(double)global_mousey); break;} 
+	 case 3: {zuweis(w1,(double)global_mouses); break;}  
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+    }
+
+#else
+   XEvent event;
    
    graphics();
     
@@ -817,12 +978,56 @@ void c_keyevent(char *n) {
      i++;
     }
   }
+#endif  
 }
 void c_allevent(char *n) {
-   XEvent event;
+  int e,i=0;
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+#ifdef WINDOWS
+  HANDLE evn[3];
+  graphics();
+  evn[0]=keyevent;
+  evn[1]=motionevent;
+  evn[2]=buttonevent;
+  ResetEvent(keyevent);
+  ResetEvent(motionevent);
+  ResetEvent(buttonevent);
+  WaitForMultipleObjects(3,evn,TRUE,INFINITE);
+  e=wort_sep(n,',',TRUE,w1,w2);
+     while(e) {
+       if(strlen(w1)) {
+         switch(i) {
+         case 0: {zuweis(w1,(double)global_eventtype);          break;}
+	 case 1: {
+	   zuweis(w1,(double)global_mousex);     
+	   break;}
+	 case 2: {
+	   zuweis(w1,(double)global_mousey);     
+	   break;}
+	 case 3: {
+	   break;}
+	 case 4: {
+	   break;}
+	 case 5: {
+	   zuweis(w1,(double)(global_mouses));   
+	   break;}
+	 case 6: {
+	   if(global_eventtype==MotionNotify)     zuweis(w1,(double)(0));     
+	   else if(global_eventtype==ButtonPress) zuweis(w1,(double)global_mousek);
+	   else if(global_eventtype==KeyPress)    zuweis(w1,(double)global_keycode);
+	   break;}
+	 case 7: {
+             zuweis(w1,(double)global_ks);       
+	   break;}	 	   
+         default: break;
+       }
+     }
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+    }
 
-   int e,i=0;
-   char w1[strlen(n)+1],w2[strlen(n)+1];
+#else
+   XEvent event;
    
    graphics();
     
@@ -900,6 +1105,7 @@ void c_allevent(char *n) {
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
     }
+#endif    
 }
 void c_infow(char *n) {
   error(9,"INFOW");
@@ -913,8 +1119,14 @@ void c_titlew(char *n) {
   e=wort_sep(n,',',TRUE,v,t);
   if(e) { if(v[0]=='#') winnr=(int)parser(v+1); else winnr=(int)parser(v);}
   if(winnr<MAXWINDOWS) {
-    if (!XStringListToTextProperty(&n, 1, &win_name[winnr]))    printf("Couldn't set Name of Window.\n");
-    XSetWMName(display[usewindow], win[usewindow], &win_name[usewindow]);
+    char *text=s_parser(t);
+#ifdef WINDOWS
+  SetWindowText(win_hwnd[winnr],text);
+#else
+    if (!XStringListToTextProperty(&text, 1, &win_name[winnr]))    printf("Couldn't set Name of Window.\n");
+    XSetWMName(display[winnr], win[winnr], &win_name[winnr]);
+#endif
+    free(text);
   } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
   free(v);free(t);
 }
@@ -922,17 +1134,26 @@ void c_clearw(char *n) {
   int winnr=usewindow,x,y,w,h,b,d;
   
   if(strlen(n)) {
-    if(n[0]=='#') winnr=max(0,(int)parser(n+1)); else winnr=max(0,(int)parser(n));
+    if(n[0]=='#') winnr=max(0,(int)parser(n+1)); 
+    else winnr=max(0,(int)parser(n));
   }
+
   if(winnr<MAXWINDOWS) {
     graphics();
     if(winbesetzt[winnr]) {  	
+#ifdef WINDOWS  
+      RECT interior;
+
+      GetClientRect(win_hwnd[winnr],&interior);
+      FillRect(bitcon[winnr],&interior,(HBRUSH)COLOR_WINDOW);
+
+#else
       Window root;
       GC sgc;   
       XGCValues gc_val;  
        /* Erst den Graphic-Kontext retten  */
-    sgc=XCreateGC(display[winnr], win[winnr], 0, &gc_val);
-    XCopyGC(display[winnr], gc[winnr],GCForeground , sgc); 
+      sgc=XCreateGC(display[winnr], win[winnr], 0, &gc_val);
+      XCopyGC(display[winnr], gc[winnr],GCForeground , sgc); 
       XGetGeometry(display[winnr],win[winnr],&root,&x,&y,&w,&h,&b,&d); 
       XSetForeground(display[winnr],gc[winnr],get_bcolor());
       XFillRectangle(display[winnr],pix[winnr],gc[winnr],x,y,w,h); 
@@ -941,7 +1162,7 @@ void c_clearw(char *n) {
       
       XCopyGC(display[winnr], sgc,GCForeground, gc[winnr]);
       XFreeGC(display[winnr],sgc); 
-      
+#endif
     }
   }
 }
@@ -984,10 +1205,13 @@ void c_sizew(char *n) {
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
-    
+
   if(winnr<MAXWINDOWS && winnr>0 ) {
     graphics();
     if(winbesetzt[winnr]) {
+#ifdef WINDOWS    
+/* hStatus = GetDlgItem(win_hwnd[winnr], IDC_MAIN_STATUS);  */
+#else
         Pixmap pixi;
 	Window root;
 	int ox,oy,ow,oh,ob,d;
@@ -999,9 +1223,11 @@ void c_sizew(char *n) {
 	XFreePixmap(display[winnr],pix[winnr]);	
 	pix[winnr]=pixi;
 	XFlush(display[winnr]);
+#endif
     } else  puts("Window existiert nicht.");
   } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
   else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
+
 }
 
 void c_movew(char *n) {
@@ -1019,23 +1245,26 @@ void c_movew(char *n) {
       e=wort_sep(t,',',TRUE,v,t);
       if(e) {
         y=max((int)parser(v),0);
+#ifndef WINDOWS
         XMoveWindow(display[winnr], win[winnr], x, y);
+#endif
       }
     }
   } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
   else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
 }
 
-
+#ifndef WINDOWS
 #include "bitmaps/biene.bmp"
 #include "bitmaps/biene_mask.bmp"
 #include "bitmaps/hand.bmp"
 #include "bitmaps/hand_mask.bmp"
 #include "bitmaps/zeigehand.bmp"
 #include "bitmaps/zeigehand_mask.bmp"
-
+#endif
 void c_defmouse(char *n) {
   int form=(int)parser(n),formt;
+#ifndef WINDOWS
   Cursor maus;
  
   if(form<0) formt=-form;   
@@ -1082,6 +1311,7 @@ void c_defmouse(char *n) {
     maus=XCreateFontCursor(display[usewindow],formt);
     XDefineCursor(display[usewindow], win[usewindow], maus);
   }
+#endif  
 }
 
 void c_text(char *n) {
@@ -1094,14 +1324,14 @@ void c_text(char *n) {
   e=wort_sep(t,',',TRUE,v,t);
   if(e) y=parser(v);
   buffer=s_parser(t);
-  XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,buffer,strlen(buffer));
+  DrawString(x,y,buffer,strlen(buffer));
   free(v);free(t);free(buffer);
 }
 
 void g_out(char a) {
   static int lin=0,col=0;
   extern int chh,chw;
-  extern RECT sbox;
+  extern ARECT sbox;
   int bbb;
   switch(a) {
   case 0: break;
@@ -1110,47 +1340,35 @@ void g_out(char a) {
   case 10: lin++; col=0; 
     if(lin*chh>=sbox.h){
       lin--;
-      XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
-    0,chh,sbox.w,
-    sbox.h-chh,0,0);
-    bbb=get_fcolor();
-      XSetForeground(display[usewindow],gc[usewindow],get_bcolor());
-      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
-      0,chh*lin,sbox.w,chh);
-      XSetForeground(display[usewindow],gc[usewindow],bbb);
+      CopyArea(0,chh,sbox.w,sbox.h-chh,0,0);
+      bbb=get_fcolor();
+      SetForeground(get_bcolor());
+      FillRectangle(0,chh*lin,sbox.w,chh);
+      SetForeground(bbb);
     } 
     break;
   case 13: col=0; break;
   default:
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-    col*chw,lin*chh+chh,&a,1);
+    DrawString(col*chw,lin*chh+chh,&a,1);
     col++;
     if(col*chw>=sbox.w) {col=0; lin++;
-        if(lin*chh>=sbox.h){
-      lin--;
-      XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
-    0,chh,sbox.w,
-    sbox.h-chh,0,0);
-    bbb=get_fcolor();
-      XSetForeground(display[usewindow],gc[usewindow],get_bcolor());
-      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
-      0,chh*lin,sbox.w,chh);
-      XSetForeground(display[usewindow],gc[usewindow],bbb);
-    } 
-
+      if(lin*chh>=sbox.h) {
+        lin--;
+        CopyArea(0,chh,sbox.w,sbox.h-chh,0,0);
+        bbb=get_fcolor();
+        SetForeground(get_bcolor());
+        FillRectangle(0,chh*lin,sbox.w,chh);
+        SetForeground(bbb);
+      } 
     }
-  }
-  
+  } 
 }
 void g_outs(STRING t){
   int i;
   if(t.len) {
-    for(i=0;i<t.len;i++) {
-      g_out(t.pointer[i]);
-    }
+    for(i=0;i<t.len;i++) g_out(t.pointer[i]);
   }
 }
-
 void c_gprint(char *n) {
   char v[strlen(n)+1];
   char c;
@@ -1178,7 +1396,6 @@ void c_gprint(char *n) {
   } else g_out('\n');
 }
 
-
 void c_ltext(char *n) {
   int x,y,e;
   char *v,*t,*buffer;
@@ -1202,9 +1419,7 @@ void c_alert(PARAMETER *plist,int e) {
     sprintf(buffer,"[%d][%s][%s]",plist[0].integer,plist[1].pointer,plist[3].pointer);
     zuweis(plist[4].pointer,(double)form_alert2(plist[2].integer,buffer,buffer2));
   }
-  if(e==6) {
-    zuweiss(plist[5].pointer,buffer2);
-  } 
+  if(e==6) zuweiss(plist[5].pointer,buffer2);
 }
 
 char *fsel_input(char *,char *,char *);
@@ -1333,12 +1548,10 @@ void c_menuset(char *n) {
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
-  if(i<2) {
-    error(42,""); /* Zu wenig Parameter  */
-  } else {
-  
-  if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=flag;    
-  else printf("Nr. des Menueintrags zu gross. Max %d.\n",MAXMENUENTRYS);
+  if(i<2) error(42,""); /* Zu wenig Parameter  */
+  else {
+    if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=flag;    
+    else printf("Nr. des Menueintrags zu gross. Max %d.\n",MAXMENUENTRYS);
   }
 }
 void c_menukill(char *n) {
@@ -1348,9 +1561,7 @@ void c_menukill(char *n) {
 }
 
 
-/*********************************************************/
-
-
+/**************  RSRC-Library *******************************************/
 
 int rsrc_load(char *);
 
@@ -1362,16 +1573,15 @@ void c_rsrc_load(char *n) {
 void c_rsrc_free(char *n) {
   if(rsrc_free()) puts("Fehler bei RSRC_FREE.");
 }
-
 void c_xload(char *n) {
-    char *name=fsel_input("load program:","./*.bas","");
-    if(strlen(name)) {
-      if(exist(name)) {
-        programbufferlen=0; 
-        mergeprg(name);
-      } else printf("LOAD/MERGE: File %s not found!\n",name);
-    }
-    free(name);
+  char *name=fsel_input("load program:","./*.bas","");
+  if(strlen(name)) {
+    if(exist(name)) {
+      programbufferlen=0; 
+      mergeprg(name);
+    } else printf("LOAD/MERGE: File %s not found!\n",name);
+  }
+  free(name);
 }
 void c_xrun(char *n) {
   c_xload(n);

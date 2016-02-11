@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <signal.h>
+#include <ctype.h>
 #include "defs.h"
 #include <time.h>
 #include <errno.h>
@@ -21,7 +24,11 @@
 #include "options.h"
 #include "kommandos.h"
 
-
+#ifdef WINDOWS
+#include <windows.h>
+#include <string.h>
+#include <io.h>
+#endif
 /*****************************************/
 /* Kommandos zur Programmablaufkontrolle */
 
@@ -33,7 +40,7 @@ void c_gosub(char *n) {
     if(pos!=NULL) {
       pos[0]=0;pos++;
       pos2=pos+strlen(pos)-1;
-      if(pos2[0]!=')') printf("Syntax error bei Parameterliste\n");
+      if(pos2[0]!=')') puts("Syntax error bei Parameterliste");
       else pos2[0]=0;
     } else pos=buffer+strlen(buffer);
     
@@ -411,6 +418,274 @@ void c_quit(char *n) {
   exit(0); 
 }
 
+/* Linearer Fit (regression) optional mit Fehlerbalken in x und y Richtung  */
+
+void c_fit_linear(char *n) {  
+  char w1[strlen(n)+1],w2[strlen(n)+1];                  
+  int e,typ,scip=0,i=0,mtw=0;  
+  int vnrx,vnry,vnre,vnre2,ndata; 
+  double a,b,siga,sigb,chi2,q;
+  char *r;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+    scip=0;
+    if(strlen(w1)) {
+       switch(i) {
+         case 0: { /* Array mit x-Werten */     
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnrx=variable_exist(r,typ);
+             free(r);
+	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("FIT: Kein ARRAY.");
+	   break;
+	   }
+	 case 1: {   /* Array mit y-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnry=variable_exist(r,typ);
+             free(r);
+	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("FIT: Kein ARRAY.");
+	   break;
+	   } 
+	 case 2: {   /* Array mit err-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnre=variable_exist(r,typ);
+             free(r);
+	     if(vnre==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     else mtw=1;
+	   } else {scip=1; mtw=0;}
+	   break;
+	   } 
+	 case 3: {   /* Array mit err-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnre2=variable_exist(r,typ);
+             free(r);
+	     if(vnre2==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     else mtw=2;
+	   } else {scip=1;}
+	   break;
+	   } 
+	 case 4: {
+	   ndata=(int)parser(w1); 
+	   if(vnrx!=-1 && vnry!=-1) {
+             if(mtw==2 && vnre!=-1 && vnre2!=-1) {
+	       linear_fit_exy(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
+		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,
+		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE,
+		   variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE
+		   ,&a,&b,&siga,&sigb,&chi2,&q); 
+
+	     } else {
+	       linear_fit(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
+		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,(mtw)?(
+		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+             }
+	   }
+	   break; 
+	 } 
+	 case 5: { zuweis(w1,a); break; } 
+	 case 6: { zuweis(w1,b); break;} 
+	 case 7: { zuweis(w1,siga); break;} 
+	 case 8: { zuweis(w1,sigb);  break;} 
+	 case 9: { zuweis(w1,chi2);  break;} 
+	 case 10: { zuweis(w1,q);  break;} 
+	   
+         default: break;
+       }
+    }
+    if(scip==0) e=wort_sep(w2,',',TRUE,w1,w2);
+    i++;
+  }
+}
+
+
+void do_sort(double *a,long n,double *b) {
+	unsigned long i,ir,j,l;
+	double rra,index;
+
+	if (n<2) return;
+	l=(n>>1)+1;
+	ir=n;
+	for(;;) {
+   
+		if(l>1) {
+		  rra=a[l-2];
+		  index=b[--l-1];
+		} else {
+			rra=a[ir-1];
+			index=b[ir-1];
+			a[ir-1]=a[1-1];
+			b[ir-1]=b[1-1];
+			if (--ir == 1) {
+				*a=rra;
+				*b=index;
+				break;
+			}
+		}
+		i=l;
+		j=l+l;
+		while (j <= ir) {
+			if (j < ir && a[j-1] < a[j]) j++;
+			
+			if (rra < a[j-1]) {
+				a[i-1]=a[j-1];
+				b[i-1]=b[j-1];
+				i=j;
+				j <<= 1;
+			} else j=ir+1;
+		}
+		a[i-1]=rra;b[i-1]=index;
+	}
+
+
+}
+
+void c_sort(char *n) {  
+  char w1[strlen(n)+1],w2[strlen(n)+1];                  
+  int e,typ,scip=0,i=0,size;  
+  int vnrx=-1,vnry=-1,ndata=0; 
+  char *r;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+    scip=0;
+    if(strlen(w1)) {
+       switch(i) {
+         case 0: { /* Array mit x-Werten */     
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnrx=variable_exist(r,typ);
+             free(r);
+	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("SORT: Kein ARRAY.");
+	   break;
+	   }
+	 case 1: 
+	   ndata=(int)parser(w1);
+	   break;
+	 case 2: {   /* Array mit index-Tabelle */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnry=variable_exist(r,typ);
+             free(r);
+	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("FIT: Kein ARRAY.");
+	   break;
+	   } 
+         default: break;
+       }
+    }
+    if(scip==0) e=wort_sep(w2,',',TRUE,w1,w2);
+    i++;
+  }
+  if(i>=2 && ndata>1) {
+    do_sort((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+    ,ndata,
+    (double *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));
+  }
+}
+
+/* Allgemeine Fit-Funktion  mit Fehlerbalken in y Richtung  */
+
+void c_fit(char *n) {  
+  char w1[strlen(n)+1],w2[strlen(n)+1];                  
+  int e,typ,scip=0,i=0,mtw=0;  
+  int vnrx,vnry,vnre,vnre2,ndata; 
+  double a,b,siga,sigb,chi2,q;
+  char *r;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  error(9,"FIT"); /* Funktion noch nicht moeglich */
+  while(e) {
+    scip=0;
+    if(strlen(w1)) {
+       switch(i) {
+         case 0: { /* Array mit x-Werten */     
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnrx=variable_exist(r,typ);
+             free(r);
+	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("FIT: Kein ARRAY.");
+	   break;
+	   }
+	 case 1: {   /* Array mit y-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnry=variable_exist(r,typ);
+             free(r);
+	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
+	   } else puts("FIT: Kein ARRAY.");
+	   break;
+	   } 
+	 case 2: {   /* Array mit err-Werten */
+	   /* Typ bestimmem. Ist es Array ? */
+           typ=type2(w1);
+	   if(typ & ARRAYTYP) {
+             r=varrumpf(w1);
+             vnre=variable_exist(r,typ);
+             free(r);
+	     if(vnre==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     else mtw=1;
+	   } else {scip=1; mtw=0;}
+	   break;
+	   } 
+	 case 4: {
+	   ndata=(int)parser(w1); 
+           break;
+	   }
+	 case 5: {   /* Funktion mit Parameterliste */
+	   }
+	 case 6: {   /* Ausdruck, der Angibt, welche Parameter zu fitten sind */  	 
+	   if(vnrx!=-1 && vnry!=-1) {
+             if(mtw==2 && vnre!=-1 && vnre2!=-1) {
+	       linear_fit_exy(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
+		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,
+		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE,
+		   variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE
+		   ,&a,&b,&siga,&sigb,&chi2,&q); 
+
+	     } else {
+	       linear_fit(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
+		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,(vnre!=-1)?(
+		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+             }
+	   }
+	   break; 
+	 } 
+	 case 7: { zuweis(w1,chi2); break; } 
+	 case 8: { zuweis(w1,b); break;} 
+	 case 9: { zuweis(w1,siga); break;} 
+	 case 10: { zuweis(w1,sigb);  break;} 
+	 case 11: { zuweis(w1,chi2);  break;} 
+	 case 12: { zuweis(w1,q);  break;} 
+	   
+         default: break;
+       }
+    }
+    if(scip==0) e=wort_sep(w2,',',TRUE,w1,w2);
+    i++;
+  }
+}
+
 void c_fft(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
   int isign=1;
@@ -433,9 +708,9 @@ void c_fft(char *n) {
 
 	  if(e==2) isign=(int)parser(w);
 	  realft(varptr,(nn-1)/2,isign);
-        } else printf("FFT: Muss Float-ARRAY sein. \n");
+        } else puts("FFT: Muss Float-ARRAY sein.");
       }
-    } else printf("FFT: Kein ARRAY. \n");
+    } else puts("FFT: Kein ARRAY.");
   
   } else error(32,"FFT"); /* Syntax error */
 }
@@ -473,9 +748,9 @@ void c_arraycopy(char *n) {
 	  convert_int_to_float_array(vnr1,vnr2);
 	else if((typ1 & INTTYP) && (typ2 & FLOATTYP))
 	  convert_float_to_int_array(vnr1,vnr2);
-	else printf("ARRAYCOPY: Typen inkompatibel. \n");
+	else puts("ARRAYCOPY: Typen inkompatibel.");
       }
-    } else printf("ARRAYCOPY: Kein ARRAY. \n");
+    } else puts("ARRAYCOPY: Kein ARRAY.");
   } else error(32,"ARRAYCOPY"); /* Syntax error */
 
 }
@@ -545,7 +820,7 @@ void c_dump(char *n) {
           if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]-1);
 	  else  printf("%d",((int *)variablen[i].pointer)[j]-1);
         }
-        printf(")\n");
+        puts(")");
       }
     }
   }
@@ -572,7 +847,7 @@ void c_dump(char *n) {
           if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]-1);
   	  else  printf("%d",((int *)variablen[i].pointer)[j]-1);
         }
-        printf(")\n");
+        puts(")");
       }
     }
   }
@@ -923,21 +1198,54 @@ void c_dec(char *n) {
     else error(58,n); /* Variable hat falschen Typ */
   }
 }
-void c_cls(char *n) { printf("\033[2J\033[H");}
-void c_home(char *n) { printf("\033[H");}
+void c_cls(char *n) { 
+#ifdef WINDOWS
+  DWORD written; /* number of chars actually written */
+  COORD coord; /* coordinates to start writing */
+  CONSOLE_SCREEN_BUFFER_INFO coninfo; /* receives console size */ 
+  HANDLE ConsoleOutput; /* handle for console output */
+  ConsoleOutput=GetStdHandle(STD_OUTPUT_HANDLE); 
+  GetConsoleScreenBufferInfo(ConsoleOutput,&coninfo);
+#define  COLS coninfo.dwSize.X
+#define  LINES coninfo.dwSize.Y
+  coord.X=0;
+  coord.Y=0;
+  FillConsoleOutputCharacter(ConsoleOutput,' ',LINES*COLS,
+    coord,&written);
+  FillConsoleOutputAttribute(ConsoleOutput,
+    FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE,LINES*COLS,
+    coord,&written);
+
+  SetConsoleCursorPosition(ConsoleOutput,coord);
+#else
+  puts("\033[2J\033[H");
+#endif
+}
+void c_home(char *n) { 
+#ifdef WINDOWS
+  COORD coord;
+  HANDLE ConsoleOutput; /* handle for console output */
+  ConsoleOutput=GetStdHandle(STD_OUTPUT_HANDLE); 
+  coord.X=0;
+  coord.Y=0;
+  SetConsoleCursorPosition(ConsoleOutput,coord);
+#else
+  puts("\033[H");
+#endif
+}
 void c_version(char *n) { printf("X11-BASIC Version: %s vom %s \n",version,vdate);}
 
 #ifndef WINDOWS
 #include <fnmatch.h>
 #else
-#define FNM_NOESCAPE 0
+#include "Windows.extension/fnmatch.h"
 #endif
 void c_help(char *w) {
-  if(strlen(w)==0) {
-    printf("HELP [topic]\n");
-  } else {
+  if(strlen(w)==0) puts("HELP [topic]");
+  else {
     int j,i;
     for(i=0;i<anzcomms;i++) {
+    
       if(fnmatch(w,comms[i].name,FNM_NOESCAPE)==0) {
         printf("%s ",comms[i].name);  
         if(comms[i].pmin) {
@@ -950,6 +1258,12 @@ void c_help(char *w) {
 	      case PL_SVAR: printf("var$"); break;
 	      case PL_NVAR: printf("var"); break;
 	      case PL_KEY: printf("KEY"); break;
+	      case PL_FARRAY: printf("a()"); break;
+	      case PL_IARRAY: printf("h%()"); break;
+	      case PL_SARRAY: printf("f$()"); break;
+	      case PL_LABEL: printf("<label>"); break;
+	      case PL_PROC: printf("<procedure>"); break;
+	      case PL_FUNC: printf("<function>"); break;
 	      default: printf("???");
 	    }
 	    if(j<comms[i].pmin-1) printf(",");
@@ -967,13 +1281,19 @@ void c_help(char *w) {
 	      case PL_SVAR: printf("var$"); break;
 	      case PL_NVAR: printf("var"); break;
 	      case PL_KEY: printf("KEY"); break;
+	      case PL_FARRAY: printf("a()"); break;
+	      case PL_IARRAY: printf("h%()"); break;
+	      case PL_SARRAY: printf("f$()"); break;
+	      case PL_LABEL: printf("<label>"); break;
+	      case PL_PROC: printf("<procedure>"); break;
+	      case PL_FUNC: printf("<function>"); break;
 	      default: printf("???");
 	    }
 	    if(j<comms[i].pmax-1) printf(",");
 	  }
         }
         if(comms[i].pmax>comms[i].pmin || comms[i].pmax==-1) printf("]");
-        printf("\n");
+        puts("");
       }
     }
   }
@@ -992,11 +1312,15 @@ void c_shm_free(char *w) {
   shm_free((char *)(int)parser(w));
 }
 void c_pause(char *w) {
+#ifdef WINDOWS
+  sleep((int)(1000*parser(w)));
+#else
   int dummy,i=0;
   dummy=(int)(1000000*parser(w));
   while(dummy>=1000000) {i++;dummy-=1000000;}
   if(i) sleep(i);
   if(dummy>0) usleep(dummy);
+#endif
 }
 
 void c_echo(char *n) {

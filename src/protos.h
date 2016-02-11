@@ -23,6 +23,7 @@ int wort_sep (char *,char ,int ,char *, char *);
 int wort_sepr(char *,char ,int ,char *, char *);
 int wort_sep2(char *,char *,int ,char *, char *);
 int wort_sepr2(char *,char *,int ,char *, char *);
+char *searchchr2(char *,char);
 char *rmemmem(char *,int,char *,int);
 int xtrim(char *,int, char *);
 char *error_text(char , char *);
@@ -109,6 +110,7 @@ char *searchchr(char *, char);
 
 ARRAY *csvget(char *,int,int);
 ARRAY *tinevget(char *,int,int);
+ARRAY *tinehistory(char *,int,int);
 int cssize(char *);
 int cstyp(char *);
 int cspid(char *);
@@ -132,4 +134,5 @@ void sweep_value(int,float,float,float,int);
 #endif
 #ifdef TINE
 void c_tinemonitor(char *);
+void c_tineput(char *);
 #endif

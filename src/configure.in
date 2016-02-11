@@ -1,5 +1,8 @@
+# configure.in file for X11-Basic   (c) Markus Hoffmann
+# used by autoconf
+#
 AC_INIT(defs.h)
-version="1.07"
+version="1.08"
 vdate=`date`
 AC_SUBST(version)
 cat > version.h  <<EOF
@@ -201,6 +204,7 @@ fi
 AC_SUBST(inline)
 echo "Looking for some functions..."
 AC_CHECK_FUNC(strdup,,def="$def -DNO_STRDUP")
+AC_CHECK_FUNC(kbhit,,def="$def -DNO_KBHIT")
 AC_CHECK_FUNC(bzero,,def="$def -DNO_BZERO")
 AC_MSG_CHECKING(if statfs() and stat() work as I want them to)
 statfs=no

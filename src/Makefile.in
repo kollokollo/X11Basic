@@ -1,4 +1,5 @@
-.SUFFIXES: 	.m4 .bmp .S 
+# Makefile for X11-Basic (c) Markus Hoffmann
+
 
 SHELL=/bin/sh
 # Register variables (-ffixed-reg)
@@ -99,8 +100,11 @@ DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 
 LINKFLAGS = -L/usr/lib/termcap -L/opt/readline/lib
+WINLINKFLAGS = -L/usr/lib/termcap 
 
 LIBS = -lm -lX11 -lreadline -ldl -ltermcap @xtra@
+WINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid
+TINEWINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 CCSLIBS = ${CCSROOT}/lib/libtine.a
 
 all :    configure Makefile xbasic
@@ -123,10 +127,24 @@ psydo : psydo.o lib
 psydostatic : psydo.o x11basic.a
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
 		$(LIBS) $(XLIBS)
-windows: clean
+windows: $(OBJS) main.o mathematics.o
 	$(WINCC) -DWINDOWS -c $(DIST2)
-	$(WINCC) -DWINDOWS $(OPT) $(LINKFLAGS) -o xbasic.exe $(DISTOBJS) \
-		$(LIBS) $(XLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe $(DISTOBJS) \
+		$(WINLIBS) Windows.extension/fnmatch.o
+	rm -f X11-Basic.zip
+	zip -j -D -K -o X11-Basic-@version@.zip Windows-Installer/setup.exe xbasic.exe \
+	Windows-Installer/readme.txt Windows-Installer/demo.bas \
+	Windows-Installer/x11basic.ico Windows-Installer/x11bver.txt \
+	Windows-Installer/X11-Basic.htm Windows-Installer/bas.ico
+
+examples: dist
+	cd .. ; zip -r  src/X11-Basic-examples-@version@.zip examples2/
+
+
+tineexe: $(OBJS) main.o mathematics.o
+	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
+	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(DISTOBJS) \
+		 Windows.extension/fnmatch.o rpclib.lib $(TINEWINLIBS)
 
 xbasic : $(DISTOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(DISTOBJS) \
@@ -178,7 +196,7 @@ clean :
 	rm -f xbasic xbasic.dyn xbasic.static *.o *.so a.out *.a
 
 distclean : clean
-	rm -f Makefile config.cache config.status config.log
+	rm -f Makefile config.cache config.status config.log X11-Basic-examples-1.07.zip
 
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)

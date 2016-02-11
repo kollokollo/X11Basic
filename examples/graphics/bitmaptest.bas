@@ -672,11 +672,11 @@ f1$=f1$+"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
 f1$=f1$+"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
 t$=inline$(f1$)
 clearw
-put_bitmap t$,0,0,640,400,get_color(65535,65535,0)
+color get_color(65535,65535,0)
+put_bitmap t$,0,0,640,400
 t$=inline$(biene$)
+color get_color(65535,65535,65535)
 for i=0 to 40
-put_bitmap t$,i*16,0,16,16,get_color(65535,65535,65535)
+  put_bitmap t$,i*16,0,16,16
 next i
 vsync
-pause 10
-quit

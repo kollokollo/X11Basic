@@ -1,4 +1,4 @@
-/* This file is part of X11BASIC, the basic interpreter for Unix/X
+/* This file is part of X11BASIC, the basic interpreter for Unix
  * ============================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
@@ -66,7 +66,7 @@ int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
 /* Spezielle Abwandlung zum erkennen von Exponentialformat */
 
 int is_operator(char c) {
-  return(!strchr("|&~!*/+-<>^ =",c)==NULL);
+  return(!(strchr("|&~!*/+-<>^ =",c)==NULL));
 }
 
 int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2)    {
@@ -295,9 +295,20 @@ int arg2(char *t,int klamb ,char *w1, char *w2)    {
 char *searchchr(char *buf, char c) {
  
  int f=0;
-  while(buf[0]!=0) {
-    if(buf[0]=='"') f= !f;
-    if(buf[0]==c && !f) return(buf);
+  while(*buf!=0) {
+    if(*buf=='"') f= !f;
+    if(*buf==c && !f) return(buf);
+    buf++;
+  }
+  return(NULL);
+}
+char *searchchr2(char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! */ 
+ int f=0,klam=0;
+  while(*buf!=0) {
+    if(*buf=='"') f= !f;
+    else if(*buf=='('  && !f) klam++;
+    if(*buf==c && !f && !(klam>0)) return(buf);
+    else if(*buf==')'  && !f) klam--;
     buf++;
   }
   return(NULL);

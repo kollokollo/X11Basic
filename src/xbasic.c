@@ -13,16 +13,16 @@
     
     
     
-                       VERSION 1.06
+                       VERSION 1.07
 
-            (C) 1997-2001 by Markus Hoffmann
+            (C) 1997-2002 by Markus Hoffmann
                  (m.hoffmann@uni-bonn.de)
        (http://www-cip.physik.uni-bonn.de/~hoffmann/)
    
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
 */
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+ * ====================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */  
@@ -71,7 +71,7 @@ VARIABLE variablen[ANZVARS];
 int anzvariablen=0;
 LABEL labels[ANZLABELS];
 int anzlabels=0;
-PROC procs[ANZPROCS];
+PROCEDURE procs[ANZPROCS];
 int anzprocs=0;
 int usewindow=DEFAULTWINDOW;
 
@@ -83,19 +83,19 @@ const COMMAND comms[]= {
  { P_ARGUMENT,  "?"         , c_print ,0,-1 ,{0}},
     
  { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
- { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2 },
+ { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2,{PL_NUMBER,PL_PROC}},
  { P_PLISTE,     "ALERT"    , c_alert     ,5, 6,{PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
- { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2},
- { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2},
+ { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2,{PL_ARRAY,PL_ARRAY}},
+ { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2,{PL_ARRAY,PL_VALUE}},
 
- { P_SIMPLE, "BEEP"     , c_beep      ,0, 0},
- { P_SIMPLE, "BELL"     , c_beep      ,0, 0},
+ { P_SIMPLE,     "BEEP"     , c_beep      ,0, 0},
+ { P_SIMPLE,     "BELL"     , c_beep      ,0, 0},
  { P_ARGUMENT,   "BGET"     , c_bget      ,3, 3,{PL_FILENR,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BLOAD"    , c_bload     ,2, 3,{PL_STRING,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3, {PL_INT,PL_INT,PL_INT} }, 
  { P_PLISTE,     "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BPUT"     , c_bput      ,3, 3,{PL_FILENR,PL_INT,PL_INT}},
- { P_BREAK,  "BREAK"    , c_break     ,0, 0}, 
+ { P_BREAK,      "BREAK"    , c_break     ,0, 0}, 
  { P_ARGUMENT,   "BSAVE"    , c_bsave     ,3, 3,{PL_STRING,PL_INT,PL_INT}},
 
  { P_ARGUMENT,   "CALL"     , c_exec,1,-1,{PL_INT}},
@@ -104,26 +104,25 @@ const COMMAND comms[]= {
  { P_PLISTE,     "CIRCLE"   , c_circle ,3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "CLEAR"    , c_clear  ,0,-1},
  { P_ARGUMENT,   "CLEARW"   , c_clearw ,0,1,{PL_INT}},
- { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1},
+ { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1,{PL_FILENR}},
  { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1,{PL_INT}},
- { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1},
+ { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1,{PL_ALLVAR}},
  { P_SIMPLE, "CLS"      , c_cls    ,0,0},
  { P_PLISTE,   "COLOR"    , c_color  ,1,2,{PL_INT,PL_INT}},
  { P_SIMPLE, "CONT"     , c_cont   ,0,0},
  { P_PLISTE, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 /* Kontrollsystembefehle  */
 #ifdef CONTROL 
-
- { P_ARGUMENT,   "CSPUT"    , c_csput ,2,-1},
+ { P_ARGUMENT,   "CSPUT"    , c_csput ,2,-1,{PL_STRING,PL_VALUE}},
  { P_SIMPLE, "CSCLEARCALLBACKS"    , c_csclearcallbacks,0,0},
- { P_ARGUMENT,   "CSSET"    , c_csput,2,-1},
+ { P_ARGUMENT,   "CSSET"    , c_csput,2,-1,{PL_STRING,PL_VALUE}},
  { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,2,-1},
  { P_ARGUMENT,   "CSSWEEP"  , c_cssweep,2,-1},
  { P_ARGUMENT,   "CSVPUT"   , c_csvput,2,-1},
 #endif
 
  { P_DATA,     "DATA"     , c_nop ,0,-1 },
- { P_ARGUMENT, "DEC"      , c_dec, 1,1},
+ { P_ARGUMENT, "DEC"      , c_dec, 1,1,{PL_NVAR}},
  { P_DEFAULT,  "DEFAULT"  , c_case, 0,0},
  { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,{PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "DEFLINE"  , c_defline ,1,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
@@ -140,7 +139,7 @@ const COMMAND comms[]= {
  { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
  { P_PLISTE,   "ELIPSE"   , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_ELSE,   "ELSE"     , bidnm  ,0,2},
+ { P_ELSE,   "ELSE"     , bidnm  ,0,2,{PL_KEY,PL_CONDITION}},
  { P_SIMPLE, "END"      , c_end   ,0,0},
  { P_ENDPROC,"ENDFUNC"  , c_return,0,0},
  { P_ENDPROC,"ENDFUNCTION", c_return,0,0},
@@ -158,10 +157,12 @@ const COMMAND comms[]= {
 */
  { P_ARGUMENT,   "FFT"      , c_fft,1,-1},
  { P_PLISTE,   "FILESELECT", c_fileselect,4,4,{PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
- { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
- { P_FOR,    "FOR"      , c_for,1,-1,{PL_KEY}},
+ { P_ARGUMENT,   "FIT",        c_fit,4,10,{PL_FARRAY,PL_FARRAY}},
+ { P_ARGUMENT,   "FIT_LINEAR", c_fit_linear,4,10,{PL_FARRAY,PL_FARRAY}},
+ { P_ARGUMENT,   "FLUSH"    , c_flush,0,1,{PL_FILENR}},
+ { P_FOR,    "FOR"      , c_for,1,-1,{PL_EXPRESSION,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
  { P_ARGUMENT,    "FREE"      , c_free,1,1,{PL_INT}},
- { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_KEY}},
+ { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_EXPRESSION}},
 
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
  { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1,{PL_PROC}},
@@ -169,10 +170,10 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "GPRINT"    , c_gprint,       0,-1},
  { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
 
- { P_ARGUMENT,   "HELP"    , c_help,0,1,{PL_KEY}},
+ { P_ARGUMENT,   "HELP"    , c_help,0,1,{PL_EXPRESSION}},
  { P_SIMPLE, "HOME"     , c_home,0,0},
 
- { P_IF,     "IF"       , c_if,1,-1,{PL_KEY}},
+ { P_IF,     "IF"       , c_if,1,-1,{PL_CONDITION}},
  { P_ARGUMENT,   "INC"      , c_inc,1,1,{PL_NVAR}},
  { P_ARGUMENT,   "INFOW"    , c_infow,2,2,{PL_INT,PL_STRING}},
  { P_ARGUMENT,   "INPUT"    , c_input,1,-1},
@@ -180,7 +181,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "KEYEVENT" , c_keyevent,0,8},
 
 
- { P_ARGUMENT,   "LET"      , c_let,1,-1,{PL_KEY}},
+ { P_ARGUMENT,   "LET"      , c_let,1,-1,{PL_EXPRESSION}},
  { P_PLISTE,     "LINE"     , c_line,4,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "LINEINPUT", c_lineinput,1,2},
  { P_PLISTE,     "LINK"     , c_link,       2,2,{PL_FILENR,PL_STRING}},
@@ -241,7 +242,7 @@ const COMMAND comms[]= {
 
  { P_PLISTE, "RANDOMIZE", c_randomize  ,      0,1,{PL_INT}},
  { P_PLISTE,     "RBOX"      , c_rbox       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_ARGUMENT,   "READ"     , c_read,       1,-1},
+ { P_ARGUMENT,   "READ"     , c_read,       1,-1,{PL_ALLVAR}},
  { P_ARGUMENT,   "RELSEEK"  , c_relseek,    2,2,{PL_FILENR,PL_INT}},
  { P_REM,    "REM"      , c_nop  ,      0,0},
  { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
@@ -267,35 +268,39 @@ const COMMAND comms[]= {
  { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,{PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,	"SGET" , c_sget,   1,1,{PL_STRING}},
  { P_ARGUMENT,  "SHM_DETACH"      , c_detatch,1,1,{PL_INT}},
- { P_ARGUMENT,  "SHM_FREE"      , c_shm_free,1,1,{PL_INT}},
+ { P_ARGUMENT,  "SHM_FREE" , c_shm_free,1,1,{PL_INT}},
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
  { P_ARGUMENT,	"SIZEW"    , c_sizew,      3,3,{PL_INT,PL_INT,PL_INT}},
- { P_ARGUMENT,	"SPLIT" , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
- { P_ARGUMENT,	"SPUT"    , c_sput,      1,1,{PL_STRING}},
+ { P_ARGUMENT,  "SORT",     c_sort,        2,3,{PL_ARRAY,PL_INT,PL_IARRAY}},
+
+ { P_ARGUMENT,	"SPLIT"    , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { P_ARGUMENT,	"SPUT"     , c_sput,      1,1,{PL_STRING}},
  { P_SIMPLE,	"STOP"     , c_stop,       0,0},
  { P_ARGUMENT,	"SUB"      , c_sub,        2,2,{PL_NVAR,PL_NUMBER}},
- { P_ARGUMENT,	"SWAP"     , c_swap,       2,2},
- { P_SELECT,	"SWITCH"   , c_select,     1,1},
+ { P_ARGUMENT,	"SWAP"     , c_swap,       2,2,{PL_VAR,PL_VAR}},
+ { P_SELECT,	"SWITCH"   , c_select,     1,1,{PL_CONDITION}},
  { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1,{PL_STRING}},
 
  { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
 #ifdef TINE
  { P_ARGUMENT,   "TINEMONITOR", c_tinemonitor,2,-1},
+ { P_ARGUMENT,   "TINEPUT"    , c_tineput ,2,-1,{PL_STRING}},
+ { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,{PL_STRING}},
 #endif
  { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2,{PL_INT,PL_STRING}},
  { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
 
- { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1},
- { P_UNTIL,	"UNTIL"    , c_until,      1,1},
+ { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1,{PL_FILENR}},
+ { P_UNTIL,	"UNTIL"    , c_until,      1,1,{PL_CONDITION}},
  { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1,{PL_INT}},
 
  { P_SIMPLE,	"VERSION"  , c_version,    0,0},
- { P_ARGUMENT,	"VOID"     , c_void,       1,1},
+ { P_ARGUMENT,	"VOID"     , c_void,       1,1,{PL_CONDITION}},
  { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
 
  { P_WEND,	"WEND"     , bidnm,       0,0},
- { P_WHILE,	"WHILE"    , c_while,      1,1},
+ { P_WHILE,	"WHILE"    , c_while,      1,1,{PL_CONDITION}},
  { P_ARGUMENT,	"WORT_SEP" , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
  
  { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
@@ -304,27 +309,12 @@ const COMMAND comms[]= {
 };
 const int anzcomms=sizeof(comms)/sizeof(COMMAND);
 
+#if 0
+char *keys[]={"ON","OFF","IF","TO","DOWNTO","STEP","USING"};
+const int anzkeys=sizeof(keys)/sizeof(char *);
+#endif
 
 
-P_CODE make_pcode(char *n) {
-  int oa,i,a,b;
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-
-  /* Kommandoliste durchsuchen, moeglichst effektiv ! */
-
-  i=0;a=anzcomms;
-  for(b=0; b<strlen(w1); b++) {
-    while(w1[b]>(comms[i].name)[b] && i<a) i++;
-    oa=a;a=i;
-    while(w1[b]<(comms[a].name)[b]+1 && a<oa) a++;
-    if(i==a) break;
-  }
-  if(i<anzcomms) {
-    if(strcmp(w1,comms[i].name)==0) {(comms[i].routine)(w2);return;}
-  }   
-  
-
-}
 
 int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
   char w1[strlen(n)+1],w2[strlen(n)+1];

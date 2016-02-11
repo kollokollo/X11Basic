@@ -927,7 +927,7 @@ fi
 PATH_SEPARATOR="$ac_path_separator"
 rm -f conftest.sh
 
-version="1.07"
+version="1.08"
 vdate=`date`
 
 cat > version.h  <<EOF
@@ -3439,13 +3439,77 @@ else
   def="$def -DNO_STRDUP"
 fi
 
-echo "$as_me:3442: checking for bzero" >&5
+echo "$as_me:3442: checking for kbhit" >&5
+echo $ECHO_N "checking for kbhit... $ECHO_C" >&6
+if test "${ac_cv_func_kbhit+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+#line 3448 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char kbhit (); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char kbhit ();
+char (*f) ();
+
+int
+main ()
+{
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_kbhit) || defined (__stub___kbhit)
+choke me
+#else
+f = kbhit;
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:3479: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:3482: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:3485: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:3488: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_func_kbhit=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_func_kbhit=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:3498: result: $ac_cv_func_kbhit" >&5
+echo "${ECHO_T}$ac_cv_func_kbhit" >&6
+if test $ac_cv_func_kbhit = yes; then
+  :
+else
+  def="$def -DNO_KBHIT"
+fi
+
+echo "$as_me:3506: checking for bzero" >&5
 echo $ECHO_N "checking for bzero... $ECHO_C" >&6
 if test "${ac_cv_func_bzero+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<_ACEOF
-#line 3448 "configure"
+#line 3512 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char bzero (); below.  */
@@ -3476,16 +3540,16 @@ f = bzero;
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:3479: \"$ac_link\"") >&5
+if { (eval echo "$as_me:3543: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:3482: \$? = $ac_status" >&5
+  echo "$as_me:3546: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:3485: \"$ac_try\"") >&5
+  { (eval echo "$as_me:3549: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:3488: \$? = $ac_status" >&5
+  echo "$as_me:3552: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   ac_cv_func_bzero=yes
 else
@@ -3495,7 +3559,7 @@ ac_cv_func_bzero=no
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
-echo "$as_me:3498: result: $ac_cv_func_bzero" >&5
+echo "$as_me:3562: result: $ac_cv_func_bzero" >&5
 echo "${ECHO_T}$ac_cv_func_bzero" >&6
 if test $ac_cv_func_bzero = yes; then
   :
@@ -3503,11 +3567,11 @@ else
   def="$def -DNO_BZERO"
 fi
 
-echo "$as_me:3506: checking if statfs() and stat() work as I want them to" >&5
+echo "$as_me:3570: checking if statfs() and stat() work as I want them to" >&5
 echo $ECHO_N "checking if statfs() and stat() work as I want them to... $ECHO_C" >&6
 statfs=no
 cat >conftest.$ac_ext <<_ACEOF
-#line 3510 "configure"
+#line 3574 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -3523,16 +3587,16 @@ struct statvfs s; struct stat st; statvfs("/",&s); stat("/",&st);
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:3526: \"$ac_link\"") >&5
+if { (eval echo "$as_me:3590: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:3529: \$? = $ac_status" >&5
+  echo "$as_me:3593: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:3532: \"$ac_try\"") >&5
+  { (eval echo "$as_me:3596: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:3535: \$? = $ac_status" >&5
+  echo "$as_me:3599: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   statfs=STATFS_USE_STATVFS
 else
@@ -3542,7 +3606,7 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 if test $statfs = no; then
 cat >conftest.$ac_ext <<_ACEOF
-#line 3545 "configure"
+#line 3609 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -3558,16 +3622,16 @@ struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:3561: \"$ac_link\"") >&5
+if { (eval echo "$as_me:3625: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:3564: \$? = $ac_status" >&5
+  echo "$as_me:3628: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:3567: \"$ac_try\"") >&5
+  { (eval echo "$as_me:3631: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:3570: \$? = $ac_status" >&5
+  echo "$as_me:3634: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   statfs=STATFS_USE_VFS
 else
@@ -3578,7 +3642,7 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 if test $statfs = no; then
 cat >conftest.$ac_ext <<_ACEOF
-#line 3581 "configure"
+#line 3645 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -3595,16 +3659,16 @@ struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:3598: \"$ac_link\"") >&5
+if { (eval echo "$as_me:3662: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:3601: \$? = $ac_status" >&5
+  echo "$as_me:3665: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:3604: \"$ac_try\"") >&5
+  { (eval echo "$as_me:3668: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:3607: \$? = $ac_status" >&5
+  echo "$as_me:3671: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   statfs=STATFS_USE_MOUNT
 else
@@ -3615,7 +3679,7 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 if test $statfs = no; then
 cat >conftest.$ac_ext <<_ACEOF
-#line 3618 "configure"
+#line 3682 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -3632,16 +3696,16 @@ struct statfs s; struct stat st; statfs("/",&s); stat("/",&st);
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:3635: \"$ac_link\"") >&5
+if { (eval echo "$as_me:3699: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:3638: \$? = $ac_status" >&5
+  echo "$as_me:3702: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:3641: \"$ac_try\"") >&5
+  { (eval echo "$as_me:3705: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:3644: \$? = $ac_status" >&5
+  echo "$as_me:3708: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   statfs=STATFS_USE_STATFS_VMOUNT
 else
@@ -3656,7 +3720,7 @@ echo "Sorry, this doesn't seem to work. Please let me know what system you are"
 echo "using, and I'll try to fix this problem. Will continue."
 
 fi
-echo "$as_me:3659: result: $statfs" >&5
+echo "$as_me:3723: result: $statfs" >&5
 echo "${ECHO_T}$statfs" >&6
 def="$def -D$statfs"
 rm -f config.h; ln -s $conf config.h
@@ -3773,7 +3837,7 @@ rm -f confdef2opt.sed
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
 ac_clean_files="$ac_clean_files $CONFIG_STATUS"
-{ echo "$as_me:3776: creating $CONFIG_STATUS" >&5
+{ echo "$as_me:3840: creating $CONFIG_STATUS" >&5
 echo "$as_me: creating $CONFIG_STATUS" >&6;}
 cat >$CONFIG_STATUS <<_ACEOF
 #! $SHELL
@@ -3943,7 +4007,7 @@ cat >>$CONFIG_STATUS <<\EOF
     echo "$ac_cs_version"; exit 0 ;;
   --he | --h)
     # Conflict between --help and --header
-    { { echo "$as_me:3946: error: ambiguous option: $1
+    { { echo "$as_me:4010: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -3962,7 +4026,7 @@ Try \`$0 --help' for more information." >&2;}
     ac_need_defaults=false;;
 
   # This is an error.
-  -*) { { echo "$as_me:3965: error: unrecognized option: $1
+  -*) { { echo "$as_me:4029: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -3999,7 +4063,7 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "default" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default" ;;
-  *) { { echo "$as_me:4002: error: invalid argument: $ac_config_target" >&5
+  *) { { echo "$as_me:4066: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -4211,7 +4275,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:4214: creating $ac_file" >&5
+    { echo "$as_me:4278: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -4229,7 +4293,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:4232: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:4296: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -4242,7 +4306,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:4245: error: cannot find input file: $f" >&5
+           { { echo "$as_me:4309: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;

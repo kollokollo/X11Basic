@@ -8,9 +8,9 @@
     
     
     
-                       VERSION 1.07
+                       VERSION 1.08
 
-            (C) 1997-2002 by Markus Hoffmann
+            (C) 1997-2003 by Markus Hoffmann
                  (m.hoffmann@uni-bonn.de)
        (http://www-cip.physik.uni-bonn.de/~hoffmann/)
 
@@ -20,7 +20,7 @@
 
       See the file `COPYING' for licensing information
 
-         Last change to this file: Aug 29, 2002
+         Last change to this file: Dec 13, 2002
 
 ==>                                                         <==
  Structured-BASIC-Interpreter with X11 graphic capabilities                          
@@ -46,7 +46,6 @@
  - Variable types indicated by appendix to name:  
      varname     REAL (double)                    
      varname%    INTEGER (long)                   
-     varname!    BOOLEAN          (*)              
      varname$    STRING                   
  - PROCEDURE and FUNCTION can have formal parameters 
              and local variables                  
@@ -54,6 +53,7 @@
  - integrated graphic instructions                
 
  - A self compiling Pseudo-compiler is available
+ - Many sample programs are available
 
 (*) not implemented yet
 
@@ -102,10 +102,10 @@ computers.
 The syntax is most similar to the old GFA-Basic ATARI ST
 implementation. Old gfa-programs should run with only few changes. 
 
-The actual implementation runs on Unix workstations (like HP/UX, DEC alpha 
-and maybe others) and Linux-PCs with the X-Window system. A MS-Windows version 
-might be supported in near future. Also Hand-held PC Versions or adaptations to 
-VxWorks are actually been thought of.
+The actual implementation runs on Unix workstations (like HP/UX, DEC alpha  and
+maybe others) and Linux-PCs with the X-Window system. A MS-Windows version  has
+been started. Also Hand-held PC Versions or adaptations to  VxWorks are
+actually been thought of.
 
 X11-Basic is as well suited to novices as programming wizards, and is
 appropriate for virtually all programming tasks. For science and engineering
@@ -116,9 +116,9 @@ understand, and maintain. For all applications, X11-Basic designed to support
 rapid development of compact, efficient, reliable, readable, portable, well
 structured programs.
 
-The X11-Basic environment contains a library of GUI
-functions.  This makes writing GUI programs in X11-Basic faster and easier than
-programming with native GUI tools.
+The X11-Basic environment contains a library of GEM GUI functions.  This makes
+writing GUI programs in X11-Basic faster and easier than programming with
+native GUI tools.
 
 Structured Programming
 
@@ -150,9 +150,10 @@ xbasic --eval 1+3-4*3
 
 1.3.1 X11-Basic as daemon:
 
-wird X11-Basic mit
+X11-Basic programs can act as daemons (with no terminal connected). Invoke the
+interpreter with the option --daemon
 xbasic --daemon
-gestartet, so erscheint bei der Kommandoeingabe kein Prompt und es erfolgt kein 
+so erscheint bei der Kommandoeingabe kein Prompt und es erfolgt kein 
 Echo der Tastatureingabe.
 
 1.3.2 X11-Basic as shell:
@@ -198,9 +199,9 @@ Logische Ausdrücke:    (a=2 AND b=5) sind vom Typ Integer (TRUE=-1, FALSE=0)
 
 Strings
 
-X11-Basic string variables automatically resize to hold whatever length string is
-assigned to them.  A wealth of intrinsics and functions are provided to support
-efficient string processing.  
+X11-Basic string variables automatically resize to hold whatever length string
+is assigned to them.  A wealth of intrinsics and functions are provided to
+support efficient string processing.  
 
 Arrays
 
@@ -332,9 +333,9 @@ Ausdrücken miteinander verbunden werden.
 
 In der Regel werden mit logischen Operatoren Wahrheitswerte verknüpft und als
 Ergebnis wiederum Wahrheitswerte ausgegeben.
-Dabei wird jedem numerischen Ausdruck ungleich 0 der Wahrheitswert 0 und jedem
-Ausdruck, dessen Wert gleich 0 ist, der Wahrheitswert falsch zugeordnet.
-Die von den Logischen Operatoren erzeugten Wahrheitswerte ergeben sich aus
+Dabei wird jedem numerischen Ausdruck ungleich 0 der Wahrheitswert >wahr< und jedem
+Ausdruck, dessen Wert gleich 0 ist, der Wahrheitswert >falsch< zugeordnet.
+Die von den logischen Operatoren erzeugten Wahrheitswerte ergeben sich aus
 der Bit-weisen Operation, wenn die Operanden als 32-Bit Integerwerte
 angesehen werden. Deshalb gehört zum Wahrheitswert 0 (falsch) der
 Wahrheitswert -1 (wahr). Hierfür gibt es auch die Systemvariablen TRUE=-1
@@ -345,26 +346,12 @@ Werte 100 oder 200.
 AND   Konjunktion
       Das Ergebnis von AND ist nur dann w, wenn beide Argumente w sind:
 
-      A  |  B  |  A AND B
-    -----+-----+-----------
-      w  |  w  |    w
-      w  |  f  |    f
-      f  |  w  |    f
-      f  |  f  |    f
-
       Beispiele:
       Print 3=3 AND 4>2        ergibt  -1 (w)
       Print 3>3 AND 5>3        ergibt   0 (f)
 
 OR   Disjunktion
      Das Ergebnis von OR ist nur dann f, wenn beide Argumente f sind:
-
-      A  |  B  |  A OR B
-    -----+-----+-----------
-      w  |  w  |    w  
-      w  |  f  |    w
-      f  |  w  |    w
-      f  |  f  |    f
       
       Beispiele:
       Print "A"<"a" OR 3=5     ergibt  -1 (w)
@@ -386,11 +373,6 @@ XOR  Exclusives (oder ausschließendes) Oder
       Print 3>5 XOR 3<5     ergibt  -1 (w)
 
 NOT   Die Negation vertauscht Wahrheitswerte in ihr Gegenteil.
-
-      A  |  NOT A
-    -----+----------
-      w  |   f 
-      f  |   w  
 
       Beispiel:
       Print NOT 3=3      ergibt   0 (f)
@@ -421,6 +403,11 @@ Wahrheitswert verbundener Ausdrücke verschiedene Programmabläufe zu ermöglichen
 Logische Operatoren können aber auch dazu benutzt werden, um Bitfolgen zu
 verknüpfen.
 
+      Beispiel:
+      PRINT 9 AND 5      ergibt   1
+
+
+
 Math Functions
 
 
@@ -436,6 +423,8 @@ functions, including:
 	logarithmic  ( base e and base 10 )
 	exponential  ( base e and base 10 )
 	miscellaneous  ( square root, power, etc. )
+
+Some math functions are defined on Vectors and Matrices.
 
 
 Angles
@@ -541,13 +530,14 @@ der Interpreter ja Basic.
 
 
 At the moment, X11-Basic only recognizes 2 kind of vars; Strings and Doubles.
-The integers are not yet fully implemented. So please do not use them at the
-moment.
+
+!!! The integers are not yet fully implemented. So please do not use them at
+!!! the moment.
 
 Variablenames and commands are case insensitive. Names of variables are limited
-of a number of characters or digits specified in defs.h and have to
-begin with a character. Each name is bound to only one kind of variable; A$  is
-a whole different variable(value) then A wich is different from A(1,1) or
+of a number of characters or digits specified in defs.h (default 64) and have
+to begin with a character. Each name is bound to only one kind of variable; A$ 
+is a whole different variable(value) then A wich is different from A(1,1) or
 A$(1,1).
 
 Space between commands will be ignored, but note that no space is allowed 
@@ -556,9 +546,9 @@ So, ASC("A") is good, ASC(     "A"     ) also,
 but ASC ("A") isn't.
 
 There are some reserved variables. Some Keywords may not work as varable names
-as well. Although  there is no checking done, parsing errors could occure.
+as well. Although there is no checking done, parsing errors could occure.
 Please try the command LET in such cases. In general, as long as an ending of
-an variable name is different then any command or keyword, it's  usable as
+an variable name is different then any command or keyword, it's usable as
 name.
 
 Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
@@ -637,7 +627,7 @@ DATE$                 Aktuelles Datum
 
 ==================== commands :  Befehle ==============================
 
-ADD a,b			-- gleiche Wirkung wie a=a+b
+ADD a,b			-- same as a=a+b but faster
 AFTER n,procedure       -- Nach n Sekunden wird die Procedure einmal ausgeführt
 ALERT a%,b$,c%,d$,var[,ret$]-- Warn- und Infobox                    
                     a%     sign: 1=! 2=? 3=STOP        
@@ -677,8 +667,8 @@ CONT                    -- Programmausführung fortfahren
 DATA 1,"Hallo",...	-- Definiert Konstanten im Programmcode
 DEC var                 -- Decrementiere var
 DEFAULT                 -- see SELECT * CASE * DEFAULT * ENDSELECT
-DEFFILL c,a,b
-DEFLINE a,b
+DEFFILL c,a,b		-- set fill style and pattern 
+DEFLINE a,b		-- set line width and type
 DEFMARK c,a,g      -+- define: colour, size, type (POLYMARK)        
                     |  c     colour                         
                     |  a     type of marker                 
@@ -686,12 +676,12 @@ DEFMARK c,a,g      -+- define: colour, size, type (POLYMARK)
                     +- g     size of marker (0,20,40,60,80,100)                        
 
 DEFMOUSE i%		-- ändert das Erscheinungsbild des Mauscursors.
-DEFTEXT c,s,r,g
+DEFTEXT c,s,r,g		-- set text properties for ltext
 DIM                     -- Dimensionierung von Arrays
 DIV a,b                 -- entspricht a=a/b
 DO * LOOP		-- Endlosschleife
 DPOKE adr%,word%        -- Schreibt den 2-Byte-Wert an Adresse adr%
-DRAW [[x1,y1] TO] x2,y2
+DRAW [[x1,y1] TO] x2,y2 -- draw line 
 DUMP			-- lists all used variable names
 DUMP "@"                -- list of Funktionen und Prozeduren
 DUMP ":"                -- list of all labels
@@ -700,7 +690,7 @@ DUMP "K"                -- list of implementierten Kommandos
 DUMP "F"                -- list of internal functions
 
 ECHO {ON|OFF}           -- Programmzeilenechomodus ein-/ausschalten
-EDIT              set edit-mode and perform the following actions
+EDIT             -- set edit-mode and perform the following actions
                  - SAVE "name.~~~"   writes the BASIC-program 
                    into a temporary file,                     
                  - calls the editor '$EDITOR'                      
@@ -716,7 +706,7 @@ ENDSELECT               -- see SELECT * CASE * DEFAULT * ENDSELECT
 ERASE a()[,b$(),...]    -- Löscht felder
 ERROR n%                -- löst Fehler Nr. n% aus
 EVENT
-EVERY
+EVERY n,procedure	-- invokes procedure every n seconds
 EXEC adr%[,var%[,...]]	-- Ruft Unterroutine an Adresse adr% auf. Die Parameter 
                            aus der Parameterliste werden auf dem Stack
 			   übergeben. Typen werden mit D: (double)
@@ -733,6 +723,10 @@ FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box
 		    pfad$    search-path + selector  
                     default$ filename                
                     f$   return selected filename with path or ""
+FIT x(),y()[,yerr()],n,func(x,a,b,c,...) -- noch nicht fertig !
+FIT_LINEAR x(),y()[,[xerr(),]yerr()],n,a,b[,siga,sigb,chi2,q]
+			-- Lineare Regression optional mit Fehlerbalken in beide
+			   Richtungen. n=Anzahl der Fitpunkte, f(x)=a+b*x
 FLUSH [#n]              -- Output flushen
 
 FOR * NEXT		-- For Next Schleife
@@ -744,7 +738,7 @@ GET x,y,w,h,g$          -- Grafik-Ausschnitt in g$ speichern
 GOSUB procedure(varliste) -- Unterroutine aufrufen
 GOTO label              -- An stelle label springen
 GPRINT                  -- like PRINT, but the output goes to the graphic window
-GRAPHMODE mode      set graphic-mode                 
+GRAPHMODE mode      	-- set graphic-mode                 
                     mode: 1=replace 2=transparent    
                           3=xor 4=reverse transparent
 
@@ -825,7 +819,7 @@ OPEN mode$,#n,filename$	-- Öffnet ein file
                     mode$="S"   socket                  
 
 OPENW n
-OUT #n,a
+OUT #n,a		-- out byte a to channel n
 
 PAUSE sec		-- Hält Programmausführung für sec Sekunden an
 PBOX  x1,y1,x2,y2       -- filled box
@@ -845,6 +839,7 @@ POLYMARK n,x(),y()  draw polygon points
                     type of points defined in DEFMARK
                     n        # of points
                     x(),y()  arrays with (x,y)-values of points
+PRBOX x1,y1,x2,y2       -- filled rounded box
 PRINT a;b$              -- Ausgewachsener BASIC-Standard-Befehl
 PRINT USING             -- mit Formatierung
 PROCEDURE procname [(p1 [,p2] ... )]  * RETURN
@@ -860,18 +855,18 @@ PUT_BITMAP t$,i%,i%,i%,i%
 QUIT                    -- Verlässt den X11-BASIC-Interpreter
 
 RANDOMIZE [seed%]	-- Sets seed for random generator, normally TIMER is used for this
-RBOX i%,i%,i%,i%
+RBOX i%,i%,i%,i%        -- draws a rounded box
 READ var                -- reads constant from DATA statement
 RELSEEK #n,d		-- Place filepointer on new relative position d
 REM Kommentar           -- Kommentarzeile 
 REPEAT                  -- siehe REPEAT * UNTIL
 RESTORE [label]         -- (re)sets pointer for READ-statement to "label" 
 RESUME
-RETURN                  --   define the end of a PROCEDURE          
-RETURN expr             --   return value from FUNCTION          
-RSRC_LOAD filename$
-RSRC_FREE
-RUN            -- Startet die Programmausführung
+RETURN                  -- define the end of a PROCEDURE          
+RETURN expr             -- return value from FUNCTION          
+RSRC_LOAD filename$     -- loads GEM rsc-File (ATARI ST)
+RSRC_FREE               -- frees GEM rsc-File (ATARI ST)
+RUN                     -- Startet die Programmausführung
 
 SAVE [a$]        -- writes the BASIC-program into file with the name a$      
 SCOPE a(),typ,yscale,yoffset   -- Schnelles Plotten des Feldes a()
@@ -880,6 +875,8 @@ SEEK #n,d		-- Place filepointer on new absolute position d
 SETENV t$=a$   -- Sets environmentvar t$ using value a$
 SGET screen$   -- Fensterinhalt in screen$ speichern
 SHOWPAGE       -- Aktualisiert die Grafikausgabe
+SORT a(),n[,b()] -- Sortiert die ersten n Werte von a() in aufsteigender
+                    Reihenfolge. b() wird mitsortiert. Z.B. Indextabelle 
 SPUT screen$   -- (xwd) Grafik in screen$ auf Window
 SUB a,b        -- same as a=a-b
 SWAP
@@ -957,12 +954,15 @@ b=FRAC(a)		-- Liefert den nichtganzzahligen Anteil an a
 FRE(n)			-- Keine Funtion, nur aus Kompatibilitätsgründen da.
 a=FREEFILE()            -- Returns first free filenumber or -1
 
+a=GASDEV(dummy)         -- Zufallszahl Gaussverteilt
 c%=GET_COLOR(r%,g%,b%) -- Alloziert eine Farbe in der Farbtabelle und gibt die
                           Nummer zurück. Ist in der Farbtabelle kein Platz
 			  mehr, so wird die Nummer derjenigen Farbe
 			  zurückgegeben, die der angeforderten am nächsten
 			  kommt.
 f%=GLOB(a$,b$[,flags%])     -- Testet, ob a$ in das Pattern b$ passt
+
+b=GRAY(a)		-- Gibt Graycode zurueck. wenn a<0: inverser Graycode
 
 t$=HEX$(a%[,n%])        -- a% als Hexadezimalzahl
 HYPOT(num,num)
@@ -981,6 +981,10 @@ a%=INSTR(s1$,s2$[,n])   -- tests if s2$ is contained in s1$, then
                            returns start-position of s2$, else 0.
                            start comparison at pos. n (default=1)
 i=INT(a)		-- Schneidet die Nachkommastellen ab, liefert ganze Zahl
+
+a=julian(date$)         -- Julianischer Tag
+d$=juldate$(a)          -- Umkehrfunktion
+
 
 LEFT$(a$[,n%])          -- extraxts from string a$ the first (left) n characters
 l%=LEN(t$)              -- length of string
@@ -1016,12 +1020,16 @@ POS
 t$=PRG$(i)              -- Programmzeile i (Quelltext)
 
 
+RAND(dummy)             -- Ganze Zufallszahl zwischen 0 und einer Systemabhaengigen
+				groessten Zahl
 RANDOM(n%)              -- Zufallszahl zwischen [0 und n%[
+
 RIGHT$(a$,n%)
 a%=RINSTR(s1$,s2$[,n])  -- tests if s2$ is contained in s1$, then      
                            returns start-position of s2$, else 0.
                            start comparison at pos. n (default=1)
                            start comparison at right
+RND(dummy)		-- Zufallszahl zwischen 0 und 1, gleichverteilt
 RSRC_GADDR(typ%,nr%)
 
 b=SIN(a)		-- Sinus
@@ -1044,6 +1052,9 @@ t$=TERMINALNAME$(#n)    -- Devicename des Terminals an Kanal n
 b=TRUNC(a)
 
 u$=UCASE$(t$)		-- identisch mit UPPER$()
+t$=unixtime$(i%)        -- Zu einem Zeitstempel gehoerende Zeit
+d$=unixdate$(i%)        -- zugehoeriges Datum
+
 u$=UPPER$(t$)		-- liefert t$ in Großbuchstaben
 
 a=VAL(t$)		-- Wandelt String in Zahl, falls der String eine
@@ -1275,7 +1286,7 @@ source code is linked to the X11-Basic library so there results one
 independant executable. Another advantage is that it is quite hard to extract a
 full running *.bas File from this binary since the code is compressd in a way. 
 
- You can find the compiler in examples/utils/compiler.bas. Yes, the compiler
+ You can find the compiler in examples/compiler/compiler.bas. Yes, the compiler
  compiles itself. Yust make sure you have built the shared library 
  libx11basic.so and the library for static linking before 
  (make lib; make x11basic.a) and moved it to /usr/lib.
@@ -1438,7 +1449,7 @@ Version 1.05 (Aug. 2001)
 - new system errors
 - started to translate everything into english
 
-Version 1.06 (Jan. 2001)
+Version 1.06 (Jan. 2002)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 - included serial device support
@@ -1454,6 +1465,14 @@ Version 1.07 (Aug. 2002)
   ist nun endlich behoben !!!
 - Anbindung an tine-Bibliothek und Kontrollsystem ist nun moeglich
 
+Version 1.08 (Jan. 2003)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Support for tine-library
+- a first MS-WINDOWS version is now available
+- some new functions
+- FIT and FIT_LINEAR
+- SORT command
+
 --------------------------------------------------------------------------------
 
 
@@ -1461,6 +1480,7 @@ Things left to do:
 ==================
 - Speed up the interpretation  with precompiled tokens
 - Optimize a bit more
+- The WIndows-Version needs more work
 - Fix the bugs
 (etc. etc.)
 

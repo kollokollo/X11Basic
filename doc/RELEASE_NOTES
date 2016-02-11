@@ -1,5 +1,6 @@
-Release notes for version 1.06
+Release notes for version 1.08
 ===============================
-- included serial device support
-- improved FILESELECT
-- modified ALERT
+- a first MS-WINDOWS version is now available
+- some new functions
+- SORT command
+

@@ -22,7 +22,7 @@ typedef struct {
   int typ;
   int zeile;
   char *parameterliste;
-} PROC;
+} PROCEDURE;
 
 
 /* P-Code-Definitionen   long */
@@ -223,8 +223,10 @@ typedef struct {
 #define PL_FVAR    0x2000
 #define PL_SVAR    0x4000
 #define PL_NVAR   (PL_IVAR|PL_FVAR)
-#define PL_AVAR    0x8000
 #define PL_VAR   (PL_SVAR|PL_NVAR)
+#define PL_ALLVAR   (PL_ARRAY|PL_SVAR|PL_NVAR)
 #define PL_ALL   (PL_VAR|PL_ADD)
-
+#define PL_VALUE (PL_INT|PL_FLOAT|PL_STRING)
+#define PL_CONDITION 0x8000
+#define PL_EXPRESSION PL_EVAL
 #endif

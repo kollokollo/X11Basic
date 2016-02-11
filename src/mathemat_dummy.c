@@ -6,9 +6,6 @@
  * COPYING for details
  */
  
-#include "math.h"
-
-
 
 /* Routinen f"uer Fouriertransformation   */
 /* aus num rec. modifiziert --> double    */
@@ -22,8 +19,8 @@ void four1(data,nn,isign)
 double *data;
 int nn,isign;
 {
-  printf("Procedures from numerical recepies not supported\n");
-  printf("because of copyright protection. \n");
+  puts("Procedures from numerical recepies not supported\n");
+  puts("because of copyright protection. \n");
   
 }
 
@@ -32,7 +29,19 @@ double *data;
 int n,isign;
 {
 	
-  printf("Procedures from numerical recepies not supported\n");
-  printf("because of copyright protection. \n");
+  puts("Procedures from numerical recepies not supported\n");
+  puts("because of copyright protection. \n");
 
+}
+void linear_fit(double *x, double *y, int anz, double *err, int flag, 
+     double *a, double *b, double *aerr, double *berr, double *chi2, double *q) {
+
+  puts("Procedures from numerical recepies not supported\n");
+  puts("because of copyright protection. \n");
+
+}
+void linear_fit_exy(double *x, double *y, int anz, double sigx[], double sigy[],
+  double *a, double *b, double *siga, double *sigb, double *chi2, double *q) {
+  puts("Procedures from numerical recepies not supported\n");
+  puts("because of copyright protection. \n");
 }

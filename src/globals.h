@@ -43,7 +43,7 @@ extern int anzvariablen;
 
 extern const COMMAND comms[];
 extern LABEL labels[];
-extern PROC  procs[];
+extern PROCEDURE  procs[];
 extern int anzlabels, anzprocs;
 extern const int anzcomms;
 

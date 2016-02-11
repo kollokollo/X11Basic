@@ -13,60 +13,48 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/types.h>
-#ifndef WINDOWS
-#include <fnmatch.h>
-#include <X11/XWDFile.h>
-
-#endif
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 
+#ifdef WINDOWS
+  #include "Windows.extension/fnmatch.h"
+#else
+  #include <fnmatch.h>
+  #include <X11/XWDFile.h>
+#endif
+
 #include "window.h"
-#include "options.h"
+#include "defs.h"
 
 
 /* globale Variablen */
 
-int winbesetzt[MAXWINDOWS];
 
-#ifndef WINDOWS
-Window win[MAXWINDOWS];                 
-Pixmap pix[MAXWINDOWS];
-Display *display[MAXWINDOWS];            
-GC gc[MAXWINDOWS];                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
-
-XSizeHints size_hints[MAXWINDOWS];       /* Hinweise fuer den WIndow-Manager..*/
-XWMHints wm_hints[MAXWINDOWS];
-XClassHint class_hint[MAXWINDOWS];
-Pixmap icon_pixmap[MAXWINDOWS];
-XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
-#endif
 
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];  
-
-char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
-#include "bitmaps/bombe_gross.bmp"
+#ifdef WINDOWS
+  HANDLE keyevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
+  HANDLE buttonevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
+  HANDLE motionevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
+  HANDLE tsync=INVALID_HANDLE_VALUE; /* handle for win thread event */
+#else
+  char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
+  #include "bitmaps/bombe_gross.bmp"
 
 void fetch_icon_pixmap(int nummer) {
-#ifndef WINDOWS
   GC gc;XGCValues gc_val;
   char t[10];
   sprintf(t,"%2d",nummer);
- 
   icon_pixmap[nummer]=XCreateBitmapFromData(display[nummer],win[nummer],
     bombe_gross_bits,bombe_gross_width,bombe_gross_height);  
-
   gc = XCreateGC(display[nummer], icon_pixmap[nummer], 0, &gc_val);
-
   XSetForeground(display[nummer], gc, 0);
   XDrawString(display[nummer],icon_pixmap[nummer],gc,9,24,t,strlen(t));
-  
   XFreeGC(display[nummer],gc);
-#endif  
 }
-
+#endif  
 
 
 int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
@@ -76,14 +64,206 @@ int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned
       printf("No more windows !\n");
       return(-2);
   }
+  printf("createwindow %d\n",nummer);
   return(create_window2(nummer,title,info,x,y,w,h));
 }
+#ifdef WINDOWS
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  RECT cr; /* client area rectangle */
+  int nr=-1,i;
+  HDC hdc;
+  PAINTSTRUCT ps; /* receives information for painting */
+  global_mousex=LOWORD(lParam);
+  global_mousey=HIWORD(lParam);
+  global_mouses=0;
+  if (wParam & MK_CONTROL) global_mouses|=4;
+  if (wParam & MK_SHIFT) global_mouses|=1;
+
+  switch(msg) {  
+  case WM_PAINT:
+    if (GetUpdateRect(hwnd,&cr,0)) {
+      for(i=0;i<MAXWINDOWS;i++) {
+        if(winbesetzt[i]) {
+          if(win_hwnd[i]==hwnd) {nr=i;break;}
+        }
+      }
+      if(nr==-1) {
+        printf("ERROR: Window existiert gar nicht !\n");
+        nr=1;
+      }
+      BeginPaint(hwnd,&ps);
+      hdc=GetDC(hwnd);
+
+      BitBlt(hdc,cr.left,cr.top,cr.right-cr.left,cr.bottom-cr.top,bitcon[nr],cr.left,cr.top,SRCCOPY);
+      ReleaseDC(hwnd,hdc);
+      EndPaint(hwnd,&ps);
+    }
+    global_eventtype=Expose;
+    break;
+        case WM_CHAR:
+	global_keycode=wParam;	
+	global_eventtype=KeyChar;
+	SetEvent(keyevent);
+        break;
+    case WM_KEYDOWN:
+ 	global_keycode=wParam;    
+	global_eventtype=KeyPress;
+	SetEvent(keyevent);    
+        break;
+     case WM_KEYUP:
+ 	global_keycode=wParam;    
+	global_eventtype=KeyRelease;
+	SetEvent(keyevent);    
+        break;
+     case WM_LBUTTONDOWN:
+       global_mousek|=1;
+       global_eventtype=ButtonPress;
+       SetEvent(buttonevent);
+       break;
+     case WM_RBUTTONDOWN:
+       global_mousek|=2;
+       global_eventtype=ButtonPress;
+       SetEvent(buttonevent);
+       break;
+     case WM_RBUTTONUP:
+	global_mousek&=(~2);
+	global_eventtype=ButtonRelease;
+	SetEvent(buttonevent);	
+	break;
+     case WM_LBUTTONUP:
+        global_mousek&=(~1);	
+	global_eventtype=ButtonRelease;
+	SetEvent(buttonevent);	
+	break;
+	case WM_CLOSE:    DestroyWindow(hwnd); break;
+	case WM_DESTROY:  PostQuitMessage(0);  break;
+     default: 
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+  }
+  return(0);
+}
+
+
+
+static DWORD winthread(PWORD par) { /* procedure for WIN95-thread */
+  MSG Msg;
+  HDC hdc;
+  RECT cr;
+  int nummer=par;
+  
+  winbesetzt[nummer]=1;
+  cr.left=0;
+  cr.top=0;  
+  cr.right=WINDOW_DEFAULT_W;
+  cr.bottom=WINDOW_DEFAULT_H;
+  AdjustWindowRect(&cr,WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,FALSE);
+
+	win_hwnd[nummer] = CreateWindow("X11-Basic",NULL,  /* my style */
+		WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,/* window style */
+		CW_USEDEFAULT, CW_USEDEFAULT, cr.right-cr.left, cr.bottom-cr.top,
+		NULL, NULL, hInstance, NULL);
+
+  SetWindowText(win_hwnd[nummer],"X11-Basic on WINDOWS");
+  ShowWindow(win_hwnd[nummer], SW_SHOW);
+  UpdateWindow(win_hwnd[nummer]);
+  SetForegroundWindow(win_hwnd[nummer]);
+
+  hdc=GetDC(win_hwnd[nummer]);
+  bitcon[nummer]=CreateCompatibleDC(hdc);
+  backbit[nummer]=CreateCompatibleBitmap(hdc,WINDOW_DEFAULT_W,WINDOW_DEFAULT_H);
+  SelectObject(bitcon[nummer],backbit[nummer]);
+  SelectClipRgn(bitcon[nummer],NULL);        
+  IntersectClipRect(bitcon[nummer],0,0,WINDOW_DEFAULT_W,WINDOW_DEFAULT_H);        
+  pen[nummer]=CreatePen(PS_SOLID,1,RGB(255,255,0));
+  brush[nummer]=CreateSolidBrush(RGB(0,127,127));
+
+  SelectObject(bitcon[nummer],pen[nummer]);
+  SelectObject(bitcon[nummer],brush[nummer]);
+  SetTextColor(bitcon[nummer],RGB(255,255,0)) ;
+  SetBkMode(bitcon[nummer],TRANSPARENT);
+  SetBkColor(bitcon[nummer],RGB(63,63,63)) ;
+ 
+#if 0
+  font[nummer]=CreateFont(13,0,0,0,FW_DONTCARE,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,
+  DEFAULT_QUALITY,FIXED_PITCH | FF_MODERN,NULL);
+  if (font[nummer]!=NULL) {
+    SelectObject(bitcon[nummer],font[nummer]);
+  } else printf("Could not create font !!\n");
+#endif
+  ReleaseDC(win_hwnd[nummer],hdc);
+  SetEvent(tsync);	
+
+  while(GetMessage(&Msg, NULL, 0, 0) > 0) {
+    TranslateMessage(&Msg);
+    DispatchMessage(&Msg);
+  }	     
+  DeleteObject(backbit[nummer]);
+#if 0
+  DeleteObject(backpen[nummer]);
+        DeleteObject(backbrush);
+#endif
+  DeleteDC(bitcon[nummer]);
+  winbesetzt[nummer]=0;
+  
+  ExitThread(0);
+  return(0);
+}
+#endif
 int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
   
   int screen_num;              /* Ein Server kann mehrere Bildschirme haben */
   unsigned long border=4,foreground,background;
   int i,d,b;
-#ifndef WINDOWS
+#ifdef WINDOWS
+    static class_reg=0;
+#endif
+  if(winbesetzt[nummer]) {
+    printf("X11-Basic: Window %d already open !\n",nummer);
+#ifdef WINDOWS
+  MessageBox(NULL,"X11-Basic: Window already open !" , "Error!",
+			MB_ICONEXCLAMATION | MB_OK);    
+#endif			
+ return(-1); 
+  
+  } else {
+#ifdef WINDOWS
+  if (buttonevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if (keyevent==INVALID_HANDLE_VALUE) keyevent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if (motionevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if (tsync==INVALID_HANDLE_VALUE) tsync=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if(!class_reg) {
+   	win_class.cbSize		 = sizeof(WNDCLASSEX);
+	win_class.style 	      = 0;
+	win_class.lpfnWndProc	      = WndProc;
+	win_class.cbClsExtra  = 0;
+	win_class.cbWndExtra  = 0;
+	win_class.hInstance   = hInstance;
+	win_class.hIcon 	      = LoadIcon(NULL, IDI_APPLICATION);
+	win_class.hCursor	      = LoadCursor(NULL, IDC_ARROW);
+	win_class.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+	win_class.lpszMenuName  = NULL;
+	win_class.lpszClassName = "X11-Basic";
+	win_class.hIconSm	      = LoadIcon(NULL, IDI_APPLICATION);
+	if(!RegisterClassEx(&win_class)){
+		MessageBox(NULL, "Window Registration Failed!", "Error!",
+			MB_ICONEXCLAMATION | MB_OK);
+		winbesetzt[nummer]=0;
+          return(-1);
+	}
+       class_reg=1;
+    }
+    ResetEvent(tsync);
+  /* create thread to care for window */
+  wthandle[nummer]=_beginthread((LPTHREAD_START_ROUTINE)winthread,0,
+    nummer);
+  if (wthandle[nummer]==NULL) {
+    MessageBox(NULL,"X11-Basic: can't create thread for window" , "Error!",
+			MB_ICONEXCLAMATION | MB_OK);    
+			return(-1);
+  }
+  winbesetzt[nummer]=1;
+  WaitForSingleObject(tsync,INFINITE);
+#else
   XGCValues gc_val;            /* */
   Window root;
   char *wn;
@@ -150,25 +330,30 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
 
   XSetForeground(display[nummer], gc[nummer], foreground);
   winbesetzt[nummer]=1;
-#endif    
+#endif  
+  }
   return(nummer);
 }
 
 
-void open_window( int nr) {
-#ifndef WINDOWS
-  XEvent event;
+void open_window(int nr) {
+ if(winbesetzt[nr]) {
+#ifdef WINDOWS
+#else
+    XEvent event;
     /* Das Fensterauf den Screen Mappen */
-  if(winbesetzt[nr]) {
+  
     XMapWindow(display[nr], win[nr]);
     XNextEvent(display[nr], &event);
     handle_event(nr,&event);
-  }
 #endif  
+  }
 }
 
 void close_window(int nr) { 
-#ifndef WINDOWS
+#ifdef WINDOWS
+  if(winbesetzt[nr]) DestroyWindow(win_hwnd[nr]);
+#else
   XEvent event;
       if(winbesetzt[nr]) {
         XUnmapWindow(display[nr], win[nr]);
@@ -218,11 +403,14 @@ void handle_event(int nr,XEvent *event) {
 #endif
   }
 }
-
+#endif
 void handle_window(int winnr) {
   
   if(winbesetzt[winnr]) {
-    XEvent event;
+
+#ifdef WINDOWS
+#else
+   XEvent event;
    
     while(XCheckWindowEvent(display[winnr],win[winnr] ,
         ExposureMask| 
@@ -231,27 +419,26 @@ void handle_window(int winnr) {
 	KeyPressMask, &event)) {
        handle_event(winnr,&event);  
     } 
+#endif
   }
 }
-#endif
+
 
 void graphics(){
-#ifndef WINDOWS  
   if(winbesetzt[usewindow]) {handle_window(usewindow);return;}
   else {
      if(usewindow==0) {
        fetch_rootwindow();
      } else {
-       create_window2(usewindow,"X11-Basic","X11-Basic",100,10,640,400);
+       create_window2(usewindow,"X11-Basic","X11-Basic",100,10,WINDOW_DEFAULT_W,WINDOW_DEFAULT_H);
        open_window(usewindow);
      }
   }
-#endif  
 }
 
-#ifndef WINDOWS
-int fetch_rootwindow() {
 
+int fetch_rootwindow() {
+#ifndef WINDOWS
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
   unsigned long border=4,foreground,background;
   int i,x,y,w,h,b,d;
@@ -283,12 +470,24 @@ int fetch_rootwindow() {
 	       KeyReleaseMask); */
 	       
   gc[0] = XCreateGC(display[0], win[0], 0, &gc_val);
-  winbesetzt[0]=1;  
+  winbesetzt[0]=1; 
+   #endif
   return(0);
 }
-#endif
+
 void activate() {  
-#ifndef WINDOWS
+#ifdef WINDOWS
+  HDC hdc;
+  RECT interior;
+  graphics();
+  hdc=GetDC(win_hwnd[usewindow]);
+  GetClientRect(win_hwnd[usewindow],&interior);
+	
+  BitBlt(hdc,interior.left,interior.top,interior.right-interior.left,interior.bottom-interior.top,bitcon[usewindow],0,0,SRCCOPY);
+    
+  ReleaseDC(win_hwnd[usewindow],hdc);
+
+#else
    Window root;
    int ox,oy,ow,oh,ob,d;
    XGCValues gc_val;
@@ -437,7 +636,9 @@ XImage *xwdtoximage(char *data,Visual *visual) {
  Status my_XAllocColor(Display *,Colormap,XColor *);
 #endif   
 int get_color(int r, int g, int b) {
-#ifndef WINDOWS
+#ifdef WINDOWS
+  return(RGB(r>>8,g>>8,b>>8));
+#else
   Colormap map;
   XColor pixcolor;
 
@@ -500,43 +701,62 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 /* GEM-Globals   */
 
 int chw=4,chh=8,baseline=7,depth=8,border=4;
-RECT sbox;
+ARECT sbox;
 
 int weiss,schwarz,rot,grau,gelb;
 
-#ifndef WINDOWS
+
 void load_GEMFONT(int n) {
-XGCValues gc_val;
-    XFontStruct *fs;
-if(n==5) fs=XLoadQueryFont(display[usewindow], GEMFONTSMALL);
-else fs=XLoadQueryFont(display[usewindow], GEMFONT);
-   if(fs!=NULL)  {
+#ifdef WINDOWS
+  SIZE siz;
+  GetTextExtentPoint(bitcon[usewindow],"Sg", 2,&siz);
+  chw=siz.cx/2;
+  chh=siz.cy;
+  baseline=chh-2;
+#else
+  XGCValues gc_val;
+  XFontStruct *fs;
+  if(n==5) fs=XLoadQueryFont(display[usewindow], GEMFONTSMALL);
+  else fs=XLoadQueryFont(display[usewindow], GEMFONT);
+  if(fs!=NULL)  {
      gc_val.font=fs->fid;
      XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
      chw=fs->max_bounds.width,chh=fs->max_bounds.ascent+fs->max_bounds.descent;
      baseline=fs->max_bounds.ascent;
-   }
-}
+  }
 #endif
+}
+
 void gem_init() {
-#ifndef WINDOWS
+#ifdef WINDOWS
+  RECT interior;
+
+  GetClientRect(win_hwnd[usewindow],&interior);
+  sbox.x=interior.left;
+  sbox.y=interior.top;
+  sbox.w=interior.right-interior.left;
+  sbox.h=interior.bottom-interior.top;   
+  weiss=get_color(65535,65535,65535);
+  schwarz=get_color(0,0,0);
+#else
     Window root;
 
     /* Screendimensionen bestimmem */
     XGetGeometry(display[usewindow],win[usewindow],&root,&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth); 
-   load_GEMFONT(1);
-   
    weiss=WhitePixel(display[usewindow], DefaultScreen(display[usewindow]));
    schwarz=BlackPixel(display[usewindow], DefaultScreen(display[usewindow]));
+
+#endif
+   load_GEMFONT(1);
+   
    grau=get_color(50000,50000,50000);
    rot=get_color(65535,0,0);
    gelb=get_color(65535,65535,0);
-#endif
 }
 
 
 #if 0
-void box_center(RECT *b) {
+void box_center(ARECT *b) {
     b->x=sbox.x+(sbox.w-b->w)/2; /* Koordinaten fuer Bildmitte: */
     b->y=sbox.y+(sbox.h-b->h)/2;
 }
@@ -734,7 +954,9 @@ int rsrc_free() {
   return(0);
 }
 void put_bitmap(char *adr,int x,int y,int w, int h) {
-#ifndef WINDOWS
+#ifdef WINDOWS
+  
+#else
   Pixmap bitpix;
   bitpix=XCreateBitmapFromData(display[usewindow],win[usewindow],
     adr,w,h);
@@ -782,7 +1004,7 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
 /*  printf("Drawobjc: %d   head=%d  next=%d tail=%d\n",idx,tree[idx].ob_head, 
   tree[idx].ob_next, tree[idx].ob_tail); 
 */
-  switch(tree[idx].ob_type & 0xff) {
+  switch(LOBYTE(tree[idx].ob_type)) {
   case G_BOX:
   case G_BOXCHAR:
     zeichen=(tree[idx].ob_spec & 0xff000000)>>24;
@@ -806,31 +1028,27 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   }
   if(tree[idx].ob_flags & EXIT) randdicke--;
   if(tree[idx].ob_flags & DEFAULT) randdicke--;
-
 /* Zeichnen  */
-#ifndef WINDOWS  
   if(tree[idx].ob_state & OUTLINED) {
-    XSetForeground(display[usewindow],gc[usewindow],weiss);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx-3,oby-3,obw+6,obh+6);
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);
-    XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx-3,oby-3,obw+6,obh+6);
+    SetForeground(weiss);
+    FillRectangle(obx-3,oby-3,obw+6,obh+6);
+    SetForeground(schwarz);
+    DrawRectangle(obx-3,oby-3,obw+6,obh+6);
   }
   if(tree[idx].ob_state & SHADOWED) {
-    XSetBackground(display[usewindow],gc[usewindow],schwarz);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx+obw,oby+chh/2,chw/2,obh);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx+chw/2,oby+obh,obw,chh/2);
-  }
-  
-  
+    SetBackground(schwarz);
+    FillRectangle(obx+obw,oby+chh/2,chw/2,obh);
+    FillRectangle(obx+chw/2,oby+obh,obw,chh/2);
+  }  
 
   if(bcolor==1) {
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);
-    XSetBackground(display[usewindow],gc[usewindow],schwarz);}
-  else {
-    XSetForeground(display[usewindow],gc[usewindow],weiss);
-    XSetBackground(display[usewindow],gc[usewindow],weiss);
+    SetForeground(schwarz);
+    SetBackground(schwarz);
+  } else {
+    SetForeground(weiss);
+    SetBackground(weiss);
   }
-  switch(tree[idx].ob_type & 0xff) {
+  switch(LOBYTE(tree[idx].ob_type)) {
   
   case G_BOXTEXT:  
   case G_FBOXTEXT:
@@ -843,39 +1061,31 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     colorspec=tree[idx].ob_spec;
     break;
   }
-  if((colorspec & 0x70)==0x40) XSetForeground(display[usewindow],gc[usewindow],grau);
-  else if((colorspec & 0x70)==0x10) XSetForeground(display[usewindow],gc[usewindow],gelb);
-  else if((colorspec & 0x70)==0x20) XSetForeground(display[usewindow],gc[usewindow],gelb);
-  else if((colorspec & 0x70)==0x30) XSetForeground(display[usewindow],gc[usewindow],gelb);
-  else if((colorspec & 0x70)==0x50) XSetForeground(display[usewindow],gc[usewindow],grau);
-  else if((colorspec & 0x70)==0x60) XSetForeground(display[usewindow],gc[usewindow],grau);
-  else if((colorspec & 0x70)==0x70) XSetForeground(display[usewindow],gc[usewindow],schwarz);
+  if((colorspec & 0x70)==0x40) {SetForeground(grau);}
+  else if((colorspec & 0x70)==0x10) {SetForeground(gelb);}
+  else if((colorspec & 0x70)==0x20) {SetForeground(gelb);}
+  else if((colorspec & 0x70)==0x30) {SetForeground(gelb);}
+  else if((colorspec & 0x70)==0x50) {SetForeground(grau);}
+  else if((colorspec & 0x70)==0x60) {SetForeground(grau);}
+  else if((colorspec & 0x70)==0x70) {SetForeground(schwarz);}
   if(tree[idx].ob_state & SELECTED) {
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx,oby,obw,obh);
+    SetForeground(schwarz);
+    FillRectangle(obx,oby,obw,obh);
     }
-  else if(!(colorspec & 0x80)) XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx,oby,obw,obh);
-
-  
-  if(fcolor==1) XSetForeground(display[usewindow],gc[usewindow],schwarz);
-  else XSetForeground(display[usewindow],gc[usewindow],weiss);
+  else if(!(colorspec & 0x80)) FillRectangle(obx,oby,obw,obh);  
+  if(fcolor==1) {SetForeground(schwarz);}
+  else {SetForeground(weiss);}
   if(randdicke>0) {
     for(i=0;i<randdicke;i++) {
-      XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx+i,oby+i,obw-2*i,obh-2*i);
+      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
     }
   } else if(randdicke<0) {
-    for(i=0;i>randdicke;i--) {      
-       XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],obx+i,oby+i,obw-2*i,obh-2*i);
-
-      }
-    }
-    
-    
-    if(tree[idx].ob_state & DISABLED) XSetForeground(display[usewindow],gc[usewindow],grau);
-    else   if(tree[idx].ob_state & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
-  else XSetForeground(display[usewindow],gc[usewindow],schwarz);
-
-  switch(tree[idx].ob_type & 0xff) {
+    for(i=0;i>randdicke;i--) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
+  }
+  if(tree[idx].ob_state & DISABLED) {SetForeground(grau);}
+  else if(tree[idx].ob_state & SELECTED) {SetForeground(weiss);}
+  else {SetForeground(schwarz);}
+  switch(LOBYTE(tree[idx].ob_type)) {
     char *text;
     char chr[2];
     TEDINFO *ted;
@@ -883,27 +1093,29 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   case G_STRING:
   case G_TITLE:
     text=(char *)((int)tree[idx].ob_spec);
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],obx,oby+chh-2,
-    text,strlen(text));
+    DrawString(obx,oby+chh-2,text,strlen(text));
   case G_BOX:
   case G_IBOX:  
     break;
   case G_BUTTON:
     text=(char *)((int)tree[idx].ob_spec);
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-    obx+(obw-chw*strlen(text))/2,oby+chh-1+(obh-chh)/2,text,strlen(text));
+    DrawString(obx+(obw-chw*strlen(text))/2,oby+chh-1+(obh-chh)/2,text,strlen(text));
     break;
   case G_BOXCHAR:
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],obx+(obw-chw)/2,oby+chh-2+(obh-chh)/2,&zeichen,1);
+    DrawString(obx+(obw-chw)/2,oby+chh-2+(obh-chh)/2,&zeichen,1);
     break;
   case G_ALERTTYP:
     chr[0]=tree[idx].ob_spec+4;
     chr[1]=0;
-    XSetForeground(display[usewindow],gc[usewindow],rot);
+    SetForeground(rot);
+    #ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 2, 0,0,0);
+    #endif
     ltext(obx,oby,0.5,0.5,0,0,chr); 
     if(tree[idx].ob_spec==3) ltext(obx+4,oby+12,0.5/6,0.5/2,0,0,"STOP");
+    #ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
+    #endif
     break;
   case G_TEXT:
   case G_FTEXT:
@@ -929,29 +1141,24 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     } else {
       x=obx+(obw-chw*strlen(text))/2; y=oby+chh-2+(obh-chh)/2;
     }
-    if(tree[idx].ob_state & DISABLED) XSetForeground(display[usewindow],gc[usewindow],grau);
-    else   if(tree[idx].ob_state & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
-    else if((colorspec & 0xf00)==0x000) XSetForeground(display[usewindow],gc[usewindow],weiss);
-    else if((colorspec & 0xf00)==0x100) XSetForeground(display[usewindow],gc[usewindow],schwarz);    
-    else XSetForeground(display[usewindow],gc[usewindow],rot);
-
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-    x,y,text,strlen(text));
-    XSetForeground(display[usewindow],gc[usewindow],rot);
+    if(tree[idx].ob_state & DISABLED) {SetForeground(grau);}
+    else   if(tree[idx].ob_state & SELECTED) {SetForeground(weiss);}
+    else if((colorspec & 0xf00)==0x000) {SetForeground(weiss);}
+    else if((colorspec & 0xf00)==0x100) {SetForeground(schwarz);}  
+    else {SetForeground(rot);}
+    DrawString(x,y,text,strlen(text));
+    SetForeground(rot);
     if(strlen((char *)(ted->te_ptext))>ted->te_tmplen+ted->te_junk2)
-      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-       obx+obw,oby+obh,">",1);
+      DrawString(obx+obw,oby+obh,">",1);
     if(ted->te_junk2)
-      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-       obx-chw,oby+obh,"<",1);
-  
+      DrawString(obx-chw,oby+obh,"<",1);
     load_GEMFONT(1);
     break;
   case G_IMAGE:
     {BITBLK *bit=(BITBLK *)((int)tree[idx].ob_spec);
     unsigned int adr;
     adr=*((LONG *)&(bit->bi_pdata));
-    XSetForeground(display[usewindow],gc[usewindow],(bit->bi_color==0)*weiss
+    SetForeground((bit->bi_color==0)*weiss
     +(bit->bi_color==1)*schwarz+(bit->bi_color>1)*rot);   
     put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);}
     break;
@@ -960,18 +1167,16 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     unsigned int adr;
     adr=*(LONG *)&bit->ib_pmask;
     
-    XSetForeground(display[usewindow],gc[usewindow],weiss);   
+    SetForeground(weiss);   
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
-    obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
+    FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
     adr=*(LONG *)&bit->ib_pdata;
     
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);   
+    SetForeground(schwarz);   
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
     /* Icon-Text */
     load_GEMFONT(SMALL);
-    XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-    obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,(char *)*(LONG *)&bit->ib_ptext,strlen((char *)*(LONG *)&bit->ib_ptext));
+    DrawString(obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,(char *)*(LONG *)&bit->ib_ptext,strlen((char *)*(LONG *)&bit->ib_ptext));
     /* Icon char */
     load_GEMFONT(1);}
     break;
@@ -979,11 +1184,10 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     printf("Unbekanntes Objekt #%d\n",tree[idx].ob_type);
   }
   if(tree[idx].ob_state & CROSSED) { 
-    XSetForeground(display[usewindow],gc[usewindow],rot);
-    XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],obx,oby,obx+obw,oby+obh); 
-    XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],obx+obw,oby,obx,oby+obh); 
+    SetForeground(rot);
+    DrawLine(obx,oby,obx+obw,oby+obh); 
+    DrawLine(obx+obw,oby,obx,oby+obh); 
   }
-#endif
 }
 
 
@@ -1079,10 +1283,10 @@ void fix_objc() {
 	      base[i].ob_type==G_IBOX || base[i].ob_type==G_ALERTTYP))
 	    base[i].ob_spec+=(LONG)rsrc;	
 	  
-	  base[i].ob_x=(base[i].ob_x & 0xff)*chw+((base[i].ob_x & 0xff00)>>8);
-	  base[i].ob_y=(base[i].ob_y & 0xff)*chh+((base[i].ob_y & 0xff00)>>8);
-	  base[i].ob_width=(base[i].ob_width & 0xff)*chw+((base[i].ob_width & 0xff00)>>8);
-	  base[i].ob_height=(base[i].ob_height & 0xff)*chh+((base[i].ob_height & 0xff00)>>8);
+	  base[i].ob_x=     LOBYTE(base[i].ob_x)*chw+     HIBYTE(base[i].ob_x);
+	  base[i].ob_y=     LOBYTE(base[i].ob_y)*chh+     HIBYTE(base[i].ob_y);
+	  base[i].ob_width= LOBYTE(base[i].ob_width)*chw+ HIBYTE(base[i].ob_width);
+	  base[i].ob_height=LOBYTE(base[i].ob_height)*chh+HIBYTE(base[i].ob_height);
 	  
 	}
   }
@@ -1143,9 +1347,7 @@ void fix_bitblk() {
 	    for(m=0;m<16;m++) {
 	      n=n<<1;
 	      n|=(l & 1);
-	      l=l>>1;
-	      
-	    
+	      l=l>>1;	    
 	    } 
 	   *((WORD *)(k+2*j))=n;
         }
@@ -1197,21 +1399,21 @@ void fix_iconblk() {
             }
             k=*(LONG *)&base[i].ib_pdata;
 	  
-	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-              WSWAP((char *)(k+2*j));
-            }
-	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-	      n=0;
-              l=((WORD *)(k+2*j))[0];
-	      for(m=0;m<16;m++) {
-	        n=n<<1;
-	        n|=(l & 1);
-	        l=l>>1;
-	      } 
-	      *((WORD *)(k+2*j))=n;
-            }
-          }
-	}
+	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
+           WSWAP((char *)(k+2*j));
+         }
+	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
+	   n=0;
+           l=((WORD *)(k+2*j))[0];
+	   for(m=0;m<16;m++) {
+	     n=n<<1;
+	     n|=(l & 1);
+	     l=l>>1;
+	   } 
+	   *((WORD *)(k+2*j))=n;
+        }
+      }
+    }
   }
 }
 
@@ -1278,13 +1480,10 @@ void draw_edcursor(OBJECT *tree,int ndx){
      int x,y;
  
      relobxy(tree,ndx,&x,&y);
-#ifndef WINDOWS     
-     XSetForeground(display[usewindow],gc[usewindow],rot);
-     XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],
-     x+chw*(ted->te_junk1-ted->te_junk2),y,x+chw*(ted->te_junk1-ted->te_junk2),
+     SetForeground(rot);
+     DrawLine(x+chw*(ted->te_junk1-ted->te_junk2),y,x+chw*(ted->te_junk1-ted->te_junk2),
      y+chh+4); 
-     XSetForeground(display[usewindow],gc[usewindow],schwarz);
-#endif
+     SetForeground(schwarz);
 } 
 
 int finded(OBJECT *tree,int start, int r) {
@@ -1305,17 +1504,26 @@ int finded(OBJECT *tree,int start, int r) {
 }
 
 int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int w2, int h2 ) {
-#ifndef WINDOWS
+  static sgccount=0;
+#ifdef WINDOWS
+  static HDC sgc[30];
+  static HBITMAP spix[30];
+#else
   static GC *sgc[30];
   static Pixmap *spix[30]; 
   XGCValues gc_val;
   GC pgc;
   Pixmap ppix;
-  static sgccount=0;
-
+#endif
   switch(fo_diflag){
   case 0:
-     /* Erst den Graphic-Kontext retten  */
+#ifdef WINDOWS
+  sgc[sgccount]=CreateCompatibleDC(bitcon[usewindow]);
+  spix[sgccount]=CreateCompatibleBitmap(bitcon[usewindow],w2+8,h2+8);
+  SelectObject(sgc[sgccount],spix[sgccount]);
+  BitBlt(sgc[sgccount],0,0,w2+8,h2+8,bitcon[usewindow],x2-3,y2-3,SRCCOPY);
+#else
+  /* Erst den Graphic-Kontext retten  */
     sgc[sgccount]=malloc(sizeof(GC));
     pgc=XCreateGC(display[usewindow], win[usewindow], 0, &gc_val);
     
@@ -1332,22 +1540,28 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     XCopyArea(display[usewindow], pix[usewindow],ppix,gc[usewindow],x2-3,y2-3,w2+8,h2+8,0,0);
     spix[sgccount]=malloc(sizeof(Pixmap));
     memcpy(spix[sgccount],&ppix,sizeof(Pixmap));
+#endif
     sgccount++;
    break;
    case 3:    
-   /* Hintergrund restaurieren  */
-    XCopyArea(display[usewindow], *(spix[--sgccount]),pix[usewindow],gc[usewindow],0,0,w2+8,
-    h2+8,x2-3,y2-3);
+   /* Hintergrund restaurieren  */    
+   sgccount--;
+#ifdef WINDOWS
+    BitBlt(bitcon[usewindow],x2-3,y2-3,w2+8,h2+8,sgc[sgccount],0,0,SRCCOPY);
+    DeleteObject(spix[sgccount]);
+    DeleteDC(sgc[sgccount]);
+#else
+    XCopyArea(display[usewindow], *(spix[sgccount]),pix[usewindow],gc[usewindow],0,0,w2+8,h2+8,x2-3,y2-3);
     XFreePixmap(display[usewindow],*(spix[sgccount]));
     XCopyGC(display[usewindow],*sgc[sgccount],GCForeground| GCFunction |GCLineWidth |GCLineStyle| GCFont, gc[usewindow]);
     XFreeGC(display[usewindow],*sgc[sgccount]); 
     free(sgc[sgccount]);free(spix[sgccount]);
+#endif
     activate();
-   break;
-   default:
-     return(-1);
+    break;
+  default:
+    return(-1);
   }
-  #endif
 }
 
 int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
@@ -1363,11 +1577,14 @@ int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
 
 
 int form_do(OBJECT *tree) {   
-#ifndef WINDOWS
+#ifdef WINDOWS
+  HANDLE evn[3];
+#else
   XEvent event;
+  XGCValues gc_val;
+#endif
   int exitf=0,bpress=0;
   int sbut,edob=-1,idx;
-  XGCValues gc_val;
   int x,y,w,h;
   
 
@@ -1386,6 +1603,14 @@ int form_do(OBJECT *tree) {
   /* Auf Tasten/Maus reagieren */
   activate();
   while(exitf==0) {
+#ifdef WINDOWS  
+  ResetEvent(keyevent);
+  ResetEvent(buttonevent);
+  evn[0]=keyevent;
+  evn[1]=buttonevent;
+  WaitForMultipleObjects(2,evn,TRUE,INFINITE);
+  switch (global_eventtype) {
+#else
     XWindowEvent(display[usewindow], win[usewindow],KeyPressMask |KeyReleaseMask|ExposureMask |ButtonReleaseMask| ButtonPressMask, &event);
     switch (event.type) {
       char buf[4];
@@ -1398,11 +1623,17 @@ int form_do(OBJECT *tree) {
           event.xexpose.width,event.xexpose.height,
           event.xexpose.x,event.xexpose.y);
       break;
+#endif
     
     /* Bei Mouse-Taste: */
     case ButtonPress:
+#ifdef WINDOWS
+      if(global_mousek==1) {
+        sbut=objc_find(tree,global_mousex,global_mousey);
+#else
       if(event.xbutton.button==1) {
         sbut=objc_find(tree,event.xbutton.x,event.xbutton.y);
+#endif
         if(sbut!=-1) {
 	if((tree[sbut].ob_flags & SELECTABLE) && !(tree[sbut].ob_state & DISABLED)) {
           if(tree[sbut].ob_flags & RBUTTON) {
@@ -1441,16 +1672,23 @@ int form_do(OBJECT *tree) {
     case ButtonRelease:
       if(bpress) exitf=1;
       break;
+    
+#ifdef WINDOWS
+    case KeyChar:   /* Return gedrueckt ? */
+    printf("ks=%04x  \n",global_keycode);
+    if((global_keycode & 255)==13) {                /* RETURN  */
+#else
     case KeyPress:   /* Return gedrueckt ? */
       XLookupString((XKeyEvent *)&event,buf,sizeof(buf),&ks,&status);   
       if((ks & 255)==13) {                /* RETURN  */
+#endif
         int idx=0;
 	while(1) {
 	  if(tree[idx].ob_flags & DEFAULT) {
 	    tree[idx].ob_state^=SELECTED;
 	    sbut=idx;
 	    objc_draw(tree,0,-1,0,0); activate();
-	    if(tree[idx].ob_flags & EXIT) {bpress=1;}
+	    if(tree[idx].ob_flags & EXIT) bpress=1;
           }
 	  if(tree[idx].ob_flags & LASTOB) break;
 	  idx++;
@@ -1458,8 +1696,14 @@ int form_do(OBJECT *tree) {
       } else if(edob>=0){
          int i;
          TEDINFO *ted=(TEDINFO *)(tree[edob].ob_spec);
-         if((ks & 0xff00)) {	   
+#ifndef WINDOWS
+         if(HIBYTE(ks)) {
+#endif
+#ifdef WINDOWS
+           if(global_keycode==8) {          /* BSP */
+#else
 	   if(ks==0xff08) {                  /* BACKSPACE   */
+#endif
 	     if(ted->te_junk1>0) {
 	       int len=strlen((char *)ted->te_ptext);
 	       i=ted->te_junk1--;
@@ -1467,6 +1711,7 @@ int form_do(OBJECT *tree) {
 	       ((char *)ted->te_ptext)[i-1]=0;
 	       objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate(); 
 	     }
+#ifndef WINDOWS
 	   } else if(ks==0xff51) { /* LEFT */
 	     if(ted->te_junk1>0) ted->te_junk1--;
 	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
@@ -1474,7 +1719,12 @@ int form_do(OBJECT *tree) {
 	     int len=strlen((char *)ted->te_ptext);
 	     if(ted->te_junk1<len && ((char *)ted->te_ptext)[ted->te_junk1]) ted->te_junk1++;
              objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
+#endif
+#ifdef WINDOWS
+           } else if(global_keycode==9) {          /* TAB */
+#else
 	   } else if(ks==0xff09) {          /* TAB */
+#endif
 	     /* Suche naechstes ED-Feld oder wieder das erste */
 	     int cp=ted->te_junk1;
 	     i=finded(tree,edob,1);
@@ -1483,7 +1733,7 @@ int form_do(OBJECT *tree) {
 	     ted=(TEDINFO *)(tree[edob].ob_spec);
 	     ted->te_junk1=min(cp,strlen((char *)ted->te_ptext));
 	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-	   
+#ifndef WINDOWS 
 	   } else if(ks==0xff52) {
 	   /* Suche vorangehendes ED-Feld */
 	     int cp=ted->te_junk1;
@@ -1495,34 +1745,47 @@ int form_do(OBJECT *tree) {
 	     int cp=ted->te_junk1;
 	     /* Suche naechstes ED-Feld  */
 	     i=finded(tree,edob,1);
-	     if(i>=0) {edob=i;
-	     ted=(TEDINFO *)(tree[edob].ob_spec);
-	     ted->te_junk1=min(cp,strlen((char *)ted->te_ptext));
-	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();}
+	     if(i>=0) {
+	       edob=i;
+	       ted=(TEDINFO *)(tree[edob].ob_spec);
+	       ted->te_junk1=min(cp,strlen((char *)ted->te_ptext));
+	       objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);
+	       activate();
+	     }
+#endif
+#ifdef WINDOWS
+           } else if(global_keycode==0x1b) {   /* ESC  */  
+#else
 	   } else if(ks==0xff1b) {   /* ESC  */               
+#endif
 	   ((char *)ted->te_ptext)[0]=0;
 	   ted->te_junk1=0;
 	   objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
+#ifndef WINDOWS
 	   } else printf("Key: %x\n",ks);
-	 } else {
-	   i=ted->te_txtlen-1;
-	   while(i>ted->te_junk1) {((char *)ted->te_ptext)[i]=((char *)ted->te_ptext)[i-1];i--;}
-	   
-	   if(ted->te_junk1<ted->te_txtlen) { 
-	     ((char *)ted->te_ptext)[ted->te_junk1]=(char)ks;
-	     ted->te_junk1++;
-	   }	   
-	   objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-	 } 
-       }       
-       break;
-     case KeyRelease:
-       if(bpress) exitf=1;
-       break;
-     }
-    }
-    return(sbut);
 #endif
+	} else {
+	  i=ted->te_txtlen-1;
+	  while(i>ted->te_junk1) {((char *)ted->te_ptext)[i]=((char *)ted->te_ptext)[i-1];i--;}
+	   
+	  if(ted->te_junk1<ted->te_txtlen) { 
+#ifdef WINDOWS
+            ((char *)ted->te_ptext)[ted->te_junk1]=(char)global_keycode;
+#else
+	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)ks;
+#endif
+	    ted->te_junk1++;
+	  }	   
+	  objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
+        } 
+      }       
+      break;
+    case KeyRelease:
+      if(bpress) exitf=1;
+      break;
+    }  
+  }
+  return(sbut);
 }
 
 int rsrc_load(char *filename) {
@@ -1543,7 +1806,7 @@ int rsrc_load(char *filename) {
           WSWAP((char *)((int)rsrc+2*i));
         }
         }
-#if 1
+#if DEBUG
        printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
        printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
        printf("%d Trees and %d FRSTRs \n",rsrc->rsh_ntree,rsrc->rsh_nstring);
@@ -1579,17 +1842,21 @@ int rsrc_load(char *filename) {
 
 
 int do_menu_select() {   
-#ifndef WINDOWS
   int nr,i,j,textx,sel=-1;   
-  Window root_return,child_return;
-
   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+#ifndef WINDOWS
+  Window root_return,child_return;
+#endif
   graphics();    
-
+#ifdef WINDOWS
+  win_x_return=global_mousex;
+  win_y_return=global_mousey;
+  mask_return=global_mousek;
+#else
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
-
+#endif
   for(i=0;i<menuanztitle-1;i++) {
    if(menutitleflag[i]) sel=i; 
   }
@@ -1674,11 +1941,14 @@ int do_menu_select() {
     do_menu_close();
     do_menu_draw();
   }
-#endif  
   return(-1);
 }
-#ifndef WINDOWS
+#ifdef WINDOWS
+HBITMAP schubladepix; 
+HDC schubladedc;
+#else
 Pixmap schubladepix; 
+#endif
 int schubladeff=0;
 int schubladenr;
 int schubladex,schubladey,schubladew,schubladeh;
@@ -1696,71 +1966,83 @@ void do_menu_open(int nr) {
       schubladew=max(schubladew,strlen(menuentry[menutitlesp[nr]+i])*chw);
     } 
     schubladeh=chh*menutitlelen[nr]+2;
-    
-    /* Hintergrund retten  */
+     /* Hintergrund retten  */ 
+#ifdef WINDOWS
+  schubladedc=CreateCompatibleDC(bitcon[usewindow]);
+  schubladepix=CreateCompatibleBitmap(bitcon[usewindow],schubladew,schubladeh);
+  SelectObject(schubladedc,schubladepix);
+  BitBlt(schubladedc,0,0,schubladew,schubladeh,bitcon[usewindow],schubladex,schubladey,SRCCOPY);
+#else
   schubladepix=XCreatePixmap(display[usewindow],win[usewindow],schubladew,schubladeh,depth);
   XCopyArea(display[usewindow], pix[usewindow],schubladepix,gc[usewindow],schubladex,schubladey,schubladew,schubladeh,0,0);
+#endif
   schubladeff=1;
   schubladenr=nr;
   do_menu_edraw();
 }
 void do_menu_edraw() {
   int i;
-    XSetForeground(display[usewindow],gc[usewindow],weiss);
+    SetForeground(weiss);
+#ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey,schubladew-1,schubladeh-1); 
+#endif
+    FillRectangle(schubladex,schubladey,schubladew-1,schubladeh-1); 
     for(i=0;i<menutitlelen[schubladenr];i++) {      
-      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],schwarz);
-      else XSetForeground(display[usewindow],gc[usewindow],weiss);
-      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey+i*chh,schubladew,chh);
-      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
-      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) XSetForeground(display[usewindow],gc[usewindow],grau);
-      else XSetForeground(display[usewindow],gc[usewindow],schwarz);
-      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],strlen(menuentry[menutitlesp[schubladenr]+i]));
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(schwarz);}
+      else {SetForeground(weiss);}
+      FillRectangle(schubladex,schubladey+i*chh,schubladew,chh);
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(weiss);}
+      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(grau);}
+      else {SetForeground(schwarz);}
+      DrawString(schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],strlen(menuentry[menutitlesp[schubladenr]+i]));
       if(menuflags[menutitlesp[schubladenr]+i] & CHECKED) {
-        XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
-        XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],schubladex+5,schubladey+chh-3+chh*i,schubladex+chw,schubladey+chh*i);
+        DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
+        DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+chw,schubladey+chh*i);
       }
     }     
-
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);
-    XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],schubladex,schubladey,schubladew-1,schubladeh-1); 
-
+    SetForeground(schwarz);
+    DrawRectangle(schubladex,schubladey,schubladew-1,schubladeh-1); 
   activate();
-
 }
 void do_menu_close() {
-   if(schubladeff) {
-
+  if(schubladeff) {
+#ifdef WINDOWS
+    BitBlt(bitcon[usewindow],schubladex,schubladey,schubladew,schubladeh,schubladedc,0,0,SRCCOPY);
+    DeleteObject(schubladepix);
+    DeleteDC(schubladedc);
+#else    
     XCopyArea(display[usewindow], schubladepix,pix[usewindow],gc[usewindow],0,0,schubladew,schubladeh
     ,schubladex,schubladey);
     XFreePixmap(display[usewindow],schubladepix);
+#endif
     schubladeff=0;
-    }
+  }
 }
 void do_menu_draw() {
-   int i,j,textx;
-    graphics();
-    gem_init();
-    XSetForeground(display[usewindow],gc[usewindow],weiss);
+  int i,j,textx;
+  graphics();
+  gem_init();
+    
+  SetForeground(weiss);
+#ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
-    XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],sbox.x,sbox.y,sbox.w,chh); 
-    XSetForeground(display[usewindow],gc[usewindow],schwarz);
-    XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
+#endif
+    FillRectangle(sbox.x,sbox.y,sbox.w,chh); 
+    SetForeground(schwarz);
+    DrawLine(sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
     textx=chw;
     for(i=0;i<menuanztitle-1;i++) {
-      if(menutitleflag[i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],schwarz);
-      else XSetForeground(display[usewindow],gc[usewindow],weiss);
-      XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],sbox.x+textx,sbox.y,chw*(2+strlen(menutitle[i])),chh);
-      if(menutitleflag[i] & SELECTED) XSetForeground(display[usewindow],gc[usewindow],weiss);
-      else XSetForeground(display[usewindow],gc[usewindow],schwarz);
-      XDrawString(display[usewindow],pix[usewindow],gc[usewindow],sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],strlen(menutitle[i]));
+      if(menutitleflag[i] & SELECTED) {SetForeground(schwarz);}
+      else {SetForeground(weiss);}
+      FillRectangle(sbox.x+textx,sbox.y,chw*(2+strlen(menutitle[i])),chh);
+      if(menutitleflag[i] & SELECTED) {SetForeground(weiss);}
+      else {SetForeground(schwarz);}
+      DrawString(sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],strlen(menutitle[i]));
       textx+=chw*(strlen(menutitle[i])+2);
     }
-
   activate();
 }
-#endif
+
 
 /* Fileselector-Routine. Dem GEM nachempfunden.
 (c) markus Hoffmann   1998               */
@@ -1783,9 +2065,11 @@ typedef struct fileinfo {
 int dir_bytes(FINFO *dir,int anzfiles) {
   int byt=0,i;
   if(anzfiles){
+#ifndef WINDOWS
     for(i=0;i<anzfiles;i++) {
       byt+=dir[i].dstat.st_blocks;
     }
+#endif    
     byt*=512;
   }
   return(byt);
@@ -1900,8 +2184,9 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   int sbut=-1;
 #ifndef WINDOWS
   XEvent event;
-  
+#endif
   FINFO filenamen[MAXANZFILES];
+
   int filenamensel[MAXANZFILES];
   
   int anzfiles,showstart=0;
@@ -2080,6 +2365,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
       make_filelist(objects,filenamen, filenamensel,anzfiles,showstart);
       make_scaler(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
     } else if(sbut==15) {    /* Scalerhintergrund */
+      #ifndef WINDOWS
       XWindowEvent(display[usewindow], win[usewindow],
        ButtonReleaseMask|ExposureMask , &event);
       switch (event.type) {
@@ -2103,11 +2389,13 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
              make_scaler(objects,anzfiles,showstart);
 	   }
 	break;
-      }      
+      }
+      #endif
     } else if(sbut==16) {    /* ScalerSchieber */
       int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;   
       int ssold=showstart;
       int sssold=showstart;
+      #ifndef WINDOWS
       Window root_return,child_return;
        XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
@@ -2142,8 +2430,9 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	    sssold=showstart;
 	  }
           break; 
-     }      
-     }    
+     }}
+     #endif
+        
     } else if(sbut>=18 && sbut<ANZSHOW*2+18) {    /* Auswahlliste */
       int j=(sbut-18)/2;
       char buf[128];
@@ -2178,10 +2467,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   }
   form_dial(3,0,0,0,0,x,y,w,h);
   form_dial(2,0,0,0,0,x,y,w,h);
-
   ergebnis=malloc(strlen(dpfad)+strlen((char *)tedinfo[3].te_ptext)+2);
   if(sbut==1) sprintf(ergebnis,"%s/%s",dpfad,tedinfo[3].te_ptext);
   else ergebnis[0]=0;
   return(ergebnis);
-#endif
 }

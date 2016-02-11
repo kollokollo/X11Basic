@@ -1,3 +1,6 @@
+' Utility zum convertieren einer UNIX-Bitmap in ein Binaerformat
+' (c) Markus Hoffmann 2002
+
 fileselect "load bitmap ...","./*.bmp","test.bmp",f$
 if len(f$)
   if exist(f$)
@@ -8,9 +11,7 @@ if len(f$)
       t$=trim$(t$)
       print t$
       if left$(t$)="#"
-        
-      else if left$(t$)="0"
-        
+      else if left$(t$)="0"  
         while len(t$)
           wort_sep t$,",",0,a$,t$
           if right$(a$,2)="};"
@@ -23,13 +24,11 @@ if len(f$)
         wend
       endif
     wend
-
-
-  close
-  print len(f$)
-  bsave "bbbb.bin",varptr(f$),len(f$)
-else 
-  ~form_alert(1,"[3][File not found !][ OH ]")
-endif
+    close
+    print len(f$)
+    bsave "bbbb.bin",varptr(f$),len(f$)
+  else 
+    ~form_alert(1,"[3][File not found !][ OH ]")
+  endif
 endif
 quit

@@ -13,10 +13,15 @@
 #include <stdlib.h>
  
 #include <sys/types.h>
+
+#ifndef WINDOWS
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+#else
+#define key_t int
+#endif
 
 #define FALSE 0
 #define TRUE (!FALSE)
@@ -49,41 +54,48 @@ int open_msg(key_t);
 
 
 int open_msg(key_t key) {
-
   int msgqueue_id;
+#ifndef WINDOWS
       /* Open the queue - create if necessary */
         if((msgqueue_id = msgget(key, IPC_CREAT|0660)) == -1) {
                  io_error(errno,"open_msg");    /* Message error.*/ 
                  return(-1);
         }
+#endif	
   return(msgqueue_id);
 }
 
-int peek_message( int qid, long type )
-{
-         int     result, length;
+int peek_message( int qid, long type ) {
+  int     result, length;
+#ifndef WINDOWS
          if((result = msgrcv( qid, NULL, 0, type,  IPC_NOWAIT)) == -1)
          { if(errno == E2BIG) return(TRUE); }
+#endif
         return(FALSE);
 }
 
 void change_queue_mode(int qid, char *mode) {
+#ifndef WINDOWS	
         struct msqid_ds myqueue_ds;
-	
         msgctl(qid, IPC_STAT, &myqueue_ds);            /* Get current info */
         sscanf(mode, "%ho", &myqueue_ds.msg_perm.mode);/* Convert and load the mode */
         msgctl(qid, IPC_SET, &myqueue_ds);             /* Update the mode */
+#endif
 }
 
 void send_message(int qid, struct mymsgbuf *qbuf, long type, char *text) {
         /* Send a message to the queue */
+#if DEBUG
         printf("Sending a message ...\n");
+#endif
         qbuf->mtype = type;
         strcpy(qbuf->mtext, text);
+#ifndef WINDOWS
         if((msgsnd(qid, (struct msgbuf *)qbuf,
                 strlen(qbuf->mtext)+1, 0)) ==-1) {
                io_error(errno,"send_message");    /* Message konnte nicht versandt werden.*/ 
         }
+#endif	
 }
 
 
@@ -91,13 +103,19 @@ void read_message(int qid, struct mymsgbuf *qbuf, long type)
 {
         /* Read a message from the queue */
         qbuf->mtype = type;
+#ifndef WINDOWS
         msgrcv(qid, (struct msgbuf *)qbuf, MAX_SEND_SIZE, type, 0);
+#endif
+#if DEBUG
         printf("Type: %ld Text: %s\n", qbuf->mtype, qbuf->mtext);
+#endif
 }
 
 
 void remove_queue(int qid) /* Remove the msg-queue */ {
+#ifndef WINDOWS
         msgctl(qid, IPC_RMID, 0);
+#endif
 }
 
 
@@ -291,6 +309,7 @@ int shm_malloc(size_t segsize, key_t key) {
   int   shmid,cntr,i;
 
         /* Open the shared memory segment - create if necessary */
+#ifndef WINDOWS
         if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
  
                  /* Segment probably already exists - try as a client */
@@ -300,28 +319,33 @@ int shm_malloc(size_t segsize, key_t key) {
                          return(-1);
                  }
         }
-        
+#endif        
   return(shmid);
 }
 int shm_attach(int shmid) {
   int r;
-  
+#ifndef WINDOWS
  if((r=(int)shmat(shmid,0,0))==-1) {
    io_error(errno,"SHM_ATTACH");    /* shm_malloc error.*/ 
    return(-1);
   }
+#endif  
  return(r);
 }
 
 int shm_detatch(int shmaddr) {
   int r;
+ #ifndef WINDOWS 
  if((r=(int)shmdt((void *)shmaddr))==-1) return(errno);
+#endif 
  return(0);
 }
 
 void shm_free(int shmid){        /*  mark for deletion*/
+#ifndef WINDOWS
         int r=shmctl(shmid, IPC_RMID, 0);
 	if(r==-1) io_error(errno,"SHM_FREE");
+#endif
 }
 
 #if 0

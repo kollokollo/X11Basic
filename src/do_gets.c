@@ -9,8 +9,9 @@
  */
 
 #include <stdio.h>
+#ifndef WINDOWS
 #include <readline/readline.h>
-
+#endif
 
 
 /* **************************************************************** */
@@ -22,8 +23,7 @@
 static char *line_read = (char *)NULL;
 
 /* Read a string, and return a pointer to it.  Returns NULL on EOF. */
-char *do_gets (char *prompt)
-{
+char *do_gets (char *prompt) {
   /* If the buffer has already been allocated, return the memory
      to the free pool. */
   if (line_read != (char *)NULL)
@@ -31,6 +31,11 @@ char *do_gets (char *prompt)
       free (line_read);
       line_read = (char *)NULL;
     }
+#ifdef WINDOWS
+  puts(prompt);
+  line_read=malloc(256);
+  gets(line_read);
+#else
   set_input_mode_echo(1);
   /* Get a line from the user. */
   line_read = readline (prompt);
@@ -39,10 +44,10 @@ char *do_gets (char *prompt)
   /* If the line has any text in it, save it on the history. */
   if (line_read && *line_read)
     add_history (line_read);
-
+#endif
   return (line_read);
 }
-
+#ifndef WINDOWS
 
 /* **************************************************************** */
 /*                                                                  */
@@ -100,7 +105,7 @@ invert_case_line (count, key)
   /* Move point to on top of the last character changed. */
   rl_point = end - direction;
 }
-
+#endif
 char *simple_gets(char *prompt) {
   char *buffer=malloc(1024);  
   if (line_read != (char *)NULL)
@@ -110,15 +115,16 @@ char *simple_gets(char *prompt) {
     }
   set_input_mode_echo(0);
   /* Get a line from the user. */
-  printf(prompt);
+  puts(prompt);
   fflush(stdout);
   line_read = fgets(buffer,1024,stdin);
   if(line_read==NULL) free(buffer);
   /*set_input_mode_echo(0);*/
-
+#ifndef WINDOWS
   /* If the line has any text in it, save it on the history. */
   if (line_read && *line_read)
     add_history (line_read);
-
+#endif
   return (line_read);
 }
+

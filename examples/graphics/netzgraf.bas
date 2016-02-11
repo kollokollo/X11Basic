@@ -1,4 +1,3 @@
-echo off  
 cls                         
 sx=100
 sy=sx*42/60
@@ -22,8 +21,7 @@ color gruen
 vsync
 FOR i=0 TO sx
   FOR j=0 TO sy
-    z=m*SIN(i/2/pi)*SIN(j/2/pi)
-    
+    z=m*SIN(i/2/pi)*SIN(j/2/pi)    
     x(i,j)=200+(i-j)*2*s
     y(i,j)=100+j*s-z
   NEXT j

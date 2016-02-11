@@ -378,9 +378,12 @@ void array_smul(ARRAY *a1, double m) {
   } else puts("Inkompatibler Array-Typ.");
 }
 ARRAY *inv_array(ARRAY *a) {
+  puts("noch nicht moeglich.");
   return(nullmatrix(a->typ,a->dimension,a->pointer));
 }
 ARRAY *trans_array(ARRAY *a) {
+  puts("noch nicht moeglich.");
+
   return(nullmatrix(a->typ,a->dimension,a->pointer));
 }
 
@@ -522,7 +525,7 @@ int zuweis(char *name, double wert) {
    vnr=variable_exist(name,FLOATARRAYTYP);
    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
    else {
-	pos2=strchr(pos,')');
+	pos2=searchchr2(pos,')');
 	if(pos2==NULL) puts("ARRAY-Zuweisung noch nicht möglich.");
 	else {
 	  double *varptr;
@@ -531,7 +534,9 @@ int zuweis(char *name, double wert) {
 	  int idxn;
 	  
 	  pos2[0]=0;
-	  /* printf("Zugriff auf Element: %s \n",pos); */
+#if DEBUG
+	   printf("Zugriff auf Element: %s \n",pos); 
+#endif
 	  varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	  /* Index- Liste aufloesen  */
           ndim=0;
@@ -579,7 +584,7 @@ void zuweisi(char *name, int wert) {
    vnr=variable_exist(r,INTARRAYTYP);
    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
    else {
-	pos2=strchr(pos,')');
+	pos2=searchchr2(pos,')');
 	if(pos2==NULL) puts("ARRAY-Zuweisung an dieser Stelle nicht möglich.");
 	else {
 	  int *varptr;
@@ -746,19 +751,19 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 		   printf("--anz2=%d\n",anz2);
 		   printf("ARRAY wert: dim=%d (",wert->dimension);
 		   for(i=0;i<wert->dimension;i++) printf("%d ",((int *)wert->pointer)[i]);
-		   printf(")\n");
+		   puts(")");
 		   printf("ARRAY vnr: dim=%d (",variablen[vnr].opcode);
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",((int *)variablen[vnr].pointer)[i]);
-		   printf(")\n");
+		   puts(")");
 		   printf("INDEXO: [");
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexo[i]);
-		   printf("]\n");
+		   puts("]");
 		   printf("INDEXE: [");
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexe[i]);
-		   printf("]\n");
+		   puts("]");
 		   printf("INDEXA: [");
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexa[i]);
-		   printf("]\n");
+		   puts("]");
 		   do_gets("Press RETURN");
 		 }
 		   

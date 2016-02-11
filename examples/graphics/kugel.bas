@@ -1,4 +1,5 @@
-echo off
+' Zeichnet Praezession auf Kugeloberflaeche (c) Markus Hoffmann 2001
+
 
 bw=600
 gucktheta=80/180*pi
@@ -12,7 +13,7 @@ blau=get_color(0,0,65530)
 weiss=get_color(65530,65530,65530)
 schwarz=get_color(0,0,0)
 lila=get_color(65530,0,65530)
-gruen=get_color(0,65530)
+gruen=get_color(0,65530,0)
 sizew 1,bw,bw
 color weiss
 pbox 0,0,bw,bw
@@ -32,7 +33,6 @@ for i=0 to 360 step 10
 for j=-60 to -30 step 10
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,(j-10)/180*pi,i/180*pi),@ky(1,(j-10)/180*pi,i/180*pi)
   line @kx(1,j/180*pi,(i-10)/180*pi),@ky(1,j/180*pi,(i-10)/180*pi),@kx(1,(j)/180*pi,i/180*pi),@ky(1,(j)/180*pi,i/180*pi)
-  
 next j
 vsync
 next i
@@ -45,27 +45,23 @@ for i=0 to 360
   ii=i-1
   jj=@f(ii)
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,jj/180*pi,ii/180*pi),@ky(1,jj/180*pi,ii/180*pi)
-  
-vsync
+  vsync
 next i
 
 color blau
-
 for i=0 to 360 step 2  
   j=-30
   ii=i-1
   jj=-30
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,jj/180*pi,ii/180*pi),@ky(1,jj/180*pi,ii/180*pi)
-  
-vsync
+  vsync
 next i
 for i=0 to 360   step 4
   j=-70
   ii=i-1
   jj=-70
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,jj/180*pi,ii/180*pi),@ky(1,jj/180*pi,ii/180*pi)
-  
-vsync
+  vsync
 next i
 vsync
 color schwarz
@@ -74,14 +70,13 @@ line @kx(0,0,0),@ky(0,0,0),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
 
 for i=0 to 360 step 10
 line @kx(0.9,-85/180*pi,i/180*pi),@ky(0.9,-85/180*pi,i/180*pi),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
-
 next i  
 
 vsync
 end
 
 function f(x)
-return sin(x/180*pi*6)*20-50
+  return sin(x/180*pi*6)*20-50
 endfunc
 
 
@@ -102,8 +97,7 @@ x=xx
 'if y>0
 '  defline ,,2
 'endif
-return bw/2+(x)*bw/2
-
+  return bw/2+(x)*bw/2
 endfunc
 function ky(r,theta,phi)
 
@@ -121,6 +115,5 @@ z=cos(gucktheta)*y-sin(gucktheta)*z
 'else
 'color blau
 'endif
-return bw/2-(z)*bw/2
-
+  return bw/2-(z)*bw/2
 endfunc

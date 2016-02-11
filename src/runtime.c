@@ -74,7 +74,11 @@ void fatal_error_handler( int signum) {
   }
   raise(signum);
 }
+#ifdef WINDOWS
+void alarm(int dummy) {
 
+}
+#endif
 
 void timer_handler( int signum) {
   if(alarmpc==-1) printf("** Uninitialisierter Interrupt #%d \n",signum);

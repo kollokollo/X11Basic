@@ -8,9 +8,9 @@ hope I will fix them soon. Now there is a source-distribution available with
 some  Makefiles which I have stolen from Marinos Yannikos (STonX).
 
 
-Unfortuantely the numerical recepies are not allowed to be distributed. So I had
-to remove the FFT-Features from XBasic for this distribution. (see
-mathemat_dummy.c).
+Unfortuantely the numerical recepies are not allowed to be distributed. So I
+had to remove some of the mathematics features from X11-Basic for this
+distribution. (see mathemat_dummy.c).
 
 Please report any errors to m.hoffmann@uni-bonn.de.
 

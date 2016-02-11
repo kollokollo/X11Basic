@@ -6,49 +6,127 @@
  * COPYING for details
  */
 
-#ifndef WINDOWS
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#ifdef WINDOWS
+  #include <windows.h> 
+  #include <process.h>
+#else
+  #include <X11/Xlib.h>
+  #include <X11/Xutil.h>
+  #define max(a,b) ((a>b)?a:b)
+  #define min(a,b) ((a<b)?a:b)
 #endif
+
 
 #define GEMFONT      "-*-fixed-*-r-normal-*-16-*-iso8859-*"
 #define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
-
-#define max(a,b) ((a>b)?a:b)
-#define min(a,b) ((a<b)?a:b)
+#define WINDOW_DEFAULT_W 640
+#define WINDOW_DEFAULT_H 400
+#ifdef SAVE_RAM
+  #define MAXWINDOWS 8
+#else
+  #define MAXWINDOWS 16
+#endif
 
 
 #define WORD short
 #define LONG unsigned int
-#define MAXWINDOWS 16
 
-#ifndef WINDOWS
+
+
+#ifdef WINDOWS
+#define SetForeground(c); { DeleteObject(pen[usewindow]); \
+ pen[usewindow]=CreatePen(PS_SOLID,1,c); \
+ SelectObject(bitcon[usewindow],pen[usewindow]); \
+ DeleteObject(brush[usewindow]); \
+ brush[usewindow]=CreateSolidBrush(c); \
+ SelectObject(bitcon[usewindow],brush[usewindow]); \
+ SetTextColor(bitcon[usewindow],c); } 
+#define SetBackground(c) SetBkColor(bitcon[usewindow],c)
+#define FillRectangle(a,b,c,d); { \
+  RECT rc; \
+  rc.left=a; \
+  rc.top=b; \
+  rc.right=a+c; \
+  rc.bottom=b+d; \
+  FillRect(bitcon[usewindow],&rc,brush[usewindow]); \
+}
+#define DrawRectangle(a,b,c,d); { \
+  RECT rc; \
+  rc.left=a; \
+  rc.top=b; \
+  rc.right=a+c; \
+  rc.bottom=b+d; \
+  FrameRect(bitcon[usewindow],&rc,pen[usewindow]); \
+}
+#define DrawLine(a,b,c,d);  {  MoveToEx(bitcon[usewindow],a,b,NULL); \
+  LineTo(bitcon[usewindow],c,d); \
+}
+#define CopyArea(a,b,c,d,e,f) BitBlt(bitcon[usewindow],e,f,c,d,bitcon[usewindow],a,b,SRCCOPY)
+#define DrawString(a,b,c,d) TextOut(bitcon[usewindow],a,(b-baseline),c,d)
+
+#else
+#define SetForeground(c) XSetForeground(display[usewindow],gc[usewindow],c)
+#define SetBackground(c) XSetBackground(display[usewindow],gc[usewindow],c)
+#define FillRectangle(a,b,c,d) XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d) 
+#define DrawRectangle(a,b,c,d) XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d) 
+#define DrawString(a,b,c,d) XDrawString(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
+#define DrawLine(a,b,c,d)  XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
+#define CopyArea(a,b,c,d,e,f) XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],a,b,c,d,e,f)
+#endif
+
 void handle_window(int);
-void handle_event(int,XEvent *);
 int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned int);
 void open_window( int);
 void close_window(int);
+
+extern int baseline,chh,chw;
+
+
+#ifndef WINDOWS
+void handle_event(int, XEvent *);
 char *imagetoxwd(XImage *,Visual *,XColor *, int *);
+#endif
 void do_menu_open(int);
 void do_menu_close();
 void do_menu_edraw();
 void do_menu_draw();
-#endif
 /* globale Variablen */
 
+extern int usewindow;
 int winbesetzt[MAXWINDOWS];
-#ifndef WINDOWS
+#ifdef WINDOWS
+/* Event-Typen  */
+#define Expose 1
+#define ButtonPress 2
+#define ButtonRelease 3
+#define KeyPress 4
+#define KeyRelease 5
+#define KeyChar 6
+#define MotionNotify 7
+
+extern HINSTANCE hInstance;
+HDC bitcon[MAXWINDOWS];
+HBITMAP backbit[MAXWINDOWS];
+HANDLE wthandle[MAXWINDOWS]; /* handle of win thread */
+HPEN pen[MAXWINDOWS];
+HBRUSH brush[MAXWINDOWS];
+HFONT font[MAXWINDOWS];
+WNDCLASSEX win_class;
+HWND win_hwnd[MAXWINDOWS];
+int global_mousex,global_mousey,global_mousek,global_mouses;
+int global_color,global_keycode,global_ks,global_eventtype;
+extern HANDLE keyevent,buttonevent,motionevent;
+
+#else
 Window win[MAXWINDOWS];                 
 Pixmap pix[MAXWINDOWS];
 Display *display[MAXWINDOWS];            
 GC gc[MAXWINDOWS];                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
-#endif
-extern int usewindow;
-#ifndef WINDOWS
 XSizeHints size_hints[MAXWINDOWS];       /* Hinweise fuer den WIndow-Manager..*/
 XWMHints wm_hints[MAXWINDOWS];
 XClassHint class_hint[MAXWINDOWS];
 XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
+Pixmap icon_pixmap[MAXWINDOWS];
 #endif
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];
@@ -64,13 +142,12 @@ extern int schubladenr;
 extern int schubladex,schubladey,schubladew,schubladeh;
 
 /* AES-Definitionen   */
-
 typedef struct {
 	int	x;
 	int	y;
 	int	w;
 	int	h;
-}RECT;
+} ARECT;
 
 
 typedef struct objc_colorword {

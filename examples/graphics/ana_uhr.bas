@@ -1,11 +1,10 @@
 
 '
 ' ANALOGUHR
-' Demoprogramm. Es soll nur die Funktionalitaet von CSXBASIC
+' Demoprogramm. Es soll nur die Funktionalitaet von X11-BASIC
 ' demonstrieren. Hier kann man zur Syntax etc. lernen
-' Letzte Bearbeitung 09.03.1999  Markus Hoffmann
+' Letzte Bearbeitung 09.03.2002  Markus Hoffmann
 '
-ECHO OFF
 gelb=get_color(65535,65535,0)
 rot=get_color(65535,0,0)
 weiss=get_color(65535,65535,65535)
@@ -14,6 +13,7 @@ setfont "*Courier*12*"
 sizew ,400,400
 color schwarz
 pbox 0,0,400,400
+vsync
 color rot
 TEXT 50,10,"Analoguhr mit X-BASIC    von Markus Hoffmann"
 setfont "*Courier*18*"

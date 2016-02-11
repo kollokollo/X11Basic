@@ -12,15 +12,22 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
+#ifndef WINDOWS
 #include <termios.h>
-#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <termio.h>
+#else
+#include <windows.h>
+
+#endif
+#include <sys/time.h>
 
 /* fuer Dynamisches Linken von shared Object-Files   */
 
+#ifndef WINDOWS
 #ifndef __hpux
 #include <dlfcn.h>
 #endif
@@ -29,12 +36,25 @@
 #endif
 
 #include <dlfcn.h>
+#endif
 
 #include "file.h"
 #include "defs.h"
 #include "globals.h"
 #include "protos.h"
 
+
+#ifdef WINDOWS
+#define FD_SETSIZE 4096
+#define EINPROGRESS   WSAEINPROGRESS
+#define EWOULDBLOCK   WSAEWOULDBLOCK
+#define gettimeofday(a,b) QueryPerformanceCounter(a)
+#else 
+#define send(s,b,l,f) write(s,b,l)
+#define recv(s,b,l,f) read(s,b,l)
+#define closesocket(s) close(s)
+#define ioctlsocket(a,b,c) ioctl(a,b,c)
+#endif
 
 void io_error(int,char *);
 
@@ -216,17 +236,20 @@ int get_number(char *w) {
 /* Internetroutinen */
 
 int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port) {
+#ifndef WINDOWS
   struct hostent *hostinfo;
   name->sin_family=AF_INET;
   name->sin_port=htons(port);
   hostinfo=gethostbyname(hostname);
   if(hostinfo==NULL) return(-1);
   name->sin_addr=*(struct in_addr *)hostinfo->h_addr;
+#endif
   return(0);
 }
 
 int make_socket(unsigned short int port) {
   int sock;
+#ifndef WINDOWS
   struct sockaddr_in name;
   sock=socket(PF_INET, SOCK_STREAM,0);
   if(sock<0) return(-1);
@@ -234,6 +257,7 @@ int make_socket(unsigned short int port) {
   name.sin_port=htons(port);
   name.sin_addr.s_addr=htonl(INADDR_ANY);
   if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
+#endif
   return(sock);
 }
 
@@ -284,6 +308,7 @@ void c_open(char *n) {
       /*  Sockets  */
       if(special=='C') { /* Connect */
         int sock;
+#ifndef WINDOWS
 	struct sockaddr_in servername;
 	 
     /* printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
@@ -304,8 +329,10 @@ void c_open(char *n) {
 	    }
 	  }
 	}
+#endif	
       } else if(special=='S') { /* serve */
         int sock;
+	#ifndef WINDOWS
    /*  printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
         sock=make_socket(port);
 	if(sock<0) {
@@ -319,9 +346,11 @@ void c_open(char *n) {
               dptr[number]=fdopen(sock,modus2);
 	  }
 	}
+	#endif
       } else if(special=='A') { /* accept */
         int sock,sock2;
 	size_t size;	
+#ifndef WINDOWS
 	struct sockaddr_in clientname;
 #ifdef DEBUG
         printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
@@ -341,11 +370,13 @@ void c_open(char *n) {
             dptr[number]=fdopen(sock2,modus2);
 	  }
 	} else printf("Socket #d nicht geoeffnet.\n",port); 
+#endif
       } else dptr[number]=fopen(filename,modus2);
       if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
       else  filenr[number]=1;
       if(special=='X') {  /* Fuer Serielle Devices !  */
         int fp=fileno(dptr[number]);
+#ifndef WINDOWS
 	struct termios ttyset;
 	if(isatty(fp)) {
 	  printf("Ist ein tty !\n");
@@ -364,7 +395,7 @@ void c_open(char *n) {
           ttyset.c_oflag = (ONLRET);
           if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
       } else printf("File ist kein TTY ! Einstellungen ignoriert !\n");
-  
+  #endif
 
   
       }
@@ -378,9 +409,15 @@ void c_link(PARAMETER *plist, int e) {
     number=plist[0].integer;
     if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
     else {
+#ifdef WINDOWS
+      dptr[number]=LoadLibrary(plist[1].pointer);
+      if(dptr[number]==NULL) io_error(GetLastError(),"LINK");
+      else  filenr[number]=2;
+#else
       dptr[number]=dlopen(plist[1].pointer,RTLD_LAZY);
       if(dptr[number]==NULL) io_error(errno,"LINK");
       else  filenr[number]=2;
+#endif
     } 
   }
 }
@@ -401,7 +438,9 @@ const struct {int sf; char xf; } table[] = {
     { ENOMEM,  -12 }, /* 12: Not enough core*/
     { EACCES,  -13 }, /* 13: Permission denied*/
     { EFAULT,  -57 }, /* 14: Bad address*/
+#ifndef WINDOWS
     { ENOTBLK, -58 }, /* 15: Block device required*/
+#endif
     { EBUSY,   -59 }, /* 16: Mount device busy*/
     { EEXIST,  -17 }, /* 17: File exists*/
     { EXDEV,   -18 }, /* 18: Cross-device link*/
@@ -412,7 +451,9 @@ const struct {int sf; char xf; } table[] = {
     { ENFILE,  -23 }, /* 23: File table overflow */
     { EMFILE,  -24 }, /* 24: Too many open files */
     { ENOTTY,  -25 }, /* 25: Not a typewriter */
+#ifndef WINDOWS
     { ETXTBSY, -26 }, /* 26: Text file busy */
+#endif
     { EFBIG,   -27 }, /* 27: File too large */
     { ENOSPC,  -28 }, /* 28: No space left on device */
     { ESPIPE,  -29 }, /* 29: Illegal seek */
@@ -426,6 +467,7 @@ const struct {int sf; char xf; } table[] = {
 
     { ENOSYS,       -38 }, /* 38: Function not implemented */
     { ENOTEMPTY,    -39 }, /* 39: Directory not empty */
+#ifndef WINDOWS
     { ELOOP,        -71 }, /* 40: Too many symbolic links encountered */
     { EWOULDBLOCK,  -41 }, /* 41: Operation would block */
     { ENOMSG,       -42 }, /* 42: No message of desired type*/
@@ -448,16 +490,18 @@ const struct {int sf; char xf; } table[] = {
 
     { ENETDOWN,    -100 }, /* 100: Network is down */
     { ENETUNREACH, -101 }, /* 101: Network is unreachable */
+
     { ENETRESET,   -102 }, /* 102: Network dropped connection because of reset */
     { ECONNABORTED,-103 }, /* 103: Software caused connection abort */
+
     { ECONNRESET,  -104 }, /* 104: Connection reset by peer*/
+
     { ENOBUFS,     -105 }, /* 105: No buffer space available */
     { EISCONN,     -106 }, /* 106: Transport endpoint is already connected*/
     { ENOTCONN,    -107 }, /* 107: Transport endpoint is not connected */
-
     { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
     { ECONNREFUSED,-111 }  /* 111: Connection refused */
-
+#endif
   };
 const int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
   
@@ -483,8 +527,13 @@ void c_close(char *w) {
       if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
       else filenr[i]=0;
     } else if(filenr[i]==2) { 
+#ifdef WINDOWS
+      if(FreeLibrary(dptr[i])==0) io_error(GetLastError(),"UNLINK");
+      else filenr[i]=0;
+#else
       if(dlclose(dptr[i])==EOF) io_error(errno,"UNLINK");
       else filenr[i]=0;
+#endif
     }
     else error(24,w); /* File nicht geoeffnet...*/
   } else {
@@ -672,10 +721,13 @@ int inpf(char *n) {
   } else if(filenr[i]) {
     fff=dptr[i];        
     fflush(fff);
+#ifndef WINDOWS
     fp=fileno(fff);
     ioctl(fp, FIONREAD, &i);
     return(i); 
-    /*return(((eof(fff)) ? 0 : -1)); */
+#else    
+    return(((eof(fff)) ? 0 : -1)); 
+#endif    
   } else {error(24,"");return(-1);} /* File nicht geoeffnet */
 }
 int inp16(char *n) {
@@ -705,9 +757,11 @@ int inp32(char *n) {
 
 /* Terminal-Einstellungen. Wichtig fuer die Zeichenweise eingabe */
 
+#ifndef WINDOWS
 struct termios saved_attributes;  /* fuer alte Einstellung */
-				
+#endif				
 void set_input_mode(int mi, int ti) {
+#ifndef WINDOWS
   struct termios tattr;
   if(isatty(STDIN_FILENO)) {
     tcgetattr(STDIN_FILENO,&saved_attributes);
@@ -717,9 +771,10 @@ void set_input_mode(int mi, int ti) {
     tattr.c_cc[VTIME]=ti;
     tcsetattr(STDIN_FILENO,TCSAFLUSH,&tattr);
   }
-
+#endif
 }
 void set_input_mode_echo(int onoff) {
+#ifndef WINDOWS
   struct termios tattr;
   if(isatty(STDIN_FILENO)) {
     tcgetattr(STDIN_FILENO,&tattr);
@@ -727,25 +782,33 @@ void set_input_mode_echo(int onoff) {
     else tattr.c_lflag &= ~ECHO;
     tcsetattr(STDIN_FILENO,TCSAFLUSH,&tattr);
   }
-
+#endif
 }
 void reset_input_mode() {
+#ifndef WINDOWS
   if(isatty(STDIN_FILENO)) tcsetattr(STDIN_FILENO,TCSANOW,&saved_attributes);
+#endif
 }
 
 /* Dynamisches Linken von Shared-Object-Files */
 
-
+#if 0
 void *dyn_symbol(void *handle,char *name){
   char *error;
   char *cosine;
+#ifdef WINDOWS
+  cosine=(char *)(int)GetProcAddress(handle,name);
+  if((int)cosine==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
+#else
   cosine=dlsym(handle, name);
   if ((error = dlerror()) != NULL)  {
     printf("ERROR: %s\n",error);
     return(NULL);
   }
+#endif
   return(cosine);
 }
+#endif
 int f_symadr(char *n) { 
   char v[strlen(n)+1],w[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,v,w);
@@ -756,8 +819,14 @@ int f_symadr(char *n) {
     if(filenr[i]==2) {
       char *sym=s_parser(w);
       char *error;
+      #ifdef WINDOWS
+        adr = (int)GetProcAddress(dptr[i],sym);
+      if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
+    
+      #else
       adr = (int)dlsym(dptr[i],sym);
       if ((error = dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",error);
+      #endif
       free(sym);
     } else error(24,v); /* File nicht geoeffnet */
   } else error(32,"SYM_ADR"); /* Syntax error */
@@ -767,7 +836,9 @@ int f_symadr(char *n) {
 
 char *terminalname(int fp) {
   char *name=NULL,*erg;
+  #ifndef WINDOWS
   if(isatty(fp)) name=ttyname(fp);
+  #endif
   erg=malloc(strlen(name)+1);
   strcpy(erg,name);
   return(erg);
@@ -826,9 +897,10 @@ void c_out(char *n) {
     } else error(24,""); /* File nicht geoeffnet */
   } else error(32,"OUT"); /* Syntax error */
 }
-
+#ifndef WINDOWS
 /* kbhit-Funktion   */
 int kbhit() {
+
   fd_set set;
 /*  
 #ifdef TIMEVAL_WORKAROUND
@@ -849,7 +921,7 @@ int kbhit() {
     if (FD_ISSET(0, &set))      return(-1);
     else  return(0);
 }
-
+#endif
 
 char *inkey() {
    static char ik[MAXSTRLEN];
@@ -934,6 +1006,7 @@ STRING do_using(double num,STRING format){
   char *des;
   const char *digits="01234567899";
   
+  
   if (*format.pointer=='%') { /* c-style format */
     char b[32];
     sprintf(b,format.pointer,num);
@@ -954,11 +1027,11 @@ STRING do_using(double num,STRING format){
    while((format.pointer)[p]) {
      if((format.pointer)[p++]=='#') a++;
    }
-  
    j=a+r;
    neg=(num<0);
-   num=abs(num);
-   num+=0.5*pow(10,(double)-a);  /* zum Runden */
+   num=fabs(num);
+
+   num+=0.5*pow(10.0,-(double)a);  /* zum Runden */
    
    for(i=0;i<format.len;i++) {
      if(format.pointer[i]=='+') {*des=(neg ? '-':'+'); vorz=0;}
@@ -968,7 +1041,6 @@ STRING do_using(double num,STRING format){
        j--;
        p=(int)(num/pow(10,(double)--r));
        p2=(int)(num/pow(10,(double)(r-1)));
-      /* printf("pow=%g\n",num/pow(10,(double)r));*/
        num-=p*pow(10,(double)r);
        if(p) {
          *des=digits[p];ln=1;

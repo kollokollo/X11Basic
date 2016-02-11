@@ -53,6 +53,23 @@ int f_odd(int b) {return(b&1 ? -1:0);}
 int f_fak(double);
 int f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
 double f_rnd(double d) {return((double)rand()/RAND_MAX);}
+double f_gasdev(double d) { /* Gaussverteilter Zufall */
+  static int flag=1;
+  static double gset;
+  double fac,rsq,v1,v2;
+  flag=(!flag);
+  if(flag) return(gset);
+  else {
+    do {
+      v1=2*((double)rand()/RAND_MAX)-1;
+      v2=2*((double)rand()/RAND_MAX)-1;
+      rsq=v1*v1+v2*v2;
+    } while(rsq>=1 || rsq==0);
+    fac=sqrt(-2*log(rsq)/rsq);
+    gset=v1*fac;
+    return(v2*fac);
+  }
+}
 int  f_srand(double d) {srand((int)d);return(0);}
 double f_deg(double d) {return(d/PI*180);}
 double f_rad(double d) {return(d*PI/180);}
@@ -65,7 +82,43 @@ double f_cvf(STRING n) {  return((double)(*((float *)n.pointer))); }
 int f_len(STRING n) { return(n.len); }
 int f_exist(STRING n) { return(-exist(n.pointer)); }
 double f_val(STRING n) { return((double)atof(n.pointer)); }
+#define IGREG (15+31L*(10+12L*1582))
+int f_julian(STRING n) { /* Julianischer Tag aus time$ */
+  char buf[n.len+1],buf2[n.len+1];
+  int e;
+  int day,mon,jahr;	
+  long jul;
+  int ja,jy,jm;
+
+  memcpy(buf,n.pointer,n.len);
+  buf[n.len]=0;
+  e=wort_sep(buf,'.',0,buf2,buf);
+  if(e<2) return(-1);
+  day=atoi(buf2);
+  e=wort_sep(buf,'.',0,buf2,buf);
+  if(e<2) return(-1);
+  mon=atoi(buf2);
+  jy=jahr=atoi(buf);
+  if(jy==0) return(-1); /* Jahr 0 gibt es nicht */
+  if(jy<0) ++jy;
+  if(mon>2) jm=mon+1;
+  else { --jy; jm=mon+13; }
+  jul=(long)(floor(365.25*jy)+floor(30.6001*jm)+day+1720995);
+  if(day+31L*(mon+12L*jahr)>=IGREG) {
+    ja=(int)(0.01*jy);
+    jul+=2-ja+(int)(0.25*ja);
+  }
+  return(jul);
+}
 double f_ltextlen(STRING n) { return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
+int f_gray(int n) { /* Gray-Code-Konversion */
+  unsigned int i=1,a,d;
+  if(n>=0) return(n^(n>>1));
+  for(a=-n;;i<<=1) {
+    a^=(d=a>>i);
+    if(d<=1||i==16) return(a);
+  }
+}
 char *arrptr(char *);
 #ifdef TINE
 double f_tinemax(STRING n) { return(tinemax(n.pointer)); }
@@ -87,6 +140,11 @@ int f_realloc(int adr,int size) {return((int)realloc((char *)adr,size));}
 int f_peek(int adr) { return((int)(*(char *)adr));}
 int f_dpeek(int adr) { return((int)(*(short *)adr));}
 int f_lpeek(int adr) { return((int)(*(long *)adr));}
+
+
+#ifdef WINDOWS 
+int err=0;
+#endif
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
@@ -157,8 +215,10 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
 
+ { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,1,1     ,{PL_NUMBER}},
  { F_PLISTE|F_IRET,    "GET_COLOR", f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_IQUICK|F_IRET,    "GRAY"     , f_gray ,1,1     ,{PL_INT}},
 
  { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
@@ -170,7 +230,8 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE|F_IRET,  "INSTR"     , f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
  { F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
- 
+ { F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
+
  { F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
@@ -395,6 +456,49 @@ STRING f_params(int n) {
   if(n>=param_anzahl || n<0) ergebnis.len=0;
   return(ergebnis);
 }
+#undef IGREG
+#define IGREG 2299161
+STRING f_juldates(int n) {   
+  STRING ergebnis;
+  long ja,jalpha,jb;
+  long day,mon,jahr;
+  ergebnis.pointer=malloc(16);
+  if(n>=IGREG) {
+    jalpha=(long)(((float)(n-1867216)-0.25)/36524.25);
+    ja=n+1+jalpha-(long)(0.25*jalpha);
+  } else ja=n;
+  jb=ja+1524;
+  jahr=(long)(6680.0+((float)(jb-2439870)-122.1)/365.25);
+  day=(long)(365*jahr+(0.25*jahr));
+  mon=(long)((jb-day)/30.6001);
+  day=jb-day-(long)(30.6001*mon);
+  mon--;
+  if(mon>12) mon-=12;
+  jahr-=4715;
+  if(mon>2) --(jahr);
+  if(jahr<=0) --(jahr);
+  sprintf(ergebnis.pointer,"%02d.%02d.%04d",day,mon,jahr);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_unixdates(int n) {   
+  STRING ergebnis;
+  struct tm * loctim;
+  loctim=localtime((time_t *)(&n));
+  ergebnis.pointer=malloc(12);
+  sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_unixtimes(int n) {   
+  STRING ergebnis;
+  struct tm * loctim;
+  loctim=localtime((time_t *)&n);
+  ergebnis.pointer=malloc(16);
+  sprintf(ergebnis.pointer,"%02d:%02d:%02d",loctim->tm_hour,loctim->tm_min,loctim->tm_sec);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
 STRING f_spaces(int n) {   
   STRING ergebnis;
   int i=0;
@@ -518,11 +622,13 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,  "BIN$"    , f_bins ,1,2   ,{PL_INT,PL_INT}},
 
  { F_IQUICK,    "CHR$"    , f_chrs ,1,1   ,{PL_NUMBER}},
+
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
  { F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
  { F_ARGUMENT,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_NUMBER,PL_NUMBER}},
  { F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_NUMBER}},
+ { F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
 
  { F_ARGUMENT,  "LEFT$" , f_lefts ,1,2   ,{PL_STRING,PL_INT}},
  { F_ARGUMENT,  "LINEINPUT$" , f_lineinputs ,1,1   ,{PL_FILENR}},
@@ -547,6 +653,8 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
  { F_SQUICK,    "UCASE$"    , f_uppers ,1,1   ,{PL_STRING}},
+ { F_IQUICK,    "UNIXDATE$" , f_unixdates ,1,1   ,{PL_INT}},
+ { F_IQUICK,    "UNIXTIME$" , f_unixtimes ,1,1   ,{PL_INT}},
  { F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}},
 
@@ -606,18 +714,16 @@ int f_rinstr(PARAMETER *plist,int e) {
   } return(0);
 }
 #ifndef WINDOWS
-#include <fnmatch.h>
+  #include <fnmatch.h>
 #else 
-#define FNM_NOESCAPE 0
+  #include "Windows.extension/fnmatch.h"
 #endif
 int f_glob(PARAMETER *plist,int e) {
   char *pos=NULL,*n;
   int flags=FNM_NOESCAPE;
   if(e>=2) {
     if(e==3) flags^=plist[2].integer;
-#ifndef WINDOWS 
     flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
-#endif
     if(flags==0) return(-1);
   } return(0);
 }
@@ -906,7 +1012,13 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
       } else if(strcmp(s,"CTIMER")==0) {
 	return((double)clock()/CLOCKS_PER_SEC);
       } else if(strcmp(s,"TIMER")==0) {
-#ifndef WINDOWS
+#ifdef WINDOWS
+#if 0
+       return((double)GetTickCount()/1000.0);
+#else
+       return((double)clock()/CLOCKS_PER_SEC);
+#endif
+#else
         struct timespec t;
 	struct {
                int  tz_minuteswest; /* minutes W of Greenwich */
@@ -923,6 +1035,9 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
       else if(strcmp(s,"PI")==0)       return(PI);
       else if(strcmp(s,"TRUE")==0)     return(-1);
       else if(strcmp(s,"FALSE")==0)    return(0);
+#ifdef WINDOWS
+      else if(strcmp(s,"WIN32")==0)    return(-1);
+#endif
       else if(strcmp(s,"MOUSEX")==0)   return((double)mousex());
       else if(strcmp(s,"MOUSEY")==0)   return((double)mousey());
       else if(strcmp(s,"MOUSEK")==0)   return((double)mousek());
@@ -1067,6 +1182,17 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	   ergeb=tinevget(zzz,nn,o);
 	   free(zzz);
 	   return(ergeb);
+	  } else if(strcmp(s,"TINEHISTORY")==0) {
+	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
+	  char *zzz;
+	  ARRAY *ergeb;
+	  
+	  wort_sep(pos,',',TRUE,w1,w2);
+	  e=wort_sep(w2,',',TRUE,w2,w3);
+	  zzz=s_parser(w1);
+	  ergeb=tinehistory(zzz,(int)parser(w2),(int)parser(w3));
+	  free(zzz);
+	  return(ergeb);
 #endif
 	 } else if(strcmp(s,"INP%")==0) {
 	   char w1[strlen(pos)+1],w2[strlen(pos)+1];
@@ -1395,8 +1521,7 @@ STRING string_parser(char *funktion) {
 	 timec = time(&timec);
 	 loctim=localtime(&timec);
 	 ergebnis.pointer=malloc(12);
-	 sprintf(ergebnis.pointer,"%2d.%2d.%4d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
-         pos=ergebnis.pointer; while(pos[0]!=0) {if(pos[0]==' ') pos[0]='0'; pos++;}
+	 sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
          ergebnis.len=strlen(ergebnis.pointer);
        } else if(strcmp(v,"TRACE")==0) { 
          ergebnis.pointer=malloc(strlen(program[pc])+1);

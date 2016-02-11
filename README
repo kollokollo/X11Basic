@@ -1,8 +1,25 @@
+
+
+    X     X    1   1        BBBB
+    X     X   11  11        B   B                   i
+      X X      1   1        B   B            sss
+       X       1   1 -----  BBBB    aaaa    s   s   i   cccc
+      X X      1   1        B   B  a   a      s     i  c
+    X     X    1   1        B   B  a   a    s   s   i  c   
+    X     X    1   1        BBBB    aaa a    sss    i   cccc
+    
+    
+    
+                       VERSION 1.08
+
+            (C) 1997-2003 by Markus Hoffmann
+                 (m.hoffmann@uni-bonn.de)
+
 Name        : X11Basic                    
-Version     : 1.06                              Vendor: Markus Hoffmann
+Version     : 1.08                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <m.hoffmann@uni-bonn.de>
-URL         : http://www-cip.uni-bonn.de/~hoffmann/X11-Basic
+URL         : http://x11-basic.sourceforge.net/
 Summary     : A Basic Interpreter with X11-Graphics capabilities
 Description :
 
@@ -19,3 +36,8 @@ You will find the compiler and many other sample programs in
 ./doc/packages/X11Basic/examples.
 
 Please read the file ./doc/manual.txt for further information.
+
+ * X11BASIC is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+
+Please read the file INSTALL for compiling instructions.

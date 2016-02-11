@@ -49,15 +49,15 @@ char *program[MAXPRGLEN];
 
 void intro(){
   puts("***************************************************************");
-  printf("*               %s                 V. %s                *\n",xbasic_name, version);
+  printf("*           %10s                     V.%5s            *\n",xbasic_name, version);
   puts("*                    by Markus Hoffmann 1997-2002 (c)         *");
   puts("*                                                             *");
 #ifdef GERMAN
-  printf("* Programmversion vom     %s       *\n",vdate);
-  printf("* Library V. %s vom     %s       *\n",libversion,libvdate);
+  printf("* Programmversion vom     %30s      *\n",vdate);
+  printf("* Library V. %s vom     %30s      *\n",libversion,libvdate);
 #else
-  printf("* version date:           %s       *\n",vdate);
-  printf("* library V. %s date:   %s       *\n",libversion,libvdate);
+  printf("* version date:           %30s      *\n",vdate);
+  printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
 #endif
   puts("***************************************************************"); 
   puts("");
@@ -125,12 +125,17 @@ void kommandozeile(int anzahl, char *argumente[]) {
    }
    if(quitflag) c_quit("");
 }
+#ifdef WINDOWS
 
-char *simple_gets(char *);
-
+#include <windows.h>
+HINSTANCE hInstance;
+#endif
+extern char *simple_gets(char *);
 main(int anzahl, char *argumente[]) {
   char buffer[MAXSTRLEN],*zw; 
- 
+#ifdef WINDOWS
+  hInstance=GetModuleHandle(NULL);
+#endif 
   x11basicStartup();   /* initialisieren   */  
 
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
