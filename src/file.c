@@ -1,5 +1,6 @@
 /* Erweiterungen fuer die Datei Ein- und Ausgabe ....   */
-/* (c) von Markus Hoffmann                                  */
+
+/* (c) von Markus Hoffmann                              */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -15,11 +16,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-
-
+#ifndef FALSE
 #define FALSE 0
 #define TRUE (!FALSE)
-
+#endif
 
 char *lineinput( FILE *n, char *line) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
   char c; int i=0;

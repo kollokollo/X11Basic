@@ -1,5 +1,4 @@
-# Makefile for X11-Basic (c) Markus Hoffmann
-
+# Makefile for X11-Basic (c) Markus Hoffmann V.@version@
 
 SHELL=/bin/sh
 # Register variables (-ffixed-reg)
@@ -11,23 +10,15 @@ OPT=@copt@
 # Additional header file paths
 INC=@X_CFLAGS@ -I${CCSROOT}/include -I/opt/readline/include
 
-# for MONITOR=1 we need a System V compatible curses library - I need to
-# write an Autoconf macro to test for that...
-#Linux:
-#INC=@X_CFLAGS@ -I/usr/include/ncurses
-
 # X11 library path
 XLIBS=@X_LIBS@
 SFLAGS=
-# MONITOR=1:
-#Linux:
-#XLIBS=@X_LIBS@ -L../../binutils-2.4 -lopcodes -lbfd -liberty -lncurses
 
 #Linux SVGALIB support :
 #XLIBS=@X_LIBS@ -lvgagl -lvga 
 #SFLAGS=-DUSE_SVGALIB
 
-DEF= @def@ -DINLINE=@inline@
+DEF= @def@ 
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
@@ -42,7 +33,14 @@ CPP=@CPP@
 
 CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
- 
+# Directories
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+BINDIR=@bindir@
+DATADIR=@datadir@
+LIBDIR=@libdir@
+MANDIR=@mandir@
 
 OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o\
         runtime.o wort_sep.o ltext.o\
@@ -50,20 +48,15 @@ OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o\
 	sysVstuff.o
 
 DISTOBJS=$(OBJS) main.o mathemat_dummy.o
-
-
-
-LIBOBJS=$(OBJS) mathematics.o
-	
-AOBJS=  main.o $(LIBOBJS)
-
-
-CSRC=$(DISTOBJS:.o=.c)
+LIBOBJS= $(OBJS) mathematics.o
+AOBJS=   main.o $(LIBOBJS)
+CSRC=    $(DISTOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
+DEPSRC=  $(CSRC) 
 
-DEPSRC=$(CSRC) 
-
-DIST= README INSTALL COPYING install.sh doc/* \
+DIST= README INSTALL COPYING install.sh doc/man-pages/* doc/ACKNOWLEGEMENTS \
+      doc/AUTHORS doc/HISTORY doc/RELEASE_NOTES doc/X11-Basic-manual.txt \
+      doc/editors/* \
       src/xbasic.c \
       src/file.c \
       src/main.c \
@@ -83,18 +76,24 @@ DIST= README INSTALL COPYING install.sh doc/* \
       src/errortxt.c \
       src/window.c \
       src/sysVstuff.c \
-      src/defs.h \
+      src/defs.h src/config.h.in \
       src/globals.h \
       src/xbasic.h src/fdata.c \
       src/window.h src/file.h src/protos.h src/options.h \
 	src/Makefile.in src/ptypes.h src/vtypes.h\
-	src/configure src/config/*\
+	src/configure \
 	src/config.guess \
         src/configure.in\
-        src/bitmaps/* examples/*
+        src/bitmaps/* \
+        examples/compiler/xbc.bas.in \
+        examples/compiler/inline.bas \
+        examples/compiler/bas2x11basic.bas \
+        examples/compiler/gui2bas.bas \
+	examples/tests/* \
+	examples/calculation/* \
+	examples/graphics/* 
 
 DIST2=$(DISTOBJS:.o=.c)
-
 
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
@@ -102,7 +101,7 @@ DIR2=X11Basic-src-@version@
 LINKFLAGS = -L/usr/lib/termcap -L/opt/readline/lib
 WINLINKFLAGS = -L/usr/lib/termcap 
 
-LIBS = -lm -lX11 -lreadline -ldl -ltermcap @xtra@
+LIBS =  @libs@ @xtra@
 WINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid
 TINEWINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 CCSLIBS = ${CCSROOT}/lib/libtine.a
@@ -114,6 +113,8 @@ configure : configure.in
 Makefile : Makefile.in
 	./configure
  
+#.c.o:
+#	$(CC) -c $(CFLAGS) -o $@ $<
 fft : $(AOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
@@ -127,7 +128,7 @@ psydo : psydo.o lib
 psydostatic : psydo.o x11basic.a
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
 		$(LIBS) $(XLIBS)
-windows: $(OBJS) main.o mathematics.o
+windows: clean
 	$(WINCC) -DWINDOWS -c $(DIST2)
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe $(DISTOBJS) \
 		$(WINLIBS) Windows.extension/fnmatch.o
@@ -159,7 +160,7 @@ tinexbasic : $(OBJS) main.o mathematics.o
 		$(LIBS) $(CCSLIBS) $(XLIBS)
 
 lib : $(LIBOBJS)
-	$(CC) $(OPT) $(LINKFLAGS) -shared -o libx11basic.so $(LIBOBJS)
+	$(CC) -shared -o libx11basic.so $(LIBOBJS)
 
 tlib : $(LIBOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -shared -o libtinex11basic.so $(LIBOBJS) $(CCSLIBS)
@@ -170,33 +171,38 @@ tx11basic.a : $(LIBOBJS)
 	 ar -ru tx11basic.a $(LIBOBJS)  $(CCSLIBS)
 
 dyn : lib main.o
-	$(CC) $(OPT) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
+	$(CC) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
 	$(LIBS) -lx11basic $(XLIBS)
 	strip xbasic.dyn
-
-install : xbasic
-	cp xbasic ${HOME}/bin/xbasic
-install2 : dyn lib 
-	cp xbasic.dyn ${HOME}/bin/xbasic
-	cp libx11basic.so /usr/local/lib/
-	strip ${HOME}/bin/xbasic
-installroot : dyn lib x11basic.a
-	cp xbasic.dyn /bin/xbasic
-	cp libx11basic.so /usr/local/lib/
-	cp x11basic.a /usr/local/lib/
-	rm -f /usr/lib/libx11basic.so
-	rm -f /usr/lib/x11basic.a
-	ln -s /usr/local/lib/libx11basic.so /usr/lib/libx11basic.so
-	ln -s /usr/local/lib/x11basic.a /usr/lib/x11basic.a
-	strip /bin/xbasic
-	strip /usr/local/lib/libx11basic.so
-	(cd .. ; cp man-pages/x11basic.1 /usr/man/man1/x11basic.1)
-	
+xbc : dyn 
+	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o xbc
+bas2x11basic : xbc
+	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o bas2x11basic
+installhome : xbasic
+	install -s -m 755 xbasic ${HOME}/bin/xbasic
+installdyn : dyn lib
+	install -s -m 755 xbasic.dyn ${HOME}/bin/xbasic
+	install -m 755 libx11basic.so $(LIBDIR)/
+install : dyn lib x11basic.a
+	install -s -m 755 xbasic.dyn $(BINDIR)/xbasic
+	install -m 755 libx11basic.so $(LIBDIR)/
+	install -m 644 x11basic.a $(LIBDIR)/
+	install -m 644 ../man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
+	install -m 644 ../man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
+xbcinstall : xbc install
+	install -s -m 755 xbc $(BINDIR)/
+	install ../man-pages/xbc.1 $(MANDIR)/man1/xbc.1
+uninstall :
+	rm -f $(LIBDIR)/libx11basic.so
+	rm -f $(LIBDIR)/x11basic.a
+	rm -f $(BINDIR)/xbasic $(BINDIR)/xbc 
+	rm -f $(MANDIR)/man1/xbasic.1
+	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1
 clean :
-	rm -f xbasic xbasic.dyn xbasic.static *.o *.so a.out *.a
+	rm -f xbasic xbasic.dyn xbasic.static xbc *.o *.so a.out *.a
 
 distclean : clean
-	rm -f Makefile config.cache config.status config.log X11-Basic-examples-1.07.zip
+	rm -f Makefile config.cache config.status config.log X11-Basic-examples-@version@.zip
 
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
@@ -206,7 +212,11 @@ dist :	$(DIST2)
 rpm :	dist
 	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
 	rpm -ba --clean x11basic.spec
-
+rpm2 :	dist
+	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
+	rpmbuild -ba --clean x11basic.spec
+check :	xbasic
+	./xbasic -e version
 depend : $(DEPSRC) 
 	cp Makefile Makefile.bak
 	chmod +w Makefile

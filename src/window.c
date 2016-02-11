@@ -24,14 +24,37 @@
   #include <X11/XWDFile.h>
 #endif
 
-#include "window.h"
 #include "defs.h"
+#include "window.h"
 
 
 /* globale Variablen */
+/* GEM-Globals   */
 
+int chw=4,chh=8,baseline=7,depth=8;
+const struct { int r,g,b;} gem_colordefs[]={
+{65535,65535,65535},  /* WHITE */
+{0,0,0},/*BLACK  */
+{65535,0,0},/* RED */
+{0,65535,0},/* GREEN */
+{0,0,65535},/* BLUE */
+{0,65535,65535},/* CYAN */
+{65535,65535,0},/* YELLOW */
+{65535,0,65535},/* MAGENTA */
+{40000,40000,40000},/* LWHITE */
+{20000,20000,20000},/* LBLACK */
+{65535,32000,32000},/* LRED */
+{32000,65535,32000},/* LGREEN */
+{32000,32000,65535},/* LBLUE */
+{32000,65535,65535},/* LCYAN  */
+{65535,65535,32000},/* LYELLOW */
+{65535,32000,65535},/* LMAGENTA */
+};
+int gem_colors[16];
 
+ARECT sbox;
 
+#ifndef NOGRAPHICS
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];  
 #ifdef WINDOWS
@@ -149,7 +172,7 @@ static DWORD winthread(PWORD par) { /* procedure for WIN95-thread */
   MSG Msg;
   HDC hdc;
   RECT cr;
-  int nummer=par;
+  int nummer=(int)par;
   
   winbesetzt[nummer]=1;
   cr.left=0;
@@ -425,6 +448,9 @@ void handle_window(int winnr) {
 
 
 void graphics(){
+#ifdef DEBUG
+  printf("graphics:\n");
+#endif
   if(winbesetzt[usewindow]) {handle_window(usewindow);return;}
   else {
      if(usewindow==0) {
@@ -440,7 +466,7 @@ void graphics(){
 int fetch_rootwindow() {
 #ifndef WINDOWS
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
-  unsigned long border=4,foreground,background;
+  unsigned long foreground,background;
   int i,x,y,w,h,b,d;
   XGCValues gc_val;            /* */
   Window root;
@@ -698,12 +724,6 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
 
-/* GEM-Globals   */
-
-int chw=4,chh=8,baseline=7,depth=8,border=4;
-ARECT sbox;
-
-int weiss,schwarz,rot,grau,gelb;
 
 
 void load_GEMFONT(int n) {
@@ -728,6 +748,7 @@ void load_GEMFONT(int n) {
 }
 
 void gem_init() {
+  int i;
 #ifdef WINDOWS
   RECT interior;
 
@@ -736,22 +757,25 @@ void gem_init() {
   sbox.y=interior.top;
   sbox.w=interior.right-interior.left;
   sbox.h=interior.bottom-interior.top;   
-  weiss=get_color(65535,65535,65535);
-  schwarz=get_color(0,0,0);
 #else
-    Window root;
+  int border;
+  Window root;
+#ifdef DEBUG
+  printf("gem_init: usewin=%d\n",usewindow);
+  printf("sbox=(%d,%d,%d,%d)\n",sbox.x,sbox.y,sbox.w,sbox.h);
+#endif
 
     /* Screendimensionen bestimmem */
     XGetGeometry(display[usewindow],win[usewindow],&root,&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth); 
+#if 0
    weiss=WhitePixel(display[usewindow], DefaultScreen(display[usewindow]));
    schwarz=BlackPixel(display[usewindow], DefaultScreen(display[usewindow]));
-
+#endif
 #endif
    load_GEMFONT(1);
    
-   grau=get_color(50000,50000,50000);
-   rot=get_color(65535,0,0);
-   gelb=get_color(65535,65535,0);
+   for(i=0;i<16;i++) 
+   gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b);
 }
 
 
@@ -785,6 +809,9 @@ int form_alert2(int dbut,char *n, char *tval) {
   OBJECT objects[40]={{-1,1,1,G_BOX, 0, OUTLINED, 0x00021100, 0,0,100,100}};
   int objccount=1;
   int x,y,w,h;
+#ifdef DEBUG
+  printf("**form_alert:\n");
+#endif
 
   while(i<j) {
     if(n[i]=='[') {
@@ -881,11 +908,11 @@ int form_alert2(int dbut,char *n, char *tval) {
 	    buffer[anzbuffer]=malloc(strlen((char *)tedinfo[anztedinfo].te_ptext)+1);
 	    tedinfo[anztedinfo].te_ptmplt=(LONG)(buffer[anzbuffer++]);
 	    tedinfo[anztedinfo].te_pvalid=(LONG)(bzeilen[i]+j+1);
-	    tedinfo[anztedinfo].te_font=IBM;
+	    tedinfo[anztedinfo].te_font=FONT_IBM;
 	    tedinfo[anztedinfo].te_just=TE_LEFT;
 	    tedinfo[anztedinfo].te_junk1=strlen((char *)tedinfo[anztedinfo].te_ptext);
 	    tedinfo[anztedinfo].te_junk2=0;
-	    tedinfo[anztedinfo].te_color=0x100;
+	    tedinfo[anztedinfo].te_color=0x1100;
 	    tedinfo[anztedinfo].te_thickness=1;
 	    tedinfo[anztedinfo].te_txtlen=strlen((char *)tedinfo[anztedinfo].te_ptext);
 	    tedinfo[anztedinfo].te_tmplen=strlen((char *)tedinfo[anztedinfo].te_ptext);
@@ -990,101 +1017,122 @@ void LWSWAP(short *adr) {
 
 int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   char randdicke=0;
-  char zeichen;
-  int fcolor=1;
-  int bcolor=0;
-  int i;
+  char zeichen,opaque=0;
+  int fillcolor=BLACK,pattern=9;
+  int textcolor=BLACK,textmode,framecolor=BLACK;
+  int i,drawbg=1,drawtext=1;
   int obx=tree[idx].ob_x+rootx;
   int oby=tree[idx].ob_y+rooty;
   int obw=tree[idx].ob_width;
   int obh=tree[idx].ob_height;
-  LONG colorspec=0;
  
-  
-/*  printf("Drawobjc: %d   head=%d  next=%d tail=%d\n",idx,tree[idx].ob_head, 
+#ifdef DEBUG
+  printf("Drawobjc: %d   head=%d  next=%d tail=%d\n",idx,tree[idx].ob_head, 
   tree[idx].ob_next, tree[idx].ob_tail); 
-*/
+#endif
   switch(LOBYTE(tree[idx].ob_type)) {
   case G_BOX:
   case G_BOXCHAR:
     zeichen=(tree[idx].ob_spec & 0xff000000)>>24;
     randdicke=(tree[idx].ob_spec & 0xff0000)>>16;
+    fillcolor=(tree[idx].ob_spec & 0xf);
+    textcolor=(tree[idx].ob_spec & 0xf00)>>8;
+    textmode=(tree[idx].ob_spec & 0x80)>>7;
+    framecolor=(tree[idx].ob_spec & 0xf000)>>12;
+    pattern=(tree[idx].ob_spec & 0x70)>>4;
     break;
+    
   case G_IBOX:
+    zeichen=(tree[idx].ob_spec & 0xff000000)>>24;
+    randdicke=0;
+    fillcolor=(tree[idx].ob_spec & 0xf);
+    textcolor=(tree[idx].ob_spec & 0xf00)>>8;
+    textmode=(tree[idx].ob_spec & 0x80)>>7;
+    framecolor=(tree[idx].ob_spec & 0xf000)>>12;
+    pattern=(tree[idx].ob_spec & 0x70)>>4;
+    break;
+
   case G_TEXT:
   case G_FTEXT:
-   randdicke=0;
+    framecolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>12) & 0xf;
+    textcolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>8) & 0xf;
+    opaque=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>7) & 1;
+    pattern=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>4) & 7;
+    fillcolor=(((TEDINFO *)((int)tree[idx].ob_spec))->te_color) & 0xf;
+    randdicke=0;
+    break;
   case G_STRING:
   case G_TITLE:
-    randdicke=0;break;
+    randdicke=0;
+    if(tree[idx].ob_state & SELECTED) {
+       fillcolor=WHITE;
+       pattern=9;
+     } else {
+       drawbg=0;
+     }
+    break;
   case G_BUTTON:
-    randdicke=-1;break;
+    randdicke=-1;
+    fillcolor=WHITE;
+    pattern=9;
     break;
   
   case G_BOXTEXT:  
   case G_FBOXTEXT:
+    framecolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>12) & 0xf;
+    textcolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>8) & 0xf;
+    opaque=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>7) & 1;
+    pattern=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>4) & 7;
+    fillcolor=(((TEDINFO *)((int)tree[idx].ob_spec))->te_color) & 0xf;
     randdicke=((TEDINFO *)((int)tree[idx].ob_spec))->te_thickness;
     break;
+  default:
+    drawbg=0;
+    break;
+  } 
+  
+  if(tree[idx].ob_state & SELECTED) {
+    fillcolor=fillcolor^1;
+    textcolor=textcolor^1;
   }
   if(tree[idx].ob_flags & EXIT) randdicke--;
   if(tree[idx].ob_flags & DEFAULT) randdicke--;
+
+if (drawbg) {
+
 /* Zeichnen  */
   if(tree[idx].ob_state & OUTLINED) {
-    SetForeground(weiss);
+    SetForeground(gem_colors[WHITE]);
     FillRectangle(obx-3,oby-3,obw+6,obh+6);
-    SetForeground(schwarz);
+    SetForeground(gem_colors[framecolor]);
     DrawRectangle(obx-3,oby-3,obw+6,obh+6);
   }
   if(tree[idx].ob_state & SHADOWED) {
-    SetBackground(schwarz);
-    FillRectangle(obx+obw,oby+chh/2,chw/2,obh);
-    FillRectangle(obx+chw/2,oby+obh,obw,chh/2);
+    SetForeground(gem_colors[BLACK]);
+    FillRectangle(obx+obw,oby+chh/2,chw,obh);
+    FillRectangle(obx+chw,oby+obh,obw,chh/2);
   }  
 
-  if(bcolor==1) {
-    SetForeground(schwarz);
-    SetBackground(schwarz);
-  } else {
-    SetForeground(weiss);
-    SetBackground(weiss);
-  }
-  switch(LOBYTE(tree[idx].ob_type)) {
-  
-  case G_BOXTEXT:  
-  case G_FBOXTEXT:
-  case G_TEXT:
-  case G_FTEXT:
-    colorspec=(LONG)((TEDINFO *)((int)tree[idx].ob_spec))->te_color;
-    break;
-  case G_BOX:
-  case G_BOXCHAR:
-    colorspec=tree[idx].ob_spec;
-    break;
-  }
-  if((colorspec & 0x70)==0x40) {SetForeground(grau);}
-  else if((colorspec & 0x70)==0x10) {SetForeground(gelb);}
-  else if((colorspec & 0x70)==0x20) {SetForeground(gelb);}
-  else if((colorspec & 0x70)==0x30) {SetForeground(gelb);}
-  else if((colorspec & 0x70)==0x50) {SetForeground(grau);}
-  else if((colorspec & 0x70)==0x60) {SetForeground(grau);}
-  else if((colorspec & 0x70)==0x70) {SetForeground(schwarz);}
-  if(tree[idx].ob_state & SELECTED) {
-    SetForeground(schwarz);
-    FillRectangle(obx,oby,obw,obh);
-    }
-  else if(!(colorspec & 0x80)) FillRectangle(obx,oby,obw,obh);  
-  if(fcolor==1) {SetForeground(schwarz);}
-  else {SetForeground(weiss);}
-  if(randdicke>0) {
-    for(i=0;i<randdicke;i++) {
-      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
-    }
-  } else if(randdicke<0) {
-    for(i=0;i>randdicke;i--) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
-  }
-  if(tree[idx].ob_state & DISABLED) {SetForeground(grau);}
-  else if(tree[idx].ob_state & SELECTED) {SetForeground(weiss);}
-  else {SetForeground(schwarz);}
+
+/* Hintergrund zeichnen */
+  SetForeground(gem_colors[WHITE]);
+  if(!opaque) {FillRectangle(obx,oby,obw,obh);}
+
+if(pattern) {
+  SetForeground(gem_colors[fillcolor]);
+  SetFillStyle(FillStippled);
+  set_fill(pattern);
+  FillRectangle(obx,oby,obw,obh);
+  SetFillStyle(FillSolid);
+}
+}
+
+/* Text zeichnen   */
+
+  SetForeground(gem_colors[textcolor]);
+
+  if(tree[idx].ob_state & DISABLED) {SetForeground(gem_colors[LWHITE]);}
+
   switch(LOBYTE(tree[idx].ob_type)) {
     char *text;
     char chr[2];
@@ -1107,7 +1155,7 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   case G_ALERTTYP:
     chr[0]=tree[idx].ob_spec+4;
     chr[1]=0;
-    SetForeground(rot);
+    SetForeground(gem_colors[RED]);
     #ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 2, 0,0,0);
     #endif
@@ -1141,13 +1189,9 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     } else {
       x=obx+(obw-chw*strlen(text))/2; y=oby+chh-2+(obh-chh)/2;
     }
-    if(tree[idx].ob_state & DISABLED) {SetForeground(grau);}
-    else   if(tree[idx].ob_state & SELECTED) {SetForeground(weiss);}
-    else if((colorspec & 0xf00)==0x000) {SetForeground(weiss);}
-    else if((colorspec & 0xf00)==0x100) {SetForeground(schwarz);}  
-    else {SetForeground(rot);}
+    
     DrawString(x,y,text,strlen(text));
-    SetForeground(rot);
+    SetForeground(gem_colors[RED]);
     if(strlen((char *)(ted->te_ptext))>ted->te_tmplen+ted->te_junk2)
       DrawString(obx+obw,oby+obh,">",1);
     if(ted->te_junk2)
@@ -1158,8 +1202,8 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     {BITBLK *bit=(BITBLK *)((int)tree[idx].ob_spec);
     unsigned int adr;
     adr=*((LONG *)&(bit->bi_pdata));
-    SetForeground((bit->bi_color==0)*weiss
-    +(bit->bi_color==1)*schwarz+(bit->bi_color>1)*rot);   
+
+    SetForeground(gem_colors[(bit->bi_color) & 0xf]);   
     put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);}
     break;
   case G_ICON:
@@ -1167,15 +1211,15 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     unsigned int adr;
     adr=*(LONG *)&bit->ib_pmask;
     
-    SetForeground(weiss);   
+    SetForeground(gem_colors[WHITE]);   
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
     FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
     adr=*(LONG *)&bit->ib_pdata;
     
-    SetForeground(schwarz);   
+    SetForeground(gem_colors[BLACK]);   
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
     /* Icon-Text */
-    load_GEMFONT(SMALL);
+    load_GEMFONT(FONT_SMALL);
     DrawString(obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,(char *)*(LONG *)&bit->ib_ptext,strlen((char *)*(LONG *)&bit->ib_ptext));
     /* Icon char */
     load_GEMFONT(1);}
@@ -1183,8 +1227,26 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   default:
     printf("Unbekanntes Objekt #%d\n",tree[idx].ob_type);
   }
+  
+  
+
+/* Rand zeichnen */
+if(randdicke) {
+  SetForeground(gem_colors[framecolor]);
+  if(randdicke>0) {
+    for(i=0;i<randdicke;i++) {  
+      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
+    }
+  } else if(randdicke<0) {
+    for(i=0;i>randdicke;i--) {
+      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
+    }
+  }
+}
+
+  
   if(tree[idx].ob_state & CROSSED) { 
-    SetForeground(rot);
+    SetForeground(gem_colors[RED]);
     DrawLine(obx,oby,obx+obw,oby+obh); 
     DrawLine(obx+obw,oby,obx,oby+obh); 
   }
@@ -1194,6 +1256,9 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
 int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
   int idx=start;
   /*printf("objc_draw: von %d bis %d\n",start,stop);*/
+#ifdef DEBUG
+  printf("**objc_draw: von %d bis %d\n",start,stop);
+#endif
   draw_object(tree,idx,rootx,rooty);
   if(tree[idx].ob_flags & LASTOB) return(1);
   if(idx==stop) return(1);
@@ -1480,10 +1545,10 @@ void draw_edcursor(OBJECT *tree,int ndx){
      int x,y;
  
      relobxy(tree,ndx,&x,&y);
-     SetForeground(rot);
+     SetForeground(gem_colors[RED]);
      DrawLine(x+chw*(ted->te_junk1-ted->te_junk2),y,x+chw*(ted->te_junk1-ted->te_junk2),
      y+chh+4); 
-     SetForeground(schwarz);
+     SetForeground(gem_colors[BLACK]);
 } 
 
 int finded(OBJECT *tree,int start, int r) {
@@ -1515,6 +1580,10 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
   GC pgc;
   Pixmap ppix;
 #endif
+#ifdef DEBUG
+  printf("**form_dial:\n");
+#endif
+
   switch(fo_diflag){
   case 0:
 #ifdef WINDOWS
@@ -1566,6 +1635,10 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
 
 int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
   /* Objektbaum Zentrieren */
+#ifdef DEBUG
+  printf("**form_center:\n");
+#endif
+
   tree->ob_x=sbox.x+(sbox.w-tree->ob_width)/2;
   tree->ob_y=sbox.y+(sbox.h-tree->ob_height)/2;    
   *x=tree->ob_x;
@@ -1586,6 +1659,9 @@ int form_do(OBJECT *tree) {
   int exitf=0,bpress=0;
   int sbut,edob=-1,idx;
   int x,y,w,h;
+#ifdef DEBUG
+  printf("**form_do:\n");
+#endif
   
 
     /* erstes editierbare Objekt finden */
@@ -1602,13 +1678,16 @@ int form_do(OBJECT *tree) {
   
   /* Auf Tasten/Maus reagieren */
   activate();
-  while(exitf==0) {
-#ifdef WINDOWS  
-  ResetEvent(keyevent);
-  ResetEvent(buttonevent);
+#ifdef WINDOWS
   evn[0]=keyevent;
   evn[1]=buttonevent;
-  WaitForMultipleObjects(2,evn,TRUE,INFINITE);
+  ResetEvent(evn[0]);
+  ResetEvent(evn[1]);
+
+#endif
+  while(exitf==0) {
+#ifdef WINDOWS  
+  WaitForMultipleObjects(2,evn,FALSE,INFINITE);
   switch (global_eventtype) {
 #else
     XWindowEvent(display[usewindow], win[usewindow],KeyPressMask |KeyReleaseMask|ExposureMask |ButtonReleaseMask| ButtonPressMask, &event);
@@ -1700,7 +1779,7 @@ int form_do(OBJECT *tree) {
          if(HIBYTE(ks)) {
 #endif
 #ifdef WINDOWS
-           if(global_keycode==8) {          /* BSP */
+           if((global_keycode & 255)==8) {          /* BSP */
 #else
 	   if(ks==0xff08) {                  /* BACKSPACE   */
 #endif
@@ -1721,7 +1800,7 @@ int form_do(OBJECT *tree) {
              objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
 #endif
 #ifdef WINDOWS
-           } else if(global_keycode==9) {          /* TAB */
+           } else if((global_keycode & 255)==9) {          /* TAB */
 #else
 	   } else if(ks==0xff09) {          /* TAB */
 #endif
@@ -1754,7 +1833,7 @@ int form_do(OBJECT *tree) {
 	     }
 #endif
 #ifdef WINDOWS
-           } else if(global_keycode==0x1b) {   /* ESC  */  
+           } else if((global_keycode & 255)==0x1b) {   /* ESC  */  
 #else
 	   } else if(ks==0xff1b) {   /* ESC  */               
 #endif
@@ -1783,6 +1862,12 @@ int form_do(OBJECT *tree) {
     case KeyRelease:
       if(bpress) exitf=1;
       break;
+#ifdef WINDOWS
+    default:
+      ResetEvent(evn[0]);
+      ResetEvent(evn[1]);
+      break;  
+#endif
     }  
   }
   return(sbut);
@@ -1867,8 +1952,8 @@ int do_menu_select() {
   /* Maus auf gueltigem Titel ? */
     textx=chw;nr=-1;
     for(i=0;i<menuanztitle-1;i++) {
-      if(win_x_return>textx && win_x_return<textx+chw*(strlen(menutitle[i])+2)) nr=i;     
-      textx+=chw*(strlen(menutitle[i])+2);
+      if(win_x_return>textx && win_x_return<textx+chw*(menutitleslen[i]+2)) nr=i;     
+      textx+=chw*(menutitleslen[i]+2);
     }
 
    if(nr>-1) {
@@ -1957,13 +2042,13 @@ void do_menu_open(int nr) {
   if(schubladeff) do_menu_close();    
   textx=chw;
     for(i=0;i<nr;i++) {  
-      textx+=chw*(strlen(menutitle[i])+2);
+      textx+=chw*(menutitleslen[i]+2);
     }
     schubladex=sbox.x+textx-2;
     schubladey=sbox.y+chh+1;
     schubladew=10;
     for(i=0;i<menutitlelen[nr];i++) {
-      schubladew=max(schubladew,strlen(menuentry[menutitlesp[nr]+i])*chw);
+      schubladew=max(schubladew,menuentryslen[menutitlesp[nr]+i]*chw);
     } 
     schubladeh=chh*menutitlelen[nr]+2;
      /* Hintergrund retten  */ 
@@ -1982,25 +2067,25 @@ void do_menu_open(int nr) {
 }
 void do_menu_edraw() {
   int i;
-    SetForeground(weiss);
+    SetForeground(gem_colors[WHITE]);
 #ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
 #endif
     FillRectangle(schubladex,schubladey,schubladew-1,schubladeh-1); 
     for(i=0;i<menutitlelen[schubladenr];i++) {      
-      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(schwarz);}
-      else {SetForeground(weiss);}
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[BLACK]);}
+      else {SetForeground(gem_colors[WHITE]);}
       FillRectangle(schubladex,schubladey+i*chh,schubladew,chh);
-      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(weiss);}
-      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(grau);}
-      else {SetForeground(schwarz);}
-      DrawString(schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],strlen(menuentry[menutitlesp[schubladenr]+i]));
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[WHITE]);}
+      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(gem_colors[LWHITE]);}
+      else {SetForeground(gem_colors[BLACK]);}
+      DrawString(schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],menuentryslen[menutitlesp[schubladenr]+i]);
       if(menuflags[menutitlesp[schubladenr]+i] & CHECKED) {
         DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
         DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+chw,schubladey+chh*i);
       }
     }     
-    SetForeground(schwarz);
+    SetForeground(gem_colors[BLACK]);
     DrawRectangle(schubladex,schubladey,schubladew-1,schubladeh-1); 
   activate();
 }
@@ -2023,22 +2108,22 @@ void do_menu_draw() {
   graphics();
   gem_init();
     
-  SetForeground(weiss);
+  SetForeground(gem_colors[WHITE]);
 #ifndef WINDOWS
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
 #endif
     FillRectangle(sbox.x,sbox.y,sbox.w,chh); 
-    SetForeground(schwarz);
+    SetForeground(gem_colors[BLACK]);
     DrawLine(sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
     textx=chw;
     for(i=0;i<menuanztitle-1;i++) {
-      if(menutitleflag[i] & SELECTED) {SetForeground(schwarz);}
-      else {SetForeground(weiss);}
-      FillRectangle(sbox.x+textx,sbox.y,chw*(2+strlen(menutitle[i])),chh);
-      if(menutitleflag[i] & SELECTED) {SetForeground(weiss);}
-      else {SetForeground(schwarz);}
-      DrawString(sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],strlen(menutitle[i]));
-      textx+=chw*(strlen(menutitle[i])+2);
+      if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[BLACK]);}
+      else {SetForeground(gem_colors[WHITE]);}
+      FillRectangle(sbox.x+textx,sbox.y,chw*(2+menutitleslen[i]),chh);
+      if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[WHITE]);}
+      else {SetForeground(gem_colors[BLACK]);}
+      DrawString(sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],menutitleslen[i]);
+      textx+=chw*(menutitleslen[i]+2);
     }
   activate();
 }
@@ -2192,10 +2277,10 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   int anzfiles,showstart=0;
 
   TEDINFO tedinfo[4+ANZSHOW]={
-  {(LONG)btitel,(LONG)btitel,(LONG)btitel,IBM,0,TE_CNTR,0x100,0,0,0,0},
-  {(LONG)mask,(LONG)mask,(LONG)mask,IBM,0,TE_CNTR,0x140,0,2,0,FWW},
-  {(LONG)feld1,(LONG)xfeld1,(LONG)btitel,IBM,0,TE_LEFT,0x100,0,0,128,50},
-  {(LONG)feld2,(LONG)xfeld2,(LONG)btitel,IBM,0,TE_LEFT,0x100,0,0,128,20}
+  {(LONG)btitel,(LONG)btitel,(LONG)btitel,FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
+  {(LONG)mask,(LONG)mask,(LONG)mask,FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
+  {(LONG)feld1,(LONG)xfeld1,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
+  {(LONG)feld2,(LONG)xfeld2,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
   };
   int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[18+2*ANZSHOW]={
@@ -2208,7 +2293,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 #endif
 /* 3*/  {4,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, (LONG)"HOME",      42,12,9,1},
 /* 4*/  {5,-1,-1,G_TEXT,  NONE, NORMAL, (LONG)&tedinfo[0],      1,1,52,1},
-/* 5*/  {11,6,17,G_BOX, NONE, NORMAL, 0x00fe1100, 2,8,FWW+2,ANZSHOW+1},
+/* 5*/  {11,6,17,G_BOX, NONE, NORMAL, 0x00fe1120, 2,8,FWW+2,ANZSHOW+1},
 /* 6*/  {7,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, (LONG)"<", 0,0,2,1},
 /* 7*/  {8,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, (LONG)"^",    FWW,1,2,1},
 /* 8*/  {9,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, (LONG)"v", FWW,ANZSHOW,2,1},
@@ -2223,26 +2308,32 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 #endif 
 /*13*/  {14,-1,-1,G_FTEXT,  EDITABLE, NORMAL, (LONG)&tedinfo[2],       2,4,50,1},
 /*14*/  {0,-1,-1,G_FTEXT,  EDITABLE, NORMAL, (LONG)&tedinfo[3],      32,6,20,1},
-/*15*/  {17,16,16,G_BOX, TOUCHEXIT, NORMAL, 0x00ff1440, FWW,2,2,ANZSHOW-2},
+/*15*/  {17,16,16,G_BOX, TOUCHEXIT, NORMAL, 0x00ff1459, FWW,2,2,ANZSHOW-2},
 /*16*/  {15,-1,-1,G_BOX, TOUCHEXIT, NORMAL, 0x00ff1100, 0,0,2,2},
 /*17*/  {5,18,17+2*ANZSHOW,G_BOX, NONE, NORMAL, 0x00ff1100, 0,1,FWW,ANZSHOW}
   };
   int objccount=sizeof(objects)/sizeof(OBJECT);
   int x,y,w,h;
   int obx,oby;
+#ifdef DEBUG
+  printf("**fsel_input:\n");
+#endif
   
   if(titel!=NULL) strncpy(btitel,titel,60);
   else strcpy(btitel,"FILESELCT");
+#ifdef DEBUG
+  printf("**2fsel_input: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
+#endif
   
   tedinfo[0].te_txtlen=strlen(btitel);
   tedinfo[0].te_tmplen=strlen(btitel);
   for(i=0;i<ANZSHOW;i++){
-    tedinfo[4+i].te_ptext=(LONG)"Hallo";
+   tedinfo[4+i].te_ptext=(LONG)"Hallo";
     tedinfo[4+i].te_ptmplt=(LONG)buffer;
     tedinfo[4+i].te_pvalid=(LONG)btitel;
-    tedinfo[4+i].te_font=IBM;
+    tedinfo[4+i].te_font=FONT_IBM;
     tedinfo[4+i].te_just=TE_LEFT;
-    tedinfo[4+i].te_color=0x100;
+    tedinfo[4+i].te_color=0x1110;
     tedinfo[4+i].te_txtlen=128;
     tedinfo[4+i].te_tmplen=FWW-4;
     objects[18+2*i].ob_next=18+2*i+1;
@@ -2271,6 +2362,9 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   }
   objects[18+2*ANZSHOW-1].ob_next=17;
   objects[objccount-1].ob_flags|=LASTOB;
+#ifdef DEBUG
+  printf("**next: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
+#endif
   graphics();
   gem_init();
   for(i=0;i<objccount;i++){
@@ -2279,6 +2373,9 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
     objects[i].ob_width*=chw;
     objects[i].ob_height*=chh;
   }
+#ifdef DEBUG
+  printf("**3fsel_input:\n");
+#endif
 
  
   wort_sepr(pfad,'/',0,dpfad, mask);
@@ -2472,3 +2569,4 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   else ergebnis[0]=0;
   return(ergebnis);
 }
+#endif /* nographics */

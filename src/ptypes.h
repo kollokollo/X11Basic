@@ -195,6 +195,18 @@ typedef struct {
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } SFUNCTION;
 
+typedef struct {
+  int opcode;
+  char name[20];
+  double (*routine)();
+} SYSVAR;
+
+typedef struct {
+  int opcode;
+  char name[20];
+  STRING (*routine)();
+} SYSSVAR;
+
 
 /* Kommandoparametertypen */
 

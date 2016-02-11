@@ -1,0 +1,116 @@
+
+Version history of X11-Basic
+============================
+
+In the beginning there were absurd plans, long sleepless nights, and incredible
+boredom.
+
+Very First Version (1990)
+--------------------------
+It was a Mailbox-Program with Basic features (only character-Graphics with
+Vt100EMU) on my ATARI ST (!).
+
+Version 0.1 First version with a version number    (1997)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Mailbox-Program was rewritten in c on my Linux-PC
+- first X11-Commands
+
+Version 0.2 Alpha (1998)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- improved X11-Basic for use at the physics institute in Bonn
+- Fixed last Problems of the Parser (didn't like -1*(4-3) )
+- Added more X-features (redraw)
+- First portation to a HP-Workstation
+- Readline library in use
+
+Version 1.00 Beta (Mar 1999)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Makefile and configure script adapted from STonX
+- True-color Displays
+- X rootwindow, multiple windows
+- INKEY$
+- First GPL-Distribution
+- FILESELECT,ALERT
+
+Version 1.01 (Jun 1999)
+~~~~~~~~~~~~~~~~~~~~~~
+- POINT()
+
+Version 1.02 (Jun 2000)
+~~~~~~~~~~~~~~~~~~~~~~
+- rsrc_load
+- shell, daemon
+
+Version 1.03 (Mar 2001)
+~~~~~~~~~~~~~~~~~~~~~~~
+- copyarea, sget, sput, get,put
+- fill-Patterns
+- drop down menues
+- String-Variables may now contain nul-characters.
+- POKE,DPOKE,LPOKE,EVEN(),ODD()
+- LINK,UNLINK
+- CVI(),CVD(),CVF(),CVL()
+- MKI$(),MKD$(),MKL$(),MKF$()
+- ON x GOSUB proc1,proc2,...
+- ON x GOTO label1,label2,...
+- INSTR(),RINSTR()
+
+Version 1.04 (Apr. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- splitted off shared library libx11basic.so (300kB)
+- bug fixed which caused print a,b to segmentation fault
+- DUMP "#"
+- SYM_ADR()
+- CALL, EXEC, EXEC()  with parameter list
+- DUMP "K" DUMP "F"
+
+Version 1.05 (Aug. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- PRINT USING
+- SYSTEM$()
+- GLOB()
+- RBOX, PRBOX
+- EDIT, SAVE
+- HELP
+- new system errors
+- started to translate everything into english
+
+Version 1.06 (Jan. 2002)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+- included serial device support
+- improved FILESELECT
+- modified ALERT
+- improved COLOR
+- FORM_DIAL(), FORM_DO(), OBJC_DRAW()
+- GPRINT
+
+Version 1.07 (Aug. 2002)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Fehler mit Exponentialdarstellungen von Zahlen mit negativem Exponent
+  ist nun endlich behoben !!!
+- Anbindung an tine-Bibliothek und Kontrollsystem ist nun moeglich
+
+Version 1.08 (Jan. 2003)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Support for tine-library
+- a first MS-WINDOWS version is now available
+- some new functions
+- FIT and FIT_LINEAR
+- SORT command
+There was a bug introduced in the MENU command. Fixed it in release 1.08-4.
+
+Version 1.09 (June 2003)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- ANSI-Basic to X11-Basic converter included
+- New example programs
+- updated man-page and documentation
+- SOUND command
+- EVAL, EVAL()
+- modified serial line support
+- modified the configure procedure
+- some modifications for portability
+- new REPLACE$() function  pre V.1.10
+
+
+--------------------------------------------------------------------------------

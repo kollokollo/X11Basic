@@ -1,6 +1,10 @@
-Release notes for version 1.08
+Release notes for version 1.09
 ===============================
-- a first MS-WINDOWS version is now available
-- some new functions
-- SORT command
-
+- ANSI-Basic to X11-Basic converter included
+- New example programs
+- updated man-page and documentation
+- new SOUND command
+- modified serial line support
+- modified the configure procedure
+- some modifications for portability
+- will now compile on FreeBSD and CYGWIN

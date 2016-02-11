@@ -6,15 +6,20 @@ gpy=8
 bpx=24
 bpy=24
 vsync
+gelb=get_color(65535,65535,0)
+schwarz=get_color(0,0,0)
 defline ,15,2
 deftext 0,1,2,0
-do
-keyevent a,b,c$
-color 0
-pbox 0,0,32*8,32*8
-color 1
-ltext 0,0,c$
+color gelb
+text 50,100,"Press any key ..."
 vsync
-print c$
-
+do
+  keyevent a,b,c$
+  color schwarz
+  pbox 0,0,200,300
+  color gelb
+  ltext 0,0,c$
+  text 10,280,"Keycode: "+str$(a)+"/"+str$(b)
+  vsync
+  print c$
 loop

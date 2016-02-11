@@ -1,16 +1,20 @@
-29.03.1999
+\chapter*{Acknowlegements}
 
-I would like to thak some people, which helped me to realize this package.
-
-
-I know that there are many problems with the actual compilation of X11-Basic. I
-hope I will fix them soon. Now there is a source-distribution available with 
-some  Makefiles which I have stolen from Marinos Yannikos (STonX).
+I would like to thank all people, which helped me to realize this
+package.
 
 
-Unfortuantely the numerical recepies are not allowed to be distributed. So I
-had to remove some of the mathematics features from X11-Basic for this
-distribution. (see mathemat_dummy.c).
+Many  thanks  to  the developers of GFA-Basic. This basic made me
+start programming in the 1980s. Many ideas and most of  the  command 
+syntax has been taken from the ATARI ST implementation.
 
-Please report any errors to m.hoffmann@uni-bonn.de.
+Thanks to sourceforge.net for hosting this project on the web.
+
+Unfortuantely  derivates  of the routines of the famous book 
+"numerical recepies in C" are not allowed to be distributed as  part
+of  the  X11-Basic program. So I have not included all of the 
+mathematics features of X11-Basic in this  distribution.      (see 
+\verb|mathemat_dummy.c|).  If you own the book and have a licence 
+you may ask me for the sources of the routines.
+
 

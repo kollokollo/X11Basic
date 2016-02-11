@@ -29,6 +29,8 @@
 #define MAX_SEND_SIZE 80
 #define SEM_RESOURCE_MAX         1        /* Initial value of all semaphores */
 
+
+#if 0
 struct mymsgbuf {
         long mtype;
         char mtext[MAX_SEND_SIZE];
@@ -38,6 +40,7 @@ void send_message(int qid, struct mymsgbuf *qbuf, long type, char *text);
 void read_message(int qid, struct mymsgbuf *qbuf, long type);
 void remove_queue(int qid);
 void change_queue_mode(int qid, char *mode);
+#endif
 void opensem(int *sid, key_t key);
 void createsem(int *sid, key_t key, int members);
 void locksem(int sid, int member);
@@ -50,8 +53,7 @@ void changemode(int sid, char *mode);
 void shm_free(int);
 void change_shm_mode(int, char *);
 int shm_malloc(size_t,key_t);
-int open_msg(key_t);
-
+#if 0
 
 int open_msg(key_t key) {
   int msgqueue_id;
@@ -118,8 +120,6 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 #endif
 }
 
-
-#if 0
 
 
 int opensem( key_t key) {   /* Open the semaphore set - do not create! */
@@ -310,6 +310,7 @@ int shm_malloc(size_t segsize, key_t key) {
 
         /* Open the shared memory segment - create if necessary */
 #ifndef WINDOWS
+#ifndef __CYGWIN__
         if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
  
                  /* Segment probably already exists - try as a client */
@@ -319,32 +320,39 @@ int shm_malloc(size_t segsize, key_t key) {
                          return(-1);
                  }
         }
-#endif        
+#endif       
+#endif 
   return(shmid);
 }
 int shm_attach(int shmid) {
   int r;
 #ifndef WINDOWS
+#ifndef __CYGWIN__
  if((r=(int)shmat(shmid,0,0))==-1) {
    io_error(errno,"SHM_ATTACH");    /* shm_malloc error.*/ 
    return(-1);
   }
-#endif  
+#endif 
+#endif 
  return(r);
 }
 
 int shm_detatch(int shmaddr) {
   int r;
- #ifndef WINDOWS 
+ #ifndef WINDOWS
+#ifndef __CYGWIN__ 
  if((r=(int)shmdt((void *)shmaddr))==-1) return(errno);
 #endif 
+#endif
  return(0);
 }
 
 void shm_free(int shmid){        /*  mark for deletion*/
 #ifndef WINDOWS
+#ifndef __CYGWIN__
         int r=shmctl(shmid, IPC_RMID, 0);
 	if(r==-1) io_error(errno,"SHM_FREE");
+#endif
 #endif
 }
 

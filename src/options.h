@@ -26,6 +26,9 @@
 /*  #define TINE  */
 #endif 
 
+/* If you do not want to have the graphics ... */
+
+/*#define NOGRAPHICS*/
 
 
 #endif /* OPTIONS_H */

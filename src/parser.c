@@ -14,12 +14,42 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "defs.h"
 #include "globals.h"
 #include "protos.h"
 
+#ifdef WINDOWS
+#undef HAVE_LOGB
+#undef HAVE_LOG1P
+#undef HAVE_EXPM1
+#undef HAVE_FORK
+#endif
+
+#ifdef __CYGWIN__  /* David Andersen  11.10.2003*/
+#undef HAVE_LOGB
+#endif
+
+
+#ifndef HAVE_LOGB
+double logb(double a) {return(log(a)/log(2));}
+#endif
+#ifndef HAVE_LOG1P
+double log1p(double a) {return(log(1+a));}
+#endif
+#ifndef HAVE_EXPM1
+double expm1(double a) {return(exp(a)-1);}
+#endif
+
 double f_nop(void *t) {return(0.0);}
+STRING vs_error() {
+  STRING e;  
+  memcpy(e.pointer=malloc(e.len=7),"<ERROR>",7); 
+  return(e);
+}
+#ifndef NOGRAPHICS
 int f_point(double v1, double v2) {  return(get_point((int)v1,(int)v2)); }
+#endif
 int f_bclr(double v1, double v2) { return((int)v1 & ~ (1 <<((int)v2))); }
 int f_bset(double v1, double v2) { return((int)v1 | (1 <<((int)v2))); }
 int f_bchg(double v1, double v2) { return((int)v1 ^ (1 <<((int)v2))); }
@@ -50,9 +80,18 @@ int f_sgn(double b) {return(sgn(b));}
 double f_frac(double b) {return(b-((double)((int)b)));}
 int f_even(int b) {return(b&1 ? 0:-1);}
 int f_odd(int b) {return(b&1 ? -1:0);}
-int f_fak(double);
+int f_fak(int);
 int f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
 double f_rnd(double d) {return((double)rand()/RAND_MAX);}
+int f_combin(PARAMETER *plist,int e) {
+  int z=1,n=plist[0].integer,k=plist[1].integer,i;
+  double zz=1;
+  if(k>n || n<=0 || k<=0) return(0);
+  if(k==n) return(1);
+  if(n-k>k) {k=n-k;}
+  for(i=n-k;i>=1;i--)  zz*=(n-i+1)/(double)i;
+  return((int)zz);
+}
 double f_gasdev(double d) { /* Gaussverteilter Zufall */
   static int flag=1;
   static double gset;
@@ -79,8 +118,9 @@ int f_cvi(STRING n) {  return((int)(*((short *)n.pointer))); }
 int f_cvl(STRING n) {  return((int)(*((long *)n.pointer))); }
 double f_cvd(STRING n) {  return((double)(*((double *)n.pointer))); }
 double f_cvf(STRING n) {  return((double)(*((float *)n.pointer))); }
+double f_eval(STRING n) {return(parser(n.pointer));}
 int f_len(STRING n) { return(n.len); }
-int f_exist(STRING n) { return(-exist(n.pointer)); }
+int f_exist(STRING n) {   return(-exist(n.pointer)); }
 double f_val(STRING n) { return((double)atof(n.pointer)); }
 #define IGREG (15+31L*(10+12L*1582))
 int f_julian(STRING n) { /* Julianischer Tag aus time$ */
@@ -142,10 +182,6 @@ int f_dpeek(int adr) { return((int)(*(short *)adr));}
 int f_lpeek(int adr) { return((int)(*(long *)adr));}
 
 
-#ifdef WINDOWS 
-int err=0;
-#endif
-
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
@@ -176,6 +212,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
 #endif
  { F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
+ { F_PLISTE|F_IRET,    "COMBIN"    , f_combin ,2,2     ,{PL_INT,PL_INT}},
  { F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
 #ifdef CONTROL
@@ -196,27 +233,30 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
  { F_IQUICK|F_IRET,    "DPEEK"    , f_dpeek ,1,1     ,{PL_INT}},
 
+ { F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
  { F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "EXEC"       , f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_SQUICK|F_IRET,    "EXIST"      , f_exist ,1,1     ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
-#ifndef WINDOWS
  { F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
-#endif
- { F_DQUICK|F_IRET,    "FAK"       , f_fak ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "FACT"       , f_fak ,1,1     ,{PL_INT}},
  { F_DQUICK|F_IRET,    "FIX"       , f_fix ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
-#ifndef WINDOWS
+#ifdef HAVE_FORK
  { F_SIMPLE|F_IRET,    "FORK"     , fork ,0,0     },
 #endif
+#ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "FORM_ALERT", f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
  { F_PLISTE|F_IRET,    "FORM_DIAL", f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "FORM_DO",   f_form_do ,1,1   ,{PL_INT}},
-
+#endif
  { F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
+ { F_SIMPLE|F_IRET,    "FREEFILE"  , f_freefile ,0,0  },
 
  { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,1,1     ,{PL_NUMBER}},
+#ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "GET_COLOR", f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+#endif
  { F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
  { F_IQUICK|F_IRET,    "GRAY"     , f_gray ,1,1     ,{PL_INT}},
 
@@ -236,21 +276,23 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
-#ifndef WINDOWS
  { F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
-#endif
  { F_IQUICK|F_IRET,    "LPEEK"    , f_lpeek ,1,1     ,{PL_INT}},
  { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
 
  { F_IQUICK|F_IRET,    "MALLOC"    , f_malloc ,1,1     ,{PL_INT}},
  { F_DQUICK|F_DRET,    "MOD"       , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+#ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "OBJC_DRAW", f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "OBJC_FIND", f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+#endif
  { F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
 
  { F_IQUICK|F_IRET,    "PEEK"      , f_peek ,1,1     ,{PL_INT}},
+#ifndef NOGRAPHICS
  { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+#endif
  { F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
 
  { F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
@@ -259,7 +301,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK|F_IRET,    "REALLOC"    , f_realloc ,2,2     ,{PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,  "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
+#ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "RSRC_GADDR", f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
+#endif
 
  { F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
  { F_IQUICK|F_IRET,    "SHM_ATTACH"    , shm_attach ,1,1     ,{PL_INT}},
@@ -327,7 +371,7 @@ STRING f_envs(STRING n) {
   char *ttt=getenv(n.pointer);
   if(ttt==NULL) {
     ergebnis.pointer=malloc(1);
-    ergebnis.pointer[0]=0;
+    *ergebnis.pointer=0;
   } else {
     ergebnis.pointer=malloc(strlen(ttt)+1);
     strcpy(ergebnis.pointer,ttt);
@@ -342,9 +386,8 @@ STRING f_terminalnames(char *n) {
   int i=get_number(n);  
   if(filenr[i]) ergebnis.pointer=terminalname(fileno(dptr[i]));
   else {
-    ergebnis.pointer=malloc(10);
-    strcpy(ergebnis.pointer,"<ERROR>");
     error(24,""); /* File nicht geoeffnet */
+    return(vs_error());
   }
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
@@ -550,71 +593,221 @@ STRING f_octs(char *pos) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-STRING f_strings(char *pos) {
+STRING f_strings(PARAMETER *plist,int e) {
   STRING buffer,ergebnis;
-  char w1[strlen(pos)+1],w2[strlen(pos)+1];
   int i=0,j;
-  wort_sep(pos,',',TRUE,w1,w2);
-  j=(int)parser(w1);
-  buffer=string_parser(w2);
-  ergebnis.pointer=malloc(j*buffer.len+1);
-  ergebnis.len=j*buffer.len;
-  while(i<j) {memcpy(ergebnis.pointer+i*buffer.len,buffer.pointer,buffer.len); i++;}
-  free(buffer.pointer);
+  if(e>=2) {
+    j=plist[0].integer;
+    buffer.len=plist[1].integer;
+    buffer.pointer=plist[1].pointer;
+    ergebnis.pointer=malloc(j*buffer.len+1);
+    ergebnis.len=j*buffer.len;
+    while(i<j) {memcpy(ergebnis.pointer+i*buffer.len,buffer.pointer,buffer.len); i++;}
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+  }
   return(ergebnis);
 }
-STRING f_rights(char *pos) {
+STRING f_rights(PARAMETER *plist,int e) {
   STRING buffer,ergebnis;
-  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-  int e,j;
-  e=wort_sep(pos,',',TRUE,w1,w2);
-  buffer=string_parser(w1);
-  if(e<2) j=1;
-  else j=min(max((int)parser(w2),0),buffer.len); 
-  ergebnis.pointer=malloc(j+1);
-  ergebnis.len=j;
-  memcpy(ergebnis.pointer,buffer.pointer+buffer.len-j,j);
-  free(buffer.pointer);
+  int j;
+  if(e>=1) {
+    buffer.len=plist[0].integer;
+    buffer.pointer=plist[0].pointer;
+    if(e<2) j=1;
+    else j=min(max(plist[1].integer,0),buffer.len); 
+    ergebnis.pointer=malloc(j+1);
+    ergebnis.len=j;
+    memcpy(ergebnis.pointer,buffer.pointer+buffer.len-j,j);
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+  }
   return(ergebnis);
 }
 
-STRING f_lefts(char *pos) {
+STRING f_lefts(PARAMETER *plist,int e) {
   STRING ergebnis;
-  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-  int e,j;
-  e=wort_sep(pos,',',TRUE,w1,w2);
-  ergebnis=string_parser(w1);
-  if(e<2) j=1;
-  else j=min(max((int)parser(w2),0),ergebnis.len);
-  ergebnis.pointer[j]=0;
-  ergebnis.len=j;
-  return(ergebnis);
-}
-STRING f_mids(char *pos) {  
-  STRING buffer,ergebnis;
-  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-  int i=0,e=wort_sep(pos,',',TRUE,w1,w2); 
-  int p=1,l=1;
-  while(e) {
-    if(i==0) buffer=string_parser(w1);
-    else if(strlen(w1)) {
-      switch(i) {
-	case 1: {p=min(buffer.len,max(1,(int)parser(w1)));break;}
-	case 2: {l=min(buffer.len-p+1,max(0,(int)parser(w1)));break;}
-        default: break;
-      }
-    }
-    e=wort_sep(w2,',',TRUE,w1,w2);
-    i++;
+  if(e>=1) {
+    ergebnis.len=plist[0].integer;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    memcpy(ergebnis.pointer,plist[0].pointer,ergebnis.len);
+    if(e<2) ergebnis.len=1;
+    else ergebnis.len=min(max(plist[1].integer,0),ergebnis.len);
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
   }
-  ergebnis.pointer=malloc(l+1),
-  ergebnis.len=l;
-  if(i) {
-    memcpy(ergebnis.pointer,buffer.pointer+p-1,l);
-    free(buffer.pointer);
-  } else error(42,"MID$()"); /* Zu wenig Parameter */
   return(ergebnis);
 }
+STRING f_mids(PARAMETER *plist,int e) {  
+  STRING buffer,ergebnis;
+  int p,l;
+  if(e>=2) {
+    buffer.len=plist[0].integer;
+    buffer.pointer=plist[0].pointer;
+    p=min(max(plist[1].integer,1),buffer.len);
+    if(e<3) l=1;
+    else l=min(max(plist[2].integer,0),buffer.len-p+1); 
+    ergebnis.pointer=malloc(l+1);
+    ergebnis.len=l;
+    memcpy(ergebnis.pointer,buffer.pointer+p-1,l);  
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+  }
+  return(ergebnis);
+}
+STRING f_replaces(PARAMETER *plist,int e) {  /* MH 10.02.2004 */
+  STRING ergebnis;
+  char *pos;
+  int i=0;
+  int start=0;
+  ergebnis.len=0;
+  ergebnis.pointer=malloc(1);
+  if(e==3) {
+    pos=(char *)memmem(&(((char *)(plist[0].pointer))[start]),plist[0].integer-start,
+                       plist[1].pointer,plist[1].integer);
+    while(pos!=NULL) {         
+      i=((int)(pos-(char *)plist[0].pointer))-start;     
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+i+plist[2].integer);
+      memcpy((char *)ergebnis.pointer+ergebnis.len,(char *)plist[0].pointer+start,i);
+      memcpy((char *)ergebnis.pointer+ergebnis.len+i,(char *)plist[2].pointer,plist[2].integer);
+      ergebnis.len+=i+plist[2].integer;
+      start+=i+plist[1].integer;
+      pos=(char *)memmem(&(((char *)(plist[0].pointer))[start]),plist[0].integer-start,
+                       plist[1].pointer,plist[1].integer);
+    }		       
+    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+(plist[0].integer-start));
+    memcpy((char *)ergebnis.pointer+ergebnis.len,(char *)plist[0].pointer+start,plist[0].integer-start);
+    ergebnis.len+=(plist[0].integer-start);
+  }
+  return(ergebnis);
+}
+
+/* Systemvariablen vom typ String */
+
+int v_false() {return(0);}
+int v_true() {return(-1);}
+int v_err() { extern int globalerr; return(globalerr);}
+int v_ccserr() {return(ccs_err);}
+#ifdef CONTROL
+int v_ccsaplid() {return(aplid);}
+#endif
+int v_sp() {return(sp);}
+int v_pc() {return(pc);}
+double v_timer() {
+#ifdef WINDOWS
+#if 0
+       return((double)GetTickCount()/1000.0);
+#else
+       return((double)clock()/CLOCKS_PER_SEC);
+#endif
+#else
+        struct timespec t;
+	struct {
+               int  tz_minuteswest; /* minutes W of Greenwich */
+               int  tz_dsttime;     /* type of dst correction */
+       } tz;
+	gettimeofday(&t,&tz);
+	return((double)t.tv_sec+(double)t.tv_nsec/1000000);      
+#endif
+}
+int v_stimer() {   /* Sekunden-Timer */
+  time_t timec=time(NULL);
+  if(timec==-1) io_error(errno,"TIMER");
+  return(timec);
+}
+double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
+double v_pi() {return(PI);}
+extern int mousex(),mousey(), mousek(), mouses();
+const SYSVAR sysvars[]= {  /* alphabetisch !!! */
+ { PL_LEER,   "!nulldummy", v_false},
+#ifdef CONTROL
+ { PL_INT,    "CCSAPLID",   v_ccsaplid},
+#endif
+ { PL_INT,    "CCSERR",     v_ccserr},
+ { PL_FLOAT,  "CTIMER",     v_ctimer},
+ { PL_INT,    "ERR",        v_err},
+ { PL_INT,    "FALSE",      v_false},
+#ifndef NOGRAPHICS
+ { PL_INT,    "MOUSEK",     mousek},
+ { PL_INT,    "MOUSES",     mouses},
+ { PL_INT,    "MOUSEX",     mousex},
+ { PL_INT,    "MOUSEY",     mousey},
+#endif
+ { PL_INT,    "PC",         v_pc},
+ { PL_FLOAT,  "PI",         v_pi},
+ { PL_INT,    "SP",         v_sp},
+ { PL_INT,    "STIMER",     v_stimer},
+ { PL_FLOAT,  "TIMER",      v_timer},
+ { PL_INT,    "TRUE",       v_true},
+#ifdef WINDOWS
+ { PL_INT,    "WIN32?",     v_true},
+#endif
+#ifndef WINDOWS
+ { PL_INT,    "UNIX?",      v_true},
+#endif
+};
+const int anzsysvars=sizeof(sysvars)/sizeof(SYSVAR);
+
+STRING vs_date() {
+  STRING ergebnis;
+  time_t timec;
+  struct tm * loctim;
+  timec = time(&timec);
+  loctim=localtime(&timec);
+  ergebnis.pointer=malloc(12);
+  sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING vs_time() {
+  STRING ergebnis;
+  time_t timec;
+  struct tm * loctim;
+  timec = time(&timec);
+  loctim=localtime(&timec);
+  ergebnis.pointer=malloc(9);
+  strncpy(ergebnis.pointer,ctime(&timec)+11,8);
+  ergebnis.len=8;
+  return(ergebnis);
+}
+STRING vs_trace() {
+  STRING ergebnis;
+  if(pc>=0 && pc<prglen) {
+  ergebnis.pointer=malloc(strlen(program[pc])+1);
+  strcpy(ergebnis.pointer,program[pc]);
+  xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
+  ergebnis.len=strlen(ergebnis.pointer);
+  } else ergebnis=vs_error();
+  return(ergebnis);
+}
+STRING vs_terminalname() {
+  STRING ergebnis;
+  ergebnis.pointer=terminalname(STDIN_FILENO);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING vs_inkey() {
+  STRING ergebnis;
+  char *t=inkey();
+  ergebnis.pointer=malloc(strlen(t)+1);
+  strcpy(ergebnis.pointer,t);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+
+const SYSSVAR syssvars[]= {  /* alphabetisch !!! */
+ { PL_LEER,   "!nulldummy", vs_error},
+ { PL_STRING, "DATE$", vs_date},
+ { PL_STRING, "INKEY$", vs_inkey},
+ { PL_STRING, "TERMINALNAME$", vs_terminalname},
+ { PL_STRING, "TIME$", vs_time},
+ { PL_STRING, "TRACE$", vs_trace},
+};
+const int anzsyssvars=sizeof(syssvars)/sizeof(SYSSVAR);
 
 const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 
@@ -630,24 +823,25 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_NUMBER}},
  { F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
 
- { F_ARGUMENT,  "LEFT$" , f_lefts ,1,2   ,{PL_STRING,PL_INT}},
+ { F_PLISTE,    "LEFT$" , f_lefts ,1,2   ,{PL_STRING,PL_INT}},
  { F_ARGUMENT,  "LINEINPUT$" , f_lineinputs ,1,1   ,{PL_FILENR}},
  { F_SQUICK,    "LOWER$"    , f_lowers ,1,1   ,{PL_STRING}},
 
- { F_ARGUMENT,  "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_NUMBER,PL_NUMBER}},
+ { F_PLISTE,    "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_NUMBER}},
  { F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
- { F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_NUMBER}},
- { F_IQUICK,    "MKL$"    , f_mkls ,1,1   ,{PL_NUMBER}},
+ { F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_INT}},
+ { F_IQUICK,    "MKL$"    , f_mkls ,1,1   ,{PL_INT}},
  { F_DQUICK,    "MKS$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
  { F_ARGUMENT,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_NUMBER,PL_NUMBER}},
  
  { F_IQUICK,    "PARAM$"  , f_params ,1,1   ,{PL_INT}},
  { F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
- { F_ARGUMENT,  "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
+ { F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
+ { F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
  { F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
  { F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
- { F_ARGUMENT,  "STRING$" , f_strings ,1,2   ,{PL_INT,PL_STRING}},
+ { F_PLISTE,  "STRING$" , f_strings ,2,2   ,{PL_INT,PL_STRING}},
  { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "TERMINALNAME$"    , f_terminalnames ,1,1 ,{PL_FILENR}},
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
@@ -661,8 +855,8 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 };
 const int anzpsfuncs=sizeof(psfuncs)/sizeof(FUNCTION);
 
-int f_fak(double n) {
-  int i,s=1,k=(int)n;
+int f_fak(int k) {
+  int i,s=1;
   for(i=2;i<=k;i++) {s=s*i;} 
   return(s);
 }
@@ -727,7 +921,7 @@ int f_glob(PARAMETER *plist,int e) {
     if(flags==0) return(-1);
   } return(0);
 }
-
+#ifndef NOGRAPHICS
 int f_form_alert(PARAMETER *plist,int e) {
   if(e==2) return(form_alert(plist[0].integer,plist[1].pointer));
   else return(-1);
@@ -776,7 +970,7 @@ int f_rsrc_gaddr(PARAMETER *plist,int e) {
     if(i>0) return((int)ptr);
   } return(-1);
 }
-
+#endif
 double parser(char *funktion){  /* Rekursiver num. Parser */
   char *pos,*pos2;
   char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
@@ -791,7 +985,6 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
   if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) & (int)parser(w2)));    /* von rechts !!  */
   if(wort_sepr2(s,"&&",TRUE,w1,w2)>1)     return((double)((int)parser(w1) & (int)parser(w2)));    
   if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   return((double)((int)parser(w1) | (int)parser(w2)));    
-  if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
   if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
   if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) return((double)~((int)parser(w1) & (int)parser(w2)));    
   if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  return((double)~((int)parser(w1) | (int)parser(w2)));    
@@ -984,6 +1177,8 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	      } else if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_SQUICK) {
                 STRING test=string_parser(pos);
 		double erg;
+		test.pointer=realloc(test.pointer,test.len+1);
+		test.pointer[test.len]=0;
 	        if(pfuncs[i].opcode&F_IRET) erg=(double)((int (*)())pfuncs[i].routine)(test);
 		else erg=(pfuncs[i].routine)(test);
 		free(test.pointer);
@@ -1005,44 +1200,23 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
     } else {
       /* Dann Systemvariablen und einfache Variablen */
       /* erst integer abfangen (xxx% oder xxx&), dann rest */
-      if(strcmp(s,"STIMER")==0) { /* Sekunden-Timer */
-        time_t timec=time(NULL);
-	if(timec==-1) io_error(errno,"TIMER");
-        return((double)timec);
-      } else if(strcmp(s,"CTIMER")==0) {
-	return((double)clock()/CLOCKS_PER_SEC);
-      } else if(strcmp(s,"TIMER")==0) {
-#ifdef WINDOWS
-#if 0
-       return((double)GetTickCount()/1000.0);
-#else
-       return((double)clock()/CLOCKS_PER_SEC);
-#endif
-#else
-        struct timespec t;
-	struct {
-               int  tz_minuteswest; /* minutes W of Greenwich */
-               int  tz_dsttime;     /* type of dst correction */
-       } tz;
-	gettimeofday(&t,&tz);
-	return((double)t.tv_sec+(double)t.tv_nsec/1000000);      
-#endif
-      } else if(strcmp(s,"ERR")==0)    return((double)err);
-      else if(strcmp(s,"CCSERR")==0)   return((double)ccs_err);
-      else if(strcmp(s,"CCSAPLID")==0) return((double)aplid);
-      else if(strcmp(s,"PC")==0)       return((double)pc);
-      else if(strcmp(s,"SP")==0)       return((double)sp);
-      else if(strcmp(s,"PI")==0)       return(PI);
-      else if(strcmp(s,"TRUE")==0)     return(-1);
-      else if(strcmp(s,"FALSE")==0)    return(0);
-#ifdef WINDOWS
-      else if(strcmp(s,"WIN32")==0)    return(-1);
-#endif
-      else if(strcmp(s,"MOUSEX")==0)   return((double)mousex());
-      else if(strcmp(s,"MOUSEY")==0)   return((double)mousey());
-      else if(strcmp(s,"MOUSEK")==0)   return((double)mousek());
-      else if(strcmp(s,"MOUSES")==0)   return((double)mouses());
-      else if(s[0]=='@')               return(do_funktion(s+1,""));
+
+	  /* Liste durchgehen */
+	  int i=0,oa,a=anzsysvars,b;
+          for(b=0; b<strlen(s); b++) {
+            while(s[b]>(sysvars[i].name)[b] && i<a) i++;
+            oa=a;a=i;
+            while(s[b]<(sysvars[a].name)[b]+1 && a<oa) a++;
+            if(i==a) break;
+          }
+
+          if(i<anzsysvars && strcmp(s,sysvars[i].name)==0) {
+	    /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/ 
+	   if((sysvars[i].opcode)==PL_INT) return((double)((int (*)())sysvars[i].routine)());
+	   else if((sysvars[i].opcode)==PL_FLOAT) return((sysvars[i].routine)());
+           }
+
+      if(s[0]=='@')               return(do_funktion(s+1,""));
       else if((vnr=variable_exist(s,FLOATTYP))!=-1) return(variablen[vnr].zahl);
       else if(s[strlen(s)-1]=='%') {
         s[strlen(s)-1]=0;
@@ -1134,12 +1308,16 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
     
     /* SystemFunktionen Subroutinen und Arrays */  
   } else {
+    if(*s=='[' && s[strlen(s)-1]==']') {  /* Konstante */
+      s[strlen(s)-1]=0;
+      return(array_const(s+1));
+    }
+   
     pos=searchchr(s,'(');
     if(pos!=NULL) {
       pos2=s+strlen(s)-1;
-      pos[0]=0;
-      pos++;      
-      if(pos2[0]!=')') {
+      *pos++=0;      
+      if(*pos2!=')') {
          error(51,w2); /* "Parser: Syntax error?! "  */
       } else {                         /* $-Funktionen und $-Felder   */
          pos2[0]=0;        
@@ -1152,8 +1330,8 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	   ergeb=array_parser(w1);
 	   array_smul(ergeb,parser(w2));
 	   return(ergeb);
-         }
-	 else if(strcmp(s,"CSVGET")==0) {
+#ifdef CONTROL
+         } else if(strcmp(s,"CSVGET")==0) {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
 	  char *zzz;
 	  int o=0,nn=0;
@@ -1167,6 +1345,7 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	   ergeb=csvget(zzz,nn,o);
 	   free(zzz);
 	   return(ergeb);
+#endif
 #ifdef TINE   
 	  } else if(strcmp(s,"TINEVGET")==0) {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
@@ -1321,84 +1500,92 @@ STRING string_parser(char *);
 
 char *s_parser(char *funktion) { /* String-Parser  */
   STRING e=string_parser(funktion);
+  e.pointer=realloc(e.pointer,e.len+1);
+  (e.pointer)[e.len]=0;
   return(e.pointer);
 }
 STRING string_parser(char *funktion) {
 /* Rekursiv und so, dass dynamische Speicherverwaltung ! */
 /* Trenne ersten Token ab, und uebergebe rest derselben Routine */
 
- char *pos,*pos2,*inhalt;
- STRING ergebnis;
- STRING t,u;
- int e,vnr;
- char v[strlen(funktion)+1],w[strlen(funktion)+1];
+  char *pos,*pos2,*inhalt;
+  STRING ergebnis;
+  STRING t,u;
+  int e,vnr;
+  char v[strlen(funktion)+1],w[strlen(funktion)+1];
 
- /*printf("S-Parser: <%s>\n",funktion);*/
- e=wort_sep(funktion,'+',TRUE,v,w);
- if(e==2) {
-   t=string_parser(v);
-   u=string_parser(w);
-   ergebnis.pointer=malloc(t.len+u.len+1);
-   memcpy(ergebnis.pointer,t.pointer,t.len);
-   memcpy(ergebnis.pointer+t.len,u.pointer,u.len+1);
-   ergebnis.len=u.len+t.len;
-   free(t.pointer);free(u.pointer); 
- } else {
-   /*printf("s-parser: <%s>\n",funktion);*/
-   strcpy(v,funktion);
-   pos=searchchr(v, '(');
-   if(pos!=NULL) {
-     pos2=v+strlen(v)-1;
-     pos[0]=0;
-     pos++;
+  /*printf("S-Parser: <%s>\n",funktion);*/
+  e=wort_sep(funktion,'+',TRUE,v,w);
+  if(e==2) {
+    t=string_parser(v);
+    u=string_parser(w);
+    ergebnis.pointer=malloc(t.len+u.len+1);
+    memcpy(ergebnis.pointer,t.pointer,t.len);
+    memcpy(ergebnis.pointer+t.len,u.pointer,u.len+1);
+    ergebnis.len=u.len+t.len;
+    free(t.pointer);free(u.pointer); 
+  } else {
+    /*printf("s-parser: <%s>\n",funktion);*/
+    strcpy(v,funktion);
+    pos=searchchr(v, '(');
+    if(pos!=NULL) {
+      pos2=v+strlen(v)-1;
+      pos[0]=0;
+      pos++;
 
-     if(pos2[0]!=')') {
-       error(51,v); /* "Parser: Syntax error?! "  */
-       ergebnis.pointer=malloc(8);
-       strcpy(ergebnis.pointer,"<ERROR>");
-       ergebnis.len=strlen(ergebnis.pointer);
-     } else {                         /* $-Funktionen und $-Felder   */
-       pos2[0]=0;
+      if(pos2[0]!=')') {
+        error(51,v); /* "Parser: Syntax error?! "  */
+        ergebnis=vs_error();
+      } else {                         /* $-Funktionen und $-Felder   */
+        pos2[0]=0;
        
-      if(strcmp(v,"CSGET$")==0) { 
+        if(strcmp(v,"CSGET$")==0) { 
 	  STRING test;
           test=string_parser(pos);
 	  ergebnis.pointer=csgets(test.pointer);
           free(test.pointer);
 	  ergebnis.len=strlen(ergebnis.pointer);
 #ifdef TINE
-      } else if(strcmp(v,"TINEGET$")==0) { 
-	  STRING test;
-          test=string_parser(pos);
-	  ergebnis=tinegets(test.pointer);
-          free(test.pointer);
-      } else if(strcmp(v,"TINEUNIT$")==0) { 
-	  STRING test;
-          test=string_parser(pos);
-	  ergebnis.pointer=tineunit(test.pointer);
-          free(test.pointer);
+        } else if(strcmp(v,"TINEGET$")==0) { 
+	  char *test;
+          test=s_parser(pos);
+	  ergebnis=tinegets(test);
+          free(test);
+        } else if(strcmp(v,"TINEQUERY$")==0) { 
+	  char *test,dummy[512],dummy2[512];
+	  int tim;
+          e=wort_sep(pos,',',TRUE,dummy,dummy2); 
+          test=s_parser(dummy);
+	  tim=(int)parser(dummy2);
+	  ergebnis=tinequery(test,tim);
+          free(test);
+        } else if(strcmp(v,"TINEUNIT$")==0) { 
+	  char *test;
+          test=s_parser(pos);
+	  ergebnis.pointer=tineunit(test);
+          free(test);
 	  ergebnis.len=strlen(ergebnis.pointer);
-      } else if(strcmp(v,"TINEINFO$")==0) { 
-	  STRING test;
-          test=string_parser(pos);
-	  ergebnis.pointer=tineinfo(test.pointer);
-          free(test.pointer);
+        } else if(strcmp(v,"TINEINFO$")==0) { 
+	  char *test;
+          test=s_parser(pos);
+	  ergebnis.pointer=tineinfo(test);
+          free(test);
 	  ergebnis.len=strlen(ergebnis.pointer);
 #endif
 #ifdef CONTROL
-      } else if(strcmp(v,"CSUNIT$")==0) { 
-	  STRING test;
-          test=string_parser(pos);
-	  ergebnis.pointer=csunit(test.pointer);
-          free(test.pointer);
+        } else if(strcmp(v,"CSUNIT$")==0) { 
+	  char *test;
+          test=s_parser(pos);
+	  ergebnis.pointer=csunit(test);
+          free(test);
 	  ergebnis.len=strlen(ergebnis.pointer);
-      } else if(strcmp(v,"CSPNAME$")==0) { 
+        } else if(strcmp(v,"CSPNAME$")==0) { 
 	  ergebnis.pointer=cspname((int)parser(pos));
     	  ergebnis.len=strlen(ergebnis.pointer);  
 #endif
-      } else if(v[0]=='@')     /* Funktion oder Array   */
+        } else if(v[0]=='@')     /* Funktion oder Array   */
  	  ergebnis=do_sfunktion(v+1,pos);	  
-      else {  /* Liste durchgehen */
+        else {  /* Liste durchgehen */
 
 	  int i=0,oa,a=anzpsfuncs,b;
           for(b=0; b<strlen(v); b++) {
@@ -1432,6 +1619,8 @@ STRING string_parser(char *funktion) {
                  ergebnis=(psfuncs[i].routine)(val1,val2);
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_SQUICK) {
                 STRING test=string_parser(pos);
+		test.pointer=realloc(test.pointer,test.len+1);
+		test.pointer[test.len]=0;
 	        ergebnis=(psfuncs[i].routine)(test);
 		free(test.pointer);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",v);
@@ -1470,86 +1659,64 @@ STRING string_parser(char *funktion) {
                  }
                  ndim++; 
                  i=wort_sep(t,',',TRUE,ss,t); 
-               } 
+              } 
 	       
-               if(ndim!=variablen[vnr].opcode) {
+              if(ndim!=variablen[vnr].opcode) {
 	         error(18,"");  /* Falsche Anzahl Indizies */
 		 ergebnis.pointer=malloc(1);
 	         ergebnis.pointer[0]=0;
 		 ergebnis.len=0;
-               } else {
+              } else {
           
-	         pos=(char *)(variablen[vnr].pointer+ndim*INTSIZE+anz*(sizeof(int)+sizeof(char *)));
+	        pos=(char *)(variablen[vnr].pointer+ndim*INTSIZE+anz*(sizeof(int)+sizeof(char *)));
 	    
-                 ergebnis.pointer=malloc(((int *)pos)[0]+1);
-		 ergebnis.len=((int *)pos)[0];
-	         pos+=sizeof(int);
-	         memcpy(ergebnis.pointer,((char **)pos)[0],ergebnis.len);
-	       }
-	       free(ss);free(t);
-	       /****************/
-	     
-	     }
+                ergebnis.pointer=malloc(((int *)pos)[0]+1);
+		ergebnis.len=((int *)pos)[0];
+	        pos+=sizeof(int);
+	        memcpy(ergebnis.pointer,((char **)pos)[0],ergebnis.len);
+	      }
+	      free(ss);free(t);
+	    }
 	  }
-       } 
-     }
-   } else {
-     pos2=v+strlen(v)-1;
-     if(v[0]=='"' && pos2[0]=='"') {  /* Konstante  */
-       ergebnis.pointer=malloc(strlen(v)-2+1);
-       ergebnis.len=strlen(v)-2;
-       pos2[0]=0;
-       memcpy(ergebnis.pointer,v+1,strlen(v)-2+1);
-       
-     } else if(pos2[0]!='$') {
-       error(51,v); /* "Parser: Syntax error?! "  */
-       ergebnis.pointer=malloc(8);
-       strcpy(ergebnis.pointer,"<ERROR>");
-       ergebnis.len=strlen(ergebnis.pointer);
-     } else {                      /* einfache Variablen und Systemvariablen */
-       time_t timec;
-       struct tm * loctim;
-       pos2[0]=0;
-       if(strcmp(v,"TIME")==0) {
-         timec = time(&timec);
-         loctim=localtime(&timec);
-         ergebnis.pointer=malloc(9);
-         strncpy(ergebnis.pointer,ctime(&timec)+11,8);
-         ergebnis.pointer[8]=0;
-	 ergebnis.len=strlen(ergebnis.pointer);
-       } else if(strcmp(v,"DATE")==0) {
-	 timec = time(&timec);
-	 loctim=localtime(&timec);
-	 ergebnis.pointer=malloc(12);
-	 sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
-         ergebnis.len=strlen(ergebnis.pointer);
-       } else if(strcmp(v,"TRACE")==0) { 
-         ergebnis.pointer=malloc(strlen(program[pc])+1);
-	 strcpy(ergebnis.pointer,program[pc]);
-	 xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
-	 ergebnis.len=strlen(ergebnis.pointer);
-       } else if(strcmp(v,"TERMINALNAME")==0) { 
-         ergebnis.pointer=terminalname(STDIN_FILENO);
-	 ergebnis.len=strlen(ergebnis.pointer);
-       } else if(strcmp(v,"INKEY")==0) { 
-         char *t=inkey();
-         ergebnis.pointer=malloc(strlen(t)+1);
-	 strcpy(ergebnis.pointer,t);
-	 ergebnis.len=strlen(ergebnis.pointer);
-       } else if((vnr=variable_exist(v,STRINGTYP))==-1) {
-         ergebnis.pointer=malloc(1);
-	 ergebnis.pointer[0]=0;
-	 ergebnis.len=0;
-       } else {
-         ergebnis.pointer=malloc(variablen[vnr].opcode+1);
-	 ergebnis.len=variablen[vnr].opcode;
-	 memcpy(ergebnis.pointer,variablen[vnr].pointer,ergebnis.len);
-       }
-     }
-   }
- }
- ergebnis.pointer[ergebnis.len]=0;
- return(ergebnis);
+        } 
+      }
+    } else {
+      pos2=v+strlen(v)-1;
+      if(v[0]=='"' && pos2[0]=='"') {  /* Konstante  */
+        ergebnis.pointer=malloc(strlen(v)-2+1);
+        ergebnis.len=strlen(v)-2;
+        pos2[0]=0;
+        memcpy(ergebnis.pointer,v+1,strlen(v)-2+1);
+      } else if(pos2[0]!='$') {
+        error(51,v); /* "Parser: Syntax error?! "  */
+        ergebnis=vs_error();
+      } else {                      /* einfache Variablen und Systemvariablen */
+	/* Liste durchgehen */
+	int i=0,oa,a=anzsyssvars,b;
+        for(b=0; b<strlen(v); b++) {
+          while(v[b]>(syssvars[i].name)[b] && i<a) i++;
+          oa=a;a=i;
+          while(v[b]<(syssvars[a].name)[b]+1 && a<oa) a++;
+          if(i==a) break;
+        }
+        if(i<anzsyssvars && strcmp(v,syssvars[i].name)==0) {
+	    /*  printf("Sysvar %s gefunden. Nr. %d\n",syssvars[i].name,i);*/ 
+	  return((syssvars[i].routine)());
+        }
+        pos2[0]=0;
+        if((vnr=variable_exist(v,STRINGTYP))==-1) {
+          ergebnis.pointer=malloc(1);
+	  ergebnis.pointer[0]=0;
+	  ergebnis.len=0;
+        } else {
+          ergebnis.pointer=malloc(variablen[vnr].opcode+1);
+	  ergebnis.len=variablen[vnr].opcode;
+	  memcpy(ergebnis.pointer,variablen[vnr].pointer,ergebnis.len);
+        }
+      }
+    }
+  }
+  return(ergebnis);
 }
 
 
@@ -1672,7 +1839,7 @@ STRING do_sfunktion(char *name,char *argumente) {
     error(44,buffer); /* Funktion  nicht definiert */
     free(buffer);
     ergebnis.pointer=malloc(1);
-    ergebnis.pointer[0]=0;
+    *ergebnis.pointer=0;
     ergebnis.len=0;
     return(ergebnis);  
 }

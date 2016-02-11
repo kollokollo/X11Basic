@@ -257,12 +257,12 @@ py_data:   ! x: von bis y: von bis step x step y
 DATA             -5,  5,    -3,  3,     1,     1
 PROCEDURE bkoordinate(tx$,ty$)
   LOCAL x,y
-  DEFLINE 1,1,0,1
-  DEFTEXT 1,0,0,4
+  DEFLINE ,1,0,1
+  DEFTEXT ,0,0,4
   READ koa,kob,koc,kod,koe,kof
   LINE @bx(koa),@by(0),@bx(kob),@by(0)
   LINE @bx(0),@by(koc),@bx(0),@by(kod)
-  DEFLINE 1,1,0,0
+  DEFLINE ,1,0,0
   FOR x=0 TO MAX(ABS(koa),ABS(kob)) STEP koe
     LINE @bx(x),@by(0)-2,@bx(x),@by(0)+2
     LINE @bx(-x),@by(0)-2,@bx(-x),@by(0)+2
@@ -281,12 +281,12 @@ PROCEDURE bkoordinate(tx$,ty$)
 RETURN
 PROCEDURE kkoordinate(tx$,ty$)
   LOCAL x,y
-  DEFLINE 1,1,0,1
-  DEFTEXT 1,0,0,4
+  DEFLINE ,1,0,1
+  DEFTEXT ,0,0,4
   READ kkoa,kkob,kkoc,kkod,kkoe,kkof
   LINE @kx(kkoa),@ky(0),@kx(kkob),@ky(0)
   LINE @kx(0),@ky(kkoc),@kx(0),@ky(kkod)
-  DEFLINE 1,1,0,0
+  DEFLINE ,1,0,0
   FOR x=0 TO MAX(ABS(kkoa),ABS(kkob)) STEP kkoe
     LINE @kx(x),@ky(0)-2,@kx(x),@ky(0)+2
     LINE @kx(-x),@ky(0)-2,@kx(-x),@ky(0)+2
@@ -304,11 +304,11 @@ PROCEDURE kkoordinate(tx$,ty$)
 RETURN
 PROCEDURE pkoordinate(tx$,ty$)
   LOCAL x,y
-  DEFLINE 1,1,0,1
-  DEFTEXT 1,0,0,4
+  DEFLINE ,1,0,1
+  DEFTEXT ,0,0,4
   LINE @px(pkoa),@py(0),@px(pkob),@py(0)
   LINE @px(0),@py(pkoc),@px(0),@py(pkod)
-  DEFLINE 1,1,0,0
+  DEFLINE ,1,0,0
   FOR x=0 TO MAX(ABS(pkoa),ABS(pkob)) STEP pkoe
     LINE @px(x),@py(0)-2,@px(x),@py(0)+2
     LINE @px(-x),@py(0)-2,@px(-x),@py(0)+2
@@ -570,13 +570,13 @@ PROCEDURE rennen(nnU)
   REPEAT
     MOUSE xU,yU,kU
   UNTIL kU=0
-  DEFLINE 1,2,2,2
+  DEFLINE ,2,2,2
   ON ERROR GOSUB error
   text 500,10," Links fixieren  Rechts beenden"
   DEFMOUSE 2
   DO
     IF MOUSEK=256
-      DEFLINE 1,6,2,2
+      DEFLINE ,6,2,2
     ENDIF
     EXIT IF nU<1
     FOR iU=0 TO nU-1
@@ -610,26 +610,21 @@ PROCEDURE rennen(nnU)
     EXIT IF MOUSEK=512
     REPEAT
     UNTIL MOUSEK=0
-    DEFLINE 1,1,0,0
+    DEFLINE ,1,0,0
   LOOP
   DEFMOUSE 5
   MENU menue$()
 RETURN
 PROCEDURE vektor(xU,yU)
   GRAPHMODE 3
-  cls        
-  dump
   x=@pbx(xU)
   y=@pby(yU)
-  print "Hallo"
-  DEFLINE 1,2,2,1
+  DEFLINE ,2,2,1
   @dgl2
-  print "Hallo"
   DEFMOUSE 5
   line xU,yU,@px(@pbx(xU)+(@pbx(xU)-x)*20),@py(@pby(yU)+(@pby(yU)-y)*20)
   VSYNC
   line xU,yU,@px(@pbx(xU)+(@pbx(xU)-x)*20),@py(@pby(yU)+(@pby(yU)-y)*20)
- 
   GRAPHMODE 1
 RETURN
 PROCEDURE vektorfeld(nU,f)
@@ -654,11 +649,11 @@ PROCEDURE vektorfeld(nU,f)
   FOR xU=bx TO bx+bw STEP 20
     FOR yU=by TO by+bh STEP 20
       CLR x,y,x_,y_
-      DEFLINE 1,1,1,1
+      DEFLINE ,1,1,1
       ' Kreuz
       LINE xU-2,yU,xU+2,yU
       LINE xU,yU-2,xU,yU+2
-      DEFLINE 1,2,2,1
+      DEFLINE ,2,2,1
       IF nU=1
         x=@pbx(xU)
         x_=@pby(yU)

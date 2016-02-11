@@ -26,6 +26,7 @@ if len(f$)
     wend
     close
     print len(f$)
+    print "Output is: bbbb.bin"
     bsave "bbbb.bin",varptr(f$),len(f$)
   else 
     ~form_alert(1,"[3][File not found !][ OH ]")

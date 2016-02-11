@@ -13,9 +13,7 @@ In order to compile X11Basic, you will need the following:
 
  * the readline library
  * the termcap library
- 
-
- 
+  
 These will suffice to get you started (unless I've forgotten something). 
 
 
@@ -27,7 +25,7 @@ cd src/
 make install 
 will copy the binary in ${HOME}/bin/
 
-If the `install.sh' script fails, please contact me (m.hoffmann@uni-bonn.de) 
+If the `install.sh' script fails, please contact me (kollo@users.sourceforge.net) 
 and send me the output it generated (install.log). 
 
 CONFIGURATION
@@ -65,7 +63,7 @@ like to have a german version of X11-Basic. The default language is english.
 COMPILING
 =========
 
-To compile, simply type 
+To compile the X11-Basic interpreter (called xbasic), simply type 
 	
 	make
 
@@ -90,18 +88,29 @@ make the pseudo-compiler work, libraries:
 
 If you want to use the paseudo compiler included in this package, you have to
 make both the static and dynamic libraries.
+
 cd ./src
-If you do not have the file mathematics.c please do
+      If you do not have the file mathematics.c please do
 cp mathemat_dummy.c mathematics.c
-then:
+      then:
 make lib              will generate libx11basic.so
-make x11basic.a       will generate 11basic.a
+make x11basic.a       will generate x11basic.a
 -- now you have to be root --
 make installroot
                   will generate a dynamic linked binary of the interpreter,
 		  copy it to /bin/, install the libraries in /usr/local/lib/,
 		  install the man-page
+-----------------------------
+make xbc
+                  will make the X11-basic compiler
+                  You can then (beeing root) do a 
+make xbcinstall
+	          to install the compiler in /usr/local/bin/ and the compiler 
+		  man-page
 
+
+After doing all this, you will also find a xbasic.dyn executabe. This is the 
+interpreter, dynamically linked and much shorter.
 
 regards and have fun
      Markus Hoffmann

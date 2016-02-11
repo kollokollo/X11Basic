@@ -11,9 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "version.h"
 #include "defs.h"
-#include "options.h"
 
 void reset_input_mode();
 void x11basicStartup();
@@ -27,7 +25,7 @@ void kommando(char *);
 extern int param_anzahl;
 extern char **param_argumente;
 extern const char xbasic_name[];
-extern int pc,sp,err,errcont,everyflag,batch,echo;
+extern int pc,sp,err,errcont,everyflag,batch,echoflag;
 
 
 
@@ -50,7 +48,7 @@ char *program[MAXPRGLEN];
 void intro(){
   puts("***************************************************************");
   printf("*           %10s                     V.%5s            *\n",xbasic_name, version);
-  puts("*                    by Markus Hoffmann 1997-2002 (c)         *");
+  puts("*                    by Markus Hoffmann 1997-2003 (c)         *");
   puts("*                                                             *");
 #ifdef GERMAN
   printf("* Programmversion vom     %30s      *\n",vdate);
@@ -159,7 +157,7 @@ main(int anzahl, char *argumente[]) {
   /* Programmablaufkontrolle  */
   for(;;) {
     programmlauf();
-    echo=batch=0;
+    echoflag=batch=0;
     if(daemonf) zw=simple_gets("");
     else zw=do_gets("> ");
     if(zw==NULL) c_quit("");

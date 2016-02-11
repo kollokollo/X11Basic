@@ -18,7 +18,7 @@ const char *errortxt[] = {
 /*   6*/  "Logarithmen nur für Zahlen größer Null",
 /*   7*/  "Unbekannter Fehler",
 /*   8*/  "Speicher voll",
-/*   9*/  "Funktion oder Befehl noch nicht möglich %s",
+/*   9*/  "Funktion oder Befehl in dieser Version nicht möglich %s",
 /*  10*/  "String zu lang",
 /*  11*/  "Fehler #11",
 /*  12*/  "Programm zu lang Speicher voll NEW",
@@ -35,7 +35,7 @@ const char *errortxt[] = {
 /*   6*/  "Logarithmen nur für Zahlen größer Null",
 /*   7*/  "Unknown Error %s",
 /*   8*/  "Out of Memory",
-/*   9*/  "Function or command %s not yet implemented",
+/*   9*/  "Function or command %s not implemented in this version",
 /*  10*/  "String too long",
 /*  11*/  "Error #11",
 /*  12*/  "Program too long, buffer size exeeded --> NEW",
@@ -80,7 +80,8 @@ const char *errortxt[] = {
 /*  31*/  "Merge - line too long - CANCEL",
 /*  32*/  "==> Syntax error %s",
 #endif
-/*  33*/  "Marke nicht definiert",
+#ifdef GERMAN
+/*  33*/  "Marke %s nicht definiert",
 /*  34*/  "Zu wenig Data",
 /*  35*/  "Data nicht numerisch",
 /*  36*/  "Programmstruktur Fehlerhaft %s",
@@ -96,23 +97,57 @@ const char *errortxt[] = {
 /*  46*/  "Parameter %s falsch, keine Zahl",
 /*  47*/  "Parameter %s falsch, kein String",
 /*  48*/  "Open \"R\" - Satzlänge falsch",
-
+#else
+/*  33*/  "Label %s not defined",
+/*  34*/  "Not enough data",
+/*  35*/  "data must be numeric",
+/*  36*/  "Error in program structure %s",
+/*  37*/  "Disk full",
+/*  38*/  "Command %s not allowed in interactive mode",
+/*  39*/  "Program Error Gosub impossible",
+/*  40*/  "CLEAR not allowed within For-Next-loops or procedures",
+/*  41*/  "CONT not possible here",
+/*  42*/  "Not enough parameters %s",
+/*  43*/  "Expression too complex",
+/*  44*/  "Function %s not defined",
+/*  45*/  "Too many parameters",
+/*  46*/  "Incorrect parameter %s, must be number",
+/*  47*/  "Incorrect parameter %s, must be string",
+/*  48*/  "Open \"R\" - incorrect Field length ",
+#endif
+#ifdef GERMAN
 /* 1*/  "Zu viele \"R\"-Files (max. 31)",
 /* 2*/  "Kein \"R\"-File",
 /* 3*/  "Parser: Syntax Error <%s>",
 /* 4*/  "Fields größer als Satzlänge",
-/* 5*/  " Fehler 53",
+/* 5*/  " Error 53",
 /* 6*/  "GET/PUT Field-String Länge falsch",
 /* 7*/  "GET/PUT Satznummer falsch",
 /* 56*/  "Falsche Anzahl Parameter",
 /* 57*/  "Variable %s noch nicht initialisiert",
 /* 58*/  "Variable %s ist vom falschen Typ",
-/* 59*/  "Fehler 59",
+/* 59*/  "Error 59",
 /* 60*/  "Sprite-String-Länge falsch",
 /* =*/  "Fehler bei RESERVE",
 /* >*/  "Menu falsch",
 /* ?*/  "Reserve falsch",
-
+#else
+/* 1*/  "Zu viele \"R\"-Files (max. 31)",
+/* 2*/  "Kein \"R\"-File",
+/* 3*/  "Parser: Syntax Error <%s>",
+/* 4*/  "Fields größer als Satzlänge",
+/* 5*/  " Error 53",
+/* 6*/  "GET/PUT Field-String Länge falsch",
+/* 7*/  "GET/PUT Satznummer falsch",
+/* 56*/  "Wrong number of parameters",
+/* 57*/  "Variable %s not yet initialized",
+/* 58*/  "Variable %s has incorrect type",
+/* 59*/  "Error 59",
+/* 60*/  "Sprite-String-Länge falsch",
+/* =*/  "Fehler bei RESERVE",
+/* >*/  "Menu falsch",
+/* ?*/  "Reserve falsch",
+#endif
 /* 64*/  "Pointer falsch",
 /* A*/  "Feldgröße < 256",
 /* B*/  "Kein VAR-Array",
@@ -151,7 +186,7 @@ const char *errortxt[] = {
 /*  a*/  "Error 97",
 /*  98*/  "Error 98",
 /*  99*/  "Error 99",
-/* 100*/  "X11BASIC Version 1.06  Copyright (c)1998-2002 Markus Hoffmann",
+/* 100*/  "X11BASIC Version 1.09  Copyright (c)1998-2003 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",
@@ -311,9 +346,9 @@ const char *errortxt[] = {
 /*  -1*/  "* IO-Error : Allgemeiner IO-Fehler %s"
 };
 
-char *error_text(unsigned char err, char *bem) {
+char *error_text(unsigned char errnr, char *bem) {
   static char errbuffer[128];
-  sprintf(errbuffer,errortxt[err],bem );
+  sprintf(errbuffer,errortxt[errnr],bem );
   return(errbuffer);
 }
 

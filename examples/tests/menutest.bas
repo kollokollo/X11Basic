@@ -40,7 +40,7 @@ PROCEDURE menuaction(k)
     ~form_alert(1,"[0][---- Menutest ----||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
   ELSE   
     PRINT "MENU selected ";k;" contents: ";field$(k)
-    b=form_alert(1,"[1][--- Menutest ---||Sie haben einen Menupunkt (Nr. "+str$(k)+")|angewaehlt, fuer den es keine|Funktion gibt !][ OK |Deaktivieren]")
+    b=form_alert(1,"[1][--- Menutest ---||You selected item (Nr. "+str$(k)+"),| fuer den es keine|Funktion gibt !][ OK |Deaktivieren]")
     if b=2
       MENUSET k,8
     endif

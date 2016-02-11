@@ -314,9 +314,16 @@ void c_randomize(PARAMETER *plist, int e) {
   srand(seed);
 }
 
-void c_list(char *n) {
-  int i;
-  for(i=0;i<prglen;i++) printf("%s\n",program[i]);
+void c_list(PARAMETER *plist, int e) {
+  int i,a=0,o=prglen;
+  if(e==2) {
+    a=min(max(plist[0].integer,0),prglen);
+    o=max(min(plist[1].integer+1,prglen),0);
+  } else if(e==1) {
+    a=min(max(plist[0].integer,0),prglen);
+    o=a+1;
+  }
+  for(i=a;i<o;i++) printf("%s\n",program[i]);
 }
 
 char *plist_zeile(P_CODE *code) {
@@ -409,13 +416,19 @@ void c_let(char *n) {
 }
 
 
-void c_quit(char *n) { 
+void c_quit(PARAMETER *plist, int e) { 
+  int ecode=0;
+  if(e) ecode=plist[0].integer; 
+#ifndef NOGRAPHICS
   close_window(usewindow); 
-  free(programbuffer); 
+#endif
+
+  free(programbuffer);
+  
 #ifdef CONTROL
   cs_exit();
 #endif
-  exit(0); 
+  exit(ecode); 
 }
 
 /* Linearer Fit (regression) optional mit Fehlerbalken in x und y Richtung  */
@@ -786,6 +799,10 @@ extern const int anzpfuncs;
 extern const FUNCTION pfuncs[];
 extern const int anzpsfuncs;
 extern const FUNCTION psfuncs[];
+extern const int anzsysvars;
+extern const int anzsyssvars;
+extern const SYSVAR sysvars[];
+extern const SYSSVAR syssvars[];
 void c_dump(char *n) {
   int i;
   char kkk=0;
@@ -795,8 +812,6 @@ void c_dump(char *n) {
     kkk=kom[0];
     free(kom);
   }
-  
-
   if(kkk==0 || kkk=='%') {
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==INTTYP) printf("%s%%=%d   [%d]\n",variablen[i].name, 
@@ -804,12 +819,23 @@ void c_dump(char *n) {
     }
   }
   if(kkk==0) {
-    for(i=0;i<anzvariablen;i++) {if(variablen[i].typ==FLOATTYP) printf("%s=%.13g    [%d]\n",variablen[i].name,
-         variablen[i].zahl, variablen[i].local);}
+    for(i=0;i<anzvariablen;i++) {
+      if(variablen[i].typ==FLOATTYP) 
+        printf("%s=%.13g    [%d]\n",variablen[i].name,variablen[i].zahl, variablen[i].local);
+    }
   }
   if(kkk==0 || kkk=='$') {
-    for(i=0;i<anzvariablen;i++) {if(variablen[i].typ==STRINGTYP) 
-    printf("%s$=\"%s\"   [%d]\n",variablen[i].name,variablen[i].pointer,variablen[i].local);}
+    char *buf;
+    for(i=0;i<anzvariablen;i++) {
+      if(variablen[i].typ==STRINGTYP) {
+        buf=malloc(variablen[i].opcode+1);
+	memcpy(buf,variablen[i].pointer,variablen[i].opcode);
+	(buf)[variablen[i].opcode]=0;
+        printf("%s$=\"%s\"   [%d]\n",variablen[i].name,buf,
+        variablen[i].local);
+        free(buf);
+      }
+    }
   }
   if(kkk==0 || kkk=='%' || kkk=='(') {
     for(i=0;i<anzvariablen;i++) {
@@ -1010,6 +1036,7 @@ void c_on(char *n) {
       
     } else if(strcmp(w1,"BREAK")==0) {
       breakcont=(mode==1);
+#ifndef NOGRAPHICS 
     } else if(strcmp(w1,"MENU")==0) {
       if(mode==0)  c_menu("");  
       else if(mode==3) {
@@ -1017,6 +1044,7 @@ void c_on(char *n) {
        if(pc2==-1) error(19,w3); /* Procedure nicht gefunden */
        else menuaction=pc2;
       } else  printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);  
+#endif
     } else { /* on n goto ...  */
       if(mode<2) printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);
       else {
@@ -1296,20 +1324,50 @@ void c_help(char *w) {
         puts("");
       }
     }
+    for(i=0;i<anzpfuncs;i++) {
+      if(fnmatch(w,pfuncs[i].name,FNM_NOESCAPE)==0) {
+        printf("%s(",pfuncs[i].name);
+	if(pfuncs[i].pmin) printf("%d",pfuncs[i].pmin);
+	if(pfuncs[i].pmax-pfuncs[i].pmin) printf("-%d",pfuncs[i].pmax);
+        puts(")");
+      }
+    }
+     for(i=0;i<anzpsfuncs;i++) {
+      if(fnmatch(w,psfuncs[i].name,FNM_NOESCAPE)==0) {
+        printf("%s(",psfuncs[i].name);  
+	if(psfuncs[i].pmin) printf("%d",psfuncs[i].pmin);
+	if(psfuncs[i].pmax-psfuncs[i].pmin) printf("-%d",psfuncs[i].pmax);
+        puts(")");
+      }
+    }
+     for(i=0;i<anzsysvars;i++) {
+      if(fnmatch(w,sysvars[i].name,FNM_NOESCAPE)==0) {
+        if(sysvars[i].opcode==PL_INT) printf("int ");
+	else if(sysvars[i].opcode==PL_FLOAT) printf("flt ");
+	else printf("??? ");
+        printf("%s\n",sysvars[i].name);          
+      }
+    }
+      for(i=0;i<anzsyssvars;i++) {
+      if(fnmatch(w,syssvars[i].name,FNM_NOESCAPE)==0) {
+        printf("%s\n",syssvars[i].name);          
+      }
+    }
+  
   }
 }
-void c_error(char *w) {
-  error((char)parser(w),"");
+void c_error(PARAMETER *plist,int e) {
+  error(plist[0].integer,"");
 }
-void c_free(char *w) {
-  free((char *)(int)parser(w));
+void c_free(PARAMETER *plist,int e) {
+  free((char *)plist[0].integer);
 }
 void c_detatch(char *w) {
   int r=shm_detatch((int)parser(w));
   if(r!=0) io_error(r,"DETATCH");
 }
-void c_shm_free(char *w) {
-  shm_free((char *)(int)parser(w));
+void c_shm_free(PARAMETER *plist,int e) {
+  shm_free((char *)plist[0].integer);
 }
 void c_pause(char *w) {
 #ifdef WINDOWS
@@ -1324,13 +1382,13 @@ void c_pause(char *w) {
 }
 
 void c_echo(char *n) {
-  if(strcmp(n,"ON")==0) echo=TRUE; 
-  else if(strcmp(n,"OFF")==0) echo=FALSE;
-  else  echo=(int)parser(n);
+  if(strcmp(n,"ON")==0) echoflag=TRUE; 
+  else if(strcmp(n,"OFF")==0) echoflag=FALSE;
+  else  echoflag=(int)parser(n);
 }
 void c_stop(char *n) { batch=0;} 
-void c_tron(char *n) {  echo=1;}
-void c_troff(char *n) { echo=0;}
+void c_tron(char *n) {  echoflag=1;}
+void c_troff(char *n) { echoflag=0;}
 void c_beep(char *n) { printf("\007");}
  
 void c_clear(char *w){  erase_all_variables(); }
@@ -1349,12 +1407,9 @@ void c_clr(char *n){
   free(v);free(w);
 }
 
-c_doclr(char *v){
-  
- char *r,*pos;
- 
- int vnr,typ; 
- 
+c_doclr(char *v) {
+  char *r,*pos;
+  int vnr,typ; 
  
  /* Typ bestimmem. Ist es Array ? */
  
@@ -1386,8 +1441,8 @@ c_doclr(char *v){
 	if(!indize) {
           if(typ & STRINGTYP) {
 	     variablen[vnr].pointer=realloc(variablen[vnr].pointer,1);
-	     (variablen[vnr].pointer)[0]=0;
-	     variablen[vnr].opcode=1; 
+	     *(variablen[vnr].pointer)=0;
+	     variablen[vnr].opcode=0; 
 	  } else {
 	    variablen[vnr].opcode=0;
 	    variablen[vnr].zahl=0.0;
@@ -1573,10 +1628,12 @@ int do_wort_sep(char *n) {
 	  char *buffer1=malloc(strlen(quelle)+1);
 	  char *buffer2=malloc(strlen(quelle)+1);
 	  ergeb=wort_sep2(quelle,deliminator,flag,buffer1,buffer2);
+	  
 	  zuweiss(var1,buffer1);
 	  free(buffer1); free(var1);
 	  zuweiss(var2,buffer2);
 	  free(buffer2); free(var2);
+	  
         } 
       } 
       free(deliminator);
@@ -1588,36 +1645,21 @@ int do_wort_sep(char *n) {
     return(0);
   } else return(ergeb);
 }
-void c_poke(char *n) {
-  char v[strlen(n)+1],t[strlen(n)+1];
-  int e;
-  char *adr;
-  e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) error(42,"POKE"); /* Zu wenig Parameter */
-  else {
-    adr=(char *)((int)parser(v));
-    *adr=(char)parser(t);
-  }
+void c_poke(PARAMETER *plist,int e) {
+  char *adr=(char *)(plist[0].integer);
+  *adr=(char)plist[1].integer;
 }
-void c_dpoke(char *n) {
-  char v[strlen(n)+1],t[strlen(n)+1];
-  int e;
-  short *adr;
-  e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) error(42,"DPOKE"); /* Zu wenig Parameter */
-  else {
-    adr=(short *)((int)parser(v));
-    *adr=(short)parser(t);
-  }
+void c_dpoke(PARAMETER *plist,int e) {
+  short *adr=(short *)(plist[0].integer);
+  *adr=(short)plist[1].integer;
 }
-void c_lpoke(char *n) {
-  char v[strlen(n)+1],t[strlen(n)+1];
-  int e;
-  long *adr;
-  e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) error(42,"LPOKE"); /* Zu wenig Parameter */
-  else {
-    adr=(long *)((int)parser(v));
-    *adr=(long)parser(t);
-  }
+void c_lpoke(PARAMETER *plist,int e) {
+  long *adr=(long *)plist[0].integer;
+  *adr=(long)plist[1].integer;
+}
+void c_sound(PARAMETER *plist,int e) {
+  speaker(plist[0].integer);
+}
+void c_eval(PARAMETER *plist,int e) {
+  kommando(plist[0].pointer);
 }

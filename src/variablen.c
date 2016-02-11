@@ -20,14 +20,14 @@ char *varrumpf(char *n) {
   char *ergebnis=malloc(strlen(n)+1);
   char *pos;
   strcpy(ergebnis,n);
-  if((pos=strchr(ergebnis,'('))!=NULL) pos[0]=0;
+  if((pos=strchr(ergebnis,'('))!=NULL) *pos=0;
   while(strchr("$%()",ergebnis[strlen(ergebnis)-1])!=NULL && strlen(ergebnis)) ergebnis[strlen(ergebnis)-1]=0;
   return(ergebnis);
 }
 char *argument(char *n) {
   char *ergebnis=malloc(strlen(n)+1);
   char *pos;
-  ergebnis[0]=0;
+  *ergebnis=0;
   if((pos=strchr(n,'('))!=NULL) {
     pos++;
     strcpy(ergebnis,pos);
@@ -90,8 +90,7 @@ void *varptr(char *n) {
   int vnr,indize=0;
 
   if(pos!=NULL) {
-    pos[0]=0; 
-    pos++;
+    *pos++=0; 
     indize=1; 
     vnr=variable_exist(r,typ|ARRAYTYP);
   } 
@@ -147,9 +146,7 @@ void local_vars_loeschen(int p) {
         erase_string_array(i);
         free(variablen[i].pointer); 
       }
-      
-      variablen[i]=variablen[anzvariablen-1];
-      
+      variablen[i]=variablen[anzvariablen-1];      
       anzvariablen--;i--;
     }
   }
@@ -342,7 +339,7 @@ void array_add(ARRAY *a1, ARRAY *a2) {
 	  strcat(pp1[j].pointer,pp2[j].pointer);
 	  pp1[j].len+=pp2[j].len; 
     }	
-  } else puts("Inkompatibler Array-Typ.");
+  } else puts("ERROR: inkompatible array type.");
 }
 void array_sub(ARRAY *a1, ARRAY *a2) {
   int anz=min(anz_eintraege(a1),anz_eintraege(a2)),j;
@@ -365,7 +362,7 @@ void array_sub(ARRAY *a1, ARRAY *a2) {
     double *pp2=(double *)(a2->pointer+a2->dimension*INTSIZE); 
     for(j=0;j<anz;j++) pp1[j]-=(int)pp2[j];
  
-  } else puts("Inkompatibler Array-Typ.");
+  } else puts("ERROR: inkompatible array type.");
 }
 void array_smul(ARRAY *a1, double m) {
   int anz=anz_eintraege(a1),j;
@@ -375,15 +372,14 @@ void array_smul(ARRAY *a1, double m) {
   } else if(a1->typ & INTTYP) {
     int *pp1=(int *)(a1->pointer+a1->dimension*INTSIZE); 
     for(j=0;j<anz;j++) pp1[j]=m*pp1[j];
-  } else puts("Inkompatibler Array-Typ.");
+  } else puts("ERROR: inkompatible array type.");
 }
 ARRAY *inv_array(ARRAY *a) {
-  puts("noch nicht moeglich.");
+  error(9,"INV"); /* Befehl noch nicht moeglich.*/
   return(nullmatrix(a->typ,a->dimension,a->pointer));
 }
 ARRAY *trans_array(ARRAY *a) {
-  puts("noch nicht moeglich.");
-
+  error(9,"TRANS"); /* Befehl noch nicht moeglich.*/
   return(nullmatrix(a->typ,a->dimension,a->pointer));
 }
 
@@ -821,6 +817,81 @@ ARRAY *array_info(int vnr) {
   zw->pointer=variablen[vnr].pointer;
   return(zw);
 }
+ARRAY *array_const(char *s) {
+  ARRAY *ergebnis=malloc(sizeof(ARRAY));
+  char t[strlen(s)+1],t2[strlen(s)+1],s2[strlen(s)+1];
+  int e,i=0,j=0,f,dx=0,dy,anz=1;
+  /* Ein oder Zweidimensional ? */
+  ergebnis->dimension=wort_sep(s,';',TRUE,t,t2);
+  /* Typ Bestimmen */
+  wort_sep(t,' ',TRUE,t,t2);
+  ergebnis->typ=(type2(t) | ARRAYTYP);
+  e=wort_sep(s,';',TRUE,t,s2);
+  while(e) {
+    f=wort_sep(t,',',TRUE,t2,t);
+    while(f) {
+      j++;
+      f=wort_sep(t,',',TRUE,t2,t);
+    }
+    dx=max(dx,j);
+    j=0;
+    i++;
+    e=wort_sep(s2,';',TRUE,t,s2);
+  }
+  dy=i;
+  anz=dx*dy;
+  /*
+  printf("ARRAY-Const:  %s\n",s);
+  printf("============\n");
+  printf("Dimension: %d\n",ergebnis->dimension);
+  printf("Typ:       %d\n",ergebnis->typ);
+  printf("Dim: %dx%d  \n",dy,dx);
+  printf("Anz: %d  \n",anz);
+*/
+  
+  
+  if(ergebnis->typ & INTTYP) ergebnis->pointer=malloc(ergebnis->dimension*INTSIZE+anz*sizeof(int));
+  else if(ergebnis->typ & FLOATTYP) ergebnis->pointer=malloc(ergebnis->dimension*INTSIZE+anz*sizeof(double));
+  else {
+    int i;
+    STRING *varptr;
+    ergebnis->pointer=malloc(ergebnis->dimension*INTSIZE+anz*sizeof(STRING));
+
+    varptr=(STRING *)(ergebnis->pointer+ergebnis->dimension*INTSIZE);
+    for(i=0;i<anz;i++) {
+      varptr[i].len=0;   /* Laenge */
+      varptr[i].pointer=malloc(1);
+    }
+  }
+  if(ergebnis->dimension==1) *((int *)(ergebnis->pointer))=dx;
+  else if(ergebnis->dimension==2) {
+    ((int *)(ergebnis->pointer))[0]=dy;
+    ((int *)(ergebnis->pointer))[1]=dx;
+  }
+  i=j=0;
+    e=wort_sep(s,';',TRUE,t,s2);
+  while(e) {
+    f=wort_sep(t,',',TRUE,t2,t);
+    while(f) {
+      if(ergebnis->typ & INTTYP) ((int *)(ergebnis->pointer+ergebnis->dimension*INTSIZE))[j]=(int)parser(t2);
+      else if(ergebnis->typ & FLOATTYP) ((double *)(ergebnis->pointer+ergebnis->dimension*INTSIZE))[j]=parser(t2);
+      else {
+        STRING *varptr,sss;
+        varptr=(STRING *)(ergebnis->pointer+ergebnis->dimension*INTSIZE);
+	sss=string_parser(t2);
+          varptr[j].len=sss.len;
+	  free(varptr[j].pointer);
+          varptr[j].pointer=sss.pointer;
+      }
+      j++;
+      f=wort_sep(t,',',TRUE,t2,t);
+    }
+    i++;
+    j=i*dx;
+    e=wort_sep(s2,';',TRUE,t,s2);
+  }
+  return(ergebnis);
+}
 
 
 
@@ -829,8 +900,14 @@ ARRAY *array_info(int vnr) {
 int zuweiss(char *name, char *inhalt) {
    return(zuweissbuf(name,inhalt,strlen(inhalt)));
 }
-
 int zuweissbuf(char *name, char *inhalt,int len) {
+   STRING e;
+   e.len=len;
+   e.pointer=inhalt;
+   return(zuweis_string(name,e));
+}
+
+int zuweis_string(char *name, STRING inhalt) {
   int i,s=0;
   char *ss,*t,*v,*pos,*pos2,*w;
   
@@ -844,16 +921,15 @@ int zuweissbuf(char *name, char *inhalt,int len) {
     
     
     pos2=w+strlen(w)-1;
-    pos[0]=0;
-    pos++;
-    if(pos2[0]!=')') puts("Fehlende schliessende Klammer.");
-    else pos2[0]=0;
+    *pos++=0;
+   
+    if(*pos2!=')') puts("Syntax error. Fehlende schliessende Klammer.");
+    else *pos2=0;
     w[strlen(w)-1]=0; /* $-Zeichen entfernen */
 
     vnr=variable_exist(w,STRINGARRAYTYP);
-    if(vnr==-1) {
-      error(15,w);  /* Feld nicht dimensioniert */
-    } else {
+    if(vnr==-1) error(15,w);  /* Feld nicht dimensioniert */
+    else {
 
       /* Dimensionen bestimmen   */
 
@@ -886,10 +962,10 @@ int zuweissbuf(char *name, char *inhalt,int len) {
    /* printf("Zuweisung: %s dim:%d anz:%d ll:%d,%d \n",w,ndim,anz,((int
    *)pos)[0],((int *)(pos+2))[0]);  */
       
-          ((int *)pos)[0]=len;
+          ((int *)pos)[0]=inhalt.len;
 	  pos+=sizeof(int);
-	  ((char **)pos)[0]=realloc(((char **)pos)[0],len+1);
-	  memcpy(((char **)pos)[0],inhalt,len+1);
+	  ((char **)pos)[0]=realloc(((char **)pos)[0],inhalt.len);
+	  memcpy(((char **)pos)[0],inhalt.pointer,inhalt.len);
 	 }
 	 free(ss);free(t);
       }
@@ -901,15 +977,11 @@ int zuweissbuf(char *name, char *inhalt,int len) {
   /* ist variable schon vorhanden ? */
  
     if((i=variable_exist(w,STRINGTYP))!=-1) {
-	  variablen[i].opcode=len;
-	  variablen[i].pointer=realloc(variablen[i].pointer,len+1);
-	  memcpy(variablen[i].pointer,inhalt,len+1);
-	  
+	  variablen[i].opcode=inhalt.len;
+	  variablen[i].pointer=realloc(variablen[i].pointer,inhalt.len);
+	  memcpy(variablen[i].pointer,inhalt.pointer,inhalt.len);
     }   else { 
-      STRING e;
-      e.pointer=inhalt;
-      e.len=len;
-      if(neue_string_variable(w,e,0)==-1) 
+      if(neue_string_variable(w,inhalt,0)==-1) 
       printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
   }
@@ -936,7 +1008,7 @@ void xzuweis(char *name, char *inhalt) {
      array_zuweis_and_free(buffer1, buffer3);
   } else if(typ & STRINGTYP) {
      STRING buffer3=string_parser(buffer2);
-     zuweissbuf(buffer1,buffer3.pointer,buffer3.len);
+     zuweis_string(buffer1,buffer3);
      free(buffer3.pointer);
   } else if(typ & INTTYP) zuweisi(buffer1,parser(buffer2));
   else zuweis(buffer1,parser(buffer2));
@@ -1117,4 +1189,3 @@ int intarrayinhalt(int vnr, char* index) {
     }
     return(varptr[a]);
 }
-

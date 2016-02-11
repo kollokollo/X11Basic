@@ -23,14 +23,17 @@ void *obh;       /* old break handler  */
 
 /* Standard-Fehlerroutine   */
 
+int globalerr=0;
 
-void error(char err, char *bem) {
+void error(char errnr, char *bem) {
+  extern int globalerr;
 #ifdef GERMAN
-  printf("Zeile %d: %s\n",pc-1,error_text(err,bem));
+  printf("Zeile %d: %s\n",pc-1,error_text(errnr,bem));
 #else
-  printf("Line %d: %s\n",pc-1,error_text(err,bem));
+  printf("Line %d: %s\n",pc-1,error_text(errnr,bem));
 #endif
   if(!errcont) batch=0;   
+  globalerr=errnr;
 }
 
 void break_handler( int signum) {

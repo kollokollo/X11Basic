@@ -1,6 +1,5 @@
-
 '
-' ANALOGUHR
+' ANALOGUHR    V.1.08
 ' Demoprogramm. Es soll nur die Funktionalitaet von X11-BASIC
 ' demonstrieren. Hier kann man zur Syntax etc. lernen
 ' Letzte Bearbeitung 09.03.2002  Markus Hoffmann
@@ -9,10 +8,14 @@ gelb=get_color(65535,65535,0)
 rot=get_color(65535,0,0)
 weiss=get_color(65535,65535,65535)
 schwarz=get_color(0,35535,25535)
+bw=400
+bh=400
+bx=0
+by=0
 setfont "*Courier*12*"
-sizew ,400,400
+sizew ,bw,bh
 color schwarz
-pbox 0,0,400,400
+pbox bx,by,bw,bh
 vsync
 color rot
 TEXT 50,10,"Analoguhr mit X-BASIC    von Markus Hoffmann"
@@ -21,8 +24,8 @@ setfont "*Courier*18*"
 '
 ' PRINT AT(5,24);"Bitte Mittelpunkt der Uhr angeben (Maus)."
 '
-x=200
-y=200
+x=bx+bw/2
+y=by+bh/2
 xr=380
 color weiss
 CIRCLE x,y,xr-x+5
@@ -86,15 +89,11 @@ do
     color schwarz 
     pbox 120,250,280,300
     @s_ekunde
-
     color gelb
     text 160,280,time$
     text 150,300,date$
-    
     vsync
-    
     pause 1-timer+stimer-0.05
-   ' pause 0.6
   ENDIF
 loop
 '
@@ -119,10 +118,9 @@ PROCEDURE s_ekunde
 RETURN
 
 PROCEDURE m_inute
- 
   INC m
   COLOR schwarz
-  DEFLINE 1,bm,0,1
+  DEFLINE ,bm
   LINE x,y,x2,y2
   COLOR weiss
   INC w2
@@ -147,7 +145,7 @@ RETURN
 PROCEDURE s_tunde
   INC st
   COLOR schwarz
-  DEFLINE 1,bm,0,1
+  DEFLINE ,bm
   LINE x,y,x3,y3
   COLOR weiss
   INC w3
@@ -159,7 +157,7 @@ PROCEDURE s_tunde
   ENDIF
 RETURN
 PROCEDURE u_hr_zeichnen_1
-  DEFLINE 1,1,0,0
+  DEFLINE ,1
   DEFTEXT 1,0,0,t
   w=-15
   REPEAT
@@ -180,11 +178,11 @@ PROCEDURE u_hr_zeichnen_1
   UNTIL w=45
 RETURN
 PROCEDURE u_hr_zeichnen_2
-  DEFLINE 1,bs,0,1
+  DEFLINE ,bs
   x1=x+INT(COS(w1*6*PI/180)*r5)
   y1=y+INT(SIN(w1*6*PI/180)*r5)
   LINE x,y,x1,y1
-  DEFLINE 1,bm,0,1
+  DEFLINE ,bm
   x2=x+INT(COS(w2*6*PI/180)*r5)
   y2=y+INT(SIN(w2*6*PI/180)*r5)
   LINE x,y,x2,y2

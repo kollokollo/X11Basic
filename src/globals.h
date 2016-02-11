@@ -14,7 +14,7 @@ extern const char version[];           /* Programmversion           */
 extern const char vdate[];
 extern const char xbasic_name[];
 extern char ifilename[];
-extern int pc,sp,prglen,echo,batch,err,errcont,breakcont,everyflag;
+extern int pc,sp,prglen,echoflag,batch,globalerr,errcont,breakcont,everyflag;
 extern int everytime,alarmpc;
 extern int menuaction;
 

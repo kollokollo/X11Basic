@@ -1,4 +1,5 @@
 
+
 /* gkommandos.c Grafik-Befehle  (c) Markus Hoffmann     */
 
 
@@ -8,6 +9,7 @@
  * COPYING for details
  */
 
+/* SIZEW (WINDOWS) 18.12.2002   M. Hoffmann   */
 /* Fehler beim Mouseevent beseitigt 2.6.1999   M. Hoffmann   */
 
 #include <stdio.h>
@@ -22,36 +24,19 @@
 #ifdef WINDOWS
   extern HANDLE keyevent,buttonevent,motionevent;
 #endif
-
 /* Line-Funktion fuer ltext */
 void line(int x1,int y1,int x2,int y2) {
+#ifndef NOGRAPHICS
   DrawLine(x1,y1,x2,y2);
+#endif
 }
+#ifndef NOGRAPHICS
 
 void box(int x1,int y1,int x2, int y2) {
-#ifdef WINDOWS
-   RECT rc;
-  rc.left=min(x1,x2);
-  rc.top=min(y1,y2);
-  rc.right=max(x1,x2);
-  rc.bottom=max(y1,y2);
- 
-  FrameRect(bitcon[usewindow],&rc,pen[usewindow]);
-#else
   DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
-#endif
 }
 void pbox(int x1,int y1,int x2, int y2) {
-#ifdef WINDOWS
-  RECT rc;
-  rc.left=min(x1,x2);
-  rc.top=min(y1,y2);
-  rc.right=max(x1,x2);
-  rc.bottom=max(y1,y2);
-  FillRect(bitcon[usewindow],&rc,brush[usewindow]);
-#else
-  XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
-#endif
+  FillRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
 }
 
 
@@ -436,6 +421,12 @@ void c_color(PARAMETER *plist,int e) {
   if(e==2) {SetBackground(plist[1].integer);}
 }
 
+int boundary=-1;
+
+void c_boundary(PARAMETER *plist,int e) {  
+  boundary=plist[0].integer;
+}
+
 int get_fcolor() {
 #ifdef WINDOWS
   return(global_color);
@@ -455,9 +446,9 @@ return(0);
 #endif
 }
 
-void c_graphmode(char *n) {
+void c_graphmode(PARAMETER *plist,int e) {
   graphics();
-  set_graphmode((int)parser(n));
+  set_graphmode(plist[0].integer);
 }
 void c_setfont(char *n) {
   char *ttt;
@@ -658,11 +649,21 @@ int get_graphmode() {
 return(0);
 #endif
 }
+void set_fill(int c) {
 
-#ifndef WINDOWS
+#ifdef WINDOWS
+#else
 #include "bitmaps/fill.xbm"
+  static Pixmap fill_pattern;
+  static fill_alloc=0;
+    if(fill_alloc) XFreePixmap(display[usewindow],fill_pattern);
+    fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
+                fill_bits+c*fill_width*fill_width/8,fill_width,fill_width);
+           /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
+    fill_alloc=1;   
+    XSetStipple(display[usewindow], gc[usewindow],fill_pattern);
 #endif
-
+}
 void c_deffill(PARAMETER *plist,int e) {
   graphics();
 #ifndef WINDOWS
@@ -675,17 +676,13 @@ void c_deffill(PARAMETER *plist,int e) {
     if(fs>=0 && fs<4) XSetFillStyle(display[usewindow], gc[usewindow], fs);
   }
   if(e>=3 && plist[2].typ!=PL_LEER){
-    Pixmap fill_pattern;
     int pa=plist[2].integer;
     pa=max(0,min(fill_height/fill_width,pa));
-    fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
-                fill_bits+pa*fill_width*fill_width/8,fill_width,fill_width);
-           /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
-	   
-    XSetStipple(display[usewindow], gc[usewindow],fill_pattern );
+    set_fill(pa);
   }
 #endif  
 }
+
 void c_defline(PARAMETER *plist,int e) { 
   static int style=0,width=0,cap=0,join=0;
   if(e>=1 && plist[0].typ!=PL_LEER) style=plist[0].integer;
@@ -821,10 +818,10 @@ void c_mouseevent(char *n) {
   while(e) {
        if(strlen(w1)) {
          switch(i) {
-         case 0: {zuweis(w1,(double)global_mousex);     break;}
-	 case 1: {zuweis(w1,(double)global_mousey);     break;} /* Dicke */
-	 case 2: {zuweis(w1,(double)global_mousek);break;} 
-	 case 5: {zuweis(w1,(double)global_mouses); break;}  
+         case 0: {zuweis(w1,(double)global_mousex); break;}
+	 case 1: {zuweis(w1,(double)global_mousey); break;}
+	 case 2: {zuweis(w1,(double)global_mousek); break;}
+	 case 5: {zuweis(w1,(double)global_mouses); break;}
          default: break;
        }
      }
@@ -847,7 +844,7 @@ void c_mouseevent(char *n) {
        if(strlen(w1)) {
          switch(i) {
          case 0: {zuweis(w1,(double)event.xbutton.x);     break;}
-	 case 1: {zuweis(w1,(double)event.xbutton.y);     break;} /* Dicke */
+	 case 1: {zuweis(w1,(double)event.xbutton.y);     break;}
 	 case 2: {zuweis(w1,(double)event.xbutton.button);break;} 
 	 case 3: {zuweis(w1,(double)event.xbutton.x_root);break;} 
 	 case 4: {zuweis(w1,(double)event.xbutton.y_root);break;}   
@@ -992,33 +989,23 @@ void c_allevent(char *n) {
   ResetEvent(keyevent);
   ResetEvent(motionevent);
   ResetEvent(buttonevent);
-  WaitForMultipleObjects(3,evn,TRUE,INFINITE);
+  WaitForMultipleObjects(3,evn,FALSE,INFINITE);
   e=wort_sep(n,',',TRUE,w1,w2);
      while(e) {
        if(strlen(w1)) {
          switch(i) {
-         case 0: {zuweis(w1,(double)global_eventtype);          break;}
-	 case 1: {
-	   zuweis(w1,(double)global_mousex);     
-	   break;}
-	 case 2: {
-	   zuweis(w1,(double)global_mousey);     
-	   break;}
-	 case 3: {
-	   break;}
-	 case 4: {
-	   break;}
-	 case 5: {
-	   zuweis(w1,(double)(global_mouses));   
-	   break;}
+         case 0: {zuweis(w1,(double)global_eventtype); break;}
+	 case 1: {zuweis(w1,(double)global_mousex);    break;}
+	 case 2: {zuweis(w1,(double)global_mousey);    break;}
+	 case 3: {                                     break;}
+	 case 4: {                                     break;}
+	 case 5: {zuweis(w1,(double)(global_mouses));  break;}
 	 case 6: {
 	   if(global_eventtype==MotionNotify)     zuweis(w1,(double)(0));     
 	   else if(global_eventtype==ButtonPress) zuweis(w1,(double)global_mousek);
 	   else if(global_eventtype==KeyPress)    zuweis(w1,(double)global_keycode);
 	   break;}
-	 case 7: {
-             zuweis(w1,(double)global_ks);       
-	   break;}	 	   
+	 case 7: {zuweis(w1,(double)global_ks);        break;}	 	   
          default: break;
        }
      }
@@ -1106,9 +1093,6 @@ void c_allevent(char *n) {
      i++;
     }
 #endif    
-}
-void c_infow(char *n) {
-  error(9,"INFOW");
 }
 void c_titlew(char *n) {
   char *v,*t;
@@ -1210,7 +1194,9 @@ void c_sizew(char *n) {
     graphics();
     if(winbesetzt[winnr]) {
 #ifdef WINDOWS    
-/* hStatus = GetDlgItem(win_hwnd[winnr], IDC_MAIN_STATUS);  */
+        RECT interior;
+        GetClientRect(win_hwnd[winnr],&interior);
+        MoveWindow(win_hwnd[winnr],interior.left,interior.top,w,h,1);
 #else
         Pixmap pixi;
 	Window root;
@@ -1247,6 +1233,8 @@ void c_movew(char *n) {
         y=max((int)parser(v),0);
 #ifndef WINDOWS
         XMoveWindow(display[winnr], win[winnr], x, y);
+#else
+       MoveWindow(win_hwnd[winnr], x, y,640,400,1);
 #endif
       }
     }
@@ -1438,7 +1426,9 @@ void c_fileselect(PARAMETER *plist,int e) {
 int menuaction=-1;
 int menuflags[MAXMENUENTRYS];
 char *menuentry[MAXMENUENTRYS];
+int menuentryslen[MAXMENUENTRYS];
 char *menutitle[MAXMENUTITLES];
+int menutitleslen[MAXMENUTITLES];
 int menutitlesp[MAXMENUTITLES];
 int menutitlelen[MAXMENUTITLES];
 int menutitleflag[MAXMENUTITLES];
@@ -1504,8 +1494,10 @@ void c_menudef(char *n) {
 	count=0;
 	for(i=0;i<nn;i++) {
 	  menuentry[i]=varptr[i].pointer;
+	  menuentryslen[i]=varptr[i].len;
 	  if(count==0 && varptr[i].len) {
 	    menutitle[menuanztitle]=varptr[i].pointer;
+	    menutitleslen[menuanztitle]=varptr[i].len;
 	    menutitlesp[menuanztitle]=i+1;
 	    menutitleflag[menuanztitle]=NORMAL;
 	    count++;
@@ -1587,3 +1579,4 @@ void c_xrun(char *n) {
   c_xload(n);
   c_run("");
 }
+#endif /* NOGRAPHICS */

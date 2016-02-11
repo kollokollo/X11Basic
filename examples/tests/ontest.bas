@@ -1,4 +1,5 @@
-
+print "test of on x gosub ..."
+print "Input x=";
 a=0
 input a
 

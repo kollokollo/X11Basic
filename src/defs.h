@@ -9,33 +9,38 @@
 #ifndef __X11BASICDEFS
 #define __X11BASICDEFS
 
+#include "config.h"
 #include "options.h"
 
 #ifndef FALSE 
-#define FALSE    0
-#define TRUE     (!FALSE)
+  #define FALSE    0
+  #define TRUE     (!FALSE)
 #endif
 #define PI       3.141592653589793
 #define E        2.718281828459
 
+#ifdef SMALL
+  #define SAVE_RAM 1
+#endif
+
 #ifdef SAVE_RAM
   #define MAXSTRLEN   1024   /* in Bytes */
   #define MAXPRGLEN  64000   /* in Bytes */
-  #define MAXLINELEN  1024
-  #define MAXVARNAMLEN  64
-  #define ANZFILENR    100
-  #define STACKSIZE    512
+  #define MAXLINELEN  1024   /* in Bytes */
+  #define MAXVARNAMLEN  64   /* in Bytes */
+  #define ANZFILENR     64
+  #define STACKSIZE    256
   #define ANZVARS     1024
-  #define ANZLABELS    512
-  #define ANZPROCS    1024
+  #define ANZLABELS    256
+  #define ANZPROCS     512
 #else
   #define MAXSTRLEN   4096   /* in Bytes */
   #define MAXPRGLEN 100000   /* in Bytes */
-  #define MAXLINELEN  4096
-  #define MAXVARNAMLEN  64
+  #define MAXLINELEN  4096   /* in Bytes */
+  #define MAXVARNAMLEN  64   /* in Bytes */
   #define ANZFILENR    100
   #define STACKSIZE    512
-  #define ANZVARS     1024
+  #define ANZVARS     4096
   #define ANZLABELS   1024
   #define ANZPROCS    1024
 #endif
@@ -50,7 +55,12 @@
 #define sgn(x)   ((x<0)?-1:1)
 #define rad(x)   (PI*x/180)
 #define deg(x)   (180*x/PI)
-#define LOBYTE(x) ((unsigned char) ((x) & 0xff))
-#define HIBYTE(x) ((unsigned char) ((x) >> 8 & 0xff))
-
+#ifndef WINDOWS
+#ifndef LOBYTE
+  #define LOBYTE(x) ((unsigned char) ((x) & 0xff))
+#endif
+#ifndef HIBYTE
+  #define HIBYTE(x) ((unsigned char) ((x) >> 8 & 0xff))
+#endif
+#endif
 #endif

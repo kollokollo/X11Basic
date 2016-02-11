@@ -2,6 +2,7 @@
 
 void c_alert(PARAMETER *,int);
 void c_allevent(char *);
+void c_boundary(PARAMETER *,int);
 void c_clearw(char *);
 void c_circle(PARAMETER *,int);
 void c_color(PARAMETER *,int);
@@ -14,7 +15,7 @@ void c_draw(char *);
 void c_ellipse(PARAMETER *,int);
 void c_get(PARAMETER *,int);
 void c_gprint(char *);
-void c_graphmode(char *);
+void c_graphmode(PARAMETER *,int);
 void c_infow(char *);
 void c_keyevent(char *);
 void c_menu(char *);

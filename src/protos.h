@@ -41,6 +41,8 @@ void clear_procliste();
 char *varrumpf(char *);
 STRING f_inputs(char *);
 STRING f_lineinputs(char *);
+int f_freefile();
+STRING vs_error();
 char *float_to_string(char *);
 char *hexoct_to_string(char,char *);
 char *bin_to_string(char *);
@@ -60,6 +62,7 @@ double parser(char *);
 char *s_parser(char *);
 STRING string_parser(char *);
 ARRAY *array_parser(char *);
+ARRAY *array_const(char *);
 
 int buchstabe(char);
 
@@ -69,6 +72,7 @@ void cs_exit();
 double csget(char *);
 char *csgets(char *);
 STRING tinegets(char *);
+STRING tinequery(char *,int );
 double do_funktion(char *,char *);
 STRING do_sfunktion(char *,char *);
 
@@ -93,6 +97,7 @@ void do_menu_draw();
 int  do_menu_select();
 void do_polygon(int,char *);
 void do_restore();
+void set_fill(int);
  
 void activate();
 void next_data_line();

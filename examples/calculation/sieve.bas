@@ -1,10 +1,9 @@
-rem "sieve.bas" , a prime number sieve benchmark
+' "sieve.bas" , a prime number sieve benchmark
 t=timer
 tc=ctimer
 s=40000
 dim f(s+1)
 arrayfill f(),1
-
 clr c
 for i=2 to s
   if f(i)

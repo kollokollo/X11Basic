@@ -19,8 +19,3 @@ while len(f$)
   inc i
 wend
 quit
-fileselect "Lade irgendwas","./*","test.txt",f$
-print f$
-alert 3,"Hallo| Zeile 2|HALX="+chr$(27)+"s999|Name="+chr$(27)+"Markus",1," OK |CANCEL|STOP",a,f$
-print f$
-quit

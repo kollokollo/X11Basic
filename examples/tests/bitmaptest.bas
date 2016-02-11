@@ -680,3 +680,5 @@ for i=0 to 40
   put_bitmap t$,i*16,0,16,16
 next i
 vsync
+alert 0,"fertig",1,"OK",b
+quit

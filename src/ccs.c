@@ -900,9 +900,7 @@ STRING tinegets(char *n) {
 
   if(rc) {
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-        ergebnis.pointer=malloc(8);
-	strcpy(ergebnis.pointer,"<ERROR>");
-	ergebnis.len=strlen(ergebnis.pointer);
+        ergebnis=vs_error();
   } else {
     PropertyQueryStruct prpinfo;  
     DTYPE dout;
@@ -911,10 +909,7 @@ STRING tinegets(char *n) {
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
-        ergebnis.pointer=malloc(8);
-	strcpy(ergebnis.pointer,"<ERROR>");
-	ergebnis.len=strlen(ergebnis.pointer);
-
+        ergebnis=vs_error();
     } else {
       buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
       buf=malloc(buflen);
@@ -926,9 +921,7 @@ STRING tinegets(char *n) {
       if(rc) {
         printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
 	free(buf);
-	ergebnis.pointer=malloc(8);
-	strcpy(ergebnis.pointer,"<ERROR>");
-	ergebnis.len=strlen(ergebnis.pointer);
+	ergebnis=vs_error();
       } else {
 #if 0
         switch (LFMT(prpinfo.prpFormat)) {
@@ -939,6 +932,55 @@ STRING tinegets(char *n) {
           default: printf("output format type %d is not a string !\n",LFMT(prpinfo.prpFormat));
         }
 #endif
+	ergebnis.pointer=buf;
+	ergebnis.len=buflen;
+      }
+    }
+   
+  }
+  ccs_err=rc;
+  return(ergebnis);
+}
+
+/* Holt einen Wert, wobei ein bestimmter Timestamp vorgegeben werden kann */
+/* Rueckgabe ist immer ein STring, auch wenn es sich um Arrays oder floats etc
+   handelt.    Allgemeinste Form des Tine-Zugriffs.    */
+
+STRING tinequery(char *n,int start) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int rc=convert_name_convention(n,w1,w2);
+  char *buf;
+  int buflen;
+  STRING ergebnis;
+
+  if(rc) {
+	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
+        ergebnis=vs_error();
+  } else {
+    PropertyQueryStruct prpinfo;  
+    DTYPE dout,din;
+    
+    /* get size of Vector */
+    rc=GetPropertyInformation(w1,w2,&prpinfo);
+    if(rc) {
+      printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+        ergebnis=vs_error();
+    } else {
+      buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
+      buf=malloc(buflen);
+      dout.dFormat = LFMT(prpinfo.prpFormat);
+      dout.dArrayLength = prpinfo.prpSize;
+      dout.dTag[0] = 0;
+      dout.data.vptr = buf;
+      din.dArrayLength = 1;
+      din.dFormat = CF_LONG;
+      din.data.lptr = &start;
+      rc=my_ExecLinkEx(w1,w2,&dout,&din,CA_READ,buflen);
+      if(rc) {
+        printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
+	free(buf);
+	ergebnis=vs_error();
+      } else {
 	ergebnis.pointer=buf;
 	ergebnis.len=buflen;
       }

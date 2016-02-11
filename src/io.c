@@ -6,6 +6,9 @@
  * COPYING for details
  */
 
+/* termio.h (weil obsolet) entfernt.    11.08.2003   MH  */
+
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,34 +18,37 @@
 #include <math.h>
 #ifndef WINDOWS
 #include <termios.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#ifdef HAVE_SYS_KD_H
+#include <sys/kd.h>
+#endif
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <termio.h>
 #else
 #include <windows.h>
-
 #endif
 #include <sys/time.h>
 
 /* fuer Dynamisches Linken von shared Object-Files   */
 
-#ifndef WINDOWS
-#ifndef __hpux
-#include <dlfcn.h>
+#ifdef WINDOWS
+#undef HAVE_DLOPEN
 #endif
+
+#ifdef HAVE_DLOPEN
+#include <dlfcn.h>
 #ifdef __hpux
 #define RTLD_LAZY       0x00000002  /* bind deferred */
 #endif
-
-#include <dlfcn.h>
 #endif
 
 #include "file.h"
 #include "defs.h"
 #include "globals.h"
 #include "protos.h"
-
 
 #ifdef WINDOWS
 #define FD_SETSIZE 4096
@@ -61,7 +67,26 @@ void io_error(int,char *);
 /*******************************/
 /* Ein- und Ausgaberoutinen    */
 
+FILE *get_fileptr(int n) {
+  if(n==-1) return(stderr);  
+  else if(n==-2) return(stdin);  
+  else if(n==-4) return(stdout);  
+  else if(n<0 || n>=ANZFILENR) return(NULL);
+  else if(filenr[n]) return(dptr[n]);
+  else return(NULL);
+}
 
+int f_freefile() {
+  int i=1;
+  while(i<ANZFILENR) {
+    if(filenr[i]==0) return(i);
+    i++;
+  }
+  return(-1);
+}
+void c_locate(PARAMETER *plist,int e) {
+  printf("\033[%.3d;%.3dH",plist[0].integer,plist[1].integer);
+}
 void c_print(char *n) {
   char v[strlen(n)+1];
   char c;
@@ -145,18 +170,17 @@ void c_input(char *n) {
 }
 STRING f_lineinputs(char *n) {
   int i=get_number(n);
-  STRING inbuf;
   if(filenr[i]) {
+    STRING inbuf;
     FILE *fff=dptr[i];
     inbuf.pointer=malloc(MAXSTRLEN);
     lineinput(fff,inbuf.pointer);
+    inbuf.len=strlen(inbuf.pointer);
+    return(inbuf);
   } else {
-    inbuf.pointer=malloc(10);
-    strcpy(inbuf.pointer,"<ERROR>");
     error(24,""); /* File nicht geoeffnet */
+    return(vs_error());
   }
-  inbuf.len=strlen(inbuf.pointer);
-  return(inbuf);
 }
 STRING f_inputs(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
@@ -176,10 +200,7 @@ STRING f_inputs(char *n) {
       return(inbuf);
     } else error(24,""); /* File nicht geoeffnet */
   } else error(32,"INPUT$"); /* Syntax Error */
-  inbuf.pointer=malloc(10);
-  strcpy(inbuf.pointer,"<ERROR>");  
-  inbuf.len=strlen(inbuf.pointer);
-  return(inbuf);
+  return(vs_error());
 }
 void c_lineinput(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
@@ -192,10 +213,9 @@ void c_lineinput(char *n) {
     int i;
     
     wort_sep(n,',',TRUE,buffer,s);
-    i=get_number(buffer);
-    if(filenr[i]) fff=dptr[i];
-    else error(24,""); /* File nicht geoeffnet */
+    fff=get_fileptr(get_number(buffer));
     free(buffer);
+    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */
   } else strcpy(s,n);
   if(strlen(s)) {
     e=arg2(s,TRUE,s,t);
@@ -271,134 +291,190 @@ void c_open(char *n) {
   int number=1,e,port=5555,i=0;
   char *filename=NULL;
   char modus2[5]="r";
-  
+  int baud=9600,bits=8,stopbits=1;
+ /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
+#if DEBUG
+  printf("OPEN %s\n",n);
+#endif
   e=wort_sep(n,',',TRUE,w1,w2);
   while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: { /* Modus */     
-	   char *mod=s_parser(w1);      /* Modus */
-           modus=toupper(mod[0]);
-	   special=toupper(mod[1]);
-           free(mod);
-           if(modus=='I') strcpy(modus2,"r");
-           else if(modus=='O') strcpy(modus2,"w");
-           else if(modus=='U') strcpy(modus2,"r+");
-           else if(modus=='A') strcpy(modus2,"a+");
-           else error(21,""); /* bei Open nur erlaubt ...*/
-	   break;
-	 }
-	 case 1: {  number=get_number(w1);    /* Nummer */ break; } 
-	 case 2: { filename=s_parser(w1); break; } 
-	 case 3: { port=(int)parser(w1); break; } 	   
-         default: break;
-       }
-     }
-     i++;
-     e=wort_sep(w2,',',TRUE,w1,w2);
-  }
-  
+    if(strlen(w1)) {
+      switch(i) {
+      case 0: { /* Modus */     
+        char *mod=s_parser(w1);      /* Modus */
+        modus=toupper(mod[0]);
+	special=toupper(mod[1]);
+	if(special=='X') {
+	  char ww1[strlen(mod)+1],ww2[strlen(mod)+1];
+	  int ii=0,ee=wort_sep(mod,':',TRUE,ww1,ww2);
+	  ee=wort_sep(ww2,',',TRUE,ww1,ww2);
+	  while(ee) {
+     	    if(strlen(ww1)) {
+	      switch(ii) {
+	        case 0: { baud=(int)parser(ww1);  break; } /* Baudrate */  
+		case 2: { bits=(int)parser(ww1);  break; } /* Bits */  
+		case 3: { stopbits=(int)parser(ww1);  break; } /* Stopbits */  
+	      }
+	    }
+	    ii++;
+            ee=wort_sep(ww2,',',TRUE,ww1,ww2);
+	    
+	  }
+#if DEBUG
+	  printf("baud=%d, bits=%d, stopbits=%d\n",baud,bits,stopbits);
+#endif
+	}
+        free(mod);
+        if(modus=='I') strcpy(modus2,"r");
+        else if(modus=='O') strcpy(modus2,"w");
+        else if(modus=='U') strcpy(modus2,"r+");
+        else if(modus=='A') strcpy(modus2,"a+");
+        else error(21,""); /* bei Open nur erlaubt ...*/
+	break;
+      }
+      case 1: {number=get_number(w1); break; } 
+      case 2: { filename=s_parser(w1); break; } 
+      case 3: { port=(int)parser(w1);  break; } 	   
+      default: break;
+      }
+    }
+    i++;
+    e=wort_sep(w2,',',TRUE,w1,w2);
+  } 	    
+ 
   if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
   else if(number>99 || number<1) error(23,"");  /* File # falsch  */
   else {
-
-      
-      /* Hier koennte man Named Pipes einbauen .... */
-
-      /*  Sockets  */
-      if(special=='C') { /* Connect */
-        int sock;
+    /*  Sockets  */
+    if(special=='C') { /* Connect */
+      int sock;
 #ifndef WINDOWS
-	struct sockaddr_in servername;
+      struct sockaddr_in servername;
 	 
     /* printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
-        sock=socket(PF_INET, SOCK_STREAM,0);
-	if(sock<0) {
-	  io_error(errno,"socket");
+      sock=socket(PF_INET, SOCK_STREAM,0);
+      if(sock<0) {
+	io_error(errno,"socket");
+	dptr[number]=NULL;
+      } else {
+	if(init_sockaddr(&servername,filename,port)<0) {
+	  io_error(errno,"init_sockadr");
 	  dptr[number]=NULL;
-	} else {
-	  if(init_sockaddr(&servername,filename,port)<0) {
-	    io_error(errno,"init_sockadr");
+	} else { 
+	  if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) {
+            io_error(errno,"connect");
 	    dptr[number]=NULL;
-	  } else { 
-	    if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) {
-              io_error(errno,"connect");
-	      dptr[number]=NULL;
-	    } else {
-              dptr[number]=fdopen(sock,modus2);
-	    }
-	  }
+	  } else dptr[number]=fdopen(sock,modus2);
 	}
+      }
 #endif	
-      } else if(special=='S') { /* serve */
-        int sock;
-	#ifndef WINDOWS
+    } else if(special=='S') { /* serve */
+      int sock;
+#ifndef WINDOWS
    /*  printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
-        sock=make_socket(port);
-	if(sock<0) {
-	  io_error(errno,"make_socket");
+      sock=make_socket(port);
+      if(sock<0) {
+	io_error(errno,"make_socket");
+	dptr[number]=NULL;
+      } else {
+	if(listen(sock,1)<0) {
+	  io_error(errno,"listen");
+	  dptr[number]=NULL;
+	} else { 
+          dptr[number]=fdopen(sock,modus2);
+	}
+      }
+#endif
+    } else if(special=='A') { /* accept */
+      int sock,sock2;
+      size_t size;	
+#ifndef WINDOWS
+      struct sockaddr_in clientname;
+#ifdef DEBUG
+      printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+#endif
+      if(filenr[port]) {
+	sock=fileno(dptr[port]);
+	size=sizeof(clientname);
+	sock2=accept(sock,(struct sockaddr *) &clientname,&size);
+	if(sock2<0) {
+	  io_error(errno,"accept");
 	  dptr[number]=NULL;
 	} else {
-	  if(listen(sock,1)<0) {
-	    io_error(errno,"listen");
-	    dptr[number]=NULL;
-	  } else { 
-              dptr[number]=fdopen(sock,modus2);
-	  }
-	}
-	#endif
-      } else if(special=='A') { /* accept */
-        int sock,sock2;
-	size_t size;	
-#ifndef WINDOWS
-	struct sockaddr_in clientname;
-#ifdef DEBUG
-        printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
-#endif
-        if(filenr[port]) {
-	  sock=fileno(dptr[port]);
-	  size=sizeof(clientname);
-	  sock2=accept(sock,(struct sockaddr *) &clientname,&size);
-	  if(sock2<0) {
-	    io_error(errno,"accept");
-	    dptr[number]=NULL;
-	  } else {
 #ifdef DEBUG	   
-	    printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), 
+	  printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), 
 	      ntohs(clientname.sin_port),sock2);
 #endif
-            dptr[number]=fdopen(sock2,modus2);
-	  }
-	} else printf("Socket #d nicht geoeffnet.\n",port); 
+          dptr[number]=fdopen(sock2,modus2);
+	}
+      } else printf("Socket #d nicht geoeffnet.\n",port); 
 #endif
-      } else dptr[number]=fopen(filename,modus2);
-      if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
-      else  filenr[number]=1;
-      if(special=='X') {  /* Fuer Serielle Devices !  */
-        int fp=fileno(dptr[number]);
+    } else dptr[number]=fopen(filename,modus2);
+    if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
+    else  filenr[number]=1;
+    if(special=='X') {  /* Fuer Serielle Devices !  */
+      int fp=fileno(dptr[number]);
 #ifndef WINDOWS
-	struct termios ttyset;
-	if(isatty(fp)) {
-	  printf("Ist ein tty !\n");
-          /* Stream buffering ausschalten */
-	  setbuf(dptr[number],NULL);
-	  /* Nicht-Canoschen Mode setzen */    
-	  tcgetattr(fp,&ttyset);
-          ttyset.c_lflag &= ~(ICANON|ECHO);
-	  ttyset.c_cc[VMIN]=1;
-	  ttyset.c_cc[VTIME]=0;
-	
-          ttyset.c_cflag = (CBAUD|CSIZE|CREAD) & port;
-          ttyset.c_cflag |= CLOCAL;
-          ttyset.c_cflag |= CREAD;
-          ttyset.c_iflag = ttyset.c_oflag = ttyset.c_lflag = (unsigned short) 0;
-          ttyset.c_oflag = (ONLRET);
-          if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
-      } else printf("File ist kein TTY ! Einstellungen ignoriert !\n");
+      struct termios ttyset;
+      if(isatty(fp)) {
+        /* Stream buffering ausschalten */
+	setbuf(dptr[number],NULL);
+	/* Nicht-Canoschen Mode setzen */    
+	tcgetattr(fp,&ttyset);
+	ttyset.c_cc[VMIN]=1;
+	ttyset.c_cc[VTIME]=0;
+	if(!port) {
+/* CBAUD gibt es nicht in allen systemen ! */
+#ifdef CBAUD
+          port&=~CBAUD;      /* Bits loeschen !  */
+#else
+	  port=0;
+#endif
+	  if(baud==300) port|=B300;
+	  else if(baud==1200) port|=B1200;
+	  else if(baud==2400) port|=B2400;
+	  else if(baud==4800) port|=B4800;
+	  else if(baud==9600) port|=B9600;
+	  else if(baud==19200) port|=B19200;
+	  else if(baud==38400) port|=B38400;
+	  else if(baud==57600) port|=B57600;
+          else printf("Baud rate not supported !\n");
+   	  port&=~CSIZE;      /* Bits loeschen !  */
+          if(bits==7) port|=CS7;
+          else if(bits==8) port|=CS8;
+          else if(bits==6) port|=CS6;
+          else if(bits==5) port|=CS5;
+	  else printf("Bits not supported !\n");
+          if(stopbits==2) port|=CSTOPB;
+	}
+	#ifdef DEBUG
+	  printf("port =$%08x \n",port);
+	  printf("cflag=$%08x \n",ttyset.c_cflag);
+	  printf("iflag=$%08x \n",ttyset.c_iflag);
+	  printf("oflag=$%08x \n",ttyset.c_oflag);
+	  printf("lflag=$%08x \n",ttyset.c_lflag);
+	#endif
+#ifdef CBAUD
+	ttyset.c_cflag&=~(CBAUD|CSIZE);
+#else
+	ttyset.c_cflag = (unsigned short) 0;
+#endif	
+        ttyset.c_cflag |=  port | (CLOCAL|CREAD);
+        ttyset.c_iflag = IGNPAR;
+        ttyset.c_lflag &= ~(ICANON|ECHO);
+	ttyset.c_oflag = (unsigned short) 0;
+	#ifdef DEBUG
+	  printf("port =$%08x \n",port);
+	  printf("cflag=$%08x \n",ttyset.c_cflag);
+	  printf("iflag=$%08x \n",ttyset.c_iflag);
+	  printf("oflag=$%08x \n",ttyset.c_oflag);
+	  printf("lflag=$%08x \n",ttyset.c_lflag);
+	#endif
+        
+        if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
+      } else printf("No TTY: cannot set %s !\n");
   #endif
-
-  
-      }
+    }
   }
   free(filename);
 }
@@ -414,9 +490,13 @@ void c_link(PARAMETER *plist, int e) {
       if(dptr[number]==NULL) io_error(GetLastError(),"LINK");
       else  filenr[number]=2;
 #else
-      dptr[number]=dlopen(plist[1].pointer,RTLD_LAZY);
+#ifdef HAVE_DLOPEN
+      dptr[number]=(FILE *)dlopen((char *)plist[1].pointer,RTLD_LAZY);
       if(dptr[number]==NULL) io_error(errno,"LINK");
       else  filenr[number]=2;
+#else
+      error(9,"LINK"); /*Function or command %s not yet implemented*/
+#endif
 #endif
     } 
   }
@@ -472,15 +552,18 @@ const struct {int sf; char xf; } table[] = {
     { EWOULDBLOCK,  -41 }, /* 41: Operation would block */
     { ENOMSG,       -42 }, /* 42: No message of desired type*/
     { EIDRM,        -43 }, /* 43: Identifier removed*/
-
+#ifdef ELNRNG
     { ELNRNG,       -48 }, /* 48: Link number out of range*/
-
+#endif
+#ifdef EBADE 
     { EBADE,        -52 }, /* 52: Invalid exchange*/
-
+#endif
+#ifdef EXFULL
     { EXFULL,       -54 }, /* 54: Exchange full*/
-
+#endif
+#ifdef ENOSTR
     { ENOSTR,       -60 }, /* 60: Device not a stream */
-    
+#endif  
     { ENOTSOCK,     -88 }, /* 88: Socket operation on non-socket */
 
     { EOPNOTSUPP,   -95 }, /* 95: Operation not supported on transport endpoint */
@@ -531,17 +614,19 @@ void c_close(char *w) {
       if(FreeLibrary(dptr[i])==0) io_error(GetLastError(),"UNLINK");
       else filenr[i]=0;
 #else
-      if(dlclose(dptr[i])==EOF) io_error(errno,"UNLINK");
+#ifdef HAVE_DLOPEN
+     if(dlclose(dptr[i])==EOF) io_error(errno,"UNLINK");
       else filenr[i]=0;
+#endif
 #endif
     }
     else error(24,w); /* File nicht geoeffnet...*/
   } else {
     for(i=0;i<ANZFILENR;i++) {
-	if(filenr[i]==1) {
-          if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
-	  else filenr[i]=0;
-        }
+      if(filenr[i]==1) {
+        if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
+        else filenr[i]=0;
+      }
     }
   }
 }
@@ -654,9 +739,8 @@ void c_unget(char *n) {
   int i,e=wort_sep(n,',',TRUE,v,w);
   FILE *fff=stdin;
   if(e>1) {
-    i=get_number(v);
-    if(filenr[i]) fff=dptr[i];      
-    else {error(24,v);return;} /* File nicht geoeffnet */
+    fff=get_fileptr(get_number(v));
+    if(fff==NULL) {error(24,v);return;} /* File nicht geoeffnet */
     i=(int)parser(w);
   } else if(e==1) i=(int)parser(v);
   else {error(32,"PUTBACK");return;} /* Syntax error */
@@ -702,14 +786,12 @@ void c_relseek(char *n) {
     } else error(24,""); /* File nicht geoeffnet */
   } else error(32,"RELSEEK"); /* Syntax error */
 }
+
 int inp8(char *n) {
   int fp,i=get_number(n);
   char ergebnis;
-  FILE *fff;
-  if(i==-2) fff=stdin;  
-  else if(filenr[i]) fff=dptr[i];
-  else {error(24,"");return(-1);} /* File nicht geoeffnet */
-  
+  FILE *fff=get_fileptr(i);
+  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
   fread(&ergebnis,1,1,fff);
   return((int)ergebnis);
 }
@@ -733,26 +815,18 @@ int inpf(char *n) {
 int inp16(char *n) {
   int i=get_number(n);
   short ergebnis;
-  FILE *fff=stdin;
-
-  if(filenr[i]) {
-    fff=dptr[i];
-    fread(&ergebnis,sizeof(short),1,fff);
-    return((int)ergebnis);
-  } else error(24,""); /* File nicht geoeffnet */
-  return(-1);
+  FILE *fff=get_fileptr(i);
+  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+  fread(&ergebnis,sizeof(short),1,fff);
+  return((int)ergebnis);
 }
 int inp32(char *n) {
   int i=get_number(n);
   unsigned int ergebnis;
-  FILE *fff=stdin;
-
-  if(filenr[i]) {
-    fff=dptr[i];
-    fread(&ergebnis,sizeof(long),1,fff);
-    return(ergebnis);
-  } else error(24,""); /* File nicht geoeffnet */
-  return(-1);
+  FILE *fff=get_fileptr(i);
+  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+  fread(&ergebnis,sizeof(long),1,fff);
+  return(ergebnis);
 }
 
 /* Terminal-Einstellungen. Wichtig fuer die Zeichenweise eingabe */
@@ -792,23 +866,6 @@ void reset_input_mode() {
 
 /* Dynamisches Linken von Shared-Object-Files */
 
-#if 0
-void *dyn_symbol(void *handle,char *name){
-  char *error;
-  char *cosine;
-#ifdef WINDOWS
-  cosine=(char *)(int)GetProcAddress(handle,name);
-  if((int)cosine==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
-#else
-  cosine=dlsym(handle, name);
-  if ((error = dlerror()) != NULL)  {
-    printf("ERROR: %s\n",error);
-    return(NULL);
-  }
-#endif
-  return(cosine);
-}
-#endif
 int f_symadr(char *n) { 
   char v[strlen(n)+1],w[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,v,w);
@@ -818,14 +875,18 @@ int f_symadr(char *n) {
     
     if(filenr[i]==2) {
       char *sym=s_parser(w);
-      char *error;
+      char *derror;
       #ifdef WINDOWS
-        adr = (int)GetProcAddress(dptr[i],sym);
+      adr = (int)GetProcAddress(dptr[i],sym);
       if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
-    
       #else
+      #ifdef HAVE_DLOPEN
       adr = (int)dlsym(dptr[i],sym);
-      if ((error = dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",error);
+      if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
+      #else
+      adr=-1;
+      error(9,"SYM_ADR"); /*Function or command %s not implemented*/
+      #endif
       #endif
       free(sym);
     } else error(24,v); /* File nicht geoeffnet */
@@ -851,10 +912,9 @@ void c_out(char *n) {
     int i=get_number(v);
     int typ,vnr,j,a=1;
     char *r;
-    FILE *fff=stdin;
+    FILE *fff=get_fileptr(i);
 
-    if(filenr[i]) {
-      fff=dptr[i];
+    if(fff!=NULL) {
       e=wort_sep(w,',',TRUE,v,w);
       while(e) {
         typ=type2(v);
@@ -902,15 +962,15 @@ void c_out(char *n) {
 int kbhit() {
 
   fd_set set;
-/*  
+
 #ifdef TIMEVAL_WORKAROUND
   struct {
                int  tv_sec; 
                int  tv_usec;   
        } tv;
-#else */
+#else 
     struct timeval tv;
-/*#endif*/
+#endif
    /* memset(&tv, 0, sizeof(tv));  */   
     tv.tv_sec=0; tv.tv_usec=0;
     FD_ZERO(&set);
@@ -948,14 +1008,38 @@ STRING print_arg(char *ausdruck) {
     if(strncmp(a1,"AT(",3)==0) {
       a1[strlen(a1)-1]=0;
       wort_sep(a1+3,',',TRUE,w3,w4);
-      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+16);
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+11);
       sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3d;%.3dH",(int)parser(w3),(int)parser(w4));
-      ergebnis.len+=16;
+      ergebnis.len+=10;
     } else if(strncmp(a1,"TAB(",4)==0) {
       a1[strlen(a1)-1]=0;
-      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+8);
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+7);
       sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3dC",(int)parser(a1+4));
-      ergebnis.len+=8;
+      ergebnis.len+=6;
+    } else if(strncmp(a1,"SPC(",4)==0) {
+      int i,j;
+      a1[strlen(a1)-1]=0;
+      i=(int)parser(a1+4);
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+i);
+      for(j=ergebnis.len;j<ergebnis.len+i;j++) ergebnis.pointer[j]=' ';
+      ergebnis.len+=i;
+    } else if(strncmp(a1,"COLOR(",6)==0) {
+      int i;
+      a1[strlen(a1)-1]=0;
+      i=wort_sep(a1+6,',',TRUE,w3,w4);
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+15);
+      ergebnis.pointer[ergebnis.len++]='\033';
+      ergebnis.pointer[ergebnis.len++]='[';      
+      sprintf(ergebnis.pointer+ergebnis.len,"%.3d",(int)parser(w3));
+      ergebnis.len+=3;
+      i=wort_sep(w4,',',TRUE,w3,w4);
+      while(i) {
+        ergebnis.pointer[ergebnis.len++]=';';
+        sprintf(ergebnis.pointer+ergebnis.len,"%.3d",(int)parser(w3));
+        ergebnis.len+=3;
+        i=wort_sep(w4,',',TRUE,w3,w4);
+      }
+      ergebnis.pointer[ergebnis.len++]='m';      
     } else {
       if(strlen(a1)) {    
         int typ,ee;
@@ -1055,3 +1139,20 @@ STRING do_using(double num,STRING format){
   return(dest);
 }
 
+/* Sound the speaker */
+void speaker(int frequency) {
+  int tone;
+  int fd=1;
+  if(frequency>0) tone=1190000/frequency;
+  else tone=0;
+#ifndef WINDOWS
+  if (strncmp(getenv("TERM"), "xterm", 5) == 0) {
+  fd = open("/dev/console", O_WRONLY);
+  if (fd < 0) {fd = 1; io_error(errno,"/dev/console");}
+ }
+#ifdef KIOCSOUND
+  ioctl(fd,KIOCSOUND,tone);
+#endif
+  if (fd>2) close(fd); /* console */
+#endif
+}

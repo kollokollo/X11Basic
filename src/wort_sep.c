@@ -37,29 +37,28 @@
 #include <string.h>
   
 int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
-  int f=0, klam=0, i=0, j=0;
+  int f=0, klam=0;
 
-  if(strlen(t)==0) {
-     w1[0]=0;
-     w2[0]=0;
-    return(0);
+  /* klamb=0 : keine Klammern werden beruecksichtigt
+     klamb=1 : normale Klammern werden beruecksichtigt
+     klamb=2 : eckige Klammern werden beruecksichtigt
+     klamb=4 : geschweifte Klammern werden beruecksichtigt
+  */
+
+  if(!(*t)) return(*w1=*w2=0);
+
+  while(*t && (*t!=c || f || klam>0)) {
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    *w1++=*t++;
   }
-
-  while(t[i]!=0 && (t[i]!=c || f || klam>0)) {
-    if(t[i]=='"') f=!f;
-    else if(t[i]=='(' && klamb && !f) klam++;
-    else if(t[i]==')' && klamb && !f) klam--;
-    w1[j++]=t[i++];
-  }
-
-
-  if(t[i]==0) {
-    w2[0]=0;
-    w1[j]=0;
+  if(!(*t)) {
+    *w2=*w1=0;
     return(1);
   } else {
-    w1[j]=0;
-    strcpy(w2,t+i+1);
+    *w1=0;
+    strcpy(w2,++t);
     return(2);
   }
 }
@@ -70,33 +69,33 @@ int is_operator(char c) {
 }
 
 int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2)    {
-  int f=0, klam=0, i=0, j=0,skip=0,zahl=0;
+  int f=0, klam=0,i=0,skip=0,zahl=0;
 
-  if(strlen(t)==0) { w1[0]=w2[0]=0;  return(0); }
+  if(!(*t)) return(w1[0]=w2[0]=0); 
 #if 0
   printf("wsep: <%s>\n",t);
   printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
 #endif
-  while(t[i]!=0 && (t[i]!=c || f || klam>0 || skip)) {
+  while(*t && (*t!=c || f || klam>0 || skip)) {
     skip=0;
-    if(t[i]=='"') f=!f;
-    else if(t[i]=='(' && klamb && !f) klam++;
-    else if(t[i]==')' && klamb && !f) klam--;
-    else if(t[i]=='E' && klam==0 && !f && zahl) skip=1;
-    if(i==0 || is_operator(t[i-1])) zahl=1;
-    zahl=(!(strchr("-.1234567890",t[i])==NULL) && zahl); 
-    w1[j++]=t[i++];
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    else if(*t=='E' && klam==0 && !f && zahl) skip=1;
+    if(i==0 || is_operator(*(t-1))) zahl=1;
+    zahl=(!(strchr("-.1234567890",*t)==NULL) && zahl); 
+    *w1++=*t++;
+    i++;
 #if 0
     printf("i=%d t[i]=%d zahl=%d, skip=%d\n",i,t[i],zahl,skip); 
 #endif
   }
-  if(t[i]==0) {
-    w2[0]=0;
-    w1[j]=0;
+  if(!*t) {
+    *w2=*w1=0;
     return(1);
   } else {
-    w1[j]=0;
-    strcpy(w2,t+i+1);
+    *w1=0;
+    strcpy(w2,t+1);
     return(2);
   }
 }
@@ -105,7 +104,7 @@ int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0,j,zahl=0;
   
-  if(strlen(t)==0) {w1[0]=w2[0]=0; return(0);}
+  if(*t==0)  return(w1[0]=w2[0]=0);
 
   i=strlen(t)-1;
 #if 0
@@ -115,8 +114,8 @@ int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
   while(i>=0) {
     if(t[i]!=c || f || klam<0) {
       if(t[i]=='"') f=!f;
-      else if(t[i]=='(' && klamb && !f) klam++;
-      else if(t[i]==')' && klamb && !f) klam--;
+    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
       if(i==strlen(t)-1 || is_operator(t[i+1])) zahl=1;
       zahl=(!(strchr("1234567890",t[i])==NULL) && zahl); 
     } else {
@@ -134,7 +133,7 @@ int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
 #endif
   }
   strcpy(w1,t);
-  if(i<0) {w2[0]=0;return(1);}
+  if(i<0) {*w2=0;return(1);}
   else {w1[i]=0;strcpy(w2,t+i+1);return(2);}
 }
 
@@ -142,23 +141,20 @@ int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0, j=0;
   
-  if(strlen(t)==0) {
-     w1[0]=w2[0]=0;
-    return(0);
-  }
-
+  if(!*t) return(*w1=*w2=0);
+ 
   i=strlen(t)-1;
 
   while(i>=0 && (t[i]!=c || f || klam<0)) {
     if(t[i]=='"') f=!f;
-    else if(t[i]=='(' && klamb && !f) klam++;
-    else if(t[i]==')' && klamb && !f) klam--;
+    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
     i--;
   }
 
   strcpy(w1,t);
   if(i<0) {
-    w2[0]=0;
+    *w2=0;
     return(1);
   } else {
     w1[i]=0;
@@ -174,25 +170,22 @@ int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, i=0, j=0;
 
 
-  if(strlen(t)==0) {   /* hier gibts nix zu trennen */
-     w1[0]=0;
-     w2[0]=0;
-    return(0);
-  } else if(strlen(t)<=strlen(c)) {
-    strcpy(w1,t);w2[0]=0;
+  if(!*t) return(*w1=*w2=0);   /* hier gibts nix zu trennen */
+  else if(strlen(t)<=strlen(c)) {
+    strcpy(w1,t);*w2=0;
     return(1);
   }
   for(;;) {
 /* suche erstes Vorkommen von c */
-    while(t[i]!=0 && (t[i]!=c[0] || f || klam>0)) {
+    while(t[i] && (t[i]!=c[0] || f || klam>0)) {
       if(t[i]=='"') f=!f;
-      else if(t[i]=='(' && klamb && !f) klam++;
-      else if(t[i]==')' && klamb && !f) klam--;
+    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
       w1[j++]=t[i++];
     }
 
     if(t[i]==0) { /* schon am ende ? */
-      w2[0]=0;
+      *w2=0;
       w1[j]=0;
       return(1);
     } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */
@@ -218,11 +211,8 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, j=0;
 
 
-  if(strlen(t)==0) {   /* hier gibts nix zu trennen */
-     w1[0]=0;
-     w2[0]=0;
-    return(0);
-  } else if(strlen(t)<=strlen(c)) {
+  if(!*t)  return(*w1=*w2=0);  /* hier gibts nix zu trennen */
+  else if(strlen(t)<=strlen(c)) {
     strcpy(w1,t);w2[0]=0;
     return(1);
   }
@@ -231,14 +221,14 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 /* suche erstes Vorkommen von c */
     while(i>=0 && (t[i]!=c[strlen(c)-1] || f || klam<0)) {
       if(t[i]=='"') f=!f;
-      else if(t[i]=='(' && klamb && !f) klam++;
-      else if(t[i]==')' && klamb && !f) klam--;
-      i--;
+    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+    i--;
     }
     
     if(i<0) { /* schon am ende ? */
       strcpy(w1,t);
-      w2[0]=0;
+      *w2=0;
       return(1);
     } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */
     
@@ -260,25 +250,18 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 
 int arg2(char *t,int klamb ,char *w1, char *w2)    {
-
   int f=0, klam=0, i=0, j=0,ergeb;
 
-  /*printf("A2 <%s> \n",t);*/
-  if(strlen(t)==0) {
-     w1[0]=0;
-     w2[0]=0;
-    return(0);
-  }
-
-  while(t[i]!=0 && ((t[i]!=';' && t[i]!=','&& t[i]!='\'') || f || klam!=0)) {
+  if(!*t) return(*w1=*w2=0);
+  while(t[i] && ((t[i]!=';' && t[i]!=','&& t[i]!='\'') || f || klam!=0)) {
     if(t[i]=='"') f=!f;
-    else if(t[i]=='(' && klamb && !f) klam++;
-    else if(t[i]==')' && klamb && !f) klam--;
+    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
     w1[j++]=t[i++];
   }
 
-  if(t[i]==0) {
-    w2[0]=0;
+  if(!t[i]) {
+    *w2=0;
     w1[j]=0;
     return(1);
   } else {
@@ -293,9 +276,8 @@ int arg2(char *t,int klamb ,char *w1, char *w2)    {
 }
 
 char *searchchr(char *buf, char c) {
- 
  int f=0;
-  while(*buf!=0) {
+  while(*buf) {
     if(*buf=='"') f= !f;
     if(*buf==c && !f) return(buf);
     buf++;
@@ -319,8 +301,8 @@ char *rsearchchr(char *buf, char c) {
  
  pos=buf+strlen(buf)-1;
   while(pos>=buf) {
-    if(pos[0]=='"') f= !f;
-    if(pos[0]==c && !f) return(pos);
+    if(*pos=='"') f= !f;
+    if(*pos==c && !f) return(pos);
     pos--;
   }
   return(NULL);
@@ -328,8 +310,8 @@ char *rsearchchr(char *buf, char c) {
 
 char *rsearchchr2(char *start,char c,char *end) {
   int f=0;
-  while((start[0]!=c || f) && start>=end) {
-    if(start[0]=='\"') f= !f;
+  while((*start!=c || f) && start>=end) {
+    if(*start=='\"') f= !f;
     start--;
   }
   return(start);
@@ -375,16 +357,15 @@ char *rmemmem(char *s1,int len1,char *s2,int len2) {
  */
  
 void xtrim(char *t,int f, char *w ) {
-  register int a=0,i=0,j=0,u=0,b=0;
+  register int a=0,u=0,b=0;
 
-  while(t[i]!=0) {
-    while(t[i]!=0 && ( !isspace(t[i]) || a)) {
-      if(t[i]=='"') a=!a;
-      u=1; if(b==1) {w[j++]=' '; b=0;}
-      if(f && !a) w[j++]=toupper(t[i++]); else w[j++]=t[i++];
+  while(*t) {
+    while(*t && (!isspace(*t) || a)) {
+      if(*t=='"') a=!a;
+      u=1; if(b==1) {*w++=' '; b=0;}
+      if(f && !a) *w++=toupper(*t++); else *w++=*t++;
     }
-    if(u && !b) { b=1;}
-    if(t[i]!=0) i++;
-  }
-  w[j]=0;
+    if(u && !b) b=1;
+    if(*t) t++;
+  } *w=0;
 }

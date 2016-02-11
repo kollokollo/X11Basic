@@ -56,15 +56,18 @@
   rc.top=b; \
   rc.right=a+c; \
   rc.bottom=b+d; \
-  FrameRect(bitcon[usewindow],&rc,pen[usewindow]); \
+  FrameRect(bitcon[usewindow],&rc,brush[usewindow]); \
 }
 #define DrawLine(a,b,c,d);  {  MoveToEx(bitcon[usewindow],a,b,NULL); \
   LineTo(bitcon[usewindow],c,d); \
 }
 #define CopyArea(a,b,c,d,e,f) BitBlt(bitcon[usewindow],e,f,c,d,bitcon[usewindow],a,b,SRCCOPY)
 #define DrawString(a,b,c,d) TextOut(bitcon[usewindow],a,(b-baseline),c,d)
-
+#define SetFillRule(c)   ; 
+#define SetFillStyle(c)  ;
 #else
+#define SetFillRule(c)   XSetFillRule(display[usewindow], gc[usewindow],c)
+#define SetFillStyle(c)  XSetFillStyle(display[usewindow], gc[usewindow],c)
 #define SetForeground(c) XSetForeground(display[usewindow],gc[usewindow],c)
 #define SetBackground(c) XSetBackground(display[usewindow],gc[usewindow],c)
 #define FillRectangle(a,b,c,d) XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d) 
@@ -98,11 +101,11 @@ int winbesetzt[MAXWINDOWS];
 /* Event-Typen  */
 #define Expose 1
 #define ButtonPress 2
-#define ButtonRelease 3
-#define KeyPress 4
-#define KeyRelease 5
-#define KeyChar 6
-#define MotionNotify 7
+#define ButtonRelease 4
+#define KeyPress 8
+#define KeyRelease 16
+#define KeyChar 32
+#define MotionNotify 64
 
 extern HINSTANCE hInstance;
 HDC bitcon[MAXWINDOWS];
@@ -133,6 +136,8 @@ char iname[MAXWINDOWS][80];
 extern int menuflags[];
 extern char *menuentry[];
 extern char *menutitle[];
+extern int menutitleslen[];
+extern int menuentryslen[];
 extern int menutitlesp[];
 extern int menutitlelen[];
 extern int menutitleflag[];
@@ -209,8 +214,8 @@ typedef struct objc_colorword {
 #define NOTS_OR_D 13
 #define ALL_BLACK 15
 						/* font types		*/
-#define IBM 3
-#define SMALL 5
+#define FONT_IBM 3
+#define FONT_SMALL 5
 
 /* Object Drawing Types */
 						/* Graphic types of obs	*/
