@@ -14,6 +14,7 @@
 #define NOTYP          0
 #define INTTYP         1
 #define FLOATTYP       2
+#define BOOLTYP        3
 #define STRINGTYP      4
 #define INDIRECTTYP    8
 #define ARRAYTYP       16

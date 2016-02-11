@@ -1,3 +1,7 @@
 Release notes for Version 1.13 (Feb 2006)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - fixed bug in INPUT$()
+- woked in the TINE implementation (TINELISTEN, TINEBROADCAST)
+- new MKA$(), CVA()
+- fixed bug in PAUSE/DELAY
+- implemented ioctl() function

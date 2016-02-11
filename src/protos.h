@@ -46,15 +46,15 @@ STRING f_lineinputs(char *);
 int f_freefile();
 STRING vs_error();
 char *float_to_string(char *);
-char *hexoct_to_string(char,char *);
+STRING hexoct_to_string(char,PARAMETER *,int);
 char *bin_to_string(char *);
 void set_input_mode(int,int);
 void set_input_mode_echo(int);
 void reset_input_mode();
 char *terminalname();
-int inp8(char *),inpf(char *),inp16(char *),inp32(char *);
-int type2(char *),do_wort_sep(char *),inp16(char *),inp32(char *);
-
+int inp8(PARAMETER *,int),inpf(PARAMETER *,int),inp16(PARAMETER *,int),inp32(PARAMETER *,int);
+int type2(char *),do_wort_sep(char *);
+int kbhit();
 
 /* parser */
 
@@ -65,6 +65,8 @@ char *s_parser(char *);
 STRING string_parser(char *);
 ARRAY array_parser(char *);
 ARRAY array_const(char *);
+ARRAY string_to_array(STRING);
+STRING array_to_string(ARRAY);
 
 int buchstabe(char);
 
@@ -82,6 +84,7 @@ STRING do_sfunktion(char *,char *);
 
 ARRAY array_info(int);
 void array_zuweis_and_free(char *, ARRAY);
+void string_zuweis_by_vnr(int, STRING);
 void c_dolocal(char *, char *);
 void xzuweis(char *, char *);
 int xzuweissbuf(char *, char *,int);
@@ -146,8 +149,11 @@ void c_cssetcallback(char *);
 void sweep_value(int,float,float,float,int);
 #endif
 #ifdef TINE
+void c_tinebroadcast(char *);
+void c_tinelisten(char *);
+void c_tinedeliver(char *);
 void c_tineexport(char *);
-void c_tinemonitor(char *);
+void c_tinemonitor(PARAMETER *,int);
 void c_tineserver(PARAMETER *,int);
 void c_tinecycle(char *);
 void c_tineput(char *);

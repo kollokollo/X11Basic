@@ -1231,11 +1231,11 @@ void c_inc(PARAMETER *plist,int e) {
     if(plist[0].integer&FLOATTYP) 
       *((double *)plist[0].pointer)=*((double *)plist[0].pointer)+1;
     else if(plist[0].integer&INTTYP)
-#ifdef __hpux
-      *((int *)plist[0].pointer)=*((int *)plist[0].pointer)+1; 
-#else
-      *((int *)plist[0].pointer)++;
-#endif
+//#ifdef __hpux
+//      *((int *)plist[0].pointer)=*((int *)plist[0].pointer)+1; 
+//#else
+      (*((int *)plist[0].pointer))++;
+//#endif
   }
 }
 
@@ -1244,11 +1244,11 @@ void c_dec(PARAMETER *plist,int e) {
     if(plist[0].integer&FLOATTYP) 
       *((double *)plist[0].pointer)=*((double *)plist[0].pointer)-1;
     else if(plist[0].integer&INTTYP) 
- #ifdef __hpux
-    *((int *)plist[0].pointer)=*((int *)plist[0].pointer)-1;
- #else
-    *((int *)plist[0].pointer)--;
- #endif
+// #ifdef __hpux
+//    *((int *)plist[0].pointer)=*((int *)plist[0].pointer)-1;
+// #else
+    (*((int *)plist[0].pointer))--;
+// #endif
   }
 }
 void c_cls(char *n) { 
@@ -1286,7 +1286,7 @@ void c_home(char *n) {
   puts("\033[H");
 #endif
 }
-void c_version(char *n) { printf("X11-BASIC Version: %s vom %s \n",version,vdate);}
+void c_version(char *n) { printf("X11-BASIC Version: %s %s\n",version,vdate);}
 
 #ifndef WINDOWS
 #include <fnmatch.h>
@@ -1394,15 +1394,15 @@ void c_detatch(char *w) {
 void c_shm_free(PARAMETER *plist,int e) {
   shm_free((char *)plist[0].integer);
 }
-void c_pause(char *w) {
+void c_pause(PARAMETER *plist,int e) {
 #ifdef WINDOWS
-  sleep((int)(1000*parser(w)));
+  sleep((int)(1000*plist[0].real));
 #else
-  int dummy,i=0;
-  dummy=(int)(1000000*parser(w));
-  while(dummy>=1000000) {i++;dummy-=1000000;}
+  double zeit=plist[0].real;
+  int i=(int)zeit;
   if(i) sleep(i);
-  if(dummy>0) usleep(dummy);
+  zeit=zeit-(double)i;
+  if(zeit>0) usleep((int)(1000000*zeit));
 #endif
 }
 

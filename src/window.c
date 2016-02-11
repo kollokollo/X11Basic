@@ -2484,7 +2484,7 @@ int compare_dirs(FINFO *a,FINFO *b) {
 }
 
 void sort_dir(FINFO *fileinfos,int anz) {
-  qsort((void *)fileinfos,anz,sizeof(FINFO),compare_dirs);
+  qsort((void *)fileinfos,anz,sizeof(FINFO),(int(*)(const void *,const void*))compare_dirs);
 }
 #define MAXANZFILES 512
 int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {

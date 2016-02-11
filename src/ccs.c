@@ -79,6 +79,7 @@ void cs_exit() {
 #ifdef CT
 int notify_handler(int pid, int overflow, int entries) {
   int i,pc2,flag=0;
+  printf("ent=%d\n",entries);
   for(i=0;i<pidanz;i++) {
     if(pids[i]==pid) {
       int oldbatch,osp=sp;
@@ -606,48 +607,77 @@ void sweep_value( int pid, float lastvalue, float v, float dt, int steps ) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Mit DESY-Kontrollsystem */
 
 #ifdef TINE
 #ifdef WINDOWS
-#include "rpctypes.h"
-#define RPCERR_SIZE 32
-extern char RPCLastErrorString[RPCERR_SIZE];
-extern unsigned short MaxPollingRate;
-extern int defaultClientTimeout;
-#define defaultClientTimeoutMsec defaultClientTimeout
+  #include "rpctypes.h"
+  #define RPCERR_SIZE 32
+  extern char RPCLastErrorString[RPCERR_SIZE];
+  extern unsigned short MaxPollingRate;
+  extern int defaultClientTimeout;
+  #define defaultClientTimeoutMsec defaultClientTimeout
+  #include "servdef.h"
 #else
-#include "prolog.h"
-#include "errors.h"
-#include "rpctypes.h"
-#include "toolkit.h"
+  #include "tine/prolog.h"
+  #include "tine/errors.h"
+  #include "tine/rpctypes.h"
+  #include "tine/toolkit.h"
+  #include "tine/servdef.h"
 #endif
-#include "servdef.h"
 
 extern int nofeclog;
 extern int ListenForGlobals;
 extern int ListenForMCasts;
+extern int NGdebug;
 
-void tmonitorCallback(int id,int cc) {
-  int i;
-#ifdef DEBUG
-  printf("Callback id=%d rc=%d!\n",id,cc);
-#endif
-  notify_handler(id,0,cc);
-  if (cc) printf("error: %s\n>",RPCLastErrorString);
-}
 
 /* Verhindert, dass Logfile angelegt wird und bestimmt die Geschwindigkeit der
    Abfragen */
 
 void fix_tine_start() {
-    MaxNumConnections = 3;
-    ListenForGlobals = ListenForMCasts = FALSE;
+   /*    MaxNumConnections = 3;  */
+  /*  ListenForGlobals = ListenForMCasts = FALSE; */
     /* MaxPollingRate = MinPollingRate = 200; */
     MaxPollingRate = MinPollingRate = 50;
-    nofeclog = TRUE;
+   /* nofeclog = TRUE; */
     defaultClientTimeout=100;
+    NGdebug=2;
 }
+extern void closeClients(void);
+
+void tine_init() {
+  static int flag=0;
+  if(flag) return;
+  fix_tine_start();
+ 
+  initClient();
+  atexit(closeClients);
+  flag=1;
+}
+
+
+
+void tmonitorCallback(int id,int cc) {
+  if (cc) printf("Callback id=%d : TRC error %d : %s\n",id,cc,GetRPCLastError(cc));
+  else notify_handler(id,0,GetCompletionDataSizeFromCallbackId(id));
+}
+
 int my_ExecLinkEx(char *dev, char *prop, DTYPE *dout, DTYPE *din,short access,int buflen) {
   int rc,retry=0;
   fix_tine_start();
@@ -670,7 +700,7 @@ int GetPropertyInformation(char *srv,char *prp,PropertyQueryStruct *srvProps){
   dout.dFormat = CF_STRUCT;
   dout.dArrayLength = PROPERTYQUERYSTRUCT_SIZE;
   dout.data.vptr = srvProps;
-  if((cc=my_ExecLinkEx(srv,"PROPS",&dout,&din,CA_READ,200))!=0) return cc;
+  if((cc=my_ExecLinkEx(srv,"PROPS",&dout,&din,CA_READ|CA_RETRY,500))!=0) return cc;
   srvProps->prpSize=ISWAP(srvProps->prpSize);
   return 0;
 }
@@ -1140,58 +1170,45 @@ ARRAY tinehistory(char *n,int start, int stop) {
   return(ergebnis);
 }
 
-void c_tinemonitor(char *n) {
-  int i,flag,newpid,pc2;
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2);
+/* tinemonitor "sender[PROP]",callback,interval */
+
+void c_tinemonitor(PARAMETER *plist, int e) {
   static PropertyQueryStruct prpinfo;
-  if(e<2) {
-    printf("Syntax-Error bei TINEMONITOR. <%s>\n",n);
-  } else {
-    char dev[strlen(w1)+1],prop[strlen(w1)+1];
-    char *test=s_parser(w1);
-    int rc=convert_name_convention(test,dev,prop);
-    char *buf;
-    int buflen;
-    if(rc) printf("Syntax-Error in Parameter-Name %s\n",test);
+  char dev[plist[0].integer+1],prop[plist[0].integer+1];
+  int rc=convert_name_convention(plist[0].pointer,dev,prop);
+  if(rc) printf("Syntax-Error in Parameter-Name %s\n",plist[0].pointer);
+  else {
+    tine_init();
+    printf("dev=<%s>, prop=<%s>\n",dev,prop);
+    ccs_err=GetPropertyInformation(dev,prop,&prpinfo);
+    if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
     else {
-
       DTYPE dout;
-      rc=GetPropertyInformation(dev,prop,&prpinfo);
-      ccs_err=rc;
-      if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
-      else {
-        pc2=procnr(w2,1);
-        if(pc2==-1)   error(19,w2); /* Procedure nicht gefunden */
-        else {
-
-        buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
-        buf=malloc(buflen);
-        dout.dFormat = LFMT(prpinfo.prpFormat);
-        dout.dArrayLength = prpinfo.prpSize;
-        dout.dTag[0] = 0;
-        dout.data.vptr = buf;
-        rc=AttachLink(dev,prop,&dout,NULL,CA_READ,buflen,tmonitorCallback,CM_POLL);
-        if(rc<0) {
-	  printf("Tine-Error AttachLink: %d  %s\n",-rc,erlst[-rc]);
-	  ccs_err=-rc;
-	  free(buf);
-        } else
-	  newpid=rc;
-	  if(pidanz<MAXPIDS) {
+      int newpid,buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
+      char *buf=malloc(buflen);
+      dout.dFormat = LFMT(prpinfo.prpFormat);
+      dout.dArrayLength = prpinfo.prpSize;
+      dout.dTag[0] = 0;
+      dout.data.vptr = buf; /* wird nirgendwo freigegeben */
+      newpid=AttachLink(dev,prop,&dout,NULL,CA_READ,100,tmonitorCallback,CM_REFRESH|CM_NETWORK);
+      if(newpid<0) {
+        ccs_err=-newpid;
+	printf("Tine-Error AttachLink: %d  %s\n",ccs_err,erlst[ccs_err]);
+	free(buf);
+      } else {
+	if(pidanz<MAXPIDS) {
+          int i,flag;
             flag=-1;
             for(i=0;i<pidanz;i++) {
               if(pids[i]==newpid) flag=i;
             }
             if(flag==-1) {
               pids[pidanz]=newpid;
-              isubs[pidanz++]=pc2;
-            } else isubs[flag]=pc2;
-          } else printf("Zu viele Callbacks. max. <%d>\n",MAXPIDS);
-        }
+              isubs[pidanz++]=plist[1].integer;
+            } else isubs[flag]=plist[1].integer;
+        } else printf("Zu viele Callbacks. max. <%d>\n",MAXPIDS);
       }
     }
-    free(test);
   }
 }
 
@@ -1357,16 +1374,18 @@ void c_tineput(char *w) {
 char tine_eqn[32]="X11BASIC";
 int tineexportvars[100];
 int anztineexportvars=0;
+
 int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, short access) {
   int devicenumber=0,vnr=-1,typ,etyp,len;
   char *r;
   if(devName[0] == '#') devicenumber=atoi(&devName[1]);
   else devicenumber=GetDeviceNumber(tine_eqn,devName);
-  printf("Got request for %s \n",Property);
   typ=vartype(Property);
   r=varrumpf(Property);
   vnr=variable_exist(r,typ);
   free(r);
+  printf("Got request for %s ",Property);
+  printf("VNR=%d ",vnr);
   if(vnr==-1) return illegal_property;
   else {
     len=do_dimension(vnr);
@@ -1375,42 +1394,173 @@ int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, s
     else if(typ & FLOATTYP) etyp=CF_DOUBLE;
 
     if(access&CA_WRITE) {
+      printf("write access: \n");
       if(din->dFormat!=etyp) return illegal_format;
       if(din->dArrayLength > len) return dimension_error;
-    if(typ & ARRAYTYP) ;
-    else if(typ & STRINGTYP) ;
-    else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0];
-    else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
+      if(typ & ARRAYTYP) ;
+      else if(typ & STRINGTYP) {
+        STRING a;
+	a.pointer=din->data.vptr;
+	a.len=din->dArrayLength;  /* wirklich ??? */
+	string_zuweis_by_vnr(vnr,a);	
+      }
+      else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0];
+      else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
 
     } else if(access&CA_READ) {
+        printf("read access: Format=%d ALEN=%d\n",dout->dFormat,dout->dArrayLength);
+  
       if(dout->dFormat!=etyp) return illegal_format;
       if(dout->dArrayLength < len) return dimension_error;
-     if(typ & ARRAYTYP) ;
-    else if(typ & STRINGTYP) ;
-    else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode;
-    else if(typ & FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
+      if(typ & ARRAYTYP) ;
+      else if(typ & STRINGTYP) {
+      
+        dout->data.vptr=variablen[vnr].pointer;
+	dout->dArrayLength=variablen[vnr].opcode;
+      } else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode;
+      else if(typ & FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
 
     }
     return(0);
   }
 }
+#define MY_TINE_TCP_PORT        41
 void c_tineserver(PARAMETER *plist, int e) {
-  int i,cc;
+  int i,cc,port_offset=MY_TINE_TCP_PORT;
   if(e>0) strncpy(tine_eqn,plist[0].pointer,31);
-  /* init RPC server: */
-  if((cc=SystemInit(FALSE))!=0) {
-	printf("SystemInit error: %s\n",erlst[cc]);
-  } else {
-    if((i=RegisterFecNameEx(tine_eqn,"X11-Basic appication","UNIX","Geb.30","X11Basic","M. Hoffmann",0,"DEFAULT"))!=0)
-      printf("Register FecName %s error: %d ",tine_eqn,i);
+  if(e>1) port_offset=plist[0].integer;
+  if((i=RegisterFecNameEx(tine_eqn,tine_eqn,
+      "UNIX","Geb.24","X11Basic","M. Hoffmann",port_offset,"DEFAULT"))!=0)
+      printf("Register FecName %s error: %d %s\n",tine_eqn,i,erlst[i]);
+  else {
+    /* init RPC server: */
+    fix_tine_start();
+    if((cc=SystemInit(FALSE))!=0) printf("SystemInit error: %s\n",erlst[cc]);
     else RegisterEquipmentModule(tine_eqn,tine_eqn,1,tineserver_callback,NULL,NULL,1000,NULL);
+  }
+}
+void completion_callback(int id,int cc) {  
+  #ifdef DEBUG
+    printf("Completion Callback id=%d rc=%d!\n",id,cc);
+  #endif
+  if (cc) {
+    printf("TRC error : %s\n",GetRPCLastError(cc));
+    return;
+  }
+}
+void c_tinebroadcast(char *n) {
+  char v[strlen(n)+1],w[strlen(n)+1],*r;
+  int p,typ,vnr,rc;
+  double tolerance=0;
+  int minPeriod=-1,maxPeriod=-1;
+  DTYPE din;
+  strcpy(v,n);
+  p=wort_sep(v,',',TRUE,w,v);
+  xtrim(w,TRUE,w);
+  typ=type2(w);
+  if(typ & CONSTTYP) error(32,"TINEBROADCAST");  /* Syntax error */
+  else {
+    r=varrumpf(w);
+    vnr=variable_exist(r,typ);
+    if(typ & ARRAYTYP) { /* ganzes Array  */
+      if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */   
+      din.dFormat=CF_BYTE;
+      din.dArrayLength=do_dimension(vnr);
+      din.data.vptr=variablen[vnr].pointer;
+    } else {
+      /*Hier sollte man die Variable anlegen, falls nicht existent...*/
+      if(vnr==-1) vnr=variable_exist_or_create(r,typ);
+      if(typ & STRINGTYP) {
+	  din.dFormat=CF_TEXT;
+	  din.dArrayLength=variablen[vnr].opcode;
+  	  din.data.vptr=variablen[vnr].pointer;
+      } else if(typ & INTTYP) {
+          din.dFormat=CF_LONG;
+	  din.dArrayLength=1;
+          din.data.lptr=&variablen[vnr].opcode;
+      }  else if(typ & FLOATTYP) {
+          din.dFormat=CF_DOUBLE;
+	  din.dArrayLength=1;
+          din.data.dptr=&variablen[vnr].zahl; 
+      } 
+
+      din.dTag[0] = 0;
+
+      rc=sendNetGlobal(w,&din,completion_callback,minPeriod,maxPeriod,tolerance); 
+      if(rc<0) {
+        printf("Tine-Error recvNetGlobal: %d  %s\n",-rc,erlst[-rc]);
+	ccs_err=-rc;
+      } 
+    }
+    free(r);
+  }
+}
+void c_tinelisten(char *n) {
+  char v[strlen(n)+1],w[strlen(n)+1],*r;
+  int i,flag,newpid,pc2=-1,p,typ,vnr,rc;
+  DTYPE dout;
+  strcpy(v,n);
+  p=wort_sep(v,',',TRUE,w,v);
+  xtrim(w,TRUE,w);
+  typ=type2(w);
+  if(typ & CONSTTYP) error(32,"TINELISTEN");  /* Syntax error */
+  else {
+    r=varrumpf(w);
+    vnr=variable_exist(r,typ);
+    if(p>1) {
+      pc2=procnr(v,1);
+      if(pc2==-1)   error(19,v); /* Procedure nicht gefunden */
+    }
+    if(typ & ARRAYTYP) { /* ganzes Array  */
+      if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */
+      
+        dout.dFormat=CF_BYTE;
+	dout.dArrayLength=do_dimension(vnr);
+        dout.data.vptr=variablen[vnr].pointer;
+    } else {
+      /*Hier sollte man die Variable anlegen, falls nicht existent...*/
+      if(vnr==-1) vnr=variable_exist_or_create(r,typ);
+      if(typ & STRINGTYP) {
+	  dout.dFormat=CF_TEXT;
+	  dout.dArrayLength=variablen[vnr].opcode;
+  	  dout.data.vptr=variablen[vnr].pointer;
+      } else if(typ & INTTYP) {
+          dout.dFormat=CF_LONG;
+	  dout.dArrayLength=1;
+          dout.data.lptr=&variablen[vnr].opcode;
+      }  else if(typ & FLOATTYP) {
+          dout.dFormat=CF_DOUBLE;
+	  dout.dArrayLength=1;
+          dout.data.dptr=&variablen[vnr].zahl; 
+      } 
+    }
+    dout.dTag[0] = 0;
+    rc=recvNetGlobal(w,&dout,tmonitorCallback);
+    if(rc<0) {
+        printf("Tine-Error recvNetGlobal: %d  %s\n",-rc,erlst[-rc]);
+	ccs_err=-rc;
+    } else {
+        /* Callback registrieren */
+        if(pc2!=-1) {
+   	  newpid=rc;
+	  if(pidanz<MAXPIDS) {
+            flag=-1;
+            for(i=0;i<pidanz;i++) {
+              if(pids[i]==newpid) flag=i;
+            }
+            if(flag==-1) {
+              pids[pidanz]=newpid;
+              isubs[pidanz++]=pc2;
+            } else isubs[flag]=pc2;
+          } else printf("Zu viele Callbacks. max. <%d>\n",MAXPIDS);
+        }
+    }
+    free(r);
   }
 }
 void c_tineexport(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1],*r;
-  int p;
-  int len=1;
-  int typ,vnr,etyp;
+  int p,len=1,typ,vnr,etyp;
   strcpy(v,n);
   p=wort_sep(v,',',TRUE,w,v);
   while(p) {
@@ -1436,8 +1586,14 @@ void c_tineexport(char *n) {
     p=wort_sep(v,',',TRUE,w,v);
   }
 }
+
+void c_tinedeliver(char *n) {
+  if((ccs_err=SystemScheduleProperty(tine_eqn,n))!=0) {
+    printf("SystemScheduleProperty Failed: %s\n",GetRPCLastError(ccs_err));
+  }
+}
+
 void c_tinecycle(char *n) {
   SystemCycle(FALSE);
 }
-
 #endif

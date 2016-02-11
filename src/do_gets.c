@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "defs.h"
 #ifdef HAVE_READLINE
 #include <readline/readline.h>

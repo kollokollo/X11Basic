@@ -16,7 +16,7 @@
 
                        VERSION 1.13
 
-            (C) 1997-2006 by Markus Hoffmann
+            (C) 1997-2007 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -157,7 +157,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1,{PL_INT}},
  { P_PLISTE,   "DEFTEXT"  , c_deftext,1,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 #endif
- { P_ARGUMENT,   "DELAY"    , c_pause,      1,1,{PL_NUMBER}},
+ { P_PLISTE,   "DELAY"    , c_pause,      1,1,{PL_NUMBER}},
  { P_ARGUMENT,   "DIM"      , c_dim ,1,-1},
  { P_ARGUMENT,   "DIV"      , c_div ,2,2,{PL_NVAR,PL_NUMBER}},
  { P_DO,     "DO"       , c_do  ,0,0},
@@ -275,7 +275,7 @@ const COMMAND comms[]= {
 #endif
  { P_ARGUMENT,   "OUT"      , c_out,        2,-1,{PL_FILENR,PL_INT}},
 
- { P_ARGUMENT,   "PAUSE"    , c_pause,      1,1,{PL_NUMBER}},
+ { P_PLISTE,   "PAUSE"    , c_pause,      1,1,{PL_NUMBER}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PBOX"     , c_pbox ,      4,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,     "PCIRCLE"  , c_pcircle,    3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
@@ -370,11 +370,14 @@ const COMMAND comms[]= {
  { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
 #endif
 #ifdef TINE
+ { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,{PL_STRING}},
  { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
+ { P_ARGUMENT,   "TINEDELIVER", c_tinedeliver,1,-1},
  { P_ARGUMENT,   "TINEEXPORT", c_tineexport,1,-1},
- { P_ARGUMENT,   "TINEMONITOR", c_tinemonitor,2,-1},
+ { P_ARGUMENT,   "TINELISTEN", c_tinelisten,1,-1,{PL_STRING}},
+ { P_PLISTE,     "TINEMONITOR", c_tinemonitor,2,3,{PL_STRING,PL_PROC,PL_INT}},
  { P_ARGUMENT,   "TINEPUT"    , c_tineput ,2,-1,{PL_STRING}},
- { P_PLISTE,     "TINESERVER" , c_tineserver,0,1,{PL_STRING}},
+ { P_PLISTE,     "TINESERVER" , c_tineserver,0,2,{PL_STRING,PL_INT}},
  { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,{PL_STRING}},
 #endif
 #ifndef NOGRAPHICS

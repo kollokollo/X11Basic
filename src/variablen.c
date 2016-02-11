@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "defs.h"
 #include "xbasic.h"
 #include "protos.h"
@@ -273,7 +274,7 @@ void convert_int_to_float_array(int vnr1, int vnr2) {
   for(j=0;j<anz;j++) pp1[j]=(double)pp2[j];	 
 }
 ARRAY convert_to_floatarray(ARRAY a) {
-  ARRAY ergeb=create_array(FLOATARRAYTYP,a.dimension,a.pointer);
+  ARRAY ergeb=create_array(FLOATTYP,a.dimension,a.pointer);
   double *varptr=(double *)(ergeb.pointer+ergeb.dimension*INTSIZE); 
   int *pp2=(int *)(a.pointer+a.dimension*INTSIZE); 
   int j,anz=1;
@@ -283,7 +284,7 @@ ARRAY convert_to_floatarray(ARRAY a) {
   return(ergeb);
 }
 ARRAY convert_to_intarray(ARRAY a) {
-  ARRAY ergeb=create_array(INTARRAYTYP,a.dimension,a.pointer);
+  ARRAY ergeb=create_array(INTTYP,a.dimension,a.pointer);
   int *varptr=(int *)(ergeb.pointer+ergeb.dimension*INTSIZE); 
   double *pp2=(double *)(a.pointer+a.dimension*INTSIZE); 
   int j,anz=1;
@@ -303,9 +304,7 @@ void convert_float_to_int_array(int vnr1, int vnr2) {
   for(j=0;j<anz;j++) pp1[j]= (int) pp2[j];	 
 }
 
-
-
-int anz_eintraege(ARRAY a) {
+int anz_eintraege(ARRAY a) {/* liefert Anzahl der Elemente in einem ARRAY */
   int anz=1,j;
   for(j=0;j<a.dimension;j++) anz=anz*((int *)a.pointer)[j];
   return(anz);
@@ -317,39 +316,32 @@ ARRAY create_array(int typ, int dimension, int *dimlist) {
   ergebnis.typ=typ;
   ergebnis.dimension=dimension;
   for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];
+  ergebnis.pointer=malloc(dimension*INTSIZE+anz*typlaenge(typ));
   
-  if(typ & INTTYP) ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(int));
-  else if(typ & FLOATTYP) ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(double));
-  else {
+  if(typ & STRINGTYP) {
     int i;
     STRING *varptr;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(STRING));
 
     varptr=(STRING *)(ergebnis.pointer+dimension*INTSIZE);
     for(i=0;i<anz;i++) {
       varptr[i].len=0;   /* Laenge */
-      varptr[i].pointer=malloc(1);
+      varptr[i].pointer=NULL;
     }
   }
   /* dimlist kopieren */
   for(j=0;j<dimension;j++) ((int *)(ergebnis.pointer))[j]=dimlist[j];
   return(ergebnis);
 }
-void free_string(STRING str) {
-  free(str.pointer); 
-} 
+void free_string(STRING str) {  free(str.pointer); } 
 
 void free_array(ARRAY arr) {
-  if(arr.typ==STRINGARRAYTYP) {
-       int  j,anz=1;
-       STRING *varptr;
-      /* Anzahl der Eintraege aus Dimension bestimmen */
-	  
-	for(j=0;j<arr.dimension;j++) anz=anz*((int *)arr.pointer)[j];
-
-        varptr=(STRING *)(arr.pointer+arr.dimension*INTSIZE); 
-        for(j=0;j<anz;j++)  free(varptr[j].pointer); 	
-      
+  if(arr.typ & STRINGTYP) {
+    int j,anz=1;
+    STRING *varptr;
+    /* Anzahl der Eintraege aus Dimension bestimmen */
+    for(j=0;j<arr.dimension;j++) anz=anz*((int *)arr.pointer)[j];
+    varptr=(STRING *)(arr.pointer+arr.dimension*INTSIZE); 
+    for(j=0;j<anz;j++)  free(varptr[j].pointer); 	  
   }
   free(arr.pointer); 
 } 
@@ -378,9 +370,9 @@ void array_add(ARRAY a1, ARRAY a2) {
     STRING *pp2=(STRING *)(a2.pointer+a2.dimension*INTSIZE); 
     
     for(j=0;j<anz;j++) {
-          pp1[j].pointer=realloc(pp1[j].pointer,pp2[j].len+pp1[j].len+1);
-	  strcat(pp1[j].pointer,pp2[j].pointer);
-	  pp1[j].len+=pp2[j].len; 
+      pp1[j].pointer=realloc(pp1[j].pointer,pp2[j].len+pp1[j].len);
+      memcpy(pp1[j].pointer+pp1[j].len,pp2[j].pointer,pp2[j].len);
+      pp1[j].len+=pp2[j].len; 
     }	
   } else puts("ERROR: inkompatible array type.");
 }
@@ -603,10 +595,7 @@ ARRAY form_array(int typ, int dimension, int *dimlist, char *inhalt) {
   if(dimension) {
     for(j=0;j<dimension;j++) anz=anz*dimlist[j];
   }
-  if(typ & INTTYP) dlen=sizeof(int);
-  else if(typ & FLOATTYP) dlen=sizeof(double);
-  else dlen=sizeof(STRING);
-  
+  dlen=typlaenge(typ);
   
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*dlen);
   pp=(char *)(ergebnis.pointer+dimension*INTSIZE);
@@ -619,80 +608,39 @@ ARRAY form_array(int typ, int dimension, int *dimlist, char *inhalt) {
 }
 
 ARRAY nullmatrix(int typ, int dimension, int *dimlist) {
-  ARRAY ergebnis;
-  int anz=1,j;
-  ergebnis.typ=typ;
-  ergebnis.dimension=dimension;
-  for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];
+  ARRAY ergebnis=create_array(typ,dimension,dimlist);
+  int anz=anz_eintraege(ergebnis),j;
   
   if(typ & INTTYP) {
-    int *pp;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(int));
-    pp=(int *)(ergebnis.pointer+dimension*INTSIZE);
-    for(j=0;j<anz;j++) pp[j]=0;
-    
+    int *pp=(int *)(ergebnis.pointer+ergebnis.dimension*INTSIZE);
+    for(j=0;j<anz;j++) pp[j]=0;    
   } else if(typ & FLOATTYP) {
-    double *pp;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(double));
-    pp=(double *)(ergebnis.pointer+dimension*INTSIZE);
+    double *pp=(double *)(ergebnis.pointer+dimension*INTSIZE);
     for(j=0;j<anz;j++) pp[j]=0.0;
-  } else {
-    int i;
-    STRING *ppp;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*(sizeof(STRING)));
-    ppp=(STRING *)(ergebnis.pointer+dimension*INTSIZE);
-    for(i=0;i<anz;i++) {
-      ppp[i].len=0;   /* Laenge */
-      ppp[i].pointer=malloc(1);
-    }
-  }
-  /* dimlist kopieren */
-  for(j=0;j<dimension;j++) ((int *)(ergebnis.pointer))[j]=dimlist[j];
+  }   
   return(ergebnis);
 }
 ARRAY einheitsmatrix(int typ, int dimension, int *dimlist) {
-  ARRAY ergebnis;
-  int anz=1,i,a=0,j,q;
-  ergebnis.typ=typ;
-  ergebnis.dimension=dimension;
-  for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];
+  ARRAY ergebnis=nullmatrix(typ,dimension,dimlist);
+  int anz=anz_eintraege(ergebnis),i,a=0,j;
+  int q=dimlist[0];
+  for(j=0;j<dimension;j++) {if(q>dimlist[j]) q=dimlist[j];}
   
   if(typ & INTTYP) {
-    int *varptr;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(int));
-    varptr=(int *)(ergebnis.pointer+dimension*INTSIZE);
-    for(j=0;j<anz;j++) varptr[j]=0;
-    q=dimlist[0];
-     for(j=0;j<dimension;j++) {if(q>dimlist[j]) q=dimlist[j];}
+    int *varptr=(int *)(ergebnis.pointer+dimension*INTSIZE);
     for(j=0;j<q;j++) {
       for(i=0;i<dimension;i++) a=j+a*dimlist[i]; 
       varptr[a]=1;
     }
   } else if(typ & FLOATTYP) {
-    double *varptr;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(double));
-    varptr=(double *)(ergebnis.pointer+dimension*INTSIZE);
-    for(j=0;j<anz;j++) varptr[j]=0.0;
+    double *varptr=(double *)(ergebnis.pointer+dimension*INTSIZE);
     /* Jetzt die Diagonalelemente */
-    q=dimlist[0];
-    for(j=0;j<dimension;j++) {if(q>dimlist[j]) q=dimlist[j];}
     for(j=0;j<q;j++) {
       a=j;
       for(i=0;i<dimension-1;i++) a+=j*dimlist[i]; 
       varptr[a]=1.0;
     }
-  } else {
-    STRING *ppp;
-    ergebnis.pointer=malloc(dimension*INTSIZE+anz*(sizeof(STRING)));
-    ppp=(STRING *)(ergebnis.pointer+dimension*INTSIZE);
-    for(i=0;i<anz;i++) {
-      ppp[i].len=0;   /* Laenge */
-      ppp[i].pointer=malloc(1);
-    }
-    puts("Einheitsmatrix für Stringfelder nicht definiert !");
-  }
-  /* dimlist kopieren */
-  for(j=0;j<dimension;j++) ((int *)(ergebnis.pointer))[j]=dimlist[j];
+  } else puts("Einheitsmatrix nicht definiert !"); 
   return(ergebnis);
 }
 
@@ -723,7 +671,12 @@ int variable_exist_or_create(char *name, int typ) {
       if((vnr=neue_float_variable(name,0.0,0))==-1) printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     } else if(typ&INTTYP) {
       if((vnr=neue_int_variable(name,0,0))==-1) printf("Zu viele Variablen ! max. %d\n",ANZVARS);
-    } else printf("Variablen-Typ komisch! kann nicht kreieren\n");
+    } else if(typ&STRINGTYP) {
+      STRING e;  
+      *(e.pointer=malloc(e.len=1))=0;
+      if((vnr=neue_string_variable(name,e,0))==-1) printf("Zu viele Variablen ! max. %d\n",ANZVARS);
+      free(e.pointer);
+    } else printf("Variablen-Typ (%x) komisch! kann nicht kreieren\n",typ);
   } 
   return(vnr);
 }
@@ -893,15 +846,12 @@ int neue_array_variable_and_free(char *name, ARRAY wert, int sp) {
 void feed_array_and_free(int vnr, ARRAY wert) { 
   /* Uebernimmt ein Array des internen Typs in die Variablenliste */
   /* Es wird nicht kopiert !     */
-
   /* erst alten Arrayinhalt freigeben */
-
   free_array(array_info(vnr));
   /* Dann neuen einklinken       */
-  
-    variablen[vnr].opcode=wert.dimension;
-    variablen[vnr].pointer=wert.pointer;
-    variablen[vnr].typ=(wert.typ | ARRAYTYP);
+  variablen[vnr].opcode=wert.dimension;
+  variablen[vnr].pointer=wert.pointer;
+  variablen[vnr].typ=(wert.typ | ARRAYTYP);
 }
 void feed_subarray_and_free(int vnr,char *pos, ARRAY wert) { 
   char w1[strlen(pos)+1],w2[strlen(pos)+1];
@@ -991,10 +941,7 @@ ARRAY double_array(ARRAY a) {
   ARRAY b=a;
   int size;
   for(j=0;j<a.dimension;j++) anz=anz*((int *)a.pointer)[j];
-  size=a.dimension*INTSIZE;
-  if(a.typ & INTTYP) size+=anz*sizeof(int);
-  else if(a.typ & FLOATTYP) size+=anz*sizeof(double);
-  else size+=anz*sizeof(STRING);
+  size=a.dimension*INTSIZE+anz*typlaenge(a.typ);
   b.pointer=malloc(size);
   memcpy(b.pointer,a.pointer,size);
   if(a.typ & STRINGTYP) {
@@ -1005,9 +952,9 @@ ARRAY double_array(ARRAY a) {
     ppp2=(STRING *)(a.pointer+a.dimension*INTSIZE);
 
     for(i=0;i<anz;i++) {
-      ppp1[i].len=ppp2[i].len;   /* Laenge */
-      ppp1[i].pointer=malloc(ppp2[i].len+1);
-      memcpy(ppp1[i].pointer,ppp2[i].pointer,ppp2[i].len+1);
+ //     ppp1[i].len=ppp2[i].len;   /* Laenge */
+      ppp1[i].pointer=malloc(ppp2[i].len);
+      memcpy(ppp1[i].pointer,ppp2[i].pointer,ppp2[i].len);
     }
   }
   return(b);
@@ -1019,7 +966,7 @@ ARRAY copy_var_array(int vnr) {
   /* Es wird kopiert !     */
   ARRAY zw;
 
-  zw.typ=variablen[vnr].typ;
+  zw.typ=variablen[vnr].typ&(~ARRAYTYP);
   zw.dimension=variablen[vnr].opcode;
   zw.pointer=variablen[vnr].pointer;
   return(double_array(zw));
@@ -1027,7 +974,7 @@ ARRAY copy_var_array(int vnr) {
 /* Dasselbe wie copy_var_array, es wird aber nicht kopiert !  */
 ARRAY array_info(int vnr) {
   ARRAY zw;
-  zw.typ=variablen[vnr].typ;
+  zw.typ=variablen[vnr].typ&(~ARRAYTYP);
   zw.dimension=variablen[vnr].opcode;
   zw.pointer=variablen[vnr].pointer;
   return(zw);
@@ -1043,7 +990,7 @@ ARRAY array_const(char *s) {
   ergebnis.dimension=wort_sep(s,';',TRUE,t,t2);
   /* Typ Bestimmen */
   wort_sep(t,' ',TRUE,t,t2);
-  ergebnis.typ=(type2(t) | ARRAYTYP);
+  ergebnis.typ=type2(t);
   e=wort_sep(s,';',TRUE,t,s2);
   while(e) {
     f=wort_sep(t,',',TRUE,t2,t);
@@ -1067,18 +1014,13 @@ ARRAY array_const(char *s) {
   printf("Anz: %d  \n",anz);
 */
   
-  
-  if(ergebnis.typ & INTTYP) ergebnis.pointer=malloc(ergebnis.dimension*INTSIZE+anz*sizeof(int));
-  else if(ergebnis.typ & FLOATTYP) ergebnis.pointer=malloc(ergebnis.dimension*INTSIZE+anz*sizeof(double));
-  else {
+  ergebnis.pointer=malloc(ergebnis.dimension*INTSIZE+anz*typlaenge(ergebnis.typ));
+  if(ergebnis.typ & STRINGTYP) {
     int i;
-    STRING *varptr;
-    ergebnis.pointer=malloc(ergebnis.dimension*INTSIZE+anz*sizeof(STRING));
-
-    varptr=(STRING *)(ergebnis.pointer+ergebnis.dimension*INTSIZE);
+    STRING *varptr=(STRING *)(ergebnis.pointer+ergebnis.dimension*INTSIZE);
     for(i=0;i<anz;i++) {
       varptr[i].len=0;   /* Laenge */
-      varptr[i].pointer=malloc(1);
+      varptr[i].pointer=NULL;
     }
   }
   if(ergebnis.dimension==1) *((int *)(ergebnis.pointer))=dx;
@@ -1192,11 +1134,8 @@ int zuweis_string(char *name, STRING inhalt) {
   
   /* ist variable schon vorhanden ? */
  
-    if((i=variable_exist(w,STRINGTYP))!=-1) {
-      variablen[i].opcode=inhalt.len;
-      variablen[i].pointer=realloc(variablen[i].pointer,inhalt.len);
-      memcpy(variablen[i].pointer,inhalt.pointer,inhalt.len);
-    } else { 
+    if((i=variable_exist(w,STRINGTYP))!=-1) string_zuweis_by_vnr(i,inhalt);
+    else { 
       if(neue_string_variable(w,inhalt,0)==-1) 
       printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
@@ -1205,7 +1144,12 @@ int zuweis_string(char *name, STRING inhalt) {
   return(0);
 }
 
-
+void string_zuweis_by_vnr(int vnr, STRING inhalt) {
+  if(vnr==-1) return;
+  variablen[vnr].opcode=inhalt.len;
+  variablen[vnr].pointer=realloc(variablen[vnr].pointer,inhalt.len);
+  memcpy(variablen[vnr].pointer,inhalt.pointer,inhalt.len);
+}
 
 void xzuweis(char *name, char *inhalt) {
   char *buffer1, *buffer2;
@@ -1232,7 +1176,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
   
   vnr=variable_exist(r,inhalt.typ | ARRAYTYP);
   typ=inhalt.typ;
-  if(ztyp!=typ) {    
+  if(ztyp!=(typ|ARRAYTYP)) {
     if((ztyp & FLOATTYP) && (typ & INTTYP)) {
       
       if(vnr==-1) {
@@ -1257,7 +1201,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
       }
     } else {
       puts("ERROR: Arrays haben nicht dengleichen Typ!");
-      printf("ztyp-typ=%d\n",ztyp-typ);
+      printf("ztyp=%d typ=%d\n",ztyp,typ);
       printf("ARRAY: Typ=%d\n",inhalt.typ);
       printf("       dim=%d\n",inhalt.dimension);
       printf("       ptr=%d\n",inhalt.pointer);
@@ -1336,8 +1280,6 @@ double arrayinhalt(char *name, char* index) {
 }
 
 
-
-
 double floatarrayinhalt2(ARRAY *a, int *indexliste) {
   int ndim,anz=0;
   double *varptr=(double  *)(a->pointer+a->dimension*INTSIZE);
@@ -1346,10 +1288,8 @@ double floatarrayinhalt2(ARRAY *a, int *indexliste) {
 }
 
 int intarrayinhalt2(ARRAY *a, int *indexliste) {
-  int *varptr;
   int ndim,anz=0;
-
-  varptr=(int *)(a->pointer+a->dimension*INTSIZE);
+  int *varptr=(int *)(a->pointer+a->dimension*INTSIZE);
   for(ndim=0;ndim<a->dimension;ndim++) anz=indexliste[ndim]+anz*((int *)a->pointer)[ndim];
   return(varptr[anz]);
 }
@@ -1385,4 +1325,97 @@ int intarrayinhalt(int vnr, char* index) {
       i=wort_sep(t,',',TRUE,s,t); 
     }
     return(varptr[a]);
+}
+int typlaenge(int typ) {
+  if(typ & INTTYP) return(sizeof(int));
+  else if(typ & FLOATTYP) return(sizeof(double));
+  else if(typ & STRINGTYP) return(sizeof(STRING));
+  else if(typ & ARRAYTYP) return(sizeof(ARRAY));
+}
+
+/* Wandelt ein ganzes Array in einen String um, so dass es auch wieder
+   rueckverwandelt werden kann. Nuetzlich zum Speichern und versenden  */
+
+STRING array_to_string(ARRAY inhalt) {
+  STRING ergebnis;
+  char *ppp;
+  int len,arraylen;
+  len=sizeof(int)+sizeof(int);
+  len+=INTSIZE*inhalt.dimension;
+  arraylen=anz_eintraege(inhalt);
+  len+=arraylen*typlaenge(inhalt.typ);
+  if(inhalt.typ & ARRAYTYP) printf("Array beinhaltet wieder ARRAYs.\n");
+  else if(inhalt.typ & STRINGTYP) {
+    /* Alle Stringlaengen aufsummieren */
+    STRING *a=(STRING *)(inhalt.pointer+INTSIZE*inhalt.dimension);
+    int i;
+    for(i=0;i<arraylen;i++) {
+     /* if(memmem(ppp2,(int)(ppp-ppp2),a[i].pointer,a[i].len)==NULL)*/
+        len+=a[i].len;
+    }
+  }
+  ergebnis.pointer=malloc(len);
+  ergebnis.len=len;
+  
+  ((int *)ergebnis.pointer)[0]=inhalt.typ;
+  ((int *)ergebnis.pointer)[1]=inhalt.dimension;
+  ppp=(char*)ergebnis.pointer+2*sizeof(int);
+  memcpy(ppp,inhalt.pointer,INTSIZE*inhalt.dimension);
+  ppp+=INTSIZE*inhalt.dimension;
+  memcpy(ppp,inhalt.pointer+INTSIZE*inhalt.dimension,
+         arraylen*typlaenge(inhalt.typ));
+  
+  if(inhalt.typ & STRINGTYP) {
+    /* Alle Stringpointer relozieren */
+    STRING *a=(STRING *)(ppp);
+    int i;
+    char *ppp2,*found;
+    ppp+=arraylen*typlaenge(inhalt.typ);
+    ppp2=ppp;
+    for(i=0;i<arraylen;i++) {
+      /* Schau, ob der eintrag schon vorhanden ist: */
+      found=(char *)memmem(ppp2,(int)(ppp-ppp2),a[i].pointer,a[i].len);
+      if(found!=NULL) {
+        a[i].pointer=(char *)(found-ppp2);
+      } else {
+        memcpy(ppp,a[i].pointer,a[i].len);
+        a[i].pointer=(char *)(ppp-ppp2);
+        ppp+=a[i].len;
+      }
+    }
+    ergebnis.len=ppp-ergebnis.pointer; /* String kuerzen */
+  }
+  return(ergebnis);
+}
+
+ARRAY string_to_array(STRING in) {
+  ARRAY out;
+  int len,arraylen;
+  
+  out.typ=((int *)in.pointer)[0];
+  out.dimension=((int *)in.pointer)[1];
+  len=INTSIZE*out.dimension;
+  out.pointer=in.pointer+2*sizeof(int);
+  arraylen=anz_eintraege(out);
+  len+=arraylen*typlaenge(out.typ);
+  
+  out.pointer=malloc(len);
+  
+  memcpy(out.pointer,in.pointer+2*sizeof(int),INTSIZE*out.dimension);
+  memcpy(out.pointer+INTSIZE*out.dimension,
+         in.pointer+2*sizeof(int)+INTSIZE*out.dimension,
+	 arraylen*typlaenge(out.typ));
+
+  if(out.typ & STRINGTYP) {
+    char *ppp=in.pointer+2*sizeof(int)+arraylen*typlaenge(out.typ);
+    STRING *a=(STRING *)(out.pointer+INTSIZE*out.dimension);
+    /* Alle Strings anlegen und pointer relozieren */
+    unsigned int i,offset;
+    for(i=0;i<arraylen;i++) {
+      offset=(unsigned int)a[i].pointer;
+      a[i].pointer=malloc(a[i].len);
+      memcpy(a[i].pointer,ppp+offset,a[i].len);
+    }
+  }
+  return(out);
 }

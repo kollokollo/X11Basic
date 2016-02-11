@@ -59,9 +59,15 @@ CSRC=    $(DISTOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 DEPSRC=  $(CSRC) 
 
-DIST= README INSTALL COPYING install.sh doc/man-pages/* doc/ACKNOWLEGEMENTS \
+# Headerfiles which should be added to the distribution
+
+HSRC=  defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
+       options.h protos.h xbasic.h window.h vtypes.h ptypes.h
+
+
+DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       doc/AUTHORS doc/HISTORY doc/RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/* \
+      doc/editors/*  \
       src/xbasic.c \
       src/file.c \
       src/main.c \
@@ -104,6 +110,8 @@ DIST2=$(DISTOBJS:.o=.c)
 
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
+TINEDIR=tinexbasic-@version@
+TINEDIST=$(DIST) doc/tine-xbasic.html examples2/DESY/*
 
 LINKFLAGS =
 WINLINKFLAGS =
@@ -138,6 +146,14 @@ static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.static main.o x11basic.a\
 		$(LIBS) $(XLIBS)
 	strip xbasic.static
+xbasic.staticreadline : x11basic.a main.o
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a\
+		/usr/lib/libreadline.a -ldl -lm -lncurses -lX11  $(XLIBS)
+	strip $@
+tinexbasic.rs : $(OBJS) $(AOBJS) 
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS)  \
+		 /usr/lib/libreadline.a /usr/lib/libtine.a -ldl -lm -lncurses -lX11  $(XLIBS)
+	strip $@
 psydo : psydo.o lib
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o  \
 		$(LIBS)-lx11basic $(XLIBS)
@@ -169,20 +185,24 @@ tineexe: $(OBJS) main.o mathematics.o
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
 	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(DISTOBJS) \
 		 Windows.extension/fnmatch.o  Windows.extension/memfrob.o rpclib.lib $(TINEWINLIBS)
+tinexbasicdyn : $(OBJS) main.o mathematics.o
+	$(CC) -DTINE  $(LINKFLAGS) -o tinexbasic.dyn $(AOBJS) \
+		$(LIBS)  -ltine $(XLIBS)
+	strip tinexbasic.dyn
 
 xbasic : $(DISTOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(DISTOBJS) \
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(DISTOBJS) \
 		$(LIBS) $(XLIBS)
-	strip xbasic
+	strip $@
 
 csxbasic : $(OBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
 
 tinexbasic : $(OBJS) main.o mathematics.o
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o tinexbasic $(AOBJS) \
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
 		$(LIBS) $(CCSLIBS) $(XLIBS)
-	strip tinexbasic
+	strip $@
 lib : $(LIBOBJS)
 	$(CC) -shared -o libx11basic.so $(LIBOBJS)
 winlib : x11basic.lib
@@ -192,26 +212,26 @@ tlib : $(LIBOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -shared -o libtinex11basic.so $(LIBOBJS) $(CCSLIBS)
 
 x11basic.a : $(LIBOBJS)
-	 ar -ru x11basic.a $(LIBOBJS) 
+	 ar -ru $@ $(LIBOBJS) 
 
 x11basic.lib : clean
 	$(WINCC) -DWINDOWS -c $(DIST2)
 	$(WINCC) -DWINDOWS -c mathematics.c
-	i686-pc-mingw32-ar -ru x11basic.lib $(WINLIBOBJS) 
+	i686-pc-mingw32-ar -ru $@ $(WINLIBOBJS) 
 
 tx11basic.a : $(LIBOBJS)
-	 ar -ru tx11basic.a $(LIBOBJS)  $(CCSLIBS)
+	 ar -ru $@ $(LIBOBJS)  $(CCSLIBS)
 
 dyn : lib main.o
 	$(CC) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
 	$(LIBS) -lx11basic $(XLIBS)
 	strip xbasic.dyn
 xbc : dyn 
-	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o xbc
-	strip xbc
+	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o $@
+	strip $@
 bas2x11basic : xbc
-	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o bas2x11basic
-	strip bas2x11basic
+	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o $@
+	strip $@
 myzip : xbc
 	xbc ../examples2/utils/myzip.bas --dynamic -o myzip
 	xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
@@ -250,12 +270,37 @@ dist :	$(DIST2)
 	mkdir /tmp/$(DIR)
 	(cd ..; tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
+tinedist : $(DIST2)
+	rm -rf /tmp/$(TINEDIR)
+	mkdir /tmp/$(TINEDIR)
+	(cd ..; tar cf - $(TINEDIST))|(cd /tmp/$(TINEDIR); tar xpf -)
+	(cd /tmp; tar cf - $(TINEDIR)|gzip -9 > $(TINEDIR).tar.gz)
 rpm :	dist
 	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
 	rpm -ba --clean x11basic.spec
 rpm2 :	dist
 	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
 	rpmbuild -ba --clean x11basic.spec
+tinerpm :	tinedist
+	cp /tmp/$(TINEDIR).tar.gz /usr/src/packages/SOURCES/$(TINEDIR).tar.gz
+	rpmbuild -ba --clean tinexbasic.spec
+# create DSL package (for Damn Small Linux MyDSL)	
+dslpackage : xbasic.staticreadline
+	(cd /dev/shm; mkdir -p home/dsl/.xtdesktop)
+	convert Windows-Installer/x11basic.ico /dev/shm/home/dsl/.xtdesktop/x11basic.png
+	echo "table Icon" > /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  Type: Program" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  Caption: X11Basic" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  Command: aterm -e /opt/X11Basic-@version@/xbasic" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  Icon: .xtdesktop/x11basic.png" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  X: 405" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "  Y: 25" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	echo "end" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
+	(cd /dev/shm; mkdir -p opt/X11Basic-@version@)
+	cp xbasic.staticreadline /dev/shm/opt/X11Basic-@version@/xbasic
+	(cd /dev/shm; tar czf X11Basic.tar.gz home/dsl/.xtdesktop/x11basic* opt/X11Basic-@version@)
+	mv /dev/shm/X11Basic.tar.gz .
+	(md5sum X11Basic.tar.gz > X11Basic.tar.gz.md5.txt )
 check :	xbasic
 	./xbasic -e version
 depend : $(DEPSRC) 

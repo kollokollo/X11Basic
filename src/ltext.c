@@ -8,6 +8,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "fdata.c"
 
 #define FALSE 0

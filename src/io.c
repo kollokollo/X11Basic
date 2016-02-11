@@ -335,20 +335,17 @@ int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short 
  connect  socket to server and port */
 
 void c_connect(PARAMETER *plist,int e) {
-  FILE *fff;
   struct sockaddr_in host_address;
   int host_address_size;
   unsigned char *address_holder;
-  if(e>=2) {
-    int sock;
-    fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
-    sock=fileno(fff);
-    if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
-    else { 
-      if(0>connect(sock,(struct sockaddr *) &host_address, sizeof(host_address))) 
-            io_error(errno,"connect");    
-    }
+  int sock;
+  FILE *fff=get_fileptr(plist[0].integer);
+  if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+  sock=fileno(fff);
+  if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
+  else { 
+    if(0>connect(sock,(struct sockaddr *) &host_address, sizeof(host_address))) 
+      io_error(errno,"connect");    
   }
 }
 int make_socket(unsigned short int port) {
@@ -955,48 +952,40 @@ void c_unget(char *n) {
 
 void c_flush(PARAMETER *plist,int e) {
   FILE *fff=stdout;
-  int i;
-  if(e) {
-    i=plist[0].integer;
-    if(filenr[i]) fff=dptr[i];      
-    else {error(24,"");return;} /* File nicht geoeffnet */
-  }
+  if(e) fff=get_fileptr(plist[0].integer);
+  if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */  
   if(fflush(fff)) io_error(errno,"FLUSH");
 }
 
 void c_seek(PARAMETER *plist,int e) {
-  if(e>=1) {
-    int j=0,i=plist[0].integer;
-    if(e>1) j=plist[1].integer;
-    if(filenr[i]) {
-      if(fseek(dptr[i],j,SEEK_SET)) io_error(errno,"SEEK");
-    } else error(24,""); /* File nicht geoeffnet */
-  } 
+  int j=0,i=plist[0].integer;
+  if(e>1) j=plist[1].integer;
+  if(filenr[i]) {
+    if(fseek(dptr[i],j,SEEK_SET)) io_error(errno,"SEEK");
+  } else error(24,""); /* File nicht geoeffnet */
 }
 void c_relseek(PARAMETER *plist,int e) {
-  if(e==2) {
-    int i=plist[0].integer;
-    if(filenr[i]) {
-      if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
-    } else error(24,""); /* File nicht geoeffnet */
-  } 
+  int i=plist[0].integer;
+  if(filenr[i]) {
+    if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
+  } else error(24,""); /* File nicht geoeffnet */
 }
 
-int inp8(char *n) {
-  int fp,i=get_number(n);
-  char ergebnis;
-  FILE *fff=get_fileptr(i);
+int inp8(PARAMETER *plist,int e) {
+  unsigned char ergebnis;
+  FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
   fread(&ergebnis,1,1,fff);
   return((int)ergebnis);
 }
-int inpf(char *n) {
-  int fp,i=get_number(n);
-  FILE *fff=stdin;
-  if(i==-2) {
-    return(kbhit() ? -1 : 0);
-  } else if(filenr[i]) {
-    fff=dptr[i];        
+int inpf(PARAMETER *plist,int e) {
+  if(plist[0].integer==-2) return(kbhit() ? -1 : 0);
+  else {
+    FILE *fff=get_fileptr(plist[0].integer);
+#ifndef WINDOWS
+    int fp,i;
+#endif
+    if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
     fflush(fff);
 #ifndef WINDOWS
     fp=fileno(fff);
@@ -1004,22 +993,20 @@ int inpf(char *n) {
     return(i); 
 #else    
     return(((eof(fff)) ? 0 : -1)); 
-#endif    
-  } else {error(24,"");return(-1);} /* File nicht geoeffnet */
+#endif  
+  }  
 }
-int inp16(char *n) {
-  int i=get_number(n);
-  short ergebnis;
-  FILE *fff=get_fileptr(i);
+int inp16(PARAMETER *plist,int e) {
+  unsigned short ergebnis;
+  FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
   fread(&ergebnis,sizeof(short),1,fff);
   return((int)ergebnis);
 }
-int inp32(char *n) {
-  int i=get_number(n);
+int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
-  FILE *fff=get_fileptr(i);
-  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+  FILE *fff=get_fileptr(plist[0].integer);
+  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */ 
   fread(&ergebnis,sizeof(long),1,fff);
   return(ergebnis);
 }
@@ -1061,31 +1048,27 @@ void reset_input_mode() {
 
 /* Dynamisches Linken von Shared-Object-Files */
 
-int f_symadr(char *n) { 
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,v,w);
+int f_symadr(PARAMETER *plist,int e) {
   int adr=0;
-  if(e>1) {
-    int i=get_number(v);
-    
-    if(filenr[i]==2) {
-      char *sym=s_parser(w);
-      char *derror;
-      #ifdef WINDOWS
-      adr = (int)GetProcAddress(dptr[i],sym);
+  if(filenr[plist[0].integer]==2) {
+    char *sym=malloc(plist[1].integer+1);
+    char *derror;
+    memcpy(sym,plist[1].pointer,plist[1].integer);
+    sym[plist[1].integer]=0;
+    #ifdef WINDOWS
+      adr = (int)GetProcAddress(dptr[plist[0].integer],sym);
       if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
-      #else
+    #else
       #ifdef HAVE_DLOPEN
-      adr = (int)dlsym(dptr[i],sym);
+      adr = (int)dlsym(dptr[plist[0].integer],sym);
       if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
       #else
-      adr=-1;
-      error(9,"SYM_ADR"); /*Function or command %s not implemented*/
+        adr=-1;
+        error(9,"SYM_ADR"); /*Function or command %s not implemented*/
       #endif
-      #endif
-      free(sym);
-    } else error(24,v); /* File nicht geoeffnet */
-  } else error(32,"SYM_ADR"); /* Syntax error */
+    #endif
+    free(sym);
+  } else error(24,""); /* File nicht geoeffnet */
   return(adr);
 }
 
@@ -1099,6 +1082,8 @@ char *terminalname(int fp) {
   strcpy(erg,name);
   return(erg);
 }
+
+
 
 void c_out(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
@@ -1154,14 +1139,11 @@ void c_out(char *n) {
 #ifndef WINDOWS
 /* kbhit-Funktion   */
 int kbhit() {
-
   fd_set set;
 
 #ifdef TIMEVAL_WORKAROUND
-  struct {
-               int  tv_sec; 
-               int  tv_usec;   
-       } tv;
+  struct { int  tv_sec; 
+           int  tv_usec; } tv;
 #else 
     struct timeval tv;
 #endif
@@ -1383,4 +1365,20 @@ void speaker(int frequency) {
 #endif
   if (fd>2) close(fd); /* console */
 #endif
+}
+
+
+int f_ioctl(PARAMETER *plist,int e) {
+  FILE *fff;
+  int ret=0;
+  if(e>=2) {
+    int sock;
+    fff=get_fileptr(plist[0].integer);
+    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    sock=fileno(fff);
+    if (e==2) ret=ioctl(sock,plist[1].integer);
+    else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
+    if(ret==-1) io_error(errno,"ioctl");
+  }
+  return(ret);
 }

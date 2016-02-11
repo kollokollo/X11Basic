@@ -71,7 +71,7 @@ int f_rsrc_gaddr(PARAMETER *,int);
 int f_objc_find(PARAMETER *,int);
 int f_get_color(PARAMETER *,int);
 
-extern int f_symadr(char *);
+extern int f_symadr(PARAMETER *,int);
 extern int f_exec(char *);
 extern int shm_malloc(int,int);
 extern int shm_attach(int);
@@ -167,7 +167,6 @@ int f_listselect(PARAMETER *plist,int e) {
 
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
-
  { F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
  { F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
@@ -255,13 +254,14 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
  { F_SQUICK|F_IRET,    "INODE"     , f_inode,1,1   ,{PL_STRING}},
- { F_ARGUMENT|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_FILENR}},
- { F_ARGUMENT|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_FILENR}},
- { F_ARGUMENT|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_FILENR}},
- { F_ARGUMENT|F_IRET,  "INP%"      , inp32 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP%"      , inp32 ,1,1      ,{PL_FILENR}},
  { F_PLISTE|F_IRET,  "INSTR"     , f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
  { F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
+ { F_PLISTE|F_IRET,    "IOCTL"     , f_ioctl ,2,3     ,{PL_FILENR,PL_INT,PL_INT}},
  { F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
 
  { F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
@@ -329,7 +329,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "SYM_ADR"   , f_symadr ,2,2     ,{PL_FILENR,PL_STRING}},
+ { F_PLISTE|F_IRET,    "SYM_ADR"   , f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
 
  { F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
@@ -801,45 +801,29 @@ STRING f_strs(PARAMETER *plist,int e) {         /* STR$(a[,b[,c[,d]]])     */
   int b=-1,c=13,mode=0;
   char formatter[24];
   ergebnis.pointer=malloc(64);
-  if(e>=1) {
-    if(e>=2) b=min(50,max(0,plist[1].integer));
-    if(e>=3) c=min(50,max(0,plist[2].integer));
-    if(e>=4) mode=plist[3].integer;
-    if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%dg",b,c);
-    else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%dg",b,c);
-    else  sprintf(formatter,"%%.13g");
-    sprintf(ergebnis.pointer,formatter,plist[0].real);
-  }
+  if(e>1) b=min(50,max(0,plist[1].integer));
+  if(e>2) c=min(50,max(0,plist[2].integer));
+  if(e>3) mode=plist[3].integer;
+  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%dg",b,c);
+  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%dg",b,c);
+  else  sprintf(formatter,"%%.13g");
+  sprintf(ergebnis.pointer,formatter,plist[0].real);
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
 STRING f_bins(PARAMETER *plist,int e) {
   STRING ergebnis;
-  unsigned int a;
+  unsigned int a=plist[0].integer;
   int j,b=8,i=0;
-  ergebnis.pointer=malloc(64);
-  if(e>=1) {
-    a=plist[0].integer;
-    if(e==2) b=min(32,max(0,plist[1].integer));
-    for(j=b;j>0;j--) ergebnis.pointer[i++]=((a&(1<<(j-1)))  ? '1':'0');
-    ergebnis.pointer[i]=0;
-  }
-  ergebnis.len=strlen(ergebnis.pointer);
+  if(e==2) b=max(0,plist[1].integer);
+  ergebnis.pointer=malloc(b+1);
+  for(j=b;j>0;j--) ergebnis.pointer[i++]=((a&(1<<(j-1)))  ? '1':'0');
+  ergebnis.pointer[i]=0;
+  ergebnis.len=i;
   return(ergebnis);
 }
-STRING f_hexs(char *pos) {
-  STRING ergebnis;
-  ergebnis.pointer=hexoct_to_string('x',pos);
-  ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
-}
-STRING f_octs(char *pos) {
-  STRING ergebnis;
-  ergebnis.pointer=hexoct_to_string('o',pos);
-  ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
-}
-
+STRING f_hexs(PARAMETER *plist, int e) {return(hexoct_to_string('x',plist,e));}
+STRING f_octs(PARAMETER *plist, int e) {return(hexoct_to_string('o',plist,e));}
 
 /* Systemvariablen vom typ String */
 
@@ -1000,7 +984,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,    "ENCRYPT$", f_encrypts ,2,2   ,{PL_STRING,PL_STRING}},
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
  { F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
- { F_ARGUMENT,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_NUMBER,PL_NUMBER}},
+ { F_PLISTE,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_NUMBER}},
  { F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
@@ -1010,6 +994,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "LOWER$"    , f_lowers ,1,1   ,{PL_STRING}},
 
  { F_PLISTE,    "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_AQUICK,    "MKA$"    , array_to_string ,1,1   ,{PL_ARRAY}},
  { F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_NUMBER}},
  { F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
  { F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_INT}},
@@ -1018,7 +1003,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "MTFD$"  , f_mtfds ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "MTFE$"  , f_mtfes ,1,1   ,{PL_STRING}},
 
- { F_ARGUMENT,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_NUMBER,PL_NUMBER}},
+ { F_PLISTE,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
 
  { F_IQUICK,    "PARAM$"  , f_params ,1,1   ,{PL_INT}},
  { F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
@@ -1523,6 +1508,7 @@ const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,    "CSGET"     , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "CSVGET"    , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
+ { F_SQUICK,    "CVA"       , string_to_array ,1,1   ,{PL_STRING}},
 
  { F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
  { F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
@@ -1555,7 +1541,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
   int e;
   strcpy(s,funktion);
   xtrim(s,TRUE,s);  /* Leerzeichen vorne und hinten entfernen */
-
+//  printf("ARRAY_PARSER: \n");
   if(wort_sep(s,'+',TRUE,w1,w2)>1) {
     if(strlen(w1)) {
       ARRAY zw1=array_parser(w1);
@@ -1647,6 +1633,12 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 		ergebnis=(pafuncs[i].routine)(a);
 		free_array(a);
 	      	return(ergebnis);
+	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_SQUICK) {
+	        ARRAY ergebnis;
+		STRING a=string_parser(pos);
+		ergebnis=(pafuncs[i].routine)(a);
+		free_string(a);
+	      	return(ergebnis);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",s);
           }/* Nicht in der Liste ?    */
          if(strcmp(s,"INP%")==0) {
@@ -1658,7 +1650,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	   i=get_number(w1);
 	   nn=(int)parser(w2);
 	
-           ergeb.typ=INTARRAYTYP;
+           ergeb.typ=INTTYP;
 	   ergeb.dimension=1;
 	   ergeb.pointer=malloc(INTSIZE+nn*sizeof(int));
 	   ((int *)(ergeb.pointer))[0]=nn;
@@ -1689,7 +1681,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	       int indexa[variablen[vnr].opcode];
 	
 	     /* Dimension des reduzierten Arrays bestimmen */
-	       ergebnis.typ=FLOATARRAYTYP;
+	       ergebnis.typ=FLOATTYP;
 	       e=wort_sep(pos,',',TRUE,w1,w2);
 	       while(e) {
 	         if(w1[0]!=':' && w1[0]!=0) {
@@ -1781,7 +1773,7 @@ STRING string_parser(char *funktion) {
   STRING ergebnis;
   char v[strlen(funktion)+1],w[strlen(funktion)+1];
 
-  /*printf("S-Parser: <%s>\n",funktion);*/
+ // printf("S-Parser: <%s>\n",funktion);
   if(wort_sep(funktion,'+',TRUE,v,w)>1) {
     STRING t=string_parser(v);
     STRING u=string_parser(w);
@@ -1795,7 +1787,7 @@ STRING string_parser(char *funktion) {
     char *pos,*pos2,*inhalt;
     int vnr;
 
-    /*printf("s-parser: <%s>\n",funktion);*/
+  //  printf("s-parser: <%s>\n",funktion);
     strcpy(v,funktion);
     pos=searchchr(v, '(');
     if(pos!=NULL) {
@@ -1811,14 +1803,19 @@ STRING string_parser(char *funktion) {
 	if(*v=='@')     /* Funktion oder Array   */
  	  ergebnis=do_sfunktion(v+1,pos);	
         else {  /* Liste durchgehen */
+	  int i=0,a=anzpsfuncs-1,b;    
 
-	  int i=0,a=anzpsfuncs-1,b;
           for(b=0; b<strlen(v); b++) {
             while(v[b]>(psfuncs[i].name)[b] && i<a) i++;
             while(v[b]<(psfuncs[a].name)[b] && a>i) a--;
             if(i==a) break;
           }
+//          printf("s-parser: <%s>\n",funktion);
+  
           if(strcmp(v,psfuncs[i].name)==0) {
+//          printf("Funktion gefunden <%s>\n",psfuncs[i].name);
+//          printf("opcode=%d pmax=%d  AQUICK=%d\n",psfuncs[i].opcode&FM_TYP,psfuncs[i].pmax,F_AQUICK);
+	  
 	      if((psfuncs[i].opcode&FM_TYP)==F_SIMPLE || psfuncs[i].pmax==0)
 	        ergebnis=(psfuncs[i].routine)();
 	      else if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT)
@@ -1847,6 +1844,11 @@ STRING string_parser(char *funktion) {
 		test.pointer[test.len]=0;
 	        ergebnis=(psfuncs[i].routine)(test);
 		free(test.pointer);
+	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_AQUICK) {
+                ARRAY test=array_parser(pos);
+	//	printf("ARRAY PArser <%s> dim=%d\n",pos,test.dimension);
+	        ergebnis=(psfuncs[i].routine)(test);
+		free_array(test);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",v);
 	   /* Nicht in der Liste ? Dann kann es noch ARRAY sein   */
 	    } else {
@@ -1939,38 +1941,25 @@ STRING string_parser(char *funktion) {
   return(ergebnis);
 }
 
-
-char *hexoct_to_string(char n,char *pos) {
-
           /* STR$(a[,b[,c[,d]]])     */
-          char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  char formatter[20];
-	  int j,e,b=-1,c=13,mode=0,i=0;
-	  unsigned int a;
-	  char *ergebnis;
-          e=wort_sep(pos,',',TRUE,w1,w2);
-	  while(e) {
-	    if(strlen(w1)) {
-              switch(i) {
-	      case 0: {a=(unsigned int)parser(w1);break;}
-	      case 1: {b=min(50,max(0,(int)parser(w1)));break;}
-	      case 2: {c=min(50,max(0,(int)parser(w1)));break;}
-	      case 3: {mode=(int)parser(w1);break;}
 
-              default: break;
-              }
-            }
-	    e=wort_sep(w2,',',TRUE,w1,w2);
-            i++;
-          }
+
+STRING hexoct_to_string(char n,PARAMETER *plist, int e) {
+  STRING ergebnis;
+  char formatter[20];
+  int b=-1,c=13,mode=0;
+  unsigned int a=plist[0].integer;
+  if(e>1) b=min(50,max(0,plist[1].integer));
+  if(e>2) c=min(50,max(0,plist[2].integer));
+  if(e>3) mode=plist[3].integer;
 	
-	
-	  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%d%c",b,c,n);
-	  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%d%c",b,c,n);
-	  else  sprintf(formatter,"%%.13%c",n);
-	  ergebnis=malloc(20);
-          sprintf(ergebnis,formatter,a);
-	  return(ergebnis);
+  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%d%c",b,c,n);
+  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%d%c",b,c,n);
+  else  sprintf(formatter,"%%.13%c",n);
+  ergebnis.pointer=malloc(31);
+  sprintf(ergebnis.pointer,formatter,a);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
 }
 
 

@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  So Feb 5 12:45:19 CET 2006
+          Last change to this file:  Do MÃ¤r 15 20:46:41 CET 2007
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -2833,6 +2833,19 @@ DESCRIPTION:
 SEE ALSO: TIMER, STIMER
 ##############################################################################
 
+Function:   CVA()
+Syntax:     <array-result>=CVA(<string-expression>)
+DESCRIPTION:
+
+	Returns array reconstructed from the string.
+	This function is the compliment of MKA$().
+
+EXAMPLE: 
+	a()=CVA(t$)
+	
+SEE ALSO:  ASC(), CVF(), CVL(), MKA$()
+##############################################################################
+
 Function:   CVD()
 Syntax:     <num-result>=CVD(<string-expression>)
 DESCRIPTION:
@@ -4407,6 +4420,38 @@ EXAMPLE:
        	Result: 1, -2
 
 ##############################################################################
+
+Function:   IOCTL()
+Syntax:     <num-result> = IOCTL(#n,d%[,adr%]) 
+DESCRIPTION:
+
+       IOCTL() manipulates the underlying device parameters of special files.  
+       In particular, many operating characteristics of character
+       special  files  (e.g. terminals) may be controlled with ioctl requests.
+       The argument #n must refer to an open file.
+
+       The second argument is a  device-dependent  request  code.   The  third
+       argument  is  an  untyped  pointer  to memory.  
+
+       An ioctl request has encoded in it whether the argument is an in param-
+       eter or out parameter, and the size of  the  argument adr% refers to in 
+       bytes.
+
+       Usually, on success zero is returned.  A  few  ioctls  use  the  return
+       value as an output parameter and return a nonnegative value on success.
+       On error, -1 is returned, and errno is set appropriately.
+
+SEE ALSO:   OPEN, CLOSE
+EXAMPLE:
+        OPEN "U",#1,"/dev/console"
+        frequency=300
+        tone=1190000/frequency
+        KIOCSOUND=19247
+        PRINT ioctl(#1,KIOCSOUND,tone)  ! Sounds the speaker
+        CLOSE #1
+       	Result: 0
+
+##############################################################################
 ##############################################################################
 Function:   JULDATE$()
 Syntax:     d$=juldate$(a)
@@ -4853,12 +4898,13 @@ DESCRIPTION:
 SEE ALSO: MAX()	  
 ##############################################################################
 
-Function: MKI$(), MKL$(), MKS$(), MKF$(), MKD$()
+Function: MKI$(), MKL$(), MKS$(), MKF$(), MKD$(), MKA$()
 Syntax:   <string-result>=MKI$(<num-expression>)
           <string-result>=MKL$(<num-expression>)
           <string-result>=MKS$(<num-expression>)
           <string-result>=MKF$(<num-expression>)
           <string-result>=MKD$(<num-expression>)
+          <string-result>=MKA$(<array-expression>)
 
 
 DESCRIPTION:
@@ -4869,9 +4915,10 @@ DESCRIPTION:
         MKS$ a number into a 4-byte float format.       \\
         MKF$ same as MKS$().                            \\
         MKD$ a number into a 8-byte double float format.
+        MKA$() transforms a whole Array into a string. 
+	It can be beacktransformed with CVA().
 
-
-SEE ALSO: CVI(), CVF(), CVL()
+SEE ALSO: CVI(), CVF(), CVL(), CVA(), CVS(), CVD()
 
 ##############################################################################
 
@@ -6992,6 +7039,10 @@ Version 1.12 (Mar 2005)
 Version 1.13 (Feb 2006)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - fixed bug in INPUT$()
+- woked in the TINE implementation (TINELISTEN, TINEBROADCAST)
+- new MKA$(), CVA()
+- fixed bug in PAUSE/DELAY
+- implemented ioctl() function
 
 --------------------------------------------------------------------------------
 *Acknowlegements

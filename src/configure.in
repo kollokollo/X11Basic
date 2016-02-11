@@ -137,6 +137,8 @@ AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
 AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses")
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS -lX11 -lm])
+# `-ltine':
+AC_CHECK_LIB([tine], [_SystemCycle],AC_DEFINE(HAVE_TINE,1,[_SystemCycle in dynamical TINE lib]),,[ -lm])
 # `-lvgagl -lvga':
 AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
 

@@ -19,6 +19,7 @@ int f_crc      (PARAMETER *,int);
 int f_gray     (int);
 
 int f_julian   (STRING);
+int f_ioctl   (PARAMETER *,int);
 
 STRING f_chrs    (int);
 STRING f_spaces  (int);

@@ -100,7 +100,16 @@ cp mathemat_dummy.c mathematics.c
       then:
 make lib              will generate libx11basic.so
 make x11basic.a       will generate x11basic.a
+
 -- now you have to be root --
+
+mv libx11basic.so /usr/lib/
+mv x11basic.a /usr/lib/
+-- please also check the permissions of the files:
+chmod 755 	/usr/lib/x11basic.a		
+chmod 755       /usr/lib/libx11basic.so 
+rehash
+
 make installroot
                   will generate a dynamic linked binary of the interpreter,
 		  copy it to /bin/, install the libraries in /usr/local/lib/,
