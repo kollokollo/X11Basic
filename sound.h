@@ -19,7 +19,7 @@
 extern int soundsystem_available;
 
 int init_soundsystem();
-int do_sound(int c,double freq, double volume, int duration);
+int do_sound(int c,double freq, double volume, double duration);
 int do_wave(int c,int form, double attack, double decay, double sustain, double release);
 int do_playsound(int c, char *data, int size, int pitch, int colume, int flag);
 void sound_activate();

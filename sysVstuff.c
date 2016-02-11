@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-#ifdef WINDOWS
+#if defined WINDOWS || defined ANDROID
 #define EX_OK 0
 #else
 #include <sysexits.h>
@@ -24,8 +24,10 @@
 #if 0
 #include <sys/msg.h>
 #endif
+#ifndef ANDROID
 #include <sys/sem.h>
 #include <sys/shm.h>
+#endif
 #else
 #define key_t int
 #endif
@@ -49,13 +51,15 @@ void read_message(int qid, struct mymsgbuf *qbuf, long type);
 void remove_queue(int qid);
 void change_queue_mode(int qid, char *mode);
 #endif
-void opensem(int *sid, key_t key);
-void createsem(int *sid, key_t key, int members);
+#if 0
+static void opensem(int *sid, key_t key);
+static void createsem(int *sid, key_t key, int members);
 void locksem(int sid, int member);
 void unlocksem(int sid, int member);
 void removesem(int sid);
-unsigned short get_member_count(int sid);
-int getval(int sid, int member);
+static unsigned short get_member_count(int sid);
+static int getval(int sid, int member);
+#endif
 void dispval(int sid, int member);
 void changemode(int sid, char *mode);
 void shm_free(int);
@@ -129,26 +133,26 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 }
 
 
-
-int opensem( key_t key) {   /* Open the semaphore set - do not create! */
+#if 0
+static int opensem( key_t key) {   /* Open the semaphore set - do not create! */
   int sid;
   if((*sid = semget(key, 0, 0666)) == -1) printf("Semaphore set does not exist!\n");
   return(sid);
 }
 
 
-void createsem(int *sid, key_t key, int members) {
+static void createsem(int *sid, key_t key, int members) {
   int cntr;
   union semun semopts;
 
   if(members > SEMMSL) {
 	  printf("Sorry, max number of semaphores in a set is %d\n",SEMMSL);
-	  exit(EX_OSERR);
+	  return;
   }
   printf("Attempting to create new semaphore set with %d members\n",members);
   if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666))== -1) {
                 fprintf(stderr, "Semaphore set already exists!\n");
-                exit(EX_OSERR);
+                return;
   }
 
 
@@ -175,14 +179,14 @@ void locksem(int sid, int member)
         /* Attempt to lock the semaphore set */
         if(!getval(sid, member)) {
                  fprintf(stderr, "Semaphore resources exhausted (no lock)!\n");
-                 exit(EX_OSERR);
+                 return;
         }
 
         sem_lock.sem_num = member;
 
         if((semop(sid, &sem_lock, 1)) == -1) {
                  fprintf(stderr, "Lock failed\n");
-                 exit(EX_OSERR);
+                 return;
         } else printf("Semaphore resources decremented by one (locked)\n");
 
         dispval(sid, member);
@@ -204,7 +208,7 @@ void unlocksem(int sid, int member)
         semval = getval(sid, member);
         if(semval == SEM_RESOURCE_MAX) {
                  fprintf(stderr, "Semaphore not locked!\n");
-                 exit(EX_OSERR);
+                 return;
         }
         sem_unlock.sem_num = member;
 
@@ -212,19 +216,17 @@ void unlocksem(int sid, int member)
         /* Attempt to lock the semaphore set */
         if((semop(sid, &sem_unlock, 1)) == -1) {
                 fprintf(stderr, "Unlock failed\n");
-                exit(EX_OSERR);
+                return;
         } else printf("Semaphore resources incremented by one (unlocked)\n");
         dispval(sid, member);
 }
-
 
 void removesem(int sid){
   semctl(sid, 0, IPC_RMID, 0);
 }
 
 
-unsigned short get_member_count(int sid)
-{
+static unsigned short get_member_count(int sid) {
         union semun semopts;
         struct semid_ds mysemds;
 
@@ -235,7 +237,7 @@ unsigned short get_member_count(int sid)
         /* Return number of members in the semaphore set */
         return(semopts.buf->sem_nsems);
 }
-int getval(int sid, int member) {
+static int getval(int sid, int member) {
         int semval;
 	
         semval = semctl(sid, member, GETVAL, 0);
@@ -254,7 +256,7 @@ void changemode(int sid, char *mode) {
         rc = semctl(sid, 0, IPC_STAT, semopts);
         if (rc == -1) {
                  perror("semctl");
-                 exit(EX_OSERR);
+                 return;
         }
 
         printf("Old permissions were %o\n", semopts.buf->sem_perm.mode);
@@ -275,6 +277,7 @@ void dispval(int sid, int member) {
         semval = semctl(sid, member, GETVAL, 0);
         printf("semval for member %d is %d\n", member, semval);
 }
+#endif
 
 #endif
 
@@ -284,6 +287,7 @@ int shm_malloc(size_t segsize, key_t key) {
   /* Open the shared memory segment - create if necessary */
 #ifndef WINDOWS
 #ifndef __CYGWIN__
+#if 0
   if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
     /* Segment probably already exists - try as a client */
     if((shmid=shmget(key,segsize,0))==-1) {
@@ -291,6 +295,7 @@ int shm_malloc(size_t segsize, key_t key) {
       return(-1);
     }
   }
+  #endif
 #endif       
 #endif 
   return(shmid);
@@ -299,10 +304,12 @@ int shm_attach(int shmid) {
   int r;
 #ifndef WINDOWS
 #ifndef __CYGWIN__
+#if 0
  if((r=(int)shmat(shmid,0,0))==-1) {
    io_error(errno,"SHM_ATTACH");    /* shm_malloc error.*/ 
    return(-1);
   }
+  #endif
 #endif 
 #endif 
  return(r);
@@ -312,7 +319,9 @@ int shm_detatch(int shmaddr) {
   int r;
  #ifndef WINDOWS
 #ifndef __CYGWIN__ 
+#if 0
  if((r=(int)shmdt((void *)shmaddr))==-1) return(errno);
+#endif
 #endif 
 #endif
  return(0);
@@ -321,8 +330,10 @@ int shm_detatch(int shmaddr) {
 void shm_free(int shmid){        /*  mark for deletion*/
 #ifndef WINDOWS
 #ifndef __CYGWIN__
+#if 0
         int r=shmctl(shmid, IPC_RMID, 0);
 	if(r==-1) io_error(errno,"SHM_FREE");
+#endif
 #endif
 #endif
 }

@@ -35,6 +35,10 @@ int f_int(double b);
 int f_fix(double b);
 int f_fak(int k);
 
+int f_and(int v1, int v2);
+int f_or( int v1, int v2);
+int f_xor(int v1, int v2);
+int f_not(int v1);
 
 double f_pred(double b);
 
@@ -50,4 +54,5 @@ int f_gray     (int);
 int f_julian   (STRING);
 int f_ioctl   (PARAMETER *,int);
 
+double f_sensor (int);
 

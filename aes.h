@@ -12,7 +12,7 @@
 #define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
 
 #define WORD short
-#define LONG unsigned int
+#define LONG unsigned long
 
 
 
@@ -95,8 +95,11 @@
 #define ALL_BLACK 15
 						/* font types		*/
 #define FONT_IBM 3
-#define FONT_SMALL 5
-#define FONT_BIG 1
+#define FONT_SMALLIBM 5
+#define FONT_BIGIBM 6
+#define FONT_SMALL 40
+#define FONT_BIG 10
+#define FONT_LARGE 20
 #define FONT_DEFAULT FONT_IBM
 
 #define EDSTART 0

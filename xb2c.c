@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2011
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2012
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
-#ifdef WINDOWS
+#if defined WINDOWS || defined ANDROID
 #define EX_CANTCREAT	73	/* can't create (user) output file */
 #define EX_NOINPUT	66	/* cannot open input */
 #define EX_OK 0
@@ -46,8 +46,8 @@ FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.18";        /* Programmversion*/
-const char vdate[]="2011-08-26";
+const char version[]="1.19";        /* Programmversion*/
+const char vdate[]="2012-11-01";
 char *programbuffer=NULL;
 char *program[MAXPRGLEN];
 int programbufferlen=0;
@@ -55,21 +55,19 @@ int programbufferlen=0;
 extern void memdump(unsigned char *,int);
 
 void intro(){
-  puts("***************************************************************");
-  printf("*           X11-Basic to C translator                      *\n");
-  puts("*                    by Markus Hoffmann 1997-2011 (c)         *");
+  puts("***************************************************************\n"
+       "*           X11-Basic to C translator                         *\n"
+       "*                    by Markus Hoffmann 1997-2012 (c)         *");
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
-  puts("***************************************************************");
-  puts("");
+  puts("***************************************************************\n");
 }
 void usage(){
-  puts("\n Usage:\n ------ \n");
-  printf(" %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
+  printf("\n Usage:\n ------ \n"
+         " %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
   printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
   puts("-h --help\t--- Usage\n"
        "-l       \t--- suppress the main function\n"
        "-v\t\t--- be more verbose");
-
 }
 
 void kommandozeile(int anzahl, char *argumente[]) {
@@ -119,7 +117,7 @@ int frishmemcpy(char *d,char *s,int n) {
 void data_section() {
   int i=0,c;
   int count=0;
-  fprintf(optr,"/* compiled by xb2c. */\n\n");
+  fprintf(optr,"/* Data section compiled by xb2c. */\n\n");
   if(bytecode->sdataseglen) {
     fprintf(optr,"static const char datasec[%d]=\n",(int)bytecode->sdataseglen);
     fprintf(optr,"\"");
@@ -158,26 +156,27 @@ void data_section() {
   }
 }
 
-void compile() {
+void translate() {
   char *buf;
   
   char c;
-  int i,a,n,b,redo;
+  int i,n,b,redo;
   short ss,ss2;
   double d;
   char *bcpc=(char *)bytecode+sizeof(BYTECODE_HEADER);
   unsigned char cmd;
-  int vidx[1000];
   int pcount=0;
 
-  a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+  int a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+  int vidx[a];
+  
   if(a>0) { 
     fprintf(optr,"\n/* Function prototypes */\n");
     for(i=0;i<a;i++) {
       if(symtab[i].typ==STT_FUNC) {
         if(symtab[i].name)
-           fprintf(optr,"void proc_%s();\t/* $%x */\n",&strings[symtab[i].name],(unsigned int)symtab[i].adr);
-        else  fprintf(optr,"void FUNC_%x();\t /* 0x%x */\n",(unsigned int)symtab[i].adr,(unsigned int)symtab[i].adr);
+           fprintf(optr,"void proc_%s(); \t/* $%x */\n",&strings[symtab[i].name],(unsigned int)symtab[i].adr);
+        else  fprintf(optr,"void FUNC_%x(); \t/* 0x%x */\n",(unsigned int)symtab[i].adr,(unsigned int)symtab[i].adr);
       }
     }
   }
@@ -200,8 +199,8 @@ void compile() {
 	else if(typ==ARRAYTYP)  fprintf(optr,"ARRAY  VARa_");
         vidx[count]=i;
         if(symtab[i].name)
-              fprintf(optr,"%s;  /* typ=0x%x, subtyp=0x%x; vnr=%d sym=%d $%04x: */\n",&strings[symtab[i].name],typ,subtyp,count,i,(unsigned int)symtab[i].adr);
-        else  fprintf(optr,"_%d; /* typ=0x%x, subtyp=0x%x;        sym=%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
+              fprintf(optr,"%s; \t/* typ=0x%x, subtyp=0x%x; vnr=%d sym=%d $%04x: */\n",&strings[symtab[i].name],typ,subtyp,count,i,(unsigned int)symtab[i].adr);
+        else  fprintf(optr,"_%d; \t/* typ=0x%x, subtyp=0x%x;        sym=%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
         count++;
       }
       fflush(optr);
@@ -224,9 +223,9 @@ void compile() {
     fprintf(optr,"\nvoid lib_%s_init() {\n",nn);
   } else {
     fprintf(optr,"\nmain(int anzahl, char *argumente[]) {\n"
-               "  MAIN_INIT;\n");
-    fprintf(optr,"databufferlen=%d;\n",(int)bytecode->dataseglen);
-    if(bytecode->dataseglen) fprintf(optr,"databuffer=datasec;\n");
+               "  MAIN_INIT;\n"
+               "  databufferlen=%d;\n",(int)bytecode->dataseglen);
+    if(bytecode->dataseglen) fprintf(optr,"  databuffer=datasec;\n");
   }
   
   if(a>0) { 
@@ -250,12 +249,12 @@ void compile() {
 	
 	if(typ==INTTYP || typ==FLOATTYP) {
           if(symtab[i].name)
-                fprintf(optr,"  add_variable_adr(\"%s\",0x%x,(char *)&%s%s); /*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
-          else  fprintf(optr,"  add_variable_adr(\"VAR_%d\",0x%x,(char *)&%s_%d); /*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
+                fprintf(optr,"  add_variable_adr(\"%s\",0x%x,(char *)&%s%s); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable_adr(\"VAR_%d\",0x%x,(char *)&%s_%d); \t/*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
 	} else {
           if(symtab[i].name)
-                fprintf(optr,"  add_variable(\"%s\",0x%x,0x%x); /*%d $%02x: */\n",&strings[symtab[i].name],typ,subtyp,count,(unsigned int)symtab[i].adr);
-          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0x%x); /*%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
+                fprintf(optr,"  add_variable(\"%s\",0x%x,0x%x); \t/*%d $%02x: */\n",&strings[symtab[i].name],typ,subtyp,count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0x%x); \t/*%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
 	}
         count++;
       }
@@ -571,7 +570,7 @@ void compile() {
       else fprintf(optr,"\n");
       break;
     default:
-      printf("VM: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
+      printf("xb2c: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
       memdump((unsigned char *)&(bcpc[i]),16);
     }
   }
@@ -587,48 +586,49 @@ int loadbcprg(char *filename) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Code-VM.c (%s)\n",filename);
-    fprintf(optr,"   X11-BAsic-Compiler Version 1.18\n"
-                 "   (c) Markus Hoffmann 2002-2011\n"
-                 "*/\n");
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.19\n"
+                 "   (c) Markus Hoffmann 2002-2012\n"
+                 "\n"
+                 "\nBytecode: %s (%d Bytes)\n\n",filename,len);
+		 
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
-      printf("WARNING: This Bytecode was compiled for a different version of"
-      "X11-Basic.\n ");
+      printf("xb2c: ERROR: Cannot translate this bytecode.\nThis bytecode was compiled for a different version of "
+      "X11-Basic.\nPlease consider to recompile it.\n");
+      return(-1);
     }
-    fprintf(optr,"/*\nBytecode: %s (%d Bytes)\n",filename,len);
-        /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
+        /* Sicherstellen, dass der Speicherbereich auch gross genug ist fuer bss segment*/
     if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
       len+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
-printf("need realooc\n");
+      if(verbose) printf("xb2c INFO: need realloc\n");
       p=realloc(p,len);
       bytecode=(BYTECODE_HEADER *)p;
     }
     
-    fprintf(optr,"txt:  $%08x %d\n",sizeof(BYTECODE_HEADER),(int)bytecode->textseglen);
+    fprintf(optr,"txt:    $%08x %d\n",sizeof(BYTECODE_HEADER),(int)bytecode->textseglen);
     fprintf(optr,"rodata: $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                       (unsigned int)bytecode->textseglen,(int)bytecode->rodataseglen);
     rodata=p+sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen;
-    fprintf(optr,"sdata: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"sdata:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                       (unsigned int)bytecode->textseglen+
 				      (unsigned int)bytecode->rodataseglen,(int)bytecode->sdataseglen);
-    fprintf(optr,"data: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"data:   $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                     (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen,(int)bytecode->dataseglen);
     datasec=(unsigned char *)&p[sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen+
     bytecode->rodataseglen];
-    fprintf(optr,"bss:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"bss:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                     (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen+
 				    (unsigned int)bytecode->dataseglen,(int)bytecode->bssseglen);
-    fprintf(optr,"str:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"str:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                    (unsigned int)bytecode->textseglen+
 				   (unsigned int)bytecode->rodataseglen+
 				   (unsigned int) bytecode->sdataseglen+
 				   (unsigned int)bytecode->dataseglen,(int)bytecode->stringseglen);
-    fprintf(optr,"sym:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"sym:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
                                    (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen+
@@ -636,22 +636,21 @@ printf("need realooc\n");
 				   (unsigned int)bytecode->stringseglen,(int)bytecode->symbolseglen);
     strings=p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->rodataseglen+bytecode->sdataseglen+
     bytecode->dataseglen;
-    fprintf(optr,"Strings: %s\n",strings);
+    fprintf(optr,"Strings: %s\n\n",strings);
     symtab=(BYTECODE_SYMBOL *)(p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->rodataseglen+bytecode->sdataseglen+
                                  bytecode->dataseglen+bytecode->stringseglen);
     c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
 
-    fprintf(optr,"%d symbols.\n",c);
+    fprintf(optr,"%d symbols:\n",c);
     for(i=0;i<c;i++) {
-      if(verbose) fprintf(optr,"%d : $%08x %s\n",i,(unsigned int)symtab[i].adr,&strings[symtab[i].name]);
+      if(verbose) fprintf(optr,"%4d : $%08x %s\n",i,(unsigned int)symtab[i].adr,&strings[symtab[i].name]);
     }
-    fprintf(optr,"    */\n");
-    fprintf(optr,"#include <x11basic/xb2csol.h>\n");
-    fprintf(optr,"\n\n");
+    fprintf(optr,"\t\t\t*/\n"
+                 "#include <x11basic/xb2csol.h>\n\n");
     fflush(optr);
     return(0);
   } else {
-    printf("VM: ERROR, file format not recognized.\n");
+    printf("xb2c: ERROR, file format not recognized.\n");
     return(-1);
   }
 }
@@ -667,10 +666,9 @@ int main(int anzahl, char *argumente[]) {
       if(exist(ifilename)) {
           /* file oeffnen */
 	optr=fopen(ofilename,"w");
-        
         if(loadbcprg(ifilename)==0) {
           data_section();
-	  compile();
+	  translate();
 	}
 	fclose(optr);
       } else {

@@ -6,8 +6,6 @@
  * COPYING for details
  */
 
-extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten);
-extern double *backsub(double *, double *, double *, double *,int,int);
 
 ARRAY create_array(int , int ,int *);
 ARRAY create_int_array(int dimension, int *dimlist,int value);
@@ -42,7 +40,6 @@ void fill_float_array  (ARRAY *,double);
 int do_dimension       (VARIABLE *v);
 int anz_eintraege(ARRAY *a);
 
-char *arrptr(PARAMETER *,int);
 void *arrayvarptr(int vnr, char *n,int size);
 void *arrayvarptr2(int vnr, int *indexliste,int size);
 STRING array_to_string(ARRAY inhalt);

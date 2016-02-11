@@ -1,18 +1,16 @@
 
-Release notes for Version 1.18 (Sept 2011)
+Release notes for Version 1.19 (Mai 2012)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Reworked variable management
-- Reworked xb2c compiler, produced code is now much(!) faster.
-- interpreter is now 8% faster
-- virtual machine is 20 times faster than interpreter
-- compiled code is 30 times faster than interpreter
-- improved detection of const expressions.
-- improved detection of fieldindex too large (less segfaults now)
-- fixed a memory leak
-- updated the documentation
-- changed DIM behavior: DIM a(10) means elements a(0) to a(9) are there.
-- fixed some bugs. 
-- New command: CURVE
-- Implemented DEFFN
-- Optimized Compiler: simple math functions and Square
-
+- Android version
+- virtual machine now included in library
+- new GPS and SENSOR commands (for Android version)
+- new SPEAK kommand (for Android version)
+- improved framebuffer graphics routines
+- new command: PLAYSOUNDFILE (for Android version)
+- new command: GET_LOCATION
+- BUGFIX: SOUND, WAVE, AND(), OR(), XOR(), NOT()
+- BUGFIX: FOR with integer variable
+- BUGFIX: SELECT CASE ENDSELECT
+- NEW: "!" is now allowed at the beginning of a line
+- BUGFIX: SELECT/CONTINUE
+- some minor changes for 64bit version

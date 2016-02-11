@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x118
+#define BC_VERSION 0x1197   /* Version 1.19 release 7*/
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
@@ -195,14 +195,10 @@ typedef struct {
 /* Protos */
 
 PARAMETER *virtual_machine(STRING, int *);
-void bc_jumptosr2(int ziel);
-void plist_to_stack(PARAMETER *pp, short *pliste, int anz, int pmin, int pmax);
-void compile();
-void bc_pushv_name(char *var);
-void bc_pushv(int vnr);
-void bc_zuweis_name(char *var);
-int vm_x2i(PARAMETER *sp);
-int vm_x2f(PARAMETER *sp);
+void compile(int verbose);
+int bc_parser(char *funktion);
+
+#if 0
 int vm_add(PARAMETER *sp);
 int vm_sub(PARAMETER *sp);
 int vm_mul(PARAMETER *sp);
@@ -217,6 +213,7 @@ int vm_asysvar(PARAMETER *sp,int n);
 int vm_dup(PARAMETER *sp);
 int vm_exch(PARAMETER *sp);
 int vm_neg(PARAMETER *sp);
+
 void cast_to_real(PARAMETER *sp);
 void cast_to_int(PARAMETER *sp);
 int vm_sfunc(PARAMETER *sp,int i, int anzarg);
@@ -230,3 +227,4 @@ int vm_pusharrayelem(int vnr,PARAMETER *sp, int dim);
 int vm_pushv(int vnr,PARAMETER *sp);
 void  push_v(PARAMETER *p, VARIABLE *v);
 int vm_eval(PARAMETER *sp);
+#endif

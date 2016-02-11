@@ -1,4 +1,4 @@
-.TH XBC 1 19-Aug-2011 "Version 1.18" "Linux Basic Compiler"
+.TH XBC 1 21-Aug-2011 "Version 1.18" "Linux Basic Compiler"
 .SH NAME
 xbc (X11-Basic compiler) \- X11-Basic compiler 
 .SH SYNOPSIS
@@ -31,6 +31,7 @@ processing to be done:
 .nf
 .ta \w'\fB.cxx\fP  'u
 \&\fB.bas\fP	Basic source; preprocess, compile, link
+\&\fB.b\fP	bytecode file; translate to C, then compile to native code
 \&\fB.o\fP	Object file; link
 .Sp
 .fi
@@ -158,7 +159,7 @@ xbc testme.bas -c
     produces testme.o
 xbc testme.bas -b
     produces testme.c or 11.c or b.b
-xbc testme.bas -virtualm -o b.out  --dynamic
+xbc testme.bas -virtualm --dynamic -o b.out
     produces b.out, which excecutes really fast!
 .fi
 
@@ -174,20 +175,22 @@ independant executable. Another advantage is that it is quite hard to extract a
 full running *.bas File from this binary since the code is compressd in a way. 
 Why is this the default? Well the compiler can pseudo-compile all BASIC 
 programs, which run in the interpreter. The real compiler has some restrictions 
-on the BASIC code, because it cannot compile every contructs (e.g. jumps/GOTO out 
+on the BASIC code, because it cannot compile every constructs (e.g. jumps/GOTO out 
 of a procedure). The compiler relies on gcc. The compiler for the MS WINDOWS 
 version behaves different (since no gcc is available): Here the BASIC program 
 is compiled into bytecode, which is packed together with a virtual machine into 
 an excecutable file. The bytecode is then interpreted on runtime, but anyway this
 is much faster than the interpreted code. Of course, you can always translate the 
-bytecode to a C source and crosscompile this for any platform.
+bytecode to a C source and crosscompile this for any platform. On MS windows it is
+worth looking for tcc, the tiny c compiler. It installs really quick and does the 
+job.
 
 
 .SH VERSION
 Page was created for V.1.18
 .SH BUG REPORTS       
 
-If you find a bug in the X11-Basic pseudo compiler, you should
+If you find a bug in the X11-Basic compiler xbc, you should
 report it. But first,  you  should make sure that it really is
 a bug, and that it appears in the latest version of the
 X11-Basic package that you have.
@@ -206,7 +209,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public

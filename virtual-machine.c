@@ -21,32 +21,59 @@
 #include "array.h"
 #include "io.h"
 
-extern int verbose;
 extern int datapointer;
+
+
+
+/* Aus Geschwindigkeitsgruenden kann der verbose mode abgeschaltet werden, wenn er keinen sinn
+macht (z.B. beim Android) */
+// #define USE_VERBODE
+
+#ifdef USE_VERBOSE
+extern int verbose;
+#define  VERBOSE(...)  if(verbose) printf(__VA_ARGS__)
+#else 
+#define  VERBOSE(...) 
+#endif
+
+#define TYPEMISMATCH(...) printf("ERROR: type mismatch for %s.\n",__VA_ARGS__)
+#define VMERROR(...) printf("VM-ERROR: %s.\n",__VA_ARGS__)
+
+/*for every platform where no real compiler exists define some functions
+  static --> higher performance */
+
+#if defined ANDROID || defined WINDOWS
+#define ISTATIC inline static
+#define STATIC static
+#else
+#define ISTATIC
+#define STATIC
+#endif
+
 
 char *rodata;
 
-int vm_x2i(PARAMETER *sp) {    /* cast to integer */
-  if(verbose) printf("x2i ");
+inline static int vm_x2i(PARAMETER *sp) {    /* cast to integer */
+  VERBOSE("x2i ");
   if(sp[-1].typ==PL_INT) return(0);
   else if(sp[-1].typ==PL_FLOAT) {
     sp[-1].integer=(int)sp[-1].real;
     sp[-1].typ=PL_INT;  
-  } else printf("X2I: something is wrong.\n");
+  } else VMERROR("X2I");
   return(0);
 }
-int vm_x2f(PARAMETER *sp) {    /* cast to integer */
-  if(verbose) printf("x2f ");
+inline static int vm_x2f(PARAMETER *sp) {    /* cast to integer */
+  VERBOSE("x2f ");
   if(sp[-1].typ==PL_FLOAT) return(0);
   else if(sp[-1].typ==PL_INT) {
     sp[-1].real=(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;  
-  } else printf("X2F: something is wrong.\n");
+  } else VMERROR("X2F");
   return(0);
 }
 
-int vm_add(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_add ");
+STATIC int vm_add(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_add ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer+=sp[0].integer;
   else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real+=sp[0].real;
@@ -67,13 +94,13 @@ int vm_add(PARAMETER *sp) {    /* binaer addition */
     free(a.pointer);
     free(b.pointer);
   } else {
-    puts("ERROR: incompatible types for ADD.");
+    TYPEMISMATCH("ADD");
     free_parameter(sp);
   }
   return(-1);
 }
-int vm_sub(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_sub ");
+STATIC int vm_sub(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_sub ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer-=sp[0].integer;
   else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real-=sp[0].real;
@@ -82,13 +109,13 @@ int vm_sub(PARAMETER *sp) {    /* binaer addition */
     sp[-1].real=sp[0].real-(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;
   } else {
-    puts("ERROR: incompatible types for SUB.");
+    TYPEMISMATCH("SUB");
     free_parameter(sp);
   }
   return(-1);
 }
-int vm_mul(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_mul ");
+STATIC int vm_mul(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_mul ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer*=sp[0].integer;
   else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) sp[-1].real*=sp[0].real;
@@ -97,13 +124,13 @@ int vm_mul(PARAMETER *sp) {    /* binaer addition */
     sp[-1].real=sp[0].real*(double)sp[-1].integer;
     sp[-1].typ=PL_FLOAT;
   } else {
-    puts("ERROR: incompatible types for MUL.");
+    TYPEMISMATCH("MUL");
     free_parameter(sp);
   }
   return(-1);
 }
-int vm_pow(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_pow ");
+STATIC int vm_pow(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_pow ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
     sp[-1].real=pow((double)sp[-1].integer,(double)sp[0].integer);
@@ -114,7 +141,7 @@ int vm_pow(PARAMETER *sp) {    /* binaer addition */
   else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) {
     sp[-1].real=pow(sp[0].real,(double)sp[-1].integer);
   } else {
-    puts("ERROR: incompatible types for POW.");
+    TYPEMISMATCH("POW");
     free_parameter(sp);
   }
     sp[-1].typ=PL_FLOAT;
@@ -122,7 +149,7 @@ int vm_pow(PARAMETER *sp) {    /* binaer addition */
 }
 #if 0
 int vm_div(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_div ");
+  VERBOSE("vm_div ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
    sp[-1].real=(double)sp[-1].integer/(double)sp[0].integer;
@@ -133,14 +160,14 @@ int vm_div(PARAMETER *sp) {    /* binaer addition */
     sp[-1].real=(double)sp[-1].integer/sp[0].real;
     sp[-1].typ=PL_FLOAT;
   } else {
-    puts("ERROR: incompatible types for DIV.");
+    TYPEMISMATCH("DIV");
     free_parameter(sp);
   }
   return(-1);
 }
 #endif
-int vm_mod(PARAMETER *sp) {    /* binaer addition */
-  if(verbose) printf("vm_mod ");
+STATIC int vm_mod(PARAMETER *sp) {    /* binaer addition */
+  VERBOSE("vm_mod ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT) {
    sp[-1].real=fmod((double)sp[-1].integer,(double)sp[0].integer);
@@ -153,15 +180,15 @@ int vm_mod(PARAMETER *sp) {    /* binaer addition */
     sp[-1].real=fmod((double)sp[-1].integer,sp[0].real);
     sp[-1].typ=PL_FLOAT;
   } else {
-    puts("ERROR: incompatible types for MOD.");
+    TYPEMISMATCH("MOD");
     free_parameter(sp);
   }
   return(-1);
 }
 
 
-int vm_equal(PARAMETER *sp) {    /* binaer and */
-  if(verbose) printf("vm_equal ");
+STATIC int vm_equal(PARAMETER *sp) {    /* binaer and */
+  VERBOSE("vm_equal ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
     sp[-1].integer=(sp[-1].integer==sp[0].integer)?-1:0;
@@ -181,14 +208,14 @@ int vm_equal(PARAMETER *sp) {    /* binaer and */
     sp[-1].integer=v?0:-1;
     
   } else {
-    puts("ERROR: incompatible types for EQUAL.");
+    TYPEMISMATCH("EQUAL");
     free_parameter(sp);
   }
   sp[-1].typ=PL_INT;
   return(-1);
 }
-int vm_greater(PARAMETER *sp) {    /* binaer and */
-  if(verbose) printf("vm_greater ");
+STATIC int vm_greater(PARAMETER *sp) {    /* binaer and */
+  VERBOSE("vm_greater ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
     sp[-1].integer=(sp[-1].integer>sp[0].integer)?-1:0;
@@ -206,14 +233,14 @@ int vm_greater(PARAMETER *sp) {    /* binaer and */
     free_parameter(&sp[-1]);
     sp[-1].integer=(v>0)?-1:0;
   }  else {
-    puts("ERROR: incompatible types for GREATER.");
+    TYPEMISMATCH("GREATER");
     free_parameter(sp);
   }
   sp[-1].typ=PL_INT;
   return(-1);
 }
-int vm_less(PARAMETER *sp) {    /* binaer and */
-  if(verbose) printf("vm_less ");
+STATIC int vm_less(PARAMETER *sp) {    /* binaer and */
+  VERBOSE("vm_less ");
   sp--;
   if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          
     sp[-1].integer=(sp[-1].integer<sp[0].integer)?-1:0;
@@ -231,14 +258,14 @@ int vm_less(PARAMETER *sp) {    /* binaer and */
     free_parameter(&sp[-1]);
     sp[-1].integer=(v>0)?-1:0;
   } else {
-    puts("ERROR: incompatible types for LESS.");
+    TYPEMISMATCH("LESS");
     free_parameter(sp);
   }
   sp[-1].typ=PL_INT;
   return(-1);
 }
-int vm_sysvar(PARAMETER *sp,int n) {    /*  */
-  if(verbose) printf("vm_%s ",sysvars[n].name);	   
+STATIC int vm_sysvar(PARAMETER *sp,int n) {    /*  */
+  VERBOSE("vm_%s ",sysvars[n].name);	   
   if(sysvars[n].opcode&INTTYP) {
     sp->integer=((int (*)())sysvars[n].routine)();
     sp->typ=PL_INT;
@@ -251,24 +278,24 @@ int vm_sysvar(PARAMETER *sp,int n) {    /*  */
   }
   return(1);
 }
-int vm_ssysvar(PARAMETER *sp,int n) {    /*  */
-  if(verbose) printf("vm_%s ",syssvars[n].name);
+ISTATIC int vm_ssysvar(PARAMETER *sp,int n) {    /*  */
+  VERBOSE("vm_%s ",syssvars[n].name);
   STRING a=(syssvars[n].routine)();
   sp->integer=a.len;
   sp->pointer=a.pointer;
   sp->typ=PL_STRING;
   return(1);
 }
-int vm_asysvar(PARAMETER *sp,int n) {    /*  */
-  if(verbose) printf("vm_%s ",sysvars[n].name);
-printf("#####Sysvar ARRAY: %s not implemented\n",sysvars[n].name);
-xberror(9,"Sysvar ARRAY"); /*Function or command %s not implemented*/
-      sp->real=4711;
-      sp->typ=PL_FLOAT;
-      return(1);
+ISTATIC int vm_asysvar(PARAMETER *sp,int n) {    /*  */
+  VERBOSE("vm_%s ",sysvars[n].name);
+  printf("#####Sysvar ARRAY: %s not implemented\n",sysvars[n].name);
+  xberror(9,"Sysvar ARRAY"); /*Function or command %s not implemented*/
+  sp->real=4711;
+  sp->typ=PL_FLOAT;
+  return(1);
 }
-int vm_dup(PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_dup ");
+STATIC int vm_dup(PARAMETER *sp) {    /*  */
+  VERBOSE("vm_dup ");
   sp[0]=sp[-1];   
   if(sp->typ==PL_KEY || sp->typ==PL_STRING) {
     sp[0].pointer=malloc(sp[0].integer+1);
@@ -278,22 +305,22 @@ int vm_dup(PARAMETER *sp) {    /*  */
   }
   return(1);
 }
-int vm_exch(PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_exch ");
+inline static int vm_exch(PARAMETER *sp) {    /*  */
+  VERBOSE("vm_exch ");
   sp[0]=sp[-1];   
   sp[-1]=sp[-2];   
   sp[-2]=sp[0];   
   return(0);
 }
-int vm_neg(PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_neg ");
+ISTATIC int vm_neg(PARAMETER *sp) {    /*  */
+  VERBOSE("vm_neg ");
   if(sp[-1].typ==PL_INT)          sp[-1].integer=-sp[-1].integer;
   else if(sp[-1].typ==PL_FLOAT)   sp[-1].real=-sp[-1].real;
-  else puts("ERROR: incompatible types for NEG.");
+  else TYPEMISMATCH("NEG");
   return(0);
 }
-void cast_to_real(PARAMETER *sp) {
-  if(verbose) printf("vm_cast-to-real ");
+inline static void cast_to_real(PARAMETER *sp) {
+  VERBOSE("vm_cast-to-real ");
   if(sp->typ==PL_FLOAT) ;
   else if(sp->typ==PL_LEER) ;
   else if(sp->typ==PL_INT) {
@@ -301,8 +328,8 @@ void cast_to_real(PARAMETER *sp) {
     sp->real=(double)sp->integer;
   } else printf("ERROR: CAST to real not possible for $%x/not implemented.\n",sp->typ);
 }
-void cast_to_int(PARAMETER *sp) {
-  if(verbose) printf("vm_cast-to-int ");
+inline static void cast_to_int(PARAMETER *sp) {
+  VERBOSE("vm_cast-to-int ");
   if(sp->typ==PL_INT) ;
   else if(sp->typ==PL_LEER) ;
   else if(sp->typ==PL_FLOAT) {
@@ -310,8 +337,8 @@ void cast_to_int(PARAMETER *sp) {
     sp->integer=(int)sp->real;
   } else puts("ERROR: CAST to int not possible/not implemented.");
 }
-int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
-  if(verbose) printf("vm_%s(%d) ",psfuncs[i].name,anzarg);
+STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
+  VERBOSE("vm_%s(%d) ",psfuncs[i].name,anzarg);
   if(anzarg<psfuncs[i].pmin) {
     xberror(42,(char *)psfuncs[i].name); /* Zu wenig Parameter  */
     return 1-anzarg;
@@ -338,7 +365,7 @@ int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
       sp[0].typ=PL_STRING;
       return 1-anzarg;
     } else {
-      printf("ERROR: something is wrong with bytecode.\n");
+      VMERROR("SFUNC");
       return 1-anzarg;
     }
   }
@@ -374,9 +401,8 @@ int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     int a=0;
     if(sp[0].typ==PL_INT)        a=sp[0].integer;
     else if(sp[0].typ==PL_FLOAT) a=(int)sp[0].real;
-    else {
-      printf("Hier stimmt was nicht: falscher Typ fuer Funktion.\n");
-    }
+    else TYPEMISMATCH("Funktion");
+    
     STRING s=(psfuncs[i].routine)(a);
     free_parameter(sp);
     sp[0].pointer=s.pointer;
@@ -390,8 +416,8 @@ int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   return 1-anzarg;
 }
 
-int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
-  if(verbose) printf("vm_.%s(%d) ",pfuncs[i].name,anzarg);
+STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
+  VERBOSE("vm_.%s(%d) ",pfuncs[i].name,anzarg);
   if(anzarg<pfuncs[i].pmin) {
     xberror(42,(char *)pfuncs[i].name); /* Zu wenig Parameter  */
     return 1-anzarg;
@@ -510,10 +536,8 @@ int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   return 1-anzarg;
 }
 
-
-
-int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
-  if(verbose) printf("vm_%s(%d)_%d\n",comms[i].name,anzarg,i);
+STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
+  VERBOSE("vm_%s(%d)_%d\n",comms[i].name,anzarg,i);
   if(comms[i].opcode&P_IGNORE) return -anzarg;
 #ifdef EXTRACHECK
   if(anzarg<comms[i].pmin) {
@@ -548,12 +572,11 @@ int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
        ", diese Funktion bekommt ihre Parameter nicht.");
   return -anzarg;
 }
-int vm_pushvv(int vnr,PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_pushvv_%d\n",vnr);
+
+ISTATIC int vm_pushvv(int vnr,PARAMETER *sp) {    /*  */
+    VERBOSE("vm_pushvv_%d\n",vnr);
     sp->integer=vnr;
-  //  printf("vnr=%d\n",vnr);
     sp->pointer=varptr_indexliste(&variablen[vnr],NULL,0);
-    if(verbose) printf("vm_pushvv_%d\n",vnr);
     if(variablen[vnr].typ==INTTYP) sp->typ=PL_IVAR;
     else if(variablen[vnr].typ==FLOATTYP) sp->typ=PL_FVAR;
     else if(variablen[vnr].typ==STRINGTYP) sp->typ=PL_SVAR;
@@ -561,11 +584,11 @@ int vm_pushvv(int vnr,PARAMETER *sp) {    /*  */
     return(1);
 }
 
-int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
+STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
   int *indexliste=NULL;
   PARAMETER *p=&sp[-dim];
   //dump_parameterlist(p,dim);
-  if(verbose) printf("vm_pushvvi_%d\n",vnr);
+  VERBOSE("vm_pushvvi_%d\n",vnr);
 
   if(dim) {
     indexliste=(int *)malloc(dim*sizeof(int));
@@ -580,7 +603,7 @@ int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
   else if(variablen[vnr].pointer.a->typ==STRINGTYP) p->typ=PL_SVAR;
   else {
     p->typ=PL_ALLVAR;
-    printf("ERROR: pushvvi\n");
+    TYPEMISMATCH("pushvvi");
   }
   free(indexliste);
   return(-dim+1);
@@ -588,17 +611,11 @@ int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
 
 
 
-int vm_zuweis(int vnr,PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_zuweis_%d\n",vnr);
-  zuweis_v_parameter(&variablen[vnr],&sp[-1]);
-  free_parameter(&sp[-1]);
-  return(-1);
-}
 
 
 /* Weise aus parameter zu einer Vaiable */
 
-void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
+static void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
   if(v->typ==INTTYP && p->typ==PL_INT)          *(v->pointer.i)=p->integer;
   else if(v->typ==INTTYP && p->typ==PL_FLOAT)   *(v->pointer.i)=(int)p->real;
   else if(v->typ==FLOATTYP && p->typ==PL_FLOAT) *(v->pointer.f)=p->real;
@@ -614,9 +631,17 @@ void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
     dump_parameterlist(p,1);
   }
 }
-int vm_zuweisindex(int vnr,PARAMETER *sp,int dim) {    /*  */
+
+ISTATIC int vm_zuweis(int vnr,PARAMETER *sp) {    /*  */
+  VERBOSE("vm_zuweis_%d\n",vnr);
+  zuweis_v_parameter(&variablen[vnr],&sp[-1]);
+  free_parameter(&sp[-1]);
+  return(-1);
+}
+
+STATIC int vm_zuweisindex(int vnr,PARAMETER *sp,int dim) {    /*  */
   int *indexliste=NULL;
-  if(verbose) printf("vm_suweisindex_%d_%d \n",vnr,dim);
+  VERBOSE("vm_suweisindex_%d_%d \n",vnr,dim);
 //printf("ZUWEISINDEX: vnr=%d dim=%d",vnr,dim);
 //dump_parameterlist(&sp[-dim],dim);
 //printf("value: ");
@@ -633,11 +658,11 @@ int vm_zuweisindex(int vnr,PARAMETER *sp,int dim) {    /*  */
   return(-dim-1);
 }
 
-int vm_pusharrayelem(int vnr, PARAMETER *sp, int dim) {    /*  */
+STATIC int vm_pusharrayelem(int vnr, PARAMETER *sp, int dim) {    /*  */
   int typ;
   int *indexliste;
   typ=variablen[vnr].typ;
-  if(verbose) printf("vm_pusharrayelem_%d_%d ",vnr,dim);
+  VERBOSE("vm_pusharrayelem_%d_%d ",vnr,dim);
 
 //printf("\nPUSHARRAYELEM: vnr=%d dim=%d\n",vnr,dim);
 //dump_parameterlist(&sp[-dim],dim);
@@ -664,22 +689,15 @@ int vm_pusharrayelem(int vnr, PARAMETER *sp, int dim) {    /*  */
 	p->pointer=malloc(p->integer+1);
 	memcpy(p->pointer,((STRING *)varptr)->pointer,p->integer);
 	((char *)p->pointer)[p->integer]=0;
-      } else printf("Something is wrong.\n"); 
+      } else VMERROR("pusharrayelem"); 
       free(indexliste);
-    } else printf("ARRAYELEM: something is wrong.\n");
-
-  } else printf("ARRAYELEM: something is wrong.\n");
+    } else VMERROR("ARRAYELEM"); 
+  } else VMERROR("ARRAYELEM"); 
 
   return(-dim+1);
 }
 
-int vm_pushv(int vnr,PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_pushv_%d ",vnr);
- // printf("vnr=%d\n",vnr);
-  push_v(sp,&variablen[vnr]);
-  return(1);
-}
-void  push_v(PARAMETER *p, VARIABLE *v) {
+STATIC void  push_v(PARAMETER *p, VARIABLE *v) {
   p->panzahl=0;
   if(v->typ==INTTYP) {
     p->typ=PL_INT;
@@ -697,175 +715,210 @@ void  push_v(PARAMETER *p, VARIABLE *v) {
   v->name,v->typ,p->typ);
 }
 
+inline static int vm_pushv(int vnr,PARAMETER *sp) {    /*  */
+  VERBOSE("vm_pushv_%d ",vnr);
+  push_v(sp,&variablen[vnr]);
+  return(1);
+}
 
 
 
-int vm_eval(PARAMETER *sp) {    /*  */
-  if(verbose) printf("vm_eval ");
+static int vm_eval(PARAMETER *sp) {    /*  */
+  VERBOSE("vm_eval ");
   if(sp[-1].typ==PL_STRING) {
-    if(verbose) printf("vm_eval_<%s>\n",(char *)sp[-1].pointer);
+    VERBOSE("vm_eval_<%s>\n",(char *)sp[-1].pointer);
     kommando(sp[-1].pointer);
     free(sp[-1].pointer);
   } else {
-    printf("ERROR: something is wrong with bytecode, no string.\n");
+    TYPEMISMATCH("EVAL:no string");
     free_parameter(&sp[-1]);
   }
   return(-1);  
 }
 
 
-PARAMETER *virtual_machine(STRING bcpc, int *npar) {
+#define CP4(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s); \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd=*ss; i+=l;}
+#define CP2(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s); \
+                 *dd++=*ss++; \
+                 *dd=*ss; i+=l;}
+
+#define CP8(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s); \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd=*ss; i+=l;}
+
+
+PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
   PARAMETER *opstack=calloc(BC_STACKLEN,sizeof(PARAMETER));
   PARAMETER *osp=opstack;
-  unsigned char cmd;
-  int i=0,j;
+  register unsigned char cmd;
+  register int i=0;
+  int j;
+  
   int a,n;
   short ss,ss2;
   double d;
   char *buf;
-
-
-
-  while((cmd=bcpc.pointer[i]) && i<bcpc.len) {
+#ifdef ANDROID
+  backlog("enter virtual machine.");
+#endif
+  while(batch & i<bcpc.len && (cmd=bcpc.pointer[i])) {
     i++;
      switch(cmd) {
     case BC_NOOP:  
-      if(verbose) printf("vm_noop ");
+      VERBOSE("vm_noop ");
       break;
     case BC_JSR:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
-      if(verbose) printf("vm_jsr_%d\n",a);
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      VERBOSE("vm_jsr_%d\n",a);
       stack[sp]=i;
       i=a;
       break;
     case BC_JMP:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
-      if(verbose) printf("vm_jmp_%d\n",a);
+      CP4(&a,&bcpc.pointer[i],0);
       i=a;
+      VERBOSE("vm_jmp_%d\n",a);
       break;
     case BC_JEQ:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
-      if(verbose) printf("vm_jeq_%d ",a);
-      if((--opstack)->integer==0) i=a;
+      if((--opstack)->integer==0) {
+        CP4(&a,&bcpc.pointer[i],0);
+	i=a;
+        VERBOSE("vm_jeq_%d ",a);
+      } else {
+        i+=sizeof(int);
+        VERBOSE("vm_jeq_** ");
+      }
       break;
     case BC_BRA:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      if(verbose) printf("vm_bra_%d \n",ss);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      VERBOSE("vm_bra_%d \n",ss);
       i+=ss;
       break;
     case BC_BEQ:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      if(verbose) printf("vm_beq_%d ",ss);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      VERBOSE("vm_beq_%d ",ss);
       if((--opstack)->integer==0) i+=ss;
       break;
     case BC_BSR:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      if(verbose) printf("vm_bsr_%d \n",ss);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      VERBOSE("vm_bsr_%d \n",ss);
       stack[sp]=i;
       i+=ss;
       break;
     case BC_BLKSTART:
-      if(verbose) printf("vm_{ ");
+      VERBOSE("vm_{ ");
       sp++;
       break;
     case BC_BLKEND:
-      if(verbose) printf("vm_} \n");
+      VERBOSE("vm_} \n");
       restore_locals(sp--);
       break;
     case BC_RTS:
-      if(verbose) printf("vm_rts \n");
+      VERBOSE("vm_rts \n");
       i=stack[sp];
       break;
     case BC_BRAs:
-      if(verbose) printf("vm_bra.s_%d \n",bcpc.pointer[i]); 
+      VERBOSE("vm_bra.s_%d \n",bcpc.pointer[i]); 
       i+=(bcpc.pointer[i++]);
       break;
     case BC_BEQs:
       ss=bcpc.pointer[i++];
-      if(verbose) printf("vm_beqs_%d ",ss);
+      VERBOSE("vm_beqs_%d ",ss);
       if((--opstack)->integer==0) i+=ss;
       break;
     case BC_PUSHF:
-      memcpy(&d,&bcpc.pointer[i],sizeof(double));i+=sizeof(double);
+      CP8(&d,&bcpc.pointer[i],sizeof(double));
       opstack->real=d;
       opstack->typ=PL_FLOAT;
       opstack++;
-      if(verbose) printf("%g ",d);
+      VERBOSE("%g ",d);
       break;
     case BC_PUSHI:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
       opstack->integer=a;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("%d ",a);
+      VERBOSE("%d ",a);
       break;
     case BC_LOADi:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
       opstack->integer=*((int *)a);
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("[$%x].i ",a);
+      VERBOSE("[$%x].i ",a);
       break;
     case BC_LOADf:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
       opstack->real=*((double *)a);
       opstack->typ=PL_FLOAT;
       opstack++;
-      if(verbose) printf("[$%x].d ",a);
+      VERBOSE("[$%x].d ",a);
       break;
     case BC_PUSHW:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack->integer=ss;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("%d ",ss);
+      VERBOSE("%d ",ss);
       break;
     case BC_PUSHB:
       opstack->integer=bcpc.pointer[i++];
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("%d ",opstack[-1].integer);
+      VERBOSE("%d ",opstack[-1].integer);
       break;
     case BC_PUSHLEER:
       opstack->typ=PL_LEER;
       opstack++;
-      if(verbose) printf("<empty> ");
+      VERBOSE("<empty> ");
       break;
     case BC_PUSH0:
       opstack->integer=0;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("0 ");
+      VERBOSE("0 ");
       break;
     case BC_PUSH1:
       opstack->integer=1;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("1 ");
+      VERBOSE("1 ");
       break;
     case BC_PUSH2:
       opstack->integer=2;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("2 ");
+      VERBOSE("2 ");
       break;
     case BC_PUSHM1:
       opstack->integer=-1;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("-1 ");
+      VERBOSE("-1 ");
       break;
     case BC_PUSHS:  /*String konstante auf STack....*/
       { int len;
-      memcpy(&len,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
+      CP4(&len,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
       opstack->integer=len;
       opstack->typ=PL_STRING;
       opstack->pointer=malloc(len+1);
       memcpy(opstack->pointer,rodata+a,len);
       ((char *)(opstack->pointer))[len]=0;
       opstack++;
-      if(verbose) printf("\"%s\" ",(char *)opstack[-1].pointer);
+      VERBOSE("\"%s\" ",(char *)opstack[-1].pointer);
       }
       break;
     case BC_PUSHFUNC:
@@ -883,7 +936,7 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       a=bcpc.pointer[i++]&0xff;
       n=bcpc.pointer[i++]&0xff;
       opstack+=vm_comm(opstack,a,n);
-      if(verbose) printf("SP=%d\n",((int)opstack-(int)osp)/sizeof(PARAMETER));  
+      VERBOSE("SP=%d\n",((int)opstack-(int)osp)/sizeof(PARAMETER));  
       break;
     case BC_PUSHSYS:
       a=bcpc.pointer[i++]&0xff;
@@ -899,7 +952,7 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       break;
     case BC_PUSHX:
       { int len=bcpc.pointer[i++];
-        memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
+        CP4(&a,&bcpc.pointer[i],sizeof(int));
         buf=malloc(len+1);
         memcpy(buf,rodata+a,len);
         buf[len]=0;
@@ -907,7 +960,7 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
         opstack->typ=PL_KEY;
         opstack->pointer=buf;
         opstack++;
-        if(verbose) printf("%s ",buf);
+        VERBOSE("%s ",buf);
       }
       break;
     case BC_COMMENT:
@@ -915,7 +968,7 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       buf=malloc(a+1);
       memcpy(buf,&bcpc.pointer[i],a);
       buf[a]=0;
-      if(verbose) printf("%s ",buf);
+      VERBOSE("%s ",buf);
       i+=a;
       free(buf);
       break;
@@ -923,15 +976,15 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       opstack+=vm_add(opstack);
       break;
     case BC_ADDi:
-      if(verbose) printf("ADDi ");
+      VERBOSE("ADDi ");
       opstack--;(opstack-1)->integer+=opstack->integer;
       break;
     case BC_ADDf:
-      if(verbose) printf("ADDf ");
+      VERBOSE("ADDf ");
       opstack--;(opstack-1)->real+=opstack->real;
       break;
     case BC_ADDs:
-      if(verbose) printf("ADDs ");
+      VERBOSE("ADDs ");
       opstack--; 
       {
         int l=(opstack-1)->integer;
@@ -944,12 +997,12 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       free(opstack->pointer);
       break;
     case BC_OR:
-      if(verbose) printf("OR ");
+      VERBOSE("OR ");
       opstack--;
       (opstack-1)->integer=(opstack-1)->integer | opstack->integer;
       break;
     case BC_XOR:
-      if(verbose) printf("XOR ");
+      VERBOSE("XOR ");
       opstack--;
       (opstack-1)->integer=(opstack-1)->integer ^ opstack->integer;
       break;
@@ -957,33 +1010,33 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       opstack+=vm_sub(opstack);
       break;
     case BC_SUBi:
-      if(verbose) printf("SUBi ");
+      VERBOSE("SUBi ");
       opstack--;(opstack-1)->integer-=opstack->integer;
       break;
     case BC_SUBf:
-      if(verbose) printf("SUBf ");
+      VERBOSE("SUBf ");
       opstack--;(opstack-1)->real-=opstack->real;
       break;
     case BC_MUL:
       opstack+=vm_mul(opstack);
       break;
     case BC_MULi:
-      if(verbose) printf("MULi ");
+      VERBOSE("MULi ");
       opstack--;(opstack-1)->integer*=opstack->integer;
       break;
     case BC_MULf:
-      if(verbose) printf("MULf ");
+      VERBOSE("MULf ");
       opstack--;(opstack-1)->real*=opstack->real;
       break;
     case BC_DIV:
-      if(verbose) printf("DIV ");
+      VERBOSE("DIV ");
       opstack--;(opstack-1)->real/=opstack->real;
       break;
     case BC_POW:
       opstack+=vm_pow(opstack);
       break;
     case BC_AND:
-      if(verbose) printf("AND ");
+      VERBOSE("AND ");
       (opstack-1)->integer=(opstack-1)->integer & (opstack-2)->integer;
       break;
     case BC_EQUAL:
@@ -1007,20 +1060,20 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
         opstack=osp;
 	for(j=0;j<a;j++)  free_parameter(&opstack[j]);
       }
-      if(verbose) printf("vm_clear ");
+      VERBOSE("vm_clear ");
       break;
     case BC_COUNT:
       a=((int)opstack-(int)osp)/sizeof(PARAMETER);
       opstack->integer=a;
       opstack->typ=PL_INT;
       opstack++;
-      if(verbose) printf("vm_count_%d ",a);
+      VERBOSE("vm_count_%d ",a);
       break;
     case BC_NEG:
       vm_neg(opstack);
       break;
     case BC_NOT:
-      if(verbose) printf("NOT ");
+      VERBOSE("NOT ");
       (opstack-1)->integer=~(opstack-1)->integer;
       break;
     case BC_X2I:
@@ -1030,53 +1083,52 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       vm_x2f(opstack);
       break;
     case BC_MOD:
-      if(verbose) printf("MOD ");
+      VERBOSE("MOD ");
       opstack+=vm_mod(opstack);
       break;
     case BC_POP:
-      if(verbose) printf("POP ");
+      VERBOSE("POP ");
       opstack--;
       free_parameter(opstack);
       break;
     case BC_ZUWEIS:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_zuweis(ss,opstack);
       break;
     case BC_PUSHVV:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_pushvv(ss,opstack);
       break;
     case BC_LOCAL:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      if(verbose) printf("dolocal_%d ",ss);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      VERBOSE("dolocal_%d ",ss);
       do_local(ss,sp);
       break;
     case BC_ZUWEISINDEX:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      memcpy(&ss2,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_zuweisindex(ss,opstack,ss2);
       break;
     case BC_PUSHV:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_pushv(ss,opstack);
       break;
     case BC_PUSHARRAYELEM:      
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      memcpy(&ss2,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_pusharrayelem(ss,opstack,ss2);
       break;
     case BC_PUSHVVI:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
-      memcpy(&ss2,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      CP2(&ss,&bcpc.pointer[i],sizeof(short));
+      CP2(&ss2,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_pushvvi(ss,opstack,ss2);
       break;
     case BC_RESTORE:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
-      if(verbose) printf("vm_restore_%d\n",a);
-      datapointer=a;
+      CP4(&datapointer,&bcpc.pointer[i],sizeof(int));
+      VERBOSE("vm_restore_%d\n",datapointer);
       break;
     case BC_EVAL:
-      if(verbose) printf("vm_eval-%d ",a);
+      VERBOSE("vm_eval-%d ",a);
       opstack+=vm_eval(opstack);
       break;
     default:
@@ -1088,9 +1140,14 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       return(osp);
     }
   }
+  VERBOSE("\nVirtual machine exited.");
+#ifdef ANDROID
+  backlog("Virtual machine exited.");
+#endif
   *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  
   return(osp);
 }
+
 
 /*******************************************/
 /* These Routines allow the access from X11-Basic compiled 
@@ -1125,6 +1182,13 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
     *sp=opstack;
     *arg=arguments;
 }
+
+
+
+/* API for The virtual machine */
+
+
+
 int pusharg(PARAMETER **opstack, char *typ,...)   {
   int count=0;
   unsigned char c;
@@ -1185,6 +1249,3 @@ ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   name();
   return(*((ARRAY *)&(osp->integer)));
 }
-
-
-

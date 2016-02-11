@@ -42,6 +42,16 @@ int ltextpflg=0;
 #include "bitmaps/bombe_gross.bmp"
 #endif
 
+/* Set default values */
+void graphics_setdefaults() {
+  marker_size=1;
+  boundary=-1;
+  ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
+  ltextpflg=0;
+#ifdef FRAMEBUFFER
+  FB_defaultcontext();
+#endif
+}
 
 /* Line-Funktion (fuer ltext) */
 void line(int x1,int y1,int x2,int y2) {
@@ -251,6 +261,9 @@ void set_fill(int c) {
 #endif
 }
 int mousex() {
+#if defined ANDROID
+  return(screen.mouse_x);
+#endif
 #ifdef WINDOWS_NATIVE
   return(global_mousex);
 #endif
@@ -259,7 +272,7 @@ int mousex() {
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
+#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
   graphics(); 
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
@@ -268,6 +281,9 @@ int mousex() {
 #endif
 }
 int mousey() {
+#if defined ANDROID
+  return(screen.mouse_y);
+#endif
 #ifdef WINDOWS_NATIVE
   return(global_mousey);
 #endif
@@ -276,7 +292,7 @@ int mousey() {
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
+#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
   graphics();
    
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
@@ -286,7 +302,10 @@ int mousey() {
 #endif
 }
 int mousek() {
-#ifdef WINDOWS_NATIVE
+#if defined ANDROID
+  return(screen.mouse_k);
+#endif
+#if defined WINDOWS_NATIVE 
   return(global_mousek);
 #endif
    int root_x_return, root_y_return,win_x_return, win_y_return;
@@ -294,7 +313,7 @@ int mousek() {
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
+#if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
@@ -304,7 +323,7 @@ int mousek() {
 #endif
 }
 int mouses() {
-#ifdef WINDOWS_NATIVE
+#if defined WINDOWS_NATIVE
   return(global_mouses);
 #endif
   int root_x_return, root_y_return,win_x_return, win_y_return;
@@ -318,7 +337,7 @@ int mouses() {
        &win_x_return, &win_y_return,&mask_return);
    return(mask_return & 255);
 #endif
-#ifdef USE_SDL
+#if defined USE_SDL|| defined FRAMEBUFFER
 return(0);
 #endif
 }

@@ -8,7 +8,6 @@
 
 /* termio.h (weil obsolet) entfernt.    11.08.2003   MH  */
 
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +16,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <sys/time.h>
+#include "config.h"
+#include "options.h"
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_SYS_KD_H
+#include <sys/kd.h>
+#endif
+
+#include "x11basic.h"
+#include "io.h"
 
 
 #ifdef __hpux
@@ -28,17 +39,12 @@
 
 #ifdef WINDOWS
 #include <ws2tcpip.h>
-#else
-#include <sys/socket.h>
 #endif
 
 #ifndef WINDOWS
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_SYS_KD_H
-#include <sys/kd.h>
-#endif
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <netinet/in.h>
@@ -46,7 +52,8 @@
 #else
 #include <windows.h>
 #endif
-#include <sys/time.h>
+
+double sensordata[ANZSENSORS];
 
 /* fuer Dynamisches Linken von shared Object-Files   */
 
@@ -85,7 +92,31 @@ static int make_socket(unsigned short int port);
 static FILE *get_fileptr(int n);
 static int make_UDP_socket(unsigned short int port);
 
+/* get the current cursor position */
+
+#ifdef ANDROID
+extern int lin,col;
+
+void getcrsrowcol(int *_row, int *_col) {
+  *_row=lin+1;
+  *_col=col+1;
+}
+#else
+
+void getcrsrowcol(int *_row, int *_col) {
+  *_row=0;
+  *_col=0;
+}
+
+
+#endif
 /* Get the number of rows and columns for this screen. */
+#ifdef ANDROID
+extern struct winsize win;
+void getrowcols(int *rows, int *cols) {
+*cols=win.ws_col;
+*rows=win.ws_row;
+#else
 void getrowcols(int *rows, int *cols) {
 #ifndef WINDOWS
 #ifdef TIOCGWINSZ
@@ -103,6 +134,7 @@ void getrowcols(int *rows, int *cols) {
 		*rows = ws.ts_lines;
 		*cols = ws.ts_cols;
 	}
+#endif
 #endif
 #endif
 }
@@ -180,6 +212,9 @@ void c_print(PARAMETER *plist,int e) {
 	    else {
               if(v[strlen(v)-1]!=';' && v[strlen(v)-1]!='\'') 
 	      fputc('\n',fff);
+#ifdef ANDROID
+  invalidate_screen();
+#endif
             }
 	  } else {
 	    if(i!=e-1) fputc('\011',fff);
@@ -196,7 +231,12 @@ void c_print(PARAMETER *plist,int e) {
         printf("PRINT: Falscher typ. $%x\n",plist[i].typ);
       }
     }
-  } else putchar('\n');
+  } else {
+    putchar('\n');
+#ifdef ANDROID
+  invalidate_screen();
+#endif
+  }
 }
 
 void c_input(char *n) {
@@ -220,8 +260,7 @@ void c_input(char *n) {
       text=malloc(strlen(u)+4);
       strcpy(text,u);
       free(u);
-      if(e==3) strcat(text," ? ");
-      else if(e!=2) strcat(text," ");
+      if(e==4) strcat(text," ");
       e=arg2(t,TRUE,s,t);
     } else text=strdup("? ");
     
@@ -236,8 +275,8 @@ void c_input(char *n) {
 	  v=do_gets(text);
 	  e2=arg2(v,TRUE,u,v);
 	}
-      } else u=input(fff,inbuf);
-      printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
+      } else u=input(fff,inbuf,MAXSTRLEN);
+  //    printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
       if(type(s) & STRINGTYP) {
         STRING str;
 	str.len=strlen(u);
@@ -534,7 +573,7 @@ void c_open(PARAMETER *plist, int e) {
       }
     } else if(special=='A') { /* accept */
       int sock,sock2;
-      size_t size;	
+      socklen_t size;	
       struct sockaddr_in clientname;
 #ifdef DEBUG
       printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
@@ -927,7 +966,7 @@ int f_exec(char *n) {
   int (*adr)(GTT);
   int i=0;
   while(e) {
-    if(i==0) adr=(int (*)())((int)parser(w1));
+    if(i==0) adr=(int (*)())((long)parser(w1));
     else if(i<20) {
       if(strncmp(w1,"D:",2)==0) {
         *((double *)(&gtt.feld[i-1]))=parser(w1+2);
@@ -1019,6 +1058,9 @@ void c_unget(PARAMETER *plist,int e) {
 void c_flush(PARAMETER *plist,int e) {
   FILE *fff=stdout;
   if(e) fff=get_fileptr(plist[0].integer);
+#ifdef ANDROID
+  else invalidate_screen(); 
+#endif
   if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */  
   if(fflush(fff)) io_error(errno,"FLUSH");
 }
@@ -1095,7 +1137,15 @@ void set_input_mode(int mi, int ti) {
   }
 #endif
 }
+
+#ifdef ANDROID
+   int termecho=1;
+#endif
+
 void set_input_mode_echo(int onoff) {
+#ifdef ANDROID
+  termecho=onoff;
+#else
 #ifndef WINDOWS
   struct termios tattr;
   if(isatty(STDIN_FILENO)) {
@@ -1104,6 +1154,7 @@ void set_input_mode_echo(int onoff) {
     else tattr.c_lflag &= ~ECHO;
     tcsetattr(STDIN_FILENO,TCSAFLUSH,&tattr);
   }
+#endif
 #endif
 }
 void reset_input_mode() {
@@ -1115,18 +1166,18 @@ void reset_input_mode() {
 /* Dynamisches Linken von Shared-Object-Files */
 
 int f_symadr(PARAMETER *plist,int e) {
-  int adr=0;
+  long adr=0;
   if(filenr[plist[0].integer]==2) {
     char *sym=malloc(plist[1].integer+1);
     char *derror;
     memcpy(sym,plist[1].pointer,plist[1].integer);
     sym[plist[1].integer]=0;
     #ifdef WINDOWS
-      adr = (int)GetProcAddress(dptr[plist[0].integer],sym);
+      adr = (long)GetProcAddress(dptr[plist[0].integer],sym);
       if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
     #else
       #ifdef HAVE_DLOPEN
-      adr = (int)dlsym(dptr[plist[0].integer],sym);
+      adr = (long)dlsym(dptr[plist[0].integer],sym);
       if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
       #else
         adr=-1;
@@ -1183,16 +1234,13 @@ void c_out(char *n) {
 	 
 	  free_array(&zzz);
 	} else if(typ & FLOATTYP){
-	 double zzz;
-	 zzz=parser(v);
+	 double zzz=parser(v);
          fwrite(&zzz,sizeof(double),1,fff);
 	} else if(typ & INTTYP){
-	 int zzz;
-	 zzz=(int)parser(v);
+	 int zzz=(int)parser(v);
          fwrite(&zzz,sizeof(int),1,fff);
 	} else if(typ & STRINGTYP){
-	 char *zzz;
-	 zzz=s_parser(v);
+	 char *zzz=s_parser(v);
          fwrite(&zzz,sizeof(char),strlen(zzz),fff);
          free(zzz);
         }
@@ -1386,7 +1434,7 @@ void memdump(unsigned char *adr,int l) {
   int i;
   printf("\033[35m");
   while(l>16) {
-    printf("$%x: ",(int)adr);	
+    printf("%p: ",(void *)adr);	
     for(i=0;i<16;i++) printf("%02x ",adr[i]);
     printf(" ");
     for(i=0;i<16;i++) {
@@ -1398,7 +1446,7 @@ void memdump(unsigned char *adr,int l) {
     l-=16;
   }
   if(l>0) {
-    printf("$%x: ",(int)adr);
+    printf("%p: ",(void *)adr);
     for(i=0;i<16;i++) {
       if(i<l) printf("%02x ",adr[i]);
       else printf("   ");
@@ -1411,6 +1459,9 @@ void memdump(unsigned char *adr,int l) {
     printf("\n");
   }
   printf("\033[m");
+#ifdef ANDROID
+  invalidate_screen();
+#endif
 }
 
 /* Sound the speaker */

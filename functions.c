@@ -21,6 +21,7 @@
 #include "wort_sep.h"
 #include "number.h"
 #include "decode.h"
+#include "io.h"
 
 
 double f_nop(void *t) {return(0.0);}
@@ -37,6 +38,15 @@ double expm1(double a) {return(exp(a)-1);}
 int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
 #endif
 int f_bclr(double v1, double v2) {return((int)v1 & ~ (1 <<((int)v2)));}
+
+int f_and(int v1, int v2) {return(v1 & v2);}
+int f_or( int v1, int v2) {return(v1 | v2);}
+int f_xor(int v1, int v2) {return(v1 ^ v2);}
+
+int f_not(int v1) {return(v1?0:-1);}
+
+
+
 int f_bset(double v1, double v2) {return((int)v1 | (1 <<((int)v2)));}
 int f_bchg(double v1, double v2) {return((int)v1 ^ (1 <<((int)v2)));}
 int f_btst(double v1, double v2) {return((((int)v1 & (1 <<((int)v2)))==0) ?  0 : -1); }
@@ -170,6 +180,8 @@ STRING f_replaces(PARAMETER *plist,int e) {  /* MH 10.02.2004 */
   ergebnis.len=0;
   ergebnis.pointer=malloc(1);
   if(e==3) {
+ // printf("REPLACE: <%s>--<%s>/<%s>\n",plist[0].pointer,plist[1].pointer,plist[2].pointer );
+
     pos=(char *)memmem(&(((char *)(plist[0].pointer))[start]),plist[0].integer-start,
                        plist[1].pointer,plist[1].integer);
     while(pos!=NULL) {         
@@ -628,3 +640,11 @@ STRING f_decrypts(PARAMETER *plist,int e) {
 #endif  
   return(ergebnis);
 }
+
+
+double f_sensor(int n) {
+ //  printf("Sensor #%d\n",n);
+  if(n>=0 && n<ANZSENSORS) return(sensordata[n]);
+  else return(-1);
+}
+

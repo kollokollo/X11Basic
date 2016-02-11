@@ -10,17 +10,17 @@
     
     
     
-                       VERSION 1.18
+                       VERSION 1.19
 
-            (C) 1997-2011 by Markus Hoffmann
+            (C) 1997-2012 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.18                              Vendor: Markus Hoffmann
+Version     : 1.19                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
-Summary     : A Basic Interpreter with X11-Graphics capabilities
+Summary     : A Basic Interpreter and compiler with graphics capabilities
 Description :
 
   X11-Basic is a dialect of the BASIC programming language with graphics
@@ -33,8 +33,7 @@ Description :
 
   On UNIX and linux systems, the X11 graphics engine can be used as well as the
   SDL library, the framebuffer devices or no graphics at all.  The MS WINDOWS
-  version supports only SDL (or no graphics at all). On LINUX systems the ALSA
-  sound engine can be used.
+  version supports only SDL (or no graphics at all). 
 
 This package includes the basic interpreter named xbasic and a set of different 
 compilers. The interpreter can be used as a shell, and can so run basic-scripts.
@@ -43,8 +42,8 @@ You can make excecutable scripts p.ex. *.cgi-Scripts for handling web-input.
 A compiler (xbc) is included which makes stand alone binaries out of the
 scripts, which run more than 10 times faster than the interpreted code. The
 compiler can either pseudo-compile the X11-Basic  sources by attaching the
-source to a run-only interpreter (In which case the  program will not run faster
-than is the interpreter is used, but you have everythin in one excecutable
+source to a run-only interpreter (in which case the  program will not run faster
+than is the interpreter is used, but you have everything in one excecutable
 file), or the compiler can do a real compilation of the BASIC source into
 bytecode, then c, and finally machine language. This way the code excecutes 
 about 10 times faster. (** This is a relatively new feature, so be prepared to
@@ -53,14 +52,14 @@ catch errors here. Please report them. **)
 X11-Basic programs can also be compiled into a bytecode (see xbbc). This bytecode 
 can be interpreted by a virtual machine (see xbvm). Finally, the bytecode can be 
 converted to c sourcefiles (see xb2c) which can be compiles with the gnu C 
-compiler to native excecutables.
+compiler (or the tiny c compiler) to native excecutables.
 
 Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
 with the bas2x11basic program (see the man page bas2x11basic(1) ).
 
 You will find the compiler sourcecode and some other sample programs in 
 /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-can be found in X11-Basic-examples-1.18.zip, which you can download from the 
+can be found in X11-Basic-examples-1.19.zip, which you can download from the 
 homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
 of the manual can be found there.
 

@@ -1,20 +1,43 @@
+--these instructions are outdated--
+
+PREREQUISITS
+============
+
+In order to function properly on a LINUX system, following software
+should be present:
+
+* The readline library
+* The X server and X-linbraries
+* The gnu c compiler (otherwise the X11-Basic compiler will not work) 
+
+
+On ubuntu you should have installed following packages:
+
+sudo apt-get install libreadline5
+
+
 INSTALLATION INSTRUCTIONS
 =========================
 
 In order to compile X11Basic, you will need the following:
 
- * A C compiler, preferably GNU C (but some ANSI C compilers, like DEC's
-  will do)
-
+ * An ANSI C compiler, preferably GNU C compiler (gcc) (but any ANSI 
+   C compiler, e.g. tcc, the tiny C compile or others, like DEC's
+   will do)
 
  * a `csh'-compatible shell 
  
- * X11R5 or R6 libraries
+ * X11R5 or R6 libraries (or the SDL library)
 
  * the readline library
  * the curses or ncurses  library
   
 These will suffice to get you started. 
+
+On debian systems like ubuntu, following packets should be installed:
+sudo apt-get install readline <...tobecompleted...>
+and optionally
+sudo apt-get install <...tobecompleted...>
 
 
 INSTALLATION
@@ -35,9 +58,18 @@ This will generate a `Makefile'
 and generate dependencies for the Makefile. It will
 also generate some more sources.
 
+The default installation path is /usr/local. If you want to install X11-Basic 
+to another directory, you should run it with an argument, like:
+
+./configure --prefix=/usr
+
+
 Then do the compilation:
 
 make
+
+And the installation:
+
 sudo make install
 
 
@@ -50,12 +82,12 @@ that you might need to change is GERMAN, which should be defined if you
 like to have a german version of X11-Basic. The default language is english. 
 
 
-COMPILING
-=========
+COMPILING a standalone excecutable
+==================================
 
 To compile the X11-Basic interpreter (called xbasic), simply type 
 	
-	make
+	make static
 
 at the shell prompt. 
 
@@ -67,10 +99,15 @@ by typing
 The command-line options can be listed with the `-h' option (`./xbasic -h').
 
 
-INSTALLING
-==========
+INSTALLING the standalone excecutable
+=====================================
 
 Put the executable wherever you like. I have mine in ${HOME}/bin/.
+
+A system wide installation can be done with
+sudo make install
+remove the installation with
+sudo make uninstall
 
 
 make the pseudo-compiler work, libraries:

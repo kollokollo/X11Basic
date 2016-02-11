@@ -64,7 +64,6 @@ int count_parameters(char *n);
 
 void free_pliste(int anz,PARAMETER *pret);
 void free_parameter(PARAMETER *p);
-void clear_parameters();
 void dump_parameterlist(PARAMETER *p, int n);
 
 

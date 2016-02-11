@@ -36,8 +36,8 @@
 /* GEM-Globals   */
 
 #ifndef NOGRAPHICS
-char wname[MAXWINDOWS][80];
-char iname[MAXWINDOWS][80];
+static char wname[MAXWINDOWS][80];
+static char iname[MAXWINDOWS][80];
 #ifdef WINDOWS_NATIVE
   HANDLE keyevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE buttonevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
@@ -560,8 +560,14 @@ static int fetch_rootwindow() {
 #endif
   return(0);
 }
+#ifdef ANDROID
+  extern void invalidate_screen();
+#endif
 
 void activate() {
+#ifdef ANDROID
+  invalidate_screen();
+#endif
 #ifdef WINDOWS_NATIVE
   HDC hdc;
   RECT interior;
@@ -673,7 +679,6 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
 #ifdef DEBUG
   printf("**form_dial:\n");
 #endif
-
   switch(fo_diflag){
   case 0:
 #ifdef WINDOWS_NATIVE
@@ -684,7 +689,10 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
 #endif
   /* Erst den Graphic-Kontext retten  */
 #ifdef FRAMEBUFFER
+   FB_hide_mouse();
+   FB_savecontext();
    spix[sgccount]=FB_get_image(x2-3,y2-3,w2+8,h2+8,NULL);
+   FB_show_mouse();
 #endif
 #ifdef USE_X11
     sgc[sgccount]=malloc(sizeof(GC));
@@ -725,7 +733,10 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     activate();
 #else
 #ifdef FRAMEBUFFER
+    FB_hide_mouse();
     FB_put_image(spix[sgccount],x2-3,y2-3);
+    FB_restorecontext();
+    FB_show_mouse();
 #endif
 #ifdef USE_X11
     XCopyArea(display[usewindow], *(spix[sgccount]),pix[usewindow],gc[usewindow],0,0,w2+8,h2+8,x2-3,y2-3);
@@ -733,8 +744,8 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     XCopyGC(display[usewindow],*sgc[sgccount],GCForeground| GCFunction |GCLineWidth |GCLineStyle| GCFont, gc[usewindow]);
     XFreeGC(display[usewindow],*sgc[sgccount]);
     free(sgc[sgccount]);
-    activate();
 #endif
+    activate();
     free(spix[sgccount]);
 #endif
     break;
@@ -763,8 +774,10 @@ int form_do(OBJECT *tree) {
 #ifdef DEBUG
   printf("**form_do:\n");
 #endif
-
-
+#if defined FRAMEBUFFER
+  FB_clear_events();
+  FB_mouse(1);
+#endif
     /* erstes editierbare Objekt finden */
 
   edob=finded(tree,0,0);
@@ -784,9 +797,6 @@ int form_do(OBJECT *tree) {
   evn[1]=buttonevent;
   ResetEvent(evn[0]);
   ResetEvent(evn[1]);
-#endif
-#ifdef FRAMEBUFFER
-  FB_mouse(1);
 #endif
   while(exitf==0) {
 #ifdef WINDOWS_NATIVE
@@ -905,7 +915,7 @@ int form_do(OBJECT *tree) {
 #endif
 #ifdef FRAMEBUFFER
     case KeyPress:   /* Return gedrueckt ? */
-      if((event.xkey.ks & 255)==13) {                /* RETURN  */
+      if((event.xkey.ks & 255)==13 || (event.xkey.ks & 255)==10) {                /* RETURN  */
 #endif
 #ifdef USE_X11
     case KeyPress:   /* Return gedrueckt ? */
@@ -1093,7 +1103,7 @@ int form_do(OBJECT *tree) {
             ((char *)ted->te_ptext)[ted->te_junk1]=(char)global_keycode;
 #endif
 #ifdef FRAMEBUFFER
-	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)event.xkey.ks;
+	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)(event.xkey.ks&0xff);
 #endif
 #ifdef USE_X11
 	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)ks;
@@ -1241,6 +1251,9 @@ Pixmap schubladepix;
 #ifdef USE_SDL
 SDL_Surface *schubladepix;
 #endif
+#ifdef FRAMEBUFFER
+char *schubladepix;
+#endif
 int schubladeff=0;
 int schubladenr;
 int schubladex,schubladey,schubladew,schubladeh;
@@ -1276,12 +1289,22 @@ void do_menu_open(int nr) {
   schubladepix=SDL_CreateRGBSurface(SDL_SWSURFACE,a.w,a.h,32,0,0,0,0);
   SDL_BlitSurface(display[usewindow], &a,schubladepix, &b);
 #endif
+  #ifdef FRAMEBUFFER
+     FB_hide_mouse();
+     schubladepix=FB_get_image(schubladex,schubladey,schubladew,schubladeh,NULL);
+  #endif
   schubladeff=1;
   schubladenr=nr;
   do_menu_edraw();
+  #ifdef FRAMEBUFFER
+     FB_show_mouse();
+  #endif
 }
 void do_menu_edraw() {
-  int i;
+  int i; 
+  #ifdef FRAMEBUFFER
+    FB_savecontext();
+  #endif
     SetForeground(gem_colors[WHITE]);
 #if defined USE_X11 || defined FRAMEBUFFER
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
@@ -1291,9 +1314,9 @@ void do_menu_edraw() {
       if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[BLACK]);}
       else {SetForeground(gem_colors[WHITE]);}
       FillRectangle(schubladex,schubladey+i*chh,schubladew,chh);
-      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[WHITE]);}
-      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(gem_colors[LWHITE]);}
-      else {SetForeground(gem_colors[BLACK]);}
+      if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[WHITE]);SetBackground(gem_colors[BLACK]);}
+      else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(gem_colors[LWHITE]);SetBackground(gem_colors[WHITE]);}
+      else {SetForeground(gem_colors[BLACK]);SetBackground(gem_colors[WHITE]);}
       DrawString(schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],menuentryslen[menutitlesp[schubladenr]+i]);
       if(menuflags[menutitlesp[schubladenr]+i] & CHECKED) {
         DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
@@ -1302,7 +1325,11 @@ void do_menu_edraw() {
     }
     SetForeground(gem_colors[BLACK]);
     DrawRectangle(schubladex,schubladey,schubladew-1,schubladeh-1);
+ #ifdef FRAMEBUFFER 
+   FB_restorecontext();
+ #endif
   activate();
+
 }
 void do_menu_close() {
   if(schubladeff) {
@@ -1322,6 +1349,11 @@ void do_menu_close() {
     SDL_BlitSurface(schubladepix, &b,display[usewindow], &a);
     SDL_FreeSurface(schubladepix);
 #endif
+ #ifdef FRAMEBUFFER 
+   FB_hide_mouse();
+   FB_put_image(schubladepix,schubladex,schubladey);
+   FB_show_mouse();
+ #endif
     schubladeff=0;
   }
 }
@@ -1329,24 +1361,31 @@ void do_menu_draw() {
   int i,textx;
   graphics();
   gem_init();
-
+ #ifdef FRAMEBUFFER
+ FB_savecontext();
+ FB_hide_mouse();
+ #endif
   SetForeground(gem_colors[WHITE]);
 #if defined USE_X11 || defined FRAMEBUFFER
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
 #endif
     FillRectangle(sbox.x,sbox.y,sbox.w,chh);
-    SetForeground(gem_colors[BLACK]);
-    DrawLine(sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
     textx=chw;
     for(i=0;i<menuanztitle-1;i++) {
       if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[BLACK]);}
       else {SetForeground(gem_colors[WHITE]);}
       FillRectangle(sbox.x+textx,sbox.y,chw*(2+menutitleslen[i]),chh);
-      if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[WHITE]);}
-      else {SetForeground(gem_colors[BLACK]);}
+      if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[WHITE]);SetBackground(gem_colors[BLACK]);}
+      else {SetForeground(gem_colors[BLACK]);SetBackground(gem_colors[WHITE]);}
       DrawString(sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],menutitleslen[i]);
       textx+=chw*(menutitleslen[i]+2);
     }
+    SetForeground(gem_colors[BLACK]);
+    DrawLine(sbox.x,sbox.y+chh,sbox.x+sbox.w,sbox.y+chh);
+ #ifdef FRAMEBUFFER
+ FB_restorecontext();
+ FB_show_mouse();
+ #endif
   activate();
 }
 
@@ -1495,7 +1534,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   int anzfiles,showstart=0;
 
   TEDINFO tedinfo[4+ANZSHOW]={
-  {(LONG)btitel,(LONG)"",(LONG)"",FONT_BIG,0,TE_CNTR,0x1200,0,0,0,0},
+  {(LONG)btitel,(LONG)"",(LONG)"",FONT_BIGIBM,0,TE_CNTR,0x1200,0,0,0,0},
   {(LONG)mask,(LONG)"",(LONG)"",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
   {(LONG)feld1,(LONG)"__________________________________________________",(LONG)"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
   {(LONG)feld2,(LONG)"____________________",(LONG)"XXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
@@ -2112,35 +2151,33 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
 #endif /* nographics */
 void do_sizew(int winnr,int w,int h) {
 #ifdef WINDOWS_NATIVE
-        RECT interior;
-        GetClientRect(win_hwnd[winnr],&interior);
-        MoveWindow(win_hwnd[winnr],interior.left,interior.top,w,h,1);
+  RECT interior;
+  GetClientRect(win_hwnd[winnr],&interior);
+  MoveWindow(win_hwnd[winnr],interior.left,interior.top,w,h,1);
 #endif
 #ifdef USE_X11
-        Pixmap pixi;
-	Window root;
-	int ox,oy;
-	unsigned int ow,oh,ob,d;
-	
-	XGetGeometry(display[winnr],win[winnr],&root,&ox,&oy,&ow,&oh,&ob,&d);
-	pixi=XCreatePixmap(display[winnr], win[winnr], w, h, d);
-        XResizeWindow(display[winnr], win[winnr], w, h);
-	XCopyArea(display[winnr],pix[winnr],pixi,gc[winnr],0,0,min(w,ow),min(h,oh),0,0);
-	XFreePixmap(display[winnr],pix[winnr]);	
-	pix[winnr]=pixi;
-	XFlush(display[winnr]);
+  Pixmap pixi;
+  Window root;
+  int ox,oy;
+  unsigned int ow,oh,ob,d;
+
+  XGetGeometry(display[winnr],win[winnr],&root,&ox,&oy,&ow,&oh,&ob,&d);
+  pixi=XCreatePixmap(display[winnr], win[winnr], w, h, d);
+  XResizeWindow(display[winnr], win[winnr], w, h);
+  XCopyArea(display[winnr],pix[winnr],pixi,gc[winnr],0,0,min(w,ow),min(h,oh),0,0);
+  XFreePixmap(display[winnr],pix[winnr]); 
+  pix[winnr]=pixi;
+  XFlush(display[winnr]);
 #endif
 #ifdef USE_SDL
   Uint32 flags;
   flags=display[winnr]->flags;
   SDL_FreeSurface(display[winnr]);
-  if(!(display[winnr]=SDL_SetVideoMode(w, 
-       h, 32, flags))) {
-      printf("cannot open SDL surface \n");
-      SDL_Quit();
-      return;
-    }
-
+  if(!(display[winnr]=SDL_SetVideoMode(w, h, 32, flags))) {
+    printf("cannot open SDL surface \n");
+    SDL_Quit();
+    return;
+  }
 #endif
 }
 void do_movew(int winnr,int x,int y) {

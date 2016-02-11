@@ -1,4 +1,4 @@
-.TH XBVM 1 09-Apr-2011 "Version 1.18" "Linux Basic Compiler"
+.TH XBVM 1 09-Apr-2012 "Version 1.19" "X11-Basic Vitual Machine"
 .SH NAME
 xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter 
 .SH SYNOPSIS
@@ -16,7 +16,7 @@ computers.
 can be used to execute bytecode-binaries which where compiled with 
 .I xbbc(1)
  . These bytecode 
-files run about 10 times faster than the interpreted .bas files. 
+files run about 10-20 times faster than the interpreted .bas files. 
 
 .B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
@@ -37,7 +37,7 @@ shows version, program and other information and exits
 print a short help
 
 For detailed help and description of the implemented basic commands take a 
-look at the README file and the X11-Basic manual. 
+look at the README file coming with the package and the X11-Basic manual. 
 
 
 .SH EXAMPLES
@@ -49,16 +49,22 @@ xbbc -v testme.b
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The virtual machine
-Actually this interpreter is a stack machine. The bytecode is very compact 
-and similar to machine code. It would not be a big step to compile it to 
-assembler.  
-This interpreter is highly optimized, so that the gain in 
+The virtual machine is an interpreter for bytecode, which implements a stack 
+machine. The bytecode is very compact  and similar to machine code, but still it
+is independant of the  actual processor hardware and such very portable. With an
+additional small  step it can be compiled to native assembler or machine code.
+(For linux this is done by the 
+.I xb2c(1) 
+translator and 
+.I gcc()).
+
+The bytecode interpreter is highly optimized, so that the gain in 
 excecution speed is immense. Especially complex formulas are 
-speed up by a factor 10.
+speed up by a factor 20.
 There is no way to recreate the source code from the bytecode. 
 
 .SH VERSION
-Page was created for V.1.18
+Page was created for V.1.19
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic virtual machine, you should
@@ -76,11 +82,11 @@ tracking system.
 Comments and  bug  reports  concerning  this  manual  page
 should be directed to kollo@users.sourceforge.net.
 .SH BUGS
-Still some bugs
+none are currently known.
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public

@@ -43,7 +43,7 @@ void memdump(unsigned char *adr,int l);
 
 
 /* swap some long ints.  (n is number of BYTES, not number of longs) */
-static void swapdws (char *bp, unsigned n) {
+static void swapdws (char *bp, unsigned int n) {
   register char c;
   register char *ep = bp + n;
   register char *sp;
@@ -67,9 +67,9 @@ char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
     colortable_len=ncolors*sizeof(XWDColor);
     *len=header_len+colortable_len+image->height*image->bytes_per_line;
     data=malloc(header_len+colortable_len+image->height*image->bytes_per_line);
-    color=(XWDColor *)((int)data+header_len);
-    memcpy((void *)((int)data+header_len+colortable_len),image->data,image->height*image->bytes_per_line);
-    memcpy((void *)((int)data+sizeof(XWDFileHeader)),image_name,strlen(image_name));
+    color=(XWDColor *)((long)data+header_len);
+    memcpy((void *)((long)data+header_len+colortable_len),image->data,image->height*image->bytes_per_line);
+    memcpy((void *)((long)data+sizeof(XWDFileHeader)),image_name,strlen(image_name));
     data->header_size=(CARD32)header_len;
     data->file_version=(CARD32)XWD_FILE_VERSION;
     data->pixmap_format=(CARD32)image->format;
@@ -139,13 +139,13 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
 
   if(compression!=BI_RGB && compression!=BI_BITFIELDS) {
     printf("\033[H BITMAPINFOHEADERLEN=%d  \n",BITMAPINFOHEADERLEN);
-    printf("&iheader-data      =%d \n",(int)iheader-(int)data);
-    printf("bisize-data        =%d %d  \n",(int)(&(iheader->biSize))-(int)data,iheader->biSize);
-    printf("biwidth-data       =%d %d  \n",(int)(&(iheader->biWidth))-(int)data,iheader->biWidth);
-    printf("biHeight-data      =%d %d  \n",(int)(&(iheader->biHeight))-(int)data,iheader->biHeight);
-    printf("biPlanes-data      =%d %d  \n",(int)(&(iheader->biPlanes))-(int)data,iheader->biPlanes);
-    printf("biBitCount-data    =%d %d  \n",(int)(&(iheader->biBitCount))-(int)data,iheader->biBitCount);
-    printf("biCompression-data =%d %d  \n",(int)(&(iheader->biCompression))-(int)data,iheader->biCompression);
+    printf("&iheader-data      =%d\n",   (long)iheader-(long)data);
+    printf("bisize-data        =%d %d\n",(long)(&(iheader->biSize))-       (long)data,iheader->biSize);
+    printf("biwidth-data       =%d %d\n",(long)(&(iheader->biWidth))-      (long)data,iheader->biWidth);
+    printf("biHeight-data      =%d %d\n",(long)(&(iheader->biHeight))-     (long)data,iheader->biHeight);
+    printf("biPlanes-data      =%d %d\n",(long)(&(iheader->biPlanes))-     (long)data,iheader->biPlanes);
+    printf("biBitCount-data    =%d %d\n",(long)(&(iheader->biBitCount))-   (long)data,iheader->biBitCount);
+    printf("biCompression-data =%d %d\n",(long)(&(iheader->biCompression))-(long)data,iheader->biCompression);
     printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
     memdump((unsigned char *)data,64);
     return(-1);
@@ -253,11 +253,12 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
         ((char *)ptr1)[j*4+3+i*bw*4]=a;
       }
     }    
-    buf2=(char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
+    buf2=(char *)(((((long)buf2-(long)buf3)+3)&0xfffffffc)+(long)buf3); /* align to 4 */
   }
   return(usealpha);  
 }
-void bitmap_scale(char *oadr,int depth,int ow,int oh,char *adr,int w,int h) {
+
+static void bitmap_scale(char *oadr,int depth,int ow,int oh,char *adr,int w,int h) {
   int rl=depth/8;
   int x,y;
   int sx,sy;
@@ -277,7 +278,7 @@ void bitmap_scale(char *oadr,int depth,int ow,int oh,char *adr,int w,int h) {
 
 }
 
-void extend_mask(char *a, char *b, int n, unsigned char thres) {
+static void extend_mask(char *a, char *b, int n, unsigned char thres) {
   int i=0;
   for(i=0;i<n;i++) {
     if(((*a++)&0xff)>=thres) {
@@ -293,7 +294,7 @@ void extend_mask(char *a, char *b, int n, unsigned char thres) {
     }
   }
 }
-void extend_mask16(char *a, char *b, int n, unsigned char thres) {
+static void extend_mask16(char *a, char *b, int n, unsigned char thres) {
   int i=0;
   for(i=0;i<n;i++) {
     if(((*a++)&0xff)>=thres) {

@@ -13,13 +13,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#ifdef WINDOWS
+#if defined WINDOWS
 #define EX_OK 0
 #include <windows.h>
 #include <io.h>
-
 #else
+#ifndef ANDROID
 #include <sysexits.h>
+#else 
+#define EX_OK 0
+#endif
 #endif
 #include <ctype.h>
 #include <time.h>
@@ -44,6 +47,23 @@
 #include "mathematics.h"
 #include "gkommandos.h"
 #include "sysVstuff.h"
+#include "bytecode.h"
+
+
+/*********************/
+static int saveprg(char *fname) {
+  char *buf=malloc(programbufferlen);
+  int i=0;
+  while(i<programbufferlen) {
+    if(programbuffer[i]==0 || programbuffer[i]=='\n')
+      buf[i]='\n';
+    else
+      buf[i]=programbuffer[i];
+    i++;
+  }
+  bsave(fname,buf,programbufferlen);
+  return(0);
+}
 
 
 
@@ -153,6 +173,7 @@ void c_edit(char *n) {
     char buffer[256];
     char *buffer2=strdup(ifilename);
     int sret;
+#ifndef ANDROID
     sprintf(filename,"%s.~~~",ifilename);
     saveprg(filename);
     sprintf(buffer,"$EDITOR %s",filename); 
@@ -163,6 +184,10 @@ void c_edit(char *n) {
     mergeprg(filename);
     sprintf(buffer,"rm -f %s",filename); 
     sret=system(buffer);
+#else
+    puts("The EDIT command is not available in ANDROID version.\n"
+    "Please use Menu --> Editor to edit the current program.");
+#endif
 }
 
 void c_after(PARAMETER *plist,int e) {
@@ -202,13 +227,14 @@ void c_dodim(char *w) {
       dimlist[ndim++]=(int)parser(s);
       i=wort_sep_destroy(t,',',TRUE,&s,&t); 
     }
-// printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
+//  printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
     vnr=add_variable(r,ARRAYTYP,typ);
       
-    /*(Re-) Dimensionieren*/      
-      
+    /*(Re-) Dimensionieren  */
     free_array(variablen[vnr].pointer.a); /*Alten Inhalt freigeben*/
     *(variablen[vnr].pointer.a)=create_array(typ,ndim,dimlist);
+//    printf("created array of type: %d\n",(variablen[vnr].pointer.a)->typ);
+
     free(r);
   }
 }
@@ -230,8 +256,23 @@ void do_run() {
 void c_chain(PARAMETER *plist,int e){ c_load(plist,e); c_run(""); }
 
 void c_cont(char *n) {
-  if(pc<=prglen) batch=1;
-  else xberror(41,"");     /*CONT nicht moeglich !*/
+  if(batch==0) {
+    if(pc>=0 && pc<=prglen) batch=1;
+    else xberror(41,"");     /*CONT nicht moeglich !*/
+  } else {
+    int p1,p2,p;
+    /*hier koennte es ein CONTINUE in einer SWITCH Anweisung sein. */
+    /*gehe zum (bzw. hinter) naechsten CASE oder DEFAULT*/
+    p1=suchep(pc,1,P_CASE,P_SELECT,P_ENDSELECT);
+    p2=suchep(pc,1,P_DEFAULT,P_SELECT,P_ENDSELECT);
+    if(p1==-1) p=p2;
+    else if(p2==-1) p=p1;
+    else p=min(p1,p2);
+    if(p==-1) p=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT); 
+    if(p==-1) xberror(36,"SELECT/CONTINUE"); /*Programmstruktur fehlerhaft !*/ 
+    pc=p;
+    pc++;
+  }
 }
 
 void c_restore(PARAMETER *plist,int e) {
@@ -273,7 +314,7 @@ void c_read(PARAMETER *plist,int e) {
     else {
     switch(plist[i].typ) {
     case PL_ARRAYVAR: 
-      printf("Read array. Noch nicht moeglich.\n");
+      printf("Read array. Not yet implemented.\n");
       break;
     case PL_SVAR:
       free_string((STRING *)plist[i].pointer);
@@ -295,12 +336,6 @@ void c_read(PARAMETER *plist,int e) {
   }
 }
 
-void c_case(char *n) {  /* case und default */
-  /*gehe zum naechsten ENDSELECT*/
-    pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
-    if(pc==-1) xberror(36,"CASE"); /*Programmstruktur fehlerhaft !*/ 
-    pc++;
-}
 
 void c_randomize(PARAMETER *plist, int e) {
   unsigned int seed;
@@ -321,7 +356,19 @@ void c_list(PARAMETER *plist, int e) {
     a=min(max(plist[0].integer,0),prglen);
     o=a+1;
   }
-  for(i=a;i<o;i++) printf("%s\n",program[i]);
+  if(is_bytecode && programbufferlen>sizeof(BYTECODE_HEADER)-2) {
+    BYTECODE_HEADER *h=(BYTECODE_HEADER *)programbuffer;
+    printf("Bytecode: %s (%d Bytes) Version: %04x\n",ifilename,programbufferlen,h->version);
+    printf("Info:\n");
+    printf("  Size of   Text-Segment: %d\n",(int)h->textseglen);
+    printf("  Size of roData-Segment: %d\n",(int)h->rodataseglen);
+    printf("  Size of   Data-Segment: %d\n",(int)h->sdataseglen);
+    printf("  Size of    bss-Segment: %d\n",(int)h->bssseglen);
+    printf("  Size of String-Segment: %d\n",(int)h->stringseglen);
+    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h->symbolseglen,(int)h->symbolseglen/sizeof(BYTECODE_SYMBOL));
+  } else {
+    for(i=a;i<o;i++) printf("%s\n",program[i]);
+  }
 }
 
 char *plist_paramter(PARAMETER *p) {
@@ -507,6 +554,7 @@ void c_new(char *n) {
   batch=0;
   programbufferlen=prglen=pc=sp=0;
   strcpy(ifilename,"new.bas");
+  graphics_setdefaults();
 }
 void c_let(char *n) {  
     char v[strlen(n)+1],w[strlen(n)+1];
@@ -522,6 +570,10 @@ void c_quit(PARAMETER *plist, int e) {
 }
 
 void quit_x11basic(int c) {
+#ifdef ANDROID
+  invalidate_screen();
+  sleep(1);
+#endif
 #ifndef NOGRAPHICS
   close_window(usewindow); 
 #endif
@@ -935,26 +987,26 @@ void c_dump(PARAMETER *plist,int e) {
   
   if(e) kkk=((char *)plist[0].pointer)[0];
 
-  if(kkk==0 || kkk=='%') {
+  if(kkk==0 || kkk=='%') {/*  dump ints */
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==INTTYP) 
         printf("%02d: %s\n",i,varinfo(&variablen[i]));
     }
   }
   if(kkk==0) {
-    for(i=0;i<anzvariablen;i++) {
+    for(i=0;i<anzvariablen;i++) {/*  dump floats */
       if(variablen[i].typ==FLOATTYP) 
         printf("%02d: %s\n",i,varinfo(&variablen[i]));
     }
   }
-  if(kkk==0 || kkk=='$') {
+  if(kkk==0 || kkk=='$') {/*  dump strings */
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==STRINGTYP) {
         printf("%02d: %s\n",i,varinfo(&variablen[i]));
       }
     }
   }
-  if(kkk==0 || kkk=='%' || kkk=='(') {
+  if(kkk==0 || kkk=='%' || kkk=='(') {/*  dump int arrays */
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==INTTYP) {
         int j;
@@ -968,7 +1020,7 @@ void c_dump(PARAMETER *plist,int e) {
     }
   }
   
-  if(kkk==0 || kkk=='(') {
+  if(kkk==0 || kkk=='(') {/*  dump arrays */
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==FLOATTYP) {
         int j;
@@ -981,7 +1033,7 @@ void c_dump(PARAMETER *plist,int e) {
       }
     }
   }
-  if(kkk==0 || kkk=='$' || kkk=='(') {
+  if(kkk==0 || kkk=='$' || kkk=='(') {/*  dump string arrays */
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==STRINGTYP) {
         int j;
@@ -994,17 +1046,17 @@ void c_dump(PARAMETER *plist,int e) {
       }
     }
   }
-  if(kkk==':') {
+  if(kkk==':') {/*  dump Labels */
     for(i=0;i<anzlabels;i++) {
       printf("%s: [%d]\n",labels[i].name,labels[i].zeile);
     }
   }
-  if(kkk=='@') {
+  if(kkk=='@') {/*  dump Procedures */
     for(i=0;i<anzprocs;i++) {
       printf("%d|%s [%d]\n",procs[i].typ,procs[i].name,procs[i].zeile);
     }
   }
-  if(kkk=='#') {
+  if(kkk=='#') {                   /*  dump Channels */
     for(i=0;i<ANZFILENR;i++) {
       if(filenr[i]==1) {
         printf("#%d: %s [FILE]\n",i,"");
@@ -1013,7 +1065,7 @@ void c_dump(PARAMETER *plist,int e) {
       }
     }
   }
-  if(kkk=='C' || kkk=='K'|| kkk=='c'|| kkk=='k') {
+  if(kkk=='C' || kkk=='K'|| kkk=='c'|| kkk=='k') { /*  dump commands */
     int j;
     for(i=0;i<anzcomms;i++) {
       printf("%3d: [%08x] %s ",i,(unsigned int)comms[i].opcode,comms[i].name);  
@@ -1053,7 +1105,7 @@ void c_dump(PARAMETER *plist,int e) {
       printf("\n");
     }
   }
-  if(kkk=='F' || kkk=='f') {
+  if(kkk=='F' || kkk=='f') { /*  dump functions */
     int j;
     for(i=0;i<anzpfuncs;i++) {
       printf("%3d: [%08x] %s(",i,(unsigned int) pfuncs[i].opcode,pfuncs[i].name);  
@@ -1404,7 +1456,7 @@ void c_cls(char *n) {
 
   SetConsoleCursorPosition(ConsoleOutput,coord);
 #else
-  puts("\033[2J\033[H");
+  printf("\033[2J\033[H");
 #endif
 }
 void c_home(char *n) { 
@@ -1416,7 +1468,7 @@ void c_home(char *n) {
   coord.Y=0;
   SetConsoleCursorPosition(ConsoleOutput,coord);
 #else
-  puts("\033[H");
+  printf("\033[H");
 #endif
 }
 void c_version(char *n) { printf("X11-BASIC Version: %s %s\n",version,vdate);}
@@ -1547,13 +1599,29 @@ void c_echo(PARAMETER *plist,int e) {
   else if(strcmp(n,"OFF")==0) echoflag=FALSE;
   else  echoflag=(int)parser(n);
 }
+void c_gps(PARAMETER *plist,int e) {
+  char *n=plist[0].pointer;
+#ifdef ANDROID
+  if(strcmp(n,"ON")==0) do_gpsonoff(1);  
+  else if(strcmp(n,"OFF")==0) do_gpsonoff(0);
+  else do_gpsonoff((int)parser(n));
+#endif
+}
+void c_sensor(PARAMETER *plist,int e) {
+  char *n=plist[0].pointer;
+#ifdef ANDROID
+  if(strcmp(n,"ON")==0) do_sensoronoff(1); 
+  else if(strcmp(n,"OFF")==0) do_sensoronoff(0); 
+  else  do_sensoronoff((int)parser(n));
+#endif
+}
 
 void c_stop()  {batch=0;} 
 void c_tron()  {echoflag=1;}
 void c_troff() {echoflag=0;}
 void c_beep()  {putchar('\007');}
  
-void c_clear(PARAMETER *plist,int e){clear_all_variables(); }
+void c_clear(PARAMETER *plist,int e){clear_all_variables(); graphics_setdefaults();}
 
 void c_clr(PARAMETER *plist,int e){  
 //  printf("CLR: pointer=%x\n",(int)plist[0].pointer);
@@ -1632,41 +1700,66 @@ void c_if(char *n) {
   }
 }
 
-void c_select(char *n) {
-  int i,wert,wert2,f=0,o;
-  char w1[MAXSTRLEN],*w2,*w3;
+void c_select(PARAMETER *plist,int e) {
+  int i,wert2;
+  char *w1=NULL,*w2,*w3;  
   
-  wert=(int)parser(n);
+  int npc=pcode[pc-1].integer;
+  if(npc==-1) {
+    xberror(36,"SELECT"); /*Programmstruktur fehlerhaft */
+    return;
+  }
+  int wert=plist->integer;
+ // printf("SELECT: value=%d  e=%d\n",wert,e);
+  int l=0,l2;
   
   /* Case-Anweisungen finden */
   while(1) {
-    for(i=pc; (i<prglen && i>=0);i++) {
-      o=pcode[i].opcode&PM_SPECIAL;
-      if((o==P_DEFAULT || o==P_CASE)  && f==0) break;
-      else if(o==P_SELECT) f++;
-      else if(o==P_ENDSELECT) f--;
-    }
-    
-     if(i==prglen) { xberror(36,"SELECT"); /*Programmstruktur fehlerhaft */return;}
-     pc=i;
-     if((pcode[i].opcode&PM_SPECIAL)==P_CASE) {
-       xtrim(program[pc],TRUE,w1);
+  //  printf("branch to line %d. <%s>\n",npc-1,program[npc-1]);
+    pc=npc;
+     if((pcode[pc-1].opcode&PM_SPECIAL)==P_CASE) {
+       l2=strlen(program[pc-1])+1;
+       if(l2>l || w1==NULL) {
+         l=l2+256;
+         w1=realloc(w1,l);
+       }
+       xtrim(program[pc-1],TRUE,w1);
        wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
-       wert2=parser(w3);
+       
+       e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
+       while(e) {
+         wert2=parser(w2);
+       //  printf("wert2=%d\n",wert2);
+	 if(wert==wert2) break;
+	 e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
+       }
        if(wert==wert2) break;
+       else {
+         npc=pcode[pc-1].integer;
+       }
      } else break;
-  }  
-  pc++;  
+  } 
+  free(w1);
+}
+void c_case(char *n) {  /* case und default */
+  /*gehe zum naechsten ENDSELECT*/
+    pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
+    if(pc==-1) xberror(36,"CASE"); /*Programmstruktur fehlerhaft !*/ 
+    pc++;
 }
 
 void bidnm(char *n) {
   xberror(38,n); /* Befehl im Direktmodus nicht moeglich */
 }
 
+
+/*Diese routine kann stark verbessert werden, wenn 
+  Variablen-typ sowie DOWNTO flag schon beim laden in pass 1 bestimmt wird.*/
+
 void c_next(PARAMETER *plist,int e) {
   char w1[MAXSTRLEN],*w2,*w3,*w4,*var;
   double step, limit,varwert;
-  int ss,f=0,hpc=pc;
+  int ss,f=0,hpc=pc,type=NOTYP;
 
    pc=pcode[pc-1].integer; /*Hier sind wir beim FOR*/
    if(pc==-1) {xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
@@ -1682,6 +1775,8 @@ void c_next(PARAMETER *plist,int e) {
    if((var=searchchr(w2,'='))!=NULL) {
      *var++=0;
      var=w2;
+     type=vartype(var);
+     if(type!=INTTYP && type!=FLOATTYP) {printf("Syntax Error: FOR %s, illegal variable type.\n",w2);batch=0;return;}
    } else {printf("Syntax Error ! FOR %s\n",w2); batch=0;return;}
    wort_sep_destroy(w3,' ',TRUE,&w4,&w2);
    
@@ -1705,7 +1800,10 @@ void c_next(PARAMETER *plist,int e) {
    }
    step*=ss;
    varwert=parser(var)+step;
-   zuweis(var,varwert);
+ //  printf("var=<%s>\n",var);
+   if(type==FLOATTYP) zuweis(var,varwert);
+   else if(type==INTTYP) izuweis(var,(int)varwert);
+   
    if(step<0) ss=-1;
    else ss=1;
 //   printf("step=%g ss=%d\n",step,ss);
@@ -1775,6 +1873,35 @@ void c_split(PARAMETER *plist,int e) {
   else free_string(&str2);
 }
 
+/* GET_LOCATION lat,lon,alt,res,speed,....*/
+/* globale veriablen, welche die GPS Informationen aufnehmen.*/
+double gps_alt,gps_lat=-1,gps_lon=-1;
+float gps_bearing,gps_accuracy,gps_speed;
+double gps_time;
+char *gps_provider;
+
+void c_getlocation(PARAMETER *plist,int e) {
+#ifdef ANDROID
+  /* mae sure, that the values get updated */
+  ANDROID_get_location();
+#endif
+  if(e>0 && plist[0].typ!=PL_LEER) varcastfloat(plist[0].integer,plist[0].pointer,gps_lat);
+  if(e>1 && plist[1].typ!=PL_LEER) varcastfloat(plist[1].integer,plist[1].pointer,gps_lon);
+  if(e>2 && plist[2].typ!=PL_LEER) varcastfloat(plist[2].integer,plist[2].pointer,gps_alt);
+  if(e>3 && plist[3].typ!=PL_LEER) varcastfloat(plist[3].integer,plist[3].pointer,gps_bearing);
+  if(e>4 && plist[4].typ!=PL_LEER) varcastfloat(plist[4].integer,plist[3].pointer,gps_accuracy);
+  if(e>5 && plist[5].typ!=PL_LEER) varcastfloat(plist[5].integer,plist[3].pointer,gps_speed);
+  if(e>6 && plist[6].typ!=PL_LEER) varcastfloat(plist[6].integer,plist[6].pointer,gps_time);
+  if(e>7 && plist[7].typ!=PL_LEER) {
+    STRING a;
+    a.pointer=gps_provider;
+    if(a.pointer) a.len=strlen(a.pointer);
+    else a.len=0;
+    varcaststring(plist[7].integer,plist[7].pointer,a);
+  }
+}
+
+
 void c_poke(PARAMETER *plist,int e) {
   char *adr=(char *)(plist[0].integer);
   *adr=(char)plist[1].integer;
@@ -1791,14 +1918,14 @@ void c_lpoke(PARAMETER *plist,int e) {
 /* SOUND channel,frequency [Hz],volume (0-1),duration (s)*/
 
 void c_sound(PARAMETER *plist,int e) { 
-  int duration=0;
+  double duration=-1;
   int c=-1;
   double frequency=-1;
   double volume=-1;
   if(plist[0].typ!=PL_LEER) c=plist[0].integer;
   if(e>=2 && plist[1].typ!=PL_LEER) frequency=plist[1].real;
   if(e>=3 && plist[2].typ!=PL_LEER) volume=plist[2].real;
-  if(e>=4) duration=(int)(plist[3].real*1000);
+  if(e>=4) duration=plist[3].real;
   sound_activate();
   do_sound(c,frequency,volume,duration);
 }
@@ -1814,6 +1941,24 @@ void c_playsound(PARAMETER *plist,int e) {
   if(e>=4) volume= (int)(plist[3].real*0xffff);
   do_playsound(c,plist[1].pointer,plist[1].integer,pitch,volume,0);
 }
+
+void c_playsoundfile(PARAMETER *plist,int e) {
+  if(exist(plist[0].pointer)) {
+#ifdef ANDROID
+  ANDROID_playsoundfile(plist[0].pointer);
+#else
+  char buffer[256];
+  int sret;
+  sprintf(buffer,"ogg123 %s &",plist[0].pointer); 
+  sret=system(buffer);
+#endif    
+  } else xberror(-33,plist[0].pointer); /* file not found*/
+}
+
+
+
+
+
 /* WAVE channel,...*/
 
 void c_wave(PARAMETER *plist,int e) { 
@@ -1834,5 +1979,19 @@ void c_wave(PARAMETER *plist,int e) {
   do_wave(c,form,attack,decay,sustain,release);
 }
 
+#ifdef ANDROID
+  extern void ANDROID_speek(char *,double,double,char *);
+#endif
+
+void c_speak(PARAMETER *plist,int e) { 
+  double pitch=-1,rate=-1;
+  char *enc=NULL;
+  if(e>=2) pitch= plist[1].real;
+  if(e>=3) rate=plist[2].real;
+  if(e>=4) enc=plist[3].pointer;
+#ifdef ANDROID
+  ANDROID_speek(plist[0].pointer,pitch,rate,enc);
+#endif
+}
 
 void c_eval(PARAMETER *plist,int e) { kommando(plist[0].pointer); }

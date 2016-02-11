@@ -47,4 +47,4 @@ out:
   endif    
 wend
 print timer-t;" Seconds.  ";86/(timer-t);" times."
-quit
+end

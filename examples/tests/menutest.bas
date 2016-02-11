@@ -14,7 +14,7 @@ color grau
 pbox 0,0,640,400
 COLOR 5
 PCIRCLE 500,200,100
-dump "@"
+' dump "@"
 MENUDEF field$(),menuaction
 DO 
   pause 0.05
@@ -43,7 +43,7 @@ PROCEDURE menuaction(k)
   ELSE IF field$(k)="  Menutest" 
     ~form_alert(1,"[0][---- Menutest ----||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
   ELSE   
-    PRINT "MENU selected ";k;" contents: ";field$(k)
+    ' PRINT "MENU selected ";k;" contents: ";field$(k)
     b=form_alert(1,"[1][--- Menutest ---||You selected item (No. "+str$(k)+"),| for which was no|function definded !][ OK |disable]")
     if b=2
       MENUSET k,8

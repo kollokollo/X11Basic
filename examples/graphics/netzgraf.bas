@@ -31,7 +31,6 @@ FOR i=0 TO sx
 NEXT i
 
 LINE 200,0,200,y(0,0)
-print "down"
 vsync
 FOR i=sx DOWNTO 1
   FOR j=sy DOWNTO 1
@@ -41,7 +40,6 @@ FOR i=sx DOWNTO 1
   flush
 NEXT i
 'FILL 1,21
-print "weiter"
 FOR i=0 TO sx-1
   FOR j=0 TO sy-1
     LINE x(i,j),y(i,j),x(i+1,j),y(i+1,j)
@@ -51,7 +49,6 @@ FOR i=0 TO sx-1
   flush
   vsync
 NEXT i
-print "fertig"
 vsync
 alert 0,"Fertig",1,"OK",balert
 quit

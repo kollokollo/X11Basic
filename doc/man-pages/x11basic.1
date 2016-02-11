@@ -1,4 +1,4 @@
-.TH X11BASIC 1 10-Aug-2011 "Version 1.17" "Basic Interpreter"
+.TH X11BASIC 1 21-Aug-2012 "Version 1.19" "Basic Interpreter"
 .SH NAME
 xbasic (X11-Basic) \- Basic interpreter and shell
 .SH SYNOPSIS
@@ -12,11 +12,6 @@ capability that integrates features like shell scripting, cgi-Programming and
 full graphical visualisation into the easy to learn basic language on modern 
 computers.
 
-On UNIX and linux systems, the X11 graphics engine can be used as
-well as the SDL library, the framebuffer devices or no graphics at all. The
-MS WINDOWS version supports only SDL (or no graphics at all). On LINUX systems
-the ALSA sound engine can be used. 
-
 The syntax is most similar to the old GFA-Basic ATARI ST
 implementation. Old GFA-programs should run with only few changes. Also 
 DOS/QBASIC programmers will feel comfortable.
@@ -29,13 +24,10 @@ program (see the man page
 ).
 
 .IR xbasic 
-is the script interpreter. It interpretes basic command-Files.
-It can run in interactive mode and batch mode.
-A psydocompiler can be used to make stand-alone-binaries.
-
-The X11-Basic environment contains a library of GUI functions.  This makes
-writing GUI programs in X11-Basic faster and easier than programming with
-native GUI tools.
+is the script interpreter. It interpretes basic command-Files (programs), which 
+usually have the extension .bas or .xbas.
+It can also run in interactive mode in which case it interpretes single lines of
+code, which are entered.
 
 .SH COMMANDLINE OPTIONS
 .P
@@ -75,8 +67,7 @@ excecuted immediately after pressing return or enter. The interpreter uses the
 library. So the input is buffered and can be edited using the up and down 
 arrows on the keyboard.
 Readline offers editing capabilities while the user is
-entering the line. By default, the line editing commands
-are similar to those of emacs. 
+entering the line.
  
 .B To quit the program
 simply enter 
@@ -93,6 +84,7 @@ xbasic --help "*nl*"
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
+
 .SH X11-Basic as daemon:
 The commandline option --daemon forces the interpreter to run in daemon-mode 
 (with no terminal connected).
@@ -109,6 +101,7 @@ xbasic          1371/tcp
 .fi
 Please note that this is not recommended since xbasic would open
 several security holes on your system.
+
 .SH X11-Basic as shell:
 X11-Basic programs can be excecuted like shell scripts.
 If the xbasic interpreter was installed in 
@@ -118,31 +111,20 @@ any X11-Basic program with
  #!/bin/xbasic
 .fi
 in the first command line can be excecuted directly.
-.SH The pseudo compiler
-The X11-Basic package is shipped with a pseudo compiler, which makes 
-stand-alone binaries out of Basic source code. Actually this "compiler" is not
-a real compiler, since the source code is still interpreted on runtime. But the
-source code is linked to the X11-Basic library so there results one 
-independant executable. Another advantage is that it is quite hard to extract a
-full running *.bas file from this binary since the code is compressd in a way. 
-You will find the compiler souce code in 
-.I /usr/share/doc/packages/X11Basic/examples/compiler/xbc.bas. See
-.I xbc(1).
-Yes, the compiler compiles itself. 
-Just make sure you have built the shared library 
-.I libx11basic.so 
-and the library for static linking before.
+
+
 .SH The X11-Basic Language
+
 .SS Variables
 X11-Basic recognizes three types of variables; floating point numbers, integer
 numbers and charackter strings. Also arrays of each of these types are used.
 .fi
 
-Variable names and commands are case insensitive. Names of variables are
-limited of a number of characters or digits specified in defs.h (default 64)
-and have to begin with a character. Each name is bound to only one kind of
-variable; A$ is a whole different variable(value) than A which is different
-from A(1,1) or A$(1,1).
+Variable names are, as well as all X11-Basic commands, case insensitive. There
+is no limit on the  length of a variable name. Variable names must begin with a
+character ("A" to "Z" or "_"). Each name is bound to only one kind of variable;
+A$ is a whole different variable(value) than A which is different from A(1,1)
+and A$(1,1).
 
 .B Integer Variables
 
@@ -156,11 +138,8 @@ faster and no rounding errors can occur.
 String variables are sequences of characters. Strings generally contain
 ASCII text, but can hold arbitrary byte sequences. Strings are automatically
 elastic, meaning they automatically resize to contain whatever number of bytes
-are put into them. When a string resizes, its location in memory may change,
-as when a longer string is assigned and there is insufficient room after the
-string to store the extra bytes. X11-Basic string variables automatically 
-resize to hold whatever length string
-is assigned to them.  A wealth of intrinsics and functions are provided to
+are put into them. When a string resizes, its location in memory may change.
+A wealth of intrinsics and functions are provided to
 support efficient string processing.  
  
 
@@ -180,7 +159,7 @@ but ASC ("A") isn't.
 
 .B reserved variable names
 
-There are some reserved variables. Some Keywords may not work as varable names
+There are some reserved variables. Some keywords may not work as varable names
 as well. Although there is no checking done, parsing errors could occure.
 Please try the command LET in such cases. In general, as long as an ending of
 an variable name is different then any command or keyword, it's usable as
@@ -200,6 +179,8 @@ SP            internal stack pointer
 ERR           error number of last error
 COLS          number of colums of the terminal connected to text output
 ROWS          number of rows of the terminal
+CRSCOL        cursor position 
+CRSLIN        cursor position
 
 MOUSEX        x coordinate of mouse position relative to window 
 MOUSEY        y coordinate of mouse position 
@@ -217,13 +198,13 @@ DATE$         current date
 
 Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
 As a consequence, boolean operators like AND, OR, XOR etc. are applied as a
-bitwise operation. This way they an be used in expressions as well as in
+bitwise operation. This way they can be used in expressions as well as in
 conditions.
 
 .SS Numbers and Constants
 
 Number constants may preceed 0x to represent hex values. String constants are
-maked with pairs of "". Array constants have following format: 
+marked with pairs of "". Array constants have following format: 
 [ , , ; , , ; , , ].
 
 .SS Operators
@@ -379,7 +360,7 @@ SEEK #n,d               -- Place filepointer on new absolute position d
 SELECT                  -- SELECT statement
 SETENV t$=a$            -- Sets environmentvar t$ using value a$
 SORT a(),n[,b()]        -- Sort array
-SOUND channel,freq      -- produce a sound (frequency f [Hz])
+SOUND chan,freq[,vol,dur] -- produce a sound (frequency f [Hz])
 SWAP
 SYSTEM t$               -- excecute shell with command t$
 TROFF                   -- Trace mode off
@@ -389,6 +370,7 @@ UNTIL exp               -- if exp is false goto REPEAT
 VERSION                 -- shows X11-Basic version number and date
 VOID a                  -- claculates expresion a and discard result
 
+WAVE chan,a,b,c,d       -- sound synthesizer parameters 
 WORT_SEP t$,d$,mode,a$,b$ -- separates string t$ by deliminator d$ in 
                            a$ and b$
 .fi
@@ -702,7 +684,7 @@ ENDFUNCTION
 .fi
 
 .SH VERSION
-Page was created for V.1.17
+Page was created for V.1.19
 .SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should
@@ -724,7 +706,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public
@@ -738,4 +720,4 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE. See the GNU General Public License for more
 details.
 .SH SEE ALSO
-tcsh(1), sh(1), readline(3), xbc(1), bas211basic(1), xb2c(1), xbbc(1), xbvm(1)
+tcsh(1), sh(1), readline(3), xbc(1), bas211basic(1)

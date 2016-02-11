@@ -6,7 +6,7 @@ l=2^11
 c1=4
 c2=86
 
-dim a(l),b(l)
+dim a(l+1),b(l+1)
 sizew ,l,400
 for i=0 to l
   a(i)=200/100*@si(3*i/512*2*pi)+i/100*sin(20*i/512*2*pi)

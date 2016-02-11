@@ -6,6 +6,7 @@
 ' 10.2005: Produziert nun auch WINDOWS .exe files
 ' 04.2007: now can produce .b bytecode files
 ' 04.2011: now can produce real compiled files
+' 10.2012: now accepts also .xbas as source code extension
 
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
 '* ======================================================================
@@ -70,11 +71,11 @@ WEND
 IF LEN(inputfile$)
   rumpf$=inputfile$
   while len(rumpf$)
-    wort_sep rumpf$,"/",1,a$,rumpf$
+    SPLIT rumpf$,"/",1,a$,rumpf$
   wend
   f$=a$
   rumpf$=a$
-  wort_sep a$,".",1,rumpf$,typ$
+  SPLIT a$,".",1,rumpf$,typ$
   if typ$="o"
     @link
   else if typ$="b"
@@ -82,7 +83,7 @@ IF LEN(inputfile$)
     if not compileonly
       @link
     ENDIF
-  ELSE IF typ$="bas"
+  ELSE IF typ$="bas" or typ$="xbas"
     IF virtualm OR bytecode
       @dobytecode
     ENDIF  
@@ -102,7 +103,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2011"
+  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2012"
   VERSION
 RETURN
 PROCEDURE using
@@ -176,7 +177,7 @@ PROCEDURE compile
     t$=XTRIM$(t$)
     IF LEN(t$)
       IF LEFT$(t$)<>"'"
-        WORT_SEP t$," !",1,t$,b$
+        SPLIT t$," !",1,t$,b$
         IF LEFT$(t$,6)="PRINT "
           t$="? "+right$(t$,len(t$)-6)
         ELSE IF LEFT$(t$,6)="GOSUB "

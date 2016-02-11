@@ -46,8 +46,8 @@ extern const unsigned char asciiTable[];
 /* X Font definitions */
 
 #define FONTBIG   "-*-fixed-*-r-normal-*-16-*-iso8859-*"
-#define FONT8x8   "-*-lucidatypewriter-medium-r-*-*-12-*-*-*-m-*-*-*"
-#define FONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
+#define FONT8x8   "-*-fixed-*-*-*-*-8-*"
+#define FONTSMALL "-*-fixed-*-*-*-*-8-*"
 
 
 

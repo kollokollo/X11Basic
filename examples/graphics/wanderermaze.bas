@@ -55,7 +55,7 @@ titlew 1,"Wandering Maze"
 
 fg1=get_color(65535,65535,65535)
 fg2=get_color(65535,0,0)
-fg3=get_color(100,1000,1000)
+fg3=get_color(1024,1024,1024)
 fg=fg1
 bg=get_color(0,0,0)
 color bg
@@ -71,8 +71,15 @@ pbox width*ps,height*ps,0,height*ps-ps*2
 color fg3
 defline ,8
 circle 100,100,202
+circle 100,100,201
+circle 100,100,200
+circle 100,100,199
+circle 100,100,198
+circle 100,100,197
 pcircle 100,100,40
+line 99,300,99,400
 line 100,300,100,400
+line 101,300,101,400
 color bg
 line 10,100,(width-2)*ps,100
 color fg
@@ -178,7 +185,7 @@ showpage
 print "Segments drawn: "; sg
 print "Maximum depth: ";mh
 print timer-timersave,"Secs."
-quit
+end
 
 procedure drawline(xx1,yy1,xx2,yy2)
   color fg
@@ -212,7 +219,7 @@ function chkpoint(xx,yy)
   showpage
   if xx<0 or yy<0
     print "*** INVALID!"
-    stop
+    return fg2
   else
     return point(xx*ps,yy*ps)
   endif

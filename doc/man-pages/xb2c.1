@@ -13,21 +13,21 @@ full graphical visualisation into the easy to learn basic language on modern
 computers.
 
 .IR xb2c
-can be used to convert X11-Basic *.b bytecode binary files (produced with xbbc)
+can be used to convert X11-Basic *.b bytecode binary files (produced with 
+.I xbbc(1))
 into C sourcecode, which can be
-compiled with the gnu C compiler. The sources depend on the x11basic.a or 
-libx11basic.so libraries and on the header file xb2csol.h, which therefor 
+compiled with the gnu C compiler gcc or any other ANSI C compiler, e.g. tcc, the
+tiny c compiler. 
+The sources depend on the x11basic.a or 
+libx11basic.so libraries and on the header file xb2csol.h, which therefore 
 should be installed and linked.  The compiled 
 programs will be faster that the interpreted ones and even a bit faster that 
 the bytecode processed ones (see 
 .I xbbc(1)
-) and (
+ and 
 .I xbvm(1)
-. Since 
-.I xb2c
-is part of the compilation process (invoked by
-.I xbc
-), which need following steps: xbbc xb2c and gcc. 
+)
+. 
 
 .B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
@@ -37,7 +37,7 @@ is part of the compilation process (invoked by
 Xb2c processes one input file. The Suffix of the input file is usually .b 
 (a bytecode file produced by
 .I xbbc(1)
-.
+).
 The default output file name is 
 .I 11.c
 but you can specify alternate names with the -o option.
@@ -54,7 +54,7 @@ If you do not specify `\|\c
 .B \-o\c
 \&\|', the default is to put the output into the file `\|\c
 .B 11.c\c
- .
+\& .
 .SS \--version
 shows version, program and other information and exits
 .SS -h --help
@@ -79,12 +79,12 @@ xbc -virtualm testme.bas -o testme
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The basic to C translator
-This translator is not yet highly optimized.
+
 There is no way to recreate the .bas source code from the c file.. 
 But still the c file is platform independant.
 
 .SH VERSION
-This Page was created for V.1.18
+This Page was created for V.1.19
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic to C translator, you should
@@ -106,7 +106,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public

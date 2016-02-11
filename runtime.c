@@ -15,11 +15,10 @@
 #include <signal.h>
 #include "defs.h"
 #include "x11basic.h"
-#include "variablen.h"
 #include "xbasic.h"
 
 
-void *obh;       /* old break handler  */
+static void *obh;       /* old break handler  */
 
 
 /* Standard-Fehlerroutine   */
@@ -48,13 +47,16 @@ void xberror(char errnr, char *bem) {
 #else
     printf("Line %d: %s\n",pc-1,error_text(errnr,bem));
 #endif
+#ifdef ANDROID
+    invalidate_screen();
+#endif
   }
 }
 
 extern int breakcont;
 extern int breakpc;
 
-void break_handler( int signum) {
+static void break_handler( int signum) {
   if(batch) {
     if(breakcont) {
       breakcont=0;
@@ -74,6 +76,9 @@ void break_handler( int signum) {
     signal(signum, break_handler);
   } else {
     puts("** X11BASIC-QUIT");
+#ifdef ANDROID
+    backlog("** X11BASIC-QUIT (break)");
+#endif
 #ifdef DOOCS
     doocssig_handler(signum);
 #endif  
@@ -81,7 +86,10 @@ void break_handler( int signum) {
     raise(signum);
   }
 }
-void fatal_error_handler( int signum) {
+#ifdef ANDROID
+extern void android_sigaction(int signum, siginfo_t *info, void *reserved);
+#endif
+static void fatal_error_handler( int signum) {
   int obatch=batch;
   switch(signum) {
   case SIGILL: xberror(104,""); break;
@@ -93,7 +101,11 @@ void fatal_error_handler( int signum) {
   case SIGPIPE: xberror(110,""); break;
 #endif
   default:
-    printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
+#ifdef GERMAN
+    printf("** Fataler BASIC-Interpreterfehler #%d\n",signum);
+#else
+    printf("** Fatal interpreter error #%d\n",signum);
+#endif
     batch=0;
   }
   if(obatch) {
@@ -104,12 +116,22 @@ void fatal_error_handler( int signum) {
     } else puts("PC negativ !");
     puts("** PROGRAM-STOP");
   } else {
+#ifdef ANDROID
+   // signal(signum,android_sigaction);
+#else
+    signal(signum,SIG_DFL);
+#endif
     printf("Stack-Pointer: SP=%d\n",sp);
     c_dump("");
     puts("** fatal error ** X11BASIC-QUIT");    
-    signal(signum,SIG_DFL);
   }
-  raise(signum);
+#ifdef ANDROID
+  invalidate_screen();
+  backlog("** X11BASIC-QUIT (fatal)");
+  android_sigaction(signum,NULL,NULL);
+#else
+   raise(signum);
+#endif
 }
 #ifdef WINDOWS
 void alarm(int dummy) {
@@ -117,9 +139,14 @@ void alarm(int dummy) {
 }
 #endif
 
-void timer_handler( int signum) {
-  if(alarmpc==-1) printf("** Uninitialisierter Interrupt #%d \n",signum);
-  else {
+static void timer_handler( int signum) {
+  if(alarmpc==-1) {
+#ifdef GERMAN
+    printf("** Uninitialisierter Interrupt #%d \n",signum);
+#else
+    printf("** Uninitialized interrupt #%d \n",signum);
+#endif
+  } else {
     int oldbatch,osp=sp,pc2;
       pc2=procs[alarmpc].zeile;
       
@@ -147,18 +174,25 @@ void x11basicStartup() {
 #endif
   /* Signal- und Interrupt-Handler installieren  */
   obh=signal(SIGINT, break_handler);
+#ifndef ANDROID
   signal(SIGILL, fatal_error_handler);
   signal(SIGSEGV, fatal_error_handler);
+#endif
 #ifndef  WINDOWS  
   signal(SIGALRM, timer_handler);
+#endif
+#ifndef ANDROID
+#ifndef  WINDOWS
   signal(SIGBUS, fatal_error_handler);
 #endif
+
 #ifdef DOOCS
   signal(SIGPIPE, doocssig_handler);
   signal(SIGTERM, doocssig_handler);
 #else
 #ifndef WINDOWS
   signal(SIGPIPE, fatal_error_handler);
+#endif
 #endif
 #endif
 }

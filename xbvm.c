@@ -20,10 +20,10 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "bytecode.h"
+#include "virtual-machine.h"
 
 void reset_input_mode();
 void x11basicStartup();
-void programmlauf();
 
 void kommando(char *);
 extern char *databuffer;
@@ -55,11 +55,6 @@ STRING bcpc;
 int verbose=0;
 
 char selfseek[]="4007111";
-
-BYTECODE_SYMBOL *symtab;
-extern char *rodata;
-char *strings;
-char *fixup;   /* Relocation information */
 
 void intro(){
   printf("**********************************************************\n"
@@ -182,112 +177,6 @@ int loadbcprg(char *filename) {
   }
 }
 
-/* We assume that the segments are in following order: 
-   HEADER
-   TEXT
-   RODATA
-   SDATA
-   DATA
-   BSS  --- STRINGS  
-        --- SYMBOL
-	--- RELOCATION
-	*/
-void do_relocation(char *adr,unsigned char *fixup, int l);
-
-char *code_init(char *adr) {
-  int i,a,vnr,vnr2,typ;
-  char *name;
-  char *bsseg;
-  /* Ueberpruefe ob ein gueltiger Header dabei ist und setze databuffer */
-  if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)-2) {
-    BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)adr;
-    clear_parameters();
-    programbufferlen=prglen=pc=sp=0;
-    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
-    if(bytecode->version!=BC_VERSION) {
-      printf("WARNING: This Bytecode was compiled for a different version of"
-      "X11-Basic.\n ERROR.\n");
-      return(NULL);
-    }
-        
-    /* Set up the data buffer */
-    databuffer=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
-    databufferlen=bytecode->sdataseglen;
-    if(verbose) printf("Databuffer $%08x contains: <%s>\n",(unsigned int)databuffer,databuffer);
-
-    rodata=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
-    bsseg=strings=&adr[sizeof(BYTECODE_HEADER)+
-                 bytecode->textseglen+
-		 bytecode->rodataseglen+
-		 bytecode->sdataseglen+
-		 bytecode->dataseglen];
-
-    /* Jetzt Variablen anlegen.*/
-    symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
-                                   bytecode->textseglen+
-		                   bytecode->rodataseglen+
-		                   bytecode->sdataseglen+
-				   bytecode->dataseglen+
-				   bytecode->stringseglen);
-    a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
-    if(a>0) {
-      for(i=0;i<a;i++) {
-        if(symtab[i].typ==STT_OBJECT) {
-	  typ=symtab[i].subtyp;
-	  if(symtab[i].name) name=&strings[symtab[i].name];
-          else {
-	    name=malloc(64);
-	    sprintf(name,"VAR_%x",vnr);
-          }
-	  /*Hier erstmal nur int und float im bss ablegen, da noch nicht geklaert ist, 
-	  wie wir strings und arrays hier initialisieren koennen ohne die symboltabelle 
-	  zu ueberschreiben*/
-	  
-	  if(typ&ARRAYTYP) vnr2=add_variable(name,ARRAYTYP,typ&(~ARRAYTYP));
-	  else if(typ==STRINGTYP) vnr2=add_variable(name,typ,0);
-	  else vnr2=add_variable_adr(name,typ,bsseg+symtab[i].adr);
-        }  
-      }
-    }
-    if(verbose) printf("%d variables.\n",anzvariablen);
-    if(verbose) c_dump(NULL,0);
-
-    fixup=(char *)(adr+sizeof(BYTECODE_HEADER)+
-                       bytecode->textseglen+
-		       bytecode->rodataseglen+
-		       bytecode->sdataseglen+
-		       bytecode->dataseglen+
-		       bytecode->stringseglen+
-		       bytecode->symbolseglen);
-    if((bytecode->flags&EXE_REL)==EXE_REL && bytecode->relseglen>0) 
-      do_relocation(adr,fixup,bytecode->relseglen);
-
-   /*Now: clear bss segment. This will probably overwrite symbol table and strings and relocation info*/
-    if(bytecode->bssseglen>0) bzero(bsseg,bytecode->bssseglen);
-
-    return(adr);
-  } else {
-    printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
-    return(NULL);
-  }
-}
-
-void do_relocation(char *adr,unsigned char *fixup, int l) {
-  int i=0;
-  long ll;
-  while(i<l) {
-    if(fixup[i]==0) break;
-    else if(fixup[i]==1) adr+=254;
-    else {
-      adr+=fixup[i];
-      memcpy(&ll,adr,sizeof(long));
-      ll+=(long)adr;
-      memcpy(adr,&ll,sizeof(long));
-    }
-  
-  } 
-}
-
 
 
 void doit(STRING bcpc) {
@@ -326,7 +215,7 @@ int main(int anzahl, char *argumente[]) {
       bcpc.len-=s;
 
       if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
-      if(code_init(bcpc.pointer)) doit(bcpc);
+      if(bytecode_init(bcpc.pointer)) doit(bcpc);
       else printf("Something is wrong, no code!\n");
     }
     
@@ -338,7 +227,7 @@ int main(int anzahl, char *argumente[]) {
       if(exist(ifilename)) {
         if(loadbcprg(ifilename)==0) {
   	  if(runfile) {
-            if(code_init(bcpc.pointer)) doit(bcpc);
+            if(bytecode_init(bcpc.pointer)) doit(bcpc);
           }
 	}
       } else printf("ERROR: %s not found !\n",ifilename);

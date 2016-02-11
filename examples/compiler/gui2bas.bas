@@ -49,7 +49,7 @@ WHILE count<anziz
       name$=""
       t$=a$
     endif
-    wort_sep t$," ",1,typ$,t$
+    SPLIT t$," ",1,typ$,t$
     if upper$(typ$)="TREE"
        if t$="{"
          @dotree(name$)
@@ -163,12 +163,12 @@ function doit2(parent)
       else
         klammer=0
       endif
-      wort_sep t$,":",1,label$,t$
+      SPLIT t$,":",1,label$,t$
       if len(t$)=0
         t$=label$
         label$=""
       endif
-      wort_sep t$,"(",1,typ$,t$
+      SPLIT t$,"(",1,typ$,t$
       typ$=trim$(typ$)
       if right$(t$)=")"
         t$=left$(t$,len(t$)-1)
@@ -209,13 +209,13 @@ function doit(par1,par2,countee)
   else
     klammer=0
   endif
-  wort_sep t$,":",1,label$,t$
+  SPLIT t$,":",1,label$,t$
   if len(t$)
   else
     t$=label$
     label$=""
   endif
-  wort_sep t$,"(",1,typ$,t$
+  SPLIT t$,"(",1,typ$,t$
   typ$=trim$(typ$)
   if right$(t$)=")"
       t$=left$(t$,len(t$)-1)
@@ -465,13 +465,13 @@ return
 function getval$(t$,f$)
   local a$,val$
   val$=""
-  wort_sep t$,",",1,a$,t$
+  SPLIT t$,",",1,a$,t$
   while len(a$)
     a$=trim$(a$)
-    wort_sep a$,"=",1,name$,val$
+    SPLIT a$,"=",1,name$,val$
     exit if upper$(name$)=upper$(f$)
     val$=""
-    wort_sep t$,",",1,a$,t$
+    SPLIT t$,",",1,a$,t$
   wend
   return val$
 endfunction
@@ -484,7 +484,7 @@ function doflags(t$)
   if right$(t$)=")"
     t$=left$(t$,len(t$)-1)  
   endif
-  wort_sep t$,"+",1,a$,t$
+  SPLIT t$,"+",1,a$,t$
   while len(a$)
     if a$="NONE"
     else if a$="SELECTABLE"
@@ -508,7 +508,7 @@ function doflags(t$)
     else
       print "Unknown flag:",a$
     endif
-    wort_sep t$,"+",1,a$,t$
+    SPLIT t$,"+",1,a$,t$
   wend
   return ret
 endfunc
@@ -521,7 +521,7 @@ function dostate(t$)
   if right$(t$)=")"
     t$=left$(t$,len(t$)-1)  
   endif
-  wort_sep t$,"+",1,a$,t$
+  SPLIT t$,"+",1,a$,t$
   while len(a$)
     if a$="NORMAL"
       ' do nothing
@@ -546,7 +546,7 @@ function dostate(t$)
     ELSE
       PRINT "Unknown state:",a$
     ENDIF
-    WORT_SEP t$,"+",1,a$,t$
+    SPLIT t$,"+",1,a$,t$
   WEND
   RETURN ret
 ENDFUNC

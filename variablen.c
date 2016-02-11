@@ -67,6 +67,18 @@ char *varrumpf(char *n) {  /* Rumpf des Variablennamens */
   return(ergebnis);
 }
 
+/* Zurueck: 0 -- Arrayelement
+            1 -- subarray
+	    2 -- ganzes array */
+
+static int isarray(int *indexliste,int n) {
+  if(n==0 || indexliste==NULL) return(2);
+  while(--n>=0) {
+    if(indexliste[n]==-1) return(1);
+  }
+  return(0);
+}
+
 
 
 void *varptr(char *n) {
@@ -106,13 +118,16 @@ void erase_all_variables() {
 }
 
 void erase_variable(VARIABLE *a) {
-  if(a->typ==ARRAYTYP) {
-    free_array(a->pointer.a);
-  } else if(a->typ==STRINGTYP) {
-    free_string(a->pointer.s);
+  if(a->pointer.i) {
+    if(a->typ==ARRAYTYP) {
+      free_array(a->pointer.a);
+    } else if(a->typ==STRINGTYP) {
+      free_string(a->pointer.s);
+    }
+  
+    if(!is_bytecode) free(a->pointer.i);
+    a->pointer.i=NULL;
   }
-  free(a->pointer.i);
-  a->pointer.i=NULL;
 }
 /*Variablen werden mit 0 oder "" initialisiert. Arrays mit ... 
   entfernt werden die Variablen niemals.*/ 
@@ -163,6 +178,7 @@ inline void free_string(STRING *str) {  free(str->pointer);str->pointer=NULL;str
 int var_exist(char *name, unsigned char typ,unsigned char subtyp, int l) {
   int i,j;
   VARIABLE *v;
+//  printf("var exist: <%s> typ=%d, subtyp=%d, l=%d",name,typ,subtyp,l);
   if(l) {
     v=lvar[l];
     j=anzlvar[l];
@@ -173,7 +189,7 @@ int var_exist(char *name, unsigned char typ,unsigned char subtyp, int l) {
   if(j) {
     if(typ==ARRAYTYP && subtyp) {
       for(i=0;i<j;i++){
-        if(v[i].typ==typ && (v[i].pointer.a)->typ==subtyp){
+        if(v[i].typ==typ && (v[i].pointer.a) && (v[i].pointer.a)->typ==subtyp){
           if(strcmp(name,v[i].name)==0) return(i);
         }
       }
@@ -192,25 +208,31 @@ int var_exist(char *name, unsigned char typ,unsigned char subtyp, int l) {
 
 int add_variable(char *name, unsigned char typ, unsigned char subtyp) {
   int vnr=var_exist(name,typ,subtyp,0);
+
   if(vnr==-1) {
+  //  printf("Add new variable.\n");
     if(anzvariablen<ANZVARS) { 
       variablen[anzvariablen].name=strdup(name);
       variablen[anzvariablen].typ=typ;
-  
-      if(typ==ARRAYTYP) {
-	variablen[anzvariablen].pointer.a=calloc(1,sizeof(ARRAY));
-	*(variablen[anzvariablen].pointer.a)=create_array(subtyp,0,NULL);
-      } else if(typ==FLOATTYP) {
-        variablen[anzvariablen].pointer.f=calloc(1,sizeof(double));
-      } else if(typ==INTTYP) {
-        variablen[anzvariablen].pointer.i=calloc(1,sizeof(int));
-      } else if(typ==STRINGTYP) {
-        variablen[anzvariablen].pointer.s=calloc(1,sizeof(STRING));
-	*(variablen[anzvariablen].pointer.s)=create_string(NULL);
-      }
+      variablen[anzvariablen].pointer.a=NULL;
       vnr=anzvariablen++;
     } else printf("Zu viele Variablen ! Konnte var nicht anlegen. anz=%d, max. %d\n",anzvariablen,ANZVARS);
   } 
+ // printf("Add variable %d\n",vnr);
+    if(variablen[vnr].pointer.i==NULL) {
+      if(typ==ARRAYTYP) {
+	variablen[vnr].pointer.a=calloc(1,sizeof(ARRAY));
+	*(variablen[vnr].pointer.a)=create_array(subtyp,0,NULL);
+      } else if(typ==FLOATTYP) {
+        variablen[vnr].pointer.f=calloc(1,sizeof(double));
+      } else if(typ==INTTYP) {
+        variablen[vnr].pointer.i=calloc(1,sizeof(int));
+      } else if(typ==STRINGTYP) {
+        variablen[vnr].pointer.s=calloc(1,sizeof(STRING));
+	*(variablen[vnr].pointer.s)=create_string(NULL);
+      }
+    }
+  
   return(vnr);
 }
 int add_variable_adr(char *name, unsigned char typ, char *adr) {
@@ -236,6 +258,7 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
    
   if(typ==ARRAYTYP) {
     ia=isarray(indexliste,n);
+    
     if(ia==0) typ=(variablen[vnr].pointer.a)->typ;
     else if(ia==1) {
       printf("ERROR: Subarray geht noch nicht...\n");
@@ -245,22 +268,36 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
   // printf("zuw: %x ia=%d typ=$%x\n",varptr,ia,typ);
   if(varptr) {
     ARRAY arr;
+    ARRAY *zarr;
     switch(typ) {
     case ARRAYTYP:
       arr=array_parser(ausdruck);
-      if(arr.typ==((ARRAY *)varptr)->typ) *((ARRAY *)varptr)=arr;
-      else if(((ARRAY *)varptr)->typ==INTTYP) {
-        *((ARRAY *)varptr)=convert_to_intarray(&arr);
+    //  zarr=(ARRAY *)varptr;
+      zarr=variablen[vnr].pointer.a;
+     
+      if(arr.typ==zarr->typ) {
+        free_array(zarr);
+        *zarr=arr;
+      } else if(zarr->typ==INTTYP) {
+        free_array(zarr);
+        *zarr=convert_to_intarray(&arr);
+	free_array(&arr);
+      } else if(zarr->typ==FLOATTYP) {
+        free_array(zarr);
+        *zarr=convert_to_floatarray(&arr);
 	free_array(&arr);
       }
-      else if(((ARRAY *)varptr)->typ==FLOATTYP) {
-        *((ARRAY *)varptr)=convert_to_floatarray(&arr);
-	free_array(&arr);
+      else {
+          xberror(58,""); /* Variable %s has incorrect type*/  
+	printf("Ziel-Array hat folgenden Typ: %d\n",zarr->typ);
+	printf("typ=ARRAY, isarray=%d  ausdruck=<%s>\n",ia,ausdruck);  
+	printf("INFO: Typ1=%d, Typ2=%d\n",arr.typ,((ARRAY *)varptr)->typ);
       }
-      else xberror(58,""); /* Variable %s has incorrect type*/  
       break;
     case STRINGTYP:
-     *((STRING *)varptr)=(STRING)string_parser(ausdruck);
+   //   free(((STRING *)varptr)->pointer);
+     *((STRING *)varptr)=string_parser(ausdruck);
+  //   printf("string wurde zugewiesen: (%d) <%s>\n",((STRING *)varptr)->len,((STRING *)varptr)->pointer);
       break;
     case INTTYP:
      *((int *)varptr)=(int)parser(ausdruck);
@@ -269,7 +306,7 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
      *((double *)varptr)=(double)parser(ausdruck);
       break;
     default:
-      printf("1Something is wrong. Variable typ=$%x\n",typ); 
+      printf("Something is wrong. Variable typ=$%x\n",typ); 
     }
   } 
 }
@@ -450,6 +487,30 @@ int zuweis(char *name, double wert) {
   } else {
     vnr=add_variable(r,FLOATTYP,0);
     *(variablen[vnr].pointer.f)=wert;
+  }
+  free(r);
+  return(0);
+}
+int izuweis(char *name, int wert) {
+  /* Zuweisungen fuer Int-Variablen und Felder    */
+  char w1[strlen(name)+1],w2[strlen(name)+1];
+  int e=klammer_sep(name,w1,w2);
+  char *r=varrumpf(w1);
+  int vnr;
+  if(e==2) {
+    int ii=count_parameters(w2);
+    vnr=add_variable(r,ARRAYTYP,INTTYP);
+    if(ii==0) puts("ARRAY-Zuweisung noch nicht möglich.");
+    else {
+      int indexliste[ii];
+      int *varptr;
+      make_indexliste(variablen[vnr].pointer.a->dimension,w2,indexliste);
+      varptr=(int  *)varptr_indexliste(&variablen[vnr],indexliste,ii);
+      *varptr=wert;
+    }
+  } else {
+    vnr=add_variable(r,INTTYP,0);
+    *(variablen[vnr].pointer.i)=wert;
   }
   free(r);
   return(0);

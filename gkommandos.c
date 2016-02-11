@@ -809,6 +809,25 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
       else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
       else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);    
      #endif
+     #ifdef FRAMEBUFFER
+      else if(doit==1) {
+        int i;
+        if(anz>1) {
+	for(i=0;i<anz-1;i++) {
+	  FB_line(points[i].x,points[i].y,points[i].x,points[i].y);
+	}
+	}
+      }
+      else if(doit==2) {
+        int arr[anz*2];
+        int i;
+	for(i=0;i<anz;i++) {
+	  arr[2*i]=points[i].x;
+	  arr[2*i+1]=points[i].y;
+	}       
+        FB_pPolygon(arr,anz,0, 0);
+      }
+     #endif
   } /* if anz  */
 }
 
@@ -918,7 +937,15 @@ void c_deftext(PARAMETER *plist,int e) {
 
 
 void c_mouse(PARAMETER *plist,int e) {
-#ifdef WINDOWS
+
+#if defined FRAMEBUFFER
+  graphics();
+  if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,screen.mouse_x);
+  if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,screen.mouse_y);
+  if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,(screen.mouse_k|(screen.mouse_s<<8)));
+#endif
+
+#if defined WINDOWS
   if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,global_mousex);
   if(e>1 && plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,global_mousey);
   if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,(global_mousek|(global_mouses<<8)));
@@ -927,9 +954,6 @@ void c_mouse(PARAMETER *plist,int e) {
    unsigned int mask_return;
 #ifdef USE_X11
    Window root_return,child_return;
-#endif
-#ifdef FRAMEBUFFER
-   FB_mouse(1);
 #endif
    graphics();
 #if defined USE_X11
@@ -955,9 +979,6 @@ void c_mouse(PARAMETER *plist,int e) {
 #endif
 #ifdef DEBUG
   printf("Mouse: x=%d y=%d m=%d\n",win_x_return,win_y_return,mask_return);
-#endif
-#ifdef FRAMEBUFFER
-   FB_mouse(0);
 #endif
 }
 

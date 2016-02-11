@@ -12,50 +12,64 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#ifdef WINDOWS
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#if defined WINDOWS || defined ANDROID
 #define EX_CANTCREAT	73	/* can't create (user) output file */
 #define EX_NOINPUT	66	/* cannot open input */
 #define EX_OK 0
 #else
 #include <sysexits.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "defs.h"
 #include "x11basic.h"
 #include "bytecode.h"
 
-
+#ifdef ANDROID
+extern char ifilename[];   /* Standard inputfile  */
+char ofilename[128]="b.b";       /* Standard outputfile     */
+extern int verbose;
+extern int dostrip;                   /* dont write symbol tables */
+extern BYTECODE_SYMBOL *symtab;
+extern int donops;
+extern int docomments;
+extern int programbufferlen;
+extern char *programbuffer;
+extern char *program[];
+extern int prglen;
+#else
 char ifilename[128]="new.bas";   /* Standard inputfile  */
 char ofilename[128]="b.b";       /* Standard outputfile     */
 int verbose=0;
 int loadfile=FALSE;
 int dostrip=0;                   /* dont write symbol tables */
-
+BYTECODE_SYMBOL *symtab;
+int donops=0;
+int docomments=0;
+int programbufferlen=0;
+char *programbuffer=NULL;
+char *program[MAXPRGLEN];
+int prglen=0;
+const char version[]="1.19"; /* Version Number. Put some useful information here */
+const char vdate[]="2012-05-26";   /* Creation date.  Put some useful information here */
 STRING bcpc;
+#endif
+
 
 STRING strings;     /* Holds comments and sybol names */
 
-BYTECODE_SYMBOL *symtab;
 int anzsymbols;
 
 char *rodata=NULL;
 int rodatalen=0;
 int bssdatalen=0;
 
-int donops=0;
-int docomments=0;
 
 
-int programbufferlen=0;
-char *programbuffer=NULL;
-const char version[]="1.18"; /* Version Number. Put some useful information here */
-const char vdate[]="2011-08-26";   /* Creation date.  Put some useful information here */
-char *program[MAXPRGLEN];
-int prglen=0;
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -64,7 +78,7 @@ int prglen=0;
 #define S_IRGRP 0
 #endif
 
-int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
+int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   
   BYTECODE_HEADER h;
@@ -72,6 +86,10 @@ int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
   
   add_rodata(ifilename,strlen(ifilename));
   
+  /* align to even adresses: */
+  len=(len+3)&0xfffffffc;
+  rodatalen=(rodatalen+3)&0xfffffffc;
+  dlen=(dlen+3)&0xfffffffc;
   
   h.BRAs=BC_BRAs;
   h.offs=sizeof(BYTECODE_HEADER)-2;
@@ -84,6 +102,7 @@ int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
   else {
     h.symbolseglen=anzsymbols*sizeof(BYTECODE_SYMBOL);
     h.stringseglen=strings.len;
+    h.stringseglen=(h.stringseglen+3)&0xfffffffc;
   }
   h.version=BC_VERSION;
   h.relseglen=0;
@@ -106,7 +125,9 @@ int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
   return(close(fdis));
 }
 
-void doit(char *ausdruck) {
+
+#ifndef ANDROID
+static void doit(char *ausdruck) {
   PARAMETER *p;
   int n;
   bcpc.len=0;
@@ -119,14 +140,14 @@ void doit(char *ausdruck) {
   free_pliste(n,p);
 }
 
-void intro(){
+static void intro(){
   puts("*************************************************************\n"
        "*           X11-Basic bytecode compilter                    *\n"
-       "*                    by Markus Hoffmann 1997-2011 (c)       *");
+       "*                    by Markus Hoffmann 1997-2012 (c)       *");
   printf("* library V. %s date:   %30s    *\n",libversion,libvdate);
   puts("*************************************************************\n");
 }
-void usage(){
+static void usage(){
   printf("Usage: %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
   printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
   puts("-h --help\t--- Usage\n"
@@ -137,7 +158,7 @@ void usage(){
 }
 
 
-void kommandozeile(int anzahl, char *argumente[]) {
+static void kommandozeile(int anzahl, char *argumente[]) {
   int count;
 
   /* Kommandozeile bearbeiten   */
@@ -184,7 +205,7 @@ int main(int anzahl, char *argumente[]) {
       if(exist(ifilename)) {
         int ret;
         loadprg(ifilename);
-	compile();
+	compile(verbose);
 	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
 	if(ret==-1) exit(EX_CANTCREAT);
       } else {
@@ -196,3 +217,4 @@ int main(int anzahl, char *argumente[]) {
   }
   return(EX_OK);
 }
+#endif

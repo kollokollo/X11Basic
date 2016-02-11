@@ -1,46 +1,50 @@
 ' Zeichnet Praezession auf Kugeloberflaeche (c) Markus Hoffmann 2001
-
+' Draws a precession trace onto a spere
+'
 
 bw=600
-gucktheta=80/180*pi
-guckphi=10/180*pi
+gucktheta=80/180*PI
+guckphi=10/180*PI
+SIZEW 1,bw,bw
 
 
-rot=get_color(65530,0,0)
-gelb=get_color(65530,40000,0)
-grau=get_color(65530/1.5,65530/1.5,65530/1.5)
-blau=get_color(0,0,65530)
-weiss=get_color(65530,65530,65530)
-schwarz=get_color(0,0,0)
-lila=get_color(65530,0,65530)
-gruen=get_color(0,65530,0)
-sizew 1,bw,bw
-vsync
-get_geometry 1,bx,by,bw,bh
-color weiss
-pbox bx,by,bw,bh
-color schwarz
-circle bw/2,bh/2,min(bw,bh)/2-1
-color grau
+rot=GET_COLOR(65530,0,0)
+gelb=GET_COLOR(65530,40000,0)
+grau=GET_COLOR(65530/1.5,65530/1.5,65530/1.5)
+blau=GET_COLOR(0,0,65530)
+weiss=GET_COLOR(65530,65530,65530)
+schwarz=GET_COLOR(0,0,0)
+lila=GET_COLOR(65530,0,65530)
+gruen=GET_COLOR(0,65530,0)
+pause 0.1
+VSYNC
+GET_GEOMETRY 1,bx,by,bw,bh
+bw=min(bw,bh)
+bh=bw
+COLOR weiss
+PBOX bx,by,bw,bh
+COLOR schwarz
+CIRCLE bw/2,bh/2,MIN(bw,bh)/2-1
+COLOR grau
 
-line @kx(0,0,0),@ky(0,0,0),@kx(1,0,0),@ky(1,0,0)
-line @kx(0,0,0),@ky(0,0,0),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
-line @kx(0,0,0),@ky(0,0,0),@kx(1,pi/2,0),@ky(1,pi/2,0)
-line @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi),@ky(1,0,-pi)
-line @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*1.5),@ky(1,0,-pi*1.5)
-line @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*0.5),@ky(1,0,-pi*0.5)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,0),@ky(1,0,0)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,pi/2,0),@ky(1,pi/2,0)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi),@ky(1,0,-pi)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*1.5),@ky(1,0,-pi*1.5)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,0,-pi*0.5),@ky(1,0,-pi*0.5)
 
 
 for i=0 to 360 step 10  
-for j=-60 to -30 step 10
-  line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,(j-10)/180*pi,i/180*pi),@ky(1,(j-10)/180*pi,i/180*pi)
-  line @kx(1,j/180*pi,(i-10)/180*pi),@ky(1,j/180*pi,(i-10)/180*pi),@kx(1,(j)/180*pi,i/180*pi),@ky(1,(j)/180*pi,i/180*pi)
-next j
-vsync
+  for j=-60 to -30 step 10
+    line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,(j-10)/180*pi,i/180*pi),@ky(1,(j-10)/180*pi,i/180*pi)
+    line @kx(1,j/180*pi,(i-10)/180*pi),@ky(1,j/180*pi,(i-10)/180*pi),@kx(1,(j)/180*pi,i/180*pi),@ky(1,(j)/180*pi,i/180*pi)
+  next j
+  vsync
 next i
 
-defline ,4
-color rot
+DEFLINE ,4
+COLOR rot
 
 for i=0 to 360   
   j=@f(i)
@@ -51,44 +55,43 @@ for i=0 to 360
 next i
 
 color blau
-for i=0 to 360 step 2  
+for i=0 TO 360 STEP 2  
   j=-30
   ii=i-1
   jj=-30
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,jj/180*pi,ii/180*pi),@ky(1,jj/180*pi,ii/180*pi)
   vsync
 next i
-for i=0 to 360   step 4
+for i=0 TO 360 STEP 4
   j=-70
   ii=i-1
   jj=-70
   line @kx(1,j/180*pi,i/180*pi),@ky(1,j/180*pi,i/180*pi),@kx(1,jj/180*pi,ii/180*pi),@ky(1,jj/180*pi,ii/180*pi)
-  vsync
-next i
-vsync
-color schwarz
+  VSYNC
+NEXT i
+VSYNC
+COLOR schwarz
 
-line @kx(0,0,0),@ky(0,0,0),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
+LINE @kx(0,0,0),@ky(0,0,0),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
 
-for i=0 to 360 step 10
-line @kx(0.9,-85/180*pi,i/180*pi),@ky(0.9,-85/180*pi,i/180*pi),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
+FOR i=0 TO 360 STEP 10
+  line @kx(0.9,-85/180*pi,i/180*pi),@ky(0.9,-85/180*pi,i/180*pi),@kx(1,-pi/2,0),@ky(1,-pi/2,0)
 next i  
+VSYNC
+~INP(-2)
+END
 
-vsync
-~inp(-2)
-end
-
-function f(x)
-  return sin(x/180*pi*6)*20-50
-endfunc
+FUNCTION f(x)
+  RETURN SIN(x/180*PI*6)*20-50
+ENDFUNC
 
 
-function kx(r,theta,phi)
+FUNCTION kx(r,theta,phi)
 
-x=r*cos(theta)*cos(phi)
-y=r*cos(theta)*sin(phi)
-z=r*sin(theta)
-xx=sin(guckphi)*x+cos(guckphi)*y
+x=r*COS(theta)*COS(phi)
+y=r*COS(theta)*SIN(phi)
+z=r*SIN(theta)
+xx=SIN(guckphi)*x+COS(guckphi)*y
 'y=cos(guckphi)*x-sin(guckphi)*y
 x=xx
 
@@ -100,9 +103,9 @@ x=xx
 'if y>0
 '  defline ,,2
 'endif
-  return bw/2+(x)*bw/2
-endfunc
-function ky(r,theta,phi)
+  RETURN bw/2+(x)*bw/2
+ENDFUNC
+FUNCTION ky(r,theta,phi)
 
 x=r*cos(theta)*cos(phi)
 y=r*cos(theta)*sin(phi)
@@ -118,5 +121,5 @@ z=cos(gucktheta)*y-sin(gucktheta)*z
 'else
 'color blau
 'endif
-  return bh/2-(z)*bh/2
-endfunc
+  RETURN bh/2-(z)*bh/2
+ENDFUNC

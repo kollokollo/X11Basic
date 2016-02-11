@@ -50,7 +50,7 @@ int f_gray(int n) { /* Gray-Code-Konversion */
   }
 }
 int f_fak(int k) {
-  int i,s=1;
+  register int i,s=1;
   for(i=2;i<=k;i++) {s=s*i;}
   return(s);
 }

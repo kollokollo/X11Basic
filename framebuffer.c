@@ -14,7 +14,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#ifndef ANDROID
 #include <sysexits.h>
+#else
+#define EX_OSFILE 0
+#define EX_IOERR 0
+#endif
 #include <math.h>
 
 #include <errno.h>
@@ -26,21 +31,29 @@
 #include <sys/reboot.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+#ifndef ANDROID
 #include <linux/fb.h>
 #include <linux/ioctl.h>
+#else
+#include <android/bitmap.h>
+#endif
+
 #include "defs.h"
 #include "window.h"
 #include "framebuffer.h"
 #include "bitmap.h"
 
+#ifndef ANDROID
 extern struct fb_var_screeninfo vinfo;
 extern struct fb_fix_screeninfo finfo;
-
-
-int fbfd = -1;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
+#else
+extern AndroidBitmapInfo  screen_info;
+#endif
 
+int fbfd = -1;
+extern int font_behaviour;
 G_CONTEXT screen;
 
 const unsigned char mousealpha[16*16]={
@@ -50,10 +63,10 @@ const unsigned char mousealpha[16*16]={
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
-127,127,127,127,127,  0,127,127,127,127,127,127,127,127,127,127,
-127,255,255,255,  0,  0,255,255,255,255,255,255,255,255,255,127,
-127,255,255,255,  0,  0,255,255,255,255,255,255,255,255,255,127,
-127,127,127,127,127,255,127,127,127,127,127,127,127,127,127,127,
+127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,
+127,255,255,255,255,255,255,255,  0,255,255,255,255,255,255,127,
+127,255,255,255,255,255,255,255,  0,255,255,255,255,255,255,127,
+127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
   0,0,0,0,0,0,0,127,255,127,0,0,0,0,0,0,
@@ -82,9 +95,12 @@ WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WH
 
 unsigned short vmousepat[16*16];
 unsigned char vmousealpha[16*16];
+void textscreen_redraw(int x, int y, int w,int h);
+extern int bigfont;
 
 
 void Fb_Open() {
+#ifndef ANDROID 
   fbfd=open(FB_DEVICENAME, O_RDWR);
   if (!fbfd) {
     printf("ERROR: could not open framebufferdevice.\n");
@@ -93,6 +109,10 @@ void Fb_Open() {
 #if DEBUG
   printf("Framebuffer device now opened.\n");
 #endif
+#else 
+  fbfd=1;
+#endif
+#ifndef ANDROID
   // Get fixed screen information
   if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
     printf("ERROR: Could not get fixed screen information.\n");
@@ -106,43 +126,60 @@ void Fb_Open() {
   screen.bpp=vinfo.bits_per_pixel;
   screen.clip_w=screen.width=vinfo.xres;
   screen.clip_h=screen.height=vinfo.yres;
+#else
+  screen.bpp=16;
+  screen.clip_w=screen.width=screen_info.width;
+  screen.clip_h=screen.height=screen_info.height;
+#endif
   screen.clip_x=screen.clip_y=0;
   screen.fcolor=YELLOW;
   screen.bcolor=BLACK;
   screen.mouse_ox=8;
   screen.mouse_oy=8;
-  screen.mouse_x=vinfo.xres/2;
-  screen.mouse_y=vinfo.yres/2;
+  screen.mouse_x=screen.width/2;
+  screen.mouse_y=screen.height/2;
   screen.mousemask=mousealpha;
   screen.mousepat=mousepat;
   screen.alpha=255;
   // Figure out the size of the screen in bytes
-  screen.size = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-  screen.scanline=vinfo.xres*vinfo.bits_per_pixel/8;
-#if DEBUG
-  printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel );
-#endif
+  screen.size = screen.width * screen.height * screen.bpp / 8;
+  screen.scanline=screen.width*screen.bpp/8;
+
 
   // Map the device to memory
+#ifndef ANDROID
   screen.pixels = (char *)mmap(0, screen.size, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
   if((int)screen.pixels==-1) {
     printf("ERROR: Could not map framebuffer device to memory.\n");
     exit(EX_IOERR);
   }
+#else
+  extern void *screen_pixels;
+  screen.pixels = (char *)screen_pixels;
+#endif
+  change_fontsize((font_behaviour==0 && screen.width>=480) || font_behaviour==2); 
   /* Now set the padding to zero, otherwise it can happen that nothing is visible
     if the pading was set to the second page...*/
 
+#ifndef ANDROID
   vinfo.xoffset=0;
   vinfo.yoffset=0;
   ioctl(fbfd,FBIOPAN_DISPLAY,&vinfo);
-  FB_show_mouse();
+#endif
+#if DEBUG
+  printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel );
+#endif
+  // printf("Screen size: %d x %d\n",screen.width, screen.height);
+ FB_show_mouse();
 }
 
 void Fb_Close() {
+#ifndef ANDROID
   if(fbfd > 0) {
     munmap(screen.pixels, screen.size);
     close(fbfd);
   }
+#endif
   fbfd = -1;
 }
 
@@ -210,7 +247,7 @@ unsigned short FB_point(int x, int y) {
   unsigned short *ptr  = (unsigned short*)(screen.pixels+x*2+y*screen.scanline);
   return(*ptr);
 }
-void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
+static void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
   register int w = width; 
 
   if (Y<screen.clip_y) return;
@@ -227,7 +264,7 @@ void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
     while(w-->0) FB_PutPixel_noclip_alpha(X++,Y,color,screen.alpha);
   }
 }
-void DrawVerticalLine(int X, int Y, int height, unsigned short color) {
+static void DrawVerticalLine(int X, int Y, int height, unsigned short color) {
   register int h = height;  // in pixels
 
   if (X<screen.clip_x) return;
@@ -247,9 +284,9 @@ void DrawVerticalLine(int X, int Y, int height, unsigned short color) {
 
 
 
-void fillLine(int x1,int x2,int y,unsigned short color) {
- if(x2>=x1) DrawHorizontalLine(x1,y,x2-x1,color);
- else DrawHorizontalLine(x1,y,x1-x2,color);
+static void fillLine(int x1,int x2,int y,unsigned short color) {
+  if(x2>=x1) DrawHorizontalLine(x1,y,x2-x1,color);
+  else DrawHorizontalLine(x1,y,x1-x2,color);
 }
 
 /* Bresenham's line drawing algorithm single with */
@@ -453,11 +490,20 @@ void FB_Clear(G_CONTEXT *screen) {
   for(i=0; i<n; i++) *ptr++=screen->bcolor;
 }
 
+void Fb_Clear2(int y, int h, unsigned short color) {
+  if (y<0|| y+h>screen.height) return;
+  unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
+  unsigned short *endp = ptr + h*screen.scanline/sizeof(short);
+  while (ptr < endp) *ptr++=color;
+}
+
 
 void Fb_inverse(int x, int y,int w,int h){
   if(w<=0||h<=0) return;
 
-  if(x<screen.clip_x||y<screen.clip_w|| x+w>screen.clip_x+screen.clip_w|| y+h>screen.clip_y+screen.clip_h) return;
+// printf("%d %d %d %d : %d %d %d %d \r",screen.clip_x,screen.clip_y,screen.clip_w,screen.clip_h,x,y,w,h);
+
+  if(x<screen.clip_x||y<screen.clip_y|| x+w>screen.clip_x+screen.clip_w|| y+h>screen.clip_y+screen.clip_h) return;
 
   register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
   ptr+=x;
@@ -560,8 +606,27 @@ int FB_get_color(int r, int g, int b) {
   return((((r>>11)&0x1f)<<11)|(((g>>10)&0x3f)<<5)|(((b>>11)&0x1f)));
 }
 
+
+#ifdef ANDROID
+unsigned char *fontlist57[10]={
+(unsigned char *)asciiTable,(unsigned char *)asciiTable,
+(unsigned char *)asciiTable,(unsigned char *)asciiTable,
+(unsigned char *)asciiTable,(unsigned char *)asciiTable,
+(unsigned char *)asciiTable,(unsigned char *)asciiTable,
+(unsigned char *)asciiTable,(unsigned char *)asciiTable};
+
+unsigned char *fontlist816[10]={
+(unsigned char *)spat_a816,(unsigned char *)ibm_like816,
+(unsigned char *)ext_font816,(unsigned char *)spat_a816,
+(unsigned char *)spat_a816,(unsigned char *)spat_a816,
+(unsigned char *)spat_a816,(unsigned char *)spat_a816,
+(unsigned char *)spat_a816,(unsigned char *)spat_a816};
+#else
 unsigned char *fontlist816[1]={(unsigned char *)spat_a816};
 unsigned char *fontlist57[1] ={(unsigned char *)asciiTable};
+#endif
+
+
 
 void Fb_BlitCharacter57(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags, int fontnr){
   unsigned char data0,data1,data2,data3,data4;
@@ -746,13 +811,13 @@ void FB_get_geometry(int *x, int *y, int *w, int *h, int *b, int *d) {
   *d=screen.bpp;
 }
 /* We need these because ARM has 32 Bit alignment (and the compiler has a bug)*/
-void writeint(char *p,int n) {
+static void writeint(char *p,int n) {
   p[0]=n&0xff;
   p[1]=(n&0xff00)>>8;
   p[2]=(n&0xff0000)>>16;
   p[3]=(n&0xff000000)>>24;
 }
-void writeshort(char *p,short n) {
+static void writeshort(char *p,short n) {
   p[0]=n&0xff;
   p[1]=(n&0xff00)>>8;
 }
@@ -821,18 +886,24 @@ void FB_bmp2pixel(char *s,unsigned short *d,int w, int h, unsigned short color) 
     if((a>>i)&1) *d=color;
     else *d=WHITE;
     d++;
+    #if DEBUG
     if((a>>i)&1) printf("##");
     else printf("..");
+#endif
   }
   a=*s++;
   for(i=0;i<8;i++) {
      if((a>>i)&1) *d=color;
     else *d=WHITE;
     d++;
+#if DEBUG
     if((a>>i)&1) printf("##");
     else printf("..");
+#endif
   }
+#if DEBUG
   printf("\n");
+#endif
   }
 }
 void FB_bmp2mask(char *s,unsigned char *d,int w, int h) {
@@ -844,23 +915,28 @@ void FB_bmp2mask(char *s,unsigned char *d,int w, int h) {
     if((a>>i)&1) *d=255;
     else *d=0;
     d++;
+#if DEBUG
     if((a>>i)&1) printf("##");
     else printf("..");
+#endif
   }
   a=*s++;
   for(i=0;i<8;i++) {
      if((a>>i)&1) *d=255;
     else *d=0;
     d++;
+#if DEBUG
     if((a>>i)&1) printf("##");
     else printf("..");
+#endif
   }
+#if DEBUG
   printf("\n");
+#endif
   }
-
 }
 
-void DrawCircle(int x, int y, int r, unsigned short color) {
+static void DrawCircle(int x, int y, int r, unsigned short color) {
   int i, row, col, px, py;
   long int sum;
   if(r==0) {
@@ -1012,7 +1088,7 @@ void FB_pArc(int x, int y, int r1, int r2, int a1, int a2) {
   บ                                                         บ
   ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ
 */
-int sort_function (const long int *a, const long int *b) {
+static int sort_function (const long int *a, const long int *b) {
 	if (*a < *b)  return(-1);
 	if (*a == *b) return(0);
 	if (*a > *b)  return(1);
@@ -1025,6 +1101,9 @@ void fill2Poly(unsigned short color,int *point, int num) {
   int dx, dy, dxabs, dyabs, i=0, index=0, j, k, px, py, sdx, sdy, x, y,
       xs,xe,ys,ye,toggle=0, old_sdy, sy0;
   long int coord[4000];
+
+// backlog("fill2poly");sleep(1);
+
   if (num<3) return;
   i=2*num+1;
   px = point[0];
@@ -1106,7 +1185,7 @@ void fill2Poly(unsigned short color,int *point, int num) {
 }
 
 
-void FB_pPolygon(XPoint *points, int n,int shape, int mode) {
+void FB_pPolygon(int *points, int n,int shape, int mode) {
   fill2Poly(screen.fcolor,(int *)points,n);
 }
 
@@ -1116,12 +1195,15 @@ void FB_pPolygon(XPoint *points, int n,int shape, int mode) {
 XEvent eque[MAXQUEUELEN];
 
 int queueptr=0;
+int queueptrlow=0;
+int number=0;
+
+#ifndef ANDROID
 int escflag=0;
 int numbers[16];
 int anznumbers;
-int number=0;
 
-void process_char(int a) {
+static void process_char(int a) {
   a&=0xff;
   
   if(escflag>=2) {
@@ -1233,8 +1315,9 @@ void process_char(int a) {
   }
 }
 
-
-void collect_events(){
+#endif
+static void collect_events(){
+#ifndef ANDROID
   fd_set set;
   int a,rc;
 #ifdef TIMEVAL_WORKAROUND
@@ -1262,8 +1345,12 @@ void collect_events(){
 #endif
     }
   }
+#endif
 }
-void wait_events(){
+
+
+static void wait_events() {
+#ifndef ANDROID
   fd_set set;
   int rc=0;
 #ifdef TIMEVAL_WORKAROUND
@@ -1280,65 +1367,90 @@ void wait_events(){
     rc=select(1, &set, 0, 0, &tv);
     if (rc<0) printf("select failed: errno=%d\n",errno);
   }
+#else
+while(queueptr==queueptrlow) usleep(10000);
 
+
+#endif
+}
+
+
+static void remove_event(int r) {
+  int i,e;
+ /*Event entfernen*/
+    if(r==queueptrlow) {
+      queueptrlow++;
+      if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
+    } else {
+      i=r;
+      queueptrlow++;
+      if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
+   
+      while(i!=queueptrlow) {
+        e=i-1;
+        if(e<0) e+=MAXQUEUELEN;
+        eque[i]=eque[e];
+        i=e;
+      }
+    }
 }
 
 int FB_check_event(int mask, XEvent *event) {
-  int i,r=-1;
+  int e,i,r=-1;
   collect_events();
-  if(queueptr) {
-    for(i=0;i<queueptr;i++) {
+  if(queueptr!=queueptrlow) {
+    if(queueptr==0) e=MAXQUEUELEN;
+    else e=queueptr;
+    i=queueptrlow;
+    while(i!=e-1) {
       if(eque[i].type&mask) {
          r=i;
       }
+      i++;
+      if(i>=MAXQUEUELEN) i=0;
     }
   }
   if(r<0) return(0);
   *event=eque[r]; 
-   if(r<=queueptr-1) {
-    for(i=r;i<queueptr-1;i++) {
-      eque[i]=eque[i+1];
-    }
-  }
-  if(queueptr>0) queueptr--;
+  remove_event(r);
   return(1);
 }
 
 
 void FB_event(int mask, XEvent *event) {
-  int i,r=-1;
-  while(r==-1) {
-    collect_events();
-    
-    if(queueptr) {
-      for(i=0;i<queueptr;i++) {
-        if(eque[i].type&mask) {
-           r=i;
-	   break;
-        }
-      }
-    }
-    if(r<0) wait_events();
-  }
-  
-  *event=eque[r]; 
- /* now remove the event from the list */
-  if(r<=queueptr-1) {
-    for(i=r;i<queueptr-1;i++) {
-      eque[i]=eque[i+1];
+  int i,r=0;
+  while(r==0) {
+    r=FB_check_event(mask,event);
+    if(r==0) {
+      usleep(10000);
+      wait_events();
     }
   }
-  if(queueptr>0) queueptr--;
 }
+void FB_clear_events() {
+  queueptrlow=queueptr=0;
+}
+
+
 void FB_next_event(XEvent *event) {
   FB_event(0xffffffff, event);
 }
 
+/*Hier sollte man das Mousepointerzeichnen entfernen, da es schon beim Fuettern 
+  der Event-Queue geschieht.
+  */
 
 void FB_Query_pointer(int *rx,int *ry,int *x,int *y,int *k) {
   XEvent ev;
-  if(FB_check_event(ButtonPressMask|PointerMotionMask|ButtonReleaseMask, &ev)) {
+  int is;
+  // printf("Querypointer\n");invalidate_screen();
+  is=FB_check_event(ButtonPressMask|PointerMotionMask|ButtonReleaseMask, &ev);
+  if(is) {
+#ifndef ANDROID
     FB_hide_mouse();
+#endif
+    while(is) {
+#ifndef ANDROID
     if(ev.type==ButtonPress||ev.type==ButtonRelease) {
       screen.mouse_x=ev.xbutton.x;
       screen.mouse_y=ev.xbutton.y;
@@ -1349,15 +1461,22 @@ void FB_Query_pointer(int *rx,int *ry,int *x,int *y,int *k) {
       screen.mouse_y=ev.xmotion.y;
       screen.mouse_s=ev.xmotion.state;
     }
+#endif
+    is=FB_check_event(ButtonPressMask|PointerMotionMask|ButtonReleaseMask, &ev);
+    }
+#ifndef ANDROID
     FB_show_mouse();
+#endif
   }
   *rx=*x=screen.mouse_x;
   *ry=*y=screen.mouse_y;
   *k=screen.mouse_k;
 }
 
-
+/*Routine teilt TTconsole mit, dass nun mousebewegungen gemeldet
+  werden sollen....*/
 void FB_mouse(int onoff){
+#ifndef ANDROID
   static int mousecount=0;
   if(onoff) {
     printf("\033[?10h");
@@ -1367,4 +1486,5 @@ void FB_mouse(int onoff){
     if(mousecount==0) printf("\033[?10l");
   }  
   fflush(stdout);
+#endif
 }

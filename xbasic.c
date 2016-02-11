@@ -14,9 +14,9 @@
 
 
 
-                       VERSION 1.18
+                       VERSION 1.19
 
-            (C) 1997-2011 by Markus Hoffmann
+            (C) 1997-2012 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -57,6 +57,8 @@
 #include "parser.h"
 #include "x11basic.h"
 #include "wort_sep.h"
+#include "bytecode.h"
+#include "virtual-machine.h"
 
 
 const char libversion[]=VERSION;           /* Programmversion           */
@@ -109,11 +111,19 @@ char *databuffer=NULL;  /* Hier werden alle DATA-Inhalte gespeichert.*/
 int databufferlen=0;
 int datapointer=0; 
 
+static void clear_parameters(int l);
+static void clear_labelliste();
+static void clear_procliste();
+static int add_label(char *name,int zeile,int dataptr);
+static int add_proc(char *name,char *pars,int zeile,int typ);
+
+
 /* Kommandoliste: muss alphabetisch sortiert sein !   */
 
 const COMMAND comms[]= {
 
- { P_ARGUMENT,  "!nulldummy", bidnm       ,0, 0,{0}},
+ { P_ARGUMENT,  " nulldummy", bidnm       ,0, 0,{0}},
+ { P_REM,       "!"      , c_nop  ,      0,0},
  { P_PLISTE,    "?"         , c_print     ,0,-1,{PL_EVAL}},
 
  { P_PLISTE,   "ADD"      , c_add       ,2, 2,{PL_ANYVAR,PL_ANYVALUE}},
@@ -160,7 +170,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "COLOR"    , c_color     ,1,2,{PL_INT,PL_INT}},
 #endif
  { P_PLISTE,     "CONNECT"  , c_connect   ,2,3,{PL_FILENR,PL_STRING,PL_INT}},
- { P_SIMPLE,     "CONT"     , c_cont      ,0,0},
+ { P_CONTINUE,     "CONTINUE" , c_cont      ,0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
@@ -249,12 +259,17 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
  { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,{PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "GET_LOCATION" , c_getlocation,2,8,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
+ 
  { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
 #endif
  { P_GOSUB,     "GOSUB"    , c_gosub,1,1,{PL_PROC}},
  { P_GOTO,       "GOTO"     , c_goto,1,1,{PL_LABEL}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GPRINT"    , c_gprint,       0,-1,{PL_EVAL}},
+#endif
+ { P_PLISTE,   "GPS"     , c_gps ,1,1,{PL_KEY}},
+#ifndef NOGRAPHICS
  { P_PLISTE,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
 #endif
  { P_PLISTE,   "HELP"    , c_help,0,1,{PL_KEY}},
@@ -330,6 +345,7 @@ const COMMAND comms[]= {
 #endif
  { P_PLISTE,     "PIPE" , c_pipe,   2,2,{PL_FILENR,PL_FILENR}},
  { P_PLISTE,     "PLAYSOUND",     c_playsound, 2,4,{PL_INT,PL_STRING,PL_NUMBER,PL_NUMBER}},
+ { P_PLISTE,     "PLAYSOUNDFILE",     c_playsoundfile, 1,1,{PL_STRING}},
  { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PLOT"     , c_plot,       2,2,{PL_INT,PL_INT}},
@@ -384,12 +400,13 @@ const COMMAND comms[]= {
 #endif
  { P_PLISTE,   "SCREEN"    , c_screen,      1,1,{PL_INT}},
  { P_PLISTE,   "SEEK"     , c_seek,       1,2,{PL_FILENR,PL_INT}},
- { P_SELECT, "SELECT"   , c_select,     1,1,{PL_CONDITION}},
+ { P_SELECT, "SELECT"   , c_select,     1,1,{PL_INT}},
  /*
  { P_ARGUMENT,   "SEMGIVE"  , c_semgive, 1,2,{PL_NUMBER,PL_NUMBER}},
  { P_ARGUMENT,   "SEMTAKE"  , c_semtake, 1,2,{PL_NUMBER,PL_NUMBER}},
  */
  { P_PLISTE, "SEND"   , c_send,     2,4,{PL_FILENR,PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE, "SENSOR" , c_sensor ,1,1,{PL_KEY}},
 #ifndef NOGRAPHICS
  { P_PLISTE,	"SETFONT"  , c_setfont,    1,1,{PL_STRING}},
  { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,{PL_INT,PL_INT,PL_INT}},
@@ -405,6 +422,8 @@ const COMMAND comms[]= {
  { P_PLISTE,    "SOUND",     c_sound,        2,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 
  { P_GOSUB,     "SPAWN"    , c_spawn,1,1,{PL_PROC}},
+ { P_PLISTE,    "SPEAK",     c_speak, 1,4,{PL_STRING,PL_NUMBER,PL_NUMBER,PL_STRING}},
+
  { P_PLISTE,	"SPLIT"    , c_split,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 #ifndef NOGRAPHICS
  { P_PLISTE,	"SPUT"     , c_sput,      1,1,{PL_STRING}},
@@ -466,110 +485,220 @@ char *keys[]={"ON","OFF","IF","TO","DOWNTO","STEP","USING"};
 const int anzkeys=sizeof(keys)/sizeof(char *);
 #endif
 
-
-void prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
-  char k1[strlen(w1)+1],k2[strlen(w1)+1];
-  int typ=vartype(w1);
-  int e=klammer_sep(w1,k1,k2);
-
-  p->pointer=NULL;
-  if(e==1 || strlen(k2)==0) {
-    if((typ&solltyp)==typ) {
-      char *r=varrumpf(w1);
-      if(typ&ARRAYTYP) {
-        p->integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
-      } else p->integer=add_variable(r,typ,0);
-      free(r);
-      if(typ==ARRAYTYP) p->typ=PL_ARRAYVAR;
-      else if(typ==INTTYP) p->typ=PL_IVAR;
-      else if(typ==FLOATTYP) p->typ=PL_FVAR;
-      else if(typ==STRINGTYP) p->typ=PL_SVAR;
-      else if(typ==(ARRAYTYP|INTTYP)) p->typ=PL_IARRAYVAR;
-      else if(typ==(ARRAYTYP|FLOATTYP)) p->typ=PL_FARRAYVAR;
-      else if(typ==(ARRAYTYP|STRINGTYP)) p->typ=PL_SARRAYVAR;
-      else printf("vvar: ???\n");
-    } else printf("prepare_vvar: ERROR: Variable hat falschen Typ. $%x/$%x  <%s>\n",typ,solltyp,w1);
-  } else {
-  // printf("Es sind indizies da. %s\n",k2);
-    typ&=~ARRAYTYP;
-    if((typ&solltyp)==typ) {
-      char *r=varrumpf(w1);
-      p->integer=add_variable(r,ARRAYTYP,typ);
-      free(r);
-      if(typ==INTTYP) p->typ=PL_IVAR;
-      else if(typ==FLOATTYP) p->typ=PL_FVAR;
-      else if(typ==STRINGTYP) p->typ=PL_SVAR;
-      p->panzahl=count_parameters(k2);   /* Anzahl indizes z"ahlen*/
-      p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
-      /*hier die Indizies in einzelne zu evaluierende Ausdruecke
-        separieren*/
-      make_preparlist(p->ppointer,k2);
-    //  printf("pointer=$%x\n",p->pointer);
-    //  printf("%d indizies in pp\n",p->panzahl);
-    } else printf("ERROR: Variable hat falschen Typ. $%x/$%x\n",typ,solltyp);
-  }
-//  printf("VVAR_: $%x ($%x)\n",p->typ,typ);
-}
-
-
+static int oldprglen=0;
 
 void loadprg(char *filename) {
-  programbufferlen=prglen=pc=sp=0;
+  batch=programbufferlen=pc=sp=0;
   mergeprg(filename);
 }
 
 extern char ifilename[];
 
-int saveprg(char *fname) {
-  char *buf=malloc(programbufferlen);
-  int i=0;
-  while(i<programbufferlen) {
-    if(programbuffer[i]==0 || programbuffer[i]=='\n')
-      buf[i]='\n';
-    else
-      buf[i]=programbuffer[i];
-    i++;
-  }
-  bsave(fname,buf,programbufferlen);
 
-  return(0);
+/* Bytecode spezifica. */
+
+int is_bytecode=0;
+static char *stringseg;
+BYTECODE_SYMBOL *symtab;
+
+static void do_relocation(char *adr,unsigned char *fixup, int l) {
+  int i=0;
+  long ll;
+  while(i<l) {
+    if(fixup[i]==0) break;
+    else if(fixup[i]==1) adr+=254;
+    else {
+      adr+=fixup[i];
+      memcpy(&ll,adr,sizeof(long));
+      ll+=(long)adr;
+      memcpy(adr,&ll,sizeof(long));
+    }
+  
+  } 
 }
+/* We assume that the segments are in following order: 
+   HEADER
+   TEXT
+   RODATA
+   SDATA
+   DATA
+   BSS  --- STRINGS  
+        --- SYMBOL
+	--- RELOCATION
+	*/
+
+char *bytecode_init(char *adr) {
+  int i,a,vnr,vnr2,typ;
+  char *name;
+  char *bsseg;
+  char *fixup;   /* Relocation information */
+#ifdef ANDROID
+  char buffer[100];
+#endif
+
+  erase_all_variables();
+  clear_labelliste();
+  clear_procliste();
+
+  /* Ueberpruefe ob ein gueltiger Header dabei ist und setze databuffer */
+  if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)-2) {
+    BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)adr;
+    clear_parameters(prglen);
+    prglen=pc=sp=0;
+    is_bytecode=1;
+#ifdef ANDROID
+     sprintf(buffer,"Bytecode header found (V.%x)\n",bytecode->version);
+     backlog(buffer);
+#endif
+    if(bytecode->version!=BC_VERSION) {
+      printf("ERROR: This Bytecode was compiled for a different version of "
+      "X11-Basic.\n Please consider to recompile it.\n");
+      return(NULL);
+    }
+        
+    /* Set up the data buffer */
+    databuffer=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
+    databufferlen=bytecode->sdataseglen;
+#ifdef ANDROID
+      sprintf(buffer,"Databuffer $%08x contains: <%s>\n",(unsigned int)databuffer,databuffer);
+    backlog(buffer);
+#endif
+    rodata=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
+    bsseg=stringseg=&adr[sizeof(BYTECODE_HEADER)+
+                 bytecode->textseglen+
+		 bytecode->rodataseglen+
+		 bytecode->sdataseglen+
+		 bytecode->dataseglen];
+
+    /* Jetzt Variablen anlegen.*/
+    symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
+                                   bytecode->textseglen+
+		                   bytecode->rodataseglen+
+		                   bytecode->sdataseglen+
+				   bytecode->dataseglen+
+				   bytecode->stringseglen);
+    a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+    if(a>0) {
+      for(i=0;i<a;i++) {
+        if(symtab[i].typ==STT_OBJECT) {
+	  typ=symtab[i].subtyp;
+	  if(symtab[i].name) name=&stringseg[symtab[i].name];
+          else {
+	    name=malloc(64);
+	    sprintf(name,"VAR_%x",vnr);
+          }
+	  /*Hier erstmal nur int und float im bss ablegen, da noch nicht geklaert ist, 
+	  wie wir strings und arrays hier initialisieren koennen ohne die symboltabelle 
+	  zu ueberschreiben*/
+#ifdef ANDROID
+    sprintf(buffer,"Symbol: <%s> $%04x %08x ",name,typ,symtab[i].adr);
+    backlog(buffer);
+#endif	  
+	  if(typ&ARRAYTYP) vnr2=add_variable(name,ARRAYTYP,typ&(~ARRAYTYP));
+	  else if(typ==STRINGTYP) vnr2=add_variable(name,typ,0);
+	  else vnr2=add_variable_adr(name,typ,bsseg+symtab[i].adr);
+#ifdef ANDROID	  
+    sprintf(buffer,"BSSSEG auf %08x ",bsseg);
+    backlog(buffer);
+#endif
+        }  
+      }
+    }
+#ifdef ANDROIOD    
+    sprintf(buffer,"%d variables.\n",anzvariablen);
+    backlog(buffer);
+#endif
+    #if DEBUG
+    printf("%d variables.\n",anzvariablen);
+    c_dump(NULL,0);
+    #endif
+    fixup=(char *)(adr+sizeof(BYTECODE_HEADER)+
+                       bytecode->textseglen+
+		       bytecode->rodataseglen+
+		       bytecode->sdataseglen+
+		       bytecode->dataseglen+
+		       bytecode->stringseglen+
+		       bytecode->symbolseglen);
+    if((bytecode->flags&EXE_REL)==EXE_REL && bytecode->relseglen>0) 
+      do_relocation(adr,fixup,bytecode->relseglen);
+
+   /*Now: clear bss segment. This will probably overwrite symbol table and strings and relocation info*/
+    if(bytecode->bssseglen>0) bzero(bsseg,bytecode->bssseglen);
+#ifdef ANDROID
+    backlog("bytecode_init done.");
+#endif
+    return(adr);
+  } else {
+    printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
+    return(NULL);
+  }
+}
+
+
+
+
+
+/* Routine zum Laden eines Programms */
 
 int mergeprg(char *fname) {
   int i,len;
   char *pos;
   FILE *dptr;
-
   /* Filelaenge rauskriegen */
 
-  dptr=fopen(fname,"r"); len=lof(dptr); fclose(dptr);
+  dptr=fopen(fname,"rb"); len=lof(dptr); fclose(dptr);
   programbuffer=realloc(programbuffer,programbufferlen+len+1);
   bload(fname,programbuffer+programbufferlen,len);
   programbufferlen+=len;
 
- /* Zeilenzahl herausbekommen */
-  pos=programbuffer;
-  i=prglen=0;
-  while(i<programbufferlen) {
-    if(i>0 && programbuffer[i]=='\n' && programbuffer[i-1]=='\\') {
-      programbuffer[i]=' ';
-      programbuffer[i-1]=' ';
-    } else if(programbuffer[i]==0 || programbuffer[i]=='\n') {
-      programbuffer[i]=0;
-      program[prglen++]=pos;
-      pos=programbuffer+i+1;
-    } else if(programbuffer[i]==9) programbuffer[i]=' '; /* TABs entfernen*/
-    i++;
+
+/* Hier jetzt pr"ufen, ob es sich um eine bytecode-Datei handelt.
+   wenn nicht, versuche sie zu interpretieren...*/
+
+  /* Ueberpruefe ob ein gueltiger Header dabei ist */
+
+  if(programbuffer[0]==BC_BRAs && programbuffer[1]==sizeof(BYTECODE_HEADER)-2) {
+    BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)programbuffer;
+
+     #if DEBUG 
+       printf("Bytecode header found (V.%x)\n",bytecode->version);
+     #endif
+     if(bytecode->version!=BC_VERSION) {
+       printf("ERROR: This Bytecode was compiled for a different version of "
+       "X11-Basic.\n Please consider to recompile it.\n");
+       return(-1);
+    }
+    
+    /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
+    if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
+      programbufferlen+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
+      programbuffer=realloc(programbuffer,programbufferlen);
+    }
+    
+    if(bytecode_init(programbuffer)) return(0);
+    return(-1); /* stimmt was nicht. */
+  } else {
+    
+   /* Zeilenzahl herausbekommen */
+    pos=programbuffer;
+    oldprglen=prglen;
+    i=prglen=0;
+    while(i<programbufferlen) {
+      if(i>0 && programbuffer[i]=='\n' && programbuffer[i-1]=='\\') {
+        programbuffer[i]=' ';
+        programbuffer[i-1]=' ';
+      } else if(programbuffer[i]==0 || programbuffer[i]=='\n') {
+        programbuffer[i]=0;
+        program[prglen++]=pos;
+	
+        pos=programbuffer+i+1;
+      } else if(programbuffer[i]==9) programbuffer[i]=' '; /* TABs entfernen*/
+      i++;
+    }
+    return(init_program());
   }
-  return(init_program());
 }
-void structure_warning(char *comment) {
-#ifdef GERMAN
-  printf("Warnung: Programmstruktur fehlerhaft bei %s.\n",comment);
-#else
-  printf("Warning: corrupt program structure ==> %s.\n",comment);
-#endif
-}
+
 
 /* Find Numer des Kommandos w1 aus Liste. 
    Wenn w1 nur ein Teil des kommandos ist, wird es trotzdem gefunden, 
@@ -594,7 +723,8 @@ int find_comm(char *w1) {
   }
   return(-1);
 }
-int find_comm_guess(char *w1,int *guessa,int *guessb) {
+
+static int find_comm_guess(char *w1,int *guessa,int *guessb) {
   int i=0,a=anzcomms-1,b;
   /* Kommandoliste durchsuchen, moeglichst effektiv ! */
   for(b=0; b<strlen(w1); b++) {
@@ -613,6 +743,7 @@ int find_comm_guess(char *w1,int *guessa,int *guessb) {
   }
   return(-1);
 }
+
 int find_func(char *w1) {
   int i=0,a=anzpfuncs-1,b;
   /* Funktionsliste durchsuchen, moeglichst effektiv ! */
@@ -624,6 +755,7 @@ int find_func(char *w1) {
   if(strcmp(w1,pfuncs[i].name)==0) return(i);
   return(-1);
 }
+
 int find_afunc(char *w1) {
   int i=0,a=anzpafuncs-1,b;
   /* Funktionsliste durchsuchen, moeglichst effektiv ! */
@@ -635,6 +767,7 @@ int find_afunc(char *w1) {
   if(strcmp(w1,pafuncs[i].name)==0) return(i);
   return(-1);
 }
+
 int find_sfunc(char *w1) {
   int i=0,a=anzpsfuncs-1,b;
   /* Funktionsliste durchsuchen, moeglichst effektiv ! */
@@ -647,7 +780,7 @@ int find_sfunc(char *w1) {
   return(-1);
 }
 
-int find_sysvar(char *s) {
+static int find_sysvar(char *s) {
   /* Liste durchgehen */
   char c=*s;
   int i=0,a=anzsysvars-1,b,l=strlen(s);
@@ -671,19 +804,20 @@ Programmvorbereitung und precompilation
 int init_program() {
   char *expr,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  
   int i,typ;
-
   erase_all_variables();
   clear_labelliste();
   clear_procliste();
   databufferlen=0;
-  clear_parameters();
+  clear_parameters(oldprglen);
 
+  is_bytecode=0;
   /* Label-, Procedur- und Variablenliste Erstellen und p_code transformieren*/
   
   for(i=0; i<prglen;i++) {
     zeile=realloc(zeile,strlen(program[i])+1);
     buffer=realloc(buffer,strlen(program[i])+1);
     strcpy(zeile, program[i]);
+    
 //    code[i].opcode=0;       /*Typ und Kommandonummer*/
     pcode[i].panzahl=0;       /*Anzahl Parameter*/
     pcode[i].ppointer=NULL;   /*Zeiger auf Parameterliste*/
@@ -717,6 +851,7 @@ int init_program() {
       pcode[i].opcode=P_LABEL;
       pcode[i].integer=add_label(zeile,i,(databufferlen?(databufferlen+1):databufferlen));
     } else if(strcmp(zeile,"DATA")==0) {
+      pcode[i].opcode=P_DATA;
 #ifdef DEBUG
       printf("DATA Statement found in line %d. <%s>\n",i,buffer);
 #endif
@@ -796,7 +931,7 @@ int init_program() {
               if(e>1) {
 		pcode[i].integer=add_variable(r,ARRAYTYP,typ);
 		pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
-		pcode[i].ppointer=malloc(sizeof(PARAMETER)*pcode[i].panzahl);
+		pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
                 /*hier die Indizies in einzelne zu evaluierende Ausdruecke
 		  separieren*/
 		make_preparlist(pcode[i].ppointer,argument);
@@ -806,11 +941,11 @@ int init_program() {
 	        pcode[i].integer=add_variable(r,typ,0);
 	      }
 	    }
-	    if(pcode[i].integer==-1) printf("ERROR: Variable konnte nicht angelegt werden.\n");
+	    if(pcode[i].integer==-1) printf("ERROR: at line %d: Variable could not be created.\n",i);
 	    free(r);
 	    free(buf);	       
           } else {
-	    printf("WARNING: Z.%d: Syntax error. <%s>\n",i,buf);
+	    printf("WARNING: Syntax error at line %d: <%s>\n",i,buf);
 	    pcode[i].opcode=P_EVAL|P_NOCMD;
 	    pcode[i].panzahl=0;
 	    pcode[i].ppointer=NULL;
@@ -822,57 +957,38 @@ int init_program() {
 	xtrim(buffer,TRUE,buffer);
 	pcode[i].argument=strdup(buffer);
 	
-	if(comms[j].opcode==P_BREAK || 
-	  comms[j].opcode==P_DO ||  
-	  comms[j].opcode==P_GOSUB ||
-	  comms[j].opcode==P_GOTO ||
-	  comms[j].opcode==P_RETURN ||
-	  comms[j].opcode==P_IF ||
-	  comms[j].opcode==P_ENDIF ||
-	  comms[j].opcode==P_ENDSELECT ||
-	  comms[j].opcode==P_PROC ||
-	  comms[j].opcode==P_ENDPROC ||
-	  comms[j].opcode==P_FOR ||
-	  comms[j].opcode==P_REM ||
-	  comms[j].opcode==P_WHILE ||
-	  comms[j].opcode==P_DEFAULT ||
-	  comms[j].opcode==P_REPEAT ||
-	  comms[j].opcode==P_CASE) {
-	  ; /*An dieser Stelle nichts tun, das geschiegt erst in Pass 2*/
-	} else if(comms[j].opcode==P_DATA) {
-	  printf("WARNING: Hier stimmt was nicht. Data schon behandelt.\n");
+	if(comms[j].opcode==P_DATA) {
+	  printf("WARNING: Something is wrong at line %d. Data should have been treated already.\n",i);
 	} else if(comms[j].opcode==P_LOOP) {/*Zugehoeriges DO suchen */
 	  pcode[i].integer=suchep(i-1,-1,P_DO,P_LOOP,P_DO);
-//	  printf("loop in Zeile %d\n",i);
-//	  printf("zugeh do in Zeile %d\n",pcode[i].integer);  
-          if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */
+          if(pcode[i].integer==-1)  structure_warning(i,zeile); /*Programmstruktur fehlerhaft */
 	} else if(comms[j].opcode==P_WEND) {/*Zugehoeriges WHILE suchen */
           pcode[i].integer=suchep(i-1,-1,P_WHILE,P_WEND,P_WHILE);
-          if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */
+          if(pcode[i].integer==-1)  structure_warning(i,zeile); /*Programmstruktur fehlerhaft */
 	} else if(comms[j].opcode==P_NEXT) {/*Zugehoeriges FOR suchen */
           pcode[i].integer=suchep(i-1,-1,P_FOR,P_NEXT,P_FOR);
-          if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */
+          if(pcode[i].integer==-1)  structure_warning(i,zeile); /*Programmstruktur fehlerhaft */
 	} else if(comms[j].opcode==P_UNTIL) {/*Zugehoeriges REPEAT suchen */
 	  pcode[i].integer=suchep(i-1,-1,P_REPEAT,P_UNTIL,P_REPEAT);
-          if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */
+          if(pcode[i].integer==-1)  structure_warning(i,zeile); /*Programmstruktur fehlerhaft */
 	} else if(comms[j].opcode==P_ELSE) {/*Pruefen ob es ELSE IF ist. */
           char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
 	  wort_sep(buffer,' ',TRUE,w1,w2);
-	  if(strcmp(w1,"IF")==0) pcode[i].opcode=P_ELSEIF|j; 
-	} else if(comms[j].pmax==0 || comms[j].opcode==P_SIMPLE) {
+	  if(strcmp(w1,"IF")==0) pcode[i].opcode=P_ELSEIF|j;
+	} 
+	/*Argumente und Argument-Listen vorbereiten*/
+	if(comms[j].pmax==0 || (comms[j].opcode&PM_TYP)==P_SIMPLE) {
 	  pcode[i].panzahl=0;
 	  pcode[i].ppointer=NULL;
-	} else if(comms[j].opcode==P_ARGUMENT) {
+	} else if((comms[j].opcode&PM_TYP)==P_ARGUMENT) {
 	  pcode[i].panzahl=0;
 	  pcode[i].ppointer=NULL;
-	} else if(comms[j].opcode==P_PLISTE) {
+	} else if((comms[j].opcode&PM_TYP)==P_PLISTE) {
 	  int ii;
 	  pcode[i].panzahl=ii=count_parameters(buffer);
 	  if((comms[j].pmin>ii && comms[j].pmin!=-1) || (comms[j].pmax<ii && comms[j].pmax!=-1))  
 	        printf("Warnung: Z.%d Falsche Anzahl Parameter bei %s.\n",i,comms[j].name); /*Programmstruktur fehlerhaft */
 	  if(ii==0) pcode[i].ppointer=NULL;
-	} else {
-	  printf("WARNING: Kommando unnbekannten typs: %s\n",comms[j].name);  
 	}
 	    /* Einige Befehle noch nachbearbeiten */
         if(strcmp(zeile,"EXIT")==0) { /*Pruefen ob es EXIT IF ist. */
@@ -882,7 +998,9 @@ int init_program() {
 	} 
       }
     }
-  }
+  } 
+
+
 #ifdef DEBUG
   puts("PASS 2:");
 #endif
@@ -893,32 +1011,57 @@ int init_program() {
   for(i=0; i<prglen;i++) {
     if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning("ELSE"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  structure_warning(i,"ELSE"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning("ELSE IF"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  structure_warning(i,"ELSE IF"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning("IF"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  structure_warning(i,"IF"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_WHILE) { /* Suche WEND */
       pcode[i].integer=suchep(i+1,1,P_WEND,P_WHILE,P_WEND)+1;
-      if(pcode[i].integer==0)  structure_warning("WHILE"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  structure_warning(i,"WHILE"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) { /* Suche NEXT */
       pcode[i].integer=suchep(i+1,1,P_NEXT,P_FOR,P_NEXT)+1;
-      if(pcode[i].integer==0)  structure_warning("FOR"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  structure_warning(i,"FOR"); /*Programmstruktur fehlerhaft */
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_SELECT) { /* Suche CASE/DEFAULT/ENDSELECT */
+      pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  {
+        pcode[i].integer=suchep(i+1,1,P_DEFAULT,P_SELECT,P_ENDSELECT)+1;
+        if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT)+1;
+        if(pcode[i].integer==0)  structure_warning(i,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
+      }
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_CASE) { /* Suche CASE/DEFAULT/ENDSELECT */
+      pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_DEFAULT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  structure_warning(i,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_DEFAULT) { /* Suche CASE/DEFAULT/ENDSELECT */
+      pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_DEFAULT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  structure_warning(i,"SELECT/DEFAULT"); /*Programmstruktur fehlerhaft */
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_CONTINUE) { /* Suche CASE/DEFAULT/ENDSELECT */
+      pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_DEFAULT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT)+1;
+      if(pcode[i].integer==0)  structure_warning(i,"SELECT/CONTINUE"); /*Programmstruktur fehlerhaft */
     } else if((pcode[i].opcode&PM_SPECIAL)==P_BREAK ||
               (pcode[i].opcode&PM_SPECIAL)==P_EXITIF) { /* Suche ende Schleife*/
       int j,f=0,o;
       for(j=i+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
-        if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
+        if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL||  o==P_ENDSELECT)  && f<=0) break;
         if(o & P_LEVELIN) f++;
         if(o & P_LEVELOUT) f--;
       }
       if(j==prglen) { 
-        structure_warning("BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
+        structure_warning(i,"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
         pcode[i].integer=-1;
-      } else pcode[i].integer=j+1;
+      } else {
+        if(o==P_ENDSELECT) pcode[i].integer=j; /* wichtig fuer compiler !*/
+        else pcode[i].integer=j+1;
+      }
     } else if((pcode[i].opcode&PM_SPECIAL)==P_GOSUB) { /* Suche Procedure */
       if(*(pcode[i].argument)=='&') pcode[i].integer=-1;
       else {
@@ -930,8 +1073,8 @@ int init_program() {
           pos[0]=0;pos++;
           pos2=pos+strlen(pos)-1;
           if(pos2[0]!=')') {
-	    puts("GOSUB: Syntax error parameter list");
-	    structure_warning("GOSUB"); /*Programmstruktur fehlerhaft */
+	    puts("GOSUB: Syntax error: parameter list");
+	    structure_warning(i,"GOSUB"); /*Programmstruktur fehlerhaft */
           } else pos2[0]=0;
         } else pos=buf+strlen(buf);
         pcode[i].integer=procnr(buf,1);
@@ -944,22 +1087,25 @@ int init_program() {
         pcode[i].integer=labelzeile(pcode[i].argument);
         /* Wenn label nicht gefunden, dann PREFETCH und IGNORE aufheben */
         if(pcode[i].integer==-1)  {
-	  printf("Label %s not found!\n",pcode[i].argument);
-          structure_warning("GOTO"); /*Programmstruktur fehlerhaft */
+	  printf("Label %s not found at line %d!\n",pcode[i].argument,i);
+          structure_warning(i,"GOTO"); /*Programmstruktur fehlerhaft */
 	  pcode[i].opcode&=~(P_PREFETCH|P_IGNORE);
         }
       }
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_PLISTE) { /* Nachbearbeiten */
+    } 
+    if((pcode[i].opcode&PM_TYP)==P_PLISTE) { /* Nachbearbeiten */
        int j=pcode[i].opcode&PM_COMMS;
        make_pliste2(comms[j].pmin,comms[j].pmax,
 	(unsigned short *)comms[j].pliste,pcode[i].argument,&(pcode[i].ppointer),pcode[i].panzahl);
     } 
   }
   free(buffer);free(zeile);
+ 
+
   return(0);
 }
 
-int add_label(char *name,int zeile,int dataptr) {
+static int add_label(char *name,int zeile,int dataptr) {
   labels[anzlabels].name=strdup(name);
   labels[anzlabels].zeile=zeile;
   labels[anzlabels].datapointer=dataptr;
@@ -967,46 +1113,39 @@ int add_label(char *name,int zeile,int dataptr) {
   return(anzlabels-1);
 }
 
-void clear_labelliste() {
+static void clear_labelliste() {
   int i;
   if(anzlabels) {
     for(i=0;i<anzlabels;i++) free(labels[i].name);
     anzlabels=0;
   }
 }
-void clear_parameters() {
+static void clear_parameters(int l) {
   int i;
-  if(prglen) {
-    for(i=0;i<prglen;i++) {
+  if(l && !is_bytecode) {
+    for(i=0;i<l;i++) {
+    
+    
       if(pcode[i].ppointer!=NULL) {
-        free(pcode[i].ppointer->pointer);
+
+/*Hier ist was falsch, denn nicht alle pointer koennen ge free t werden
+bei Arrays sind es z.b. varptr pointer*/
+
+ //       if(pcode[i].ppointer->pointer!=NULL) free(pcode[i].ppointer->pointer);
+
         free(pcode[i].ppointer);
 	pcode[i].ppointer=NULL;
       }
-      free(pcode[i].argument);
-      free(pcode[i].extra);
+      if(pcode[i].argument!=NULL) free(pcode[i].argument);
+      if(pcode[i].extra!=NULL) free(pcode[i].extra);
       pcode[i].argument=NULL;
       pcode[i].extra=NULL;
     }
   }
 }
 
-int labelnr(char *n) {
-  int i=anzlabels;
-  while(--i>=0) {
-    if(strcmp(labels[i].name,n)==0) return(i);
-  }
-  return(-1);
-}
-int labelzeile(char *n) {
-  int i=anzlabels;
-  while(--i>=0) {
-    if(strcmp(labels[i].name,n)==0) return(labels[i].zeile);
-  }
-  return(-1);
-}
 
-void clear_procliste() {
+static void clear_procliste() {
   while(anzprocs) {
     anzprocs--;
     free(procs[anzprocs].name);
@@ -1015,7 +1154,7 @@ void clear_procliste() {
 }
 
 
-int make_varliste(char *argument, int *l,int n) {
+static int make_varliste(char *argument, int *l,int n) {
   char arg[strlen(argument)+1];
   char *w1,*w2;
   int i=0,e;
@@ -1040,7 +1179,7 @@ int make_varliste(char *argument, int *l,int n) {
 
 /*Prozedurin Liste hinzufuegen */
 
-int add_proc(char *name,char *pars,int zeile,int typ) {
+static int add_proc(char *name,char *pars,int zeile,int typ) {
   int ap,i;
   i=procnr(name,typ);
   if(i==-1) {
@@ -1060,14 +1199,6 @@ int add_proc(char *name,char *pars,int zeile,int typ) {
   }
 }
 
-int procnr(char *n,int typ) {
-  int i=anzprocs;
-  while(--i>=0) {
-    if((procs[i].typ&typ) && strcmp(procs[i].name,n)==0) return(i);
-  }
-  return(-1);
-}
-
 
 char *indirekt2(char *funktion) {
    char *ergebnis;
@@ -1078,9 +1209,12 @@ char *indirekt2(char *funktion) {
   return(ergebnis);
 }
 
+
+#if DEBUG 
+
 /* Typ von Ausdruecken */
 
-void dump_type(unsigned int typ) {
+static void dump_type(unsigned int typ) {
   if(typ==NOTYP) printf("notyp ");
   else {
     if(typ&INDIRECTTYP) printf("indirect ");
@@ -1103,6 +1237,9 @@ int type3(char *ausdruck) {
   printf("\n");
   return(ret);
 }
+#endif
+
+
 
 /* Bestimmt den Typ eines Ausdrucks 
 
@@ -1115,11 +1252,13 @@ unsigned int type(char *ausdruck) {
 
 /*Hier erstes Trennzeichen suchen (ausserhalb "" und Klammern()[]), dann type getrennt fuer beide teile.
   Trennzeichen=',', ';', ''', ' ', "+-* / ^()|<>=&!" 
+  Trennzeichen sind aber auch alle Operatoren wie AND, OR, ....
+  
   + und - am Anfang einfach ignorieren
   blank am Anfang ignorieren
   wenn eines kein Konsttyp ist, dann konsttyp loeschen
   */
-// printf("type: <%s>\n",ausdruck);
+ // printf("type: <%s>\n",ausdruck);
   if(ausdruck==NULL) return(NOTYP);
   switch(*ausdruck) {
     case 0: 
@@ -1135,32 +1274,47 @@ unsigned int type(char *ausdruck) {
     default: ; /*Was machen mit ~ und @  ?*/
   }
   {
-    char w1[strlen(ausdruck)+1]; /*Ab hier arbeiten wir mit einer Kopie des AUsdrucks*/
+    char w1[strlen(ausdruck)+1]; /*Ab hier arbeiten wir mit einer Kopie des Ausdrucks*/
     memcpy(w1,ausdruck,strlen(ausdruck)+1);
     if(*w1=='[') {   /*Array const def.*/
       pos=searchchr2(w1+1,']');
       if(pos!=NULL) *pos=0;
-      ltyp=type(w1+1);
-      return(ARRAYTYP|ltyp);
+      return(ARRAYTYP|type(w1+1));
     }
 
     pos=searchchr2_multi(w1,",;+- '*/^=<>");
     if(pos!=NULL) {
       char a=*pos;
-     // printf("Wir haben folgendes im Ausdruck gefunden: <%s>\n",pos);
+      // printf("Wir haben folgendes im Ausdruck gefunden: <%s>\n",pos);
       *pos++=0;
-      
-      ltyp=type(pos);  /*Rechte Seite auswerten */
-    //  if(ltyp&CONSTTYP) printf("rechts ist const.\n");
-      if(a=='/') { /*War division, dann kann ergebnis nur float sein */
-        if((ltyp&INTTYP)==INTTYP) {
-	  ltyp&=(~INTTYP);
-	  ltyp|=FLOATTYP;
+      if(a=='=' || a=='<' || a=='>') {
+        if(*pos=='=' ||*pos=='<' ||*pos=='>') { /* faengt die operatoen <>,==,<=,>= ab.*/
+	  a=*pos++;
 	}
+      } else if(a==' ') {
+        ; /*Hier koennte man die Operatoren OR; AND etc bearbeiten....*/
       }
-      if(*w1==0) return(ltyp); /*Ist eigentlich komisch.*/
+      
+      int rtyp=type(pos);  /*Rechte Seite auswerten */
+      int ltyp=type(w1);   /*Linke Seite auswerten */
+    //  if(ltyp&CONSTTYP) printf("rechts ist const.\n");
+      typ=0;
+      if((ltyp&CONSTTYP) && (rtyp&CONSTTYP)) typ|=CONSTTYP;
+      if((ltyp&ARRAYTYP) || (rtyp&ARRAYTYP)) typ|=ARRAYTYP;
+      if(a=='/') { /*War division, dann kann das Ergebnis nur float sein */
+        typ|=FLOATTYP;
+      } else if(a=='=' || a=='<' || a=='>') { /*War Vergleichsoperator, dann kann das Ergebnis nur int sein */
+        typ|=INTTYP;
+      } else {
+        if(rtyp&INTTYP) typ|=INTTYP;
+	else if(rtyp&FLOATTYP) typ|=FLOATTYP;
+	else if(rtyp&STRINGTYP) typ|=STRINGTYP;
+	else printf("something is wrong: %x\n",rtyp);
+      } 
+      return(typ); 
     }
 
+/*  hier ist nun nurnoch ein operand zu untersuchen */
     if(*w1=='(' && w1[strlen(w1)-1]==')') {
       w1[strlen(w1)-1]=0;
       typ=type(w1+1);
@@ -1168,7 +1322,7 @@ unsigned int type(char *ausdruck) {
       pos=searchchr(w1,'(');
       if(pos!=NULL) {
         if(*w1!='@') {
-          if(pos==w1) printf("Syntax fehler: Klammerung? <%s>\n",w1);
+          if(pos==w1) printf("Syntax-error at line %d: Parenthesis? <%s>\n",i,w1);
       /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
           char *ppp=pos+1;
           int i=0,flag=0,sflag=0,count=0;
@@ -1178,7 +1332,7 @@ unsigned int type(char *ausdruck) {
 	    else  typ=FLOATTYP;
 	    if(pfuncs[i].opcode&F_CONST) {
 	      if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	      else printf("WARNING: Syntay-error: fehlende schliessende Klammer. <%s>\n",ppp);
+	      else printf("WARNING: Syntay-error at line %d: fehlende schliessende Klammer. <%s>\n",i,ppp);
               if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
             }
 	    goto binfertig;
@@ -1186,7 +1340,7 @@ unsigned int type(char *ausdruck) {
 	    typ=STRINGTYP;
 	    if(psfuncs[i].opcode&F_CONST) {
 	      if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	      else printf("WARNING: Syntay-error: fehlende schliessende Klammer. <%s>\n",ppp);
+	      else printf("WARNING: Syntay-error at line %d: fehlende schliessende Klammer. <%s>\n",i,ppp);
               if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
             }
 	    goto binfertig;
@@ -1256,7 +1410,7 @@ unsigned int type(char *ausdruck) {
 }
 
 
-int suche(int begin, int richtung, char *such,char *w1,char *w2) {
+static int suche(int begin, int richtung, char *such,char *w1,char *w2) {
   int i,f=0;
   char nbuffer[MAXSTRLEN];
   char zbuffer[MAXSTRLEN];
@@ -1278,17 +1432,7 @@ int suche(int begin, int richtung, char *such,char *w1,char *w2) {
   }
   return(-1);
 }
-int suchep(int begin, int richtung, int such, int w1, int w2) {
-  int i,f=0,o;
 
-  for(i=begin; (i<prglen && i>=0);i+=richtung) {
-    o=pcode[i].opcode&PM_SPECIAL;
-    if(o==such && f==0) return(i);
-    else if(o==w1) f++;
-    else if(o==w2) f--;
-  }
-  return(-1);
-}
 
 
 
@@ -1343,13 +1487,13 @@ void kommando(char *cmd) {
 
   i=find_comm_guess(w1,&a,&b);
   if(i!=-1) {
-      if((comms[i].opcode&PM_TYP)==P_IGNORE) return;
+      if((comms[i].opcode&PM_TYP)==P_IGNORE) return; /*?? das geht nicht*/
       if((comms[i].opcode&PM_TYP)==P_ARGUMENT) (comms[i].routine)(w2);
       else if((comms[i].opcode&PM_TYP)==P_SIMPLE) (comms[i].routine)();
       else if((comms[i].opcode&PM_TYP)==P_PLISTE) {
         PARAMETER *plist;
         int e=make_pliste(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,w2,&plist);
-        (comms[i].routine)(plist,e);
+        if(e>=comms[i].pmin) (comms[i].routine)(plist,e);
 	if(e!=-1) free_pliste(e,plist);
       } else xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
     } else if(a!=b) {
@@ -1367,6 +1511,22 @@ void programmlauf(){
 #ifdef DEBUG
     int timer;
 #endif
+
+  if(is_bytecode) {  
+    PARAMETER *p;
+    int n;
+  #if DEBUG
+    printf("Virtual Machine: %d bytes.\n",programbufferlen);
+  #endif
+    STRING bcpc;  /* Bytecode holder */
+    bcpc.pointer=programbuffer;
+    bcpc.len=programbufferlen;
+    p=virtual_machine(bcpc,&n);
+    dump_parameterlist(p,n);  
+    free_pliste(n,p);
+    return;
+  }
+
     isp=sp;ipc=pc;
     while(batch && pc<prglen && pc>=0 && sp>=isp)  {
       if(echoflag) printf("%s\n",program[pc]);
@@ -1402,8 +1562,8 @@ void programmlauf(){
         (comms[pcode[opc].opcode&PM_COMMS].routine)(NULL);
       } else if(pcode[opc].opcode&P_INVALID) xberror(32,program[opc]); /*Syntax nicht korrekt*/
       else if((pcode[opc].opcode&PM_COMMS)>=anzcomms) {
-        printf("Precompiler error...  <%s>\n",program[opc]);
-        kommando(program[opc]);
+	xberror(36,program[opc]); /*Programmstruktur fehlerhaft !*/
+   //     kommando(program[opc]);
       } else {
         if((pcode[opc].opcode&PM_TYP)==P_ARGUMENT)
           (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].argument);
@@ -1417,7 +1577,7 @@ void programmlauf(){
 	     pcode[opc].ppointer,&plist,pcode[opc].panzahl);
           (comms[i].routine)(plist,e);
 	  if(e!=-1) free_pliste(e,plist);
-        } else printf("Was denn noch ?: %s\n",program[opc]);
+        } else printf("something is wrong: %x %s\n",pcode[opc].opcode,program[opc]);
       }
 #ifdef DEBUG
       ptimes[opc]=(int)((clock()-timer)/1000);  /* evaluiert die

@@ -16,6 +16,7 @@ gcc -fomit-frame-pointer -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <x11basic/x11basic.h>
 
 /* X11-Basic needs these declarations:  */
@@ -34,6 +35,7 @@ int verbose=0;
 
 main(int anzahl, char *argumente[]) {
   double ret;
+  int i;
   /* Initialize the x11basic-library */
   x11basicStartup(); set_input_mode(1,0);
   atexit(reset_input_mode);
@@ -52,5 +54,9 @@ main(int anzahl, char *argumente[]) {
   kommando("SHOWPAGE");
   kommando("KEYEVENT");
   /* ... */
+/* If you know the internals of libx11basic, you can also use the c-versions of the functions:*/
+  graphics();
+  i=form_alert(1,strdup("[1][Hi I am X11-Basic.][ OK ]"));
+  printf("You pressed button %d\n",i);
 
 }

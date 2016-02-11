@@ -1,8 +1,8 @@
 
-/* sound.c      graphics-Routinen (c) Markus Hoffmann    */
+/* sound.c      sound synthesizer-Routinen (c) Markus Hoffmann    */
 
 
-/* all this stuff needs improvements ... can you help?   */
+/* this stuff implements a full ADSR enveloppe synthesizer   */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -40,28 +40,37 @@ int soundsystem_available=0;
 static SDL_AudioSpec audioformat;
 static void mixeAudio(void *nichtVerwendet, Uint8 *stream, int laenge);
 #endif
-#ifdef USE_ALSA
 
-#define GAIN 5000.0
+
+/*Mixer gain, 16 Kanaele sollten sich nicht zu mehr als 32000 addieren.... im Mittel also sqrt(16)=4*/
+
+#define GAIN 8192.0
 
 static char *device = "default";			 /* playback device */
+#ifdef USE_ALSA
 static snd_pcm_t *handle;
+#endif
 static unsigned char *mixbuf;
 static int mixpos;
 static int mixlen;
 static const int format=16/8;  /*16/8*/
 static const int channels=1;  /* 2 */
+#ifdef USE_ALSA
 static snd_pcm_uframes_t buffer_size = 256;
 static snd_pcm_uframes_t period_size = 64;
+#endif
+#ifdef ANDROID
+static int rrate=22050;  /* sample rate */
+#else
 static int rrate=44100;  /* sample rate */
-
+#endif
 #ifdef SNDERR
 #undef SNDERR
 #endif
 
 #define SNDERR if(e<0) printf("SOUND: Error: %d, %s\n",e,snd_strerror(e))
 
-#endif
+
 
 static struct sample {
     Uint8 *data;
@@ -80,6 +89,7 @@ static struct sample {
     double sustain; /* level (relative to attack ? ) during the main sequence of the sound's duration */
     int release;    /* time taken for the level to decay from the sustain level to zero after the key is released */
     double envelope;
+    int duration; /*  Duration of the sound in samples*/
 } sounds[MAX_SOUND_CHANNELS];
 
 
@@ -99,36 +109,39 @@ typedef struct{
 } WAVHEADER;
 
 
+/* Routinen fuer verschiedene Wellenformen, welche anstelle von sin() eingesetzt werden.*/
 
 
-#ifdef USE_ALSA
-
-static double sawtooth(double a) {
+static double sawtooth(double a) {   /*Saegezahn*/
   a=fmod(a,2*PI);
   return(a/2/PI*2-1);
 }
-static double triag(double a) {
+static double triag(double a) {      /*Dreieck*/
   a=fmod(a,2*PI);
   if(a>PI) return((2*PI-a)/PI*2-1);
   else return(a/PI*2-1);
 }
-static double square(double a) {
+static double square(double a) {     /*Rechteck*/
   a=fmod(a,2*PI);
   return(a<PI?-1:1);
 }
-static double noise(double a)   {return(2*(double)random()/RAND_MAX-1);}
-static double silence(double a) {return(0);}
-
+static double noise(double a)   {return(2*(double)random()/RAND_MAX-1);}   /*Rauschen*/
+static double silence(double a) {return(0);}        /*Stille*/
 
 
 /* Enveloppe function for synthesizer */
 
 static double envelope(int *note_active, int gate, double *env_level, int t, 
-                int attack, int decay, double sustain, int release) {
-//printf("a=%d, d=%d, s=%g, r=%d\n",attack,decay,sustain,release);
-//if((t>>3) & 1) printf("envelope: %d acive=%d gate=%d %g \n",t,*note_active,gate,*env_level);
-
-    if (gate==1)  {
+                int attack, int decay, double sustain, int release, int duration) {
+    if(gate==1)  {
+        if(duration>=0 && t>duration) {
+          if(t>duration+release) {
+            if(note_active) *note_active = 0;
+            return(*env_level=0);
+          }
+          if(release) return(*env_level*(1.0-(double)(t-duration)/(double)release));
+          else return(*env_level=0);
+	}     
         if(t>attack+decay) return(*env_level=sustain);
         if(t>attack) {
 	  if(decay) return(*env_level=1.0-(1.0-sustain)*(t-attack)/(double)decay);
@@ -146,10 +159,8 @@ static double envelope(int *note_active, int gate, double *env_level, int t,
     }
 }
 
-
-
-
-static void mixeAudio(Uint8 *stream, int laenge) {
+#ifdef ANDROID
+void mixeAudio(Uint8 *stream, int laenge) {
   int i,j;
   double ev;
   Uint32 menge;
@@ -157,6 +168,8 @@ static void mixeAudio(Uint8 *stream, int laenge) {
 
   for(i=0; i<MAX_SOUND_CHANNELS; ++i ) {
     if(sounds[i].generator==0) {
+#if 0
+
         menge = (sounds[i].dlen-sounds[i].dpos);
         if(menge>laenge) menge=laenge;
 	if(menge>0) {
@@ -170,11 +183,59 @@ static void mixeAudio(Uint8 *stream, int laenge) {
 	}
         sounds[i].dpos += menge;
 	if(sounds[i].dpos==sounds[i].dlen && sounds[i].endless) sounds[i].dpos=0;
+#endif
+    } else {
+      short *a=(short *)stream;
+
+      for(j=0;j<laenge;j++) {
+        ev=envelope(&sounds[i].generator,(sounds[i].generator==1),
+	   &(sounds[i].envelope),
+	   sounds[i].timecount+j,sounds[i].attack,sounds[i].decay,
+	   sounds[i].sustain,sounds[i].release,sounds[i].duration);
+	
+        a[j*channels]+=(short)(GAIN*sounds[i].gain*ev*
+        (sounds[i].waveform)((double)2*PI*sounds[i].frequency*j/rrate+sounds[i].phase));
+	}
+      sounds[i].phase=fmod(laenge*2*PI*sounds[i].frequency/rrate+sounds[i].phase,2*PI);
+      sounds[i].timecount+=laenge;
+    } 
+  }
+}
+
+#endif
+
+#ifdef USE_ALSA
+
+
+
+static void mixeAudio(Uint8 *stream, int laenge) {
+  int i,j;
+  double ev;
+  Uint32 menge;
+  memset(stream, 0, laenge*format*channels);
+
+  for(i=0; i<MAX_SOUND_CHANNELS; ++i ) {
+    if(sounds[i].generator==0) {
+    #if 0
+        menge = (sounds[i].dlen-sounds[i].dpos);
+        if(menge>laenge) menge=laenge;
+	if(menge>0) {
+	  printf("copy channel %d, [%d->%d]\n",i,(int)sounds[i].dpos,(int)menge);	
+/* hier entweder sample abspielen oder tongenerator */ 
+
+	  for(j=0;j<menge;j++) {
+	    stream[j]+=sounds[i].data[sounds[i].dpos+j];
+	
+	  }
+	}
+        sounds[i].dpos += menge;
+	if(sounds[i].dpos==sounds[i].dlen && sounds[i].endless) sounds[i].dpos=0;
+#endif
     } else {
       Uint16 *a=(Uint16 *)stream;
       for(j=0;j<laenge;j++) {
         ev=envelope(&sounds[i].generator,(sounds[i].generator==1),&(sounds[i].envelope),sounds[i].timecount+j,sounds[i].attack,sounds[i].decay,
-	sounds[i].sustain,sounds[i].release);
+	sounds[i].sustain,sounds[i].release,sounds[i].duration);
 	
         a[j]+=(Uint16)(GAIN*sounds[i].gain*ev*
         (sounds[i].waveform)((double)2*PI*sounds[i].frequency*j/rrate+sounds[i].phase));
@@ -214,8 +275,17 @@ void *soundthread(void *arg) {
 }
 #endif
 
-
 int init_soundsystem() {
+  int c;
+  do_wave(0,1,0,0,1,0); 
+  sounds[0].gain=1;
+  for(c=1;c<MAX_SOUND_CHANNELS; c++) do_wave(c,0,0,0,1,0); 
+  
+
+#ifdef ANDROID
+  ANDROID_init_sound();
+  soundsystem_available=1;
+#endif
 #ifdef USE_SDL
   if(SDL_Init(SDL_INIT_AUDIO)<0) {
     printf("ERROR: could not initialize the audio system.\n");
@@ -238,7 +308,7 @@ int init_soundsystem() {
   }
 #endif
 #ifdef USE_ALSA
-  int e,c;
+  int e;
   snd_pcm_hw_params_t *hw_params;
   snd_pcm_sw_params_t *sw_params;
 
@@ -304,10 +374,7 @@ void sound_activate() {
 }
 
 
-
-
-
-int do_sound(int c,double freq, double volume, int duration) {
+int do_sound(int c,double freq, double volume, double duration) {
 #if defined USE_SDL 
   int numsamples=44100;
   int rrate=44100;
@@ -347,10 +414,10 @@ int do_sound(int c,double freq, double volume, int duration) {
   
   free(wav);
 #if DEBUG
-  printf("sound %d %g %d %d\n",c,freq,volume,duration);
+  printf("sound %d %g %d %g\n",c,freq,volume,duration);
 #endif
 #else
-  #ifdef USE_ALSA
+  #if defined USE_ALSA || defined ANDROID
   
   if(c<0) {
     /* einen leeren Audio-Slot suchen */
@@ -368,12 +435,17 @@ int do_sound(int c,double freq, double volume, int duration) {
     sounds[c].frequency=freq;
     sounds[c].timecount=0;    
     sounds[c].generator=1;
+    if(duration<0) sounds[c].duration=-1;
+    else sounds[c].duration=duration*rrate;
   } else if (freq==0) { 
     sounds[c].generator=2; /* Losgelassen  */
     sounds[c].timecount=0;
   }
- //printf("dosound: freq=%g volume=%g gen=%d\n",sounds[c].frequency,sounds[c].gain,sounds[c].generator);
-
+  #ifdef ANDROID
+  char t[100];
+  sprintf(t,"dosound: freq=%g volume=%g gen=%d\n",sounds[c].frequency,sounds[c].gain,sounds[c].generator);
+  backlog(t);
+  #endif
 
   #else
   speaker(freq);
@@ -382,8 +454,8 @@ int do_sound(int c,double freq, double volume, int duration) {
   return(0);
 }
 
+
 int do_wave(int c,int form, double attack, double decay, double sustain, double release ) {
-  #ifdef USE_ALSA
   if(c<0) {
     /* einen leeren Audio-Slot suchen */
     for(c=0;c<MAX_SOUND_CHANNELS; ++c) {
@@ -393,31 +465,22 @@ int do_wave(int c,int form, double attack, double decay, double sustain, double 
     }
   }
   if(c>=MAX_SOUND_CHANNELS) return(-1);
-
-   /*  to be completed */
   switch (form) {
   case -1: break;
-  case 0:
-    sounds[c].waveform=silence;break;
-  case 1:
-    sounds[c].waveform=sin;break;
-  case 2:
-    sounds[c].waveform=square;break;
-  case 3:
-    sounds[c].waveform=triag;break;
-  case 4:
-    sounds[c].waveform=sawtooth;break;
-  case 5:
-    sounds[c].waveform=noise;break;
+  case 0: sounds[c].waveform=silence;break;
+  case 1: sounds[c].waveform=sin;break;
+  case 2: sounds[c].waveform=square;break;
+  case 3: sounds[c].waveform=triag;break;
+  case 4: sounds[c].waveform=sawtooth;break;
+  case 5: sounds[c].waveform=noise;break;
   default:
     printf("WAVE: Unknown waveform %d\n",form);
   }
-  if(attack>=0)  sounds[c].attack=(int)(attack*(double)rrate/1000);
-  if(decay>=0)   sounds[c].decay=(int)(decay*(double)rrate/1000);
+  if(attack>=0)  sounds[c].attack=(int)(attack*(double)rrate);
+  if(decay>=0)   sounds[c].decay=(int)(decay*(double)rrate);
   if(sustain>=0) sounds[c].sustain=sustain;
-  if(release>=0)   sounds[c].release=(int)(release*(double)rrate/1000);
+  if(release>=0)   sounds[c].release=(int)(release*(double)rrate);
  // printf("a=%d, d=%d, s=%g, r=%d\n",sounds[c].attack,sounds[c].decay,sounds[c].sustain,sounds[c].release);
-#endif
   return(0);
 }
 

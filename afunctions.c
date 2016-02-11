@@ -17,6 +17,7 @@
 #include "xbasic.h"
 #include "array.h"
 #include "afunctions.h"
+#include "mathematics.h"
 
 ARRAY f_smula(PARAMETER *plist, int e) {
   ARRAY ergeb;
@@ -36,55 +37,6 @@ ARRAY f_einsmat(PARAMETER *plist, int e) {
     return(einheitsmatrix(FLOATTYP,2,dimlist));
 }
 
-extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten);
-extern double *backsub(double *, double *, double *, double *,int,int);
-
-double *makeSVD(double *v1,double *m1,int anzzeilen, int anzspalten) {
-  int i,elim=0,fsing=0;
-  double maxsing=0;
-  double *ergebnis;
-
-  double *u = malloc(sizeof(double)*anzzeilen*anzspalten);
-  double *v = malloc(sizeof(double)*anzspalten*anzspalten);
-  double *singulars = malloc(sizeof(double)*anzspalten);
-
-  memcpy(u,m1,sizeof(double)*anzzeilen*anzspalten);
-  singulars=SVD(u,singulars,v,anzzeilen,anzspalten);
-
-#ifdef DEBUG
-  printf("Eigenwerte:\n");
-  for(i=0;i<anzspalten;i++) printf("%g\n",singulars[i]);
-#endif
-/* Groessten Singulaerwert rausfinden */
-
-  for(i=0;i<anzspalten;i++) {
-    if(fabs(singulars[i])>maxsing) maxsing=fabs(singulars[i]);
-  }
-
-/* Zaehle Anzahl der Singulaeren Werte (d.h. Eigenwerte=0) */
-/* Akzeptiere nur Eigenwerte die mindestens 1e-10 vom groessten sind,
-   ansonsten setze sie zu 0 */
-
-  for(i=0;i<anzspalten;i++) {
-    if(singulars[i]==0) fsing++;
-    if(fabs(singulars[i])/maxsing<1e-10 && singulars[i]) {
-      printf("** %g\n",singulars[i]);
-      singulars[i]=0;
-      elim++;
-    }
-  }
-  if(fsing || elim) printf("Found %d singularities and eliminated another %d.\n",fsing,elim);
-  ergebnis=backsub(singulars,u,v,v1,anzzeilen,anzspalten);
-  free(u);free(v);
-  free(singulars);
-  return(ergebnis);
-}
-
-void makeSVD2(double *v1,double *m1,int anzzeilen, int anzspalten, double *ergeb) {
-  double *x;
-  x=makeSVD(v1,m1,anzzeilen,anzspalten);
-  memcpy(ergeb,x,sizeof(double)*anzspalten);
-}
 
 /* Gleichungssystem loesen  d=Mx    x()=SOLVE(m(),d())*/
 ARRAY f_solvea(PARAMETER *plist, int e) {

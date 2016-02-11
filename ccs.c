@@ -17,26 +17,22 @@
 #include "variablen.h"
 #include "xbasic.h"
 
-int ccs_err;
 
+#if defined CONTROL || defined TINE
+static int ccs_err;
+int v_ccserr() {return(ccs_err);}
+#endif
 
 /* Falls mit Kontrollsystem  */
 
 #define MAXPIDS 250
-#ifdef CONTROL
-int notify_handler(int , int , int );
-int pids[MAXPIDS];
-int isubs[MAXPIDS];
-int pidanz=0;
-#endif
-#ifdef TINE
+#if defined CONTROL || defined TINE
 int notify_handler(int , int , int );
 int pids[MAXPIDS];
 int isubs[MAXPIDS];
 int pidanz=0;
 #endif
 
-#ifndef WINDOWS
 #ifdef CONTROL
 
 #include "ccsdef.h"
@@ -48,6 +44,7 @@ int pidanz=0;
 #include "resourcebaseman.h"
 
 
+int v_ccsaplid() {return(aplid);}
 
 /* Kontrollsystemstuff */
 
@@ -71,16 +68,8 @@ void cs_exit() {
   ccs_detach_control();
 }
 #endif
-#endif
-#ifdef CONTROL
-  #define CT
-#endif
-#ifdef TINE
-  #define CT
-#endif
 
-
-#ifdef CT
+#if defined CONTROL || defined TINE
 int notify_handler(int pid, int overflow, int entries) {
   int i,pc2,flag=0;
   printf("ent=%d\n",entries);

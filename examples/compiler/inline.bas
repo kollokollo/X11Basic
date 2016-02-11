@@ -82,7 +82,7 @@ procedure doit(f$)
     else
       print "' ";f$;" ";l;" Bytes."
     endif
-    wort_sep f$,".",0,n$,b$    
+    SPLIT f$,".",0,n$,b$    
     if rinstr(n$,"/")
       n$=right$(n$,len(n$)-rinstr(n$,"/"))
     endif

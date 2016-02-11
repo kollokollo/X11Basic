@@ -68,7 +68,7 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
   param_anzahl=anzahl; \
   param_argumente=argumente; \
   osp=opstack=calloc(BC_STACKLEN,sizeof(PARAMETER)); \
-  clear_parameters(); programbufferlen=prglen=pc=sp=0;
+  programbufferlen=prglen=pc=sp=0;
 
 
 #define CLEAR {int a,j; a=((int)opstack-(int)osp)/sizeof(PARAMETER); \
@@ -93,15 +93,19 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define EVAL     opstack--; kommando(opstack->pointer); free(opstack->pointer)
 #define PUSHARRAYELEM(a,b) opstack+=vm_pusharrayelem(a,opstack,b)
 #define ZUWEISINDEX(a,b) opstack+=vm_zuweisindex(a,opstack,b)
-#define PUSHV(a)  opstack+=vm_pushv(a,opstack)
+#define PUSHV(a)  push_v(opstack,&variablen[a]); opstack++
+// define PUSHV(a) opstack+=vm_pushv(a,opstack)
 #define PUSHVV(a) opstack+=vm_pushvv(a,opstack)
 #define PUSHVVI(a,b) opstack+=vm_pushvvi(a,opstack,b)
 #define ZUWEIS(a) opstack+=vm_zuweis(a,opstack)
 #define LOCAL(a)  do_local(a,sp)
 #define MOD      opstack+=vm_mod(opstack)
 #define NOT      (opstack-1)->integer=~(opstack-1)->integer
-#define X2I      vm_x2i(opstack)
-#define X2F      vm_x2f(opstack)
+//#define X2I      vm_x2i(opstack)
+#define X2I      if((opstack-1)->typ==PL_FLOAT) {(opstack-1)->integer=(int)(opstack-1)->real; (opstack-1)->typ=PL_INT;}
+//#define X2F      vm_x2f(opstack)
+#define X2F      if((opstack-1)->typ==PL_INT) {(opstack-1)->real=(double)(opstack-1)->integer; (opstack-1)->typ=PL_FLOAT;}
+
 #define NEG      vm_neg(opstack)
 #define EXCH     *opstack=opstack[-1];opstack[-1]=opstack[-2];opstack[-2]=*opstack
 

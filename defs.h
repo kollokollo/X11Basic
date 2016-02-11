@@ -20,7 +20,6 @@
   #define MAXSTRLEN   1024   /* in Bytes */
   #define MAXPRGLEN  64000   /* in Bytes */
   #define MAXLINELEN  1024   /* in Bytes */
-  #define MAXVARNAMLEN  64   /* in Bytes */
   #define ANZFILENR     64
   #define STACKSIZE    256
   #define ANZVARS     1024
@@ -30,7 +29,6 @@
   #define MAXSTRLEN   4096   /* in Bytes */
   #define MAXPRGLEN 100000   /* in Bytes */
   #define MAXLINELEN  4096   /* in Bytes */
-  #define MAXVARNAMLEN  64   /* in Bytes */
   #define ANZFILENR    100
   #define STACKSIZE    512
   #define ANZVARS     4096
@@ -40,7 +38,6 @@
 #define DEFAULTWINDOW 1
 
 #define INTSIZE sizeof(double)
-
 
 #define round(a) ((int)(a+0.5))
 #ifdef min

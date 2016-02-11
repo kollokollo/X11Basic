@@ -9,10 +9,6 @@
 /* Die Routinen aus den Numerical recepies sind copyrighted und duerfen nicht
    weitergegeben werden */
 
-void four1(double *data,int nn,int isign) {
-  puts("Procedures from numerical recepies not supported\n");
-  puts("because of copyright protection. \n");
-}
 void realft(double *data,int n,int isign) {
   puts("Procedures from numerical recepies not supported\n");
   puts("because of copyright protection. \n");
@@ -35,4 +31,9 @@ double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten) {
 double *backsub(double *singulars, double *u, double *v, double *b, int n, int m) {
   puts("Procedures from numerical recepies not supported\n");
   puts("because of copyright protection. \n");
+}
+void makeSVD2(double *v1,double *m1,int anzzeilen, int anzspalten, double *ergeb) {
+  puts("Procedures from numerical recepies not supported\n");
+  puts("because of copyright protection. \n");
+
 }

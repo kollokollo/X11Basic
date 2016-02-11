@@ -13,8 +13,8 @@
  
 /* prototypes */ 
 
-char *lineinput( FILE *, char *);
-char *input( FILE *, char *);
+char *lineinput( FILE *, char *,int );
+char *input( FILE *, char *,int );
 
 size_t lof(FILE *);
 int myeof( FILE *);

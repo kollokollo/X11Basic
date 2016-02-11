@@ -94,8 +94,6 @@ Pixmap icon_pixmap[MAXWINDOWS];
 #endif
 
 
-char wname[MAXWINDOWS][80];
-char iname[MAXWINDOWS][80];
 extern int menuflags[];
 extern char *menuentry[];
 extern char *menutitle[];

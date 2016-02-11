@@ -80,6 +80,9 @@ typedef struct {
 
 extern const unsigned char asciiTable[];
 extern const unsigned char spat_a816[];
+extern unsigned char ext_font816[];
+extern unsigned char ibm_like816[];
+
 extern G_CONTEXT screen;
 extern unsigned short vmousepat[16*16];
 extern unsigned char vmousealpha[16*16];

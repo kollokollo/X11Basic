@@ -18,7 +18,7 @@ INCDIR=@prefix@/include/x11basic
 LIBNO=@version@
 
 # Register variables (-ffixed-reg) -Wall
-REGS= @regs@ -fPIC
+REGS= @regs@
 
 # Optimization and debugging options
 OPT=@copt@
@@ -74,17 +74,19 @@ EXTRAOBJS= bytecode.o xbbc.o xbvm.o xb2c.o framebuffer.o spat-a-fnt.o 5x7.o
 WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
 AOBJS=   main.o $(LIBOBJS)
 BOBJS=   main.o blowfish.o $(LIBOBJS)
-CSRC=    $(DISTOBJS:.o=.c) fdata.c 5x7-rev.c $(EXTRAOBJS:.o=.c)
+CSRC=    $(DISTOBJS:.o=.c) 5x7-rev.c $(EXTRAOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
+LIBCSRC=$(LIBOBJS:.o=.c)
+
 DEPSRC=  $(CSRC) 
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  aes.h array.h bitmap.h defs.h file.h functions.h gkommandos.h kommandos.h \
+HSRC=  aes.h android.h array.h bitmap.h defs.h file.h functions.h gkommandos.h kommandos.h \
        options.h xbasic.h window.h bytecode.h number.h  parameter.h \
        framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h \
        sound.h wort_sep.h variablen.h mathematics.h sysVstuff.h x11basic.h \
-       decode.h xb2csol.h
+       decode.h xb2csol.h virtual-machine.h terminal.h
 
 EXAMPLES=examples2/calculation/randomminmax.bas \
         examples2/calculation/sieve.bas \
@@ -212,8 +214,8 @@ config.h: config.h.in
 libx11basic.so: libx11basic.so.$(LIBNO)
 	ln -s -f $< libx11basic.so.1
 	ln -s -f libx11basic.so.1 libx11basic.so
-libx11basic.so.$(LIBNO) : $(LIBOBJS)
-	$(CC) -fPIC -shared -Wl,-soname,$@ -o $@ $(LIBOBJS)
+libx11basic.so.$(LIBNO) : $(LIBCSRC)
+	$(CC) -fPIC -shared -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) $(XLIBS)
 	strip $@
 
 # Make the (static) library
@@ -245,7 +247,7 @@ xbbcstatic : xbbc.c bytecode.h bytecode.o  x11basic.a
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c 
-	gcc -o $@ xbvm.c  -L .$(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
+	gcc -o $@ xbvm.c  -L . $(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
 	strip $@
 xbvmstatic : bytecode.h xbvm.c  bytecode.h x11basic.a
 	gcc -o xbvm xbvm.c   x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
@@ -455,12 +457,12 @@ tinexbasic : $(OBJS) main.o mathematics.o
 	strip $@
 doocsxbasic.dyn : $(OBJS) main.o mathematics.o doocs-wrapper.o
 	$(CC) -DTINE -DDOOCS  $(LINKFLAGS) -o $@ $(AOBJS) doocs-wrapper.o \
-		$(LIBS)$(XLIBS) -ltine -lDOOCSclient -lDOOCSserver -lpthread
+		$(LIBS) $(XLIBS) -ltine -lDOOCSclient -lDOOCSserver 
 	strip $@
 doocsxbasic : $(OBJS) main.o mathematics.o doocs-wrapper.o
 	g++ -DTINE -DDOOCS $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
 	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
-	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS) -lpthread
+	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS)
 	strip $@
 
 
@@ -538,6 +540,8 @@ uninstall :
 clean :
 	rm -f *.o a.out b.out b.b Makefile.bak \
 	backup-*.tgz
+moreclean : clean
+	rm -f  xbasic xbbc xbvm xbc xb2c bas2x11basic libx11basic.so.1.* x11basic.a
 
 distclean : clean
 	rm -f Makefile config.cache config.status config.log config.h 11.c xbasic xbc xbvm \

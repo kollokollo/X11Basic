@@ -488,6 +488,7 @@ do
   next i
     put x(0),y(0),p01277_bmp$
   vsync
+  pause 0.05
   graphmode 1
   put 300,dropy,dh$
   dropy=dropy+1

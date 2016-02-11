@@ -12,12 +12,67 @@
 #include <math.h>
 #include "defs.h"
 #include "x11basic.h"
+#include "xbasic.h"
 #include "variablen.h"
 #include "parser.h"
 #include "array.h"
 
 #include "wort_sep.h"
 #include "parameter.h"
+
+
+
+
+static void prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
+  char k1[strlen(w1)+1],k2[strlen(w1)+1];
+  int typ=vartype(w1);
+  int e=klammer_sep(w1,k1,k2);
+
+  p->pointer=NULL;
+  if(e==1 || strlen(k2)==0) {
+    if((typ&solltyp)==typ) {
+      char *r=varrumpf(w1);
+      if(typ&ARRAYTYP) {
+        p->integer=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
+      } else p->integer=add_variable(r,typ,0);
+      free(r);
+      if(typ==ARRAYTYP) p->typ=PL_ARRAYVAR;
+      else if(typ==INTTYP) p->typ=PL_IVAR;
+      else if(typ==FLOATTYP) p->typ=PL_FVAR;
+      else if(typ==STRINGTYP) p->typ=PL_SVAR;
+      else if(typ==(ARRAYTYP|INTTYP)) p->typ=PL_IARRAYVAR;
+      else if(typ==(ARRAYTYP|FLOATTYP)) p->typ=PL_FARRAYVAR;
+      else if(typ==(ARRAYTYP|STRINGTYP)) p->typ=PL_SARRAYVAR;
+      else printf("vvar: ???\n");
+    } else printf("prepare_vvar: ERROR: Variable hat falschen Typ. $%x/$%x  <%s>\n",typ,solltyp,w1);
+  } else {
+  // printf("Es sind indizies da. %s\n",k2);
+    typ&=~ARRAYTYP;
+    if((typ&solltyp)==typ) {
+      char *r=varrumpf(w1);
+      p->integer=add_variable(r,ARRAYTYP,typ);
+      free(r);
+      if(typ==INTTYP) p->typ=PL_IVAR;
+      else if(typ==FLOATTYP) p->typ=PL_FVAR;
+      else if(typ==STRINGTYP) p->typ=PL_SVAR;
+      p->panzahl=count_parameters(k2);   /* Anzahl indizes z"ahlen*/
+      p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
+      /*hier die Indizies in einzelne zu evaluierende Ausdruecke
+        separieren*/
+      make_preparlist(p->ppointer,k2);
+    //  printf("pointer=$%x\n",p->pointer);
+    //  printf("%d indizies in pp\n",p->panzahl);
+    } else printf("ERROR: Variable hat falschen Typ. $%x/$%x\n",typ,solltyp);
+  }
+//  printf("VVAR_: $%x ($%x)\n",p->typ,typ);
+}
+
+
+
+
+
+
+
 
 /* Anzahl der Parameter zaehlen.*/
 
@@ -54,6 +109,7 @@ void free_parameter(PARAMETER *p) {
   case PL_LEER:
   case PL_NUMBER:
   case PL_FILENR:
+  case PL_LABEL:
     break;
   case PL_ALLVAR:
   case PL_ARRAYVAR:
@@ -83,7 +139,7 @@ void free_parameter(PARAMETER *p) {
     free_array(&a);
     break;
   default:
-    printf("WARNING: free_parameter, Unbekannter typ $%x an dieser STelle.\n",p->typ);
+    printf("WARNING: free_parameter, unknown typ $%x, PC=%d.\n",p->typ,pc);
   }
   p->typ=PL_LEER;
 }
@@ -109,7 +165,7 @@ void dump_parameterlist(PARAMETER *p, int n) {
         case PL_PROC:   printf(" <proc>\n");break;
         case PL_FUNC:   printf(" <func>\n");break;
         case PL_ARRAY:  printf(" <array,$%x,dim=%d>\n",p[j].arraytyp,p[j].integer);break;
-        default:   printf("$%x %d %g $%08x\n",p[j].typ,p[j].integer,p[j].real,(int)p[j].pointer);
+        default:   printf("$%x %d %g %p\n",p[j].typ,p[j].integer,p[j].real,(void *)p[j].pointer);
       }
     }
   }

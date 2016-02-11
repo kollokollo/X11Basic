@@ -18,12 +18,22 @@
 #define ioctlsocket(a,b,c) ioctl(a,b,c)
 #endif
 
+
+#ifdef ANDROID 
+  #define ANZSENSORS 16
+#else
+  #define ANZSENSORS 0
+#endif
+
+extern double sensordata[];
+
 char *do_gets (char *prompt);
 int kbhit();
 
 void io_error(int,char *);
 
 void getrowcols(int *rows, int *cols);
+void getcrsrowcol(int *rows, int *cols);
 
 STRING longlineinput(FILE *n);
 int get_number(char *w);

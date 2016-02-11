@@ -18,24 +18,12 @@
 #include "wort_sep.h"
 #include "array.h"
 #include "parser.h"
+#include "mathematics.h"
 
 static ARRAY form_array(int, int, int *, char *);
 
-char *arrptr(PARAMETER *p,int e) {return((char *)variablen[p->integer].pointer.a); }
 
 
-
-/* Zurueck: 0 -- Arrayelement
-            1 -- subarray
-	    2 -- ganzes array */
-
-int isarray(int *indexliste,int n) {
-  if(n==0 || indexliste==NULL) return(2);
-  while(--n>=0) {
-    if(indexliste[n]==-1) return(1);
-  }
-  return(0);
-}
 
 
 
@@ -128,6 +116,7 @@ ARRAY create_array(int typ, int dimension, int *dimlist) {
   return(ergebnis);
 }
 void free_array(ARRAY *arr) {
+ // printf("free_array: %d\n",arr->typ);
   if(arr->typ==NOTYP) return;
   if(arr->typ==STRINGTYP) {
     int j,anz=1;
@@ -632,9 +621,10 @@ ARRAY string_to_array(STRING in) {
     char *ppp=in.pointer+2*sizeof(int)+arraylen*typlaenge(out.typ);
     STRING *a=(STRING *)(out.pointer+INTSIZE*out.dimension);
     /* Alle Strings anlegen und pointer relozieren */
-    unsigned int i,offset;
+    unsigned int i;
+    unsigned long offset;
     for(i=0;i<arraylen;i++) {
-      offset=(unsigned int)a[i].pointer;
+      offset=(unsigned long)a[i].pointer;
       a[i].pointer=malloc(a[i].len);
       memcpy(a[i].pointer,ppp+offset,a[i].len);
     }

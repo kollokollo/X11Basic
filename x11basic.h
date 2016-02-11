@@ -144,7 +144,6 @@ extern LABEL labels[];
 
 extern int filenr[];
 extern FILE *dptr[];
-extern int ccs_err;
 /* Variablen, welche ausserhalb der lib definiert werden muessen */
 
 extern int prglen;
@@ -183,11 +182,8 @@ int find_afunc(char *);
 int find_sfunc(char *);
 int count_parameter(char *);
 
-void break_handler( int);
 void doocssig_handler( int);
 
-void fatal_error_handler( int);
-void timer_handler( int);
 double ltext(int, int, double, double, double , int, char *);
 char *do_gets (char *); 
 char *simple_gets(char *);
@@ -196,9 +192,6 @@ double varfloatarrayinhalt(int, int *);
 int varintarrayinhalt(int, int *);
 char *indirekt2(char *);
 void local_vars_loeschen(int);
-void clear_parameters();
-void clear_labelliste();
-void clear_procliste();
 char *varrumpf(char *);
 int f_freefile();
 char *bin_to_string(char *);
@@ -214,7 +207,6 @@ void cs_init();
 void cs_exit();
 double csget(char *);
 char *csgets(char *);
-double do_funktion(char *,char *);
 
 
 void do_menu_draw();
@@ -281,10 +273,13 @@ double doocstimestamp(char *);
 int doocstyp(char *);
 int doocssize(char *);
 #endif
+int v_ccserr();
 
 /* API for The virtual machine */
 
 int pusharg(PARAMETER **opstack, char *typ,...);
+int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...);
+
 int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...);

@@ -77,7 +77,7 @@
 #define P_ELSEIF   (P_LEVELINOUT|P_ARGUMENT|P_IGNORE|P_PREFETCH|P_SPECIAL4)
 #define P_ENDIF    (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL0)
 
-#define P_SELECT   (P_LEVELIN |P_ARGUMENT|P_SPECIAL1)
+#define P_SELECT   (P_LEVELIN |P_PLISTE|P_SPECIAL1)
 #define P_CASE     (P_LEVELINOUT |P_ARGUMENT|P_SPECIAL1)
 #define P_DEFAULT  (P_LEVELINOUT|P_SIMPLE|P_SPECIAL1)
 #define P_ENDSELECT (P_LEVELOUT|P_IGNORE|P_SIMPLE|P_SPECIAL1)
@@ -100,6 +100,7 @@
 #define P_BREAK    (P_PREFETCH|P_IGNORE|P_SPECIAL4)
 #define P_EXITIF   (P_ARGUMENT|P_SPECIAL4)
 #define P_REM      (P_IGNORE|P_ARGUMENT)
+#define P_CONTINUE (P_PREFETCH|P_IGNORE|P_SIMPLE|P_SPECIAL5)
 
 
 #define P_LABEL    (P_LEVELINOUT|P_IGNORE|P_NOCMD|0x00002000)
@@ -202,24 +203,67 @@ extern int everytime,alarmpc;
 extern int breakcont;
 extern const char vdate[];
 extern const char version[];
+extern int is_bytecode;
 
 /* Deklarationen von Hilfsfunktionen */
-
-int add_label(char *name,int zeile,int dataptr);
-int labelnr(char *n);
-int labelzeile(char *n);
-
-int add_proc(char *name,char *pars,int zeile,int typ);
-int procnr(char *n,int typ);
-
-int suchep(int begin, int richtung, int such, int w1, int w2);
 int init_program();
+char *bytecode_init(char *adr);
 
 char *indirekt2(char *funktion);
-void clear_labelliste();
-void clear_procliste();
 
-int saveprg(char *fname);
 
-void structure_warning(char *comment);
 unsigned int type(char *ausdruck);
+
+
+#ifndef ANDROID
+   #define invalidate_screen() ;
+#endif
+
+#ifdef GERMAN
+#define structure_warning(lin,comment)  {printf("Warnung: Programmstruktur fehlerhaft bei Zeile %d : %s.\n",lin,comment); invalidate_screen();}
+#else
+#define structure_warning(lin,comment)  {printf("Warning: corrupt program structure at line %d ==> %s.\n",lin,comment); invalidate_screen();}
+#endif
+
+
+
+/*Schnelle inline Funktionen */
+
+inline static int suchep(int begin, int richtung, int such, int w1, int w2) {
+  int i,f=0,o;
+
+  for(i=begin; (i<prglen && i>=0);i+=richtung) {
+    o=pcode[i].opcode&PM_SPECIAL;
+    if(o==such && f==0) return(i);
+    else if(o==w1) f++;
+    else if(o==w2) f--;
+  }
+  return(-1);
+}
+
+inline static int procnr(char *n,int typ) {
+  register int i=anzprocs;
+  while(--i>=0) {
+    if((procs[i].typ&typ) && strcmp(procs[i].name,n)==0) return(i);
+  }
+  return(-1);
+}
+
+
+inline static int labelnr(char *n) {
+  register int i=anzlabels;
+  while(--i>=0) {
+    if(strcmp(labels[i].name,n)==0) return(i);
+  }
+  return(-1);
+}
+
+
+inline static int labelzeile(char *n) {
+  register int i=anzlabels;
+  while(--i>=0) {
+    if(strcmp(labels[i].name,n)==0) return(labels[i].zeile);
+  }
+  return(-1);
+}
+

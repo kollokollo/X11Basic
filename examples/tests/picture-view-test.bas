@@ -5,31 +5,30 @@
 ' In the framebuffer-version (TomTom etc) the file format is
 ' .bmp 24 Bit
 ' 
-for i=0 to 32
-for j=0 to 20
-  circle i*20,j*20,8
-  if odd(j+i)
-    pcircle i*20,j*20,3
-  endif
-next j
-next i
+FOR i=0 TO 32
+  FOR j=0 TO 20
+    CIRCLE i*20,j*20,8
+    IF ODD(j+i)
+      PCIRCLE i*20,j*20,3
+    ENDIF
+  NEXT j
+NEXT i
 
-circle 100,100,30
-circle 200,200,60
+CIRCLE 100,100,30
+CIRCLE 200,200,60
 
-pcircle 200,300,70
+PCIRCLE 200,300,70
 
-a$=system$("locate .bmp")
-while len(a$)
-  wort_sep a$,chr$(10),0,t$,a$
-  if exist(t$)
-    open "I",#1,t$
-    t$=input$(#1,lof(#1))
-    put 0,0,t$
-    close
-    vsync
-    pause 1
-  endif
-wend
-
-quit
+a$=SYSTEM$("locate .bmp")
+WHILE LEN(a$)
+  SPLIT a$,CHR$(10),0,t$,a$
+  IF EXIST(t$)
+    OPEN "I",#1,t$
+    t$=INPUT$(#1,LOF(#1))
+    PUT 0,0,t$
+    CLOSE
+    VSYNC
+    PAUSE 1
+  ENDIF
+WEND
+QUIT

@@ -1,4 +1,5 @@
 /* MAIN.C                                           (c) Markus Hoffmann
+
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -11,15 +12,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef WINDOWS
-#define EX_OK 0
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <time.h>
+#include <pthread.h>    /* POSIX Threads */
+#if defined WINDOWS || defined ANDROID
+  #define EX_OK 0
 #else
-#include <sysexits.h>
+  #include <sysexits.h>
 #endif
+#ifdef ANDROID
+  #include <jni.h>
+  #include <android/log.h>
+  #include <android/bitmap.h>
+  #include "android.h"
+#endif
+
 #include "config.h"
 #include "defs.h"
 #include "x11basic.h"
-
+#ifdef ANDROID
+  #include "terminal.h"
+#endif
+#ifdef WINDOWS
+  #include <windows.h>
+  HINSTANCE hInstance;
+#endif
 
 char *do_gets (char *);
 
@@ -33,15 +52,34 @@ char ifilename[100]="new.bas";
 #endif
 int prglen=0;
 int verbose=0;
-int runfile,daemonf;
+int runfile,daemonf=0;
 int programbufferlen=0;
 char *programbuffer=NULL;
 char *program[MAXPRGLEN];
 
+#ifdef ANDROID
+void intro() {
+  putchar(27);
+  printf("c");
+  printf("*************************************************\n"
+         "*    %10s              V.%5s            *\n"
+         "*              by Markus Hoffmann 1997-2012 (c) *\n"
+         "*                                               *\n"
+#ifdef GERMAN
+         "* Pr Version vom %30s *\n"
+         "* Library V.%s:%30s *\n"
+#else
+         "* version date:  %30s *\n"
+         "* library V.%s:%30s *\n"
+#endif
+         "*************************************************\n\n",
+	     xbasic_name,version,vdate,libversion,libvdate);
+}
+#else
 void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2011 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2012 (c) *\n"
          "*                                                        *\n"
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"
@@ -53,6 +91,8 @@ void intro() {
          "**********************************************************\n\n",
 	     xbasic_name,version,vdate,libversion,libvdate);
 }
+
+#endif
 
 void usage() {
   printf(
@@ -120,17 +160,20 @@ void kommandozeile(int anzahl, char *argumente[]) {
    }
    if(quitflag) quit_x11basic(0);
 }
-#ifdef WINDOWS
 
-#include <windows.h>
-HINSTANCE hInstance;
-#endif
 extern char *simple_gets(char *);
+
+#ifdef ANDROID
+int orig_main(int anzahl, char *argumente[]) {
+  static int isdirectmode=0;
+#else
 int main(int anzahl, char *argumente[]) {
+#endif
   char buffer[MAXSTRLEN],*zw;
 #ifdef WINDOWS
   hInstance=GetModuleHandle(NULL);
 #endif
+
   x11basicStartup();   /* initialisieren   */
 
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
@@ -155,6 +198,10 @@ int main(int anzahl, char *argumente[]) {
   for(;;) {
     programmlauf();
     echoflag=batch=0;
+#ifdef ANDROID
+    if(isdirectmode) break;
+    isdirectmode=1;
+#endif
     if(daemonf) zw=simple_gets("");
     else zw=do_gets("> ");
     if(zw==NULL) quit_x11basic(0);
@@ -162,6 +209,9 @@ int main(int anzahl, char *argumente[]) {
       strcpy(buffer,zw);
       kommando(buffer);
     }
+#ifdef ANDROID
+    isdirectmode=0;
+#endif
   }
   return(EX_OK);
 }

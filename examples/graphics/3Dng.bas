@@ -146,9 +146,8 @@ alert 0,"Fertig !",1," OK ",balert
 quit
 '
 '
-function f(x,y)
-return 0.8*EXP(-2*(x^2+y^2))*COS((x^2+y^2)*10)
-endfunc
+DEFFN f(x,y)=0.8*EXP(-2*(x^2+y^2))*COS((x^2+y^2)*10)
+
 ' Koordinatentransformationen mit Perspektive:
 FUNCTION kx(x,y,z)
   LOCAL xx

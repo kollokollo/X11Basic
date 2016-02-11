@@ -39,18 +39,21 @@
 extern int shm_malloc(int,int);
 extern int shm_attach(int);
 
-int f_succ(double b) {return((int)(b+1));}
-int f_sgn(double b) {return(sgn(b));}
-double f_frac(double b) {return(b-((double)((int)b)));}
-int f_even(int b) {return(b&1 ? 0:-1);}
-int f_odd(int b) {return(b&1 ? -1:0);}
+static STRING do_sfunktion(char *name,char *argumente);
+static double do_funktion(char *name,char *argumente);
+
+static int f_succ(double b) {return((int)(b+1));}
+static int f_sgn(double b) {return(sgn(b));}
+static double f_frac(double b) {return(b-((double)((int)b)));}
+static int f_even(int b) {return(b&1 ? 0:-1);}
+static int f_odd(int b) {return(b&1 ? -1:0);}
 int f_fak(int);
-int f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
-double f_rnd(double d) {return((double)rand()/RAND_MAX);}
-int  f_srand(double d) {srand((int)d);return(0);}
-double f_deg(double d) {return(d/PI*180);}
-double f_rad(double d) {return(d*PI/180);}
-int  f_dimf(char *pos) {
+static int f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
+static double f_rnd(double d) {return((double)rand()/RAND_MAX);}
+static int  f_srand(double d) {srand((int)d);return(0);}
+static double f_deg(double d) {return(d/PI*180);}
+static double f_rad(double d) {return(d*PI/180);}
+static int  f_dimf(char *pos) {
   int typ=vartype(pos);
   char *r=varrumpf(pos);
   int subtyp,vnr;
@@ -64,66 +67,65 @@ int  f_dimf(char *pos) {
   }
   return((double)do_dimension(&variablen[vnr]));
 }
-int f_asc(STRING n) {  return((int)n.pointer[0]); }
-int f_cvi(STRING n) {  return((int)(*((short *)n.pointer))); }
-int f_cvl(STRING n) {  return((int)(*((long *)n.pointer))); }
-double f_cvd(STRING n) {  return((double)(*((double *)n.pointer))); }
-double f_cvf(STRING n) {  return((double)(*((float *)n.pointer))); }
-double f_eval(STRING n) {return(parser(n.pointer));}
+static int f_asc(STRING n)     {return((int)n.pointer[0]); }
+static int f_cvi(STRING n)     {return((int)(*((short *)n.pointer))); }
+static int f_cvl(STRING n)     {return((int)(*((long *)n.pointer))); }
+static double f_cvd(STRING n)  {return((double)(*((double *)n.pointer))); }
+static double f_cvf(STRING n)  {return((double)(*((float *)n.pointer))); }
+static double f_eval(STRING n) {return(parser(n.pointer));}
 
-double f_add(double v1, double v2) {return(v1+v2);}
-double f_sub(double v1, double v2) {return(v1-v2);}
-double f_mul(double v1, double v2) {return(v1*v2);}
-double f_div(double v1, double v2) {return(v1/v2);}
+static double f_add(double v1, double v2) {return(v1+v2);}
+static double f_sub(double v1, double v2) {return(v1-v2);}
+static double f_mul(double v1, double v2) {return(v1*v2);}
+static double f_div(double v1, double v2) {return(v1/v2);}
 
-int f_len(STRING n)    { return(n.len); }
-int f_exist(STRING n)  { return(-exist(n.pointer)); }
-int f_size(STRING n)   { return(stat_size(n.pointer)); }
-int f_nlink(STRING n)  { return(stat_nlink(n.pointer)); }
-int f_device(STRING n) { return(stat_device(n.pointer)); }
-int f_inode(STRING n)  { return(stat_inode(n.pointer)); }
-int f_mode(STRING n)   { return(stat_mode(n.pointer)); }
+static int f_len(STRING n)    { return(n.len); }
+static int f_exist(STRING n)  { return(-exist(n.pointer)); }
+static int f_size(STRING n)   { return(stat_size(n.pointer)); }
+static int f_nlink(STRING n)  { return(stat_nlink(n.pointer)); }
+static int f_device(STRING n) { return(stat_device(n.pointer)); }
+static int f_inode(STRING n)  { return(stat_inode(n.pointer)); }
+static int f_mode(STRING n)   { return(stat_mode(n.pointer)); }
 
-double f_val(STRING n) { return(myatof(n.pointer)); }
-double f_ltextlen(STRING n) { return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
+static double f_val(STRING n) { return(myatof(n.pointer)); }
+static double f_ltextlen(STRING n) { return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
 
-char *arrptr(PARAMETER *,int);
 #ifdef TINE
-double f_tinemax(STRING n) { return(tinemax(n.pointer)); }
-double f_tinemin(STRING n) { return(tinemin(n.pointer)); }
-double f_tineget(STRING n) { return(tineget(n.pointer)); }
-int f_tinesize(STRING n) { return(tinesize(n.pointer)); }
-int f_tinetyp(STRING n) { return(tinetyp(n.pointer)); }
+static double f_tinemax(STRING n) { return(tinemax(n.pointer)); }
+static double f_tinemin(STRING n) { return(tinemin(n.pointer)); }
+static double f_tineget(STRING n) { return(tineget(n.pointer)); }
+static int f_tinesize(STRING n) { return(tinesize(n.pointer)); }
+static int f_tinetyp(STRING n) { return(tinetyp(n.pointer)); }
 #endif
 #ifdef DOOCS
-double f_doocsget(STRING n) { return(doocsget(n.pointer)); }
-int f_doocssize(STRING n) { return(doocssize(n.pointer)); }
-int f_doocstyp(STRING n) { return(doocstyp(n.pointer)); }
-double f_doocstimestamp(STRING n) { return(doocstimestamp(n.pointer)); }
+static double f_doocsget(STRING n) { return(doocsget(n.pointer)); }
+static int f_doocssize(STRING n) { return(doocssize(n.pointer)); }
+static int f_doocstyp(STRING n) { return(doocstyp(n.pointer)); }
+static double f_doocstimestamp(STRING n) { return(doocstimestamp(n.pointer)); }
 #endif
 #ifdef CONTROL
-double f_csmax(STRING n) { return(csmax(n.pointer)); }
-double f_csmin(STRING n) { return(csmin(n.pointer)); }
-double f_csres(STRING n) { return(csres(n.pointer)); }
-double f_csget(STRING n) { return(csget(n.pointer)); }
-int f_cssize(STRING n) { return(cssize(n.pointer)); }
-int f_cspid(STRING n) { return(cspid(n.pointer)); }
+static double f_csmax(STRING n) { return(csmax(n.pointer)); }
+static double f_csmin(STRING n) { return(csmin(n.pointer)); }
+static double f_csres(STRING n) { return(csres(n.pointer)); }
+static double f_csget(STRING n) { return(csget(n.pointer)); }
+static int f_cssize(STRING n) { return(cssize(n.pointer)); }
+static int f_cspid(STRING n) { return(cspid(n.pointer)); }
 #endif
-int f_malloc(int size) {return((int)malloc(size));}
-int f_realloc(int adr,int size) {return((int)realloc((char *)adr,size));}
-int f_peek(int adr) { return((int)(*(char *)adr));}
-int f_dpeek(int adr) { return((int)(*(short *)adr));}
-int f_lpeek(int adr) { return((int)(*(long *)adr));}
-int f_lof(PARAMETER *plist,int e) {
+static int f_malloc(int size) {return((int)malloc(size));}
+static int f_realloc(int adr,int size) {return((int)realloc((char *)adr,size));}
+static int f_peek(int adr) { return((int)(*(char *)adr));}
+static int f_dpeek(int adr) { return((int)(*(short *)adr));}
+static int f_lpeek(int adr) { return((int)(*(long *)adr));}
+static int f_lof(PARAMETER *plist,int e) {
 // dump_parameterlist(plist,e);
   if(filenr[plist[0].integer]) return(lof(dptr[plist[0].integer]));
   else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
-int f_loc(PARAMETER *plist,int e) {
+static int f_loc(PARAMETER *plist,int e) {
   if(filenr[plist[0].integer]) return(ftell(dptr[plist[0].integer]));
   else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
-int f_eof(PARAMETER *plist,int e) {
+static int f_eof(PARAMETER *plist,int e) {
   if(plist[0].integer==-2) return((myeof(stdin))?-1:0);
   else if(filenr[plist[0].integer]) {
     fflush(dptr[plist[0].integer]);
@@ -131,7 +133,7 @@ int f_eof(PARAMETER *plist,int e) {
   } else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 
-int f_wort_sep(PARAMETER *plist,int e) {
+static int f_wort_sep(PARAMETER *plist,int e) {
   STRING str1,str2;
   int ret;
   str1.pointer=malloc(plist->integer+1);
@@ -148,13 +150,121 @@ int f_wort_sep(PARAMETER *plist,int e) {
 }
 
 
-
-
+static int f_instr(PARAMETER *plist,int e) {
+  int start=1;
+  char *pos=NULL;
+  if(e>=2) {
+    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
+    pos=(char *)memmem(&(((char *)(plist[0].pointer))[start-1]),plist[0].integer-start+1,plist[1].pointer,plist[1].integer);
+    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
+  } return(0);
+}
+static int f_rinstr(PARAMETER *plist,int e) {
+  char *pos=NULL;
+  int start;
+  if(e>=2) {
+    start=plist[0].integer;
+    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
+    pos=rmemmem(plist[0].pointer,start-1,plist[1].pointer,plist[1].integer);
+    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
+  } return(0);
+}
+#ifndef WINDOWS
+  #include <fnmatch.h>
+#else
+  #include "Windows.extension/fnmatch.h"
+#endif
+static int f_glob(PARAMETER *plist,int e) {
+  int flags=FNM_NOESCAPE;
+  if(e>=2) {
+    if(e==3) flags^=plist[2].integer;
+    flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
+    if(flags==0) return(-1);
+  } return(0);
+}
 #ifndef NOGRAPHICS
+static int f_form_alert(PARAMETER *plist,int e) {
+  return(form_alert(plist[0].integer,plist[1].pointer));
+}
+static int f_form_center(PARAMETER *plist,int e) {
+  int x,y,w,h,ret;
+  graphics();
+  gem_init();
+  if(e) ret=form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h);
+  if(e>4) {
+    if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
+    if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
+    if(plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
+    if(plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,h);
+  }
+  return(ret);
+}
+static int f_form_dial(PARAMETER *plist,int e) {
+  if(e==9) {
+    graphics();
+    gem_init();
+    return(form_dial(plist[0].integer,plist[1].integer,
+  plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,
+  plist[6].integer,plist[7].integer,plist[8].integer));
+  } else return(-1);
+}
+static int f_form_do(PARAMETER *plist,int e) {
+  if(e==1) {
+    graphics();
+    gem_init();
+    return(form_do((OBJECT *)plist[0].integer));
+  } else return(-1);
+}
+static int f_objc_draw(PARAMETER *plist,int e) {
+  if(e==5) {
+    graphics();
+    gem_init();
+    return(objc_draw((OBJECT *)plist[0].integer,plist[1].integer
+    ,plist[2].integer,plist[3].integer,plist[4].integer));
+  } else return(-1);
+}
+static int f_objc_find(PARAMETER *plist,int e) {
+    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer));
+}
+static int f_objc_offset(PARAMETER *plist,int e) {
+  int x,y,ret;
+
+  if(e>2 && plist[2].typ!=PL_LEER) {
+    int typ;
+    if((typ=variablen[plist[2].integer].typ)==ARRAYTYP) 
+      typ=variablen[plist[2].integer].pointer.a->typ;
+    if(typ==INTTYP) x=*((int *)plist[2].pointer);
+    else if(typ==FLOATTYP) x=(int)*((double *)plist[2].pointer);
+  }
+  if(e>3 && plist[3].typ!=PL_LEER) {
+    int typ;
+    if((typ=variablen[plist[3].integer].typ)==ARRAYTYP) 
+      typ=variablen[plist[3].integer].pointer.a->typ;
+    if(typ==INTTYP) y=*((int *)plist[3].pointer);
+    else if(typ==FLOATTYP) y=(int)*((double *)plist[3].pointer);
+  }
+  ret=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
+
+  if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,x);
+  if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,y);
+
+  return(ret);
+}
+static int f_get_color(PARAMETER *plist,int e) {
+  graphics();
+  return(get_color(plist[0].integer,plist[1].integer,plist[2].integer));
+}
+static int f_rsrc_gaddr(PARAMETER *plist,int e) {
+  int i;
+  char *ptr;
+  i=rsrc_gaddr(plist[0].integer,plist[1].integer,&ptr);
+  if(i>0) return((int)ptr);
+  else return(0);
+}
 
 int lsel_input(char *,STRING *,int,int);
 
-int f_listselect(PARAMETER *plist,int e) {
+static int f_listselect(PARAMETER *plist,int e) {
   int sel=-1;
   if(e>2) sel=plist[2].integer;
   if(e>1) {
@@ -166,18 +276,27 @@ int f_listselect(PARAMETER *plist,int e) {
 }
 #endif
 
+
+static char *arrptr(PARAMETER *p,int e) {return((char *)variablen[p->integer].pointer.a); }
+
+
+
 /*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
   output liefern.
   */
-
+  
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
  { F_CONST|F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ADD"     , f_add ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_PLISTE|F_IRET,  "ARRPTR"    , arrptr ,1,1     ,{PL_ARRAY}},
- { F_CONST|F_SQUICK|F_IRET,    "ASC"       , f_asc ,1,1   ,{PL_STRING}},
+
+ { F_CONST|F_IQUICK|F_IRET,    "AND"      ,(pfunc) f_and,2,2     ,{PL_NUMBER,PL_NUMBER}},
+
+
+ { F_PLISTE|F_IRET,  "ARRPTR"    , (pfunc)arrptr ,1,1     ,{PL_ARRAY}},
+ { F_CONST|F_SQUICK|F_IRET,    "ASC"       ,(pfunc) f_asc ,1,1   ,{PL_STRING}},
  { F_CONST|F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ASINH"      , asinh ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ATAN"      , atan ,1,1     ,{PL_NUMBER}},
@@ -185,155 +304,158 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_DQUICK|F_DRET,    "ATANH"     , atanh ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "ATN"       , atan ,1,1     ,{PL_NUMBER}},
 
- { F_CONST|F_DQUICK|F_IRET,    "BCHG"      , f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BCLR"      , f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BSET"      , f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_CONST|F_DQUICK|F_IRET,    "BTST"      , f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BCHG"      , (pfunc)f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BCLR"      ,(pfunc) f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BSET"      , (pfunc)f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BTST"      ,(pfunc) f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
 
  { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_PLISTE|F_IRET,    "COMBIN"    , f_combin ,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "COMBIN"    , (pfunc)f_combin ,2,2     ,{PL_INT,PL_INT}},
  { F_CONST|F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_PLISTE|F_IRET,    "CRC"       , f_crc ,1,2     ,{PL_STRING, PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "CRC"       ,(pfunc) f_crc ,1,2     ,{PL_STRING, PL_INT}},
 #ifdef CONTROL
  { F_SQUICK|F_DRET,  "CSGET"     , f_csget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "CSMAX"     , f_csmax ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "CSMIN"     , f_csmin ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CSPID"     , f_cspid ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "CSPID"     , (pfunc)f_cspid ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "CSRES"     , f_csres ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CSSIZE"    , f_cssize ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "CSSIZE"    , (pfunc)f_cssize ,1,1   ,{PL_STRING}},
 #endif
  { F_CONST|F_SQUICK|F_DRET,  "CVD"       , f_cvd ,1,1     ,{PL_STRING}},
  { F_CONST|F_SQUICK|F_DRET,  "CVF"       , f_cvf ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVI"       , f_cvi ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVL"       , f_cvl ,1,1     ,{PL_STRING}},
- { F_CONST|F_SQUICK|F_IRET,  "CVS"       , f_cvf ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVI"       ,(pfunc) f_cvi ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVL"       , (pfunc)f_cvl ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVS"       , (pfunc)f_cvf ,1,1     ,{PL_STRING}},
 
  { F_CONST|F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
- { F_SQUICK|F_IRET,    "DEVICE"    , f_device,1,1   ,{PL_STRING}},
- { F_CONST|F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
+ { F_SQUICK|F_IRET,    "DEVICE"    , (pfunc)f_device,1,1   ,{PL_STRING}},
+ { F_CONST|F_ARGUMENT|F_IRET,  "DIM?"      , (pfunc)f_dimf ,1,1      ,{PL_ARRAY}},
  { F_CONST|F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 #ifdef DOOCS
  { F_SQUICK|F_DRET,  "DOOCSGET"     , f_doocsget ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "DOOCSSIZE"    , f_doocssize ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "DOOCSSIZE"    ,(pfunc) f_doocssize ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "DOOCSTIMESTAMP"    , f_doocstimestamp ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "DOOCSTYP"    , f_doocstyp ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "DOOCSTYP"    , (pfunc)f_doocstyp ,1,1   ,{PL_STRING}},
 #endif
- { F_IQUICK|F_IRET,    "DPEEK"     , f_dpeek ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "DPEEK"     , (pfunc)f_dpeek ,1,1     ,{PL_INT}},
 
- { F_PLISTE|F_IRET,    "EOF"       , f_eof ,1,1     ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,    "EOF"       ,(pfunc) f_eof ,1,1     ,{PL_FILENR}},
 
  { F_CONST|F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
- { F_CONST|F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "EXEC"       , f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_SQUICK|F_IRET,    "EXIST"      , f_exist ,1,1     ,{PL_STRING}},
+ { F_CONST|F_IQUICK|F_IRET,    "EVEN"       , (pfunc)f_even ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "EXEC"       , (pfunc)f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_SQUICK|F_IRET,    "EXIST"      , (pfunc)f_exist ,1,1     ,{PL_STRING}},
  { F_CONST|F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
 
- { F_CONST|F_IQUICK|F_IRET,    "FACT"       , f_fak ,1,1     ,{PL_INT}},
- { F_CONST|F_DQUICK|F_IRET,    "FIX"       , f_fix ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "FACT"       , (pfunc)f_fak ,1,1     ,{PL_INT}},
+ { F_CONST|F_DQUICK|F_IRET,    "FIX"       ,(pfunc) f_fix ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
 #ifdef HAVE_FORK
- { F_SIMPLE|F_IRET,    "FORK"     , fork ,0,0     },
+ { F_SIMPLE|F_IRET,    "FORK"     , (pfunc)fork ,0,0     },
 #else
- { F_SIMPLE|F_IRET,    "FORK"     , f_nop ,0,0     },
+ { F_SIMPLE|F_IRET,    "FORK"     , (pfunc)f_nop ,0,0     },
 #endif
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "FORM_ALERT", f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
- { F_PLISTE|F_IRET,    "FORM_CENTER", f_form_center ,1,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { F_PLISTE|F_IRET,    "FORM_DIAL", f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "FORM_DO",   f_form_do ,1,1   ,{PL_INT}},
+ { F_PLISTE|F_IRET,    "FORM_ALERT", (pfunc)f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
+ { F_PLISTE|F_IRET,    "FORM_CENTER", (pfunc)f_form_center ,1,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { F_PLISTE|F_IRET,    "FORM_DIAL", (pfunc)f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "FORM_DO",   (pfunc)f_form_do ,1,1   ,{PL_INT}},
 #endif
  { F_CONST|F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
- { F_SIMPLE|F_IRET,    "FREEFILE"  , f_freefile ,0,0  },
+ { F_SIMPLE|F_IRET,    "FREEFILE"  , (pfunc)f_freefile ,0,0  },
 
  { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "GET_COLOR", f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "GET_COLOR", (pfunc)f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
 #endif
- { F_CONST|F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
- { F_CONST|F_IQUICK|F_IRET,    "GRAY"     , f_gray ,1,1     ,{PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "GLOB"     ,(pfunc) f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_IQUICK|F_IRET,    "GRAY"     ,(pfunc) f_gray ,1,1     ,{PL_INT}},
 
  { F_CONST|F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
- { F_SQUICK|F_IRET,    "INODE"     , f_inode,1,1   ,{PL_STRING}},
- { F_PLISTE|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INP%"      , inp32 ,1,1      ,{PL_FILENR}},
- { F_CONST|F_PLISTE|F_IRET,  "INSTR"     , f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_SQUICK|F_IRET,    "INODE"     ,(pfunc) f_inode,1,1   ,{PL_STRING}},
+ { F_PLISTE|F_IRET,  "INP"       , (pfunc)inp8 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP?"      ,(pfunc) inpf ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP&"      , (pfunc)inp16 ,1,1      ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,  "INP%"      , (pfunc)inp32 ,1,1      ,{PL_FILENR}},
+ { F_CONST|F_PLISTE|F_IRET,  "INSTR"     ,(pfunc) f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
- { F_CONST|F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_IRET,    "IOCTL"     , f_ioctl ,2,3     ,{PL_FILENR,PL_INT,PL_INT}},
- { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
+ { F_CONST|F_DQUICK|F_IRET,    "INT"       ,(pfunc) f_int ,1,1     ,{PL_NUMBER}},
+ { F_PLISTE|F_IRET,    "IOCTL"     , (pfunc)f_ioctl ,2,3     ,{PL_FILENR,PL_INT,PL_INT}},
+ { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    ,(pfunc) f_julian ,1,1     ,{PL_STRING}},
 
- { F_CONST|F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "LEN"       ,(pfunc) f_len ,1,1   ,{PL_STRING}},
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "LISTSELECT", f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
+ { F_PLISTE|F_IRET,    "LISTSELECT", (pfunc)f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
 #endif
  { F_CONST|F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
 
- { F_PLISTE|F_IRET,    "LOC"       , f_loc ,1,1     ,{PL_FILENR}},
- { F_PLISTE|F_IRET,    "LOF"       , f_lof ,1,1     ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,    "LOC"       , (pfunc)f_loc ,1,1     ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,    "LOF"       , (pfunc)f_lof ,1,1     ,{PL_FILENR}},
 
  { F_CONST|F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
- { F_IQUICK|F_IRET,    "LPEEK"    , f_lpeek ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "LPEEK"    , (pfunc)f_lpeek ,1,1     ,{PL_INT}},
  { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
 
- { F_IQUICK|F_IRET,    "MALLOC"    , f_malloc ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "MALLOC"    ,(pfunc) f_malloc ,1,1     ,{PL_INT}},
  { F_CONST|F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_CONST|F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_SQUICK|F_IRET,    "MODE"     , f_mode,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,    "MODE"     , (pfunc)f_mode,1,1   ,{PL_STRING}},
  { F_CONST|F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
- { F_SQUICK|F_IRET,    "NLINK"     , f_nlink,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,    "NLINK"     , (pfunc)f_nlink,1,1   ,{PL_STRING}},
+ { F_CONST|F_IQUICK|F_IRET,    "NOT"      , (pfunc)f_not,1,1     ,{PL_NUMBER}},
 
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "OBJC_DRAW", f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "OBJC_FIND", f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "OBJC_OFFSET", f_objc_offset ,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
+ { F_PLISTE|F_IRET,    "OBJC_DRAW",(pfunc) f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "OBJC_FIND", (pfunc)f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "OBJC_OFFSET", (pfunc)f_objc_offset ,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
 #endif
- { F_CONST|F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "ODD"       ,(pfunc) f_odd ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "OR"      ,(pfunc) f_or,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
- { F_IQUICK|F_IRET,    "PEEK"      , f_peek ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "PEEK"      , (pfunc)f_peek ,1,1     ,{PL_INT}},
 #ifndef NOGRAPHICS
- { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+ { F_DQUICK|F_IRET,    "POINT"     , (pfunc)f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
 #endif
  { F_CONST|F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
- { F_DQUICK|F_IRET,    "PTST"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+ { F_DQUICK|F_IRET,    "PTST"     , (pfunc)f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
 #endif
 
  { F_CONST|F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "RANDOM"    , f_random ,1,1     ,{PL_NUMBER}},
- { F_IQUICK|F_IRET,    "REALLOC"    , f_realloc ,2,2     ,{PL_INT,PL_INT}},
- { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
- { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "RAND"      ,(pfunc) rand ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "RANDOM"    , (pfunc)f_random ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "REALLOC"    , (pfunc)f_realloc ,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , (pfunc)f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_DQUICK|F_DRET,    "RND"       , f_rnd ,0,1     ,{PL_NUMBER}},
  { F_CONST|F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_NUMBER,PL_INT}},
 #ifndef NOGRAPHICS
- { F_PLISTE|F_IRET,    "RSRC_GADDR", f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "RSRC_GADDR", (pfunc)f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
 #endif
 
- { F_CONST|F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
- { F_CONST|F_DQUICK|F_IRET,    "SHL"      , f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_IQUICK|F_IRET,    "SHM_ATTACH"    , shm_attach ,1,1     ,{PL_INT}},
- { F_IQUICK|F_IRET,    "SHM_MALLOC"    , shm_malloc ,2,2     ,{PL_INT,PL_INT}},
- { F_CONST|F_DQUICK|F_IRET,    "SHR"      , f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_IQUICK|F_DRET,    "SENSOR"       ,(pfunc) f_sensor ,1,1     ,{PL_INT}},
+ { F_CONST|F_DQUICK|F_IRET,    "SGN"       , (pfunc)f_sgn ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SHL"      , (pfunc)f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "SHM_ATTACH"    , (pfunc)shm_attach ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "SHM_MALLOC"    , (pfunc)shm_malloc ,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_DQUICK|F_IRET,    "SHR"      , (pfunc)f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
- { F_SQUICK|F_IRET,    "SIZE"     , f_size,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,    "SIZE"     , (pfunc)f_size,1,1   ,{PL_STRING}},
  { F_CONST|F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "SRAND"     ,(pfunc) f_srand ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_CONST|F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_IRET,    "SYM_ADR"   , f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
+ { F_CONST|F_DQUICK|F_IRET,    "SUCC"      ,(pfunc) f_succ ,1,1     ,{PL_NUMBER}},
+ { F_PLISTE|F_IRET,    "SYM_ADR"   ,(pfunc) f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
 
  { F_CONST|F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
  { F_CONST|F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
@@ -341,33 +463,47 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_DRET,  "TINEGET"     , f_tineget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "TINEMAX"     , f_tinemax ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "TINEMIN"     , f_tinemin ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "TINESIZE"    , f_tinesize ,1,1   ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "TINETYP"    , f_tinetyp ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "TINESIZE"    , (pfunc)f_tinesize ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "TINETYP"    , (pfunc)f_tinetyp ,1,1   ,{PL_STRING}},
 #endif
- { F_CONST|F_DQUICK|F_DRET,    "TRUNC"     , f_fix ,1,1     ,{PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "TYP?"       , type ,1,1     ,{PL_ALLVAR}},
+ { F_CONST|F_DQUICK|F_DRET,    "TRUNC"     , (pfunc)f_fix ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "TYP?"       , (pfunc)type ,1,1     ,{PL_ALLVAR}},
 
  { F_CONST|F_SQUICK|F_DRET,  "VAL"       , f_val ,1,1     ,{PL_STRING}},
- { F_ARGUMENT|F_IRET,  "VARPTR"    , varptr ,1,1     ,{PL_ALLVAR}},
+ { F_ARGUMENT|F_IRET,  "VARPTR"    , (pfunc)varptr ,1,1     ,{PL_ALLVAR}},
 
- { F_PLISTE|F_IRET,  "WORT_SEP" , f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { F_PLISTE|F_IRET,  "WORT_SEP" , (pfunc)f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+
+ { F_CONST|F_IQUICK|F_IRET,    "XOR"      , (pfunc) f_xor,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
 };
 const int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);
 
 /* Systemvariablen vom typ String */
 
-int v_false() {return(0);}
-int v_true() {return(-1);}
-int v_err() { extern int globalerr; return(globalerr);}
-int v_ccserr() {return(ccs_err);}
-#ifdef CONTROL
-int v_ccsaplid() {return(aplid);}
-#endif
-int v_sp() {return(sp);}
-int v_pc() {return(pc);}
+static int v_false() {return(0);}
+static int v_true() {return(-1);}
+static int v_err() { extern int globalerr; return(globalerr);}
+static int v_sp() {return(sp);}
+static int v_pc() {return(pc);}
 
-double v_timer() {
+#ifdef ANDROID
+extern double gps_alt,gps_lat,gps_lon;
+
+static double v_gpsalt() {return(gps_alt);}
+static double v_gpslat() {return(gps_lat);}
+static double v_gpslon() {return(gps_lon);}
+#else
+static double v_gpsalt() {return(0);}
+static double v_gpslat() {return(-1);}
+static double v_gpslon() {return(-1);}
+#endif
+
+
+static int v_sensorf() {return(ANZSENSORS);}
+
+
+static double v_timer() {
 #ifdef WINDOWS
 #if 0
        return((double)GetTickCount()/1000.0);
@@ -382,58 +518,90 @@ double v_timer() {
 #endif
 }
 
-int v_stimer() {   /* Sekunden-Timer */
+static int v_stimer() {   /* Sekunden-Timer */
   time_t timec=time(NULL);
   if(timec==-1) io_error(errno,"TIMER");
   return(timec);
 }
 
-int v_cols() {   /* Anzahl Spalten des Terminals */
+static int v_cols() {   /* Anzahl Spalten des Terminals */
   int rows=0,cols=0;
   getrowcols(&rows,&cols);
   return(cols);
 }
-int v_rows() {   /* Anzahl Zeilen des Terminals */
+static int v_rows() {   /* Anzahl Zeilen des Terminals */
   int rows=0,cols=0;
   getrowcols(&rows,&cols);
   return(rows);
 }
+static int v_crscol() {   /* Terminal cursor position */
+  int rows=0,cols=0;
+  getcrsrowcol(&rows,&cols);
+  return(cols);
+}
+static int v_crslin() {   /* Terminal cursor position */
+  int rows=0,cols=0;
+  getcrsrowcol(&rows,&cols);
+  return(rows);
+}
 
-double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
-double v_pi() {return(PI);}
+static double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
+static double v_pi() {return(PI);}
 extern int mousex(),mousey(), mousek(), mouses();
 const SYSVAR sysvars[]= {  /* alphabetisch !!! */
- { NOTYP,   "!nulldummy", v_false},
-#ifdef CONTROL
- { INTTYP,    "CCSAPLID",   v_ccsaplid},
-#endif
- { INTTYP,    "CCSERR",     v_ccserr},
- { INTTYP,    "COLS",       v_cols},
- { FLOATTYP,  "CTIMER",     v_ctimer},
- { INTTYP,    "ERR",        v_err},
- { CONSTTYP|INTTYP,    "FALSE",      v_false},
-#ifndef NOGRAPHICS
- { INTTYP,    "MOUSEK",     mousek},
- { INTTYP,    "MOUSES",     mouses},
- { INTTYP,    "MOUSEX",     mousex},
- { INTTYP,    "MOUSEY",     mousey},
-#endif
- { INTTYP,    "PC",         v_pc},
- { CONSTTYP|FLOATTYP,  "PI",         v_pi},
- { INTTYP,    "ROWS",	    v_rows},
- { INTTYP,    "SP",	    v_sp},
- { INTTYP,    "STIMER",     v_stimer},
- { FLOATTYP,  "TIMER",      v_timer},
- { CONSTTYP|INTTYP,    "TRUE",       v_true},
-#ifdef WINDOWS
- { CONSTTYP|INTTYP,    "WIN32?",     v_true},
+ { NOTYP,   "!nulldummy", (pfunc)v_false},
+#ifdef ANDROID
+ { CONSTTYP|INTTYP,    "ANDROID?",  (pfunc)   v_true},
 #else
- { CONSTTYP|INTTYP,    "WIN32?",     v_false},
+ { CONSTTYP|INTTYP,    "ANDROID?",  (pfunc)   v_false},
+#endif
+#ifdef CONTROL
+ { INTTYP,    "CCSAPLID", (pfunc)  v_ccsaplid},
+#endif
+#if defined CONTROL || defined TINE
+ { INTTYP,    "CCSERR",  (pfunc)   v_ccserr},
+#endif
+ { INTTYP,    "COLS",    (pfunc)   v_cols},
+ { INTTYP,    "CRSCOL",  (pfunc)     v_crscol},
+ { INTTYP,    "CRSLIN",   (pfunc)    v_crslin},
+ { FLOATTYP,  "CTIMER",     v_ctimer},
+ { INTTYP,    "ERR",    (pfunc)    v_err},
+ { CONSTTYP|INTTYP,    "FALSE",   (pfunc)   v_false},
+#ifdef ANDROID
+ { CONSTTYP|INTTYP,    "GPS?",  (pfunc)   v_true},
+#else
+ { CONSTTYP|INTTYP,    "GPS?",  (pfunc)   v_false},
+#endif
+ { FLOATTYP,  "GPS_ALT",      v_gpsalt}, /* Altitude in meters*/
+ { FLOATTYP,  "GPS_LAT",      v_gpslat}, /* Lattitude in degrees*/
+ { FLOATTYP,  "GPS_LON",      v_gpslon}, /* Longitude in degrees*/
+#ifndef NOGRAPHICS
+ { INTTYP,    "MOUSEK",   (pfunc)  mousek},
+ { INTTYP,    "MOUSES",  (pfunc)   mouses},
+ { INTTYP,    "MOUSEX",  (pfunc)   mousex},
+ { INTTYP,    "MOUSEY",  (pfunc)   mousey},
+#endif
+ { INTTYP,    "PC",        (pfunc) v_pc},
+ { CONSTTYP|FLOATTYP,  "PI",         v_pi},
+ { INTTYP,    "ROWS",	   (pfunc) v_rows},
+#ifdef ANDROID
+ { CONSTTYP|INTTYP,    "SENSOR?",   (pfunc)  v_sensorf},
+#else
+ { CONSTTYP|INTTYP,    "SENSOR?",   (pfunc)  v_false},
+#endif
+ { INTTYP,    "SP",	 (pfunc)   v_sp},
+ { INTTYP,    "STIMER",  (pfunc)   v_stimer},
+ { FLOATTYP,  "TIMER",      v_timer},
+ { CONSTTYP|INTTYP,    "TRUE",     (pfunc)  v_true},
+#ifdef WINDOWS
+ { CONSTTYP|INTTYP,    "WIN32?",   (pfunc)  v_true},
+#else
+ { CONSTTYP|INTTYP,    "WIN32?",    (pfunc) v_false},
 #endif
 #ifndef WINDOWS
- { CONSTTYP|INTTYP,    "UNIX?",      v_true},
+ { CONSTTYP|INTTYP,    "UNIX?",    (pfunc) v_true},
 #else
- { CONSTTYP|INTTYP,    "UNIX?",      v_false},
+ { CONSTTYP|INTTYP,    "UNIX?",    (pfunc) v_false},
 #endif
 };
 const int anzsysvars=sizeof(sysvars)/sizeof(SYSVAR);
@@ -450,9 +618,12 @@ const SYSSVAR syssvars[]= {  /* alphabetisch !!! */
 };
 const int anzsyssvars=sizeof(syssvars)/sizeof(SYSSVAR);
 
+
+
+
 const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 
- { F_CONST|F_ARGUMENT,  "!nulldummy", f_nop ,0,0   ,{0}},
+ { F_CONST|F_ARGUMENT,  "!nulldummy", (sfunc)f_nop ,0,0   ,{0}},
  { F_CONST|F_SQUICK,    "ARID$"     , f_arids ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "ARIE$"     , f_aries ,1,1   ,{PL_STRING}},
  { F_CONST|F_PLISTE,    "BIN$"      , f_bins ,1,2   ,{PL_INT,PL_INT}},
@@ -529,7 +700,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 const int anzpsfuncs=sizeof(psfuncs)/sizeof(SFUNCTION);
 
 
-int vergleich(char *w1,char *w2) {
+static int vergleich(char *w1,char *w2) {
   int v;
   int e=type(w1)&(~CONSTTYP);
   if((e | INTTYP | FLOATTYP)!=((type(w2)&(~CONSTTYP)) | INTTYP | FLOATTYP )) {
@@ -556,118 +727,6 @@ int vergleich(char *w1,char *w2) {
   }
   return(v);
 }
-int f_instr(PARAMETER *plist,int e) {
-  int start=1;
-  char *pos=NULL;
-  if(e>=2) {
-    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
-    pos=(char *)memmem(&(((char *)(plist[0].pointer))[start-1]),plist[0].integer-start+1,plist[1].pointer,plist[1].integer);
-    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
-  } return(0);
-}
-int f_rinstr(PARAMETER *plist,int e) {
-  char *pos=NULL;
-  int start;
-  if(e>=2) {
-    start=plist[0].integer;
-    if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
-    pos=rmemmem(plist[0].pointer,start-1,plist[1].pointer,plist[1].integer);
-    if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
-  } return(0);
-}
-#ifndef WINDOWS
-  #include <fnmatch.h>
-#else
-  #include "Windows.extension/fnmatch.h"
-#endif
-int f_glob(PARAMETER *plist,int e) {
-  int flags=FNM_NOESCAPE;
-  if(e>=2) {
-    if(e==3) flags^=plist[2].integer;
-    flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
-    if(flags==0) return(-1);
-  } return(0);
-}
-#ifndef NOGRAPHICS
-int f_form_alert(PARAMETER *plist,int e) {
-  return(form_alert(plist[0].integer,plist[1].pointer));
-}
-int f_form_center(PARAMETER *plist,int e) {
-  int x,y,w,h,ret;
-  graphics();
-  gem_init();
-  if(e) ret=form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h);
-  if(e>4) {
-    if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
-    if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
-    if(plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
-    if(plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,h);
-  }
-  return(ret);
-}
-int f_form_dial(PARAMETER *plist,int e) {
-  if(e==9) {
-    graphics();
-    gem_init();
-    return(form_dial(plist[0].integer,plist[1].integer,
-  plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,
-  plist[6].integer,plist[7].integer,plist[8].integer));
-  } else return(-1);
-}
-int f_form_do(PARAMETER *plist,int e) {
-  if(e==1) {
-    graphics();
-    gem_init();
-    return(form_do((OBJECT *)plist[0].integer));
-  } else return(-1);
-}
-int f_objc_draw(PARAMETER *plist,int e) {
-  if(e==5) {
-    graphics();
-    gem_init();
-    return(objc_draw((OBJECT *)plist[0].integer,plist[1].integer
-    ,plist[2].integer,plist[3].integer,plist[4].integer));
-  } else return(-1);
-}
-int f_objc_find(PARAMETER *plist,int e) {
-    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer));
-}
-int f_objc_offset(PARAMETER *plist,int e) {
-  int x,y,ret;
-
-  if(e>2 && plist[2].typ!=PL_LEER) {
-    int typ;
-    if((typ=variablen[plist[2].integer].typ)==ARRAYTYP) 
-      typ=variablen[plist[2].integer].pointer.a->typ;
-    if(typ==INTTYP) x=*((int *)plist[2].pointer);
-    else if(typ==FLOATTYP) x=(int)*((double *)plist[2].pointer);
-  }
-  if(e>3 && plist[3].typ!=PL_LEER) {
-    int typ;
-    if((typ=variablen[plist[3].integer].typ)==ARRAYTYP) 
-      typ=variablen[plist[3].integer].pointer.a->typ;
-    if(typ==INTTYP) y=*((int *)plist[3].pointer);
-    else if(typ==FLOATTYP) y=(int)*((double *)plist[3].pointer);
-  }
-  ret=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
-
-  if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,x);
-  if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,y);
-
-  return(ret);
-}
-int f_get_color(PARAMETER *plist,int e) {
-  graphics();
-  return(get_color(plist[0].integer,plist[1].integer,plist[2].integer));
-}
-int f_rsrc_gaddr(PARAMETER *plist,int e) {
-  int i;
-  char *ptr;
-  i=rsrc_gaddr(plist[0].integer,plist[1].integer,&ptr);
-  if(i>0) return((int)ptr);
-  else return(0);
-}
-#endif
 
 
 
@@ -896,7 +955,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 }
 
 const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
- { F_CONST|F_ARGUMENT,  "!nulldummy",  f_nop ,0,0   ,{0}},
+ { F_CONST|F_ARGUMENT,  "!nulldummy",  (afunc) f_nop ,0,0   ,{0}},
  { F_CONST|F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "1"         , f_einsmat ,1,1   ,{PL_INT}},
 #ifdef CONTROL
@@ -1238,7 +1297,7 @@ STRING string_parser(char *funktion) {
 
 
 
-double do_funktion(char *name,char *argumente) {
+static double do_funktion(char *name,char *argumente) {
   int oldbatch,osp=sp;
   int pc2=procnr(name,2|4);  /*FUNCTION und DEFFN*/
   int typ;
@@ -1296,7 +1355,7 @@ int do_parameterliste(char *pos, int *l,int n) {
 }
 
 
-STRING do_sfunktion(char *name,char *argumente) {
+static STRING do_sfunktion(char *name,char *argumente) {
   int oldbatch,osp=sp;
   int pc2=procnr(name,2|4);  /*FUNCTION und DEFFN*/
   int typ;
