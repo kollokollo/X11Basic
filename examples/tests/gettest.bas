@@ -13,12 +13,26 @@ if len(f$)
   endif
 endif
 schwarz=get_color(0,0,0)
+gelb=get_color(65535,65535,0)
+color gelb
+for j=0 to 400 step 10
+for i=0 to 640 step 50
+  text i,j,str$(i)+"/"+str$(j)
+next i
+next j
 for i=0 to 10
   color get_color(i*6553,32000+i*6553/2,i*6553)
-  pcircle 350+i/3,20-i/3,20-2*i
+  pcircle 150+i/3,20-i/3,20-2*i
 next i
-get 330,0,40,40,kugel$
+get 130,0,40,40,kugel$
+color schwarz
+pbox 0,0,640,400
+color gelb
+deftext 1
 text 100,170,"Copyarea GET und PUT mit XBASIC V.1.03   (c) Markus Hoffmann"
+for i=0 to 5
+  put 100+i*40,100,kugel$
+next i
 num=6
 i=0
 dim dx(num),dy(num),x(num),y(num),hinter$(num),kugel$(num),m(num)

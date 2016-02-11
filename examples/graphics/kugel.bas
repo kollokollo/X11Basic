@@ -15,10 +15,12 @@ schwarz=get_color(0,0,0)
 lila=get_color(65530,0,65530)
 gruen=get_color(0,65530,0)
 sizew 1,bw,bw
+vsync
+get_geometry 1,bx,by,bw,bh
 color weiss
-pbox 0,0,bw,bw
+pbox bx,by,bw,bh
 color schwarz
-circle bw/2,bw/2,bw/2
+circle bw/2,bh/2,min(bw,bh)/2-1
 color grau
 
 line @kx(0,0,0),@ky(0,0,0),@kx(1,0,0),@ky(1,0,0)
@@ -115,5 +117,5 @@ z=cos(gucktheta)*y-sin(gucktheta)*z
 'else
 'color blau
 'endif
-  return bw/2-(z)*bw/2
+  return bh/2-(z)*bh/2
 endfunc

@@ -20,6 +20,7 @@
 #include "protos.h"
 #include "array.h"
 #include "functions.h"
+#include "file.h"
 
 #ifdef WINDOWS
 #undef HAVE_LOGB
@@ -744,7 +745,7 @@ STRING f_systems(STRING n) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-STRING f_errs(int n) { return(create_string(error_text((char)n,""))); }
+STRING f_errs(int n) { return(create_string(error_text((char)n,NULL))); }
 STRING f_prgs(int n) {
   if(n>=prglen || n<0) xberror(16,"PRG$"); /* Feldindex zu gross*/
   return(create_string(program[min(prglen-1,max(n,0))]));

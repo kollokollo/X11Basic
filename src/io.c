@@ -943,6 +943,28 @@ void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr
   if(e==3) 
     memmove((char *)plist[1].integer,(char *)plist[0].integer,(size_t)plist[2].integer);
 }
+void c_pipe(PARAMETER *plist,int e) {
+  int i=plist[0].integer;
+  int j=plist[1].integer;
+  if(e==2) {
+    if(filenr[i] || filenr[j]) xberror(22,"");  /* File schon geoeffnet  */
+    else {
+      int filedes[2];
+      if(pipe(filedes)) io_error(errno,"PIPE");
+      else {
+        dptr[i]=fdopen(filedes[0],"r");
+	if(dptr[i]==NULL) printf("Error with fdopen! should not happen\n");
+	else filenr[i]=1;
+        dptr[j]=fdopen(filedes[1],"w");
+	if(dptr[j]==NULL) printf("Error with fdopen! should not happen\n");
+	else filenr[j]=1;
+      }
+    }
+  }
+}
+
+
+
 void c_unget(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
   int i,e=wort_sep(n,',',TRUE,v,w);

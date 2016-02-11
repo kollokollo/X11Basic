@@ -3,22 +3,24 @@
 ' Demoprogramm. Es soll nur die Funktionalitaet von X11-BASIC
 ' demonstrieren. Hier kann man zur Syntax etc. lernen
 ' Letzte Bearbeitung 09.03.2002  Markus Hoffmann
+' Letzte Bearbeitung 18.01.2008  Markus Hoffmann
 '
 gelb=get_color(65535,65535,0)
 rot=get_color(65535,0,0)
 weiss=get_color(65535,65535,65535)
 schwarz=get_color(0,35535,25535)
-bw=400
+
+bw=640
 bh=400
-bx=0
-by=0
+
 setfont "*Courier*12*"
 sizew ,bw,bh
 color schwarz
+get_geometry 1,bx,by,bw,bh
 pbox bx,by,bw,bh
 vsync
 color rot
-TEXT 50,10,"Analoguhr mit X-BASIC    von Markus Hoffmann"
+TEXT 10,10,"Analoguhr mit X11-BASIC von Markus Hoffmann"
 setfont "*Courier*18*"
 
 '
@@ -26,7 +28,7 @@ setfont "*Courier*18*"
 '
 x=bx+bw/2
 y=by+bh/2
-xr=380
+xr=bh
 color weiss
 CIRCLE x,y,xr-x+5
 '
@@ -87,11 +89,11 @@ do
   IF STIMER>ti
     ti=STIMER
     color schwarz 
-    pbox 120,250,280,300
+    pbox 10,bh-30,130,bh
     @s_ekunde
     color gelb
-    text 160,280,time$
-    text 150,300,date$
+    text 20,bh-10,time$
+    text 10,bh-30,date$
     vsync
     pause 1-timer+stimer-0.05
   ENDIF

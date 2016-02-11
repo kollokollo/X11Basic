@@ -8,7 +8,9 @@ ri=0
 schwanz=1
 c=1
 pt=0.1
-sizew ,320,200
+bw=320
+bh=200
+sizew ,bw,bh
 schwarz=get_color(0,0,0)
 clearw 
 go:

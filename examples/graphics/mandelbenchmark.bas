@@ -6,7 +6,7 @@
 bx=0
 by=0
 bw=256
-bh=256
+bh=240
 
 sx=-2.2
 sy=-1.5
@@ -14,6 +14,7 @@ sw=2
 sh=2
 
 sizew ,bw,bh
+text 0,bh/2,"Drawing a fractal. Be patient..."
 t=timer
 while y<bh
 
@@ -41,9 +42,8 @@ out:
     x=0
     y=y+1
     showpage
-    print y
+    print at(10,1);y;"  "
   endif    
 wend
 print timer-t
-~inp(-2)
 quit

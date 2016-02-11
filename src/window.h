@@ -14,8 +14,10 @@
     #include <vga.h>
     #include <vgagl.h>
 #else
+#ifndef FRAMEBUFFER
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
+#endif
 #endif
 #endif
 
@@ -82,6 +84,18 @@
 #define DrawPoint(a,b)  ;
 #define CopyArea(a,b,c,d,e,f) ;
 #else
+#ifdef FRAMEBUFFER
+#define SetFillRule(c)   ;
+#define SetFillStyle(c)  ;
+#define SetForeground(c) FB_set_color(c)
+#define SetBackground(c) FB_set_bcolor(c)
+#define FillRectangle(a,b,c,d)  FB_pbox(a,b,a+c,b+d)
+#define DrawRectangle(a,b,c,d)  FB_box(a,b,a+c,b+d)
+#define DrawString(a,b,c,d) FB_DrawString(a,b-chh+2,c,d)
+#define DrawLine(a,b,c,d)  FB_line(a,b,c,d)
+#define DrawPoint(a,b)  FB_plot(a,b)
+#define CopyArea(a,b,c,d,e,f) FB_copyarea(a,b,c,d,e,f)
+#else
 #define SetFillRule(c)   XSetFillRule(display[usewindow], gc[usewindow],c)
 #define SetFillStyle(c)  XSetFillStyle(display[usewindow], gc[usewindow],c)
 #define SetForeground(c) XSetForeground(display[usewindow],gc[usewindow],c)
@@ -94,6 +108,7 @@
 #define CopyArea(a,b,c,d,e,f) XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],a,b,c,d,e,f)
 #endif
 #endif
+#endif
 
 void handle_window(int);
 int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned int);
@@ -104,8 +119,10 @@ extern int baseline,chh,chw;
 
 
 #ifndef WINDOWS
+#ifndef FRAMEBUFFER
 void handle_event(int, XEvent *);
 char *imagetoxwd(XImage *,Visual *,XColor *, int *);
+#endif
 #endif
 void do_menu_open(int);
 void do_menu_close();
@@ -139,6 +156,11 @@ int global_color,global_keycode,global_ks,global_eventtype;
 extern HANDLE keyevent,buttonevent,motionevent;
 
 #else
+#ifdef FRAMEBUFFER
+extern int global_mousex,global_mousey,global_mousek,global_mouses;
+extern int global_color,global_bcolor;
+
+#else
 Window win[MAXWINDOWS];
 Pixmap pix[MAXWINDOWS];
 Display *display[MAXWINDOWS];
@@ -148,6 +170,7 @@ XWMHints wm_hints[MAXWINDOWS];
 XClassHint class_hint[MAXWINDOWS];
 XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
 Pixmap icon_pixmap[MAXWINDOWS];
+#endif
 #endif
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];
@@ -163,6 +186,58 @@ extern int menuanztitle;
 extern int schubladeff;
 extern int schubladenr;
 extern int schubladex,schubladey,schubladew,schubladeh;
+
+
+
+
+
+/* Wegen alignment (auf 4 !) */
+typedef struct {char a;char b; char c; char d;} TT;
+
+typedef struct {                     /**** BMP file header structure ****/
+    unsigned short bfType;           /* Magic number for file */
+    TT        bfSize;           /* Size of file */
+    unsigned short bfReserved1;      /* Reserved */
+    unsigned short bfReserved2;      /* ... */
+    TT   bfOffBits;        /* Offset to bitmap data */
+} BITMAPFILEHEADER;
+
+#define BF_TYPE 0x4D42             /* "MB" */
+#define BITMAPFILEHEADERLEN 14
+
+typedef struct   {                   /**** BMP file info structure ****/
+    unsigned int   biSize;           /* Size of info header */
+    int            biWidth;          /* Width of image */
+    int            biHeight;         /* Height of image */
+    unsigned short biPlanes;         /* Number of color planes */
+    unsigned short biBitCount;       /* Number of bits per pixel */
+    unsigned int   biCompression;    /* Type of compression to use */
+    unsigned int   biSizeImage;      /* Size of image data */
+    int            biXPelsPerMeter;  /* X pixels per meter */
+    int            biYPelsPerMeter;  /* Y pixels per meter */
+    unsigned int   biClrUsed;        /* Number of colors used */
+    unsigned int   biClrImportant;   /* Number of important colors */
+} BITMAPINFOHEADER;
+#define BITMAPINFOHEADERLEN sizeof(BITMAPINFOHEADER)
+
+/*
+ * Constants for the biCompression field...
+ */
+
+#  define BI_RGB       0             /* No compression - straight BGR data */
+#  define BI_RLE8      1             /* 8-bit run-length compression */
+#  define BI_RLE4      2             /* 4-bit run-length compression */
+#  define BI_BITFIELDS 3             /* RGB bitmap with RGB masks */
+
+
+typedef struct  {                    /**** Colormap entry structure ****/
+    unsigned char  rgbBlue;          /* Blue value */
+    unsigned char  rgbGreen;         /* Green value */
+    unsigned char  rgbRed;           /* Red value */
+    unsigned char  rgbReserved;      /* Reserved */
+} RGBQUAD;
+
+void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth);
 
 /* AES-Definitionen   */
 typedef struct {
@@ -180,6 +255,8 @@ typedef struct objc_colorword {
    unsigned pattern : 3;
    unsigned fillc   : 4;
 }OBJC_COLORWORD;
+
+
 #define ROOT 0
 #define NIL -1
 						/* keybd states		*/
@@ -234,6 +311,8 @@ typedef struct objc_colorword {
 						/* font types		*/
 #define FONT_IBM 3
 #define FONT_SMALL 5
+#define FONT_BIG 1
+#define FONT_DEFAULT FONT_IBM
 
 /* Object Drawing Types */
 						/* Graphic types of obs	*/

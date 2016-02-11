@@ -58,6 +58,7 @@ void c_objc_delete (PARAMETER *,int);
 void c_on(char *);
 void c_onbreak(char *);
 void c_pause    (PARAMETER *,int);
+void c_pipe     (PARAMETER *,int);
 void c_poke     (PARAMETER *,int);
 void c_print    (char *);
 void c_quit     (PARAMETER *,int);

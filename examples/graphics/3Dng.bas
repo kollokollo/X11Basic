@@ -4,7 +4,7 @@ DIM pxU(4),pyU(4)
 bxU=0
 byU=18
 bwU=640
-bhU=400-18
+bhU=400-50
 ' CLIP bxU,byU,bwU,bhU
 ' Koordinaten:
 '
@@ -53,7 +53,7 @@ grau=get_color(32000,32000,32000)
 gelb=get_color(65535,65535,32000)
 blau=get_color(32000,32000,65535)
 color grau
-pbox 0,0,640,400
+pbox 0,0,bwU,bhU
 color weiss
 pxU(0)=@kx(x1,y2,z1/2)
 pyU(0)=@ky(x1,y2,z1/2)

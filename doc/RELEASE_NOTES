@@ -14,3 +14,10 @@ Release notes for Version 1.14 (Apr 2007)
 - new CHDIR command
 - new SPAWN command (does still not work as wanted)
 - created doocsxbasic modification to use the FLASH control system at DESY
+
+Release notes for Version 1.15 (Feb 2008)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- New command: PIPE
+- New commands: GET_SCREENSIZE, GET_GEOMETRY
+- Implemented BMP file format (for PUT)
+- produced a framebuffer-graphics version of X11-basic

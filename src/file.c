@@ -1,6 +1,5 @@
+/* file.c  (c) Markus Hoffmann   */
 /* Erweiterungen fuer die Datei Ein- und Ausgabe ....   */
-
-/* (c) von Markus Hoffmann                              */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -17,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "file.h"
 
 #ifndef FALSE
 #define FALSE 0
@@ -51,8 +52,11 @@ char *input( FILE *n, char *line) {   /* liest bis Komma oder Zeilenende aus ein
     return line;
 }
 
-long lof( FILE *n) {	
-  long laenge,position;
+
+/* Returns the length of the open file n */
+
+size_t lof(FILE *n) {	
+  size_t laenge,position;
 	
   position=ftell(n);
   if(fseek(n,0,2)==0){
@@ -63,32 +67,46 @@ long lof( FILE *n) {
 }
 
 
+/* Returns the eof condition of an open file n */
+
 int myeof(FILE *n) {
   int c=fgetc(n);
   ungetc(c,n);
   return c==EOF;
 }
 
-int bsave( char *name, char *adr, long len) { 
+
+/* Saves an area in memory starting at adr with length len to a file
+   with filename name.
+   RETURNS: 0 on success and -1 on error */
+
+int bsave(char *name, char *adr, size_t len) { 
   int fdis=creat(name,0644);
   if(fdis==-1) return(-1);
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
   return(close(fdis));
 }
 
-long bload( char *name, char *adr, long len) {	
+/* loads the file with filename name to a memory location at address adr.
+   a maximum of len bytes are read. if len==-1 the whole file is read. 
+   RETURNS the number of read bytes or 0 on error.
+   */
+
+size_t bload(char *name, char *adr, size_t len) {	
   FILE *fdis;
-  long gelesen=0;
 	
-	fdis=fopen(name,"r");
-	if (fdis==NULL) return(0);
-        if(len==-1) len=lof(fdis);
-        if(len>0) gelesen=fread(adr,1,len,fdis);
-	fclose(fdis);
-	return(gelesen);
+  fdis=fopen(name,"r");
+  if(fdis==NULL) return(0);
+  if(len==-1) len=lof(fdis);
+  if(len>0) len=fread(adr,1,len,fdis);
+  fclose(fdis);
+  return(len);
 }
+
+/* Checks if a give file name exists */
+
 #if 0
-int exist( char *name ) {	
+int exist( char *name ) {	/* This is a save but slow implementation */
   int   fdis=open(name,0x8000);
   if (fdis==-1) return(FALSE);
   close(fdis);

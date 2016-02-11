@@ -2,6 +2,9 @@
 ' Demonstration of POLYLINE and POLYFILL
 ' X11-Basic (c) Markus Hoffmann
 
+bw=320
+bh=240
+
 dim x(5),y(5)
 x(0)=-50
 y(0)=-50
@@ -13,7 +16,7 @@ x(3)=-50
 y(3)=50
 x(4)=-50
 y(4)=-50
-sizew ,400,400
+sizew ,bw,bh
 r=5/180
 gelb=get_color(65535,32000,0)
 schwarz=get_color(0,32000,0)
@@ -27,11 +30,12 @@ do
     x(i)=xx
   next i
   color schwarz
-  pbox 0,0,400,400
+  pbox 0,0,bw,bh
   color weiss
-  polyfill 5,x(),y(),200,200
+  text 10,10,"Polyline/Polyfill test X11-Basic"
+  polyfill 5,x(),y(),bw/2,bh/2
   color gelb
-  polyline 5,x(),y(),200,200
+  polyline 5,x(),y(),bw/2,bh/2
   vsync
-  pause 0.02
+  pause 0.05
 loop

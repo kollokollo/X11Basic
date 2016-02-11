@@ -8,6 +8,18 @@
 #include "options.h"
 #include <stdio.h>
 
+/* This is the list of official error messages liked to a number
+   (see the command reference for ERROR <n>). Positive numbers correspond to
+   X11-Basic ruintime errors, negative numbers correspond to system errors
+
+   The translation is not complete. The length of the Messages 
+   (including any possible inserted stings) can not 
+   exceed MAXERRORTXTLEN.
+   */
+
+
+#define MAXERRORTXTLEN 128
+
 const char *errortxt[] = {
 #ifdef GERMAN
 /*   0*/  "Division durch Null",
@@ -187,7 +199,7 @@ const char *errortxt[] = {
 /*  a*/  "Error 97",
 /*  98*/  "Error 98",
 /*  99*/  "Error 99",
-/* 100*/  "X11-BASIC Version 1.14  Copyright (c) 1997-2007 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version 1.15  Copyright (c) 1997-2008 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",
@@ -347,9 +359,15 @@ const char *errortxt[] = {
 /*  -1*/  "* IO-Error : Allgemeiner IO-Fehler %s"
 };
 
-char *error_text(unsigned char errnr, char *bem) {
-  static char errbuffer[128];
-  sprintf(errbuffer,errortxt[errnr],bem );
-  return(errbuffer);
+/* Returns the Error message which belongs to the number errnr.
+   The message is completed by an optional string bem which is inserted into
+   the error message at a position denoted by %s */
+
+const char *error_text(unsigned char errnr, char *bem) {
+  if(bem) {
+    static char errbuffer[MAXERRORTXTLEN];
+    snprintf(errbuffer,MAXERRORTXTLEN,errortxt[errnr],bem );
+    return(errbuffer);
+  } else return(errortxt[errnr]);
 }
 

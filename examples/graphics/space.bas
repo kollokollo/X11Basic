@@ -49,7 +49,7 @@ DO
   endif
  
     if zc=40
-      print timer-t
+      print at(1,1);timer-t
       IF TIMER-t>3
         DEC a&
         print "-"'a&

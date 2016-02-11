@@ -14,9 +14,9 @@
 
 
 
-                       VERSION 1.14
+                       VERSION 1.15
 
-            (C) 1997-2007 by Markus Hoffmann
+            (C) 1997-2008 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -24,6 +24,7 @@
  **  letzte Bearbeitung: Feb. 2003   von Markus Hoffmann		   **
  **  letzte Bearbeitung: Feb. 2005   von Markus Hoffmann		   **
  **  letzte Bearbeitung: Feb. 2007   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: Jan. 2008   von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -92,8 +93,8 @@ int usewindow=DEFAULTWINDOW;
 
 const COMMAND comms[]= {
 
- { P_ARGUMENT,  "!nulldummy", bidnm ,0,0   ,{0}},
- { P_ARGUMENT,  "?"         , c_print ,0,-1 ,{0}},
+ { P_ARGUMENT,  "!nulldummy", bidnm       ,0, 0,{0}},
+ { P_ARGUMENT,  "?"         , c_print     ,0,-1,{0}},
 
  { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
  { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2,{PL_NUMBER,PL_PROC}},
@@ -109,37 +110,37 @@ const COMMAND comms[]= {
  { P_PLISTE,     "BLOAD"    , c_bload     ,2, 3,{PL_STRING,PL_INT,PL_INT}},
  { P_PLISTE,     "BMOVE"    , c_bmove     ,3, 3,{PL_INT,PL_INT,PL_INT} },
 #ifndef NOGRAPHICS
- { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0,1,   {PL_FILENR}},
- { P_PLISTE,     "BOUNDARY" , c_boundary  ,1, 1, {PL_INT}},
- { P_PLISTE,     "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0, 1,{PL_FILENR}},
+ { P_PLISTE,     "BOUNDARY" , c_boundary  ,1, 1,{PL_INT}},
+ { P_PLISTE,     "BOX"      , c_box       ,4, 4,{PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
  { P_PLISTE,     "BPUT"     , c_bput      ,3, 3,{PL_FILENR,PL_INT,PL_INT}},
  { P_BREAK,      "BREAK"    , c_break     ,0, 0},
  { P_PLISTE,     "BSAVE"    , c_bsave     ,3, 3,{PL_STRING,PL_INT,PL_INT}},
 
- { P_ARGUMENT,   "CALL"     , c_exec,   1,-1,{PL_INT}},
- { P_CASE,       "CASE"     , c_case   ,1,1,{PL_NUMBER}},
- { P_ARGUMENT,   "CHAIN"    , c_chain  ,1,1,{PL_STRING}},
- { P_ARGUMENT,   "CHDIR"    , c_chdir  ,1,1,{PL_STRING}},
+ { P_ARGUMENT,   "CALL"     , c_exec      ,1,-1,{PL_INT}},
+ { P_CASE,       "CASE"     , c_case      ,1, 1,{PL_NUMBER}},
+ { P_ARGUMENT,   "CHAIN"    , c_chain     ,1, 1,{PL_STRING}},
+ { P_ARGUMENT,   "CHDIR"    , c_chdir     ,1, 1,{PL_STRING}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CIRCLE"   , c_circle ,3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "CIRCLE"   , c_circle    ,3, 5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT,   "CLEAR"    , c_clear  ,0,-1},
+ { P_ARGUMENT,   "CLEAR"    , c_clear     ,0,-1},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "CLEARW"   , c_clearw ,0,1,{PL_FILENR}},
- { P_PLISTE,   "CLIP"     , c_clip ,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "CLEARW"   , c_clearw      ,0, 1,{PL_FILENR}},
+ { P_PLISTE,   "CLIP"     , c_clip        ,4, 6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1,{PL_FILENR}},
+ { P_ARGUMENT,   "CLOSE"    , c_close     ,0,-1,{PL_FILENR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CLOSEW"   , c_closew ,0,1,{PL_FILENR}},
+ { P_PLISTE,     "CLOSEW"   , c_closew    ,0, 1,{PL_FILENR}},
 #endif
- { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1,{PL_ALLVAR}},
- { P_SIMPLE,     "CLS"      , c_cls    ,0,0},
+ { P_ARGUMENT,   "CLR"      , c_clr       ,0,-1,{PL_ALLVAR}},
+ { P_SIMPLE,     "CLS"      , c_cls       ,0, 0},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "COLOR"    , c_color  ,1,2,{PL_INT,PL_INT}},
+ { P_PLISTE,     "COLOR"    , c_color     ,1,2,{PL_INT,PL_INT}},
 #endif
- { P_PLISTE,     "CONNECT"     , c_connect   ,2,3,{PL_FILENR,PL_STRING,PL_INT}},
- { P_SIMPLE,     "CONT"     , c_cont   ,0,0},
+ { P_PLISTE,     "CONNECT"  , c_connect   ,2,3,{PL_FILENR,PL_STRING,PL_INT}},
+ { P_SIMPLE,     "CONT"     , c_cont      ,0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
@@ -223,6 +224,8 @@ const COMMAND comms[]= {
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_EXPRESSION}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
+ { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,{PL_FILENR,PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR}},
+ { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,{PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR}},
 #endif
  { P_GOSUB,     "GOSUB"    , c_gosub,1,1,{PL_PROC}},
  { P_GOTO,       "GOTO"     , c_goto,1,1,{PL_LABEL}},
@@ -301,6 +304,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "PCIRCLE"  , c_pcircle,    3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,     "PELLIPSE" , c_pellipse,   4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
+ { P_PLISTE,     "PIPE" , c_pipe,   2,2,{PL_FILENR,PL_FILENR}},
  { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PLOT"     , c_plot,       2,2,{PL_INT,PL_INT}},

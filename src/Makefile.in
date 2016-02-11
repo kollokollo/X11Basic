@@ -30,6 +30,9 @@ CC=@CC@ $(REGS)
 # WINCC=i386-mingw32msvc-gcc
 WINCC=i686-pc-mingw32-gcc
 
+# Cross-Compiler fuer ARM-Linux-Excecutable
+
+ARMCC=arm-linux-gcc
 
 # Preprocessor
 CPP=@CPP@
@@ -62,7 +65,8 @@ DEPSRC=  $(CSRC)
 # Headerfiles which should be added to the distribution
 
 HSRC=  array.h defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
-       options.h protos.h xbasic.h window.h vtypes.h ptypes.h bytecode.h
+       options.h protos.h xbasic.h window.h vtypes.h ptypes.h bytecode.h \
+       framebuffer.h
 
 
 DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
@@ -86,6 +90,8 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       src/gkommandos.h \
       src/functions.c \
       src/functions.h \
+      src/framebuffer.c \
+      src/framebuffer.h \
       src/do_gets.c \
       src/errortxt.c \
       src/window.c \
@@ -101,6 +107,7 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 	src/configure \
 	src/config.guess \
         src/configure.in\
+        src/x11basic.spec \
         src/bitmaps/* \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
@@ -138,26 +145,37 @@ Makefile : Makefile.in
 #	$(CC) -c $(CFLAGS) -o $@ $<
 .cc.o:
 	g++ -c $(INC) -o $@ $<
-fft : $(AOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.fft $(AOBJS) \
-		$(LIBS) $(XLIBS)
-	strip xbasic.fft
-blow : $(BOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.blow $(BOBJS) \
-		$(LIBS) $(XLIBS)
-	strip xbasic.blow
-vga : $(DISTOBJS) 
-	$(CC) $(OPT) -DUSE_VGA $(LINKFLAGS) -o xbasic.vga $(DISTOBJS) \
+xbasic.fft : $(AOBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
+	strip $@
+fft :  xbasic.fft
+	
+xbasic.blow : $(BOBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(BOBJS) $(LIBS) $(XLIBS)
+	strip $@
+blow : 	xbasic.blow
+
+xbasic.vga : $(DISTOBJS) 
+	$(CC) $(OPT) -DUSE_VGA $(LINKFLAGS) -o $@ $(DISTOBJS) \
 		$(LIBS) $(VGA_LIBS)
-	strip xbasic.vga
-static : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.static main.o x11basic.a\
-		$(LIBS) $(XLIBS)
-	strip xbasic.static
+	strip $@
+vga :  xbasic.vga
+xbasic.framebuffer : $(DISTOBJS) 
+	$(CC) $(OPT) -DFRAMEBUFFER $(LINKFLAGS) -o $@ $(DISTOBJS) \
+		$(LIBS) 
+	strip $@
+framebuffer :  xbasic.framebuffer
+
+xbasic.static : x11basic.a main.o
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) $(XLIBS)
+	strip $@
+static : xbasic.static
+	
 xbasic.staticreadline : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a\
 		/usr/lib/libreadline.a -ldl -lm -lncurses -lX11  $(XLIBS)
 	strip $@
+	
 tinexbasic.rs : $(OBJS) $(AOBJS) 
 	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS)  \
 		 /usr/lib/libreadline.a /usr/lib/libtine.a -ldl -lm -lncurses -lX11  $(XLIBS)
@@ -212,16 +230,19 @@ doocsxbasic : $(OBJS) main.o mathematics.o doocs-wrapper.o
 	strip $@
 
 xbasic : $(DISTOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(DISTOBJS) \
-		$(LIBS) $(XLIBS)
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(DISTOBJS) $(LIBS) $(XLIBS)
 	strip $@
 
 csxbasic : $(OBJS) 
-	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
-		$(LIBS) $(XLIBS)
+	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
+	strip $@
 
-lib : $(LIBOBJS)
-	$(CC) -shared -o libx11basic.so $(LIBOBJS)
+libx11basic.so : $(LIBOBJS)
+	$(CC) -shared -o $@ $(LIBOBJS)
+	strip $@
+	
+lib : libx11basic.so
+
 winlib : x11basic.lib
 	$(WINCC) -shared -o libx11basic.dll x11basic.lib
 
@@ -239,10 +260,11 @@ x11basic.lib : clean
 tinex11basic.a : $(LIBOBJS)
 	 ar -ru $@ $(LIBOBJS)  
 
-dyn : lib main.o
-	$(CC) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
-	$(LIBS) -lx11basic $(XLIBS)
-	strip xbasic.dyn
+xbasic.dyn : lib main.o
+	$(CC) -L. $(LINKFLAGS) -o $@ main.o $(LIBS) -lx11basic $(XLIBS)
+	strip $@
+dyn : xbasic.dyn
+	
 xbc : dyn 
 	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o $@
 	strip $@

@@ -11,23 +11,29 @@ grau=get_color(15535,0,0)
 schwarz=get_color(0,0,0)
 t$=""
 
-do
-t$=@conv$(str$(mem,13,13))
-groesse=1
-@puts7(0,0,t$)
-groesse=0.5
-t$=@conv$(time$+"  "+date$)
-@puts7(0,100,t$)
-t$=@conv$(str$(timer))
-@puts7(400,100,t$)
-groesse=2
-t$=@conv$(str$(acu,10,7))
-@puts7(0,200,t$)
-groesse=1
-t$=@conv$(hex$(mem,13,13))
-@puts7(0,320,t$)
+scale=0.5
 
-vsync
+bw=640*scale
+bh=400*scale
+
+sizew ,bw,bh
+do
+  t$=@conv$(str$(mem,13,13))
+  groesse=scale
+  @puts7(0,0,t$)
+  groesse=0.5*scale
+  t$=@conv$(time$+"  "+date$)
+  @puts7(0,100*scale,t$)
+  t$=@conv$(str$(timer))
+  @puts7(400*scale,100*scale,t$)
+  groesse=2*scale
+  t$=@conv$(str$(acu,10,7))
+  @puts7(0,200*scale,t$)
+  groesse=1*scale
+  t$=@conv$(hex$(mem,13,13))
+  @puts7(0,320*scale,t$)
+
+  vsync
   keyevent a,b,c$
   if left$(c$)>="0" and left$(c$)<="9"
     if clearacu
@@ -64,8 +70,7 @@ vsync
     endif
     clearacu=true
   else
-    print a,hex$(b),c$
-
+    print at(1,1);a,hex$(b),c$,"   "
   endif
 loop
 end
@@ -75,7 +80,7 @@ procedure puts7(x,y,c$)
   for i=0 to len(c$)-1
     @put7(x,y,groesse,peek(varptr(c$)+i))
     add x,32*groesse
-    if x>640
+    if x>640*scale
     x=0
     add y,64*groesse
     endif

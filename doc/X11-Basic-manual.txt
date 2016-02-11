@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Sa Aug 18 20:01:58 CEST 2007
+          Last change to this file:  So Sep 23 14:02:42 CEST 2007
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -5421,6 +5421,21 @@ DESCRIPTION:
 	Draws a filled ellipse
 	
 SEE ALSO: PCIRCLE, ELLIPSE, DEFFILL, COLOR
+##############################################################################
+Command:  PIPE
+Syntax:   PIPE #n1,#n2
+
+DESCRIPTION:
+
+        PIPE links two File channels n1 and n2 together to form a pipe.
+	n1  is  for reading, n2 is for writing. Whatever you write to the pipe 
+	can be read from it at a different time. The content is buffered 
+	in the kernel. The mechanism is FIFI (0 first in first out). 
+	The biggest advantage is, that you can read and
+	write to it from different processes (created by FORK()). This allows 
+	inter-process communication.
+	
+SEE ALSO: CLOSE, OPEN, FORK()
 ##############################################################################
 Command:  PLIST 
 Syntax:   PLIST

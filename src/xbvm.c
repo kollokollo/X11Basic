@@ -46,7 +46,7 @@ int verbose=1;
 void intro(){
   puts("***************************************************************");
   printf("*           %10s                     V.%5s            *\n",xbasic_name, version);
-  puts("*                    by Markus Hoffmann 1997-2007 (c)         *");
+  puts("*                    by Markus Hoffmann 1997-2008 (c)         *");
   puts("*                                                             *");
   printf("* version date:           %30s      *\n",vdate);
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);

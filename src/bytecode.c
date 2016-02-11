@@ -521,7 +521,7 @@ int doit(char *ausdruck) {
 void intro(){
   puts("***************************************************************");
   printf("*           X11-Basic bytecode compilter                    *\n");
-  puts("*                    by Markus Hoffmann 1997-2007 (c)         *");
+  puts("*                    by Markus Hoffmann 1997-2008 (c)         *");
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
   puts("***************************************************************");
   puts("");
