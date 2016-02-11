@@ -14,15 +14,20 @@
 
 /*#define SAVE_RAM*/
 
-/* Kontrollsystemanbindung. Nur wichtig fuer Benutzer bei ELSA in Bonn */
-/* und DESY in Hamburg. sonst bitte abschalten */
-
-#define USE_X11
 
 #ifdef WINDOWS
   #undef HAVE_READLINE
+ // #undef HAVE_EXECVPE
+  #undef HAVE_FUTIMENS
+  #undef HAVE_PTY_H
+  #undef HAVE_SYS_SOCKET_H
+  #undef HAVE_SYS_KD_H
   #define X_DISPLAY_MISSING
   #define USE_SDL
+  #define HAVE_SDL 1 
+  #define HAVE_SDL_GFX 1 
+#else
+  #define USE_X11
 #endif
 
 

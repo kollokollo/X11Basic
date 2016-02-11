@@ -18,8 +18,13 @@
 #endif
 #include "defs.h"
 #include "x11basic.h"
+#include "xbasic.h"
 #include "variablen.h"
+#include "parameter.h"
 #include "bytecode.h"
+#include "file.h"
+#include "wort_sep.h"
+#include "kommandos.h"
 #include "virtual-machine.h"
 
 void reset_input_mode();
@@ -43,7 +48,7 @@ int prglen=0;
 int runfile,daemonf;
 int programbufferlen=0;
 char *programbuffer=NULL;
-char *program[MAXPRGLEN];
+char **program=NULL;
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -127,7 +132,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
       if(count<anzahl-1 && *argumente[count+1]!='-') {
         strncpy(buffer,argumente[count+1],100);
         xtrim(buffer,TRUE,buffer);
-        c_help(buffer);
+        do_help(buffer);
       } else usage();
       quitflag=1;
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
@@ -140,7 +145,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
       }
     }
    }
-   if(quitflag) c_quit("",0);
+   if(quitflag) c_quit(NULL,0);
 }
 
 
@@ -183,7 +188,9 @@ void doit(STRING bcpc) {
   PARAMETER *p;
   int n;
   if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
+  do_run();
   p=virtual_machine(bcpc,&n);
+  if(verbose) printf("done.\n");
   dump_parameterlist(p,n);  
   free_pliste(n,p);
 }
@@ -220,7 +227,7 @@ int main(int anzahl, char *argumente[]) {
     }
     
   if(anzahl<2) {
-   intro();
+    intro();
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
@@ -228,9 +235,10 @@ int main(int anzahl, char *argumente[]) {
         if(loadbcprg(ifilename)==0) {
   	  if(runfile) {
             if(bytecode_init(bcpc.pointer)) doit(bcpc);
-          }
-	}
+          } else printf("xbvm: nothing to do.\n");
+	} else printf("xbvm: could not run %s.\n",ifilename);
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }
+  return(EX_OK);
 }

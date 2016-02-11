@@ -683,15 +683,15 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
   case 0:
 #ifdef WINDOWS_NATIVE
   sgc[sgccount]=CreateCompatibleDC(bitcon[usewindow]);
-  spix[sgccount]=CreateCompatibleBitmap(bitcon[usewindow],w2+8,h2+8);
+  spix[sgccount]=CreateCompatibleBitmap(bitcon[usewindow],w2+7,h2+7);
   SelectObject(sgc[sgccount],spix[sgccount]);
-  BitBlt(sgc[sgccount],0,0,w2+8,h2+8,bitcon[usewindow],x2-3,y2-3,SRCCOPY);
+  BitBlt(sgc[sgccount],0,0,w2+7,h2+7,bitcon[usewindow],x2-3,y2-3,SRCCOPY);
 #endif
   /* Erst den Graphic-Kontext retten  */
 #ifdef FRAMEBUFFER
    FB_hide_mouse();
    FB_savecontext();
-   spix[sgccount]=FB_get_image(x2-3,y2-3,w2+8,h2+8,NULL);
+   spix[sgccount]=FB_get_image(x2-3,y2-3,w2+7,h2+7,NULL);
    FB_show_mouse();
 #endif
 #ifdef USE_X11
@@ -708,7 +708,7 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
 
     /* Hintergrund retten  */
     ppix=XCreatePixmap(display[usewindow],win[usewindow],w2+8,h2+8,depth);
-    XCopyArea(display[usewindow], pix[usewindow],ppix,gc[usewindow],x2-3,y2-3,w2+8,h2+8,0,0);
+    XCopyArea(display[usewindow], pix[usewindow],ppix,gc[usewindow],x2-3,y2-3,w2+7,h2+7,0,0);
     spix[sgccount]=malloc(sizeof(Pixmap));
     memcpy(spix[sgccount],&ppix,sizeof(Pixmap));
 #endif
@@ -722,7 +722,7 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
    /* Hintergrund restaurieren  */
    sgccount--;
 #ifdef WINDOWS_NATIVE
-    BitBlt(bitcon[usewindow],x2-3,y2-3,w2+8,h2+8,sgc[sgccount],0,0,SRCCOPY);
+    BitBlt(bitcon[usewindow],x2-3,y2-3,w2+7,h2+7,sgc[sgccount],0,0,SRCCOPY);
     DeleteObject(spix[sgccount]);
     DeleteDC(sgc[sgccount]);
     activate();
@@ -739,7 +739,7 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     FB_show_mouse();
 #endif
 #ifdef USE_X11
-    XCopyArea(display[usewindow], *(spix[sgccount]),pix[usewindow],gc[usewindow],0,0,w2+8,h2+8,x2-3,y2-3);
+    XCopyArea(display[usewindow], *(spix[sgccount]),pix[usewindow],gc[usewindow],0,0,w2+7,h2+7,x2-3,y2-3);
     XFreePixmap(display[usewindow],*(spix[sgccount]));
     XCopyGC(display[usewindow],*sgc[sgccount],GCForeground| GCFunction |GCLineWidth |GCLineStyle| GCFont, gc[usewindow]);
     XFreeGC(display[usewindow],*sgc[sgccount]);
@@ -1317,7 +1317,7 @@ void do_menu_edraw() {
       if(menuflags[menutitlesp[schubladenr]+i] & SELECTED) {SetForeground(gem_colors[WHITE]);SetBackground(gem_colors[BLACK]);}
       else if(menuflags[menutitlesp[schubladenr]+i] & DISABLED) {SetForeground(gem_colors[LWHITE]);SetBackground(gem_colors[WHITE]);}
       else {SetForeground(gem_colors[BLACK]);SetBackground(gem_colors[WHITE]);}
-      DrawString(schubladex,schubladey+chh-3+chh*i,menuentry[menutitlesp[schubladenr]+i],menuentryslen[menutitlesp[schubladenr]+i]);
+      DrawString(schubladex,schubladey+baseline+chh*i,menuentry[menutitlesp[schubladenr]+i],menuentryslen[menutitlesp[schubladenr]+i]);
       if(menuflags[menutitlesp[schubladenr]+i] & CHECKED) {
         DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+2,schubladey+chh-8+chh*i);
         DrawLine(schubladex+5,schubladey+chh-3+chh*i,schubladex+chw,schubladey+chh*i);
@@ -1377,7 +1377,7 @@ void do_menu_draw() {
       FillRectangle(sbox.x+textx,sbox.y,chw*(2+menutitleslen[i]),chh);
       if(menutitleflag[i] & SELECTED) {SetForeground(gem_colors[WHITE]);SetBackground(gem_colors[BLACK]);}
       else {SetForeground(gem_colors[BLACK]);SetBackground(gem_colors[WHITE]);}
-      DrawString(sbox.x+textx+chw,sbox.y+chh-3,menutitle[i],menutitleslen[i]);
+      DrawString(sbox.x+textx+chw,sbox.y+baseline,menutitle[i],menutitleslen[i]);
       textx+=chw*(menutitleslen[i]+2);
     }
     SetForeground(gem_colors[BLACK]);

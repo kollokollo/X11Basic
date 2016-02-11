@@ -16,7 +16,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
-#include <pthread.h>    /* POSIX Threads */
+#ifndef WINDOWS
+  #include <pthread.h>    /* POSIX Threads */
+#endif
 #if defined WINDOWS || defined ANDROID
   #define EX_OK 0
 #else
@@ -32,6 +34,8 @@
 #include "config.h"
 #include "defs.h"
 #include "x11basic.h"
+#include "wort_sep.h"
+#include "file.h"
 #ifdef ANDROID
   #include "terminal.h"
 #endif
@@ -55,31 +59,25 @@ int verbose=0;
 int runfile,daemonf=0;
 int programbufferlen=0;
 char *programbuffer=NULL;
-char *program[MAXPRGLEN];
+char **program=NULL;
 
 #ifdef ANDROID
 void intro() {
   putchar(27);
   printf("c");
-  printf("*************************************************\n"
-         "*    %10s              V.%5s            *\n"
-         "*              by Markus Hoffmann 1997-2012 (c) *\n"
-         "*                                               *\n"
-#ifdef GERMAN
-         "* Pr Version vom %30s *\n"
-         "* Library V.%s:%30s *\n"
-#else
-         "* version date:  %30s *\n"
-         "* library V.%s:%30s *\n"
-#endif
-         "*************************************************\n\n",
-	     xbasic_name,version,vdate,libversion,libvdate);
+  printf("*************************************\n"
+         "* %10s          V.%5s       *\n"
+         "*  by Markus Hoffmann 1997-2013 (c) *\n"
+         "*                                   *\n"
+         "* lib %29s *\n"
+         "*************************************\n\n",
+	     xbasic_name,libversion,libvdate);
 }
 #else
 void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2012 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2013 (c) *\n"
          "*                                                        *\n"
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"
@@ -116,7 +114,6 @@ void usage() {
 
 void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
-  char buffer[100];
 
   /* Kommandozeile bearbeiten   */
   runfile=TRUE;
@@ -139,9 +136,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();
       if(count<anzahl-1 && *argumente[count+1]!='-') {
-        strncpy(buffer,argumente[count+1],100);
+        char *buffer=strdup(argumente[count+1]);
         xtrim(buffer,TRUE,buffer);
         do_help(buffer);
+	free(buffer);
       } else usage();
       quitflag=1;
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {

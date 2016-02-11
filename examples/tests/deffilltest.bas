@@ -1,29 +1,29 @@
 ' deffill <rule>,<style>,<pattern>
 
 
-weiss=get_color(65535,65535,65535)
-rot=get_color(65535,32000,32000)
-schwarz=get_color(0,0,0)
-color weiss
-pbox 0,0,640,400
-color schwarz,weiss
-text 10,300,"DEFFILL-Test with X11-Basic (c) Markus Hoffmann"
-for j=0 to 5
-  for i=0 to 7
-    color schwarz
-    deffill ,2,i+j*8
-    pbox j*32,i*32,j*32+32,i*32+32
-    color get_color((i+j*8)*4000,32000,32000)
-    pcircle 320+j*50,i*64,32
-    color weiss
-    deffill ,0
-    pbox j*32,i*32+18,j*32+16,i*32+32
-    color schwarz
-    text 4+j*32,i*32+30,str$(i+j*8)
-    color rot
-    box j*32,i*32,j*32+32,i*32+32
-  next i
-  vsync
-next j
-vsync
-end
+weiss=COLOR_RGB(1,1,1)
+rot=COLOR_RGB(1,0.5,0.5)
+schwarz=COLOR_RGB(0,0,0)
+COLOR weiss
+PBOX 0,0,640,400
+COLOR schwarz,weiss
+TEXT 10,300,"DEFFILL-Test with X11-Basic (c) Markus Hoffmann"
+FOR j=0 TO 5
+  FOR i=0 TO 7
+    COLOR schwarz
+    DEFFILL ,2,i+j*8
+    PBOX j*32,i*32,j*32+32,i*32+32
+    COLOR GET_COLOR((i+j*8)*4000,32000,32000)
+    PCIRCLE 320+j*50,i*64,32
+    COLOR weiss
+    DEFFILL ,0
+    PBOX j*32,i*32+18,j*32+16,i*32+32
+    COLOR schwarz
+    TEXT 4+j*32,i*32+30,STR$(i+j*8)
+    COLOR rot
+    BOX j*32,i*32,j*32+32,i*32+32
+  NEXT i
+  SHOWPAGE
+NEXT j
+SHOWPAGE
+END

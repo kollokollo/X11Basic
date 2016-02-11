@@ -27,7 +27,7 @@ int anzlvar[STACKSIZE];
 
 /* Variablen-Verwaltung   */
 
-int vartype(char *name) {  /* Bestimmt Typ der Variablen */
+int vartype(const char *name) {  /* Bestimmt Typ der Variablen */
   char w1[strlen(name)+1];
   char *pos;
   int typ=0;
@@ -58,10 +58,8 @@ int vartype(char *name) {  /* Bestimmt Typ der Variablen */
   return(typ);
 }
 
-char *varrumpf(char *n) {  /* Rumpf des Variablennamens */
-  char *ergebnis;
-  char *pos;
-  ergebnis=strdup(n);
+char *varrumpf(const char *n) {  /* Rumpf des Variablennamens */
+  char *pos,*ergebnis=strdup(n);
   if((pos=strchr(ergebnis,'('))!=NULL) *pos=0;
   while(strchr("$%()",ergebnis[strlen(ergebnis)-1])!=NULL && strlen(ergebnis)) ergebnis[strlen(ergebnis)-1]=0;
   return(ergebnis);
@@ -71,70 +69,23 @@ char *varrumpf(char *n) {  /* Rumpf des Variablennamens */
             1 -- subarray
 	    2 -- ganzes array */
 
-static int isarray(int *indexliste,int n) {
-  if(n==0 || indexliste==NULL) return(2);
-  while(--n>=0) {
-    if(indexliste[n]==-1) return(1);
-  }
-  return(0);
-}
-
-
-
-void *varptr(char *n) {
-  int typ=vartype(n);
-  char *r=varrumpf(n);
-  void *ergebnis=NULL;
-  char *pos=strchr(n,'(');
-  int vnr,indize=0;
-
-  if(pos!=NULL) {
-    *pos++=0; 
-    indize=1;
-    vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
-  } else vnr=add_variable(r,typ,0);
-
- /* printf("varptr: typ=%d, r=%s, vnr=%d, indize=%d\n",typ,r,vnr,indize);*/
-    if(typ & ARRAYTYP) ergebnis=((variablen[vnr].pointer.a)->pointer+(variablen[vnr].pointer.a)->dimension*INTSIZE);
-    else if(typ==STRINGTYP) {
-      if(indize) ergebnis=((STRING *)(arrayvarptr(vnr,pos,sizeof(STRING))))->pointer;
-      else ergebnis=(variablen[vnr].pointer.s)->pointer;
-    } else if(typ==INTTYP) {
-      if(indize) ergebnis=arrayvarptr(vnr,pos,sizeof(int)); 
-      else ergebnis=variablen[vnr].pointer.i;
-    } else if(typ==FLOATTYP) {
-      if(indize) ergebnis=arrayvarptr(vnr,pos,sizeof(double)); 
-      else ergebnis=variablen[vnr].pointer.f;
-    }
-    else ergebnis=variablen[vnr].pointer.i;
-  free(r);
-  return(ergebnis);
+static int isarray(const int *indexliste,int n) {
+  if(n==0 || indexliste==NULL) return(FULL_ARRAY);
+  while(--n>=0) { if(indexliste[n]==-1) return(SUB_ARRAY); }
+  return(NO_ARRAY);
 }
 
 /* entferne Variablen.*/ 
 
-void erase_all_variables() {
-  while(anzvariablen) erase_variable(&variablen[--anzvariablen]);
-}
-
 void erase_variable(VARIABLE *a) {
   if(a->pointer.i) {
-    if(a->typ==ARRAYTYP) {
-      free_array(a->pointer.a);
-    } else if(a->typ==STRINGTYP) {
-      free_string(a->pointer.s);
-    }
-  
+    if(a->typ==ARRAYTYP)       free_array(a->pointer.a);
+    else if(a->typ==STRINGTYP) free_string(a->pointer.s);
     if(!is_bytecode) free(a->pointer.i);
     a->pointer.i=NULL;
   }
 }
-/*Variablen werden mit 0 oder "" initialisiert. Arrays mit ... 
-  entfernt werden die Variablen niemals.*/ 
-void clear_all_variables() {
-  int i=0;
-  while(i<anzvariablen) clear_variable(&variablen[i++]);
-}
+
 
 void clear_variable(VARIABLE *v) {
   STRING inh;
@@ -150,12 +101,8 @@ void clear_variable(VARIABLE *v) {
         fill_string_array(arr,inh);
         free_string(&inh);
         break;
-      case INTTYP: 
-        fill_int_array(arr,0);
-        break;
-      case FLOATTYP:
-        fill_float_array(arr,0);
-        break;
+      case INTTYP:   fill_int_array(arr,0);    break;
+      case FLOATTYP: fill_float_array(arr,0);  break;
     }
     break;
   case STRINGTYP:
@@ -163,19 +110,12 @@ void clear_variable(VARIABLE *v) {
     str->len=0;
     *(str->pointer)=0;
     break;
-  case INTTYP:
-    *(v->pointer.i)=0;
-    break;
-  case FLOATTYP:
-    *(v->pointer.f)=0;
-    break;
+  case INTTYP:   *(v->pointer.i)=0;  break;
+  case FLOATTYP: *(v->pointer.f)=0;  break;
   }
 }
 
-
-inline void free_string(STRING *str) {  free(str->pointer);str->pointer=NULL;str->len=0; } 
-
-int var_exist(char *name, unsigned char typ,unsigned char subtyp, int l) {
+int var_exist(const char *name, unsigned char typ,unsigned char subtyp, int l) {
   int i,j;
   VARIABLE *v;
 //  printf("var exist: <%s> typ=%d, subtyp=%d, l=%d",name,typ,subtyp,l);
@@ -206,11 +146,11 @@ int var_exist(char *name, unsigned char typ,unsigned char subtyp, int l) {
 /*legt neue variable an mit default wert (also 0,"", Arraydim0) und 
   gibt variablennummer zurueck. Der name muss nur der rumpf sein! */
 
-int add_variable(char *name, unsigned char typ, unsigned char subtyp) {
+int add_variable(const char *name, unsigned char typ, unsigned char subtyp) {
   int vnr=var_exist(name,typ,subtyp,0);
 
   if(vnr==-1) {
-  //  printf("Add new variable.\n");
+   // printf("Add new variable. %s\n",name);
     if(anzvariablen<ANZVARS) { 
       variablen[anzvariablen].name=strdup(name);
       variablen[anzvariablen].typ=typ;
@@ -235,7 +175,7 @@ int add_variable(char *name, unsigned char typ, unsigned char subtyp) {
   
   return(vnr);
 }
-int add_variable_adr(char *name, unsigned char typ, char *adr) {
+int add_variable_adr(const char *name, unsigned char typ, char *adr) {
   int subtyp=0;  /* Vorlauefig ... ???*/
   int vnr=var_exist(name,typ,subtyp,0);
   if(vnr==-1) {
@@ -259,16 +199,15 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
   if(typ==ARRAYTYP) {
     ia=isarray(indexliste,n);
     
-    if(ia==0) typ=(variablen[vnr].pointer.a)->typ;
-    else if(ia==1) {
+    if(ia==NO_ARRAY) typ=(variablen[vnr].pointer.a)->typ;
+    else if(ia==SUB_ARRAY) {
       printf("ERROR: Subarray geht noch nicht...\n");
     
     }
   }
   // printf("zuw: %x ia=%d typ=$%x\n",varptr,ia,typ);
   if(varptr) {
-    ARRAY arr;
-    ARRAY *zarr;
+    ARRAY arr,*zarr;
     switch(typ) {
     case ARRAYTYP:
       arr=array_parser(ausdruck);
@@ -288,7 +227,7 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
 	free_array(&arr);
       }
       else {
-          xberror(58,""); /* Variable %s has incorrect type*/  
+          xberror(58,variablen[vnr].name); /* Variable %s has incorrect type*/  
 	printf("Ziel-Array hat folgenden Typ: %d\n",zarr->typ);
 	printf("typ=ARRAY, isarray=%d  ausdruck=<%s>\n",ia,ausdruck);  
 	printf("INFO: Typ1=%d, Typ2=%d\n",arr.typ,((ARRAY *)varptr)->typ);
@@ -299,14 +238,9 @@ void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck) {
      *((STRING *)varptr)=string_parser(ausdruck);
   //   printf("string wurde zugewiesen: (%d) <%s>\n",((STRING *)varptr)->len,((STRING *)varptr)->pointer);
       break;
-    case INTTYP:
-     *((int *)varptr)=(int)parser(ausdruck);
-      break;
-    case FLOATTYP:
-     *((double *)varptr)=(double)parser(ausdruck);
-      break;
-    default:
-      printf("Something is wrong. Variable typ=$%x\n",typ); 
+    case INTTYP:   *((int *)varptr)=(int)parser(ausdruck);       break;
+    case FLOATTYP: *((double *)varptr)=(double)parser(ausdruck); break;
+    default:       printf("Something is wrong. Variable typ=$%x\n",typ); 
     }
   } 
 }
@@ -376,7 +310,7 @@ void zuweispbyindex(int vnr,int *indexliste,int n,PARAMETER *p) {
       else printf("ERROR: Must be flt.\n");
       break;
     default:
-      printf("2Something is wrong. Variable typ=$%x\n",typ); 
+      printf("Something is wrong. Variable typ=$%x\n",typ); 
     }
   }
 }
@@ -401,73 +335,51 @@ int check_feldindex(VARIABLE *v,int *indexliste,int n) {
 char *varptr_indexliste(VARIABLE *v,int *indexliste,int n) {
   char *varptr=NULL;
   if(v->typ!=ARRAYTYP && n) {
-    printf("Typ ist: $%x\n",v->typ);
-    xberror(18,""); /* Falsche Anzahl Indizes */
+    printf("Typ ist: $%x, das ist kein ARRAYtyp. Trotzdem gibt es %d indizies.\n",
+    v->typ,n);
+  //  xberror(18,""); /* Falsche Anzahl Indizes */
+    xberror(15,v->name); /* Array not dimensioned */
     return(NULL);
   }
-  
-  // if(indexliste) printf("Index ist: %d\n",*indexliste);
   
   switch(v->typ) {
   case ARRAYTYP:
     {
       int ndim,anz=0;
       int a=isarray(indexliste,n);
-     // printf("n=%d, a=%d\n",n,a);
+   //   printf("n=%d, a=%d\n",n,a);
       if(n>v->pointer.a->dimension) {
-      printf("variable: dim=%d indizien %d\n",v->pointer.a->dimension,n);
-        xberror(18,"varptr"); /* Falsche Anzahl Indizes */
-        c_dump("",0);exit(0);
+        if(v->pointer.a->dimension) xberror(18,"varptr"); /* Falsche Anzahl Indizes */
+        else xberror(15,v->name); /* Array not dimensioned */
         return(NULL);
       }
-      if(check_feldindex(v,indexliste,n)) {
-        xberror(16,"varptr"); /* Feldindex zu groß */
-        return(NULL);
-      }
-      if(a==2) {  /*ganzes array*/
-        varptr=(char *)&(v->pointer.a);  /* zeigt dann quasi auf ARRAY */
-      } else if(a) { /* Subarray */
-        varptr=(char  *)(v->pointer.a->pointer+v->pointer.a->dimension*INTSIZE);
-      } else {
-        varptr=(char  *)(v->pointer.a->pointer+v->pointer.a->dimension*INTSIZE);
+      if(check_feldindex(v,indexliste,n)) { xberror(16,"varptr"); /* Feldindex zu groß */ return(NULL);}
+      if(a==FULL_ARRAY)     varptr=(char *)v->pointer.a;  /* zeigt dann quasi auf ARRAY struktur*/
+      else if(a==SUB_ARRAY) varptr=(char  *)(v->pointer.a->pointer+v->pointer.a->dimension*INTSIZE);
+      else {                varptr=(char  *)(v->pointer.a->pointer+v->pointer.a->dimension*INTSIZE);
         if(n==0) return(varptr);
         for(ndim=0;ndim<v->pointer.a->dimension;ndim++) 
           anz=indexliste[ndim]+anz*((int *)v->pointer.a->pointer)[ndim];
         switch(v->pointer.a->typ) {
-        case STRINGTYP: 
-          varptr+=anz*sizeof(STRING);
-          break;
-        case INTTYP: 
-          varptr+=anz*sizeof(int);
-          break;
-        case FLOATTYP: 
-          varptr+=anz*sizeof(double);
-          break;
-        default: 
-          printf("varptr: unbekannter typ.\n");
+        case STRINGTYP: varptr+=anz*sizeof(STRING); break;
+        case INTTYP:    varptr+=anz*sizeof(int);    break;
+        case FLOATTYP:  varptr+=anz*sizeof(double); break;
+        default:        printf("varptr: illegal variable type.\n");
         }
       }
     } 
     break;
-  case STRINGTYP: 
-    varptr=(char *)v->pointer.s;  
-    break;
-  case INTTYP:
-    varptr=(char *)v->pointer.i;  
-    break;
-  case FLOATTYP: 
-    varptr=(char *)v->pointer.f;  
-    break;
-  default: 
-      printf("varptr: unbekannter typ.\n");
+  case STRINGTYP: varptr=(char *)v->pointer.s;  break;
+  case INTTYP:    varptr=(char *)v->pointer.i;  break;
+  case FLOATTYP:  varptr=(char *)v->pointer.f;  break;
+  default:        printf("varptr: illegal variable type.\n");
   }
-//  printf("v=$%x\n",varptr);
   return(varptr);
 }
 
 
 
-int zuweis(char *name, double wert) {
+int zuweis(const char *name, double wert) {
   /* Zuweisungen fuer Float-Variablen und Felder    */
   char w1[strlen(name)+1],w2[strlen(name)+1];
   int e=klammer_sep(name,w1,w2);
@@ -482,7 +394,7 @@ int zuweis(char *name, double wert) {
       double *varptr;
       make_indexliste(variablen[vnr].pointer.a->dimension,w2,indexliste);
       varptr=(double  *)varptr_indexliste(&variablen[vnr],indexliste,ii);
-      *varptr=wert;
+      if(varptr) *varptr=wert;
     }
   } else {
     vnr=add_variable(r,FLOATTYP,0);
@@ -491,7 +403,7 @@ int zuweis(char *name, double wert) {
   free(r);
   return(0);
 }
-int izuweis(char *name, int wert) {
+int izuweis(const char *name, int wert) {
   /* Zuweisungen fuer Int-Variablen und Felder    */
   char w1[strlen(name)+1],w2[strlen(name)+1];
   int e=klammer_sep(name,w1,w2);
@@ -506,7 +418,7 @@ int izuweis(char *name, int wert) {
       int *varptr;
       make_indexliste(variablen[vnr].pointer.a->dimension,w2,indexliste);
       varptr=(int  *)varptr_indexliste(&variablen[vnr],indexliste,ii);
-      *varptr=wert;
+      if(varptr) *varptr=wert;
     }
   } else {
     vnr=add_variable(r,INTTYP,0);
@@ -604,7 +516,7 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY wert) {
 /* Weist einer $-Variable eine Zeichenkette zu */
 
 /*Achtung: String inhalt wird nicht dupliziert !*/
-int zuweis_string_and_free(char *name, STRING inhalt) {
+int zuweis_string_and_free(const char *name, STRING inhalt) {
   char w1[strlen(name)+1],w2[strlen(name)+1];
   int e=klammer_sep(name,w1,w2);
   char *r=varrumpf(w1);
@@ -619,7 +531,7 @@ int zuweis_string_and_free(char *name, STRING inhalt) {
       make_indexliste(variablen[vnr].pointer.a->dimension,w2,indexliste);
       varptr=(STRING  *)varptr_indexliste(&variablen[vnr],indexliste,ii);
       free_string(varptr);
-      *varptr=inhalt;
+      if(varptr) *varptr=inhalt;
     }
   } else {
     vnr=add_variable(r,STRINGTYP,0);
@@ -637,20 +549,17 @@ void string_zuweis(VARIABLE *v, STRING inhalt) {
   v->pointer.s->pointer[inhalt.len]=0;
 }
 
-void xzuweis(char *name, char *inhalt) {
-  char *buffer1, *buffer2;
-  int typ;
-  char *r;
+void xzuweis(const char *name, char *inhalt) {
   int vnr;
-  int dim,ii=0,e;
+  int dim,ii=0;
   char *vname,*argument;
   int *indexliste=NULL;
   
-  buffer1=indirekt2(name);
-  buffer2=indirekt2(inhalt);
-  typ=vartype(buffer1);
-  e=klammer_sep_destroy(buffer1,&vname,&argument);
-  r=varrumpf(buffer1);
+  char *buffer1=indirekt2(name);
+  char *buffer2=indirekt2(inhalt);
+  int typ=vartype(buffer1);
+  int e=klammer_sep_destroy(buffer1,&vname,&argument);
+  char *r=varrumpf(buffer1);
   if(e>1) {
     vnr=add_variable(r,ARRAYTYP,typ&(~ARRAYTYP));
     ii=count_parameters(argument);
@@ -665,7 +574,11 @@ void xzuweis(char *name, char *inhalt) {
   free(buffer1);free(buffer2);
 }
 
-void copy_var(VARIABLE *a,VARIABLE *b) {
+
+/*Kopiere Inhalt von VARIABLEN Struktur. Hierbei wird typ unc local einfach Uebernommen, der Pointer zum namen 
+  einfach kopiert und nur der Inhalt dupliziert. (neue Pointer und Speicherbereiche werden angelegt.) */
+
+static void copy_var(VARIABLE *a,VARIABLE *b) {
   switch(b->typ) {
   case STRINGTYP:
    // free_string(a->pointer.s);
@@ -694,34 +607,23 @@ void copy_var(VARIABLE *a,VARIABLE *b) {
     break;
   default:
     *a=*b;
-    printf("Falsche Typen: $%x\n",a->typ);
+    printf("ERROR: copyvar:wrong type: $%x\n",a->typ);
   }
 }
 
-/*restauriere Variable */
+/*restauriere Variable, hierbei werden nur die Inhalte Uebertragen, typ und name bleiben unveraendert.
+Ziel-Variable wird vorher freigegeben und dann mit neuem Inhalt Ã¼berschriebeb. Quell-Variablenspeicherbereich wird
+freigegeben.  */
 
-void move_var(VARIABLE *a,VARIABLE *b) {
-//  printf("mov a: ");
-//  memdump(a,sizeof(VARIABLE));
-//  printf("mov b: ");
-//  memdump(b,sizeof(VARIABLE));
+static void move_var(VARIABLE *a,VARIABLE *b) {
   switch(a->typ) {
-  case INTTYP:
-    *(a->pointer.i)=*(b->pointer.i);
-    break;
-  case FLOATTYP:
-    *(a->pointer.f)=*(b->pointer.f);
-    break;
-  case STRINGTYP:
-    *(a->pointer.s)=*(b->pointer.s);
-    break;
-  case ARRAYTYP:
-    *(a->pointer.a)=*(b->pointer.a);
-    break;
-  default:
-    *a=*b;
+  case INTTYP:    *(a->pointer.i)=*(b->pointer.i);    break;
+  case FLOATTYP:  *(a->pointer.f)=*(b->pointer.f);    break;
+  case STRINGTYP: free_string(a->pointer.s); *(a->pointer.s)=*(b->pointer.s); break;
+  case ARRAYTYP:  free_array(a->pointer.a);  *(a->pointer.a)=*(b->pointer.a); break;
+  default: *a=*b;
   }  
-  free(b->pointer.a);
+  free(b->pointer.a);    /*  free local var ...*/
 }
 
 void do_local(int vnr,int sp) {
@@ -745,13 +647,6 @@ void restore_locals(int sp) {
     free(lvar[sp]);
   }
 }
-
-void c_dolocal(int vnr, char *inhalt) {
-  do_local(vnr,sp);
-  zuweisxbyindex(vnr,NULL,0,inhalt);
-}
-
-
 
 double floatarrayinhalt2(ARRAY *a, int *indexliste) {
   int ndim,anz=0;
@@ -781,15 +676,6 @@ STRING varstringarrayinhalt(int vnr, int *indexliste) {
   return(double_string(&varptr[anz]));
 }
 
-int typlaenge(int typ) {
-  switch(typ) {
-  case INTTYP: return(sizeof(int));
-  case FLOATTYP: return(sizeof(double));
-  case STRINGTYP: return(sizeof(STRING));
-  case ARRAYTYP: return(sizeof(ARRAY));
-  }
-  return(0);
-}
 
 /************************* CASTS *******************************/
 
@@ -816,26 +702,18 @@ void varcaststring(int vnr,void *pointer,STRING val) {
   }
 }
 
-void varcaststring_and_free(int typ,void *pointer,STRING val) {
-    STRING *s=(STRING *)pointer;
-    free(s->pointer);
-    *s=val;
-}
 
 
-STRING create_string(char *n) {
+STRING create_string(const char *n) {
   STRING ergeb;
-  if(n) ergeb.len=strlen(n);
-  else ergeb.len=0;
-  ergeb.pointer=malloc(ergeb.len+1);
-  if(n) memcpy(ergeb.pointer,n,ergeb.len+1);
-  else *(ergeb.pointer)=0;
-  return(ergeb);
-}
-STRING create_string_and_free(char *n,int l) {
-  STRING ergeb;
-  ergeb.pointer=n;
-  ergeb.len=l;
+  if(n) {
+    ergeb.len=strlen(n);
+    ergeb.pointer=strdup(n);
+  } else {
+    ergeb.len=0;
+    ergeb.pointer=malloc(1);
+    ergeb.pointer[0]=0;
+  }
   return(ergeb);
 }
 STRING double_string(STRING *a) {

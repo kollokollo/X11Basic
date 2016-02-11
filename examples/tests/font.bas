@@ -1,10 +1,10 @@
-color 0
-pbox 0,0,640,400
-deftext 1
-color get_color(65535,10000,10000)
-deftext ,0.08*0.9,0.16*0.9,0
-'defline ,2,2,2
-for x=0 to 15
+COLOR COLOR_RGB(0,0,0)
+PBOX 0,0,640,400
+DEFTEXT 1
+COLOR COLOR_RGB(1,1/6,1/6)
+DEFTEXT ,0.08*0.9,0.16*0.9,0
+'DEFLINE ,2,2,2
+FOR x=0 to 15
   for y=0 to 15
     ltext 8*y,16*x,chr$(y+16*x)
 setfont "BIG"
@@ -13,9 +13,9 @@ setfont "MEDIUM"
     text 300+8*y,16*x+16,chr$(y+16*x)
 setfont "SMALL"
     text 440+8*y,16*x+16,chr$(y+16*x)
-    vsync
+    SHOWPAGE
   next y
 next x
-pause 5
-alert 0,"Fertig !",1," OK ",dummy
-quit
+PAUSE 5
+ALERT 0,"Fertig !",1," OK ",dummy
+QUIT

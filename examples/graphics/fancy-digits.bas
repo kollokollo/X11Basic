@@ -1,5 +1,5 @@
 
-' Shows fancy digits from images
+' Shows fancy digits from images   2011-07-22
 ' 
 ' The images were taken from here:
 ' https://sites.google.com/site/dannychouinard/Home/unix-linux-trinkets/fun-things/xdc-x11-digital-clock-using-image-digits
@@ -8,52 +8,52 @@
 ' For TomTom device display this should be 1
 
 scale=1
-sizew ,320*scale,240*scale
-rot=get_color(65535,0,0)
-schwarz=get_color(0,0,0)
+SIZEW ,320*scale,240*scale
+rot=COLOR_RGB(1,0,0)
+schwarz=COLOR_RGB(0,0,0)
 
 @init
 t$=digit0_bmp$
-color schwarz
-pbox 0,0,320*scale,200*scale
-color rot
-text 0,280*scale,"Due to a bug in earlier versions this demo only works with"
-text 0,300*scale,"X11-basic V.1.16 and later."
-vsync
+COLOR schwarz
+PBOX 0,0,320*scale,200*scale
+COLOR rot
+TEXT 0,280*scale,"Due to a bug in earlier versions this demo only works with"
+TEXT 0,300*scale,"X11-basic V.1.16 and later."
+SHOWPAGE
 
 
-do 
-  @putstring(0,0,str$(timer))
-  @putstring(10*scale,50*scale,time$)
-  @putstring(120*scale,100*scale,date$)
-  vsync
-  pause 0.1
-loop
-pause 10
-quit
+DO 
+  @putstring(0,0,STR$(TIMER))
+  @putstring(10*scale,50*scale,TIME$)
+  @putstring(120*scale,100*scale,DATE$)
+  SHOWPAGE
+  PAUSE 0.1
+LOOP
+PAUSE 10
+QUIT
 
-procedure putstring(x,y,s$)
-  local i,g,a$,t$
-  for g=0 to len(s$)-1
-    i=peek(varptr(s$)+g)-asc("0")
+PROCEDURE putstring(x,y,s$)
+  LOCAL i,g,a$,t$
+  FOR g=0 TO LEN(s$)-1
+    i=PEEK(VARPTR(s$)+g)-ASC("0")
     
-    if i<0 or i>9
+    IF i<0 OR i>9
       a$="t$=colon_bmp$"
-    else
-      a$="t$=digit"+str$(i mod 10)+"_bmp$"
-    endif
+    ELSE
+      a$="t$=digit"+STR$(i MOD 10)+"_bmp$"
+    ENDIF
     &a$
-    put x,y,t$,scale
-    if i<0 or i>9
-      add x,10*scale
-    else
-      add x,23*scale
-    endif
-  next g
-  vsync
-return
+    PUT x,y,t$,scale
+    IF i<0 or i>9
+      ADD x,10*scale
+    ELSE
+      ADD x,23*scale
+    ENDIF
+  NEXT g
+  SHOWPAGE
+RETURN
 
-procedure init
+PROCEDURE init
 ' output of inline.bas for X11-Basic 04.03.2011
 ' digit0.bmp 1334 Bytes. (compressed: 1118 Bytes, 83%)
 digit0$=""
@@ -347,4 +347,4 @@ colon$=colon$+"7Pc&*7X_Z$)E*Q+O,AYIRD)YJ)M2=@+4_](U8@W@-5S/,)2OXF9O1280%6HV[^CM"
 colon$=colon$+"(0&N]K7;bG31J4'\$a4IHZTW>J<%?%<TDE2QR=+Ga*@$?\V;Ea9_FRZ^M.=XQ)6'"
 colon$=colon$+"YE)B6%)cX'K:/R;D(Z'-?`H*@a6HPV$$"
 colon_bmp$=UNCOMPRESS$(INLINE$(colon$))
-return
+RETURN

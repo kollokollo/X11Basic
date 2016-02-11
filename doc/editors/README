@@ -1,4 +1,4 @@
-X11-Basic V.1.10
+nedit.defs:
 
 This is a macro package for nedit -- the Nirvana editor.
 
@@ -32,3 +32,17 @@ programmers).
 Authors:
 --------
     Mark Edel <edel@fnal.gov>
+
+===902 Text Editor Syntax file ============
+920.conf
+This is the syntax conf file for 920 Text Editor
+
+
+
+======================== Vim syntax file ================================
+
+Marcos Cruz has published a Vim syntax file:
+
+http://programandala.net/en.program.x11-basic_vim_syntax_file
+
+

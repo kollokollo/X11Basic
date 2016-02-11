@@ -11,10 +11,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
+#include "svariablen.h"
 #include "xbasic.h"
 
 

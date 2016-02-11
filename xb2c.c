@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2012
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2013
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -25,6 +25,7 @@
 #include "x11basic.h"
 #include "bytecode.h"
 #include "variablen.h"
+#include "file.h"
 //#include "xb2c.h"
 
 
@@ -46,10 +47,10 @@ FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.19";        /* Programmversion*/
+const char version[]="1.20";        /* Programmversion*/
 const char vdate[]="2012-11-01";
 char *programbuffer=NULL;
-char *program[MAXPRGLEN];
+char **program=NULL;
 int programbufferlen=0;
 
 extern void memdump(unsigned char *,int);
@@ -57,7 +58,7 @@ extern void memdump(unsigned char *,int);
 void intro(){
   puts("***************************************************************\n"
        "*           X11-Basic to C translator                         *\n"
-       "*                    by Markus Hoffmann 1997-2012 (c)         *");
+       "*                    by Markus Hoffmann 1997-2013 (c)         *");
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
   puts("***************************************************************\n");
 }
@@ -159,7 +160,7 @@ void data_section() {
 void translate() {
   char *buf;
   
-  char c;
+  signed char c;
   int i,n,b,redo;
   short ss,ss2;
   double d;
@@ -321,14 +322,14 @@ void translate() {
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
       a-=sizeof(BYTECODE_HEADER);
       if((b=havesymbol(a,STT_LABEL))>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto %s\t/* JEQ(0x%x); */\n",&strings[symtab[b].name],a);
+        fprintf(optr,"JUMPIFZERO %s\t/* JEQ(0x%x); */\n",&strings[symtab[b].name],a);
       else if((b=havesymbol(a,0))>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* JEQ(0x%x); */\n",a,a);
+        fprintf(optr,"JUMPIFZERO LBL_%x;\t/* JEQ(0x%x); */\n",a,a);
       else fprintf(optr,"JEQ(0x%x);\n",a);
       break;
     case BC_BRA:
       memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
-     if(b=havesymbol(i+ss,STT_LABEL)>=0) 
+     if((b=havesymbol(i+ss,STT_LABEL))>=0) 
         fprintf(optr,"goto %s;\t/*BRA(%d); $%x */\n",&strings[symtab[b].name],ss,i+ss);
       else if((b=havesymbol(i+ss,0))>=0) 
         fprintf(optr,"goto LBL_%x;\t/* BRA(%d); */\n",i+ss,ss);
@@ -336,10 +337,10 @@ void translate() {
       break;
     case BC_BEQ:
       memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
-      if(b=havesymbol(i+ss,STT_LABEL)>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto %s;\t/*BEQ(%d); $%x */\n",&strings[symtab[b].name],ss,i+ss);
+      if((b=havesymbol(i+ss,STT_LABEL))>=0) 
+        fprintf(optr,"JUMPIFZERO %s;\t/*BEQ(%d); $%x */\n",&strings[symtab[b].name],ss,i+ss);
       else if((b=havesymbol(i+ss,0))>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* BEQ(%d); */\n",i+ss,ss);
+        fprintf(optr,"JUMPIFZERO LBL_%x;\t/* BEQ(%d); */\n",i+ss,ss);
       else fprintf(optr,"BEQ(%d);\t/* $%x */\n",ss,i+ss); 
       break;
     case BC_BSR:
@@ -360,7 +361,7 @@ void translate() {
       break;
     case BC_BRAs:
       c=bcpc[i++];
-      if(b=havesymbol(i+c,STT_LABEL)>=0) 
+      if((b=havesymbol(i+c,STT_LABEL))>=0) 
         fprintf(optr,"goto %s;\t/*BRA_s(%d); $%x */\n",&strings[symtab[b].name],c,i+c);
       else if((b=havesymbol(i+c,0))>=0) 
         fprintf(optr,"goto LBL_%x;\t/* BRA_s(%d); */\n",i+c,c);
@@ -368,10 +369,10 @@ void translate() {
       break;
     case BC_BEQs:
       c=bcpc[i++];
-      if(b=havesymbol(i+c,STT_LABEL)>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto %s;\t/*BEQ_s(%d); $%x */\n",&strings[symtab[b].name],c,i+c);
+      if((b=havesymbol(i+c,STT_LABEL))>=0) 
+        fprintf(optr,"JUMPIFZERO %s;\t/*BEQ_s(%d); $%x */\n",&strings[symtab[b].name],c,i+c);
       else if((b=havesymbol(i+c,0))>=0) 
-        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* BEQ_s(%d); */\n",i+c,c);
+        fprintf(optr,"JUMPIFZERO LBL_%x;\t/* BEQ_s(%d); */\n",i+c,c);
       else fprintf(optr,"BEQ_s(%d);\t/* $%x */\n",c,i+c); 
       break;
     case BC_LOADi:
@@ -472,7 +473,7 @@ void translate() {
     case BC_PUSHX:
       n=bcpc[i++];
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
-      buf=malloc(n*2+1);
+      buf=malloc(n*4+8);
       b=frishmemcpy(buf,rodata+a,n);
       buf[b]=0;
       fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,n);
@@ -482,10 +483,21 @@ void translate() {
       { int len;
       memcpy(&len,&bcpc[i],sizeof(int));i+=sizeof(int);
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
-      buf=malloc(2*len+1);
+      buf=malloc(4*len+8);
       b=frishmemcpy(buf,rodata+a,len);
       buf[b]=0;
       fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,len);
+      free(buf);
+      }
+      break;
+    case BC_PUSHA:
+      { int len;
+      memcpy(&len,&bcpc[i],sizeof(int));i+=sizeof(int);
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      buf=malloc(4*len+8);
+      b=frishmemcpy(buf,rodata+a,len);
+      buf[b]=0;
+      fprintf(optr,"PUSHA(\"%s\",%d); /*len=%d*/\n",buf,len,len);
       free(buf);
       }
       break;
@@ -586,8 +598,8 @@ int loadbcprg(char *filename) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.19\n"
-                 "   (c) Markus Hoffmann 2002-2012\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.20\n"
+                 "   (c) Markus Hoffmann 2002-2013\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
 		 

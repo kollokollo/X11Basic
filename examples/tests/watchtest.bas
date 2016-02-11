@@ -14,18 +14,19 @@
 '
 
 WATCH "/tmp"
-system "mkdir /tmp/ttt"
-system "rmdir /tmp/ttt"
-system "touch /tmp/ttt"
-system "rm -f /tmp/ttt"
-
+MKDIR "/tmp/ttt"
+RMDIR "/tmp/ttt"
+SYSTEM "touch /tmp/ttt"
+SYSTEM "rm -f /tmp/ttt"
+print "now open a file browser (or a terminal window), go"
+print "to the /tmp directory and do something..."
 do
   a$=fileevent$
   if len(a$)
     print a$
-  else 
-    pause 0.3
-  endif
-loop
+  ELSE 
+    PAUSE 0.3
+  ENDIF
+LOOP
 
-quit
+QUIT

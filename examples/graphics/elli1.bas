@@ -1,13 +1,15 @@
-clearw
+' Draws ellipses 1995
+'
+CLEARW
 f=40
-color get_color(0,65535,0)
+COLOR COLOR_RGB(0,1,0)
 CIRCLE 320,200,1/0.2*f+2
 CIRCLE 320,200,1/0.2*35+2
 CIRCLE 320,200,1/0.2*37+2
 CIRCLE 320,200,1/0.2*15+2
 CIRCLE 320,200,1/0.2*17+2
-vsync
-color get_color(65535,65535,65535)
+SHOWPAGE
+COLOR COLOR_RGB(1,1,1)
 DO
   FOR t=0 TO 2*PI STEP 0.01
     r=1/(1+0.8*COS(t+t0))
@@ -16,10 +18,9 @@ DO
     y=r*SIN(t)
     PLOT x+320,y+200
   NEXT t
-  vsync
+  SHOWPAGE
   t0=t0+1
   EXIT IF t0>11
 LOOP
-pause 5
-
-quit
+PAUSE 5
+QUIT

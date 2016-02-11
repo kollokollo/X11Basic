@@ -161,14 +161,12 @@ static const unsigned char font[128][36] = {
 {100,1,100,100,100,50,40,1,100} /* 127 */   };
 
 
-double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt) 
-{
-   double obxx,bxx=0,msin,mcos;
-   unsigned int a;
-   int i,j,len,len2,fx,fy,charw,center,px,py,pxo,pyo;
-   int xx,yy,ox,oy;
-   
-  len=strlen(tt);
+double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt) {
+  double bxx=0,msin,mcos;
+  unsigned int a;
+  int i,j,len2,fx,fy,charw,center,px,py,pxo,pyo;
+  int xx,yy,ox=0,oy=0;
+  int len=strlen(tt);
   if(len>0) {
     msin=sin(rad(wk));
     mcos=cos(rad(wk)); 
@@ -185,7 +183,7 @@ double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt)
       else a&=0x7f;
       fy=bxx*msin+y;
       fx=bxx*mcos+x;
-      len2=strlen(font[a]);
+      len2=strlen((const char *)font[a]);
       
       charw=(int)font[a][0];
       
@@ -213,8 +211,7 @@ double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt)
           ox=xx; oy=yy;
         }
       }
-      obxx=bxx;
-      bxx=bxx+(charw+30)*s;
+      bxx+=(charw+30)*s;
     }
   }
   return(bxx);
@@ -232,7 +229,7 @@ double ltextlen (double s, int pflg, char *tt) {
     else if(a=='Ü') a=21;
     else if(a=='ü') a=22;
     else a&=0x7f;
-    if(pflg && strlen(font[a])>1) charw=(int)font[a][0];
+    if(pflg && strlen((const char *)font[a])>1) charw=(int)font[a][0];
     bxx+=(charw+30);
   }
   return(bxx*s);

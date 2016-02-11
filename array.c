@@ -14,6 +14,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "parameter.h"
+
 #include "xbasic.h"
 #include "wort_sep.h"
 #include "array.h"
@@ -199,18 +200,6 @@ ARRAY einheitsmatrix(int typ, int dimension, int *dimlist) {
   } else puts("Einheitsmatrix nicht definiert !"); 
   return(ergebnis);
 }
-ARRAY nullmatrix(int typ, int dimension, int *dimlist) {
-  ARRAY ergebnis;
-  
-  if(typ & INTTYP) {
-    ergebnis=create_int_array(dimension,dimlist,0);
-  } else if(typ & FLOATTYP) {
-    ergebnis=create_float_array(dimension,dimlist,0);
-  } else {
-    ergebnis=create_array(typ,dimension,dimlist);
-  }   
-  return(ergebnis);
-}
 /* Uebernimmt einen Speicherbereich in ein Array */
 
 static ARRAY form_array(int typ, int dimension, int *dimlist, char *inhalt) {
@@ -237,7 +226,7 @@ static ARRAY form_array(int typ, int dimension, int *dimlist, char *inhalt) {
 
 /* Mache ein ARRAY aus Konstante [1,2,3;4,5,6]  */
 
-ARRAY array_const(char *s) {
+ARRAY array_const(const char *s) {
   ARRAY ergebnis;
   char t[strlen(s)+1],t2[strlen(s)+1],s2[strlen(s)+1];
   int e,i=0,j=0,f,dx=0,dy,anz=1;
@@ -263,11 +252,11 @@ ARRAY array_const(char *s) {
   /*
   printf("ARRAY-Const:  %s\n",s);
   printf("============\n");
-  printf("Dimension: %d\n",ergebnis->dimension);
-  printf("Typ:       %d\n",ergebnis->typ);
+  printf("Dimension: %d\n",ergebnis.dimension);
+  printf("Typ:       %d\n",ergebnis.typ);
   printf("Dim: %dx%d  \n",dy,dx);
   printf("Anz: %d  \n",anz);
-*/
+  */
   
   ergebnis.pointer=malloc(ergebnis.dimension*INTSIZE+anz*typlaenge(ergebnis.typ));
   if(ergebnis.typ & STRINGTYP) {
@@ -284,10 +273,11 @@ ARRAY array_const(char *s) {
     ((int *)(ergebnis.pointer))[1]=dx;
   }
   i=j=0;
-    e=wort_sep(s,';',TRUE,t,s2);
+  e=wort_sep(s,';',TRUE,t,s2);
   while(e) {
     f=wort_sep(t,',',TRUE,t2,t);
     while(f) {
+  //    printf("t2=%s %g\n",t2,parser(t2));
       if(ergebnis.typ & INTTYP) ((int *)(ergebnis.pointer+ergebnis.dimension*INTSIZE))[j]=(int)parser(t2);
       else if(ergebnis.typ & FLOATTYP) ((double *)(ergebnis.pointer+ergebnis.dimension*INTSIZE))[j]=parser(t2);
       else {
@@ -537,7 +527,7 @@ void array_sub(ARRAY a1, ARRAY a2) {
     int *pp1=(int *)(a1.pointer+a1.dimension*INTSIZE); 
     double *pp2=(double *)(a2.pointer+a2.dimension*INTSIZE); 
     for(j=0;j<anz;j++) pp1[j]-=(int)pp2[j];
-  } else puts("ERROR: inkompatible array type.");
+  } else xberror(96,""); /* inkompatible array type*/  
 }
 
 
@@ -602,13 +592,16 @@ STRING array_to_string(ARRAY inhalt) {
 ARRAY string_to_array(STRING in) {
   ARRAY out;
   int len,arraylen;
-  
+ // memdump(in.pointer,in.len);
   out.typ=((int *)in.pointer)[0];
   out.dimension=((int *)in.pointer)[1];
   len=INTSIZE*out.dimension;
   out.pointer=in.pointer+2*sizeof(int);
   arraylen=anz_eintraege(&out);
   len+=arraylen*typlaenge(out.typ);
+ 
+// printf("Array typ=%x dimension=%d\n",out.typ,out.dimension);
+// printf("arraylen=%d\n",arraylen);
   
   out.pointer=malloc(len);
   
@@ -618,15 +611,18 @@ ARRAY string_to_array(STRING in) {
 	 arraylen*typlaenge(out.typ));
 
   if(out.typ & STRINGTYP) {
-    char *ppp=in.pointer+2*sizeof(int)+arraylen*typlaenge(out.typ);
+    char *ppp=in.pointer+2*sizeof(int)+INTSIZE*out.dimension+arraylen*typlaenge(out.typ);
     STRING *a=(STRING *)(out.pointer+INTSIZE*out.dimension);
     /* Alle Strings anlegen und pointer relozieren */
     unsigned int i;
     unsigned long offset;
+ //   memdump(ppp,len);
     for(i=0;i<arraylen;i++) {
       offset=(unsigned long)a[i].pointer;
-      a[i].pointer=malloc(a[i].len);
+//      printf("%d:Offset=%d\n",i,offset);
+      a[i].pointer=malloc(a[i].len+1);
       memcpy(a[i].pointer,ppp+offset,a[i].len);
+      a[i].pointer[a[i].len]=0;
     }
   }
   return(out);
@@ -641,7 +637,7 @@ ARRAY get_subarray(ARRAY *arr,int *indexliste) {
   ARRAY ergebnis=*arr;
   int *aindex=(int *)arr->pointer;
   int bindex[arr->dimension];
-  int adim,dim,dim2=0,i,j,jj,k,anz=1,anz2;
+  int adim,dim2=0,i,j,jj,k,anz=1,anz2;
 
   adim=arr->dimension;
   if(adim) {
@@ -685,29 +681,8 @@ ARRAY get_subarray(ARRAY *arr,int *indexliste) {
 }
 
 
-int anz_eintraege(ARRAY *a) {/* liefert Anzahl der Elemente in einem ARRAY */
-  int anz=1,j;
-  for(j=0;j<a->dimension;j++) anz=anz*((int *)a->pointer)[j];
-  return(anz);
-}
-
-int do_dimension(VARIABLE *v) {  /* liefert Anzahl der Elemente in einem ARRAY */
- /*  printf("DODIM?: vnr=%d \n",vnr); */
-  if(v->typ & ARRAYTYP) {
-    return(anz_eintraege(v->pointer.a));
-  } else return(1);
-}
-
-
-void *arrayvarptr(int vnr, char *n,int size) {  
-  if(vnr!=-1)  {
-    int dim=variablen[vnr].pointer.a->dimension;
-    int indexliste[dim];
-    /* Index- Liste aufloesen  */
-    make_indexliste(dim,n,indexliste);
-    return(arrayvarptr2(vnr,indexliste,size));
-  } else return(NULL);
-}
+// wird nicht mehr benoetigt
+#if 0
 void *arrayvarptr2(int vnr, int *indexliste,int size) {
   int a=0,i=0;
   if(vnr!=-1)  {
@@ -720,7 +695,7 @@ void *arrayvarptr2(int vnr, int *indexliste,int size) {
     return(variablen[vnr].pointer.a->pointer+dim*INTSIZE+a*size);
   } else return(NULL);
 }
-
+#endif
 
 int make_indexliste(int dim, char *pos, int *index) {
   char w1[strlen(pos)+1],w2[strlen(pos)+1];
@@ -733,17 +708,11 @@ int make_indexliste(int dim, char *pos, int *index) {
       flag=1;
       break;
     }
-    if(w1[0]==':' || w1[0]==0) {index[i]=-1;flag=1;}	
+    if(*w1==':' || *w1==0) {index[i]=-1;flag=1;}	
     else index[i]=(int)parser(w1);
     e=wort_sep(w2,',',TRUE,w1,w2);
   }
   return(flag);
 }
 
-void make_indexliste_plist(int dim, PARAMETER *p, int *index) {
-  while(--dim>=0) {
-      if(p[dim].typ==PL_INT) index[dim]=p[dim].integer;
-      else if(p[dim].typ==PL_FLOAT) index[dim]=(int)p[dim].real;
-      else printf("ERROR: Kein int!");    
-  }
-}
+

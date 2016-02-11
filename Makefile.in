@@ -18,7 +18,7 @@ INCDIR=@prefix@/include/x11basic
 LIBNO=@version@
 
 # Register variables (-ffixed-reg) -Wall
-REGS= @regs@
+REGS= @regs@ -g -Wall
 
 # Optimization and debugging options
 OPT=@copt@
@@ -34,7 +34,7 @@ DEF= @def@
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
-CC=@CC@ $(REGS) -g
+CC=@CC@ $(REGS)
 
 # Cross-Compiler fuer Windows-Excecutable
 
@@ -51,14 +51,16 @@ CPP=@CPP@
 CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
 
-OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o parameter.o \
+OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o svariablen.o \
+        array.o parameter.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
-	sysVstuff.o aes.o graphics.o sound.o number.o decode.o virtual-machine.o
+	sysVstuff.o aes.o graphics.o sound.o number.o decode.o \
+	virtual-machine.o
 
 # Object group for framebuffer variant
 
-OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o array.o parameter.o\
+OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o  svariablen.o array.o parameter.o\
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o do_gets.o errortxt.o number.o decode.o \
 	sysVstuff.o aes.o  sound.o virtual-machine.o
@@ -85,7 +87,7 @@ DEPSRC=  $(CSRC)
 HSRC=  aes.h android.h array.h bitmap.h defs.h file.h functions.h gkommandos.h kommandos.h \
        options.h xbasic.h window.h bytecode.h number.h  parameter.h \
        framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h \
-       sound.h wort_sep.h variablen.h mathematics.h sysVstuff.h x11basic.h \
+       sound.h wort_sep.h variablen.h svariablen.h mathematics.h sysVstuff.h x11basic.h \
        decode.h xb2csol.h virtual-machine.h terminal.h
 
 EXAMPLES=examples2/calculation/randomminmax.bas \
@@ -144,7 +146,8 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
 
 BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/* xbasic xbc bas2x11basic xbvm x11basic.h \
+      doc/editors/* xbasic xbc bas2x11basic xbbc xbvm x11basic.h xb2csol.h \
+      x11basic.a libx11basic.so \
       examples/compiler/xbc.bas.in \
       examples/compiler/inline.bas \
       examples/compiler/bas2x11basic.bas \
@@ -179,7 +182,7 @@ DOOCSDIST=$(DIST) src/doocs-wrapper.cc doc/doocs-xbasic.html \
 LINKFLAGS =
 WINLINKFLAGS = -L./Windows.extension/lib 
 
-LIBS =  @libs@ @xtra@
+LIBS =  @libs@ @xtra@ -lutil
 LIBS1 =  @libs@
 LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
 
@@ -232,25 +235,25 @@ xbasic : libx11basic.so main.o
 # Make th X11-Xasic psydocompiler
 
 xbc : xbasic libx11basic.so
-	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@
+	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@ -L .
 	strip $@
 
 
 # Make the bytecode compiler xbbc
 
 xbbc : bytecode.h bytecode.o  xbbc.c
-	gcc -o $@ xbbc.c bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
+	$(CC) -o $@ xbbc.c bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
 	strip $@
 xbbcstatic : xbbc.c bytecode.h bytecode.o  x11basic.a
-	gcc -o xbbc xbbc.c bytecode.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
+	$(CC) -o xbbc xbbc.c bytecode.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
 
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c 
-	gcc -o $@ xbvm.c  -L . $(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
+	$(CC) -o $@ xbvm.c  -L . $(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
 	strip $@
 xbvmstatic : bytecode.h xbvm.c  bytecode.h x11basic.a
-	gcc -o xbvm xbvm.c   x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
+	$(CC) -o xbvm xbvm.c   x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -325,9 +328,20 @@ xbasic.framebuffer : main.c $(LIBCSRCFB)
 # therefor can be used without the .so file
 xbasic.static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic main.o x11basic.a $(LIBS) $(XLIBS)
-	strip xbasic
+	
 
-static : xbasic.static	
+static : xbasic.static	xbbcstatic xbvmstatic xb2cstatic
+strip  : xbasic xbbc xbvm xb2c
+	strip xbasic
+	strip xbbc
+	strip xbvm
+	strip xb2c
+
+
+debugtest : x11basic.a main.o
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic main.o x11basic.a $(LIBS) $(XLIBS)
+	
+	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic ../examples2/calculation/diffglei.bas
 
 # Make a version of X11-basic which uses the SDL library for graphics 
 
@@ -481,21 +495,21 @@ tinex11basic.a : $(LIBOBJS)
 # Make the ANSI-Basic to X11-Basic translator
 
 bas2x11basic : xbc
-	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@
+	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
 	strip $@
 myzip : xbc
-	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myzip.bas --dynamic -o myzip
-	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
+	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myzip.bas --dynamic -o myzip -L .
+	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip -L .
 	strip myzip
 	strip myunzip
 
 
 # make the X11-Basic to C translator
 xb2c :  xb2c.c
-	gcc -o $@ xb2c.c  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
+	$(CC) -o $@ xb2c.c  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
 	strip $@
 xb2cstatic : xb2c.c x11basic.a
-	gcc -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+	$(CC) -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 
 x11basic.tga: x11basic.pov
 	povray +I$< +O$@ +FT +W160 +H200 +V -D +X
@@ -506,6 +520,8 @@ install : xbasic libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb
 	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
 	ln -s -f $(LIBDIR)/libx11basic.so.1 $(LIBDIR)/libx11basic.so
 	install -m 644 x11basic.a $(LIBDIR)/
+	install -d $(MANDIR)
+	install -d $(MANDIR)/man1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
 	install -s -m 755 xbc $(BINDIR)/

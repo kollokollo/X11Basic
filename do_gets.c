@@ -11,7 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "defs.h"
+#include "x11basic.h"
 
 //#undef HAVE_READLINE
 
@@ -153,6 +155,8 @@ char *readline(char *prompt) {
 
   return(line_read);
 }
+#else
+  extern void add_history(const char *line);
 #endif
 
 

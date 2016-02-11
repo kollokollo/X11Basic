@@ -225,4 +225,20 @@ Release notes for Version 1.18 (Sept 2011)
 - Implemented DEFFN
 - Optimized Compiler: simple math functions and Square
 
+Release notes for Version 1.19 (Mai 2012)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Android version
+- virtual machine now included in library
+- new GPS and SENSOR commands (for Android version)
+- new SPEAK kommand (for Android version)
+- improved framebuffer graphics routines
+- new command: PLAYSOUNDFILE (for Android version)
+- new command: GET_LOCATION
+- BUGFIX: SOUND, WAVE, AND(), OR(), XOR(), NOT()
+- BUGFIX: FOR with integer variable
+- BUGFIX: SELECT CASE ENDSELECT
+- NEW: "!" is now allowed at the beginning of a line
+- BUGFIX: SELECT/CONTINUE
+- some minor changes for 64bit version
+
 --------------------------------------------------------------------------------

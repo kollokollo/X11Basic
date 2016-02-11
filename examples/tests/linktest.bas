@@ -1,21 +1,21 @@
 ' Hier wird gezeigt, wie man externe Programmroutinen verwenden kann
+' In diesem Fall eine Routine aus der bereits installierten libreadline
 
 
-
-t$="/usr/lib/libreadline.so"
-print t$
-if exist(t$)
-  link #1,t$
-  dump "#"
+t$="/usr/lib/i386-linux-gnu/libreadline.so"
+PRINT t$
+IF EXIST(t$)
+  LINK #1,t$
+  DUMP "#"
   promt$=">>>"
-  adr=exec(sym_adr(#1,"readline"),L:varptr(promt$))
-  r=adr
-  while peek(r)>0
-    print chr$(peek(r));
-    inc r
-  wend 
-  print
-  unlink #1
-  free adr
-endif
-quit
+  adr%=CALL(SYM_ADR(#1,"readline"),L:VARPTR(promt$))
+  r=adr%
+  WHILE PEEK(r)>0
+    PRINT CHR$(PEEK(r));
+    INC r
+  WEND 
+  PRINT
+  UNLINK #1
+  FREE adr%
+ENDIF
+QUIT

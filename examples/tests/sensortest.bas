@@ -1,27 +1,25 @@
-' Test of the Android builtin sensors
+' Test of the Android builtin sensors  05.2012
 '
 '
-print "SENSOR?=";sensor?
-pause 1
-for i=0 to 10
-  print sensor(0),sensor(1),sensor(2)
-  pause 0.5
-next i
+PRINT "SENSOR?=";SENSOR?
+PAUSE 1
+FOR i=0 TO 10
+  PRINT SENSOR(0),SENSOR(1),SENSOR(2)
+  PAUSE 0.5
+NEXT i
 
-print "ON"
+PRINT "ON"
 SENSOR ON
 
-for i=0 to 10
-  print sensor(0),sensor(1),sensor(2),sensor(3),sensor(4),sensor(5)
-  pause 0.5
-next i
-print "OFF"
+FOR i=0 TO 10
+  PRINT SENSOR(0),SENSOR(1),SENSOR(2),SENSOR(3),SENSOR(4),SENSOR(5)
+  PAUSE 0.5
+NEXT i
+PRINT "OFF"
 SENSOR OFF
 
-for i=0 to 10
-  print sensor(0),sensor(1),sensor(2)
-  pause 0.5
-next i
-end
-
-
+FOR i=0 TO 10
+  PRINT SENSOR(0),SENSOR(1),SENSOR(2)
+  PAUSE 0.5
+NEXT i
+END

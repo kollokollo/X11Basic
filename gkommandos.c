@@ -40,7 +40,6 @@
 #include "bitmaps/bombe_mask.bmp"
 #endif
 
-int menuaction;
 int turtlex,turtley;
 
 /*
@@ -66,6 +65,20 @@ void c_usewindow(PARAMETER *plist,int e){
 }
 
 void c_vsync(char *n) {activate();}
+
+void c_hidem(char *n) {
+    graphics();
+#ifdef FRAMEBUFFER
+    FB_hide_mouse();
+#endif
+}
+void c_showm(char *n) {
+    graphics();
+#ifdef FRAMEBUFFER
+    FB_show_mouse();
+#endif
+}
+
 
 void c_plot(PARAMETER *plist,int e) {
     graphics();
@@ -315,7 +328,7 @@ void c_sget(PARAMETER *plist,int e) {
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
       XQueryColors(display[usewindow], map, ppixcolor,256);
     }
-    str.pointer=imagetoxwd(Image,xwa.visual,ppixcolor,&(str.len));
+    str.pointer=imagetoxwd(Image,xwa.visual,ppixcolor,(int *)&(str.len));
 
   varcaststring(plist[0].integer,plist[0].pointer,str);
  XDestroyImage(Image);  
@@ -423,9 +436,7 @@ void c_line(PARAMETER *plist,int e) {
 }
 /* Kubische Bezier curve*/
 void c_curve(PARAMETER *plist,int e) {
-  int granul=3;
-  int t=0;
-  int x,y,ox,oy;
+  int granul=3,t=0,x=0,y=0,ox,oy;
   #define px0 plist[0].integer
   #define py0 plist[1].integer
   #define px1 plist[2].integer
@@ -606,7 +617,6 @@ void c_color(PARAMETER *plist,int e) {
   if(e==2) {SetBackground(plist[1].integer);}
 }
 
-void c_boundary(PARAMETER *plist,int e) { boundary=plist->integer; }
 
 void c_screen(PARAMETER *plist,int e) {
   graphics();
@@ -618,12 +628,9 @@ void c_screen(PARAMETER *plist,int e) {
 #endif
 }
 
-void c_graphmode(PARAMETER *plist,int e) {
-  graphics();  set_graphmode(plist->integer);
-}
-void c_setfont(PARAMETER *plist,int e) {
-  graphics();  set_font(plist->pointer);
-}
+void c_boundary (PARAMETER *plist,int e) { boundary=plist->integer; }
+void c_graphmode(PARAMETER *plist,int e) { graphics();  set_graphmode(plist->integer); }
+void c_setfont  (PARAMETER *plist,int e) { graphics();  set_font(plist->pointer);      }
 
 void c_scope(char *n) {                                      /* SCOPE y()[,sy[,oy,[,mod]]]   */
   char w1[strlen(n)+1],w2[strlen(n)+1];                      /* oder                         */
@@ -814,7 +821,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
         int i;
         if(anz>1) {
 	for(i=0;i<anz-1;i++) {
-	  FB_line(points[i].x,points[i].y,points[i].x,points[i].y);
+	  FB_line(points[i].x,points[i].y,points[i+1].x,points[i+1].y);
 	}
 	}
       }
@@ -835,21 +842,21 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 
 void c_deffill(PARAMETER *plist,int e) {
   graphics();
-#ifdef USE_X11
   if(e>=1 && plist[0].typ!=PL_LEER){
     int fs=plist[0].integer;
-    if(fs>=0 && fs<2) XSetFillRule(display[usewindow], gc[usewindow], fs);
+    if(fs>=0 && fs<2) SetFillRule(fs);
   } 
   if(e>=2 && plist[1].typ!=PL_LEER){
     int fs=plist[1].integer;
-    if(fs>=0 && fs<4) XSetFillStyle(display[usewindow], gc[usewindow], fs);
+    if(fs>=0 && fs<4) SetFillStyle(fs);
   }
   if(e>=3 && plist[2].typ!=PL_LEER){
     int pa=plist[2].integer;
+#ifndef WINDOWS
     pa=max(0,min(fill_height/fill_width,pa));
     set_fill(pa+1);
+#endif
   }
-#endif  
 }
 void c_defmark(PARAMETER *plist,int e) {
   graphics();
@@ -1611,8 +1618,8 @@ FB_show_mouse();
   } else SDL_SetCursor(&defcursor);
 #endif
 }
-void g_outs(STRING t);
-void g_out(char a) {
+
+static void g_out(char a) {
   static int lin=0,col=0;
   extern ARECT sbox;
   int bbb;
@@ -1646,11 +1653,9 @@ void g_out(char a) {
     }
   } 
 }
-void g_outs(STRING t) {
+static inline void g_outs(STRING t) {
   int i;
-  if(t.len) {
-    for(i=0;i<t.len;i++) g_out(t.pointer[i]);
-  }
+  if(t.len) { for(i=0;i<t.len;i++) g_out(t.pointer[i]); }
 }
 
 
@@ -1706,7 +1711,6 @@ void c_alert(PARAMETER *plist,int e) {
   free(str.pointer);
 }
 
-char *fsel_input(char *,char *,char *);
 
 void c_fileselect(PARAMETER *plist,int e) {
   STRING str;
@@ -1736,12 +1740,14 @@ void c_menu(char *n) {
     sel=do_menu_select();
     if(sel>=0) {
       sprintf(pos,"%d",sel);
-      if(do_parameterliste(pos,procs[menuaction].parameterliste,procs[menuaction].anzpar)) xberror(42,pos); /* Zu wenig Parameter */
-      else {
+      if(do_parameterliste(pos,procs[menuaction].parameterliste,procs[menuaction].anzpar)) {
+        restore_locals(sp+1);
+        xberror(42,pos); /* Zu wenig Parameter */
+      } else {
         batch=1;
         pc2=procs[menuaction].zeile;
         if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-        else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+        else {printf("Stack-Overflow ! PC=%d\n",pc);restore_locals(sp+1); batch=0;}
       }
     }
   }
@@ -1819,9 +1825,7 @@ void c_menuset(PARAMETER *plist, int e) {
   }
 }
 void c_menukill(char *n) {
-  if(menuaction!=-1) {
-    menuaction=-1;
-  }
+  if(menuaction!=-1) menuaction=-1;
 }
 
 

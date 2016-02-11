@@ -32,6 +32,8 @@
 
    (c) Markus Hoffmann 1997
 
+   2012: memories now may overlap and t==w2 or t==w1 is allowed.
+
 
   */
 #include <stdio.h>
@@ -39,7 +41,7 @@
 #include <ctype.h> 
 #include "wort_sep.h" 
 
-int wort_sep(char *t,char c,int klamb ,char *w1, char *w2)    {
+int wort_sep(const char *t,char c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
 
   /* klamb=0 : keine Klammern werden beruecksichtigt
@@ -61,10 +63,16 @@ int wort_sep(char *t,char c,int klamb ,char *w1, char *w2)    {
     return(1);
   } else {
     *w1=0;
-    strcpy(w2,++t);
+    ++t;
+    while(*t) *w2++=*t++;
+    *w2=0; 
     return(2);
   }
 }
+
+/*This is a faster version of wort_sep, which just returns pointers
+  into the memory area pointed by t, which gets modifyed.*/
+
 int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2)    {
   int f=0, klam=0;
 
@@ -94,7 +102,7 @@ int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2)    {
 
 
 /* Dasselbe fuer eine Liste von n Zeichen */
-int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2)    {
+int wort_sep_multi(const char *t,char *c, int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
 
   if(!(*t)) return(*w1=*w2=0);
@@ -110,7 +118,9 @@ int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2)    {
     return(1);
   } else {
     *w1=0;
-    strcpy(w2,++t);
+    ++t;
+    while(*t) *w2++=*t++;
+    *w2=0; 
     return(2);
   }
 }
@@ -124,7 +134,7 @@ static int is_operator(char c) {
   return(!(strchr("|&~!*/+-<>^ =",c)==NULL));
 }
 
-int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2)    {
+int wort_sep_e(const char *t,char c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0,i=0,skip=0,zahl=0;
 
   if(!(*t)) return(w1[0]=w2[0]=0); 
@@ -151,12 +161,14 @@ int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2)    {
     return(1);
   } else {
     *w1=0;
-    strcpy(w2,t+1);
+    ++t;
+    while(*t) *w2++=*t++;
+    *w2=0; 
     return(2);
   }
 }
 
-int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
+int wort_sepr_e(const char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0,j,zahl=0;
   
@@ -188,12 +200,24 @@ int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
     printf("i=%d t[i]=%d zahl=%d\n",i,t[i],zahl); 
 #endif
   }
-  strcpy(w1,t);
-  if(i<0) {*w2=0;return(1);}
-  else {w1[i]=0;strcpy(w2,t+i+1);return(2);}
+  if(i<0) {
+    while(*t) *w1++=*t++; 
+    *w2=*w1=0;
+    return(1);
+  } else {
+    while(i>0) {
+      *w1++=*t++;
+      i--;
+    }
+    *w1=0;
+    t++;
+    while(*t) *w2++=*t++;
+    *w2=0;
+    return(2);
+  }
 }
 
-int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
+int wort_sepr(const char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0;
   
@@ -208,35 +232,40 @@ int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
     i--;
   }
 
-  strcpy(w1,t);
   if(i<0) {
-    *w2=0;
+    while(*t) *w1++=*t++; 
+    *w1=*w2=0;
     return(1);
   } else {
-    w1[i]=0;
-    strcpy(w2,t+i+1);
+    while(i>0) {
+      *w1++=*t++;
+      i--;
+    }
+    *w1=0;
+    t++;
+    while(*t) *w2++=*t++;
+    *w2=0;
     return(2);
   }
 }
 
 
 
-int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
-
+int wort_sep2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, i=0, j=0;
 
-
   if(!*t) return(*w1=*w2=0);   /* hier gibts nix zu trennen */
-  else if(strlen(t)<=strlen(c)) {
-    strcpy(w1,t);*w2=0;
+  if(strlen(t)<=strlen(c)) {
+    while(*t) *w1++=*t++; 
+    *w1=*w2=0;
     return(1);
   }
   for(;;) {
 /* suche erstes Vorkommen von c */
     while(t[i] && (t[i]!=c[0] || f || klam>0)) {
       if(t[i]=='"') f=!f;
-    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
-    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+      else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+      else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
       w1[j++]=t[i++];
     }
 
@@ -248,12 +277,14 @@ int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
     
       if(strncmp(t+i,c,strlen(c))==0) {
         w1[j]=0;
-        strcpy(w2,t+i+strlen(c));
+	i+=strlen(c);
+	while(t[i]) *w2++=t[i++];
+        *w2=0;
         return(2);
       } else {
         if(t[i]=='"') f=!f;
-        else if(t[i]=='(' && klamb && !f) klam++;
-        else if(t[i]==')' && klamb && !f) klam--;
+        else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+        else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
         w1[j++]=t[i++];
       }     /* ansonsten weitersuchen */
     }
@@ -262,41 +293,44 @@ int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 
 
-int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
+int wort_sepr2(const char *t,char *c,int klamb ,char *w1, char *w2)    {
   register int i;
   int f=0, klam=0;
-
+  int strc,strt;
 
   if(!*t)  return(*w1=*w2=0);  /* hier gibts nix zu trennen */
-  else if(strlen(t)<=strlen(c)) {
-    strcpy(w1,t);w2[0]=0;
+  strc=strlen(c);
+  strt=strlen(t);
+  if(strt<=strc) {
+    while(*t) *w1++=*t++; 
+    *w1=*w2=0;
     return(1);
   }
-  i=strlen(t)-1;
+  i=strt-1;
   for(;;) {
 /* suche erstes Vorkommen von c */
-    while(i>=0 && (t[i]!=c[strlen(c)-1] || f || klam<0)) {
+    while(i>=0 && (t[i]!=c[strc-1] || f || klam<0)) {
       if(t[i]=='"') f=!f;
-    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
-    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
-    i--;
+      else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+      else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
+      i--;
     }
     
     if(i<0) { /* schon am ende ? */
-      strcpy(w1,t);
-      *w2=0;
+      while(*t) *w1++=*t++; 
+      *w1=*w2=0;
       return(1);
     } else {     /* ueberpruefe, ob auch der Rest von c vorkommt */
     
-      if(strncmp(t+i-strlen(c)+1,c,strlen(c))==0) {
+      if(strncmp(t+i-strc+1,c,strc)==0) {
         strcpy(w1,t);
-	w1[i-strlen(c)+1]=0;
+	w1[i-strc+1]=0;
         strcpy(w2,t+i+1);
         return(2);
       } else {
         if(t[i]=='"') f=!f;
-        else if(t[i]=='(' && klamb && !f) klam++;
-        else if(t[i]==')' && klamb && !f) klam--;
+        else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
+        else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
         i--;
       }     /* ansonsten weitersuchen */
     }
@@ -305,7 +339,7 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 /* Funktion Trennt w1(w2) string in w1 und w2 auf */ 
 
-int klammer_sep(char *t,char *w1, char *w2)    {
+int klammer_sep(const char *t,char *w1, char *w2)    {
   char *pos,*pos2;
   
   if(!(*t)) return(*w1=*w2=0);
@@ -346,48 +380,68 @@ int klammer_sep_destroy(char *t,char **w1, char **w2) {
     return(1);
   }
 }
-
-int arg2(char *t,int klamb ,char *w1, char *w2)    {
-  int f=0, klam=0, i=0, j=0,ergeb;
+  /*
+   2012: memories now may overlap and t==w2 or t==w1 is allowed.
+   */
+int arg2(const char *t,int klamb ,char *w1, char *w2)    {
+  int f=0, klam=0,ergeb;
   if(!*t) return(*w1=*w2=0);
-  while(t[i] && ((t[i]!=';' && t[i]!=','&& t[i]!='\'') || f || klam!=0)) {
-    if(t[i]=='"') f=!f;
-    else if(!f && (((klamb&1) && t[i]=='(') || ((klamb&2) && t[i]=='[') || ((klamb&4) && t[i]=='{'))) klam++;
-    else if(!f && (((klamb&1) && t[i]==')') || ((klamb&2) && t[i]==']') || ((klamb&4) && t[i]=='}'))) klam--;
-    w1[j++]=t[i++];
+  while(*t && ((*t!=';' && *t!=','&& *t!='\'') || f || klam!=0)) {
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    *w1++=*t++;
   }
 
-  if(!t[i]) {
-    *w2=0;
-    w1[j]=0;
-    return(1);
-  } else {
-    if(t[i]==';') ergeb=2;
-    else if(t[i]==',') ergeb=3;
-    else if(t[i]=='\'') ergeb=4;
+  if(!*t) { *w1=*w2=0; return(1); } 
+  else {
+    if(*t==';') ergeb=2;
+    else if(*t==',') ergeb=3;
+    else if(*t=='\'') ergeb=4;
     else ergeb=-1;
-    w1[j]=0;
-    strcpy(w2,t+i+1); 
+    *w1=0;
+    t++;
+    while(*t) *w2++=*t++;
+    *w2=0;
     return(ergeb);
   }
 }
 
-char *searchchr(char *buf, char c) {
+char *searchchr(const char *buf, char c) {
  int f=0;
   while(*buf) {
     if(*buf=='"') f= !f;
-    if(*buf==c && !f) return(buf);
+    if(!f && *buf==c) return((char *)buf);
     buf++;
   }
   return(NULL);
 }
-char *searchchr2(char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! */ 
+char *searchchr2(const char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! */ 
  int f=0,klam=0;
   while(*buf!=0) {
     if(*buf=='"') f= !f;
-    else if(*buf=='('  && !f) klam++;
-    if(*buf==c && !f && !(klam>0)) return(buf);
-    if(*buf==')'  && !f) klam--;
+    if(!f) {
+      if(*buf=='(') klam++;
+      if(*buf==c && !(klam>0)) return((char *)buf);
+      if(*buf==')') klam--;
+    }
+    buf++;
+  }
+  return(NULL);
+}
+char *searchchr3(const char *buf, char c) { /* Alle 3  Klammertypen (()[]{}) beruecksichtigen ! */ 
+ int f=0,klam=0,klam2=0,klam3=0;;
+  while(*buf!=0) {
+    if(*buf=='"') f= !f;
+    else if(!f) {
+      if(*buf=='(') klam++;
+      else if(*buf=='{') klam2++;
+      else if(*buf=='[') klam3++;
+      if(*buf==c && !(klam>0 || klam2>0 || klam3>0)) return((char *)buf);
+      if(*buf==')') klam--;
+      else if(*buf=='}') klam2--;
+      else if(*buf==']') klam3--;
+    }
     buf++;
   }
   return(NULL);
@@ -395,23 +449,23 @@ char *searchchr2(char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! *
 
 /*Dasselbe, aber jetzt werden mehrere Zeichen gefunden */
 
-char *searchchr2_multi(char *buf, char *c) { 
+char *searchchr2_multi(const char *buf, const char *c) { 
  int f=0,klam=0;
   while(*buf!=0) {
     if(*buf=='"') f= !f;
     else if(*buf=='('  && !f) klam++;
-    if((strchr(c,*buf)!=NULL) && !f && !(klam>0)) return(buf);
+    if((strchr(c,*buf)!=NULL) && !f && !(klam>0)) return((char *)buf);
     if(*buf==')'  && !f) klam--;
     buf++;
   }
   return(NULL);
 }
 
-char *rsearchchr(char *buf, char c) {
+char *rsearchchr(const char *buf, char c) {
  char *pos;
  int f=0;
  
- pos=buf+strlen(buf)-1;
+ pos=(char *)buf+strlen(buf)-1;
   while(pos>=buf) {
     if(*pos=='"') f= !f;
     if(*pos==c && !f) return(pos);
@@ -420,13 +474,13 @@ char *rsearchchr(char *buf, char c) {
   return(NULL);
 }
 
-char *rsearchchr2(char *start,char c,char *end) {
+char *rsearchchr2(const char *start,char c,const char *end) {
   int f=0;
   while((*start!=c || f) && start>=end) {
     if(*start=='\"') f= !f;
     start--;
   }
-  return(start);
+  return((char *)start);
 }
 
 void *memmem(const void *buf,  size_t buflen,const void *pattern, size_t len) {
@@ -468,7 +522,7 @@ char *rmemmem(char *s1,int len1,char *s2,int len2) {
   ' wenn fl&=1 ,  gib Groûbuchstaben zurÅck
  */
  
-void xtrim(char *t,int f, char *w ) {
+void xtrim(const char *t,int f, char *w ) {
   register int a=0,u=0,b=0;
 
   while(*t) {
@@ -487,16 +541,22 @@ void xtrim(char *t,int f, char *w ) {
 Damit das ganze funktioniert, muss man evtl ein Kommando 
 am Anfang beruecksichtigen. Hier muss das Blank bleiben.
 
+Die Blankentfernung wird erst gestartet, sobald eines der folgenden Zeichen aufgetaucht ist:
+
+blank
+
+
 */
 
 
-void xtrim2(char *t,int f, char *w ) {
+void xtrim2(const char *t,int f, char *w ) {
   register int a=0,u=0,b=0,z=0,z2=0;
   /*a sagt, ob im String
     b sagt, ob schonam ein blank nach einem space da war
     u sagt, ob schonmal ein nichtspace da war*/
   const char solo[]=",;+-*/^'(~@<>="; /*Potentielle Zeichen, wo ein blank danach entfallen kann*/
   const char solo2[]="*/^)<>="; /*Potentielle Zeichen, wo ein blank davor niemals simm macht*/
+  /*evtl. hier das * herausnehmen, da es bei HELP und REM als erstes Zeichen des Arguments auftauchen kann*/
 #if 0
 char *w2=w;
 printf("XTRIM2 <%s> --> ",t);
@@ -505,13 +565,13 @@ printf("XTRIM2 <%s> --> ",t);
   while(*t) {
     while(*t && (!isspace(*t) || a)) {
       if(*t=='"') a=!a;
-      u=1; 
-      z2=(strchr(solo2,*t)!=NULL);
-      if(z2 && b) b=0;
-      if(b) {*w++=' '; b=0;}
-      z=(strchr(solo,*t)!=NULL);
-      if(f && !a) *w++=toupper(*t++); 
-      else *w++=*t++;
+      u=1;                             /*Erster nicht-space Buchstabe wurde gefunden*/
+      z2=(strchr(solo2,*t)!=NULL);     /*davor ein Blank?*/
+      if(z2 && b) b=0;                 /*das zurueckgehaltene Blank nicht schreiben*/
+      if(b) {*w++=' '; b=0;}           /*es muss noch ein Blank davor*/
+      z=(strchr(solo,*t)!=NULL);        
+      if(f && !a) *w++=toupper(*t++);  /*Zeichen kopieren*/
+      else *w++=*t++;                  /*Zeichen kopieren*/
     }
     if(u && !b) b=1;
     if(b && z) b=0;

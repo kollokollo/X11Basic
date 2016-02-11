@@ -1,12 +1,14 @@
-gelb=get_color(65535,32000,0)
-schwarz=get_color(0,32000,0)
-rot=get_color(65535,0,0)
-weiss=get_color(65535,65535,32000)
+' fractal 2011
+
+gelb=COLOR_RGB(1,0.5,0)
+schwarz=COLOR_RGB(0,0.5,0)
+rot=COLOR_RGB(1,0,0)
+weiss=COLOR_RGB(1,1,0.5)
 
 @figur(320,200,0,1)
-vsync
-~inp(-2)
-quit
+SHOWPAGE
+~INP(-2)
+QUIT
 
 
 
@@ -23,8 +25,6 @@ procedure figur(ox,oy,r,scale)
   x(4)=-scale*100/2
   y(4)=-scale*100/2
   
-  
-  
   for i=0 to 4
     xx=cos(r)*x(i)+sin(r)*y(i)
     y(i)=-sin(r)*x(i)+cos(r)*y(i)
@@ -34,7 +34,7 @@ procedure figur(ox,oy,r,scale)
   polyfill 5,x(),y(),ox,oy
   color gelb
   polyline 5,x(),y(),ox,oy
-  vsync
+  SHOWPAGE
   if scale>0.005
     @figur(scale*100+ox,oy,pi/2,scale/2)
     @figur(ox,oy+scale*100,pi/2,scale/2)

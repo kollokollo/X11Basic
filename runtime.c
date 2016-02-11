@@ -11,11 +11,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <signal.h>
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "kommandos.h"
 
 
 static void *obh;       /* old break handler  */
@@ -25,7 +27,7 @@ static void *obh;       /* old break handler  */
 
 int globalerr=0;
 
-void xberror(char errnr, char *bem) {
+void xberror(char errnr, const char *bem) {
   extern int globalerr;
   globalerr=errnr;
   if(errcont) {   
@@ -43,9 +45,10 @@ void xberror(char errnr, char *bem) {
   } else { 
     batch=0;   
 #ifdef GERMAN
-    printf("Zeile %d: %s\n",pc-1,error_text(errnr,bem));
+    printf("FEHLER in Zeile %d: %s\n",original_line(pc-1),error_text(errnr,bem));
 #else
-    printf("Line %d: %s\n",pc-1,error_text(errnr,bem));
+    if(pc>0) printf("ERROR at line %d: %s\n",original_line(pc-1),error_text(errnr,bem));
+    else printf("ERROR: %s\n",error_text(errnr,bem));
 #endif
 #ifdef ANDROID
     invalidate_screen();
@@ -122,7 +125,7 @@ static void fatal_error_handler( int signum) {
     signal(signum,SIG_DFL);
 #endif
     printf("Stack-Pointer: SP=%d\n",sp);
-    c_dump("");
+    c_dump(NULL,0);
     puts("** fatal error ** X11BASIC-QUIT");    
   }
 #ifdef ANDROID

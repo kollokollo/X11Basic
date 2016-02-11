@@ -9,15 +9,9 @@
 
 
 int do_parameterliste(char *pos, int *,int);
-double parser(char *funktion);
+double parser(const char *funktion);
 ARRAY array_parser(char *funktion);
-STRING string_parser(char *);
-char *s_parser(char *funktion);
+STRING string_parser(const char *);
+char *s_parser(const char *funktion);
 
-
-/*STandard Funktionstyp fuer Parser-Funktionen */
-
-typedef double (*pfunc)();
-typedef STRING (*sfunc)();
-typedef ARRAY (*afunc)();
-
+STRING vs_error();

@@ -2,8 +2,8 @@
 ' (c) Markus Hoffmann 2011
 '
 
-schwarz=get_color(0,0,0)
-gelb=get_color(65535,65535,0)
+schwarz=COLOR_RGB(0,0,0)
+gelb=COLOR_RGB(1,1,0)
 ' output of inline.bas for X11-Basic 04.04.2011
 ' /home/hoffmann/ttt/bas/p00225.bmp 4218 Bytes. (compressed: 2416 Bytes, 57%)
 p00225$=""
@@ -464,18 +464,17 @@ for j=0 to num
   color schwarz
   pbox 310,0,380,40
 
-for i=0 to 10
-  color get_color(i*6553+j*(65535-i*6553)/num,32000+i*6553/2,i*6553)
-  pcircle 350+i/3,20-i/3,m(j)*(20-2*i)
-next i
-get 350-m(j)*20,20-m(j)*20,2*m(j)*20,2*m(j)*20,kugel$(j)
+  for i=0 to 10
+    color get_color(i*6553+j*(65535-i*6553)/num,32000+i*6553/2,i*6553)
+    pcircle 350+i/3,20-i/3,m(j)*(20-2*i)
+  next i
+  get 350-m(j)*20,20-m(j)*20,2*m(j)*20,2*m(j)*20,kugel$(j)
 next j
 do
   get 300,dropy,60,70,dh$
   for i=0 to num
     x(i)=max(0,min(x(i),599))
     y(i)=max(0,min(y(i),359))
-  
     get x(i),y(i),40,40,hinter$(i)
   next i
   put 300,dropy,p01705_bmp$
@@ -486,38 +485,38 @@ do
     graphmode 2
     put x(i),y(i),kugel$(i)
   next i
-    put x(0),y(0),p01277_bmp$
-  vsync
-  pause 0.05
-  graphmode 1
-  put 300,dropy,dh$
+  put x(0),y(0),p01277_bmp$
+  SHOWPAGE
+  PAUSE 0.05
+  GRAPHMODE 1
+  PUT 300,dropy,dh$
   dropy=dropy+1
-  if dropy>330
-  dropy=0
-  endif
-  for i=0 to num
-    put x(i),y(i),hinter$(i)
-    add x(i),dx(i)
-    add y(i),dy(i)
-    if x(i)>=635-40 or x(i)<=5
+  IF dropy>330
+    dropy=0
+  ENDIF
+  FOR i=0 TO num
+    PUT x(i),y(i),hinter$(i)
+    ADD x(i),dx(i)
+    ADD y(i),dy(i)
+    IF x(i)>=635-40 OR x(i)<=5
       dx(i)=-dx(i)
-    endif
-    if y(i)>=395-40 or y(i)<=5
+    ENDIF
+    IF y(i)>=395-40 OR y(i)<=5
       dy(i)=-dy(i)
-    endif
+    ENDIF
     ' Kraefte
     kraftx=0
     krafty=0
-    for k=0 to num
-      if k<>i
-        l=sqrt((x(i)-x(k))^2+(y(i)-y(k))^2)
+    FOR k=0 TO num
+      IF k<>i
+        l=SQRT((x(i)-x(k))^2+(y(i)-y(k))^2)
         r=@pot(l)
-	add kraftx,r*(x(k)-x(i))/l
-	add krafty,r*(y(k)-y(i))/l
-      endif
-    next k
-    add dx(i),kraftx*m(i)
-    add dy(i),krafty*m(i)
+	ADD kraftx,r*(x(k)-x(i))/l
+	ADD krafty,r*(y(k)-y(i))/l
+      ENDIF
+    NEXT k
+    ADD dx(i),kraftx*m(i)
+    ADD dy(i),krafty*m(i)
     dx(i)=dx(i)*0.999
     dy(i)=dy(i)*0.999
   ' Zusammenstoesse
@@ -540,12 +539,10 @@ do
  '   endif
  ' next k
  ' endif
-  next i
-  exit if inp?(-2)
-loop
-vsync
-quit
+  NEXT i
+  EXIT IF INP?(-2)
+LOOP
+SHOWPAGE
+QUIT
 
-function pot(d)
-return -exp(-d^2/20/20)*100
-endfunc
+DEFFN pot(d)=-exp(-d^2/20/20)*100

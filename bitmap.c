@@ -139,13 +139,13 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
 
   if(compression!=BI_RGB && compression!=BI_BITFIELDS) {
     printf("\033[H BITMAPINFOHEADERLEN=%d  \n",BITMAPINFOHEADERLEN);
-    printf("&iheader-data      =%d\n",   (long)iheader-(long)data);
-    printf("bisize-data        =%d %d\n",(long)(&(iheader->biSize))-       (long)data,iheader->biSize);
-    printf("biwidth-data       =%d %d\n",(long)(&(iheader->biWidth))-      (long)data,iheader->biWidth);
-    printf("biHeight-data      =%d %d\n",(long)(&(iheader->biHeight))-     (long)data,iheader->biHeight);
-    printf("biPlanes-data      =%d %d\n",(long)(&(iheader->biPlanes))-     (long)data,iheader->biPlanes);
-    printf("biBitCount-data    =%d %d\n",(long)(&(iheader->biBitCount))-   (long)data,iheader->biBitCount);
-    printf("biCompression-data =%d %d\n",(long)(&(iheader->biCompression))-(long)data,iheader->biCompression);
+    printf("&iheader-data      =%d\n",   (int)((long)iheader-(long)data));
+    printf("bisize-data        =%d %d\n",(int)((long)(&(iheader->biSize))-       (long)data),iheader->biSize);
+    printf("biwidth-data       =%d %d\n",(int)((long)(&(iheader->biWidth))-      (long)data),iheader->biWidth);
+    printf("biHeight-data      =%d %d\n",(int)((long)(&(iheader->biHeight))-     (long)data),iheader->biHeight);
+    printf("biPlanes-data      =%d %d\n",(int)((long)(&(iheader->biPlanes))-     (long)data),iheader->biPlanes);
+    printf("biBitCount-data    =%d %d\n",(int)((long)(&(iheader->biBitCount))-   (long)data),iheader->biBitCount);
+    printf("biCompression-data =%d %d\n",(int)((long)(&(iheader->biCompression))-(long)data),iheader->biCompression);
     printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
     memdump((unsigned char *)data,64);
     return(-1);

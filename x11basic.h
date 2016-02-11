@@ -21,7 +21,7 @@
 /*Variablen Typen*/
 
 typedef struct {
-  int len;
+  unsigned int len;
   char *pointer;
 } STRING;
 
@@ -56,18 +56,24 @@ struct PARAMETER {
 };
 typedef struct PARAMETER PARAMETER;
 
+/*STandard Funktionstyp fuer Parser-Funktionen */
+
+typedef double (*pfunc)();
+typedef STRING (*sfunc)();
+typedef ARRAY (*afunc)();
+
 typedef struct {
-  long opcode;
-  char name[20];
+  unsigned long opcode;
+  const char *name;
   void (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
   signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
-  unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+  const unsigned short *pliste;  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } COMMAND;
 
 typedef struct {
-  long opcode;
-  char name[20];
+  unsigned long opcode;
+  const char *name;
   double (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
   signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
@@ -75,8 +81,8 @@ typedef struct {
 } FUNCTION;
 
 typedef struct {
-  long opcode;
-  char name[20];
+  unsigned long opcode;
+  const char *name;
   STRING (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
   signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
@@ -84,14 +90,14 @@ typedef struct {
 } SFUNCTION;
 
 typedef struct {
-  int opcode;
-  char name[20];
+  unsigned int opcode;
+  const char *name;
   double (*routine)();
 } SYSVAR;
 
 typedef struct {
-  int opcode;
-  char name[20];
+  unsigned int opcode;
+  const char *name;
   STRING (*routine)();
 } SYSSVAR;
  
@@ -108,6 +114,9 @@ typedef struct {
   int anzpar;
   int *parameterliste;  /* Liste mit Variablennummern*/
 } PROCEDURE;
+
+
+
 
 /* Globale Variablen */
 
@@ -150,7 +159,7 @@ extern int prglen;
 extern int runfile,daemonf;
 extern int programbufferlen;
 extern char *programbuffer;
-extern char *program[];
+extern char **program;
 
 
 
@@ -158,28 +167,28 @@ extern char *program[];
 
 
 
-const char *error_text(unsigned char errnr, char *bem);
-void xberror(char errnr, char *bem);
+const char *error_text(unsigned char errnr, const char *bem);
+void xberror(char errnr, const char *bem);
 void reset_input_mode();
 void x11basicStartup();
 
 void kommando(char *);   /* This is for single command execution: */
-void loadprg(char *);
-int mergeprg(char *fname);
+void loadprg(const char *);
+int mergeprg(const char *fname);
 
 void programmlauf();
 
 void do_run();
-void do_help(char *);
+void do_help(const char *);
 void quit_x11basic(int c);
-double parser(char *funktion);
+double parser(const char *funktion);
 
 /* Hilfsfunktionen */
 
-int find_comm(char *);
-int find_func(char *);
-int find_afunc(char *);
-int find_sfunc(char *);
+int find_comm(const char *);
+int find_func(const char *);
+int find_afunc(const char *);
+int find_sfunc(const char *);
 int count_parameter(char *);
 
 void doocssig_handler( int);
@@ -190,15 +199,14 @@ char *simple_gets(char *);
 double floatarrayinhalt(int, char*);
 double varfloatarrayinhalt(int, int *);
 int varintarrayinhalt(int, int *);
-char *indirekt2(char *);
+char *indirekt2(const char *);
 void local_vars_loeschen(int);
-char *varrumpf(char *);
+char *varrumpf(const char *);
 int f_freefile();
 char *bin_to_string(char *);
 void set_input_mode(int,int);
 void set_input_mode_echo(int);
 void reset_input_mode();
-char *terminalname();
 int kbhit();
 
 
@@ -278,8 +286,6 @@ int v_ccserr();
 /* API for The virtual machine */
 
 int pusharg(PARAMETER **opstack, char *typ,...);
-int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...);
-
 int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...);

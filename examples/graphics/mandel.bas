@@ -9,13 +9,15 @@ bh=256*2
 SIZEW ,bw,bh
 CLEARW
 DIM col(256) 
-col(0)=GET_COLOR(0,0,0)
-col(255)=GET_COLOR(65535,65535,65535)
+col(0)=COLOR_RGB(0,0,0)
+col(255)=COLOR_RGB(1,1,1)
 for i=1 to 254
   col(i)=GET_COLOR(RANDOM(65535),RANDOM(65535),RANDOM(65535))
 NEXT i 
 
 GET_GEOMETRY 1,bx,by,bw,bh
+bw=min(512,bw)
+bh=min(512,bh)
 DIM field(bw,bh)
 ARRAYFILL field(),0
 
@@ -66,7 +68,7 @@ DO
       PBOX 0,0,70,20
       COLOR col(255)
       TEXT 10,10,STR$(INT(100*count/bw/bh))+"%  "+STR$(count2-count)
-      VSYNC
+      SHOWPAGE
       t=TIMER
     ENDIF
   ENDIF

@@ -9,21 +9,21 @@
 
 ' define some colors
 
-gelb=get_color(65535,65535,0)
-rot=get_color(65535,0,0)
-weiss=get_color(65535,65535,65535)
-schwarz=get_color(0,35535,25535)
+gelb=COLOR_RGB(1,1,0)
+rot=COLOR_RGB(1,0,0)
+weiss=COLOR_RGB(1,1,1)
+schwarz=COLOR_RGB(0,1/2,1/3)
 
 bw=640 ! The default with and height of the window
 bh=400
 
-setfont "*Courier-bold-r-*12*"
-sizew ,bw,bh   ! Set the window size
-color schwarz
-get_geometry 1,bx,by,bw,bh   ! Ask what size we really got
-pbox bx,by,bw,bh
-vsync
-color rot,schwarz
+SETFONT "*Courier-bold-r-*12*"
+SIZEW ,bw,bh   ! Set the window size
+COLOR schwarz
+GET_GEOMETRY 1,bx,by,bw,bh   ! Ask what size we really got
+PBOX bx,by,bw,bh
+SHOWPAGE
+COLOR rot,schwarz
 TEXT 10,10,"Analoguhr mit X11-BASIC von Markus Hoffmann"
 
 '
@@ -37,7 +37,7 @@ CIRCLE x,y,r+5
 '
 ' ***** Radien fÅr Zeiger usw. berechnen.
 '
-vsync
+SHOWPAGE
 
 bs=r/50
 bm=r/20
@@ -95,7 +95,7 @@ do
     setfont "*Courier*18*"
     text 20,bh-10,time$
     text 10,bh-30,date$
-    vsync
+    SHOWPAGE
     pause 1-timer+stimer-0.05
     setfont "*Courier-*-r-*18*"
   ENDIF

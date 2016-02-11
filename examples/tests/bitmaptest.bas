@@ -96,7 +96,7 @@ f1$=f1$+"=6$-)(T9Ca)[.TQ]M<F8>AYGFN0UD>>GLSD?c4CPZ%`_&WNE;1:)9%U$FR,8*[V]"
 f1$=f1$+"MK^.\DW^81P[?>`A&/9.$:50E1&9O3)>-;Z&*.>0T`/6WJ%IaOPTB[G<]/-HU.?D"
 f1$=f1$+"1S8)%F&7[5K4RN0aXRG^.?EE^B^L<*^HRJ\b?\%'6V6X1cIZ9E0=$D$$"
 
-t$=uncompress$(inline$(f1$))
+t$=UNCOMPRESS$(INLINE$(f1$))
 dim rev(256)
 for i=0 to 255
   a=0
@@ -118,14 +118,14 @@ for i=0 to len(t$)/4
   poke varptr(t$)+i*4+3,rev(d)
 next i
 ttt:
-clearw
-color get_color(65535,65535,0)
-put_bitmap t$,0,0,640,400
+CLEARW
+COLOR COLOR_RGB(1,1,0)
+PUT_BITMAP t$,0,0,640,400
 t$=inline$(biene$)
-color get_color(65535,65535,65535)
+color COLOR_RGB(1,1,1)
 for i=0 to 40
   put_bitmap t$,i*16,0,16,16
 next i
-vsync
+SHOWPAGE
 alert 0,"fertig",1,"OK",b
 quit

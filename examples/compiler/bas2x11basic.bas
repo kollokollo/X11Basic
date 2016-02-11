@@ -9,8 +9,12 @@
 ' (letzte Bearbeitung: 10.02.2004)
 '
 '
+
+' 2012-10-29 Modifications by Marcos Cruz (programandala.net)
+
 i=1
-outputfilename$="b.bas"
+' outputfilename$="b.bas" ! xxx original
+outputfilename$=@yyyymmddhhmmss$()+"_converted.xbas" ! xxx new, only for debugging
 WHILE LEN(PARAM$(i))
   IF LEFT$(PARAM$(i))="-"
     IF PARAM$(i)="--help" OR PARAM$(i)="-h"
@@ -56,7 +60,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "ANSI BASIC to X11-Basic Converter V.1.10 (c) Markus Hoffmann 2003-2004"
+  PRINT "ANSI BASIC to X11-Basic Converter V.1.11 (c) Markus Hoffmann 2003-2004"
   VERSION
 RETURN
 PROCEDURE using
@@ -71,8 +75,16 @@ PROCEDURE convert
   anzprocs=0
   anzline=0
   OPEN "O",#2,outputfilename$
-  PRINT #2,"' bas2x11basic V.1.10 ("+f$+")"
-  PRINT #2,"'	   (c) Markus Hoffmann "+date$+" "+time$
+  ! xxx original header:
+#  PRINT #2,"' bas2x11basic V.1.10 ("+f$+")"
+#  PRINT #2,"'	   (c) Markus Hoffmann "+date$+" "+time$
+  ! xxx new suggested header:
+  PRINT #2,"' "+outputfilename$
+  PRINT #2,"' ";@iso_time$()
+  PRINT #2,"' Automatic conversion of "+f$+" to X11-Basic"
+  PRINT #2,"' by bas2x11basic V.1.11 "
+  PRINT #2,"' Copyright (C) 2002-2004 Markus Hoffmann"
+  PRINT #2
   ' PASS 1
   PRINT "PASS 1"
   pass=1
@@ -153,10 +165,11 @@ PROCEDURE processline(t$)
   WEND
 RETURN
 PROCEDURE processifline(t$)
-  LOCAL ifauf
-  IF pass<>1
-    PRINT #2,"' "+t$
-  ENDIF
+  LOCAL ifauf,a$,b$
+# xxx why is this in the original?, it seems debugging code:
+#  IF pass<>1
+#    PRINT #2,"' "+t$
+#  ENDIF
   t$=REPLACE$(t$,", ",",")
   WHILE LEN(t$)
     WORT_SEP t$,":",1,b$,t$
@@ -233,11 +246,33 @@ PROCEDURE processcommand(b$)
       PRINT #2,"@P";a$+" "+c$         
     ENDIF
   ELSE IF UPPER$(b$)="IF"
-    PRINT #2,"' ERROR: No if here !"      
+#    PRINT #2,"' ERROR: No if here !" ! xxx original
+    @processifline(b$+" "+a$) ! xxx new
   ELSE
-    IF pass=1
-    ELSE
+    IF pass>1
       PRINT #2,b$;" ";a$
     ENDIF	
   ENDIF
 RETURN
+
+function yyyymmddhhmmss$() ! xxx new, only for debugging
+  local year$,month$,day$,hour$,minute$,second$
+  year$=right$(date$,4)
+  month$=left$(date$,2)
+  day$=mid$(date$,4,2)
+  hour$=left$(time$,2)
+  minute$=mid$(time$,4,2)
+  second$=right$(time$,2)
+  return year$+month$+day$+hour$+minute$+second$
+endfunction
+
+function iso_time$() ! xxx new, just a suggestion
+  local year$,month$,day$,hour$,minute$,second$
+  year$=right$(date$,4)
+  month$=left$(date$,2)
+  day$=mid$(date$,4,2)
+  hour$=left$(time$,2)
+  minute$=mid$(time$,4,2)
+  second$=right$(time$,2)
+  return year$+"-"+month$+"-"+day$+" "+hour$+":"+minute$+":"+second$
+endfunction

@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.19
+                       VERSION 1.20
 
-            (C) 1997-2012 by Markus Hoffmann
+            (C) 1997-2013 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.19                              Vendor: Markus Hoffmann
+Version     : 1.20                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
@@ -30,46 +30,123 @@ Description :
 
   The structure of the language is similar to the ATARI-ST GFA-BASIC.
   GFA-Basic programs should run with only few changes.
-
+ 
   On UNIX and linux systems, the X11 graphics engine can be used as well as the
   SDL library, the framebuffer devices or no graphics at all.  The MS WINDOWS
   version supports only SDL (or no graphics at all). 
 
-This package includes the basic interpreter named xbasic and a set of different 
-compilers. The interpreter can be used as a shell, and can so run basic-scripts.
-You can make excecutable scripts p.ex. *.cgi-Scripts for handling web-input. 
+  This package includes the basic interpreter named xbasic and a set of
+  different  compilers. The interpreter can be used as a shell, and can so run
+  basic-scripts. You can make excecutable scripts p.ex. *.cgi-Scripts for
+  handling web-input. 
 
-A compiler (xbc) is included which makes stand alone binaries out of the
-scripts, which run more than 10 times faster than the interpreted code. The
-compiler can either pseudo-compile the X11-Basic  sources by attaching the
-source to a run-only interpreter (in which case the  program will not run faster
-than is the interpreter is used, but you have everything in one excecutable
-file), or the compiler can do a real compilation of the BASIC source into
-bytecode, then c, and finally machine language. This way the code excecutes 
-about 10 times faster. (** This is a relatively new feature, so be prepared to
-catch errors here. Please report them. **)
+  A compiler (xbc) is included which makes stand alone binaries out of the
+  scripts, which run more than 10 times faster than the interpreted code. The
+  compiler can either pseudo-compile the X11-Basic  sources by attaching the
+  source to a run-only interpreter (in which case the  program will not run
+  faster than is the interpreter is used, but you have everything in one
+  excecutable file), or the compiler can do a real compilation of the BASIC
+  source into bytecode, then C, and finally machine language. This way the code
+  excecutes  about 10 times faster.
 
-X11-Basic programs can also be compiled into a bytecode (see xbbc). This bytecode 
-can be interpreted by a virtual machine (see xbvm). Finally, the bytecode can be 
-converted to c sourcefiles (see xb2c) which can be compiles with the gnu C 
-compiler (or the tiny c compiler) to native excecutables.
+  X11-Basic programs can also be compiled into a bytecode (see xbbc). This
+  bytecode  can be interpreted by a virtual machine (see xbvm). Finally, the
+  bytecode can be  converted to C sourcefiles (see xb2c) which can be compiled
+  with the gnu C compiler (or the tiny c compiler) to native excecutables.
 
-Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
-with the bas2x11basic program (see the man page bas2x11basic(1) ).
+  Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
+  with the bas2x11basic program (see the man page bas2x11basic(1) ).
 
-You will find the compiler sourcecode and some other sample programs in 
-/usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-can be found in X11-Basic-examples-1.19.zip, which you can download from the 
-homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
-of the manual can be found there.
+  You will find the compiler sourcecode and some other sample programs in 
+  /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
+  can be found in X11-Basic-examples-1.20.zip, which you can download from the 
+  homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
+  of the manual can be found there.
 
-Please read the file ./doc/X11-Basic-manual.txt for further information.
+  Please read the file ./doc/X11-Basic-manual.txt for further information.
 
   X11BASIC is free software and comes with NO WARRANTY - read the file
   COPYING for details
  
-(Basically that means, free, open source, use and modify as you like, don't
-incorporate it into non-free software, no warranty of any sort, don't blame me
-if it doesn't work.)
+  (Basically that means, free, open source, use and modify as you like, don't
+  incorporate it into non-free software, no warranty of any sort, don't blame me
+  if it doesn't work.)
 
 Please read the file INSTALL for compiling instructions.
+
+ADDITIONAL CONFIGURATION OPTIONS
+================================
+
+After generating the Makefile, look at the file `options.h' (sparsely
+commented) and see if there is anything you want to change.  The only option
+that you might need to change is GERMAN, which should be defined if you
+like to have a german version of X11-Basic. The default language is english. 
+
+COMPILING a standalone excecutable
+==================================
+
+To compile the X11-Basic interpreter (called xbasic), simply type 
+	
+	make static
+
+at the shell prompt. The produced file is independant of the x11basic 
+library and does not need the x11basic framework to be installed.
+
+After X11Basic has been compiled and linked successfully, you can start it
+by typing
+
+	./xbasic
+
+The command-line options can be listed with the `-h' option (`./xbasic -h').
+INSTALLING the standalone excecutable
+=====================================
+
+Put the executable wherever you like. I have mine in ${HOME}/bin/.
+
+A system wide installation can be done with
+sudo make install
+remove the installation with
+sudo make uninstall
+
+
+make the pseudo-compiler work, libraries:
+=========================================
+
+If you want to use the compilers included in this package, you have to
+make both the static and dynamic libraries.
+
+cd ./src
+      If you do not have the file mathematics.c please do
+cp mathemat_dummy.c mathematics.c
+      then:
+make lib              will generate libx11basic.so
+make x11basic.a       will generate x11basic.a
+
+-- now you have to be root --
+
+mv libx11basic.so /usr/lib/
+mv x11basic.a /usr/lib/
+-- please also check the permissions of the files:
+chmod 755 	/usr/lib/x11basic.a		
+chmod 755       /usr/lib/libx11basic.so 
+rehash
+
+make installroot
+                  will generate a dynamic linked binary of the interpreter,
+		  copy it to /bin/, install the libraries in /usr/local/lib/,
+		  install the man-page
+-----------------------------
+make xbc
+                  will make the X11-basic compiler
+                  You can then (beeing root) do a 
+make xbcinstall
+	          to install the compiler in /usr/local/bin/ and the compiler 
+		  man-page
+
+
+After doing all this, you will also find a xbasic.dyn executabe. This is the 
+interpreter, dynamically linked and much shorter.
+
+regards and have fun
+     Markus Hoffmann
+     

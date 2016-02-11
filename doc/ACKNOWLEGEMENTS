@@ -8,15 +8,45 @@ syntax has been taken from the ATARI ST implementation.
 
 Thanks to sourceforge.net for hosting this project on the web.
 
-Unfortuantely  derivates  of the routines of the famous book 
-"numerical recepies in C" are not allowed to be distributed as  part
-of  the  X11-Basic program. So I have not included all of the 
-mathematics features of X11-Basic in this  distribution.      (see 
-\verb|mathemat_dummy.c|).  If you own the book and have a licence 
-you may ask me for the sources of the routines.
-
+I would like to thank every people who help me out with source code, 
+patches, program examples, bug tracking, help and documentation writing, 
+financial support, judicious remarks, and so on...   
 
 And here some people, who helped me recently:
 in 2012:
- Marcos Cruz (beta testing and bug fixing)
- beos (send me a patch for 64bit version)
+* Marcos Cruz (beta testing and bug fixing)
+* Bernhard Rosenkraenzer (send me a patch for 64bit version)
+in 2013:
+* Matthias Vogl (\verb|va_copy| patch for 64bit version)
+* Eckhard Kruse (for permission to include ballerburg.bas in the samples)
+* Stewart C. Russell (helped me fix some compilation bugs on Raspberry PI)
+
+X11-Basic is build on top of many free softwares, and could not exist without 
+them.
+
+So I would like to thank every people involved in the following projects:
+
+    Linux
+    GCC and all of the GNU tools, of course.
+    The readline library.
+    The SDL (Simple Direct Media) library.
+    Creator if the 8x16 font "\verb|spat_a|".
+    The Burrow-Wheeler-Transform.
+    And any other libraries used by X11-Basic.
+ 
+Some pieces of code of X11-Basic are based on third party software:
+
+    The AES user interface routines are based on OpenGEM.
+    The FloodFill algorithm is based on xxxx.
+    Pictograms for mousecursers and fill patterns are based on TOS / ATARI ST.
+    The order-0 adaptive arithmetic decoding function  contains the source code 
+    from the 1987 CACM article by Witten, Neal, and Cleary.
+    Code for the blowfish encryption algorithm. (c) 1997 by Paul Kocher LGPL.
+
+Unfortuantely  derivates  of the routines of the famous book  "numerical
+recepies in C" are not allowed to be distributed as  part of  the  X11-Basic
+program. So I have not included all of the  mathematics features of X11-Basic in
+this  distribution.      (see  \verb|mathemat_dummy.c|).  
+If you own the book and have a licence  you may ask me for the sources of the
+routines.
+

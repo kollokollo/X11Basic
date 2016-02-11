@@ -68,13 +68,20 @@ typedef struct {
   unsigned short linejoin;
   unsigned int bcolor,fcolor;
   unsigned char alpha;
+  unsigned char graphmode;
   unsigned int textmode;
   int textwinkel;
+  unsigned short initialized;
+  unsigned short fill_rule;
+  unsigned short fill_style;
+  unsigned short *fill_pat;
   
 } G_CONTEXT;
 
+#define CharWidth1632 16
 #define CharWidth816 8
 #define CharWidth57 5
+#define CharHeight1632 32
 #define CharHeight816 16
 #define CharHeight57 (7+1)
 
@@ -104,10 +111,17 @@ extern const unsigned char mousealpha[16*16];
 #define FL_FRAMED       (1<<11)
 #define FL_TRANSPARENT  (1<<12)
 
+void Fb_BlitCharacter816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, 
+                               int flags,int fontnr,int charwidth,int charheight);
+
+void Fb_BlitCharacter1632(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character,int flags,int);
 void Fb_BlitCharacter816(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character,int flags,int);
 void Fb_BlitCharacter57(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character,int flags,int);
-void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackColor, char *str);
-void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColor, char *str);
+void Fb_BlitText3264(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str);
+void Fb_BlitText1632(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str);
+void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str);
+void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str);
+void Fb_BlitText816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str,int w,int h);
 
 
 
@@ -121,6 +135,9 @@ void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColo
   #define XWindowEvent(a,b,c,d) FB_event(c,d)
   #define XCheckWindowEvent(a,b,c,d) FB_check_event(c,d)
   #define XNextEvent(a,b)            FB_next_event(b)
+  
+  #define XSetFillRule(a,b,c) FB_setfillrule(c)
+  #define XSetFillStyle(a,b,c) FB_setfillstyle(c)
   
   #define XQueryPointer(a,b,c,d,e,f,g,h,i) FB_Query_pointer(e,f,g,h,i)
   #define XUnmapWindow(a,b) ;
@@ -202,7 +219,7 @@ void FB_put_image(char *,int, int);
 void FB_get_geometry(int *x, int *y, int *w, int *h, int *b, int *d);
 void FB_mtext(int x, int y, char *t);
 
-void FB_DrawString(int x, int y, char *t,int len);
+void FB_DrawString(int x, int y, const char *t,int len);
 void FB_DrawLine(int x0, int y0, int x1, int y1,unsigned short color);
 void FillBox (int x, int y, int w, int h, unsigned short color);
 unsigned short int mix_color(unsigned short int a, unsigned short int b, unsigned char alpha);
@@ -211,6 +228,21 @@ void FB_hide_mouse();
 void FB_draw_sprite(unsigned short *sprite, unsigned char *alpha,int x,int y);
 void FB_hide_sprite(int x,int y);
 void fill2Poly(unsigned short color,int *point, int num);
-void FB_bmp2pixel(char *s,unsigned short *d,int w, int h, unsigned short color);
-void FB_bmp2mask(char *s,unsigned char *d,int w, int h);
+void FB_bmp2pixel(const char *s,unsigned short *d,int w, int h, unsigned short color);
+void FB_bmp2mask(const char *s,unsigned char *d,int w, int h);
+
+void FB_defaultcontext();
+
+
+
+#define FillSolid 0
+#define FillStippled 2
+
+
+
+void FB_setfillpattern(const char *p);
+void FB_setfillstyle(int);
+void FB_setfillrule(int);
+
+
 #endif

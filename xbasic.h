@@ -161,6 +161,17 @@
 #define PE_NONE 0
 #define PE_COMMENT 1
 
+/*Procedure - Typen */
+
+#define PROC_PROC 1
+#define PROC_FUNC 2
+#define PROC_DEFFN 4
+
+
+
+
+
+
 typedef struct {
   long opcode;
   int integer;
@@ -196,7 +207,7 @@ extern UNIVAR returnvalue;
 
 extern const int anzpafuncs;
 extern const AFUNCTION pafuncs[];
-extern P_CODE pcode[];
+extern P_CODE *pcode;
 extern int errorpc, breakpc;
 extern int everytime,alarmpc;
 
@@ -206,13 +217,15 @@ extern const char version[];
 extern int is_bytecode;
 
 /* Deklarationen von Hilfsfunktionen */
-int init_program();
+
+void clear_program();
+int init_program(int prglen);
 char *bytecode_init(char *adr);
 
-char *indirekt2(char *funktion);
+char *indirekt2(const char *funktion);
 
-
-unsigned int type(char *ausdruck);
+void free_pcode(int l);
+unsigned int type(const char *ausdruck);
 
 
 #ifndef ANDROID
@@ -222,7 +235,7 @@ unsigned int type(char *ausdruck);
 #ifdef GERMAN
 #define structure_warning(lin,comment)  {printf("Warnung: Programmstruktur fehlerhaft bei Zeile %d : %s.\n",lin,comment); invalidate_screen();}
 #else
-#define structure_warning(lin,comment)  {printf("Warning: corrupt program structure at line %d ==> %s.\n",lin,comment); invalidate_screen();}
+#define structure_warning(lin,comment)  {printf("WARNING: corrupt program structure at line %d ==> %s.\n",lin,comment); invalidate_screen();}
 #endif
 
 
@@ -267,3 +280,25 @@ inline static int labelzeile(char *n) {
   return(-1);
 }
 
+#define clear_labelliste() { \
+  while(anzlabels) free(labels[--anzlabels].name); \
+}
+
+#define init_pcode(l) { \
+  pcode=(P_CODE *)calloc(l,sizeof(P_CODE)); \
+}
+
+#define clear_procliste() { \
+  while(anzprocs) { \
+    anzprocs--; \
+    free(procs[anzprocs].name); \
+    free(procs[anzprocs].parameterliste); \
+  } \
+}
+
+
+
+
+
+
+int original_line(int);

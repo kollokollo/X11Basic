@@ -34,6 +34,9 @@
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
+/* Define to 1 if you have the <pty.h> header file. */
+#undef HAVE_PTY_H
+
 /* expm1 in Mathlib */
 #undef HAVE_EXPM1
 
@@ -48,6 +51,12 @@
 
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
+
+/* Define to 1 if you have the `execvpe' function. */
+#undef HAVE_EXECVPE
+
+/* Define to 1 if you have the `futimens' function. */
+#undef HAVE_FUTIMENS
 
 /* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
@@ -118,6 +127,9 @@
 
 /* Advanced Sound System present */
 #undef HAVE_ALSA
+
+/* forkpty usable */
+#undef HAVE_FORKPTY
 
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT

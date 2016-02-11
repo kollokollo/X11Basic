@@ -51,7 +51,7 @@ extern int verbose;
 #endif
 
 
-char *rodata;
+char *rodata=NULL;;
 
 inline static int vm_x2i(PARAMETER *sp) {    /* cast to integer */
   VERBOSE("x2i ");
@@ -356,13 +356,12 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }  
   if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-    if(sp[0].typ==PL_KEY) {
-      char *w2=sp[0].pointer;
-      STRING s=(psfuncs[i].routine)(w2);
-      free(w2);
-      sp[0].pointer=s.pointer;
-      sp[0].integer=s.len;
-      sp[0].typ=PL_STRING;
+    if(sp->typ==PL_KEY) {
+      STRING s=(psfuncs[i].routine)(sp->pointer);
+      free(sp->pointer);
+      sp->pointer=s.pointer;
+      sp->integer=s.len;
+      sp->typ=PL_STRING;
       return 1-anzarg;
     } else {
       VMERROR("SFUNC");
@@ -438,16 +437,14 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }  
   if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-    char *w2;
-    w2=sp[0].pointer;
     if(pfuncs[i].opcode&F_IRET) {
-      sp[0].integer=((int (*)())pfuncs[i].routine)(w2);
-      sp[0].typ=PL_INT;
+      sp->integer=((int (*)())pfuncs[i].routine)(sp->pointer);
+      sp->typ=PL_INT;
     } else {
-      sp[0].real=(pfuncs[i].routine)(w2);
-      sp[0].typ=PL_FLOAT;
+      sp->real=(pfuncs[i].routine)(sp->pointer);
+      sp->typ=PL_FLOAT;
     }
-    free(w2);
+    free(sp->pointer);
     return 1-anzarg;
   }
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
@@ -498,18 +495,18 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   }
   if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_SQUICK) {
     STRING a;
-    if(sp[0].typ==PL_STRING) {
-      a.len=sp[0].integer;
-      a.pointer=sp[0].pointer;
+    if(sp->typ==PL_STRING) {
+      a.len=sp->integer;
+      a.pointer=sp->pointer;
     } else 
     xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
 //    printf("Got a string: <%s>\n",a.pointer);
     if(pfuncs[i].opcode&F_IRET) {
-      sp[0].integer=((int (*)())pfuncs[i].routine)(a);
-      sp[0].typ=PL_INT;
+      sp->integer=((int (*)())pfuncs[i].routine)(a);
+      sp->typ=PL_INT;
     } else {
-      sp[0].real=(pfuncs[i].routine)(a);
-      sp[0].typ=PL_FLOAT;
+      sp->real=(pfuncs[i].routine)(a);
+      sp->typ=PL_FLOAT;
     }
     free(a.pointer);
     return 1-anzarg;
@@ -538,6 +535,7 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
 
 STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
   VERBOSE("vm_%s(%d)_%d\n",comms[i].name,anzarg,i);
+// printf("SP=%p\n",sp);
   if(comms[i].opcode&P_IGNORE) return -anzarg;
 #ifdef EXTRACHECK
   if(anzarg<comms[i].pmin) {
@@ -605,7 +603,7 @@ STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
     p->typ=PL_ALLVAR;
     TYPEMISMATCH("pushvvi");
   }
-  free(indexliste);
+  if(indexliste) free(indexliste);
   return(-dim+1);
 }
 
@@ -624,9 +622,28 @@ static void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
     free(v->pointer.s->pointer);
     *(v->pointer.s)=double_string((STRING *)&(p->integer));
   } else if(v->typ==ARRAYTYP && p->typ==PL_ARRAY) {
-    free_array(v->pointer.a);
-    *(v->pointer.a)=double_array((ARRAY *)&(p->integer));
+    
+    /*Was machen wir, wenn die Arraytypen nicht stimmen?*/
+    
+       ARRAY *zarr=v->pointer.a;
+       ARRAY *arr=(ARRAY *)&(p->integer);
+     
+      if(arr->typ==zarr->typ) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=double_array((ARRAY *)&(p->integer));
+      } else if(zarr->typ==INTTYP && arr->typ==FLOATTYP) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_intarray(arr);
+      } else if(zarr->typ==FLOATTYP && arr->typ==INTTYP) {
+        free_array(v->pointer.a);
+        *(v->pointer.a)=convert_to_floatarray(arr);
+      } else {
+          xberror(58,v->name); /* Variable %s has incorrect type*/  
+	printf("Ziel-Array  hat folgenden Typ: %d\n",zarr->typ);
+	printf("Quell-Array hat folgenden Typ: %d\n",arr->typ);
+      }
   } else {
+    xberror(58,v->name); /* Variable %s has incorrect type*/  
     printf("zuweis_v_parameter: $%x->$%x kann nicht konvertieren.\n",p->typ,v->typ);
     dump_parameterlist(p,1);
   }
@@ -715,7 +732,7 @@ STATIC void  push_v(PARAMETER *p, VARIABLE *v) {
   v->name,v->typ,p->typ);
 }
 
-inline static int vm_pushv(int vnr,PARAMETER *sp) {    /*  */
+inline static int vm_pushv(unsigned short vnr,PARAMETER *sp) {    /*  */
   VERBOSE("vm_pushv_%d ",vnr);
   push_v(sp,&variablen[vnr]);
   return(1);
@@ -774,9 +791,9 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
 #ifdef ANDROID
   backlog("enter virtual machine.");
 #endif
-  while(batch & i<bcpc.len && (cmd=bcpc.pointer[i])) {
+  while(batch && i<bcpc.len && (cmd=bcpc.pointer[i])) {
     i++;
-     switch(cmd) {
+    switch(cmd) {
     case BC_NOOP:  
       VERBOSE("vm_noop ");
       break;
@@ -921,6 +938,19 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
       VERBOSE("\"%s\" ",(char *)opstack[-1].pointer);
       }
       break;
+    case BC_PUSHA:  /*Array konstante auf STack....*/
+      { int len;
+        STRING str;
+      CP4(&len,&bcpc.pointer[i],sizeof(int));
+      CP4(&a,&bcpc.pointer[i],sizeof(int));
+      str.len=len;
+      str.pointer=(char *)(rodata+a);
+      opstack->typ=PL_ARRAY;
+      *((ARRAY *)&(opstack->integer))=string_to_array(str);
+      opstack++;
+      VERBOSE("array ");
+      }
+      break;
     case BC_PUSHFUNC:
       a=bcpc.pointer[i++]&0xff;
       n=bcpc.pointer[i++]&0xff;
@@ -1037,7 +1067,8 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
       break;
     case BC_AND:
       VERBOSE("AND ");
-      (opstack-1)->integer=(opstack-1)->integer & (opstack-2)->integer;
+      opstack--;
+      (opstack-1)->integer=opstack->integer & (opstack-1)->integer;
       break;
     case BC_EQUAL:
       opstack+=vm_equal(opstack);
@@ -1112,6 +1143,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int *npar) {
     case BC_PUSHV:
       CP2(&ss,&bcpc.pointer[i],sizeof(short));
       opstack+=vm_pushv(ss,opstack);
+      
       break;
     case BC_PUSHARRAYELEM:      
       CP2(&ss,&bcpc.pointer[i],sizeof(short));
@@ -1167,7 +1199,12 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
   double f;
   int i;
   PARAMETER *opstack=*sp;
-  va_list arguments=*arg;
+//#ifdef SYSTEM64
+  va_list arguments;     /*Patch von Matthias Vogl, 29.12.2012*/
+  va_copy(arguments, *arg);
+//#else
+//  va_list arguments=*arg;
+//#endif
     switch(typ) {
     case 'a': a=va_arg ( arguments, ARRAY );  *((ARRAY *)(opstack->integer))=double_array(&a); opstack->typ=PL_ARRAY; opstack++; break;
     case 's': s=va_arg ( arguments, STRING ); *((STRING *)(opstack->integer))=double_string(&s); opstack->typ=PL_STRING; opstack++; break;
@@ -1180,7 +1217,11 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
       break;
     }
     *sp=opstack;
-    *arg=arguments;
+//#ifdef SYSTEM64
+    va_copy(*arg, arguments); /*Patch von Matthias Vogl, 29.12.2012*/
+//#else
+//    *arg=arguments;
+//#endif
 }
 
 
@@ -1194,7 +1235,7 @@ int pusharg(PARAMETER **opstack, char *typ,...)   {
   unsigned char c;
   va_list arguments;    
   va_start ( arguments, typ ); 
-  while(c=typ[count++]) do_pusharg(&arguments,c,opstack);
+  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
   va_end ( arguments );                  // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
 // jetzt kann die Funktion aufgerufen werden...
@@ -1207,7 +1248,7 @@ int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   PARAMETER *osp=*opstack;
   va_list arguments;    
   va_start(arguments,typ); 
-  while(c=typ[count++]) do_pusharg(&arguments,c,opstack);
+  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
   va_end ( arguments );                  // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
@@ -1219,7 +1260,7 @@ double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   PARAMETER *osp=*opstack;
   va_list arguments;    
   va_start(arguments,typ); 
-  while(c=typ[count++]) do_pusharg(&arguments,c,opstack);
+  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
   va_end ( arguments );                  // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
@@ -1231,7 +1272,7 @@ STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   PARAMETER *osp=*opstack;
   va_list arguments;    
   va_start(arguments,typ); 
-  while(c=typ[count++]) do_pusharg(&arguments,c,opstack);
+  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
   va_end ( arguments );                  // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
@@ -1243,7 +1284,7 @@ ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   PARAMETER *osp=*opstack;
   va_list arguments;    
   va_start(arguments,typ); 
-  while(c=typ[count++]) do_pusharg(&arguments,c,opstack);
+  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
   va_end ( arguments );                  // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();

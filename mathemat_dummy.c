@@ -5,6 +5,9 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+
+#include <stdlib.h>
+#include <stdio.h>
  
 /* Die Routinen aus den Numerical recepies sind copyrighted und duerfen nicht
    weitergegeben werden */
@@ -27,10 +30,12 @@ void linear_fit_exy(double *x, double *y, int anz, double sigx[], double sigy[],
 double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten) {
   puts("Procedures from numerical recepies not supported\n");
   puts("because of copyright protection. \n");
+  return 0;
 }
 double *backsub(double *singulars, double *u, double *v, double *b, int n, int m) {
   puts("Procedures from numerical recepies not supported\n");
   puts("because of copyright protection. \n");
+  return 0;
 }
 void makeSVD2(double *v1,double *m1,int anzzeilen, int anzspalten, double *ergeb) {
   puts("Procedures from numerical recepies not supported\n");

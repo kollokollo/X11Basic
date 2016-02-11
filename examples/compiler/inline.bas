@@ -14,23 +14,23 @@ chuncklen=63   ! length of a line
 i=1
 CLR inputfile$,collect$
 outputfilename$="a.bas"
-WHILE LEN(param$(i))
-  IF LEFT$(param$(i))="-"
-    IF param$(i)="--help" OR param$(i)="-h"
+WHILE LEN(PARAM$(i))
+  IF LEFT$(PARAM$(i))="-"
+    IF PARAM$(i)="--help" OR PARAM$(i)="-h"
       @intro
       @using
-    ELSE IF param$(i)="-c"
+    ELSE IF PARAM$(i)="-c"
       docomp=0
-    ELSE IF param$(i)="-o"
+    ELSE IF PARAM$(i)="-o"
       INC i
-      IF LEN(param$(i))
-        outputfilename$=param$(i)
+      IF LEN(PARAM$(i))
+        outputfilename$=PARAM$(i)
       ENDIF
-    else 
-      collect$=collect$+param$(i)+" " 
+    ELSE
+      collect$=collect$+PARAM$(i)+" " 
     ENDIF
   ELSE
-    inputfile$=param$(i)
+    inputfile$=PARAM$(i)
     IF NOT EXIST(inputfile$)
       PRINT "inline.bas: "+inputfile$+": file or path not found"
       CLR inputfile$
@@ -40,8 +40,8 @@ WHILE LEN(param$(i))
 WEND
 IF LEN(inputfile$)
   @doit(inputfile$)
-else
-  print "inline.bas: No input files"
+ELSE
+  PRINT "inline.bas: No input files"
 ENDIF
 QUIT
 PROCEDURE intro
@@ -56,59 +56,58 @@ PROCEDURE using
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
 
+PROCEDURE doit(f$)
+  LOCAL l,ll,content$,g$,gg$,comp
+  CLR comp
+  IF EXIST(f$)
+    OPEN "I",#1,f$
+    ll=LOF(#1)
+    content$=INPUT$(#1,ll)
+    CLOSE #1
 
-procedure doit(f$)
-  local l,ll,content$,g$,gg$,comp
-  clr comp
-  if exist(f$)
-    open "I",#1,f$
-    ll=lof(#1)
-    content$=input$(#1,ll)
-    close #1
-
-    if docomp
+    IF docomp
       gg$=compress$(content$)
-    endif
-    if len(gg$)<len(content$) and docomp=1
+    ENDIF
+    IF LEN(gg$)<LEN(content$) AND docomp=1
       g$=gg$
       comp=1
-    else
+    ELSE
       g$=content$
-    endif
-    l=len(g$)
-    print "' output of inline.bas for X11-Basic "+date$
-    if comp=1
-      print "' ";f$;" ";ll;" Bytes. (compressed: ";l;" Bytes, ";int(l/ll*100);"%)"
-    else
-      print "' ";f$;" ";l;" Bytes."
-    endif
+    ENDIF
+    l=LEN(g$)
+    PRINT "' output of inline.bas for X11-Basic "+date$
+    IF comp=1
+      PRINT "' ";f$;" ";ll;" Bytes. (compressed: ";l;" Bytes, ";int(l/ll*100);"%)"
+    ELSE
+      PRINT "' ";f$;" ";l;" Bytes."
+    ENDIF
     SPLIT f$,".",0,n$,b$    
-    if rinstr(n$,"/")
-      n$=right$(n$,len(n$)-rinstr(n$,"/"))
-    endif
+    IF RINSTR(n$,"/")
+      n$=RIGHT$(n$,LEN(n$)-RINSTR(n$,"/"))
+    ENDIF
     t$=""
-    n$=replace$(n$,"-","_")
-    print n$+"$="+chr$(34)+chr$(34)
-    while l>3
-      a$=left$(g$,3)
-      t$=t$+chr$(36+(peek(varptr(a$)) and 0xfc)/4)
-      t$=t$+chr$(36+(peek(varptr(a$)) and 0x3)*16+(peek(varptr(a$)+1) and 0xf0)/16)
-      t$=t$+chr$(36+(peek(varptr(a$)+1) and 0xf)*4+(peek(varptr(a$)+2) and 0xc0)/64)
-      t$=t$+chr$(36+(peek(varptr(a$)+2) and 0x3f))
-      sub l,3
-      g$=right$(g$,len(g$)-3)
-      if len(t$)>chuncklen
-        print n$+"$="+n$+"$+"+chr$(34)+t$+chr$(34)
+    n$=REPLACE$(n$,"-","_")
+    PRINT n$+"$="+CHR$(34)+CHR$(34)
+    pointer=0
+    WHILE l>3
+      t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0xfc)/4)
+      t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3) AND 0x3)*16+(PEEK(VARPTR(g$)+pointer*3+1) and 0xf0)/16)
+      t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+1) AND 0xf)*4+(PEEK(VARPTR(g$)+pointer*3+2) and 0xc0)/64)
+      t$=t$+CHR$(36+(PEEK(VARPTR(g$)+pointer*3+2) AND 0x3f))
+      SUB l,3
+      INC pointer
+      IF LEN(t$)>chuncklen
+        PRINT n$+"$="+n$+"$+"+ENCLOSE$(t$)
         t$=""
-      endif
-    wend
-    if l
-      a$=g$+mkl$(0)
-      t$=t$+chr$(36+(peek(varptr(a$)) and 0xfc)/4)
-      t$=t$+chr$(36+(peek(varptr(a$)) and 0x3)*16+(peek(varptr(a$)+1) and 0xf0)/16)
-      t$=t$+chr$(36+(peek(varptr(a$)+1) and 0xf)*4+(peek(varptr(a$)+2) and 0xc0)/64)
-      t$=t$+chr$(36+(peek(varptr(a$)+2) and 0x3f))
-      print n$+"$="+n$+"$+"+chr$(34)+t$+chr$(34)
+      ENDIF
+    WEND
+    IF l
+      a$=RIGHT$(g$,l)+MKL$(0)
+      t$=t$+CHR$(36+(PEEK(VARPTR(a$)) AND 0xfc)/4)
+      t$=t$+CHR$(36+(PEEK(VARPTR(a$)) AND 0x3)*16+(PEEK(VARPTR(a$)+1) AND 0xf0)/16)
+      t$=t$+CHR$(36+(PEEK(VARPTR(a$)+1) AND 0xf)*4+(PEEK(VARPTR(a$)+2) AND 0xc0)/64)
+      t$=t$+CHR$(36+(PEEK(VARPTR(a$)+2) AND 0x3f))
+      PRINT n$+"$="+n$+"$+"+ENCLOSE$(t$)
     ENDIF
     IF comp
       PRINT n$+"_"+b$+"$=UNCOMPRESS$(INLINE$("+n$+"$))"

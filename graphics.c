@@ -53,6 +53,7 @@ void graphics_setdefaults() {
 #endif
 }
 
+
 /* Line-Funktion (fuer ltext) */
 void line(int x1,int y1,int x2,int y2) {
 #ifdef USE_X11
@@ -99,35 +100,33 @@ r=sdl_getpixel(display[usewindow],x,y);
 int get_fcolor() {
 #ifdef WINDOWS_NATIVE
   return(global_color);
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
   return(screen.fcolor);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
   XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCForeground, &gc_val);
   return(gc_val.foreground);
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   return(fcolor);
 #endif
 }
 int get_bcolor() {
 #ifdef FRAMEBUFFER
   return(screen.bcolor);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
   XGCValues gc_val;  
   XGetGCValues(display[usewindow], gc[usewindow],  GCBackground, &gc_val);
   return(gc_val.background);
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   return(bcolor);
+#else 
+  return(0);
 #endif
 }
 
-
+#ifdef USE_X11
 int global_graphmode=1;
+#endif
 
 void set_graphmode(int n) { 
 /*            n=1 copy src
@@ -138,9 +137,8 @@ void set_graphmode(int n) {
               n<0 uebergibt -n an X-Server
  */  
 
-  global_graphmode=n;
-
 #ifdef USE_X11
+  global_graphmode=n;
   XGCValues gc_val;  
   switch (n) {
     case GRAPHMD_REPLACE:gc_val.function=GXcopy;       break;
@@ -157,8 +155,8 @@ void set_graphmode(int n) {
     break;
   } 
   XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
+  FB_setgraphmode(n);
   switch (n) {
     case GRAPHMD_REPLACE:FB_set_alpha(255);break;
     case GRAPHMD_TRANS:break;
@@ -175,6 +173,7 @@ void set_graphmode(int n) {
 
 /* NAME="BIG"
         "SMALL"
+        "LARGE"
 	"8x16"
 	"8x8"
 	"5x7"
@@ -192,20 +191,41 @@ void set_font(char *name) {
    if(fs!=NULL)  {
      gc_val.font=fs->fid;
      XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
+     baseline=fs->ascent;
+     chh=baseline+fs->descent;
+     chw=fs->max_bounds.width;
    }
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
-    chw=8;
-    chh=16;
+    chw=CharWidth816;
+    chh=CharHeight816;
     baseline=chh-2;   
+  } else if(strcmp(name,"HUGE")==0 || strcmp(name,"24x48")==0) {
+    chw=24;
+    chh=48;
+    baseline=chh-6;
+  } else if(strcmp(name,"GIANT")==0 || strcmp(name,"32x64")==0) {
+    chw=32;
+    chh=64;
+    baseline=chh-8;
+  } else if(strcmp(name,"LARGE")==0 || strcmp(name,"16x32")==0) {
+    chw=CharWidth1632;
+    chh=CharHeight1632;
+    baseline=chh-4;   
+  } else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) {
+    chw=8;
+    chh=8;
+    baseline=chh-1;
+  } else if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) {
+    chw=CharWidth57;
+    chh=CharHeight57;
+    baseline=chh-0;   
   } else {
     chw=CharWidth;
     chh=CharHeight;
     baseline=chh-0;
   }
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
     chw=8;
     chh=16;
@@ -229,27 +249,24 @@ void set_font(char *name) {
 void draw_string(int x, int y, char *text,int len) {
 #ifdef WINDOWS_NATIVE
   TextOut(bitcon[usewindow],x,(y-baseline),text,len);
-#endif
-#ifdef FRAMEBUFFER
-  FB_DrawString(x,y-chh+2,text,len);
-#endif
-#ifdef USE_X11
- if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
- else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
-#endif
-#ifdef USE_SDL
+#elif defined FRAMEBUFFER
+  FB_DrawString(x,y-baseline,text,len);
+#elif defined USE_X11
+  if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+  else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+#elif defined USE_SDL
   char s[len+1];
   memcpy(s,text,len);
   s[len]=0;
-  stringColor(display[usewindow],x,y-chh+4,s,fcolor);
+  stringColor(display[usewindow],x,y-baseline+2,s,fcolor);
 #endif
 }
 
 
 
 void set_fill(int c) {
-#ifdef USE_X11
 #include "bitmaps/fill.xbm"
+#ifdef USE_X11
   static Pixmap fill_pattern;
   static int fill_alloc=0;
     if(fill_alloc) XFreePixmap(display[usewindow],fill_pattern);
@@ -259,6 +276,9 @@ void set_fill(int c) {
     fill_alloc=1;   
     XSetStipple(display[usewindow], gc[usewindow],fill_pattern);
 #endif
+#ifdef FRAMEBUFFER
+    FB_setfillpattern(fill_bits+c*16*2);
+#endif
 }
 int mousex() {
 #if defined ANDROID
@@ -267,12 +287,13 @@ int mousex() {
 #ifdef WINDOWS_NATIVE
   return(global_mousex);
 #endif
-  int root_x_return, root_y_return,win_x_return, win_y_return;
-  unsigned int mask_return;
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
 #if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
+  int root_x_return, root_y_return,win_x_return, win_y_return;
+  unsigned int mask_return;
+
   graphics(); 
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
@@ -287,14 +308,13 @@ int mousey() {
 #ifdef WINDOWS_NATIVE
   return(global_mousey);
 #endif
-    int root_x_return, root_y_return,win_x_return, win_y_return;
-    unsigned int mask_return;
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
 #if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
-  graphics();
-   
+  int root_x_return, root_y_return,win_x_return, win_y_return;
+  unsigned int mask_return;
+  graphics(); 
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
@@ -308,14 +328,13 @@ int mousek() {
 #if defined WINDOWS_NATIVE 
   return(global_mousek);
 #endif
-   int root_x_return, root_y_return,win_x_return, win_y_return;
-   unsigned int mask_return;
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
 #if defined USE_X11 || defined USE_SDL || defined FRAMEBUFFER
-   graphics();
-   
+   int root_x_return, root_y_return,win_x_return, win_y_return;
+   unsigned int mask_return;
+   graphics(); 
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
@@ -326,9 +345,9 @@ int mouses() {
 #if defined WINDOWS_NATIVE
   return(global_mouses);
 #endif
+#ifdef USE_X11
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
-#ifdef USE_X11
    Window root_return,child_return;
    graphics();
    
@@ -349,10 +368,10 @@ return(0);
    zurueckgeliefert, der der spezifizierten Farbe am naechsten kommt.
    Diese Routine kann also kein XAllocColor failed mehr produzieren.
 
-   (c) markus hoffmann  1998                                   */
+   (c) Markus Hoffmann  1998                                   */
 
 
-unsigned int get_color(int r, int g, int b) {
+unsigned int get_color(int r, int g, int b, int a) {
 #ifdef WINDOWS_NATIVE
   return(RGB(r>>8,g>>8,b>>8));
 #endif
@@ -420,8 +439,10 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 }
 #endif
 
-/**** Flood Fill *********************************************************/
-
+/**** Flood Fill *********************************************************
+*	Source code is based on:
+*	"Programmer's guide to PC & PS/2 Video Systems"
+*/
 #define QUEUESIZE   256		/* The size of Queue (400) */
 
 #define FF_UP	    1

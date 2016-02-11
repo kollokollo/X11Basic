@@ -10,58 +10,57 @@ c=1
 pt=0.1
 bw=320
 bh=200
-sizew ,bw,bh
-schwarz=get_color(0,0,0)
-clearw 
+SIZEW ,bw,bh
+schwarz=COLOR_RGB(0,0,0)
+CLEARW 
 go:
-text 0,190,"Krieche wie ein Wurm ... und Du bist glücklich!  (c) Markus Hoffmann"
+TEXT 0,190,"Krieche wie ein Wurm ... und Du bist glücklich!  (c) Markus Hoffmann"
 DO
-	altschwanz=schwanz
-	schwanz=schwanz MOD 25
-	inc schwanz
-	c=c mod 200
-	inc c
- 	color schwarz
-	circle xkreis(schwanz),ykreis(schwanz),3
-	wechsel=RANDOM(10)
-	IF wechsel<5
-		add ri,0.1745
-	ELSE
-		sub ri,0.1745
-	ENDIF	
-	neux=xkreis(altschwanz)+2*COS(ri)
-	neuy=ykreis(altschwanz)+SIN(ri)
-	neux=neux MOD 320
-	neuy=neuy MOD 200
-	IF neux<0
-		add neux,320
-	ENDIF
-	IF neuy<0
-		add neuy,200
-	ENDIF
-	xkreis(schwanz)=neux
-	ykreis(schwanz)=neuy
-	
-	color @farbe(c)
-	circle neux,neuy,3
-        exit if mousek>500
-	vsync
-        pause pt
-	if timer-t>0.025
-	  pt=pt/1.1
-	endif
-	if timer-t<0.021
-	  pt=pt*1.1+0.001
-	endif
-        t=timer
-loop
+  altschwanz=schwanz
+  schwanz=schwanz MOD 25
+  INC schwanz
+  c=c MOD 200
+  INC c
+  COLOR schwarz
+  CIRCLE xkreis(schwanz),ykreis(schwanz),3
+  wechsel=RANDOM(10)
+  IF wechsel<5
+    ADD ri,0.1745
+  ELSE
+    SUB ri,0.1745
+  ENDIF   
+  neux=xkreis(altschwanz)+2*COS(ri)
+  neuy=ykreis(altschwanz)+SIN(ri)
+  neux=neux MOD bw
+  neuy=neuy MOD bh
+  IF neux<0
+    ADD neux,bw
+  ENDIF
+  IF neuy<0
+    ADD neuy,bh
+  ENDIF
+  xkreis(schwanz)=neux
+  ykreis(schwanz)=neuy
+
+  COLOR @farbe(c)
+  CIRCLE neux,neuy,3
+  EXIT IF MOUSEK>500
+  SHOWPAGE
+  PAUSE pt
+  IF TIMER-t>0.025
+    pt=pt/1.1
+  ENDIF
+  IF TIMER-t<0.021
+    pt=pt*1.1+0.001
+  ENDIF
+  t=TIMER
+LOOP
 ' " ... und der Wurm verpuppte sich und ward niemehr gesehen..."
-quit
-function farbe(n)
-  local r,g,b,col
-  r=random(1000)/1000
-  g=random(1000)/1000
-  b=sqrt(1-r*r-g*g)
-  col=get_color(r*65535,g*65535,b*65535)
-  return col
-endfunc
+QUIT
+FUNCTION farbe(n)
+  LOCAL r,g,b
+  r=RND()
+  g=RND()
+  b=SQRt(1-r*r-g*g)
+  RETURN COLOR_RGB(r,g,b)
+ENDFUNC

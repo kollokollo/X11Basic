@@ -1,4 +1,7 @@
-' 3D-Grafik benchmark (c) Markus Hoffmann, die Idee und das Programm kommt noch aus der ATARI-ST Zeit
+' 3D-grafics benchmark (c) Markus Hoffmann, 
+' die Idee und das Programm kommt noch aus der ATARI-ST Zeit (ca. 1991)
+'
+' uses polygon and polyfill commands
 '
 '
 DIM pxU(4),pyU(4)
@@ -44,14 +47,14 @@ xwink=-SGN(bbz)*ATN(ABS(bbz/SQR(bbz^2+bby^2)))
 ' Lichteinfallrichtung
 lichtx=0
 lichty=-0.8
-lichtz=sqr(1-lichty^2)
+lichtz=SQR(1-lichty^2)
 ' Lichtfarbe
 lichtr=50000
 lichtg=65535
 lichtb=65535
 '
-weiss=get_color(65535,65535,65535)
-schwarz=get_color(0,0,0)
+weiss=COLOR_RGB(1,1,1)
+schwarz=COLOR_RGB(0,0,0)
 grau=get_color(32000,32000,32000)
 gelb=get_color(65535,65535,32000)
 blau=get_color(32000,32000,65535)
@@ -90,9 +93,9 @@ text bxU+20,byU+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
 color schwarz
 LINE @kx(x1,y1,0),@ky(x1,y1,0),@kx(x1,y2,0),@ky(x1,y2,0)
 LINE @kx(x1,y2,0),@ky(x1,y2,0),@kx(x2,y2,0),@ky(x2,y2,0)
-POLYline 4,pxU(),pyU()
+POLYLINE 4,pxU(),pyU()
 
-vsync
+SHOWPAGE
 tim=timer
 FOR y=y2 DOWNTO y1 STEP sy
   IF SGN(y)<>SGN(yy)
@@ -137,13 +140,16 @@ FOR y=y2 DOWNTO y1 STEP sy
     POLYFILL 4,pxU(),pyU()
   NEXT x
   LINE @kx(0,y-sy,0),@ky(0,y-sy,0),@kx(0,y,0),@ky(0,y,0)
-  vsync
+  SHOWPAGE
 NEXT y
 '
 ' BSAVE "E:\ablage\funktion.doo",XBIOS(3),32000
 print timer-tim;" Sekunden."
-alert 0,"Fertig !",1," OK ",balert
-quit
+alert 0,"Done !",1," OK |QUIT",balert
+if balert=2
+  quit
+endif
+end
 '
 '
 DEFFN f(x,y)=0.8*EXP(-2*(x^2+y^2))*COS((x^2+y^2)*10)

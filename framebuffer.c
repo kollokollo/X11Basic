@@ -132,15 +132,13 @@ void Fb_Open() {
   screen.clip_h=screen.height=screen_info.height;
 #endif
   screen.clip_x=screen.clip_y=0;
-  screen.fcolor=YELLOW;
-  screen.bcolor=BLACK;
-  screen.mouse_ox=8;
-  screen.mouse_oy=8;
-  screen.mouse_x=screen.width/2;
-  screen.mouse_y=screen.height/2;
-  screen.mousemask=mousealpha;
-  screen.mousepat=mousepat;
-  screen.alpha=255;
+if(screen.initialized!=4711) {
+  FB_defaultcontext();
+} else {
+  screen.mouse_x=min(screen.width,screen.mouse_x);
+  screen.mouse_y=min(screen.height,screen.mouse_y);
+
+}
   // Figure out the size of the screen in bytes
   screen.size = screen.width * screen.height * screen.bpp / 8;
   screen.scanline=screen.width*screen.bpp/8;
@@ -157,7 +155,13 @@ void Fb_Open() {
   extern void *screen_pixels;
   screen.pixels = (char *)screen_pixels;
 #endif
-  change_fontsize((font_behaviour==0 && screen.width>=480) || font_behaviour==2); 
+
+  if(font_behaviour==0) {
+    if(screen.width/8<20) change_fontsize(0);
+    else if(screen.width/8<=40) change_fontsize(1);
+    else change_fontsize(2);
+  } else change_fontsize(font_behaviour-1);
+
   /* Now set the padding to zero, otherwise it can happen that nothing is visible
     if the pading was set to the second page...*/
 
@@ -171,6 +175,7 @@ void Fb_Open() {
 #endif
   // printf("Screen size: %d x %d\n",screen.width, screen.height);
  FB_show_mouse();
+ screen.initialized=4711;
 }
 
 void Fb_Close() {
@@ -180,8 +185,49 @@ void Fb_Close() {
     close(fbfd);
   }
 #endif
+  FB_hide_mouse();
   fbfd = -1;
 }
+
+static G_CONTEXT backup;
+
+void FB_savecontext() {
+   backup=screen;
+}
+void FB_restorecontext() {
+  screen.fcolor=backup.fcolor;
+  screen.bcolor=backup.bcolor;
+  screen.graphmode=backup.graphmode;
+  screen.textmode=backup.textmode;
+  screen.linewidth=backup.linewidth;
+  screen.linewidth=backup.linewidth;
+  screen.fill_rule=backup.fill_rule;
+  screen.fill_style=backup.fill_style;
+  screen.fill_pat=backup.fill_pat;
+  
+}
+void FB_defaultcontext() {
+  screen.fcolor=YELLOW;
+  screen.bcolor=BLACK;
+  screen.mouse_ox=8;
+  screen.mouse_oy=8;
+  screen.mouse_x=screen.width/2;
+  screen.mouse_y=screen.height/2;
+  screen.mousemask=(unsigned char *)mousealpha;
+  screen.mousepat=(unsigned short *)mousepat;
+  screen.alpha=255;
+  screen.graphmode=1;
+  screen.linewidth=1;
+  screen.fill_rule=0;
+  screen.fill_style=0;
+  screen.fill_pat=NULL;
+}
+
+
+void FB_setgraphmode(int n) {
+  screen.graphmode=n;
+}
+
 
 /* This is a low-level Function, need to be fast, but does noch check 
    clipping */
@@ -264,6 +310,81 @@ static void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
     while(w-->0) FB_PutPixel_noclip_alpha(X++,Y,color,screen.alpha);
   }
 }
+
+
+
+
+
+
+void FB_setfillpattern(const char *p) {
+  screen.fill_pat=(unsigned short *)p;
+}
+void FB_setfillstyle(int c) {
+  screen.fill_style=c;
+}
+void FB_setfillrule(int c) {
+  screen.fill_rule=c;
+}
+
+
+/*Draw a horizontal line and use pattern, transparent*/
+
+static void DrawHorizontalLinePatt(int X, int Y, int width, unsigned short color, unsigned short pat) {
+  if (Y<screen.clip_y) return;
+  if (Y>=screen.clip_y+screen.clip_h) return;
+  register int w = width; 
+
+  if (Y<screen.clip_y) return;
+  if (Y>=screen.clip_y+screen.clip_h) return;
+
+  if (X<screen.clip_x)      // clip left margin
+    { w-=(screen.clip_x-X); X=screen.clip_x; }
+  if (w>screen.clip_x+screen.clip_w-X)    // clip right margin
+    w=screen.clip_x+screen.clip_w-X;
+
+  if(screen.alpha==255) {
+    while(w-->0) {
+      if((pat>>(X&0xf))&1) FB_PutPixel_noclip(X,Y,color);
+      X++;
+    }
+  } else {
+    while(w-->0) {
+      if((pat>>(X&0xf))&1) FB_PutPixel_noclip_alpha(X,Y,color,screen.alpha);
+      X++;
+    }
+  }
+}
+
+static void DrawHorizontalLinePattBg(int X, int Y, int width, unsigned short color,unsigned short bgcolor, unsigned short pat) {
+  if (Y<screen.clip_y) return;
+  if (Y>=screen.clip_y+screen.clip_h) return;
+  register int w = width; 
+
+  if (Y<screen.clip_y) return;
+  if (Y>=screen.clip_y+screen.clip_h) return;
+
+  if (X<screen.clip_x)      // clip left margin
+    { w-=(screen.clip_x-X); X=screen.clip_x; }
+  if (w>screen.clip_x+screen.clip_w-X)    // clip right margin
+    w=screen.clip_x+screen.clip_w-X;
+
+  if(screen.alpha==255) {
+    while(w-->0) {
+      if((pat>>(X&0xf))&1) FB_PutPixel_noclip(X,Y,color);
+      else FB_PutPixel_noclip(X,Y,bgcolor);
+      X++;
+    }
+  } else {
+    while(w-->0) {
+      if((pat>>(X&0xf))&1) FB_PutPixel_noclip_alpha(X,Y,color,screen.alpha);
+      X++;
+    }
+  }
+}
+
+
+
+
 static void DrawVerticalLine(int X, int Y, int height, unsigned short color) {
   register int h = height;  // in pixels
 
@@ -285,8 +406,19 @@ static void DrawVerticalLine(int X, int Y, int height, unsigned short color) {
 
 
 static void fillLine(int x1,int x2,int y,unsigned short color) {
-  if(x2>=x1) DrawHorizontalLine(x1,y,x2-x1,color);
-  else DrawHorizontalLine(x1,y,x1-x2,color);
+  if(screen.fill_pat && screen.fill_style==FillStippled) {
+    if(screen.graphmode<=1) {
+      if(x2>=x1) DrawHorizontalLinePattBg(x1,y,x2-x1,color,screen.bcolor,*((unsigned short *)(screen.fill_pat+(y&0xf))));
+      else DrawHorizontalLinePattBg(x1,y,x1-x2,color,screen.bcolor,*((unsigned short *)(screen.fill_pat+(y&0xf))));
+    } else {
+      if(x2>=x1) DrawHorizontalLinePatt(x1,y,x2-x1,color,*((unsigned short *)(screen.fill_pat+(y&0xf))));
+      else DrawHorizontalLinePatt(x1,y,x1-x2,color,*((unsigned short *)(screen.fill_pat+(y&0xf))));
+   
+    }
+  } else {
+    if(x2>=x1) DrawHorizontalLine(x1,y,x2-x1,color);
+    else DrawHorizontalLine(x1,y,x1-x2,color);
+  }
 }
 
 /* Bresenham's line drawing algorithm single with */
@@ -342,14 +474,14 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
 
   int ddx1,ddy1;
   int ddx2,ddy2;
-
+  int w2=width>>1;
   
   if(dx==0) {
     int i;
     /* Swap y1, y2 if required */
     if(y0>y1) {int ytmp=y0;y0=y1;y1=ytmp;}
     for (i=y0; i<=y1; i++) {
-      DrawHorizontalLine(x0-width/2, i, width, color);
+      DrawHorizontalLine(x0-w2, i, width, color);
     }  
     return;
   }
@@ -357,8 +489,8 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
     int i;
     /* Swap x1, x2 if required */
     if(x0>x1) {int xtmp=x0;x0=x1;x1=xtmp;}
-    for (i=0; i<=width; i++) {
-      DrawHorizontalLine(x0, y0-width/2+i,x1-x0, color);
+    for (i=0; i<width; i++) {
+      DrawHorizontalLine(x0, y0-w2+i,x1-x0, color);
     }  
     return;
   }
@@ -369,16 +501,16 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
 
   width--;
 
-  ddx1=(int)dy/HYPOT(dx,dy)*width/2;
-  ddy1=(int)dx/HYPOT(dx,dy)*width/2;
+  ddx1=(int)(dy/HYPOT(dx,dy)*width/2);
+  ddy1=(int)(dx/HYPOT(dx,dy)*width/2);
   if(width&1) {
     ddx2=(int)(dy/HYPOT(dx,dy)*(width+1)/2);
     ddy2=(int)(dx/HYPOT(dx,dy)*(width+1)/2);
   } else {
     ddx2=ddx1;
-    ddy2=ddy2;
+    ddy2=ddy1;
   }
-  
+  // printf("(%d/%d) (%d/%d) %d\n",ddx1,ddy1,ddx2,ddy2,width);
   dy<<=1;	// dy is now 2*dy
   dx<<=1;	// dx is now 2*dx
 
@@ -468,8 +600,11 @@ void FB_box(int x1,int y1,int x2,int y2) {
 
 void FillBox (int x, int y, int w, int h, unsigned short color) {
   int i;
-  for (i=y; i<=y+h; i++) {
-    DrawHorizontalLine(x, i, w, color);
+  for (i=y; i<y+h; i++) {
+    if(screen.fill_pat && screen.fill_style==FillStippled) {
+      if(screen.graphmode<=1) DrawHorizontalLinePattBg(x,i,w,color,screen.bcolor,*((unsigned short *)(screen.fill_pat+(i&0xf))));
+      else DrawHorizontalLinePatt(x,i,w,color,*((unsigned short *)(screen.fill_pat+(i&0xf))));
+    } else DrawHorizontalLine(x, i, w, color);
   }  
 }
 void FB_pbox(int x1, int y1, int x2, int y2) {
@@ -771,33 +906,290 @@ void Fb_BlitCharacter816(int x, int y, unsigned short aColor, unsigned short aBa
     }
   }
 }
+void Fb_BlitCharacter1632(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, int flags,int fontnr){
+  char charackter[CharHeight816];
+  int i,d;
+  if (x<0||y<0|| x>screen.width-CharWidth816 || y>screen.height-CharHeight816) return;
+  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
+  memcpy(charackter,aptr,CharHeight816);
+  register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
 
-void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColor, char *str) {
+  if(flags&FL_REVERSE) { /* reverse */
+    unsigned short t=aBackColor;
+    aBackColor=aColor;
+    aColor=t;
+  }  
+  if(flags&FL_FRAMED) {/* Framed */
+    charackter[0]=0xff;
+    for(i=1;i<16;i++) charackter[i]|=1;
+  }
+  if(flags&FL_UNDERLINE) {/* underline */
+    charackter[15]=0xff;
+    charackter[14]=0xff;
+  } else if(flags&FL_DBLUNDERLINE) {/* double underline */
+    charackter[15]=0xff;
+    charackter[13]=0xff;
+  }
+  if(flags&FL_DIM) {
+    for(i=0;i<16;i++) {
+      charackter[i++]&=0xaa;
+      charackter[i]  &=0x55;
+    }
+  } else if(flags&FL_CONCREAL) {
+    for(i=0;i<16;i++) {
+      charackter[i++]|=0xaa;
+      charackter[i]  |=0x55;
+    }
+  }  
+  ptr+=x;
+  if(flags&FL_TRANSPARENT) {/* transparent */
+    for(i=0;i<16;i++) {
+      d=charackter[i];
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+      d=charackter[i];
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if (d&0x80) *ptr= aColor; ptr++; 
+      if (d&0x80) *ptr= aColor; ptr++; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+    }
+  } else {
+    for(i=0;i<16;i++) {
+      d=charackter[i];
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+      d=charackter[i];
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; 
+      if (d&0x80) *ptr++ = aColor; else *ptr++ = aBackColor; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+    }
+  }
+  if(flags&FL_BOLD) {/* bold */
+    ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
+    ptr+=x+1;
+    for(i=0;i<16;i++) {
+      d=charackter[i];
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+      d=charackter[i];
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      if(d&0x80) *ptr= aColor; ptr++; 
+      if(d&0x80) *ptr= aColor; ptr++; d<<=1;
+      ptr+=screen.width-CharWidth1632;
+    }
+  }
+}
+
+/*Langsame Routine zum scalieren des 8x16 Fonts auf beliebige Groessen*/
+
+void Fb_BlitCharacter816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, unsigned char character, 
+                               int flags,int fontnr,int charwidth,int charheight ) {
+  char charackter[CharHeight816];
+  int i,d,j,dd;
+  if (x<0||y<0|| x>screen.width-charwidth || y>screen.height-charheight) return;
+  const unsigned char *aptr = &((fontlist816[fontnr])[character*CharHeight816]);
+  memcpy(charackter,aptr,CharHeight816);
+  register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
+
+  if(flags&FL_REVERSE) { /* reverse */
+    unsigned short t=aBackColor;
+    aBackColor=aColor;
+    aColor=t;
+  }  
+  if(flags&FL_FRAMED) {/* Framed */
+    charackter[0]=0xff;
+    for(i=1;i<16;i++) charackter[i]|=1;
+  }
+  if(flags&FL_UNDERLINE) {/* underline */
+    charackter[15]=0xff;
+    charackter[14]=0xff;
+  } else if(flags&FL_DBLUNDERLINE) {/* double underline */
+    charackter[15]=0xff;
+    charackter[13]=0xff;
+  }
+  if(flags&FL_DIM) {
+    for(i=0;i<16;i++) {
+      charackter[i++]&=0xaa;
+      charackter[i]  &=0x55;
+    }
+  } else if(flags&FL_CONCREAL) {
+    for(i=0;i<16;i++) {
+      charackter[i++]|=0xaa;
+      charackter[i]  |=0x55;
+    }
+  }  
+  ptr+=x;
+  if(flags&FL_TRANSPARENT) {/* transparent */
+    for(i=0;i<charheight;i++) {
+      d=charackter[i*CharHeight816/charheight];
+      for(j=0;j<charwidth;j++) {
+        dd=j*CharWidth816/charwidth;
+        if((d<<dd)&0x80) *ptr= aColor; 
+	ptr++; 
+      }
+      ptr+=screen.width-charwidth;
+    }
+  } else {
+    for(i=0;i<charheight;i++) {
+      d=charackter[i*CharHeight816/charheight];
+      for(j=0;j<charwidth;j++) {
+        dd=j*CharWidth816/charwidth;
+        if((d<<dd)&0x80) *ptr++= aColor; 
+	else *ptr++ = aBackColor;
+      }
+      ptr+=screen.width-charwidth;
+    }
+  }
+  if(flags&FL_BOLD) {/* bold */
+    ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
+    ptr+=x+charheight/CharHeight816;
+    for(i=0;i<charheight;i++) {
+      d=charackter[i*CharHeight816/charheight];
+      for(j=0;j<charwidth;j++) {
+        dd=j*CharWidth816/charwidth;
+        if((d<<dd)&0x80) *ptr= aColor; 
+	ptr++; 
+      }
+      ptr+=screen.width-charwidth;
+    }
+  }
+}
+
+void Fb_BlitText57(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
   while (*str) {
     Fb_BlitCharacter57(x, y, aColor, aBackColor, *str,0,0);
     x+=CharWidth57;
     str++;
   }
 }
-void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackColor, char *str) {
+void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
   while (*str) {
     Fb_BlitCharacter816(x, y, aColor, aBackColor, *str,0,0);
     x+=CharWidth816;
     str++;
   }
 }
+void Fb_BlitText1632(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
+  while (*str) {
+    Fb_BlitCharacter1632(x, y, aColor, aBackColor, *str,0,0);
+    x+=CharWidth1632;
+    str++;
+  }
+}
+void Fb_BlitText3264(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str) {
+  while (*str) {
+    Fb_BlitCharacter816_scale(x, y, aColor, aBackColor, *str,0,0,32,64);
+    x+=32;
+    str++;
+  }
+}
+void Fb_BlitText816_scale(int x, int y, unsigned short aColor, unsigned short aBackColor, const char *str,int w,int h) {
+  while (*str) {
+    Fb_BlitCharacter816_scale(x, y, aColor, aBackColor, *str,0,0,w,h);
+    x+=w;
+    str++;
+  }
+}
 
 extern int ltextpflg;
+extern unsigned int chw;
 extern unsigned int chh;
 
-void FB_DrawString(int x, int y, char *t,int len) {
+void FB_DrawString(int x, int y, const char *t,int len) {
   if(len>0) {
     char buf[len+1];
     FB_hide_mouse();
     memcpy(buf,t,len);
     buf[len]=0;
-    if(ltextpflg==1 || chh==16)  Fb_BlitText816(x,y,screen.fcolor, screen.bcolor,buf);
-    else Fb_BlitText57(x,y,screen.fcolor,screen.bcolor,buf);
+    if(ltextpflg==1 || (chh==16 && chw==8))  Fb_BlitText816(x,y,screen.fcolor, screen.bcolor,buf);
+    else if(chh==32 && chw==16) Fb_BlitText1632(x,y,screen.fcolor, screen.bcolor,buf);
+    else if(chh<8 || chw<8) Fb_BlitText57(x,y,screen.fcolor,screen.bcolor,buf);
+    else Fb_BlitText816_scale(x,y,screen.fcolor, screen.bcolor,buf,chw,chh);
     FB_show_mouse();
   }
 }
@@ -877,7 +1269,7 @@ void FB_put_image(char *data,int x, int y) {
 
 
 
-void FB_bmp2pixel(char *s,unsigned short *d,int w, int h, unsigned short color) {
+void FB_bmp2pixel(const char *s,unsigned short *d,int w, int h, unsigned short color) {
   int i,j;
   unsigned char a;
   for(j=0;j<h;j++) {
@@ -906,7 +1298,7 @@ void FB_bmp2pixel(char *s,unsigned short *d,int w, int h, unsigned short color) 
 #endif
   }
 }
-void FB_bmp2mask(char *s,unsigned char *d,int w, int h) {
+void FB_bmp2mask(const char *s,unsigned char *d,int w, int h) {
   int i,j;
   unsigned char a;
   for(j=0;j<h;j++) {
@@ -1194,8 +1586,8 @@ void FB_pPolygon(int *points, int n,int shape, int mode) {
 
 XEvent eque[MAXQUEUELEN];
 
-int queueptr=0;
-int queueptrlow=0;
+volatile int queueptr=0;
+volatile int queueptrlow=0;
 int number=0;
 
 #ifndef ANDROID
@@ -1368,7 +1760,9 @@ static void wait_events() {
     if (rc<0) printf("select failed: errno=%d\n",errno);
   }
 #else
+// backlog("waitevents");
 while(queueptr==queueptrlow) usleep(10000);
+// backlog("waitevents done.");
 
 
 #endif
@@ -1395,23 +1789,33 @@ static void remove_event(int r) {
     }
 }
 
+
 int FB_check_event(int mask, XEvent *event) {
   int e,i,r=-1;
   collect_events();
+ // backlog("check events...");
   if(queueptr!=queueptrlow) {
     if(queueptr==0) e=MAXQUEUELEN;
     else e=queueptr;
-    i=queueptrlow;
-    while(i!=e-1) {
-      if(eque[i].type&mask) {
+    i=queueptrlow;    
+
+    while(i!=e) {
+      if((eque[i].type&mask)==eque[i].type) {
          r=i;
+	
+	 break;
       }
       i++;
       if(i>=MAXQUEUELEN) i=0;
     }
   }
-  if(r<0) return(0);
-  *event=eque[r]; 
+  
+  if(r<0) {
+    queueptrlow=queueptr=0; /*alle events loeschen*/
+    return(0);
+  } 
+  *event=eque[r];  
+  queueptrlow=r; /*remove all other events*/
   remove_event(r);
   return(1);
 }

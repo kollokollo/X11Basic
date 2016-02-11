@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x1197   /* Version 1.19 release 7*/
+#define BC_VERSION 0x1203   /* Version 1.20 release 1*/
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
@@ -99,7 +99,7 @@ typedef struct {
 #define BC_PUSH1    0x2c /*   00101100  --- Push a int 1 */
 #define BC_PUSHASYS 0x2d /*   00101101  --- PUSHASYS */
 #define BC_PUSHAFUNC 0x2e /*  00101110  --- push array function */
-                         /*   00101111  ---  */
+#define BC_PUSHA     0x2f /*  00101111  --- push an array constant */
 
 /* Gruppe 3: Operand Stack Manipulation Operators 0 in 1 out */
 #define BC_PUSH2    0x30 /*   00110000  ---  Push a int 2 */
@@ -196,7 +196,8 @@ typedef struct {
 
 PARAMETER *virtual_machine(STRING, int *);
 void compile(int verbose);
-int bc_parser(char *funktion);
+int bc_parser(const char *funktion);
+int add_rodata(char *data,int len);
 
 #if 0
 int vm_add(PARAMETER *sp);

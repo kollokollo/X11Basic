@@ -1,6 +1,6 @@
 ' Pseudo-Compiler for X11-Basic (MS WINDOWS Version)
 ' erzeugt allein lauffaehigen Code (.exe)
-' (c) Markus Hoffmann 2010-2011
+' (c) Markus Hoffmann 2010-2013
 '
 '* This file is part of X11BASIC, the BASIC interpreter / compiler
 '* ======================================================================
@@ -64,15 +64,15 @@ WHILE LEN(param$(i))
   INC i
 WEND
 IF qflag=0
- IF LEN(inputfile$)=0
-  TEXT 10,10,"X11-Basic compiler V.1.18 (c) Markus Hoffmann 2010-2011"
-  FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
-  IF LEN(inputfile$)
-    IF NOT EXIST(inputfile$)
-      CLR inputfile$
+  IF LEN(inputfile$)=0
+    TEXT 10,10,"X11-Basic compiler V.1.20 (c) Markus Hoffmann 2010-2013"
+    FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
+    IF LEN(inputfile$)
+      IF NOT EXIST(inputfile$)
+        CLR inputfile$
+      ENDIF
     ENDIF
   ENDIF
- ENDIF
 ENDIF
 IF UPPER$(RIGHT$(inputfile$,4))<>".BAS"
   PRINT "File must have the extension: .bas!"
@@ -126,7 +126,7 @@ IF LEN(inputfile$)
     default$=right$(inputfile$,len(inputfile$)-rinstr(inputfile$,"/"))
     default$=right$(default$,len(default$)-rinstr(default$,"\"))
     default$=replace$(default$,".bas",".exe")
-      fileselect "select program to compile","./*.exe",default$,outputfilename$
+    fileselect "select filename to write to","./*.exe",default$,outputfilename$
     if len(outputfilename$)=0
       quit
     endif
@@ -154,7 +154,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.1.18 (c) Markus Hoffmann 2002-2011"
+  PRINT "X11-Basic Compiler V.1.20 (c) Markus Hoffmann 2002-2013"
   VERSION
 RETURN
 PROCEDURE using

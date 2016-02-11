@@ -69,8 +69,39 @@ static int saveprg(char *fname) {
 
 /*****************************************/
 /* Kommandos zur Programmablaufkontrolle */
+static void bidnm(const char *n) {
+  xberror(38,n); /* Befehl im Direktmodus nicht moeglich */
+}
 
-void c_gosub(char *n) {
+void c_stop()  {batch=0;} 
+
+static void c_tron()  {echoflag=1;}
+static void c_troff() {echoflag=0;}
+static void c_beep()  {putchar('\007');}
+ 
+static void c_clear(PARAMETER *plist,int e){
+  clear_all_variables(); 
+  graphics_setdefaults();
+}
+
+void c_new(const char *n) {
+  c_stop();
+  clear_program();
+  free_pcode(prglen);
+  programbufferlen=prglen=pc=0;
+  strcpy(ifilename,"new.bas");
+  graphics_setdefaults();
+}
+static void c_while(const char *n) {
+  if(parser(n)==0) { 
+    if(pc<=0) {bidnm("WHILE"); return;}
+    int npc=pcode[pc-1].integer;
+    if(npc==-1) xberror(36,"WHILE"); /*Programmstruktur fehlerhaft */
+    pc=npc;
+  } 
+}
+
+void c_gosub(const char *n) {
     char *buffer,*pos,*pos2;
     int pc2;
    
@@ -80,8 +111,9 @@ void c_gosub(char *n) {
       pos[0]=0;pos++;
       pos2=pos+strlen(pos)-1;
       if(pos2[0]!=')') {
-        puts("Syntax error bei Parameterliste");
-        xberror(39,buffer); /* Program Error Gosub impossible */
+	xberror(32,n); /* Syntax error */
+	free(buffer);
+	return;
       }	
       else pos2[0]=0;
     } else pos=buffer+strlen(buffer);
@@ -89,12 +121,15 @@ void c_gosub(char *n) {
     pc2=procnr(buffer,1);
     if(pc2==-1)   xberror(19,buffer); /* Procedure nicht gefunden */
     else {       
-	if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) xberror(42,buffer); /* Zu wenig Parameter */
-	else { batch=1;
+	if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) {
+          restore_locals(sp+1);
+	  xberror(42,buffer); /* Zu wenig Parameter */
+	} else { batch=1;
 	  pc2=procs[pc2].zeile;
 	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
 	  else {
 	    printf("Stack-Overflow ! PC=%d\n",pc); 
+	    restore_locals(sp+1);
 	    xberror(39,buffer); /* Program Error Gosub impossible */
 	  }
 	}
@@ -107,7 +142,7 @@ void c_gosub(char *n) {
    Hierzu muesste man die XBASIC-Variablen in Shared-Memory auslagern.
    das waere aehnlich wie EXPORT ....
    */
-void c_spawn(char *n) {
+static void c_spawn(const char *n) {
   char *buffer,*pos,*pos2;
   int pc2;
   
@@ -130,13 +165,16 @@ void c_spawn(char *n) {
     pid_t forkret=fork();
     if(forkret==-1) io_error(errno,"SPAWN");
     if(forkret==0) {
-      if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) xberror(42,buffer); /* Zu wenig Parameter */
-      else { 
+      if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) {
+        restore_locals(sp+1);
+        xberror(42,buffer); /* Zu wenig Parameter */
+      } else { 
         batch=1;
         pc2=procs[pc2].zeile;
         if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
         else {
           printf("Stack-Overflow ! PC=%d\n",pc); 
+	  restore_locals(sp+1);
           xberror(39,buffer); /* Program Error Gosub impossible */
         }      
         programmlauf();
@@ -149,14 +187,14 @@ void c_spawn(char *n) {
 }
       
 
-void c_local(PARAMETER *plist,int e) {
+static void c_local(PARAMETER *plist,int e) {
   int i;
   if(e) {
     for(i=0;i<e;i++) do_local(plist[i].integer,sp);
   }
 }
 
-void c_goto(char *n) {
+static void c_goto(const char *n) {
   char *b=indirekt2(n);
   pc=labelzeile(b);
   if(pc==-1) {xberror(20,b);/* Label nicht gefunden */ batch=0;}
@@ -165,38 +203,52 @@ void c_goto(char *n) {
 }
 
 
-void c_system(PARAMETER *plist,int e) {
-  if(system(plist[0].pointer)==-1) io_error(errno,"system");
+static void c_system(PARAMETER *plist,int e) {
+  if(system(plist->pointer)==-1) io_error(errno,"system");
 }
-void c_edit(char *n) {
+
+
+static void c_shell(PARAMETER *plist,int e) {
+  char *argv[e+1];
+  int i;
+ // printf("e=%d\n",e);
+  for(i=0;i<e;i++) {
+    argv[i]=plist[i].pointer;
+ //   printf("%d: %s\n",i,argv[i]);
+  }
+  argv[e]=NULL;
+
+  if(spawn_shell(argv)==-1) io_error(errno,"shell");
+}
+
+static void c_edit(const char *n) {
+#ifndef ANDROID
     char filename[strlen(ifilename)+8];
     char buffer[256];
     char *buffer2=strdup(ifilename);
-    int sret;
-#ifndef ANDROID
     sprintf(filename,"%s.~~~",ifilename);
     saveprg(filename);
     sprintf(buffer,"$EDITOR %s",filename); 
-    sret=system(buffer);
-    c_new("");  
+    if(system(buffer)==-1) io_error(errno,"system");
+    c_new(NULL);  
     strcpy(ifilename,buffer2);
     free(buffer2);
     mergeprg(filename);
     sprintf(buffer,"rm -f %s",filename); 
-    sret=system(buffer);
+    if(system(buffer)==-1) io_error(errno,"system");
 #else
-    puts("The EDIT command is not available in ANDROID version.\n"
+    puts("The EDIT command is not available in the ANDROID version.\n"
     "Please use Menu --> Editor to edit the current program.");
 #endif
 }
 
-void c_after(PARAMETER *plist,int e) {
+static void c_after(PARAMETER *plist,int e) {
     everyflag=0;
     alarmpc=plist[1].integer; /*Proc nummer*/
     alarm(plist[0].integer);     /*Zeit in sec*/
 }
 
-void c_every(PARAMETER *plist,int e) {
+static void c_every(PARAMETER *plist,int e) {
   everyflag=1;
   alarmpc=plist[1].integer; /*Proc nummer*/
   everytime=plist[0].integer; /*Zeit in sec*/
@@ -204,14 +256,13 @@ void c_every(PARAMETER *plist,int e) {
 }
 
 
-void c_dodim(char *w) {
+static void dodim(const char *w) {
   char w1[strlen(w)+1],w2[strlen(w)+1];
   int e=klammer_sep(w,w1,w2);
  
   if(e<2) xberror(32,"DIM"); /* Syntax nicht Korrekt */
   else {
     char *s,*t;
-    ARRAY arr;
     int ndim=count_parameters(w2);
     int dimlist[ndim];
     int i,vnr,typ;
@@ -238,57 +289,56 @@ void c_dodim(char *w) {
     free(r);
   }
 }
-static void do_restore(int offset) {
+static inline void do_restore(int offset) {
   datapointer=offset;
  // printf("DO RESTORE %d\n",offset);
 }
 
-void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
+static void c_run(const char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
   do_run();
 }
 void do_run() {
-  pc=sp=0;
+  restore_all_locals(); /* sp=0; von einem vorherigen Abbruch koennten noch locale vars im Zwischenspeicher sein.*/
   clear_all_variables();
+  pc=0;
   batch=1;
   do_restore(0);
 }
 
-void c_chain(PARAMETER *plist,int e){ c_load(plist,e); c_run(""); }
 
-void c_cont(char *n) {
+void c_cont(const char *n) {
   if(batch==0) {
     if(pc>=0 && pc<=prglen) batch=1;
     else xberror(41,"");     /*CONT nicht moeglich !*/
   } else {
-    int p1,p2,p;
     /*hier koennte es ein CONTINUE in einer SWITCH Anweisung sein. */
     /*gehe zum (bzw. hinter) naechsten CASE oder DEFAULT*/
-    p1=suchep(pc,1,P_CASE,P_SELECT,P_ENDSELECT);
-    p2=suchep(pc,1,P_DEFAULT,P_SELECT,P_ENDSELECT);
-    if(p1==-1) p=p2;
-    else if(p2==-1) p=p1;
-    else p=min(p1,p2);
-    if(p==-1) p=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT); 
-    if(p==-1) xberror(36,"SELECT/CONTINUE"); /*Programmstruktur fehlerhaft !*/ 
-    pc=p;
-    pc++;
+    
+    int j,f=0,o;
+    for(j=pc; (j<prglen && j>=0);j++) {
+      o=pcode[j].opcode&PM_SPECIAL;
+      if((o==P_CASE || o==P_DEFAULT || o==P_ENDSELECT)  && f<=0) break;
+      if(o & P_LEVELIN) f++;
+      if(o & P_LEVELOUT) f--;
+    }
+    if(j==prglen) xberror(36,"SELECT/CONTINUE"); /*Programmstruktur fehlerhaft !*/ 
+    else pc=j+1;
   }
 }
 
-void c_restore(PARAMETER *plist,int e) {
+static void c_restore(PARAMETER *plist,int e) {
   if(e) {
     do_restore((int)labels[plist[0].integer].datapointer);
   //  printf("RESTORE: %d %s\n",plist[0].integer,labels[plist[0].integer].name);
   } else do_restore(0);
 }
 
-char *get_next_data_entry() {
+static char *get_next_data_entry() {
   char *ptr,*ptr2;
   char *ergebnis=NULL;
   if(databufferlen==0 || databuffer==NULL || datapointer>=databufferlen) return(NULL);
   ptr=databuffer+datapointer;
   ptr2=searchchr(ptr,',');
- // printf("Inhalt: k2=%d <%s>\n",ptr2-ptr,ptr);
   if(ptr2==NULL) {
     ergebnis=malloc(databufferlen-datapointer+1);
     strncpy(ergebnis,ptr,databufferlen-datapointer);
@@ -300,13 +350,11 @@ char *get_next_data_entry() {
     datapointer+=(ptr2-ptr)+1;
     ergebnis[ptr2-ptr]=0;
   } 
-//  printf("READ: <%s>\n",ergebnis);
   return(ergebnis);
 }
 
-void c_read(PARAMETER *plist,int e) {
+static void c_read(PARAMETER *plist,int e) {
   int i;
-  VARIABLE *v;
   char *t;
   for(i=0;i<e;i++) {
     t=get_next_data_entry();
@@ -337,7 +385,7 @@ void c_read(PARAMETER *plist,int e) {
 }
 
 
-void c_randomize(PARAMETER *plist, int e) {
+static void c_randomize(PARAMETER *plist, int e) {
   unsigned int seed;
   if(e) seed=plist[0].integer;
   else {
@@ -347,7 +395,7 @@ void c_randomize(PARAMETER *plist, int e) {
   srand(seed);
 }
 
-void c_list(PARAMETER *plist, int e) {
+static void c_list(PARAMETER *plist, int e) {
   int i,a=0,o=prglen;
   if(e==2) {
     a=min(max(plist[0].integer,0),prglen);
@@ -359,15 +407,15 @@ void c_list(PARAMETER *plist, int e) {
   if(is_bytecode && programbufferlen>sizeof(BYTECODE_HEADER)-2) {
     BYTECODE_HEADER *h=(BYTECODE_HEADER *)programbuffer;
     printf("Bytecode: %s (%d Bytes) Version: %04x\n",ifilename,programbufferlen,h->version);
-    printf("Info:\n");
-    printf("  Size of   Text-Segment: %d\n",(int)h->textseglen);
-    printf("  Size of roData-Segment: %d\n",(int)h->rodataseglen);
-    printf("  Size of   Data-Segment: %d\n",(int)h->sdataseglen);
-    printf("  Size of    bss-Segment: %d\n",(int)h->bssseglen);
-    printf("  Size of String-Segment: %d\n",(int)h->stringseglen);
+    printf("Info:\n"
+           "  Size of   Text-Segment: %d\n"
+           "  Size of roData-Segment: %d\n"
+           "  Size of   Data-Segment: %d\n",(int)h->textseglen,(int)h->rodataseglen,(int)h->sdataseglen);
+    printf("  Size of    bss-Segment: %d\n"
+           "  Size of String-Segment: %d\n",(int)h->bssseglen,(int)h->stringseglen);
     printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h->symbolseglen,(int)h->symbolseglen/sizeof(BYTECODE_SYMBOL));
   } else {
-    for(i=a;i<o;i++) printf("%s\n",program[i]);
+    if(o<=prglen) for(i=a;i<o;i++) puts(program[i]);
   }
 }
 
@@ -456,51 +504,77 @@ char *plist_paramter(PARAMETER *p) {
   return(strdup(ergebnis));
 }
 
-char *plist_zeile(P_CODE *code) {
+static char *plist_zeile(P_CODE *code) {
   char *ergebnis=malloc(MAXLINELEN);
   int i;
-  ergebnis[0]=0;
-  if(code->opcode&P_INVALID) strcat(ergebnis,"==> ");
-  if(code->opcode==P_REM) {
-    strcat(ergebnis,"' ");
-    strcat(ergebnis,code->argument);
-    return(ergebnis);
-  }
-  if(code->opcode==(P_IGNORE|P_NOCMD)) return(ergebnis);
-  
-  if(code->opcode==P_LABEL) {
-    strcat(ergebnis,labels[code->integer].name);
-    strcat(ergebnis,":");
-  } else if((code->opcode)&P_EVAL) {
-    strcat(ergebnis,"eval ---> "); 
-    strcat(ergebnis,code->argument);
-  } else if((code->opcode&P_ZUWEIS)==P_ZUWEIS) {
-    sprintf(ergebnis,"zuweis %d ---> %s",code->integer,code->argument); 
-    
-  } else if((code->opcode&PM_COMMS)<anzcomms) {
-    strcat(ergebnis,comms[(code->opcode&PM_COMMS)].name);
-    if((code->opcode&PM_SPECIAL)==P_ARGUMENT) strcat(ergebnis,code->argument);
-    else if((code->opcode&PM_SPECIAL)==P_PLISTE) {
-      if(code->panzahl) {
-        char *buf;
-        strcat(ergebnis," ");
-      
-        for(i=0;i<code->panzahl;i++) {
-          buf=plist_paramter(&(code->ppointer[i]));
-          strcat(ergebnis,buf);
-	  free(buf);
-	  if(i<code->panzahl-1) strcat(ergebnis,",");
+  sprintf(ergebnis,"=?=> %d",(int)code->opcode);
+  switch(code->opcode) {
+  case P_DEFFN: 
+    sprintf(ergebnis,"DEFFN %s",procs[code->integer].name); 
+    if(procs[code->integer].anzpar) { 
+      strcat(ergebnis,"(");
+      for(i=0;i<procs[code->integer].anzpar;i++) {
+    	strcat(ergebnis,variablen[procs[code->integer].parameterliste[i]].name);
+        if(i<procs[code->integer].anzpar-1) strcat(ergebnis,",");
+      }
+      strcat(ergebnis,")");
+    }
+    strcat(ergebnis," = ");
+    strcat(ergebnis,code->argument); 
+    break;
+  case P_PROC:
+    if(procs[code->integer].typ==PROC_PROC)
+         sprintf(ergebnis,"PROCEDURE %s",procs[code->integer].name); 
+    else sprintf(ergebnis,"FUNCTION %s",procs[code->integer].name); 
+    if(procs[code->integer].anzpar) { 
+      strcat(ergebnis,"(");
+      for(i=0;i<procs[code->integer].anzpar;i++) {
+    	strcat(ergebnis,variablen[procs[code->integer].parameterliste[i]].name);
+        if(i<procs[code->integer].anzpar-1) strcat(ergebnis,",");
+      }
+      strcat(ergebnis,")");
+    }
+    break;
+  case P_REM:
+    sprintf(ergebnis,"' %s",code->argument);
+    break;
+  case P_LABEL:
+    sprintf(ergebnis,"%s:",labels[code->integer].name);
+    break;
+  default:
+    if(code->opcode&P_INVALID) sprintf(ergebnis,"==> invalid ==> %d",(int)code->opcode);
+    else if(code->opcode==(P_IGNORE|P_NOCMD)) ergebnis[0]=0;
+    else if((code->opcode)&P_EVAL) {
+      sprintf(ergebnis,"eval ---> %s",code->argument);
+    } else if((code->opcode&P_ZUWEIS)==P_ZUWEIS) {
+      sprintf(ergebnis,"zuweis %d %s ---> %s",code->integer,variablen[code->integer].name,code->argument); 
+    } else if((code->opcode&PM_COMMS)<anzcomms) {
+      sprintf(ergebnis,"%s",comms[(code->opcode&PM_COMMS)].name);
+      if((code->opcode&PM_SPECIAL)==P_ARGUMENT) strcat(ergebnis,code->argument);
+      else if((code->opcode&PM_SPECIAL)==P_PLISTE) {
+        if(code->panzahl) {
+          char *buf;
+          strcat(ergebnis," ");
+          for(i=0;i<code->panzahl;i++) {
+            buf=plist_paramter(&(code->ppointer[i]));
+            strcat(ergebnis,buf);
+	    free(buf);
+	    if(i<code->panzahl-1) strcat(ergebnis,",");
+          }
         }
       }
-    }
-  } else sprintf(ergebnis,"=?=> %d",(int)code->opcode);
+    }  
+  }
+ 
+  /*Anfuegungen an Zeile hinten*/
+ 
   if(code->etyp==PE_COMMENT) {
     strcat(ergebnis," !");
     strcat(ergebnis,(char *)code->extra);
   }
   return(ergebnis);
 }
-int plist_printzeile(P_CODE *code, int level) {
+static int plist_printzeile(P_CODE *code, int level) {
   int j;
   char *zeile=plist_zeile(code);
   if(code->opcode & P_LEVELOUT) level--;
@@ -511,7 +585,7 @@ int plist_printzeile(P_CODE *code, int level) {
   return(level);
 }
 
-void c_plist(char *n) {
+static void c_plist(const char *n) {
   int i,f=0;
   for(i=0;i<prglen;i++) { 
     printf("%4d: $%06x |",i,(unsigned int)pcode[i].opcode);
@@ -523,11 +597,8 @@ void c_plist(char *n) {
   }
 }
 
-void c_load(PARAMETER *plist, int e) { 
-  programbufferlen=prglen=pc=sp=0;
-  c_merge(plist,e); 
-}
-void c_save(PARAMETER *plist, int e) { 
+
+static void c_save(PARAMETER *plist, int e) { 
   if(programbufferlen) {
     char *name;
     if(e) name=plist[0].pointer;
@@ -542,21 +613,19 @@ void c_save(PARAMETER *plist, int e) {
   }
 }
 
-void c_merge(PARAMETER *plist, int e){
+static void c_merge(PARAMETER *plist, int e){
   if(exist(plist[0].pointer)) {
     if(programbufferlen==0) strcpy(ifilename,plist[0].pointer);
     mergeprg(plist[0].pointer);
   } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",(char *)plist[0].pointer);
 }
-
-void c_new(char *n) {
-  erase_all_variables();
-  batch=0;
-  programbufferlen=prglen=pc=sp=0;
-  strcpy(ifilename,"new.bas");
-  graphics_setdefaults();
+static void c_load(PARAMETER *plist, int e) { 
+  programbufferlen=prglen=pc=0;
+  c_merge(plist,e); 
 }
-void c_let(char *n) {  
+static void c_chain(PARAMETER *plist,int e){ c_load(plist,e); do_run(); }
+
+static void c_let(const char *n) {  
     char v[strlen(n)+1],w[strlen(n)+1];
     wort_sep(n,'=',TRUE,v,w);
     xzuweis(v,w);
@@ -569,24 +638,9 @@ void c_quit(PARAMETER *plist, int e) {
   quit_x11basic(ecode); 
 }
 
-void quit_x11basic(int c) {
-#ifdef ANDROID
-  invalidate_screen();
-  sleep(1);
-#endif
-#ifndef NOGRAPHICS
-  close_window(usewindow); 
-#endif
-  free(programbuffer);
-#ifdef CONTROL
-  cs_exit();
-#endif
-  exit(c); 
-}
-
 /* Linearer Fit (regression) optional mit Fehlerbalken in x und y Richtung  */
 
-void c_fit_linear(char *n) {  
+static void c_fit_linear(const char *n) {  
   char w1[strlen(n)+1],w2[strlen(n)+1];                  
   int e,typ,scip=0,i=0,mtw=0;  
   int vnrx,vnry,vnre,vnre2,ndata; 
@@ -678,7 +732,7 @@ void c_fit_linear(char *n) {
 
 /* Sort-Funktion (wie qsort() ), welche ausserdem noch ein integer-Array mitsortiert */
 
-void do_sort(void *a, size_t n,size_t size,int(*compar)(const void *, const void *), int *b) {
+static void do_sort(void *a, size_t n,size_t size,int(*compar)(const void *, const void *), int *b) {
  // printf("sort: n=%d size=%d\n",n,size);
   if (n<2) return;
   if(b==NULL) qsort(a,n,size,compar);
@@ -687,38 +741,38 @@ void do_sort(void *a, size_t n,size_t size,int(*compar)(const void *, const void
     unsigned long i,ir,j,l;
     int index;
 
-  l=(n>>1)+1;
-  ir=n;
-  for(;;) {
-    if(l>1) {
-      memcpy(rra,a+size*(l-2),size);
-      l--;
-      index=b[l-1];
-    } else {
-      memcpy(rra,a+size*(ir-1),size);
-      index=b[ir-1];
-      memcpy(a+size*(ir-1),a+size*(1-1),size);
-      b[ir-1]=b[1-1];
-      if (--ir==1) {
-        memcpy(a,rra,size);
-        *b=index;
-        break;
+    l=(n>>1)+1;
+    ir=n;
+    for(;;) {
+      if(l>1) {
+        memcpy(rra,a+size*(l-2),size);
+        l--;
+        index=b[l-1];
+      } else {
+        memcpy(rra,a+size*(ir-1),size);
+        index=b[ir-1];
+        memcpy(a+size*(ir-1),a+size*(1-1),size);
+        b[ir-1]=b[1-1];
+        if (--ir==1) {
+          memcpy(a,rra,size);
+          *b=index;
+          break;
+        }
       }
+      i=l;j=l+l;
+      while(j<=ir) {
+        if(j<ir && compar(a+size*(j-1),a+size*j)<0) j++;
+        if(compar(rra,a+size*(j-1))<0) {
+	  memcpy(a+size*(i-1),a+size*(j-1),size); 
+	  b[i-1]=b[j-1];
+	  i=j;
+	  j<<=1;
+        } else j=ir+1;
+      }
+      memcpy(a+size*(i-1),rra,size);
+      b[i-1]=index;
     }
-    i=l;j=l+l;
-    while(j<=ir) {
-      if(j<ir && compar(a+size*(j-1),a+size*j)<0) j++;
-      if(compar(rra,a+size*(j-1))<0) {
-	memcpy(a+size*(i-1),a+size*(j-1),size); 
-	b[i-1]=b[j-1];
-	i=j;
-	j<<=1;
-      } else j=ir+1;
-    }
-    memcpy(a+size*(i-1),rra,size);
-    b[i-1]=index;
-  }
-  free(rra);
+    free(rra);
   }
 }
 
@@ -749,18 +803,16 @@ Todo:
 */
 
 
-
-void c_sort(PARAMETER *plist,int e) {  
-  int typ,subtyp;
+static void c_sort(PARAMETER *plist,int e) {  
+  int subtyp;
   int vnrx,vnry=-1,ndata=0; 
-  char *r;
 
-  vnrx=plist[0].integer;
+  vnrx=plist->integer;
   ndata=anz_eintraege(variablen[vnrx].pointer.a);
 
   if(e>=2) ndata=plist[1].integer;
   if(e>=3) vnry=plist[2].integer;
-  typ=variablen[vnrx].typ;
+  // int typ=variablen[vnrx].typ;
   subtyp=variablen[vnrx].pointer.a->typ;
   
  //  printf("c_sort vnr=%d ndata=%d vnry=%d\n",vnrx,ndata,vnry);
@@ -782,7 +834,7 @@ void c_sort(PARAMETER *plist,int e) {
 
 /* Allgemeine Fit-Funktion  mit Fehlerbalken in y Richtung  */
 
-void c_fit(char *n) {  
+static void c_fit(const char *n) {  
   char w1[strlen(n)+1],w2[strlen(n)+1];                  
   int e,typ,scip=0,i=0,mtw=0;  
   int vnrx,vnry,vnre,vnre2,ndata; 
@@ -828,12 +880,12 @@ void c_fit(char *n) {
 	   } else {scip=1; mtw=0;}
 	   break;
 	   } 
-	 case 4: {
+	 case 4: 
 	   ndata=(int)parser(w1); 
            break;
-	   }
 	 case 5: {   /* Funktion mit Parameterliste */
 	   }
+	   break;
 	 case 6: {   /* Ausdruck, der Angibt, welche Parameter zu fitten sind */  	 
 	   if(vnrx!=-1 && vnry!=-1) {
              if(mtw==2 && vnre!=-1 && vnre2!=-1) {
@@ -865,7 +917,7 @@ void c_fit(char *n) {
   }
 }
 
-void c_fft(char *n) {
+static void c_fft(const char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
   int isign=1;
   int e=wort_sep(n,',',TRUE,v,w);
@@ -887,15 +939,14 @@ void c_fft(char *n) {
 
 	  if(e==2) isign=(int)parser(w);
 	  realft(varptr,(nn-1)/2,isign);
-        } else puts("FFT: Muss Float-ARRAY sein.");
+        } else xberror(94,v); /* Parameter must be float Array */
       }
-    } else puts("FFT: Kein ARRAY.");
-  
+    } else xberror(95,v); /* Parameter must be Array */
   } else xberror(32,"FFT"); /* Syntax error */
 }
 
 
-void c_arraycopy(PARAMETER *plist,int e) {
+static void c_arraycopy(PARAMETER *plist,int e) {
   int vnr1=plist[0].integer;
   int vnr2=plist[1].integer;
   ARRAY *arr1=variablen[vnr1].pointer.a;
@@ -905,16 +956,16 @@ void c_arraycopy(PARAMETER *plist,int e) {
   case INTTYP:
       if(arr2->typ==INTTYP) a=double_array(arr2);
       else if(arr2->typ==FLOATTYP) a=convert_to_intarray(arr2);
-      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      else xberror(96,variablen[vnr2].name); /* Array has wrong type */
       break;
   case FLOATTYP:
       if(arr2->typ==FLOATTYP) a=double_array(arr2);
       else if(arr2->typ==INTTYP) a=convert_to_floatarray(arr2);
-      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      else xberror(96,variablen[vnr2].name); /* Array has wrong type */
       break;
   case STRINGTYP:
       if(arr2->typ==STRINGTYP) a=double_array(arr2);
-      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      else xberror(96,variablen[vnr2].name); /* Array has wrong type */
       break;
   default:
     printf("ERROR: arraycopy : typ? $%x \n",variablen[vnr1].typ);
@@ -923,9 +974,8 @@ void c_arraycopy(PARAMETER *plist,int e) {
   *arr1=a;
 }
 
-void c_arrayfill(PARAMETER *plist,int e) {
+static void c_arrayfill(PARAMETER *plist,int e) {
   int vnr=plist[0].integer;
-  int typ;
 //  printf("ARRAYFILL: vnr=%d\n",vnr);
   ARRAY *arr=variablen[vnr].pointer.a;
   ARRAY a;
@@ -933,29 +983,29 @@ void c_arrayfill(PARAMETER *plist,int e) {
   switch(arr->typ) {
   case INTTYP:
     if(plist[1].typ==PL_FLOAT) plist[1].integer=(int)plist[1].real;
-    else if(plist[1].typ!=PL_INT) printf("ERROR: ARRAYFILL: falscher typ\n");
+    else if(plist[1].typ!=PL_INT) xberror(96,variablen[vnr].name); /* Array has wrong type */
     a=create_int_array(arr->dimension,arr->pointer,plist[1].integer);
     break;
   case FLOATTYP:
     if(plist[1].typ==PL_INT) plist[1].real=(double)plist[1].integer;
-    else if(plist[1].typ!=PL_FLOAT) printf("ERROR: ARRAYFILL: falscher typ\n");
+    else if(plist[1].typ!=PL_FLOAT) xberror(96,variablen[vnr].name); /* Array has wrong type */
     a=create_float_array(arr->dimension,arr->pointer,plist[1].real);
     break;
   case STRINGTYP:
-    if(plist[1].typ!=PL_STRING) printf("ERROR: ARRAYFILL: falscher typ\n");
+    if(plist[1].typ!=PL_STRING) xberror(96,variablen[vnr].name); /* Array has wrong type */
     a=create_string_array(arr->dimension,arr->pointer,(STRING *)&(plist[1].integer));
     break;  
   default:
-    printf("ERROR: arrayfill : typ? $%x var is not an array\n",variablen[vnr].typ);
+    xberror(95,variablen[vnr].name); /* Parameter must be Array */
   }
   free_array(arr);
   *arr=a;
 }
-void c_memdump(PARAMETER *plist,int e) {
+static void c_memdump(PARAMETER *plist,int e) {
   memdump((unsigned char *)plist[0].integer,plist[1].integer);
 }
 
-char *varinfo(VARIABLE *v) {
+static char *varinfo(VARIABLE *v) {
   static char info[128];
   char *buf;
   char a;
@@ -1184,9 +1234,9 @@ void c_dump(PARAMETER *plist,int e) {
   }
 }
 
-void c_end(char *n) { batch=0; }
+static void c_end(const char *n) { batch=0; }
 
-void c_on(char *n) {
+static void c_on(const char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1],w3[strlen(n)+1];
   int e=wort_sep(n,' ',TRUE,w1,w2);
   int mode=0;
@@ -1237,7 +1287,7 @@ void c_on(char *n) {
   }
 }
 
-void c_add(PARAMETER *plist,int e) {
+static void c_add(PARAMETER *plist,int e) {
   int vnr=plist[0].integer;
   char *varptr=plist[0].pointer;
   int typ=variablen[vnr].typ;
@@ -1271,7 +1321,7 @@ void c_add(PARAMETER *plist,int e) {
     xberror(32,""); /* Syntax error */
   }
 }
-void c_sub(PARAMETER *plist,int e) {
+static void c_sub(PARAMETER *plist,int e) {
   int vnr=plist[0].integer;
   char *varptr=plist[0].pointer;
   int typ=variablen[vnr].typ;
@@ -1297,7 +1347,7 @@ void c_sub(PARAMETER *plist,int e) {
     xberror(32,""); /* Syntax error */
   }
 }
-void c_mul(PARAMETER *plist,int e) {
+static void c_mul(PARAMETER *plist,int e) {
   int vnr=plist[0].integer;
   char *varptr=plist[0].pointer;
   int typ=variablen[vnr].typ;
@@ -1323,7 +1373,7 @@ void c_mul(PARAMETER *plist,int e) {
     xberror(32,""); /* Syntax error */
   }
 }
-void c_div(PARAMETER *plist,int e) {
+static void c_div(PARAMETER *plist,int e) {
   int vnr=plist[0].integer;
   char *varptr=plist[0].pointer;
   int typ=variablen[vnr].typ;
@@ -1350,57 +1400,78 @@ void c_div(PARAMETER *plist,int e) {
   }
 }
 
-
-
-void c_swap(PARAMETER *plist,int e) {
-  VARIABLE tmp;
-  char *zb;
-  int vnr1,vnr2;
-  vnr1=plist[0].integer;
-  vnr2=plist[1].integer;
-  // printf("SWAP: %d %d\n",vnr1,vnr2);
-  if(vnr1==vnr2 && plist[0].pointer==plist[1].pointer) return;
+static void c_swap(PARAMETER *plist,int e) {
+  int vnr1=plist[0].integer;
+  int vnr2=plist[1].integer;
+  if(vnr1==vnr2 && plist[0].pointer==plist[1].pointer) return; // nix zu tun
   if(plist[0].typ!=plist[1].typ) {
-  printf("$%x $%x",variablen[plist[0].integer].typ,variablen[plist[1].integer].typ);
      xberror(58,""); /* Variable %s ist vom falschen Typ */
      return;
    }
-//   switch(typ) {
-/* Was ist, wenn wir eine variable mit einem Arrayindex vertauschen ?*/     
-//   default:
-     tmp=variablen[plist[0].integer];
-     zb=variablen[plist[0].integer].name;
-     variablen[plist[0].integer]=variablen[plist[1].integer];
-     variablen[plist[0].integer].name=zb;
-     zb=variablen[plist[1].integer].name;
-     variablen[plist[1].integer]=tmp;     
-     variablen[plist[1].integer].name=zb;
-//   }
+   /* Die p->pointer enthalten das ergebnis von varptr_indexliste() */
+   switch(plist->typ) {
+   case PL_IVAR:
+     { int tmp=*(int *)plist[1].pointer;
+       *(int *)plist[1].pointer=*(int *)plist[0].pointer;
+       *(int *)plist[0].pointer=tmp;
+     }
+     break;
+   case PL_FVAR:
+     { double tmp=*(double *)plist[1].pointer;
+       *(double *)plist[1].pointer=*(double *)plist[0].pointer;
+       *(double *)plist[0].pointer=tmp;
+     }
+     break;
+   case PL_SVAR:
+     { STRING tmp=*(STRING *)plist[1].pointer;
+       *(STRING *)plist[1].pointer=*(STRING *)plist[0].pointer;
+       *(STRING *)plist[0].pointer=tmp;
+     }
+     break;
+   case PL_FARRAYVAR:
+   case PL_IARRAYVAR:
+   case PL_SARRAYVAR:
+     { ARRAY tmp=*(ARRAY *)plist[1].pointer;
+       *(ARRAY *)plist[1].pointer=*(ARRAY *)plist[0].pointer;
+       *(ARRAY *)plist[0].pointer=tmp;
+     }
+     break;
+   default:
+     printf("SWAP: vnr=%d %d ",vnr1,vnr2);
+     printf("pointer=%p %p ",plist[0].pointer,plist[1].pointer);
+     printf("Typ=%x\n",plist->typ);
+     xberror(58,""); /* Variable %s ist vom falschen Typ */
+   }
 } 
 
-void c_do(char *n) {   /* wird normalerweise ignoriert */
+static void c_do(const char *n) {   /* wird normalerweise ignoriert */
   if(*n==0) ; 
   else if(strncmp(n,"WHILE",5)==0) c_while(n);
   else if(strncmp(n,"UNTIL",5)==0) ;
-  else  printf("Unbekannter Befehl: DO <%s>\n",n);
+  else xberror(32,n); /*Syntax nicht korrekt*/
 }
 
-void c_dim(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int p=wort_sep(n,',',TRUE,w,v);
-  while(p) {
-     xtrim(w,TRUE,w);
-     c_dodim(w);
-     p=wort_sep(v,',',TRUE,w,v); 
+static void c_dim(PARAMETER *plist,int e) {
+  int i;
+  for(i=0;i<e;i++) {
+      switch(plist[i].typ) {
+      case PL_EVAL:
+      //  printf("arg: %s \n",(char *)plist[i].pointer);
+	dodim(plist[i].pointer);
+        break;
+      default: 
+        dump_parameterlist(plist,e);
+        xberror(32,"DIM"); /* Syntax error */
+	return;
+      }
   }
 }
-void c_erase(PARAMETER *plist,int e) {
+static void c_erase(PARAMETER *plist,int e) {
   while(e) erase_variable(&variablen[plist[--e].integer]);
 }
 
 
-
-void c_return(char *n) {
+static void c_return(const char *n) {
   if(sp>0) {
     if(n && strlen(n)) {
       if(type(n) & STRINGTYP) {
@@ -1410,19 +1481,18 @@ void c_return(char *n) {
     }
     restore_locals(sp);
     pc=stack[--sp];
-  }
-  else xberror(93,""); /*Stack-Error !*/
+  } else xberror(93,""); /*Stack-Error !*/
 }
 
-void c_void(char *n) { 
+void c_void(const char *n) { 
   if(type(n) & STRINGTYP) {
     char *erg=s_parser(n);
     free(erg);
   } else parser(n);
 }
-void c_nop(char *n) { return; }
+static void c_nop(const char *n) { return; }
 
-void c_inc(PARAMETER *plist,int e) {
+static void c_inc(PARAMETER *plist,int e) {
   int typ=variablen[plist->integer].typ;
   if(typ==ARRAYTYP) typ=variablen[plist->integer].pointer.a->typ;
   if(typ&FLOATTYP) (*((double *)plist->pointer))++;
@@ -1430,13 +1500,13 @@ void c_inc(PARAMETER *plist,int e) {
 //    else printf("INC seltsam. $%x\n",variablen[plist->integer].typ);
 }
 
-void c_dec(PARAMETER *plist,int e) { 
+static void c_dec(PARAMETER *plist,int e) { 
   int typ=variablen[plist->integer].typ;
   if(typ==ARRAYTYP)   typ=variablen[plist->integer].pointer.a->typ;
   if(typ&FLOATTYP)    (*((double *)plist->pointer))--;
   else if(typ&INTTYP) (*((int *)plist->pointer))--;
 }
-void c_cls(char *n) { 
+static void c_cls(const char *n) { 
 #ifdef WINDOWS
   DWORD written; /* number of chars actually written */
   COORD coord; /* coordinates to start writing */
@@ -1448,8 +1518,7 @@ void c_cls(char *n) {
 #define  LINES coninfo.dwSize.Y
   coord.X=0;
   coord.Y=0;
-  FillConsoleOutputCharacter(ConsoleOutput,' ',LINES*COLS,
-    coord,&written);
+  FillConsoleOutputCharacter(ConsoleOutput,' ',LINES*COLS,coord,&written);
   FillConsoleOutputAttribute(ConsoleOutput,
     FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE,LINES*COLS,
     coord,&written);
@@ -1459,7 +1528,7 @@ void c_cls(char *n) {
   printf("\033[2J\033[H");
 #endif
 }
-void c_home(char *n) { 
+static void c_home(const char *n) { 
 #ifdef WINDOWS
   COORD coord;
   HANDLE ConsoleOutput; /* handle for console output */
@@ -1471,18 +1540,18 @@ void c_home(char *n) {
   printf("\033[H");
 #endif
 }
-void c_version(char *n) { printf("X11-BASIC Version: %s %s\n",version,vdate);}
+static void c_version(const char *n) { printf("X11-BASIC Version: %s %s\n",version,vdate);}
 
 #ifndef WINDOWS
 #include <fnmatch.h>
 #else
 #include "Windows.extension/fnmatch.h"
 #endif
-void c_help(PARAMETER *plist,int e) {
+static void c_help(PARAMETER *plist,int e) {
   if(e==0) puts("HELP [topic]");
   else do_help(plist[0].pointer);
 }  
-void do_help(char *w) {
+void do_help(const char *w) {
     int j,i;
     for(i=0;i<anzcomms;i++) {
     
@@ -1568,20 +1637,14 @@ void do_help(char *w) {
       }
     }
 }
-void c_error(PARAMETER *plist,int e) {
-  xberror(plist[0].integer,"");
-}
-void c_free(PARAMETER *plist,int e) {
-  free((char *)plist[0].integer);
-}
-void c_detatch(PARAMETER *plist,int e) {
-  int r=shm_detatch(plist[0].integer);
+static void c_error(PARAMETER *plist,int e) {xberror(plist[0].integer,"");}
+static void c_free(PARAMETER *plist,int e)  {free((char *)plist[0].integer);}
+static void c_detatch(PARAMETER *plist,int e) {
+  int r=shm_detatch(plist->integer);
   if(r!=0) io_error(r,"DETATCH");
 }
-void c_shm_free(PARAMETER *plist,int e) {
-  shm_free(plist[0].integer);
-}
-void c_pause(PARAMETER *plist,int e) {
+static void c_shm_free(PARAMETER *plist,int e) {shm_free(plist->integer);}
+static void c_pause(PARAMETER *plist,int e) {
 #ifdef WINDOWS
   Sleep((int)(1000*plist[0].real));
 #else
@@ -1593,41 +1656,34 @@ void c_pause(PARAMETER *plist,int e) {
 #endif
 }
 
-void c_echo(PARAMETER *plist,int e) {
-  char *n=plist[0].pointer;
+static void c_echo(PARAMETER *plist,int e) {
+  char *n=plist->pointer;
   if(strcmp(n,"ON")==0) echoflag=TRUE; 
   else if(strcmp(n,"OFF")==0) echoflag=FALSE;
   else  echoflag=(int)parser(n);
 }
-void c_gps(PARAMETER *plist,int e) {
-  char *n=plist[0].pointer;
+static void c_gps(PARAMETER *plist,int e) {
 #ifdef ANDROID
+  char *n=plist->pointer;
   if(strcmp(n,"ON")==0) do_gpsonoff(1);  
   else if(strcmp(n,"OFF")==0) do_gpsonoff(0);
   else do_gpsonoff((int)parser(n));
 #endif
 }
-void c_sensor(PARAMETER *plist,int e) {
-  char *n=plist[0].pointer;
+static void c_sensor(PARAMETER *plist,int e) {
 #ifdef ANDROID
+  char *n=plist[0].pointer;
   if(strcmp(n,"ON")==0) do_sensoronoff(1); 
   else if(strcmp(n,"OFF")==0) do_sensoronoff(0); 
   else  do_sensoronoff((int)parser(n));
 #endif
 }
 
-void c_stop()  {batch=0;} 
-void c_tron()  {echoflag=1;}
-void c_troff() {echoflag=0;}
-void c_beep()  {putchar('\007');}
- 
-void c_clear(PARAMETER *plist,int e){clear_all_variables(); graphics_setdefaults();}
 
-void c_clr(PARAMETER *plist,int e){  
-//  printf("CLR: pointer=%x\n",(int)plist[0].pointer);
+static void c_clr(PARAMETER *plist,int e) {
   while(--e>=0) {
- //  printf("clr: typ=$%x\n",plist[e].typ);
     switch(plist[e].typ) {
+    case PL_ALLVAR:
     case PL_ARRAYVAR: 
     case PL_IARRAYVAR: 
     case PL_FARRAYVAR: 
@@ -1645,27 +1701,16 @@ void c_clr(PARAMETER *plist,int e){
       *((double *)(plist[e].pointer))=0;
       break;
     default:
-      printf("ERROR: CLR, unknown var type. i=%d pc=%d\n",e,pc);
+      printf("ERROR: CLR, unknown var type $%x at argument %d in line pc=%d\n",plist[e].typ,e,pc);
       dump_parameterlist(plist,1);
     }
   }
 }
-
-
-void c_exit(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  
-  wort_sep(n,' ',TRUE,w1,w2);
-  if(*w1==0) c_return(n); 
-  else if(strcmp(w1,"IF")==0) {
-    if(parser(w2)==-1) c_break("");
-  } else  printf("Unbekannter Befehl: EXIT <%s>\n",n);
-}
-
-void c_break(char *n) {
-  int i,f=0,o;
-  i=pcode[pc-1].integer;
+static void c_break(const char *n) {
+  if(pc<=0) {bidnm("BREAK"); return;}
+  int i=pcode[pc-1].integer;
   if(i==-1) {
+    int f=0,o;
     for(i=pc; (i<prglen && i>=0);i++) {
       o=pcode[i].opcode&PM_SPECIAL;
       if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
@@ -1677,7 +1722,21 @@ void c_break(char *n) {
   } else pc=i;
 }
 
-void c_if(char *n) {
+/*  EXIT                 --- same as return 
+    EXIT IF <expression>  */
+
+static void c_exit(const char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  
+  wort_sep(n,' ',TRUE,w1,w2);
+  if(*w1==0) c_return(n); 
+  else if(strcmp(w1,"IF")==0) {
+    if(parser(w2)==-1) c_break(NULL);
+  } else  printf("ERROR: Syntax error, unknown command: EXIT %s.\n",n);
+}
+
+
+static void c_if(const char *n) {
   if((int)parser(n)==0) {  
     int i,f=0,o;
   
@@ -1691,7 +1750,7 @@ void c_if(char *n) {
     if(i==prglen) { xberror(36,"IF"); /*Programmstruktur fehlerhaft */return;}
     pc=i+1;
     if(o==P_ELSEIF) {
-      char w1[MAXSTRLEN],*w2,*w3,*w4;
+      char w1[strlen(program[i])+1],*w2,*w3,*w4;
       xtrim(program[i],TRUE,w1);
       wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
       wort_sep_destroy(w3,' ',TRUE,&w3,&w4);
@@ -1700,10 +1759,10 @@ void c_if(char *n) {
   }
 }
 
-void c_select(PARAMETER *plist,int e) {
-  int i,wert2;
+static void c_select(PARAMETER *plist,int e) {
+  int wert2;
   char *w1=NULL,*w2,*w3;  
-  
+  if(pc<=0) {bidnm("SELECT"); return;}
   int npc=pcode[pc-1].integer;
   if(npc==-1) {
     xberror(36,"SELECT"); /*Programmstruktur fehlerhaft */
@@ -1734,32 +1793,29 @@ void c_select(PARAMETER *plist,int e) {
 	 e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
        }
        if(wert==wert2) break;
-       else {
-         npc=pcode[pc-1].integer;
-       }
+       else npc=pcode[pc-1].integer;
      } else break;
   } 
   free(w1);
 }
-void c_case(char *n) {  /* case und default */
+static void c_case(const char *n) {  /* case und default */
   /*gehe zum naechsten ENDSELECT*/
     pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
     if(pc==-1) xberror(36,"CASE"); /*Programmstruktur fehlerhaft !*/ 
     pc++;
 }
 
-void bidnm(char *n) {
-  xberror(38,n); /* Befehl im Direktmodus nicht moeglich */
-}
 
 
 /*Diese routine kann stark verbessert werden, wenn 
   Variablen-typ sowie DOWNTO flag schon beim laden in pass 1 bestimmt wird.*/
 
-void c_next(PARAMETER *plist,int e) {
+static void c_next(PARAMETER *plist,int e) {
   char w1[MAXSTRLEN],*w2,*w3,*w4,*var;
   double step, limit,varwert;
   int ss,f=0,hpc=pc,type=NOTYP;
+
+  if(pc<=0) {bidnm("NEXT"); return;}
 
    pc=pcode[pc-1].integer; /*Hier sind wir beim FOR*/
    if(pc==-1) {xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
@@ -1816,7 +1872,7 @@ void c_next(PARAMETER *plist,int e) {
    if(f)  pc=hpc;          /* Schleifenende, gehe hinter NEXT */
    else pc++;
 }
-void c_for(char *n) {
+static void c_for(const char *n) {
   /* erledigt nur die erste Zuweisung  */
   char *buf=strdup(n);
   char *w1,*w2;
@@ -1828,39 +1884,21 @@ void c_for(char *n) {
   } else {printf("Syntax Error ! FOR %s\n",n); batch=0;}
   free(buf);
 }
-void c_until(char *n) {
+static void c_until(const char *n) {
   if(parser(n)==0) {
+    if(pc<=0) {bidnm("UNTIL"); return;}
     int npc=pcode[pc-1].integer;
     if(npc==-1) xberror(36,"UNTIL"); /*Programmstruktur fehlerhaft */
     else pc=npc+1;
   }
 }
 
-void c_while(char *n) {
-  if(parser(n)==0) {
-    int npc=pcode[pc-1].integer;
-    if(npc==-1) xberror(36,"WHILE"); /*Programmstruktur fehlerhaft */
-    pc=npc;
-  } 
-}
 
 
-void c_wort_sep(PARAMETER *plist,int e) {
-  STRING str1,str2;
-  str1.pointer=malloc(plist->integer+1);
-  str2.pointer=malloc(plist->integer+1);
-  
-  wort_sep2(plist[0].pointer,plist[1].pointer,plist[2].integer,str1.pointer,str2.pointer);
-  str1.len=strlen(str1.pointer);
-  str2.len=strlen(str2.pointer);
-  varcaststring_and_free(plist[3].typ,plist[3].pointer,str1);  
-  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
-  else free_string(&str2);
-}
 
 /* Bei split wollen wir den optionalen int parameter ans ende setzen.
    ist aber noch nicht wegen kompatibilitaet.*/
-void c_split(PARAMETER *plist,int e) {
+static void c_split(PARAMETER *plist,int e) {
   STRING str1,str2;
   str1.pointer=malloc(plist->integer+1);
   str2.pointer=malloc(plist->integer+1);
@@ -1880,7 +1918,7 @@ float gps_bearing,gps_accuracy,gps_speed;
 double gps_time;
 char *gps_provider;
 
-void c_getlocation(PARAMETER *plist,int e) {
+static void c_getlocation(PARAMETER *plist,int e) {
 #ifdef ANDROID
   /* mae sure, that the values get updated */
   ANDROID_get_location();
@@ -1902,22 +1940,22 @@ void c_getlocation(PARAMETER *plist,int e) {
 }
 
 
-void c_poke(PARAMETER *plist,int e) {
-  char *adr=(char *)(plist[0].integer);
+static void c_poke(PARAMETER *plist,int e) {
+  char *adr=(char *)(plist->integer);
   *adr=(char)plist[1].integer;
 }
-void c_dpoke(PARAMETER *plist,int e) {
+static void c_dpoke(PARAMETER *plist,int e) {
   short *adr=(short *)(plist[0].integer);
   *adr=(short)plist[1].integer;
 }
-void c_lpoke(PARAMETER *plist,int e) {
+static void c_lpoke(PARAMETER *plist,int e) {
   long *adr=(long *)plist[0].integer;
   *adr=(long)plist[1].integer;
 }
 
 /* SOUND channel,frequency [Hz],volume (0-1),duration (s)*/
 
-void c_sound(PARAMETER *plist,int e) { 
+static void c_sound(PARAMETER *plist,int e) { 
   double duration=-1;
   int c=-1;
   double frequency=-1;
@@ -1932,7 +1970,7 @@ void c_sound(PARAMETER *plist,int e) {
 
 /* PLAYSOUND channel,data$[,pitch,volume] */
 
-void c_playsound(PARAMETER *plist,int e) { 
+static void c_playsound(PARAMETER *plist,int e) { 
   int pitch=0x100,volume=0xffff;
   int c=-1;
   sound_activate();
@@ -1942,26 +1980,22 @@ void c_playsound(PARAMETER *plist,int e) {
   do_playsound(c,plist[1].pointer,plist[1].integer,pitch,volume,0);
 }
 
-void c_playsoundfile(PARAMETER *plist,int e) {
+static void c_playsoundfile(PARAMETER *plist,int e) {
   if(exist(plist[0].pointer)) {
 #ifdef ANDROID
   ANDROID_playsoundfile(plist[0].pointer);
 #else
   char buffer[256];
-  int sret;
-  sprintf(buffer,"ogg123 %s &",plist[0].pointer); 
-  sret=system(buffer);
+  sprintf(buffer,"ogg123 %s &",(char *)plist[0].pointer); 
+  if(system(buffer)==-1) io_error(errno,"system");
 #endif    
   } else xberror(-33,plist[0].pointer); /* file not found*/
 }
 
 
-
-
-
 /* WAVE channel,...*/
 
-void c_wave(PARAMETER *plist,int e) { 
+static void c_wave(PARAMETER *plist,int e) { 
   int c=-1;
   int form=-1;
   double attack=-1;
@@ -1983,15 +2017,403 @@ void c_wave(PARAMETER *plist,int e) {
   extern void ANDROID_speek(char *,double,double,char *);
 #endif
 
-void c_speak(PARAMETER *plist,int e) { 
+static void c_speak(PARAMETER *plist,int e) { 
+#ifdef ANDROID
   double pitch=-1,rate=-1;
   char *enc=NULL;
   if(e>=2) pitch= plist[1].real;
   if(e>=3) rate=plist[2].real;
   if(e>=4) enc=plist[3].pointer;
-#ifdef ANDROID
   ANDROID_speek(plist[0].pointer,pitch,rate,enc);
 #endif
 }
 
-void c_eval(PARAMETER *plist,int e) { kommando(plist[0].pointer); }
+static void c_eval(PARAMETER *plist,int e) { kommando(plist[0].pointer); }
+
+
+/* Kommandoliste: muss alphabetisch sortiert sein !   */
+
+const COMMAND comms[]= {
+
+ { P_ARGUMENT,  " nulldummy", bidnm      , 0, 0},
+ { P_REM,       "!"         , c_nop      , 0, 0},
+ { P_PLISTE,    "?"         , c_print    , 0,-1,(unsigned short []){PL_EVAL}},
+
+ { P_PLISTE,   "ADD"      , c_add        , 2, 2,(unsigned short []){PL_ANYVAR,PL_ANYVALUE}},
+ { P_PLISTE,   "AFTER"    , c_after      , 2, 2,(unsigned short []){PL_INT,PL_PROC}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "ALERT"    , c_alert    , 5, 6,(unsigned short []){PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
+#endif
+ { P_PLISTE,   "ARRAYCOPY", c_arraycopy  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}}, /*zweiter parameter muesste "PL_ARRAY sein, nicht ARRAYVAR*/
+ { P_PLISTE,   "ARRAYFILL", c_arrayfill  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ANYVALUE}},
+
+ { P_SIMPLE,     "BEEP"     , c_beep      ,0, 0},
+ { P_SIMPLE,     "BELL"     , c_beep      ,0, 0},
+ { P_PLISTE,     "BGET"     , c_bget      ,3, 3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+ { P_PLISTE,     "BLOAD"    , c_bload     ,2, 3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE,     "BMOVE"    , c_bmove     ,3, 3,(unsigned short []){PL_INT,PL_INT,PL_INT} },
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0, 1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "BOUNDARY" , c_boundary  ,1, 1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "BOX"      , c_box       ,4, 4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,     "BPUT"     , c_bput      ,3, 3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+ { P_BREAK,      "BREAK"    , c_break     ,0, 0},
+ { P_PLISTE,     "BSAVE"    , c_bsave     ,3, 3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
+
+ { P_PLISTE,     "CALL"     , c_call      ,1,-1,(unsigned short []){PL_INT,PL_EVAL}},
+ { P_CASE,       "CASE"     , c_case      ,1, 1,(unsigned short []){PL_NUMBER}},
+ { P_PLISTE,     "CHAIN"    , c_chain     ,1, 1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "CHDIR"    , c_chdir     ,1, 1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "CHMOD"    , c_chmod,2,2,(unsigned short []){PL_STRING,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "CIRCLE"   , c_circle    ,3, 5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,   "CLEAR"    , c_clear     ,0,-1,(unsigned short []){PL_ALLVAR}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "CLEARW"   , c_clearw      ,0, 1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,   "CLIP"     , c_clip        ,4, 6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,   "CLOSE"    , c_close     ,0,-1,(unsigned short []){PL_FILENR}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "CLOSEW"   , c_closew    ,0, 1,(unsigned short []){PL_FILENR}},
+#endif
+ { P_PLISTE,   "CLR"      , c_clr       ,1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_SIMPLE,     "CLS"      , c_cls       ,0, 0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "COLOR"    , c_color     ,1,2,(unsigned short []){PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,     "CONNECT"  , c_connect   ,2,3,(unsigned short []){PL_FILENR,PL_STRING,PL_INT}},
+ { P_CONTINUE,     "CONTINUE" , c_cont      ,0,0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "COPYAREA"     , c_copyarea   ,6,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+/* Kontrollsystembefehle  */
+#ifdef CONTROL
+ { P_ARGUMENT,   "CSPUT"    , c_csput ,2,-1,(unsigned short []){PL_STRING,PL_VALUE}},
+ { P_SIMPLE, "CSCLEARCALLBACKS"    , c_csclearcallbacks,0,0},
+ { P_ARGUMENT,   "CSSET"    , c_csput,2,-1,(unsigned short []){PL_STRING,PL_VALUE}},
+ { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,2,-1},
+ { P_ARGUMENT,   "CSSWEEP"  , c_cssweep,2,-1},
+ { P_ARGUMENT,   "CSVPUT"   , c_csvput,2,-1},
+#endif
+ { P_PLISTE,     "CURVE"     , c_curve,8,9,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+
+ { P_DATA,     "DATA"     , c_nop ,0,-1 },
+ { P_PLISTE, "DEC"      , c_dec, 1,1,(unsigned short []){PL_NVAR}},
+ { P_DEFAULT,  "DEFAULT"  , c_case, 0,0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_DEFFN,    "DEFFN"     , bidnm  ,0,0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "DEFLINE"  , c_defline ,1,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "DEFMARK"  , c_defmark,1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "DEFMOUSE" , c_defmouse, 1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,   "DEFTEXT"  , c_deftext,1,4,(unsigned short []){PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+#endif
+ { P_PLISTE,   "DELAY"    , c_pause,      1,1,(unsigned short []){PL_NUMBER}},
+ { P_PLISTE,   "DIM"      , c_dim ,1,-1,(unsigned short []){PL_EVAL,PL_EVAL}},
+ { P_PLISTE,   "DIV"      , c_div ,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ { P_DO,     "DO"       , c_do  ,0,0},
+#ifdef DOOCS
+/* { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,{PL_STRING}},
+ { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
+ { P_ARGUMENT,   "TINEDELIVER", c_tinedeliver,1,-1},   */
+ { P_ARGUMENT,   "DOOCSCALLBACK", c_doocscallback,2,3, (unsigned short []){PL_VAR,PL_PROC,PL_PROC}},
+ { P_ARGUMENT,   "DOOCSEXPORT", c_doocsexport,1,-1},
+/* { P_ARGUMENT,   "TINELISTEN", c_tinelisten,1,-1,{PL_STRING}},
+ { P_PLISTE,     "TINEMONITOR", c_tinemonitor,2,3,{PL_STRING,PL_PROC,PL_INT}},*/
+ { P_ARGUMENT,   "DOOCSPUT"    , c_doocsput ,2,-1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "DOOCSSERVER" , c_doocsserver,0,2,(unsigned short []){PL_STRING,PL_INT}},
+ { P_ARGUMENT,   "DOOCSSET"    , c_doocsput ,2,-1,(unsigned short []){PL_STRING}},
+#endif
+ { P_PLISTE,   "DPOKE"    , c_dpoke,       2,2,(unsigned short []){PL_INT,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,(unsigned short []){PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,   "DUMP"     , c_dump ,0,1,(unsigned short []){PL_STRING}},
+
+ { P_PLISTE,   "ECHO"     , c_echo ,1,1,(unsigned short []){PL_KEY}},
+ { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_ELSE,   "ELSE"     , bidnm  ,0,2,(unsigned short []){PL_KEY,PL_CONDITION}},
+ { P_SIMPLE, "END"      , c_end   ,0,0},
+ { P_ENDPROC,"ENDFUNCTION", c_return,0,0},
+ { P_ENDIF,  "ENDIF"       , bidnm  ,0,0},
+ { P_ENDSELECT,"ENDSELECT" , bidnm  ,0,0},
+ { P_PLISTE,   "ERASE"    , c_erase,1,-1,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}},
+ { P_PLISTE,   "ERROR"    , c_error,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,   "EVAL"     , c_eval,1,1,(unsigned short []){PL_STRING}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "EVENT"    , c_allevent,0,9,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
+#endif
+ { P_PLISTE,   "EVERY"    , c_every,2,2,(unsigned short []){PL_INT,PL_PROC}},
+ { P_PLISTE,   "EXEC"     , c_exec,1,3,(unsigned short []){PL_STRING,PL_STRING,PL_STRING}},
+ { P_ARGUMENT,   "EXIT"     , c_exit,0,-1},
+/*
+ { P_ARGUMENT,   "EXPORT"     , c_export,1,2, {PL_ALLVAR, PL_NUMBER}},
+*/
+ { P_ARGUMENT,   "FFT"      , c_fft,1,2,(unsigned short []){PL_FARRAY,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "FILESELECT", c_fileselect,4,4,(unsigned short []){PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
+ { P_PLISTE,   "FILL"     , c_fill,2,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_ARGUMENT,   "FIT",        c_fit,4,10,(unsigned short []){PL_FARRAY,PL_FARRAY}},
+ { P_ARGUMENT,   "FIT_LINEAR", c_fit_linear,4,10,(unsigned short []){PL_FARRAY,PL_FARRAY}},
+ { P_PLISTE,   "FLUSH"    , c_flush,0,1,(unsigned short []){PL_FILENR}},
+ { P_FOR,    "FOR"      , c_for,1,-1,(unsigned short []){PL_EXPRESSION,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
+ { P_PLISTE,    "FREE"      , c_free,1,1,(unsigned short []){PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "FULLW"    , c_fullw,0,1, (unsigned short []){PL_FILENR}},
+#endif
+ { P_PROC,   "FUNCTION" , c_end,1,-1,(unsigned short []){PL_EXPRESSION}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "GET"      , c_get,5,5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
+ { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,(unsigned short []){PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "GET_LOCATION" , c_getlocation,2,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
+ 
+ { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+#endif
+ { P_GOSUB,     "GOSUB"    , c_gosub,1,1,(unsigned short []){PL_PROC}},
+ { P_GOTO,       "GOTO"     , c_goto,1,1,(unsigned short []){PL_LABEL}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "GPRINT"    , c_gprint,       0,-1,(unsigned short []){PL_EVAL}},
+#endif
+ { P_PLISTE,   "GPS"     , c_gps ,1,1,(unsigned short []){PL_KEY}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "GRAPHMODE", c_graphmode,1,1,(unsigned short []){PL_INT}},
+#endif
+ { P_PLISTE,   "HELP"    , c_help,0,1,(unsigned short []){PL_KEY}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,     "HIDEM"     , c_hidem,0,0},
+#endif
+ { P_SIMPLE,     "HOME"     , c_home,0,0},
+
+ { P_IF,         "IF"       , c_if,1,-1,(unsigned short []){PL_CONDITION}},
+ { P_PLISTE,   "INC"      , c_inc,1,1,(unsigned short []){PL_NVAR}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,	 "INFOW"    , c_infow,    2,2,(unsigned short []){PL_FILENR,PL_STRING}},
+#endif
+ { P_ARGUMENT,   "INPUT"    , c_input,1,-1,(unsigned short []){PL_ALLVAR}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "KEYEVENT" , c_keyevent,0,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+#endif
+ { P_PLISTE,     "KILL"    , c_kill     ,1, 1,(unsigned short []){PL_STRING}},
+
+
+ { P_ARGUMENT,   "LET"      , c_let,1,-1,(unsigned short []){PL_KEY}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "LINE"     , c_line,4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_ARGUMENT,   "LINEINPUT", c_lineinput,1,2, (unsigned short []){PL_FILENR,PL_STRING}},
+ { P_PLISTE,     "LINK"     , c_link,       2,2,(unsigned short []){PL_FILENR,PL_STRING}},
+
+ { P_PLISTE,     "LIST"     , c_list,0,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_PLISTE,     "LOAD"     , c_load,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "LOCAL"    , c_local,1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_PLISTE,     "LOCATE"    , c_locate,2,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_LOOP,       "LOOP"     , bidnm,0,0},
+ { P_PLISTE,     "LPOKE"    , c_lpoke,       2,2,(unsigned short []){PL_INT,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "LTEXT"     , c_ltext,3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
+#endif
+
+ { P_PLISTE,     "MEMDUMP"    , c_memdump,2,2,(unsigned short []){PL_INT,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,     "MENU"    , c_menu,0,0},
+ { P_ARGUMENT,   "MENUDEF"  , c_menudef,1,2,(unsigned short []){PL_SARRAY,PL_PROC}},
+ { P_SIMPLE,     "MENUKILL" , c_menukill,0,0},
+ { P_PLISTE,     "MENUSET"  , c_menuset,2,2,(unsigned short []){PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,    "MERGE"    , c_merge,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,    "MFREE"      , c_free,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,    "MKDIR"    , c_mkdir     ,1, 2,(unsigned short []){PL_STRING,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "MOUSE"    , c_mouse,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "MOUSEEVENT" , c_mouseevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "MOTIONEVENT" , c_motionevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "MOVEW"    , c_movew,3,3, (unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,  "MSYNC"     , c_msync  ,2,2,(unsigned short []){PL_INT, PL_INT}},
+ { P_PLISTE,   "MUL"      , c_mul,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+
+ { P_SIMPLE, "NEW"      , c_new,0,0},
+ { P_NEXT,   "NEXT"     , c_next,0,1,(unsigned short []){PL_NVAR}},
+ { P_IGNORE|P_SIMPLE, "NOOP",         c_nop,         0,0},
+ { P_IGNORE|P_SIMPLE, "NOP",          c_nop,         0,0},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
+ { P_PLISTE,   "OBJC_ADD"    , c_objc_add,      3,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "OBJC_DELETE"    , c_objc_delete,      2,2,(unsigned short []){PL_INT,PL_INT}},
+#endif
+ { P_ARGUMENT,   "ON"       , c_on,         1,-1,(unsigned short []){PL_KEY}},
+ { P_PLISTE,     "OPEN"     , c_open,       3,4,(unsigned short []){PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "OPENW"    , c_openw,      1,1,(unsigned short []){PL_FILENR}},
+#endif
+ { P_PLISTE,   "OUT"      , c_out,        2,-1,(unsigned short []){PL_FILENR,PL_EVAL,PL_EVAL}},
+
+ { P_PLISTE,   "PAUSE"    , c_pause,      1,1,(unsigned short []){PL_NUMBER}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "PBOX"     , c_pbox ,      4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PCIRCLE"  , c_pcircle,    3,5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PELLIPSE" , c_pellipse,   4,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,     "PIPE" , c_pipe,   2,2,(unsigned short []){PL_FILENR,PL_FILENR}},
+ { P_PLISTE,     "PLAYSOUND",     c_playsound, 2,4,(unsigned short []){PL_INT,PL_STRING,PL_NUMBER,PL_NUMBER}},
+ { P_PLISTE,     "PLAYSOUNDFILE",     c_playsoundfile, 1,1,(unsigned short []){PL_STRING}},
+ { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "PLOT"     , c_plot,       2,2,(unsigned short []){PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,   "POKE"     , c_poke,       2,2,(unsigned short []){PL_INT,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "POLYFILL" , c_polyfill,         3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "POLYLINE" , c_polyline,       3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "POLYMARK" , c_polymark,   3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "PRBOX"    , c_prbox ,      4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,  "PRINT"    , c_print,       0,-1,(unsigned short []){PL_EVAL}},
+ { P_PROC,   "PROCEDURE", c_end  ,      0,0},
+ { P_IGNORE, "PROGRAM"  , c_nop  ,      0,0},
+ /* Ausdruck als Message queuen
+  { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALLVAR,PL_NUMBER}},
+ */
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "PUT"  , c_put,      3,4,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_NUMBER}},
+#endif
+ { P_PLISTE,   "PUTBACK"  , c_unget,      2,2,(unsigned short []){PL_FILENR,PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "PUT_BITMAP"  , c_put_bitmap, 5,5,(unsigned short []){PL_STRING,PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+
+ { P_PLISTE, "QUIT"     , c_quit,       0,1,(unsigned short []){PL_INT}},
+
+ { P_PLISTE, "RANDOMIZE", c_randomize  ,      0,1,(unsigned short []){PL_INT}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,     "RBOX"      , c_rbox       ,4, 4,(unsigned short []) {PL_INT,PL_INT,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,   "READ"     , c_read,       1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_PLISTE,     "RECEIVE"  , c_receive,    2,3,(unsigned short []){PL_FILENR,PL_SVAR,PL_NVAR}},
+ { P_PLISTE,     "RELSEEK"  , c_relseek,    2,2,(unsigned short []){PL_FILENR,PL_INT}},
+ { P_REM,    "REM"      , c_nop  ,      0,0},
+ { P_PLISTE,   "RENAME"     , c_rename,2,2,(unsigned short []){PL_STRING,PL_STRING}},
+ { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
+ { P_PLISTE,   "RESTORE"  , c_restore,    0,1,(unsigned short []){PL_LABEL}},
+ { P_RETURN,   "RETURN"   , c_return,     0,1,(unsigned short []){PL_CONDITION}},
+ { P_PLISTE,     "RMDIR"    , c_rmdir     ,1, 1,(unsigned short []){PL_STRING}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
+ { P_SIMPLE, "RSRC_FREE", c_rsrc_free,0,0},
+ { P_PLISTE, "RSRC_LOAD", c_rsrc_load,1,1,(unsigned short []){PL_STRING}},
+#endif
+
+ { P_SIMPLE, "RUN"      , c_run,        0,0},
+
+ { P_PLISTE,   "SAVE"     , c_save,0,1,(unsigned short []){PL_STRING}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,   "SAVESCREEN", c_savescreen,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,   "SAVEWINDOW", c_savewindow,1,1,(unsigned short []){PL_STRING}},
+ { P_ARGUMENT,   "SCOPE"    , c_scope,      1,6,(unsigned short []){PL_NARRAY,PL_ANYVALUE,PL_NUMBER,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+#endif
+ { P_PLISTE,   "SCREEN"    , c_screen,      1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,   "SEEK"     , c_seek,       1,2,(unsigned short []){PL_FILENR,PL_INT}},
+ { P_SELECT, "SELECT"   , c_select,     1,1,(unsigned short []){PL_INT}},
+ /*
+ { P_ARGUMENT,   "SEMGIVE"  , c_semgive, 1,2,{PL_NUMBER,PL_NUMBER}},
+ { P_ARGUMENT,   "SEMTAKE"  , c_semtake, 1,2,{PL_NUMBER,PL_NUMBER}},
+ */
+ { P_PLISTE, "SEND"   , c_send,     2,4,(unsigned short []){PL_FILENR,PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE, "SENSOR" , c_sensor ,1,1,(unsigned short []){PL_KEY}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,	"SETFONT"  , c_setfont,    1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,	"SGET" , c_sget,   1,1,(unsigned short []){PL_SVAR}},
+#endif
+ { P_PLISTE,	"SHELL"   , c_shell,     1,-1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,  "SHM_DETACH"      , c_detatch,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,    "SHM_FREE" , c_shm_free,1,1,(unsigned short []){PL_INT}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,     "SHOWM"     , c_showm,0,0},
+ { P_SIMPLE,	 "SHOWPAGE" , c_vsync,      0,0},
+ { P_PLISTE,	 "SIZEW"    , c_sizew,      3,3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+#endif
+ { P_PLISTE,    "SORT",      c_sort,        1,3,(unsigned short []){PL_ARRAYVAR,PL_INT,PL_IARRAYVAR}},
+ { P_PLISTE,    "SOUND",     c_sound,        2,4,(unsigned short []){PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+
+ { P_GOSUB,     "SPAWN"    , c_spawn,1,1,(unsigned short []){PL_PROC}},
+ { P_PLISTE,    "SPEAK",     c_speak, 1,4,(unsigned short []){PL_STRING,PL_NUMBER,PL_NUMBER,PL_STRING}},
+
+ { P_PLISTE,	"SPLIT"    , c_split,  4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,	"SPUT"     , c_sput,      1,1,(unsigned short []){PL_STRING}},
+#endif
+ { P_SIMPLE,	"STOP"     , c_stop,       0,0},
+ { P_PLISTE,	"SUB"      , c_sub,        2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ { P_PLISTE,	"SWAP"     , c_swap,       2,2,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_PLISTE,	"SYSTEM"   , c_system,     1,1,(unsigned short []){PL_STRING}},
+
+#ifndef NOGRAPHICS
+ { P_PLISTE,	"TEXT"     , c_text,       3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
+#endif
+#ifdef TINE
+ { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,(unsigned short []){PL_STRING}},
+ { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
+ { P_ARGUMENT,   "TINEDELIVER", c_tinedeliver,1,-1},
+ { P_ARGUMENT,   "TINEEXPORT", c_tineexport,1,-1},
+ { P_ARGUMENT,   "TINELISTEN", c_tinelisten,1,-1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "TINEMONITOR", c_tinemonitor,2,3,(unsigned short []){PL_STRING,PL_PROC,PL_INT}},
+ { P_ARGUMENT,   "TINEPUT"    , c_tineput ,2,-1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "TINESERVER" , c_tineserver,0,2,(unsigned short []){PL_STRING,PL_INT}},
+ { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,(unsigned short []){PL_STRING}},
+#endif
+#ifndef NOGRAPHICS
+ { P_PLISTE,	"TITLEW"   , c_titlew,     2,2,(unsigned short []){PL_FILENR,PL_STRING}},
+ { P_PLISTE,    "TOPW"     , c_topw,       0,1,  (unsigned short []) {PL_FILENR}},
+#endif
+ { P_PLISTE,    "TOUCH"    , touch,1,1,(unsigned short []){PL_FILENR}},
+ { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
+ { P_SIMPLE,	"TRON"     , c_tron,       0,0},
+
+ { P_PLISTE,  "UNLINK"   , c_close  ,     1,-1,(unsigned short []){PL_FILENR,PL_FILENR}},
+ { P_PLISTE,    "UNMAP"    , c_unmap      ,2,2,(unsigned short []){PL_INT, PL_INT}},
+ { P_UNTIL,	"UNTIL"    , c_until,      1,1,(unsigned short []){PL_CONDITION}},
+#ifndef NOGRAPHICS
+ { P_PLISTE,	"USEWINDOW", c_usewindow,  1,1,(unsigned short []){PL_FILENR}},
+#endif
+
+ { P_SIMPLE,	"VERSION"  , c_version,    0,0},
+ { P_ARGUMENT,	"VOID"     , c_void,       1,1,(unsigned short []){PL_EVAL}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
+#endif
+ { P_PLISTE,     "WATCH"     , c_watch,  1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,    "WAVE",     c_wave,      2,6,(unsigned short []){PL_INT,PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+
+ { P_WEND,	"WEND"     , bidnm,      0,0},
+ { P_WHILE,	"WHILE"    , c_while,    1,1,(unsigned short []){PL_CONDITION}},
+ { P_PLISTE,	"WORT_SEP" , c_split,    4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+#ifndef NOGRAPHICS
+ { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
+ { P_SIMPLE,	"XRUN"     , c_xrun,     0,0},
+#endif
+
+};
+const int anzcomms=sizeof(comms)/sizeof(COMMAND);
+
+
+
+
+
+
+
+
+
+
+
+
+
+

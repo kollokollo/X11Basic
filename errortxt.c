@@ -54,8 +54,8 @@ const char *errortxt[] = {
 /*  11*/  "Error #11",
 /*  12*/  "Program too long, buffer size exeeded --> NEW",
 /*  13*/  "Error #13",
-/*  14*/  "Array %s() already dimensioned",
-/*  15*/  "Array %s() not dimensioned",
+/*  14*/  "Array %s() is already dimensioned",
+/*  15*/  "Array not dimensioned: %s()",
 #endif
 #ifdef GERMAN
 /*  16*/  "Feldindex zu groß",
@@ -71,7 +71,7 @@ const char *errortxt[] = {
 /*  26*/  "Fileende erreicht EOF",
 /*  27*/  "Zu viele Punkte für Polyline/Polyfill",
 /*  28*/  "Feld muss eindimensional sein",
-/*  29*/  "Fehler #29",
+/*  29*/  "Ungueltige Adresse! %s",
 /*  30*/  "Merge - Kein ASCII-File",
 /*  31*/  "Merge - Zeile zu lang - Abbruch",
 /*  32*/  "==> Syntax nicht korrekt %s",
@@ -89,7 +89,7 @@ const char *errortxt[] = {
 /*  26*/  "EOF - reached end of file",
 /*  27*/  "Too many points for Polyline/Polyfill",
 /*  28*/  "Array must be one dimensional",
-/*  29*/  "Error #29",
+/*  29*/  "Illegal address! %s",
 /*  30*/  "Merge - no ASCII file",
 /*  31*/  "Merge - line too long - CANCEL",
 /*  32*/  "==> Syntax error %s",
@@ -204,14 +204,14 @@ const char *errortxt[] = {
 /*  91*/  "Fehler bei For",
 /*  92*/  "Resume (next) nicht möglich   Fatal, For oder Local",
 /*  93*/  "Stapel-Fehler",
-/*  94*/  "Error 94",
-/* _*/  "Error 95",
+/*  94*/  "Parameter %s must be float ARRAY",
+/* 95 */  "Parameter %s must be ARRAY",
 
-/*  `*/  "Error 96",
+/* 96*/  "ARRAY %s has the wrong type. Cannot convert.",
 /*  a*/  "This operation %s is not allowed for root window",
 /*  98*/  "Illegal Window number %s (0-16)",
 /*  99*/  "Window %s does not exist",
-/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2012 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2013 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",
@@ -336,7 +336,7 @@ const char *errortxt[] = {
 /* -36*/  "* Zugriff nicht möglich",
 /* -35*/  "* Zu viele Dateien offen",
 /* -34*/  "* Pfadname nicht gefunden",
-/* -33*/  "* File %s not found : Datei nicht gefunden",
+/* -33*/  "* %s File not found : Datei nicht gefunden",
 /* -32*/  "* Broken pipe : Verbindung wurde unterbrochen",
 /* -31*/  "* Too many links : Zu viele Links",
 /* -30*/  "* Read-Only File-System : File-System ist Schreibgeschützt",
@@ -375,7 +375,7 @@ const char *errortxt[] = {
    The message is completed by an optional string bem which is inserted into
    the error message at a position denoted by %s */
 
-const char *error_text(unsigned char errnr, char *bem) {
+const char *error_text(unsigned char errnr, const char *bem) {
   if(bem) {
     static char errbuffer[MAXERRORTXTLEN];
     snprintf(errbuffer,MAXERRORTXTLEN,errortxt[errnr],bem );

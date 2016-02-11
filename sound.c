@@ -125,7 +125,7 @@ static double square(double a) {     /*Rechteck*/
   a=fmod(a,2*PI);
   return(a<PI?-1:1);
 }
-static double noise(double a)   {return(2*(double)random()/RAND_MAX-1);}   /*Rauschen*/
+static double noise(double a)   {return(2*(double)rand()/RAND_MAX-1);}   /*Rauschen*/
 static double silence(double a) {return(0);}        /*Stille*/
 
 

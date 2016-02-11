@@ -4,7 +4,7 @@
 
 ' Each of the pictures need to be in following format:
 ' BMP Windows 3.x format, , 8 Bit (palette).
-
+' 2011-04-04
 
 ' output of inline.bas for X11-Basic 
 ' undead-flag-1.bmp 5726 Bytes. (compressed: 717 Bytes, 12%)
@@ -468,28 +468,28 @@ gryphon_master_flying_8$=gryphon_master_flying_8$+"bUEF,/$)XVY@S(a>MU//$PC>JO_Rb
 gryphon_master_flying_8$=gryphon_master_flying_8$+"$D$$"
 gryphon_master_flying_8_bmp$=UNCOMPRESS$(INLINE$(gryphon_master_flying_8$))
 
-weiss=get_color(60000,30000,30000)
-do
-  color 0
-  graphmode 1
-  pbox 0,0,640,400
-  color weiss
-  line 0,190,640,190
-  a$="t$=undead_flag_"+str$((i mod 4)+1)+"_bmp$"
-  b$="t2$=gryphon_master_flying_"+str$((j mod 8)+1)+"_bmp$"
+weiss=COLOR_RGB(1,1/2,1/2)
+DO
+  COLOR 0
+  GRAPHMODE 1
+  PBOX 0,0,640,400
+  COLOR weiss
+  LINE 0,190,640,190
+  a$="t$=undead_flag_"+STR$((i MOD 4)+1)+"_bmp$"
+  b$="t2$=gryphon_master_flying_"+STR$((j MOD 8)+1)+"_bmp$"
   &a$
   &b$
-  put 100,200,t$
-  mouse x,y,k
-  graphmode 2
-  put x-40,y-40,t2$
-  if x-ox or y-oy or y<150
-    inc j
-  endif
+  PUT 100,200,t$
+  MOUSE x,y,k
+  GRAPHMODE 2
+  PUT x-40,y-40,t2$
+  IF x-ox OR y-oy OR y<150
+    INC j
+  ENDIF
   ox=x
   oy=y
-  vsync
-  pause 0.1
-  inc i
-loop
-quit
+  SHOWPAGE
+  PAUSE 0.1
+  INC i
+LOOP
+QUIT

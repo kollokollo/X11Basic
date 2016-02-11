@@ -13,12 +13,12 @@ ARRAY create_float_array(int dimension, int *dimlist,double value);
 ARRAY create_string_array(int dimension, int *dimlist,STRING *value);
 
 
-ARRAY nullmatrix(int , int ,int *);
+
 ARRAY einheitsmatrix(int , int ,int *);
-ARRAY array_const(char *);
+ARRAY array_const(const char *);
 ARRAY double_array(ARRAY *);
 ARRAY einheitsmatrix(int, int, int *);
-ARRAY nullmatrix(int, int, int *);
+
 ARRAY mul_array(ARRAY, ARRAY);
 ARRAY trans_array(ARRAY);
 ARRAY inv_array(ARRAY);
@@ -37,15 +37,33 @@ void free_array(ARRAY *arr);
 void fill_string_array (ARRAY *,STRING );
 void fill_int_array    (ARRAY *,int);
 void fill_float_array  (ARRAY *,double);
-int do_dimension       (VARIABLE *v);
-int anz_eintraege(ARRAY *a);
 
-void *arrayvarptr(int vnr, char *n,int size);
-void *arrayvarptr2(int vnr, int *indexliste,int size);
 STRING array_to_string(ARRAY inhalt);
 ARRAY string_to_array(STRING in);
 int make_indexliste(int dim, char *pos, int *index);
-void make_indexliste_plist(int dim, PARAMETER *p, int *index);
 
 
+/*  Kleinere Hilfsfunktionen als inline Makro*/
+
+
+static inline int anz_eintraege(ARRAY *a) {/* liefert Anzahl der Elemente in einem ARRAY */
+  int anz=1,j;
+  for(j=0;j<a->dimension;j++) anz=anz*((int *)a->pointer)[j];
+  return(anz);
+}
+
+static inline int do_dimension(VARIABLE *v) {  /* liefert Anzahl der Elemente in einem ARRAY */
+ /*  printf("DODIM?: vnr=%d \n",vnr); */
+  if(v->typ & ARRAYTYP) return(anz_eintraege(v->pointer.a));
+  else return(1);
+}
+
+
+static inline ARRAY nullmatrix(int typ, int dimension, int *dimlist) {
+  ARRAY ergebnis;
+  if(typ & INTTYP)        ergebnis=create_int_array(dimension,dimlist,0);
+  else if(typ & FLOATTYP) ergebnis=create_float_array(dimension,dimlist,0);
+  else                    ergebnis=create_array(typ,dimension,dimlist);
+  return(ergebnis);
+}
 

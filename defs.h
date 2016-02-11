@@ -18,7 +18,6 @@
 
 #ifdef SAVE_RAM
   #define MAXSTRLEN   1024   /* in Bytes */
-  #define MAXPRGLEN  64000   /* in Bytes */
   #define MAXLINELEN  1024   /* in Bytes */
   #define ANZFILENR     64
   #define STACKSIZE    256
@@ -27,7 +26,6 @@
   #define ANZPROCS     512
 #else
   #define MAXSTRLEN   4096   /* in Bytes */
-  #define MAXPRGLEN 100000   /* in Bytes */
   #define MAXLINELEN  4096   /* in Bytes */
   #define ANZFILENR    100
   #define STACKSIZE    512
@@ -39,7 +37,6 @@
 
 #define INTSIZE sizeof(double)
 
-#define round(a) ((int)(a+0.5))
 #ifdef min
 #undef min
 #endif
@@ -56,5 +53,8 @@
 #endif
 #ifndef HIBYTE
   #define HIBYTE(x) ((unsigned char) ((x) >> 8 & 0xff))
+#endif
+#ifdef WINDOWS
+  #define bzero(p, l) memset(p, 0, l)
 #endif
 #endif

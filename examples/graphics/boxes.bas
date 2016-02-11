@@ -1,25 +1,23 @@
-' Simple test for the virtual Machine
-
-
-plot 1,1
-get_geometry 1,bx,by,bw,bh
-print "Los gehts..."
+' Simple test for the X11-Basic virtual Machine 2008-01-19
+'
+PLOT 1,1
+GET_GEOMETRY 1,bx,by,bw,bh
+PRINT "Los gehts..."
 ' ~inp(-2)
-box bx,by,bx+bw,by+bh
-color get_color(65535,65535,0)
-text 30,bh-40,"Test of the X11-Basic virtual machine"
-text 30,bh-30,"Hit Ctrl-c to end"
-do
-  i=(i+1) mod bw
-  color get_color(random(65535),random(65535),random(65535))
-  pbox random(300),random(30),random(bw),random(bh-40)
-  showpage
-  if i=0
-    print at(4,1);print timer-t;" sek."
-    t=timer
-  endif  
-  plot i,50*sin(i/100*2*pi)+bh-40
-  pause 0.01
-loop
-
-quit
+BOX bx,by,bx+bw,by+bh
+COLOR COLOR_RGB(1,1,0)
+TEXT 30,bh-40,"Test of the X11-Basic virtual machine"
+TEXT 30,bh-30,"Hit Ctrl-c to end"
+DO
+  i=(i+1) MOD bw
+  COLOR COLOR_RGB(RND(),RND(),RND())
+  PBOX RANDOM(300),RANDOM(30),RANDOM(bw),RANDOM(bh-40)
+  SHOWPAGE
+  IF i=0
+    PRINT AT(4,1);timer-t;" sek."
+    t=TIMER
+  ENDIF  
+  PLOT i,50*SIN(i/100*2*PI)+bh-40
+  PAUSE 0.01
+LOOP
+QUIT

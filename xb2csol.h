@@ -20,6 +20,7 @@
 #define PL_INT     1
 #define PL_FLOAT   2
 #define PL_STRING  4
+#define PL_ARRAY   8
 
 /* Variablen Typen (unsigned char)*/
 
@@ -34,24 +35,26 @@
 
 /* X11-Basic needs these declarations:  */
 #ifdef NOMAIN
+extern int is_bytecode;
 extern int programbufferlen;
 extern char ifilename[];
 extern char *programbuffer;
 extern const char version[]; /* Version Number. */
 extern const char vdate[];   /* Creation date.*/
-extern char *program[];    /* Other comments.  */
+extern char **program;    /* Other comments.  */
 extern int prglen;
 extern int datapointer;
 extern PARAMETER *opstack;
 extern PARAMETER *osp;
 extern int verbose;
 #else
+extern int is_bytecode;
 int programbufferlen;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer;
-const char version[]="1.18"; /* Version Number. Put some useful information here */
+const char version[]="1.20"; /* Version Number. Put some useful information here */
 const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
-char *program[]={"compiled by xb2c"};    /* Other comments. Put some useful information here */
+char **program={"compiled by xb2c"};    /* Other comments. Put some useful information here */
 int prglen=sizeof(program)/sizeof(char *);
 extern int datapointer;
 PARAMETER *opstack;
@@ -68,7 +71,7 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
   param_anzahl=anzahl; \
   param_argumente=argumente; \
   osp=opstack=calloc(BC_STACKLEN,sizeof(PARAMETER)); \
-  programbufferlen=prglen=pc=sp=0;
+  programbufferlen=prglen=pc=sp=0; is_bytecode=1;
 
 
 #define CLEAR {int a,j; a=((int)opstack-(int)osp)/sizeof(PARAMETER); \
@@ -85,8 +88,10 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define PUSHW(a) opstack->integer=a; opstack->typ=PL_INT; opstack++
 #define PUSHF(a) opstack->real=a; opstack->typ=PL_FLOAT; opstack++
 #define PUSHX(a) opstack->integer=strlen(a); opstack->pointer=strdup(a); opstack->typ=PL_KEY; opstack++
+/* TODO: binary data in Strings*/
 #define PUSHS(a) opstack->integer=strlen(a); opstack->pointer=strdup(a); opstack->typ=PL_STRING; opstack++
-
+/* TODO: Array constant */
+#define PUSHA(a,l) opstack->integer=l; opstack->pointer=strdup(a); opstack->typ=PL_ARRAY; opstack++
 #define PUSHLEER opstack->typ=PL_LEER; opstack++
 #define POP      opstack--; free_parameter(opstack)
 #define COUNT    opstack->integer=((int)opstack-(int)osp)/sizeof(PARAMETER); opstack->typ=PL_INT; opstack++
@@ -152,7 +157,8 @@ int add_variable_adr(char *name, unsigned char  typ, char *adr);
 #define COMM_INC opstack--;if(variablen[opstack->integer].typ&FLOATTYP) (*((double *)opstack->pointer))++;  else if(variablen[opstack->integer].typ&INTTYP) (*((int *)opstack->pointer))++
 #define COMM_DEC opstack--;if(variablen[opstack->integer].typ&FLOATTYP) (*((double *)opstack->pointer))--;  else if(variablen[opstack->integer].typ&INTTYP) (*((int *)opstack->pointer))--
 
-
+/* conditional helpers*/
+#define JUMPIFZERO if((--opstack)->integer==0) goto
 
 /* simplified functions */
 

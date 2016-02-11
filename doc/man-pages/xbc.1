@@ -1,4 +1,4 @@
-.TH XBC 1 21-Aug-2011 "Version 1.18" "Linux Basic Compiler"
+.TH XBC 1 21-Aug-2012 "Version 1.20" "Linux Basic Compiler"
 .SH NAME
 xbc (X11-Basic compiler) \- X11-Basic compiler 
 .SH SYNOPSIS
@@ -75,7 +75,8 @@ the suffix `\|\c
 .TP
 .B \-l
 Precompile and compile the source files, but do not link.  The compiler
-output is an object file corresponding to each source file. The source files are compiled 
+output is an object file corresponding to each source file. The source files 
+are compiled 
 in a way that they can (and will have to) be linked to other object files. With these
 object files it is possible to create a library from your basic routines, which can be 
 executed from another program.
@@ -121,6 +122,7 @@ in `\|\c
 .B \&.c\c
 .
 .SS \-virtualm
+.SS \--virtualm
 this option tells the compiler to compile the code to bytecode and then translate it to C 
 source and finally compile it with gcc. The code produced is really fast. On UNIX this 
 option can always be used unless some compiler trouble occur. 
@@ -139,6 +141,20 @@ Usually the extention should be
 if it was used together with the 
 .B -l\c
  option.
+
+.SS \-C
+Do not discard comments.  All comments are passed through to the
+output file.
+
+.SS \-s --strip
+Remove all symbol table and relocation information from the
+executable.
+
+.SS "\-L " path
+Use \c
+.I path\c
+\& when looking for libraries to link (default is /usr/lib). 
+
 
 .SS \--version
 shows version, program and other information and exits
@@ -187,7 +203,7 @@ job.
 
 
 .SH VERSION
-Page was created for V.1.18
+Page was created for V.1.20
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic compiler xbc, you should
@@ -209,7 +225,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2013 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public

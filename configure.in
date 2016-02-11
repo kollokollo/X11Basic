@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.19], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.20], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -103,7 +103,7 @@ if test "x$no_x" = yes; then
 fi
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/kd.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
+AC_CHECK_HEADERS([sys/kd.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
 
 
 
@@ -138,6 +138,12 @@ AC_CHECK_LIB([pthread], [pthread_create], libs="$libs -lpthread")
 AC_CHECK_LIB([asound], [snd_pcm_recover], [
 libs="$libs -lasound"
 AC_DEFINE(HAVE_ALSA,1,[snd_pcm_recover in asound])
+],,[$libs])
+
+# `-lutil':
+AC_CHECK_LIB([util], [forkpty], [
+libs="$libs -lutil"
+AC_DEFINE(HAVE_FORKPTY,1,[forkpty in libutil])
 ],,[$libs])
 
 # `-lreadline':
@@ -337,7 +343,8 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
-AC_CHECK_FUNCS([nanosleep inotify_init alarm atexit getcwd gethostbyname gettimeofday inet_ntoa memmove memfrob select socket strchr strdup strstr utime])
+AC_CHECK_FUNCS([nanosleep inotify_init alarm atexit getcwd gethostbyname gettimeofday inet_ntoa]) 
+AC_CHECK_FUNCS([memmove memfrob select socket strchr strdup strstr utime execvp execvpe futimens])
 
 
 # Versioning

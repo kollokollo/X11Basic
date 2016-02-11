@@ -1,4 +1,4 @@
-.TH X11BASIC 1 21-Aug-2012 "Version 1.19" "Basic Interpreter"
+.TH X11BASIC 1 21-Dec-2012 "Version 1.20" "Basic Interpreter"
 .SH NAME
 xbasic (X11-Basic) \- Basic interpreter and shell
 .SH SYNOPSIS
@@ -168,30 +168,38 @@ name.
 Reserved and system variables are:
 
 .nf
-TRUE          -1
-FALSE         0
-PI            3.141592...
-TIMER         unix system timer, float, seconts 
-STIMER        integer system timer
-CTIMER        system timer in units of CPU-time
-PC            line number of next line to be processed
-SP            internal stack pointer
-ERR           error number of last error
-COLS          number of colums of the terminal connected to text output
-ROWS          number of rows of the terminal
-CRSCOL        cursor position 
-CRSLIN        cursor position
+int ANDROID?  -1 on Android systems, else 0
+int COLS      number of columns of the text terminal
+int CRSCOL    text cursor position: current column
+int CRSLIN    text cursor position: current line
+flt CTIMER    CPU system timer (seconds)
+int ERR       number of the last error
+int FALSE     constant: 0
+int GPS?      TRUE if GPS is availabe, else 0
+flt GPS_ALT   Altitude in m received from GPS
+flt GPS_LAT   latitude in degrees received from GPS
+flt GPS_LON   longitude in degrees received from GPS
+int MOUSEK    mouse button state (Button 1=Bit 0,Button 2=Bit 1 etc.)
+int MOUSES    state of the shift,alt,ctrl,caps keys 
+int MOUSEX    x coordinate of mouse position relative to window or screen
+int MOUSEY    y coordinate of mouse position
+int PC        line number of next program line to be processed
+flt PI        constant: 3.141592...
+int ROWS      number of rows of the text terminal
+int SENSOR?   TRUE if sensor phallanx is available
+int SP        internal stack pointer
+int STIMER    integer system timer
+flt TIMER     unix system timer, float, seconds since 1970-01-01 00:00 
+int TRUE      constant: -1
+int WIN32?    TRUE if OS is MS WINDOWS 32 bit
+int UNIX?     TRUE if OS is UNIX like (linux, BSD)
 
-MOUSEX        x coordinate of mouse position relative to window 
-MOUSEY        y coordinate of mouse position 
-MOUSEK        mouse button state
-              Button 1=Bit 0,Button 2=Bit 1 usw.
-MOUSES        state of the shift,alt,ctrl,caps keys 
-
+DATE$         current date
+FILEEVENT$    get events about files
 INKEY$        content of the keyboard-buffer
 TERMINALNAME$ device name of the standard terminal
 TIME$         current time 
-DATE$         current date
+TRACE$        current program code line
 .fi
 
 .SS Conditions
@@ -233,6 +241,8 @@ Precedence is defined as follows (highest first):
 
 .SS commands
 .nf
+? [,...]                -- abbreviation for PRINT
+ADD var_a,b             -- ADD b to var_a
 AFTER n,procedure       -- execute procedure after n seconds
 ARRAYFILL a(),b         -- fills array with value
 ARRAYCOPY dest(),souce() -- copies array including Dimensionierung
@@ -249,16 +259,22 @@ BSAVE f$,a,l            -- saves l bytes in memory at adress a to file f$
 CALL adr%[,par,...]     -- see EXEC
 CASE const              -- see SELECT * CASE * DEFAULT * ENDSELECT
 CHAIN bas$              -- executes another basic program
+CHDIR path$             -- change current working directory
 CLEAR                   -- clear and remove all variables
-CLOSE  [[#]n%]          -- close file, I/O channel or link
+CLOSE  [[#]n%[,...]]    -- close file, I/O channel or link
 CLR a,b%,c(),f$         -- clear variables
 CLS                     -- clear (text)screen
+CONNECT #n,t$[,i%]
+CONTINUE 
 CONT                    -- continue (after STOP)
 
 DATA 1,"Hallo",...      -- define constants 
+DEC var                 -- same as var=var-1
 DEFAULT                 -- see SELECT * CASE * DEFAULT * ENDSELECT
+DEFFN 
 DELAY sec		-- same as PAUSE
 DIM                     -- Declarate array
+DIV var,num
 DO * LOOP               -- Loop
 DPOKE adr,word          -- write short int word to adr
 DUMP                    -- lists all used variable names
@@ -278,17 +294,24 @@ ENDSELECT               -- see SELECT * CASE * DEFAULT * ENDSELECT
 ERASE a()[,b$(),...]    -- erase arrays
 ERROR n                 -- execute error number n
 EVAL a$                 -- evaluate command, which is in a$
+EVENT [,var,var,var,var,var,var,var,var,var$]
 EVERY n,procedure       -- invokes procedure every n seconds
-EXEC adr[,var[,...]]    -- call a C subroutine at pointer adr. 
+EXEC t$[,t$,t$]         -- call system service or program. 
 EXIT IF a               -- exit loop if condition a is TRUE
 
+FFT a()[,i%]
+FIT a(),a(),a(),a()[,#n,???,KEY,num,KEY,num]
+FIT_LINEAR a(),a(),#n,???[,KEY,num,KEY,num,i%,#n]
 FLUSH [#n]              -- flush output
 FOR * NEXT              -- For Next loop
 FORM_INPUT t$           -- input string with default value
+FREE i%
 FUNCTION * ENDFUNC      -- define function
 
+GET_LOCATION var,var[,var,var,var,var,var,var$]
 GOSUB procedure(varliste) -- call subroutine
 GOTO label              -- goto label
+GPS {ON|OFF} 
 
 HELP <expr>             -- prints short help on expr              
 HOME                    -- Textcursor home
@@ -313,10 +336,10 @@ LOOP                    -- see DO * LOOP
 LPOKE adr,long          -- writes long int value to pointer adr
 LSET t$=a$
 
-ON MENU GOSUB p1        -- define PROCEDURE p1 to handle an action   
-                           if a menue-point was selected             
 MERGE f$                -- Merges bas-file to actual program code
+MFREE i%
 MID$(t$,i,j)=b$
+MSYNC i%,i%
 MUL a,b	                -- same as a=a*b
 
 NEW                     -- clear and erase all variables and stop.
@@ -419,6 +442,8 @@ MOUSEEVENT              -- wait for mouse event
 MOTIONEVENT             -- wait for mouse movement
 
 MOVEW n,x,y             -- move window
+ON MENU GOSUB p1        -- define PROCEDURE p1 to handle an action   
+                           if a menue-point was selected             
 OPENW n                 -- open window
 PBOX  x1,y1,x2,y2       -- draw filled box
 PCIRCLE x,y,r[,a1,a2]   -- draw filled cirle
@@ -684,7 +709,7 @@ ENDFUNCTION
 .fi
 
 .SH VERSION
-Page was created for V.1.19
+Page was created for V.1.20
 .SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should
@@ -706,7 +731,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2012 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2013 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public

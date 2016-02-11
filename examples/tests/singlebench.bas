@@ -1,5 +1,6 @@
 ac=5000000
 
+print "empty FOR loop with ";ac;" iterations:"
 t=ctimer
 for i=0 to ac
 next i

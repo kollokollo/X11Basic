@@ -1,3 +1,5 @@
+' Another benchmark test for X11-Basic
+'
 count=0
 cc=false
 clr x,y,z
@@ -140,13 +142,13 @@ endfunction
 
 PROCEDURE test
 ' Testroutine
-  a=sqrt(x^2+y^2+z^2)
+  a=SQRT(x^2+y^2+z^2)
 
-  inc count
-  if (count mod 500)=0
-      color random(256)
-      pbox random(320),random(200),random(320),random(200)
-      vsync
-     inc cc      
-  endif
-return
+  INC count
+  IF (count MOD 500)=0
+    COLOR RANDOM(256)
+    PBOX RANDOM(320),RANDOM(200),RANDOM(320),RANDOM(200)
+    SHOWPAGE
+    INC cc      
+  ENDIF
+RETURN

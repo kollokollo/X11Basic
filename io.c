@@ -7,18 +7,30 @@
  */
 
 /* termio.h (weil obsolet) entfernt.    11.08.2003   MH  */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <errno.h>
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
 #include <sys/time.h>
-#include "config.h"
-#include "options.h"
+#ifdef WINDOWS
+  #define WEXITSTATUS(w)    (((w) >> 8) & 0xff)
+  #define WIFEXITED(w)      (((w) & 0xff) == 0)
+#else
+  #include <sys/wait.h> 
+#endif
+
+#include "defs.h"
+
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#ifdef HAVE_PTY_H
+#include <pty.h>
+#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -27,6 +39,8 @@
 #endif
 
 #include "x11basic.h"
+#include "parser.h"
+#include "svariablen.h"
 #include "io.h"
 
 
@@ -39,18 +53,33 @@
 
 #ifdef WINDOWS
 #include <ws2tcpip.h>
-#endif
+#include <winsock2.h>
 
+#endif 
+
+#include <sys/stat.h>
 #ifndef WINDOWS
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #else
 #include <windows.h>
+
+struct winsize
+{
+  unsigned short ws_row;	/* rows, in characters */
+  unsigned short ws_col;	/* columns, in characters */
+  unsigned short ws_xpixel;	/* horizontal size, pixels */
+  unsigned short ws_ypixel;	/* vertical size, pixels */
+};
+#define fsync(a) ;
+#define forkpty(a,b,c,d) (-1)
+
+
 #endif
 
 double sensordata[ANZSENSORS];
@@ -69,15 +98,11 @@ double sensordata[ANZSENSORS];
 #endif
 
 #include "file.h"
-#include "defs.h"
-#include "x11basic.h"
 #include "variablen.h"
 #include "parameter.h"
 #include "xbasic.h"
 #include "wort_sep.h"
-#include "parser.h"
 #include "array.h"
-#include "io.h"
 #include "sfunctions.h"
 
 #ifdef WINDOWS
@@ -89,12 +114,26 @@ double sensordata[ANZSENSORS];
 
 static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port);
 static int make_socket(unsigned short int port);
-static FILE *get_fileptr(int n);
 static int make_UDP_socket(unsigned short int port);
 
 /* get the current cursor position */
 
-#ifdef ANDROID
+#ifndef HAVE_FUTIMENS
+  #define futimens(a,b)  (0);   /* not supported  */
+#endif
+
+#ifndef UTIME_NOW
+  #define UTIME_NOW      ((1l << 30) - 1l)
+  #define UTIME_OMIT     ((1l << 30) - 2l) 
+#ifndef ANDROID
+  struct timespec {
+               time_t tv_sec;        /* seconds */
+               long   tv_nsec;       /* nanoseconds */
+  };
+#endif
+#endif
+
+#if defined ANDROID
 extern int lin,col;
 
 void getcrsrowcol(int *_row, int *_col) {
@@ -144,7 +183,7 @@ void getrowcols(int *rows, int *cols) {
 /*******************************/
 /* Ein- und Ausgaberoutinen    */
 
-static FILE *get_fileptr(int n) {
+FILE *get_fileptr(int n) {
   if(n==-1) return(stderr);  
   else if(n==-2) return(stdin);  
   else if(n==-4) return(stdout);  
@@ -187,23 +226,22 @@ void c_unmap(PARAMETER *plist,int e) {
   }
 }
 void c_locate(PARAMETER *plist,int e) {
-  printf("\033[%.3d;%.3dH",plist[0].integer,plist[1].integer);
+  printf("\033[%.3d;%.3dH",plist->integer,plist[1].integer);
 }
 void c_print(PARAMETER *plist,int e) {
   if(e) {
     int i;
     char *v;
     FILE *fff=stdout;
-// printf("C_PRINT: \n");
-// dump_parameterlist(plist,e);
 
     for(i=0;i<e;i++) {
-      if(plist[i].typ==PL_EVAL || plist[i].typ==PL_KEY) {
+      switch(plist[i].typ) {
+      case PL_EVAL:
+      case PL_KEY:
           v=plist[i].pointer;
-          if(i==0 && v[0]=='#') {  /* Sonderbehandlung fuer erstes.. */
-            int ii=get_number(v);
-            if(filenr[ii]) fff=dptr[ii];
-            else xberror(24,""); /* File nicht geoeffnet */
+          if(i==0 && *v=='#') {  /* Sonderbehandlung fuer erstes.. */
+            fff=get_fileptr(get_number(v));
+            if(fff==NULL) {xberror(24,v); /* File nicht geoeffnet */return;}
           } else if(strlen(v)) {
 	    STRING buffer=print_arg(v);
 	    fwrite(buffer.pointer,1,buffer.len,fff);
@@ -219,16 +257,21 @@ void c_print(PARAMETER *plist,int e) {
 	  } else {
 	    if(i!=e-1) fputc('\011',fff);
 	  }
-      } else if(plist[i].typ==PL_FILENR) {
+	  break;
+      case PL_FILENR:
         if(i==0) {
-	  int ii=plist[i].integer;
-	    if(filenr[ii]) fff=dptr[ii];
-            else xberror(24,""); /* File nicht geoeffnet */
-	} else printf("ERROR: Syntax error, PRINT filenummer an falscher Stelle.\n");
-      } else if(plist[i].typ==PL_LEER) {
+	  fff=get_fileptr(plist[i].integer);
+          if(fff==NULL) {xberror(24,""); /* File nicht geoeffnet */return;}
+	  if(e==1) fputc('\n',fff); /* Dann war # der einzige parameter.*/
+	} else xberror(32,"PRINT"); /* Syntax Error */
+	break;
+      case PL_LEER:
         if(i!=e-1) fputc('\011',fff);
-      } else {
-        printf("PRINT: Falscher typ. $%x\n",plist[i].typ);
+	break;
+      default:
+        dump_parameterlist(plist,e);
+        xberror(32,"PRINT"); /* Syntax Error */
+	return;
       }
     }
   } else {
@@ -239,11 +282,12 @@ void c_print(PARAMETER *plist,int e) {
   }
 }
 
-void c_input(char *n) {
+void c_input(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
-  char *u,*v,*text;
+  char *u,*v=NULL,*text;
   char inbuf[MAXSTRLEN];
-  int e,e2;
+  int e;
+  
   FILE *fff=stdin;
   
   if(*n=='#') {
@@ -270,11 +314,13 @@ void c_input(char *n) {
     while(e!=0) {
       xtrim(s,TRUE,s);
       if(fff==stdin) {
-        e2=arg2(v,TRUE,u,v);
-        while(e2==0) {
+        // int e2=
+	arg2(v,TRUE,u,v);
+      /*  while(e2==0) {
 	  v=do_gets(text);
 	  e2=arg2(v,TRUE,u,v);
 	}
+       */
       } else u=input(fff,inbuf,MAXSTRLEN);
   //    printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
       if(type(s) & STRINGTYP) {
@@ -284,6 +330,7 @@ void c_input(char *n) {
 	str=double_string(&str);
         zuweis_string_and_free(s,str);
       } else xzuweis(s,u);
+     
       e=arg2(t,TRUE,s,t);
     }
     free(text);
@@ -297,7 +344,7 @@ Liest bis \n oder eof oder 0. Die Laenge kann deshalb mit strlen ermittelt
 werden. Zeile wird Nullterminiert
 */
 
-STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
+static STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
   int c; int i=0;
   STRING line;
   int l=MAXSTRLEN;
@@ -351,7 +398,7 @@ STRING f_inputs(char *n) {
   } else xberror(32,"INPUT$"); /* Syntax Error */
   return(vs_error());
 }
-void c_lineinput(char *n) {
+void c_lineinput(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   char *u,*text=NULL;
   int e,i=0,typ;
@@ -371,7 +418,6 @@ void c_lineinput(char *n) {
        free(u);
       if(e==3) strcat(text," ? ");
       if(e!=2) strcat(text," ");
-       
     } else if(i==0 && (typ&FILENRTYP)==FILENRTYP) {
       fff=get_fileptr(get_number(s));
       if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
@@ -394,9 +440,7 @@ void c_lineinput(char *n) {
           free(a.pointer);
         }
       }
-
-      free(text);
-      text=NULL;
+      free(text); text=NULL;
     }
     e=arg2(t,TRUE,s,t);
     i++;
@@ -406,8 +450,8 @@ void c_lineinput(char *n) {
 /********************/
 /* File-Routinen    */
 
-int get_number(char *w) {
-    if(w[0]=='#') w++;
+int get_number(const char *w) {
+    if(*w=='#') w++;
     return((int)parser(w));
 }
 
@@ -608,7 +652,7 @@ void c_open(PARAMETER *plist, int e) {
           if(dptr[number]==NULL) io_error(errno,"make_udp_socket");
       }
     } else dptr[number]=fopen(filename,modus2);
-    if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
+    if(dptr[number]==NULL) {io_error(errno,"OPEN");return;}
     else  filenr[number]=1;
     if(special=='X') {  /* Fuer Serielle Devices !  */
       int fp=fileno(dptr[number]);
@@ -791,12 +835,15 @@ void c_send(PARAMETER *plist, int e) {
 }
 void c_receive(PARAMETER *plist, int e) {
   FILE *fff;
-	 struct	sockaddr_in	host_address;
-	 socklen_t 	host_address_size;
-	 unsigned	char	*address_holder;
-  STRING str;  
-
+  struct	sockaddr_in	host_address;
+  socklen_t 	host_address_size;
+#if DEBUG
+	 
+  unsigned	char	*address_holder;
+#endif
+    STRING str;  
     int fdes;
+    
     str.pointer=malloc(1500);
     fff=get_fileptr(plist[0].integer);
     if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
@@ -806,8 +853,8 @@ void c_receive(PARAMETER *plist, int e) {
     host_address_size=sizeof(host_address);
     if((str.len=recvfrom(fdes,str.pointer,1500,0,(struct sockaddr*)&host_address,
        &host_address_size))<0) {io_error(errno,"recvfrom()");free(str.pointer);return;}
-address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
 #if DEBUG
+address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
     printf("Port  obtained %d Bytes message '%s' from host %d.%d.%d.%d.\n",
     str.len,buffer,address_holder[0],address_holder[1],address_holder[2],
     address_holder[3]);
@@ -911,7 +958,7 @@ static const struct {int sf; char xf; } ioemaptable[] = {
   };
 static const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
   
-void io_error(int n, char *s) {
+void io_error(int n, const char *s) {
   int i;
   for(i=0;i<anztabs;i++) {
     if(n==ioemaptable[i].sf) {
@@ -955,35 +1002,129 @@ void c_close(PARAMETER *plist,int e) {
   }
 }
 
+#ifndef HAVE_EXECVPE
+int execvpe(const char *program, char **argv, char **envp) {
+    char **saved = environ;
+    int rc;
+    environ = envp;
+    rc = execvp(program, argv);
+    environ = saved;
+    return rc;
+}
+#endif
+
+/*Exec */
+void c_exec(PARAMETER *plist,int e) {
+  char *newargv[128]; 
+  char *newenviron[128];
+  char *a=NULL,*b=NULL;
+  int ret,ee,anzargs=0,anzenv=0;
+#ifdef ANDROID
+  if(strncmp(plist->pointer,"android.",8)==FALSE) {
+    if(e>1) a=plist[1].pointer;
+    if(e>2) b=plist[2].pointer;
+    ANDROID_call_intent(plist->pointer,a,b);
+    return;
+  }
+/* untersuche, ob es sich um ein intent handelt*/
+#endif
+  if(e>1) {
+    newargv[anzargs++]=plist->pointer;
+    
+    ee=wort_sep_destroy(plist[1].pointer,'\n',0,&a,&b);
+    while(ee && anzargs<127) {
+      newargv[anzargs++]=a;
+      ee=wort_sep_destroy(b,'\n',0,&a,&b);
+    }
+  }
+  
+  if(e>2) {
+    ee=wort_sep_destroy(plist[2].pointer,'\n',0,&a,&b);
+    while(ee && anzenv<127) {
+      newenviron[anzenv++]=a;
+      ee=wort_sep_destroy(b,'\n',0,&a,&b);
+    }
+  }
+  
+  newargv[anzargs]=NULL;
+  newenviron[anzenv]=NULL;
+ 
+#ifdef WINDOWS
+  _flushall();
+  errno = 0;
+  ret=spawnv(_P_WAIT,plist->pointer, newargv);
+  if (errno) ret=-1;
+#else
+  if(e>2) ret=execvpe(plist->pointer,newargv,newenviron);
+  else ret=execvp(plist->pointer,newargv);
+#endif
+  if(ret==-1) io_error(errno,"EXEC");
+}
+
+/*Diese funktion liefert den Rueckgabewert aus exit zurueck*/
+
+int f_exec(PARAMETER *plist,int e) {
+  int statval;
+
+#ifdef ANDROID
+  char *a=NULL,*b=NULL;
+/* untersuche, ob es sich um ein intent handelt*/
+  if(strncmp(plist->pointer,"android.",8)==FALSE) {
+    if(e>1) a=plist[1].pointer;
+    if(e>2) b=plist[2].pointer;
+    ANDROID_call_intent(plist->pointer,a,b);
+    return(ANDROID_waitfor_intentresult());
+  }
+#endif
+
+  
+#ifndef WINDOWS
+  if(fork() == 0) {
+    c_exec(plist,e);
+    exit(-1); /*we come here only in case of error */
+  } else {
+    wait(&statval);
+    if(WIFEXITED(statval)) return(WEXITSTATUS(statval));
+    else return(-1); // Child did not terminate with exit.
+  }
+#endif
+  return 0;  /* we never come here*/
+}
 
 /* Fuehrt Code an Adresse aus */
-void c_exec(char *n) { f_exec(n);}
-int f_exec(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2);
+void c_call(PARAMETER *plist,int e) { f_call(plist,e);}
+int f_call(PARAMETER *plist,int e) {
   typedef struct  {int feld[20];} GTT;
-  GTT gtt;
-  int (*adr)(GTT);
-  int i=0;
-  while(e) {
-    if(i==0) adr=(int (*)())((long)parser(w1));
-    else if(i<20) {
-      if(strncmp(w1,"D:",2)==0) {
-        *((double *)(&gtt.feld[i-1]))=parser(w1+2);
-        if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(int))-1;
-      } else if(strncmp(w1,"F:",2)==0) {
-        *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
-	if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
-      } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-      else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-      else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-      else gtt.feld[i-1]=(int)parser(w1);
+  int (*adr)(GTT)=(int (*)())plist->integer;
+  // printf("call 0x%x mit %d args.\n",plist->integer,e);
+  if(e>20) xberror(45,"CALL"); /* Zu viele Parameter */
+  else if(adr==NULL) xberror(29,"CALL"); /* illegal address */
+  else {
+    int i;
+    GTT gtt;
+#define w1 ((char *)plist[i].pointer)
+    for(i=1;i<e;i++) {
+      switch(plist[i].typ) {
+      case PL_EVAL:
+      //	printf("arg: %s \n",(char *)plist[i].pointer);
+        if(strncmp(w1,"D:",2)==0) {
+          *((double *)(&gtt.feld[i-1]))=parser(w1+2);
+          if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(int))-1;
+        } else if(strncmp(w1,"F:",2)==0) {
+          *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
+	  if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
+        } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+        else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+        else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
+        else gtt.feld[i-1]=(int)parser(w1);
+#undef w1
+        break;
+      default:
+        xberror(32,"CALL"); /* Syntax error */
+      }
     }
-    i++;
-    e=wort_sep(w2,',',TRUE,w1,w2);
+    return(adr(gtt));
   }
-  if(i==0) xberror(42,"EXEC"); /* Zu wenig Parameter */
-  else return(adr(gtt));
   return(0);
 }
 void c_bload(PARAMETER *plist,int e) {
@@ -1078,6 +1219,20 @@ void c_relseek(PARAMETER *plist,int e) {
     if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
   } else xberror(24,""); /* File nicht geoeffnet */
 }
+
+void touch(PARAMETER *plist,int e) {
+  if(plist->integer>0) {
+    FILE *fff=get_fileptr(plist->integer);
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */ 
+    int fp=fileno(fff);
+    struct timespec ts[2];
+    ts[0].tv_nsec=UTIME_NOW;
+    ts[1].tv_nsec=UTIME_NOW;
+    int ret=futimens(fp, ts);
+    if(ret==-1) io_error(errno,"touch");
+  }
+}
+
 
 int inp8(PARAMETER *plist,int e) {
   unsigned char ergebnis;
@@ -1202,22 +1357,21 @@ char *terminalname(int fp) {
 
 
 
-void c_out(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,v,w);
-  if(e>1) {
-    int i=get_number(v);
-    int typ,j,a=1;
-    FILE *fff=get_fileptr(i);
-
-    if(fff!=NULL) {
-      e=wort_sep(w,',',TRUE,v,w);
-      while(e) {
-        typ=type(v);
+void c_out(PARAMETER *plist,int e) {
+  FILE *fff=get_fileptr(plist->integer);
+  // printf("OUT #%d mit %d args.\n",plist->integer,e);
+  if(fff==NULL) xberror(24,""); /* File nicht geoeffnet */
+  else {
+    int i,typ;
+    for(i=1;i<e;i++) {
+      switch(plist[i].typ) {
+      case PL_EVAL:
+	typ=type(plist[i].pointer);
+	// printf("arg: %s typ=%x\n",plist[i].pointer,typ);
 	if(typ & ARRAYTYP) {
-	  ARRAY zzz=array_parser(v);    
+	  int j,a=1;
+	  ARRAY zzz=array_parser(plist[i].pointer);
 	  for(j=0;j<zzz.dimension;j++) a=a*(((int *)zzz.pointer)[j]);
-
 	  if(zzz.typ & FLOATTYP) {
             double *varptr=(double *)(zzz.pointer+zzz.dimension*INTSIZE);
             
@@ -1231,23 +1385,27 @@ void c_out(char *n) {
 	      fwrite(varptr[j].pointer,sizeof(char),varptr[j].len,fff);
 	    }
 	  }
-	 
+
 	  free_array(&zzz);
-	} else if(typ & FLOATTYP){
-	 double zzz=parser(v);
-         fwrite(&zzz,sizeof(double),1,fff);
-	} else if(typ & INTTYP){
-	 int zzz=(int)parser(v);
-         fwrite(&zzz,sizeof(int),1,fff);
+	} else if(typ & FLOATTYP) {
+          double zzz=parser(plist[i].pointer);
+          fwrite(&zzz,sizeof(double),1,fff);
+	} else if(typ & INTTYP) {
+	  int zzz=(int)parser(plist[i].pointer);
+          fwrite(&zzz,sizeof(int),1,fff);
 	} else if(typ & STRINGTYP){
-	 char *zzz=s_parser(v);
-         fwrite(&zzz,sizeof(char),strlen(zzz),fff);
-         free(zzz);
-        }
-	e=wort_sep(w,',',TRUE,v,w);
-      }  
-    } else xberror(24,""); /* File nicht geoeffnet */
-  } else xberror(32,"OUT"); /* Syntax error */
+ 	  STRING zzz=string_parser(plist[i].pointer);
+          fwrite(zzz.pointer,sizeof(char),zzz.len,fff);
+          free_string(&zzz);
+	} else xberror(32,"OUT"); /* Syntax error */
+        break;
+      default:
+        dump_parameterlist(plist,e);
+        xberror(32,"OUT"); /* Syntax error */
+	return;
+      }
+    }
+  }
 }
 #ifndef WINDOWS
 /* kbhit-Funktion   */
@@ -1275,7 +1433,7 @@ int kbhit() {
 char *inkey() {
    static char ik[MAXSTRLEN];
    int i=0;
-   while(kbhit()) ik[i++]=getc(stdin);
+   while(kbhit() && i<MAXSTRLEN-1) ik[i++]=getc(stdin);
    ik[i]=0;
    return(ik);
 }
@@ -1283,7 +1441,7 @@ char *inkey() {
 
 /* Baut einen String aus der Argumenteliste des PRINT-Kommandos zusammen */
 
-STRING print_arg(char *ausdruck) {
+STRING print_arg(const char *ausdruck) {
   int e;
   char *a1,w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
@@ -1302,16 +1460,14 @@ STRING print_arg(char *ausdruck) {
       ergebnis.len+=10;
     } else if(strncmp(a1,"TAB(",4)==0) {
       a1[strlen(a1)-1]=0;
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+8);
+      sprintf(ergebnis.pointer+ergebnis.len,"\r\033[%.3dC",(int)parser(a1+4));
+      ergebnis.len+=7;
+    } else if(strncmp(a1,"SPC(",4)==0) {
+      a1[strlen(a1)-1]=0;
       ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+7);
       sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3dC",(int)parser(a1+4));
       ergebnis.len+=6;
-    } else if(strncmp(a1,"SPC(",4)==0) {
-      int i,j;
-      a1[strlen(a1)-1]=0;
-      i=(int)parser(a1+4);
-      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+i);
-      for(j=ergebnis.len;j<ergebnis.len+i;j++) ergebnis.pointer[j]=' ';
-      ergebnis.len+=i;
     } else if(strncmp(a1,"COLOR(",6)==0) {
       int i;
       a1[strlen(a1)-1]=0;
@@ -1428,9 +1584,12 @@ STRING do_using(double num,STRING format) {
   }
   return(dest);
 }
+/* This is a handy helper function which prints out a 
+   hex dump of the memory arey pointed to by adr of length l
+   The output is in magenta and fints on a 80 char screen.
+   (c) by Markus Hoffmann 1997 */
 
-
-void memdump(unsigned char *adr,int l) {
+void memdump(const unsigned char *adr,int l) {
   int i;
   printf("\033[35m");
   while(l>16) {
@@ -1505,9 +1664,36 @@ int f_ioctl(PARAMETER *plist,int e) {
 
 
 void c_chdir(PARAMETER *plist,int e) {
-  int ret=chdir(plist[0].pointer);
-  if(ret==-1) io_error(errno,"chdir");
+  if(chdir(plist->pointer)==-1) io_error(errno,"chdir");
 }
+
+void c_mkdir(PARAMETER *plist,int e) {
+#ifndef WINDOWS
+  mode_t mode=S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+  if(e>1) mode=plist[1].integer;
+  if(mkdir(plist->pointer,mode)==-1) io_error(errno,"mkdir");
+#else
+  if(mkdir(plist->pointer)==-1) io_error(errno,"mkdir");
+#endif
+}
+
+
+void c_rmdir(PARAMETER *plist,int e) {
+  if(rmdir(plist->pointer)==-1) io_error(errno,plist->pointer);
+}
+
+
+void c_kill(PARAMETER *plist,int e) {
+  if(unlink(plist->pointer)==-1) io_error(errno,plist->pointer);
+}
+void c_rename(PARAMETER *plist,int e) {
+  if(rename(plist->pointer,plist[1].pointer)==-1) io_error(errno,plist->pointer);
+}
+void c_chmod(PARAMETER *plist,int e) {
+  if(chmod(plist->pointer,plist[1].integer)==-1) io_error(errno,plist->pointer);
+}
+
+
 
 static int watch_fd=-2;
 void c_watch(PARAMETER *plist, int e) {
@@ -1567,4 +1753,136 @@ char *fileevent() {
 #endif
   }
   return(erg);
+}
+
+
+
+/* Spawns a process with redirected standard input and output
+   streams. ARGV is the set of arguments for the process,
+   terminated by a NULL element. The first element of ARGV
+   should be the command to invoke the process.
+   Returns a file descriptor that can be used to communicate
+   with the process. */
+
+int spawn_shell (char *argv[]) {
+  int ret_fd = -1;
+  char slavename[80]="";
+ #ifndef ANDROID
+  struct winsize win={25,80,320,240};
+  #endif
+  printf("connecting %s\n",argv[0]);
+
+  /* Find out if the intended programme really exists and
+     is accessible. */
+  struct stat stat_buf;
+  if (stat (argv[0], &stat_buf) != 0) {printf("ERROR accessing programme");return -1;}
+
+#ifdef SAVE_STDERR
+  /* Save the standard error stream. */
+  int saved_stderr = dup (STDERR_FILENO);
+  if(saved_stderr < 0) {printf("ERROR saving old STDERR");return -1;}
+#endif
+  /* Create a pseudo terminal and fork a process attached
+     to it. */
+  pid_t pid = forkpty (&ret_fd,slavename, NULL, &win);
+ // printf("forkpty(%s) --> %d --> %d\n",slavename,ret_fd,pid);
+  if (pid == 0) {
+    /* Inside the child process. */
+
+#ifndef WINDOWS
+    /* Ensure that terminal echo is switched off so that we
+       do not get back from the spawned process the same
+       messages that we have sent it. */
+    struct termios orig_termios;
+    if(tcgetattr(STDIN_FILENO,&orig_termios)<0) {printf("ERROR getting current terminal's attributes");return -1;}
+
+    orig_termios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+    orig_termios.c_oflag &= ~(ONLCR);
+
+    if(tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios) < 0) {printf("ERROR setting current terminal's attributes");return -1;}
+#endif
+#ifdef SAVE_STDERR
+    /* Restore stderr. */
+    if(dup2(saved_stderr, STDERR_FILENO)<0) {printf("ERROR restoring STDERR");return -1;}
+#endif
+    /* This should now already work */
+  //  printf("The child is now going to excecute the shell!\n");
+    /* Now spawn the intended programme. */
+    if (execv (argv[0], argv)) {
+      /* execv() should not return. */
+      printf("ERROR spawning program\n");
+      return -1;
+    }
+  } else if (pid < 0) {
+    io_error(errno,"forkpty");
+    if(errno==ENOENT) printf("There are no available ttys.\n");
+    printf("slavename=%s",slavename);
+    printf("\nERROR spawning program\n");
+    return -1;
+  }
+#ifdef SAVE_STDERR
+  else close(saved_stderr);
+#endif
+  if(ret_fd<0) {
+    printf("Cannot spawn shell! ERROR\n");
+  } else {
+    struct timeval tv;
+    fd_set active_fd_set,read_fd_set;
+    int DoExit=0;
+    int retval;
+    FD_ZERO (&active_fd_set);
+    FD_SET (STDIN_FILENO, &active_fd_set); 
+    FD_SET (ret_fd, &active_fd_set); 
+    while (!DoExit) {
+      tv.tv_sec =  1;   /* Wait up to one second. */
+      tv.tv_usec = 10000;
+      read_fd_set = active_fd_set;
+      retval = select (FD_SETSIZE, &read_fd_set, NULL, NULL, &tv); 
+      if(retval<0) {
+        if(errno==EINTR) ; /* This is OK */
+        else if(errno==EBADF) { /* This is not OK */
+          printf("console: select failed! Connection to shell lost! \n");
+	  return(0);
+        } else printf("console: select failed!\n");
+      } else if(!retval) {
+       // printf("++timeout!\n");
+      //  DoExit=1;  /* This, probably, will also not work.  */
+      } else {
+        if(FD_ISSET(ret_fd,&read_fd_set)) {
+          char c;
+          int cc=read(ret_fd,&c,1);
+          if(cc>0) {
+	  putchar(c);fflush(stdout);
+	  #ifdef ANDROID
+  	    invalidate_screen();
+	  #endif
+	  }
+   	  else if(cc==-1) {
+	    if(errno==EINTR || errno==EAGAIN) ; /* This is OK */
+            else if(errno==EBADF ||errno==EIO) { /* This is not OK */
+              printf("Terminal: read failed! Connection to shell lost!\n");
+	      DoExit=1;
+            } else printf("console: read failed!\n");
+	  }
+        } 
+	if(FD_ISSET(STDIN_FILENO,&read_fd_set)) {
+	  char c;
+          int cc=read(STDIN_FILENO,&c,1);
+	 // printf("read from stdin: %d\n",(int)c);
+          if(cc>0) {
+	    if(write(ret_fd,&c,1)!=1) printf("Terminal write error.\n");
+	    
+	    fsync(ret_fd);
+          } else if(cc==-1) {
+	    if(errno==EINTR || errno==EAGAIN) ; /* This is OK */
+            else if(errno==EBADF ||errno==EIO) { /* This is not OK */
+              printf("Terminal: read failed! Connection to terminal lost!\n");
+	      DoExit=1;
+            } else printf("console: read failed!\n");
+	  }
+        }
+      }
+    }
+  }
+  return ret_fd;
 }

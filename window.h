@@ -109,6 +109,7 @@ extern int schubladex,schubladey,schubladew,schubladeh;
 
 void do_sizew(int,int,int);
 void do_movew(int,int,int);
+char *fsel_input(char *,char *,char *);
 
 
 #define ROOT 0

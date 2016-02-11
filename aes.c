@@ -101,6 +101,7 @@ void gem_init() {
   printf("sbox=(%d,%d,%d,%d)\n",sbox.x,sbox.y,sbox.w,sbox.h);
 #endif
 #ifdef FRAMEBUFFER
+  /*Das Ziel ist hier, dass ungefaehrr 60 bis 80 Zeichen in eine Zeile passen*/
   if(font_behaviour==0) { /* Auto */
     if(sbox.w>=1200) load_GEMFONT(FONT_LARGE);
     else if(sbox.w>=640) load_GEMFONT(FONT_BIG);
@@ -119,7 +120,7 @@ void gem_init() {
   load_GEMFONT(FONT_DEFAULT);
 #endif
   for(i=0;i<16;i++)
-    gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b);
+    gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b,65535);
 
 }
 
@@ -724,12 +725,14 @@ if (drawbg) {
   case G_STRING:
   case G_TITLE:
     text=(char *)((long)tree[idx].ob_spec);
+   // printf("Title: <%s> y=%d baseline=%d\n",text,oby,baseline);
     DrawString(obx,oby+baseline,text,strlen(text));
   case G_BOX:
   case G_IBOX:
     break;
   case G_BUTTON:
     text=(char *)((long)tree[idx].ob_spec);
+  //  printf("Title: <%s> y=%d baseline=%d h=%d\n",text,oby,baseline+(obh-chh)/2,obh);
     DrawString(obx+(obw-chw*strlen(text))/2,oby+baseline+(obh-chh)/2,text,strlen(text));
     break;
   case G_BOXCHAR:
@@ -773,7 +776,7 @@ if (drawbg) {
       else flen-=ted->te_junk2;
     } else ted->te_junk2=0;
     
-    y=oby+(obh+fontheight(ted->te_font))/2+fontbaseline(ted->te_font)-fontheight(ted->te_font);
+    y=oby+(obh-fontheight(ted->te_font))/2+fontbaseline(ted->te_font);
     
     if(ted->te_just==TE_LEFT) x=obx;
     else if(ted->te_just==TE_RIGHT) {

@@ -1,4 +1,4 @@
-' Utility to convert gui Files with Formulars or other Graphical user interface
+' Utility to convert gui Files with Formulars OR other Graphical user interface
 ' Objects to X11Basic executable programs
 '
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -10,7 +10,7 @@
 '                                               27.01.2005
 '
 DIM iz$(1000)
-DIM fstr$(1000)
+DIM fSTR$(1000)
 DIM fstrnam$(1000)
 CLR anziz,anzstring,anztree,anzfreestring,anzobj
 CLR anztedinfo,anzdata,anzbitblk,anziconblk
@@ -37,219 +37,210 @@ PRINT "quit"
 
 WHILE count<anziz
   t$=iz$(count)
-  inc count
-  exit if t$="}"
-  if left$(t$)="'" or left$(t$)="#"
-    print t$
-  else
-    if wort_sep(t$,":",1,a$,b$)=2
-      name$=trim$(a$)
-      t$=trim$(b$)
-    else
+  INC count
+  EXIT IF t$="}"
+  IF LEFT$(t$)="'" OR LEFT$(t$)="#"
+    PRINT t$
+  ELSE
+    IF WORT_SEP(t$,":",1,a$,b$)=2
+      name$=TRIM$(a$)
+      t$=TRIM$(b$)
+    ELSE
       name$=""
       t$=a$
-    endif
+    ENDIF
     SPLIT t$," ",1,typ$,t$
-    if upper$(typ$)="TREE"
-       if t$="{"
+    IF UPPER$(typ$)="TREE"
+       IF t$="{"
          @dotree(name$)
-       endif
-    else if upper$(typ$)="FREESTR"
+       ENDIF
+    ELSE IF UPPER$(typ$)="FREESTR"
       @dofreestr(t$)
-    else if upper$(typ$)="RSC"
-       if t$="{"
+    ELSE IF UPPER$(typ$)="RSC"
+       IF t$="{"
          @dorsc(name$)
-       endif 
-    else
-      dec count
+       ENDIF 
+    ELSE
+      DEC count
       @dotree("FREETREE_"+name$)
-    endif
-  endif
-wend
+    ENDIF
+  ENDIF
+WEND
 
-print "PROCEDURE init"
-if anzfreestring>0
-  print "  DIM freestring$("+str$(anzfreestring)+")"
-  for i=0 to anzfreestring-1
-    if len(fstrnam$(i))
-      print fstrnam$+"="+str$(i)
-    endif
-    t$=replace$(fstr$(i),chr$(34),"<&&&gaense>")
-    t$=replace$(t$,"<&&&gaense>",chr$(34)+"+chr$(34)+"+chr$(34))
-    print "  freestring$("+str$(i)+")="+chr$(34)+fstr$(i)+chr$(34)
-  next i
-endif
+PRINT "PROCEDURE init"
+IF anzfreestring>0
+  PRINT "  DIM freestring$("+STR$(anzfreestring)+")"
+  FOR i=0 TO anzfreestring-1
+    IF LEN(fstrnam$(i))
+      PRINT fstrnam$+"="+STR$(i)
+    ENDIF
+    t$=REPLACE$(fSTR$(i),CHR$(34),"<&&&gaense>")
+    t$=REPLACE$(t$,"<&&&gaense>",ENCLOSE$("+chr$(34)+"))
+    PRINT "  freestring$("+STR$(i)+")="+ENCLOSE$(fSTR$(i))
+  NEXT i
+ENDIF
 PRINT "RETURN"
-
-
 PRINT "PROCEDURE doit"
-if anztree>0
-  for i=0 to anztree-1
-    print "  @formular"+str$(i)
-  next i
-endif
-if anzfreestring>0
-  for i=0 to anzfreestring-1
-    print "  ~form_alert(1,freestring$("+str$(i)+"))"
-  next i
+IF anztree>0
+  FOR i=0 TO anztree-1
+    PRINT "  @formular"+STR$(i)
+  NEXT i
+ENDIF
+IF anzfreestring>0
+  FOR i=0 TO anzfreestring-1
+    PRINT "  ~FORM_ALERT(1,freestring$("+STR$(i)+"))"
+  NEXT i
 ENDIF
 PRINT "RETURN"
 QUIT
 
-procedure dotree(n$)
+PROCEDURE dotree(n$)
   klammer=0
   spaces=1
   anzobj=0
-  if len(n$)
-    print "' TREE NAME: "+n$
-  endif
-  print "PROCEDURE formular"+str$(anztree)
-  print "  LOCAL ret,x,y,w,h"
+  IF LEN(n$)
+    PRINT "' TREE NAME: "+n$
+  ENDIF
+  PRINT "PROCEDURE formular"+STR$(anztree)
+  PRINT "  LOCAL ret,x,y,w,h"
     ~@doit2(-1)
  ' while count<anziz
  '   t$=iz$(count)
  '   inc count
  '   exit if t$="}"
-    
  '   ~@doit2(-1)
-
-
-    
  '   print t$
  ' wend
  @addtree(aobj,anzobj-1)
-  print "RETURN"
-  inc anztree
-return
-procedure dorsc(n$)
-  local t$
-  print "' RSC information "+n$
-  while count<anziz
+  PRINT "RETURN"
+  INC anztree
+RETURN
+PROCEDURE dorsc(n$)
+  LOCAL t$
+  PRINT "' RSC information "+n$
+  WHILE count<anziz
     t$=iz$(count)
-    inc count
-    exit if t$="}"
-    t$=replace$(t$,"#","!")
-    print "' "+t$
-  wend
-return
-procedure dofreestr(b$)
-  local text$
-   text$=@getval$(b$,"STRING")
-   if left$(text$)=chr$(34)
-     text$=right$(text$,len(text$)-1)  
-   endif
-   if right$(text$)=chr$(34)
-     text$=left$(text$,len(text$)-1)  
-   endif
-   fstr$(anzfreestring)=text$
-   inc anzfreestring
-return
-function doit2(parent)
-  local t$,klammer,idx,typ$,label$,obnext,obtail,obhead,parameter$
+    INC count
+    EXIT IF t$="}"
+    t$=REPLACE$(t$,"#","!")
+    PRINT "' "+t$
+  WEND
+RETURN
+PROCEDURE dofreestr(b$)
+  LOCAL text$
+  text$=@getval$(b$,"STRING")
+  IF LEFT$(text$)=CHR$(34)
+    text$=DECLOSE$(text$)  
+  ENDIF
+  fSTR$(anzfreestring)=text$
+  INC anzfreestring
+RETURN
+FUNCTION doit2(parent)
+  LOCAL t$,klammer,idx,typ$,label$,obnext,obtail,obhead,parameter$
  ' print "'# DOIT2: ",parent,count
   idx=-1
-  while count<anziz
+  WHILE count<anziz
     t$=iz$(count)
-    inc count
-    exit if t$="}"
-    if left$(t$)="'" or left$(t$)="#"
-      print t$
-    else
+    INC count
+    EXIT IF t$="}"
+    IF LEFT$(t$)="'" OR LEFT$(t$)="#"
+      PRINT t$
+    ELSE
       idx=anzobj
-      inc anzobj
-      if right$(t$)="{"
+      INC anzobj
+      IF RIGHT$(t$)="{"
         klammer=1 
-        t$=trim$(left$(t$,len(t$)-1))
-      else
+        t$=TRIM$(LEFT$(t$,LEN(t$)-1))
+      ELSE
         klammer=0
-      endif
+      ENDIF
       SPLIT t$,":",1,label$,t$
-      if len(t$)=0
+      IF LEN(t$)=0
         t$=label$
         label$=""
-      endif
+      ENDIF
       SPLIT t$,"(",1,typ$,t$
-      typ$=trim$(typ$)
-      if right$(t$)=")"
-        t$=left$(t$,len(t$)-1)
-      endif
-      if klammer=1
+      typ$=TRIM$(typ$)
+      IF RIGHT$(t$)=")"
+        t$=LEFT$(t$,LEN(t$)-1)
+      ENDIF
+      IF klammer=1
         obhead=anzobj
         obtail=@doit2(idx)
-	if obtail=-1
+	IF obtail=-1
 	  obhead=-1
-	endif
-      else
+	ENDIF
+      ELSE
         obtail=-1
 	obhead=-1
-      endif
-      if iz$(count)="}" or count=anziz
+      ENDIF
+      IF iz$(count)="}" OR count=anziz
         obnext=parent
-      else
+      ELSE
         obnext=anzobj
-      endif
-      if len(label$)
-        print label$+"="+str$(idx)
-      endif
+      ENDIF
+      IF LEN(label$)
+        PRINT label$+"="+STR$(idx)
+      ENDIF
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
-    endif
-  wend
+    ENDIF
+  WEND
  '  print "'# END DOIT2: ",parent,count
-  return idx
-endfunc
+  RETURN idx
+ENDFUNC
 
-function doit(par1,par2,countee)
-  local klammer,ppp,typ$,obnext,obhead,obtail,idx,label$,t2$,parameter$
-  local label$,typ$,i,t$,ss
+FUNCTION doit(par1,par2,countee)
+  LOCAL klammer,ppp,typ$,obnext,obhead,obtail,idx,label$,t2$,parameter$
+  LOCAL label$,typ$,i,t$,ss
   t$=iz$(countee)
-  print "# DOIT ",par1,par2,t$
-  if right$(t$)="{"
+  PRINT "# DOIT ",par1,par2,t$
+  IF RIGHT$(t$)="{"
     klammer=1 
-    t$=trim$(left$(t$,len(t$)-1))
-  else
+    t$=TRIM$(LEFT$(t$,LEN(t$)-1))
+  ELSE
     klammer=0
-  endif
+  ENDIF
   SPLIT t$,":",1,label$,t$
-  if len(t$)
+  if LEN(t$)
   else
     t$=label$
     label$=""
-  endif
+  ENDIF
   SPLIT t$,"(",1,typ$,t$
-  typ$=trim$(typ$)
-  if right$(t$)=")"
-      t$=left$(t$,len(t$)-1)
+  typ$=TRIM$(typ$)
+  if RIGHT$(t$)=")"
+    t$=LEFT$(t$,LEN(t$)-1)
   endif
   idx=anzobj
-  inc anzobj
+  INC anzobj
 
   obhead=anzobj
   parameter$=t$
-  if klammer=1
+  IF klammer=1
     ss=@suchende(countee+1,idx)   
     obtail=anzobj-1
-  else
+  ELSE
     obhead=-1
     obtail=-1  
-  endif
+  ENDIF
  
-  if par1=1
+  IF par1=1
     obnext=par2
-  else
+  ELSE
     obnext=anzobj
-  endif
-  if len(label$)
-    print label$+"="+str$(idx)
-  endif
+  ENDIF
+  IF LEN(label$)
+    PRINT label$+"="+STR$(idx)
+  ENDIF
   on=obnext
   oh=obhead
   ot=obtail
   i=idx
   @doobj(i,on,oh,ot,typ$,parameter$)
-  if klammer
-    return ss+1
-  endif
-  return countee+1
+  IF klammer
+    RETURN ss+1
+  ENDIF
+  RETURN countee+1
 RETURN
 FUNCTION suchende(start,idx)
   LOCAL i,t$,k
@@ -273,276 +264,256 @@ FUNCTION suchende(start,idx)
 ENDFUNC
 
 PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
-  if upper$(a$)="FREESTR"
-      text$=@getval$(b$,"STRING")
-      if left$(text$)=chr$(34)
-        text$=right$(text$,len(text$)-1)  
-      endif
-      if right$(text$)=chr$(34)
-        text$=left$(text$,len(text$)-1)  
-      endif
-      fstr$(anzfreestring)=text$
-    inc anzfreestring
-  else
-      obx=val(@getval$(b$,"X"))*chw
-      oby=val(@getval$(b$,"Y"))*chh
-      obw=val(@getval$(b$,"W"))*chw
-      obh=val(@getval$(b$,"H"))*chh
-      flags$=@getval$(b$,"FLAGS")
-      state$=@getval$(b$,"STATE")
-      obflags=@doflags(flags$)
-      obstate=@dostate(state$)
-    if upper$(a$)="BOX" or upper$(a$)="BOXCHAR"
-      obtype=20*abs(upper$(a$)="BOX")+27*abs(upper$(a$)="BOX")
+  IF UPPER$(a$)="FREESTR"
+    text$=@getval$(b$,"STRING")
+    IF LEFT$(text$)=CHR$(34)
+      text$=DECLOSE$(text$)  
+    ENDIF
+    fSTR$(anzfreestring)=text$
+    INC anzfreestring
+  ELSE
+    obx=VAL(@getval$(b$,"X"))*chw
+    oby=VAL(@getval$(b$,"Y"))*chh
+    obw=VAL(@getval$(b$,"W"))*chw
+    obh=VAL(@getval$(b$,"H"))*chh
+    flags$=@getval$(b$,"FLAGS")
+    state$=@getval$(b$,"STATE")
+    obflags=@doflags(flags$)
+    obstate=@dostate(state$)
+    IF UPPER$(a$)="BOX" OR UPPER$(a$)="BOXCHAR"
+      obtype=20*ABS(UPPER$(a$)="BOX")+27*ABS(UPPER$(a$)="BOX")
       char$=@getval$(b$,"CHAR")
-      if len(char$)=1
-        char=asc(char$)
-      else if len(char$)=3
-        char=peek(varptr(char$)+1)
-      else
+      IF LEN(char$)=1
+        char=ASC(char$)
+      ELSE IF LEN(char$)=3
+        char=PEEK(VARPTR(char$)+1)
+      ELSE
         char=0
-      endif
-      frame=val(@getval$(b$,"FRAME"))
-      framecol=val(@getval$(b$,"FRAMECOL"))
-      textcol=val(@getval$(b$,"TEXTCOL"))
-      bgcol=val(@getval$(b$,"BGCOL"))
-      pattern=val(@getval$(b$,"PATTERN"))
-      textmode=val(@getval$(b$,"TEXTMODE"))
+      ENDIF
+      frame=VAL(@getval$(b$,"FRAME"))
+      framecol=VAL(@getval$(b$,"FRAMECOL"))
+      textcol=VAL(@getval$(b$,"TEXTCOL"))
+      bgcol=VAL(@getval$(b$,"BGCOL"))
+      pattern=VAL(@getval$(b$,"PATTERN"))
+      textmode=VAL(@getval$(b$,"TEXTMODE"))
       obspec=cvl(chr$(16*(bgcol and 15)+2*(pattern and 7)+(textmode and 1))+chr$((framecol and 15)+16*(textcol and 15))+chr$(frame)+chr$(char))
-      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
       print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(";obspec;")";
-     else if upper$(a$)="TEXT" or upper$(a$)="FTEXT" or upper$(a$)="BOXTEXT"
-      obtype=21*abs(upper$(a$)="TEXT")+29*abs(upper$(a$)="FTEXT")+22*abs(upper$(a$)="BOXTEXT")
+     ELSE IF UPPER$(a$)="TEXT" OR UPPER$(a$)="FTEXT" OR UPPER$(a$)="BOXTEXT"
+      obtype=21*abs(UPPER$(a$)="TEXT")+29*abs(UPPER$(a$)="FTEXT")+22*abs(UPPER$(a$)="BOXTEXT")
       text$=@getval$(b$,"TEXT")
       if left$(text$)=chr$(34)
-        text$=right$(text$,len(text$)-1)  
-      endif
-      if right$(text$)=chr$(34)
-        text$=left$(text$,len(text$)-1)  
+        text$=DECLOSE$(text$) 
       endif
       ptmp$=@getval$(b$,"PTMP")
       if left$(ptmp$)=chr$(34)
-        ptmp$=right$(ptmp$,len(ptmp$)-1)  
-      endif
-      if right$(ptmp$)=chr$(34)
-        ptmp$=left$(ptmp$,len(ptmp$)-1)  
+        ptmp$=DECLOSE$(ptmp$)  
       endif
       pvalid$=@getval$(b$,"PVALID")
       if left$(pvalid$)=chr$(34)
-        pvalid$=right$(pvalid$,len(pvalid$)-1)  
+        pvalid$=DECLOSE$(pvalid$)  
       endif
-      if right$(pvalid$)=chr$(34)
-        pvalid$=left$(pvalid$,len(pvalid$)-1)  
-      endif
-      font=val(@getval$(b$,"FONT"))
+      font=VAL(@getval$(b$,"FONT"))
       if @getval$(b$,"FONT")=""
         font=3
       endif
-      just=val(@getval$(b$,"JUST"))
-      color=val(@getval$(b$,"COLOR"))
-      border=val(@getval$(b$,"BORDER"))
+      just=VAL(@getval$(b$,"JUST"))
+      color=VAL(@getval$(b$,"COLOR"))
+      border=VAL(@getval$(b$,"BORDER"))
       @addtedinfo(text$,ptmp$,pvalid$,font,just,color,border)
-      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
       print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(tedinfo";anztedinfo-1;"$))";
-    else if upper$(a$)="STRING" or upper$(a$)="TITLE" or upper$(a$)="BUTTON"
-      obtype=28*abs(upper$(a$)="STRING")+32*abs(upper$(a$)="TITLE")+26*abs(upper$(a$)="BUTTON")
+    ELSE IF UPPER$(a$)="STRING" OR UPPER$(a$)="TITLE" OR UPPER$(a$)="BUTTON"
+      obtype=28*abs(UPPER$(a$)="STRING")+32*abs(UPPER$(a$)="TITLE")+26*abs(UPPER$(a$)="BUTTON")
       text$=@getval$(b$,"TEXT")
       if left$(text$)=chr$(34)
-        text$=right$(text$,len(text$)-1)  
-      endif
-      if right$(text$)=chr$(34)
-        text$=left$(text$,len(text$)-1)  
+        text$=DECLOSE$(text$)  
       endif
       @addstring(text$)
-      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
       print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(string";anzstring-1;"$))";
-    else if upper$(a$)="IMAGE"
+    ELSE IF UPPER$(a$)="IMAGE"
       data$=@getval$(b$,"DATA")
-      iw=val(@getval$(b$,"IW"))
-      ih=val(@getval$(b$,"IH"))
-      ix=val(@getval$(b$,"IX"))
-      iy=val(@getval$(b$,"IY"))
-      ic=val(@getval$(b$,"IC"))
+      iw=VAL(@getval$(b$,"IW"))
+      ih=VAL(@getval$(b$,"IH"))
+      ix=VAL(@getval$(b$,"IX"))
+      iy=VAL(@getval$(b$,"IY"))
+      ic=VAL(@getval$(b$,"IC"))
       @addbitblk(data$,iw,ih,ix,iy,ic)
-      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(bitblk";anzbitblk-1;"$))";
-    else if upper$(a$)="ICON"
+      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(bitblk";anzbitblk-1;"$))";
+    ELSE IF UPPER$(a$)="ICON"
       data$=@getval$(b$,"DATA")
       mask$=@getval$(b$,"MASK")
       text$=@getval$(b$,"TEXT")
-      char=val(@getval$(b$,"CHAR"))
-      xchar=val(@getval$(b$,"XCHAR"))
-      ychar=val(@getval$(b$,"YCHAR"))
-      xicon=val(@getval$(b$,"XICON"))
-      yicon=val(@getval$(b$,"YICON"))
-      wicon=val(@getval$(b$,"WICON"))
-      hicon=val(@getval$(b$,"HICON"))
-      xtext=val(@getval$(b$,"XTEXT"))
-      ytext=val(@getval$(b$,"YTEXT"))
-      wtext=val(@getval$(b$,"WTEXT"))
-      htext=val(@getval$(b$,"HTEXT"))
-      if left$(text$)=chr$(34)
-        text$=right$(text$,len(text$)-1)  
-      endif
-      if right$(text$)=chr$(34)
-        text$=left$(text$,len(text$)-1)  
-      endif
+      char=VAL(@getval$(b$,"CHAR"))
+      xchar=VAL(@getval$(b$,"XCHAR"))
+      ychar=VAL(@getval$(b$,"YCHAR"))
+      xicon=VAL(@getval$(b$,"XICON"))
+      yicon=VAL(@getval$(b$,"YICON"))
+      wicon=VAL(@getval$(b$,"WICON"))
+      hicon=VAL(@getval$(b$,"HICON"))
+      xtext=VAL(@getval$(b$,"XTEXT"))
+      ytext=VAL(@getval$(b$,"YTEXT"))
+      wtext=VAL(@getval$(b$,"WTEXT"))
+      htext=VAL(@getval$(b$,"HTEXT"))
+      IF LEFT$(text$)=CHR$(34)
+        text$=DECLOSE$(text$)  
+      ENDIF
 
       @addiconblk(data$,mask$,text$,char,xchar,ychar,xicon,yicon,wicon,hicon,xtext,ytext,wtext,htext)
-      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(iconblk";anziconblk-1;"$))";
-    else if upper$(a$)="UNKNOWN"
-      print "' UNKNOWN: ";b$
-    else
-      print "' unsupported: "+a$,parent
-      return
-    endif
-    print "+mki$(";obx;")+mki$(";oby;")+mki$(";obw;")+mki$(";obh;")"
-  endif
-return
-procedure addtree(aob,oobj)
-  local t$,i
-  t$="tree"+str$(anztree)+"$="
-  for i=aobj to oobj
-    t$=t$+"obj"+str$(i)+"$"
-    if i<>oobj
-      if len(t$)>70
-        print space$(spaces*2)+t$
-        t$="tree"+str$(anztree)+"$=tree"+str$(anztree)+"$+"
-      else 
+      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(iconblk";anziconblk-1;"$))";
+    ELSE IF UPPER$(a$)="UNKNOWN"
+      PRINT "' UNKNOWN: ";b$
+    ELSE
+      PRINT "' unsupported: "+a$,parent
+      RETURN
+    ENDIF
+    PRINT "+mki$(";obx;")+mki$(";oby;")+mki$(";obw;")+mki$(";obh;")"
+  ENDIF
+RETURN
+PROCEDURE addtree(aob,oobj)
+  LOCAL t$,i
+  t$="tree"+STR$(anztree)+"$="
+  FOR i=aobj TO oobj
+    t$=t$+"obj"+STR$(i)+"$"
+    IF i<>oobj
+      IF LEN(t$)>70
+        PRINT SPACE$(spaces*2)+t$
+        t$="tree"+STR$(anztree)+"$=tree"+STR$(anztree)+"$+"
+      ELSE
 	t$=t$+"+"
-      endif
-    endif
-  next i
-  print space$(spaces*2)+t$
-  print "  ~form_center(varptr(tree"+str$(anztree)+"$),x,y,w,h)"
-  print "  ~form_dial(0,0,0,0,0,x,y,w,h)"
-  print "  ~form_dial(1,0,0,0,0,x,y,w,h)"
-  print "  ~objc_draw(varptr(tree"+str$(anztree)+"$),0,-1,0,0)"
-  print "  ret=form_do(varptr(tree"+str$(anztree)+"$))"
-  print "  ~form_dial(2,0,0,0,0,x,y,w,h)"
-  print "  ~form_dial(3,0,0,0,0,x,y,w,h)"
-  print "  vsync"
-return
-procedure addstring(r$)
-  print "string"+str$(anzstring)+"$="+chr$(34)+r$+chr$(34)+"+chr$(0)"
-  inc anzstring
-return
-procedure adddata(r$)
-  print "data"+str$(anzdata)+"$=INLINE$("+r$+")"
-  inc anzdata
-return
-procedure addtedinfo(a$,b$,c$,d,e,f,g)
-  print "string"+str$(anzstring)+"$="+chr$(34)+a$+chr$(34)+"+chr$(0)+space$("+str$(len(c$))+")"
-  inc anzstring
- 
-   @addstring(b$)
-   @addstring(c$)
-
-  print "tedinfo"+str$(anztedinfo)+"$=mkl$(varptr(string"+str$(anzstring-3)+"$))";
-  print "+mkl$(varptr(string"+str$(anzstring-2)+"$))";
-  print "+mkl$(varptr(string"+str$(anzstring-1)+"$))";
-  print "+mki$(";d;")+mki$(0)+mki$(";e;")+mki$(";f;")+mki$(0)+mki$(";g;")+mki$(";len(b$);")+mki$(";len(c$);")"
-  inc anztedinfo
-return
-procedure addbitblk(a$,b,c,d,e,f)
+      ENDIF
+    ENDIF
+  NEXT i
+  PRINT SPACE$(spaces*2)+t$
+  PRINT "  ~form_center(varptr(tree"+STR$(anztree)+"$),x,y,w,h)"
+  PRINT "  ~form_dial(0,0,0,0,0,x,y,w,h)"
+  PRINT "  ~form_dial(1,0,0,0,0,x,y,w,h)"
+  PRINT "  ~objc_draw(varptr(tree"+STR$(anztree)+"$),0,-1,0,0)"
+  PRINT "  ret=FORM_DO(VARPTR(tree"+STR$(anztree)+"$))"
+  PRINT "  ~form_dial(2,0,0,0,0,x,y,w,h)"
+  PRINT "  ~form_dial(3,0,0,0,0,x,y,w,h)"
+  PRINT "  showpage"
+RETURN
+PROCEDURE addstring(r$)
+  PRINT "string"+STR$(anzstring)+"$="+ENCLOSE$(r$)+"+chr$(0)"
+  INC anzstring
+RETURN
+PROCEDURE adddata(r$)
+  PRINT "data"+STR$(anzdata)+"$=INLINE$("+r$+")"
+  INC anzdata
+RETURN
+PROCEDURE addtedinfo(a$,b$,c$,d,e,f,g)
+  PRINT "string"+STR$(anzstring)+"$="+ENCLOSE$(a$)+"+chr$(0)+space$("+STR$(LEN(c$))+")"
+  INC anzstring
+  @addstring(b$)
+  @addstring(c$)
+  PRINT "tedinfo"+STR$(anztedinfo)+"$=mkl$(varptr(string"+STR$(anzstring-3)+"$))";
+  PRINT "+mkl$(varptr(string"+STR$(anzstring-2)+"$))";
+  PRINT "+mkl$(varptr(string"+STR$(anzstring-1)+"$))";
+  PRINT "+mki$(";d;")+mki$(0)+mki$(";e;")+mki$(";f;")+mki$(0)+mki$(";g;")+mki$(";LEN(b$);")+mki$(";LEN(c$);")"
+  INC anztedinfo
+RETURN
+PROCEDURE addbitblk(a$,b,c,d,e,f)
   @adddata(a$)
-  print "bitblk"+str$(anzbitblk)+"$=mkl$(varptr(data"+str$(anzdata-1)+"$))";
-  print "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")"
-  inc anzbitblk
-return
-procedure addiconblk(a$,b$,c$,b,c,d,e,f,g,h,i,j,k,l)
+  PRINT "bitblk"+STR$(anzbitblk)+"$=mkl$(varptr(data"+STR$(anzdata-1)+"$))";
+  PRINT "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")"
+  INC anzbitblk
+RETURN
+PROCEDURE addiconblk(a$,b$,c$,b,c,d,e,f,g,h,i,j,k,l)
   @adddata(a$)
   @adddata(b$)
   @addstring(c$)
-  print "iconblk"+str$(anziconblk)+"$=mkl$(varptr(data"+str$(anzdata-2)+"$))";
-  print "+mkl$(varptr(data"+str$(anzdata-1)+"$))";
-  print "+mkl$(varptr(string"+str$(anzstring-1)+"$))";
-  print "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")";
-  print "+mki$(";g;")+mki$(";h;")+mki$(";i;")+mki$(";j;")+mki$(";k;")+mki$(";l;")"
-  inc anziconblk
-return
-function getval$(t$,f$)
-  local a$,val$
+  PRINT "iconblk"+STR$(anziconblk)+"$=mkl$(varptr(data"+STR$(anzdata-2)+"$))";
+  PRINT "+mkl$(varptr(data"+STR$(anzdata-1)+"$))";
+  PRINT "+mkl$(varptr(string"+STR$(anzstring-1)+"$))";
+  PRINT "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")";
+  PRINT "+mki$(";g;")+mki$(";h;")+mki$(";i;")+mki$(";j;")+mki$(";k;")+mki$(";l;")"
+  INC anziconblk
+RETURN
+FUNCTION getval$(t$,f$)
+  LOCAL a$,val$
   val$=""
   SPLIT t$,",",1,a$,t$
-  while len(a$)
-    a$=trim$(a$)
+  WHILE LEN(a$)
+    a$=TRIM$(a$)
     SPLIT a$,"=",1,name$,val$
-    exit if upper$(name$)=upper$(f$)
+    EXIT IF UPPER$(name$)=UPPER$(f$)
     val$=""
     SPLIT t$,",",1,a$,t$
-  wend
-  return val$
-endfunction
-function doflags(t$)
-  local ret,a$
+  WEND
+  RETURN val$
+ENDFUNCTION
+FUNCTION doflags(t$)
+  LOCAL ret,a$
   ret=0
-  if left$(t$)="("
-    t$=right$(t$,len(t$)-1)  
-  endif
-  if right$(t$)=")"
-    t$=left$(t$,len(t$)-1)  
-  endif
+  IF LEFT$(t$)="("
+    t$=RIGHT$(t$,LEN(t$)-1)  
+  ENDIF
+  IF RIGHT$(t$)=")"
+    t$=LEFT$(t$,LEN(t$)-1)  
+  ENDIF
   SPLIT t$,"+",1,a$,t$
-  while len(a$)
+  WHILE LEN(a$)
     if a$="NONE"
-    else if a$="SELECTABLE"
-      ret=ret or 1
-    else if a$="DEFAULT"
-      ret=ret or 2
-    else if a$="EXIT"
-      ret=ret or 4
-    else if a$="EDITABLE"
-      ret=ret or 8
-    else if a$="RADIOBUTTON"
-      ret=ret or 16
-    else if a$="LASTOB"
-      ret=ret or 32
-    else if a$="TOUCHEXIT"
-      ret=ret or 64
-    else if a$="HIDETREE"
-      ret=ret or 128
-    else if a$="INDIRECT"
-      ret=ret or 256
-    else
-      print "Unknown flag:",a$
-    endif
+    ELSE IF a$="SELECTABLE"
+      ret=ret OR 1
+    ELSE IF a$="DEFAULT"
+      ret=ret OR 2
+    ELSE IF a$="EXIT"
+      ret=ret OR 4
+    ELSE IF a$="EDITABLE"
+      ret=ret OR 8
+    ELSE IF a$="RADIOBUTTON"
+      ret=ret OR 16
+    ELSE IF a$="LASTOB"
+      ret=ret OR 32
+    ELSE IF a$="TOUCHEXIT"
+      ret=ret OR 64
+    ELSE IF a$="HIDETREE"
+      ret=ret OR 128
+    ELSE IF a$="INDIRECT"
+      ret=ret OR 256
+    ELSE
+      PRINT "Unknown flag:",a$
+    ENDIF
     SPLIT t$,"+",1,a$,t$
-  wend
-  return ret
-endfunc
-function dostate(t$)
-  local ret,a$
+  WEND
+  RETURN ret
+ENDFUNC
+FUNCTION dostate(t$)
+  LOCAL ret,a$
   ret=0
-  if left$(t$)="("
-    t$=right$(t$,len(t$)-1)  
-  endif
-  if right$(t$)=")"
-    t$=left$(t$,len(t$)-1)  
-  endif
+  IF LEFT$(t$)="("
+    t$=RIGHT$(t$,LEN(t$)-1)  
+  ENDIF
+  IF RIGHT$(t$)=")"
+    t$=LEFT$(t$,LEN(t$)-1)  
+  ENDIF
   SPLIT t$,"+",1,a$,t$
-  while len(a$)
-    if a$="NORMAL"
+  WHILE LEN(a$)
+    IF a$="NORMAL"
       ' do nothing
-    else if a$="SELECTED"
-      ret=ret or 1
-    else if a$="CROSSED"
-      ret=ret or 2
-    else if a$="CHECKED"
-      ret=ret or 4
-    else if a$="DISABLED"
-      ret=ret or 8
-    else if a$="OUTLINED"
-      ret=ret or 16
-    else if a$="SHADOWED"
-      ret=ret or 32
-    else if a$="WHITEBAK"
-      ret=ret or 64
-    else if a$="WHITEBACK"
-      ret=ret or 64
-    else if a$="DRAW3D"
-      ret=ret or 128
+    ELSE IF a$="SELECTED"
+      ret=ret OR 1
+    ELSE IF a$="CROSSED"
+      ret=ret OR 2
+    ELSE IF a$="CHECKED"
+      ret=ret OR 4
+    ELSE IF a$="DISABLED"
+      ret=ret OR 8
+    ELSE IF a$="OUTLINED"
+      ret=ret OR 16
+    ELSE IF a$="SHADOWED"
+      ret=ret OR 32
+    ELSE IF a$="WHITEBAK"
+      ret=ret OR 64
+    ELSE IF a$="WHITEBACK"
+      ret=ret OR 64
+    ELSE IF a$="DRAW3D"
+      ret=ret OR 128
     ELSE
       PRINT "Unknown state:",a$
     ENDIF

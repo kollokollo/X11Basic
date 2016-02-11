@@ -94,7 +94,7 @@ int myeof(FILE *n) {
    with filename name.
    RETURNS: 0 on success and -1 on error */
 
-int bsave(char *name, char *adr, size_t len) { 
+int bsave(const char *name, char *adr, size_t len) { 
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   if(fdis==-1) return(-1);
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
@@ -106,7 +106,7 @@ int bsave(char *name, char *adr, size_t len) {
    RETURNS the number of read bytes or 0 on error.
    */
 
-size_t bload(char *name, char *adr, size_t len) {	
+size_t bload(const char *name, char *adr, size_t len) {	
   FILE *fdis;
 	
   fdis=fopen(name,"rb");
@@ -120,14 +120,14 @@ size_t bload(char *name, char *adr, size_t len) {
 /* Checks if a give file name exists */
 
 #if 0
-int exist( char *name ) {	/* This is a save but slow implementation */
+int exist(const char *name ) {	/* This is a save but slow implementation */
   int   fdis=open(name,0x8000);
   if (fdis==-1) return(FALSE);
   close(fdis);
   return(TRUE);
 }
 #else
-int exist(char *filename) {
+int exist(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) return(FALSE);
@@ -135,43 +135,43 @@ int exist(char *filename) {
 }
 #endif
 
-int stat_device(char *filename) {
+int stat_device(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_dev);  
 }
-int stat_inode(char *filename) {
+int stat_inode(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_ino);  
 }
-int stat_mode(char *filename) {
+int stat_mode(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_mode);  
 }
-int stat_nlink(char *filename) {
+int stat_nlink(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_nlink);  
 }
-int stat_uid(char *filename) {
+int stat_uid(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_uid);  
 }
-int stat_gid(char *filename) {
+int stat_gid(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_gid);  
 }
-int stat_size(char *filename) {
+int stat_size(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");

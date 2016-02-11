@@ -1,24 +1,22 @@
-defline ,80
+' Draw some thick lines to see if everything is OK.
+'
+DEFLINE ,80
+black=COLOR_RGB(0,0,0)
+yellow=COLOR_RGB(1,1,0)
 
+color COLOR_RGB(0.9,0,0)
 
-color get_color(54424,0,0)
+LINE 100,100,99,200
+LINE 200,200,199,100
 
-line 100,100,99,200
-
-line 200,200,199,100
-
-
-
-
-for i=0 to 360 step 30
-  color get_color(65535,65535,0)
-  line 400,400,400+200*cos(i/180*pi),400+200*sin(i/180*pi)
-  vsync
-  pause 0.1
-  color 0
-'  line 400,400,400+200*cos(i/180*pi),400+200*sin(i/180*pi)
-
+for i=0 TO 360 STEP 30
+  COLOR yellow
+  LINE 400,400,400+200*COS(i/180*PI),400+200*SIN(i/180*PI)
+  SHOWPAGE
+  PAUSE 0.1
+  COLOR black
+ '  line 400,400,400+200*cos(i/180*pi),400+200*sin(i/180*pi)
  '  pause 0.01
-next i
-pause 1
-quit
+NEXT i
+PAUSE 1
+QUIT

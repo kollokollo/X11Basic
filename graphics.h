@@ -8,26 +8,25 @@
 
 #include "options.h"
 #ifdef FRAMEBUFFER
-#include "framebuffer.h"
-#endif
-#ifdef USE_SDL
-#include <SDL/SDL.h>
-#endif
-#ifdef USE_X11
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#endif
-#ifdef USE_VGA
-    #include <vga.h>
-    #include <vgagl.h>
+  #include "framebuffer.h"
+#elif defined USE_SDL
+  #include <SDL/SDL.h>
+  extern unsigned int fcolor,bcolor;
+  extern SDL_Surface *display[];
+  extern const unsigned char spat_a816[];
+  extern const unsigned char asciiTable[];
+#elif defined USE_X11
+  #include <X11/Xlib.h>
+  #include <X11/Xutil.h>
+  /* X Font definitions */
+  #define FONTBIG   "-*-fixed-*-r-normal-*-16-*-iso8859-*"
+  #define FONT8x8   "-*-fixed-*-*-*-*-8-*"
+  #define FONTSMALL "-*-fixed-*-*-*-*-8-*"
+#elif defined USE_VGA
+  #include <vga.h>
+  #include <vgagl.h>
 #endif
 
-#ifdef USE_SDL
-extern unsigned int fcolor,bcolor;
-extern SDL_Surface *display[];
-extern const unsigned char spat_a816[];
-extern const unsigned char asciiTable[];
-#endif
 #ifdef WINDOWS_NATIVE
   extern HANDLE keyevent,buttonevent,motionevent;
   #define XSetLineAttributes(a,b,c,d,e,f) ; 
@@ -41,13 +40,6 @@ extern const unsigned char asciiTable[];
 #define GRAPHMD_TRANS   2
 #define GRAPHMD_XOR     3
 #define GRAPHMD_ERASE   4
-
-
-/* X Font definitions */
-
-#define FONTBIG   "-*-fixed-*-r-normal-*-16-*-iso8859-*"
-#define FONT8x8   "-*-fixed-*-*-*-*-8-*"
-#define FONTSMALL "-*-fixed-*-*-*-*-8-*"
 
 
 
@@ -88,12 +80,12 @@ extern const unsigned char asciiTable[];
 #else
 #ifdef FRAMEBUFFER
 #define SetFillRule(c)   ;
-#define SetFillStyle(c)  ;
+#define SetFillStyle(c)  FB_setfillstyle(c)
 #define SetForeground(c) FB_set_color(c)
 #define SetBackground(c) FB_set_bcolor(c)
 #define FillRectangle(a,b,c,d)  FB_pbox(a,b,(a)+(c),(b)+(d))
 #define DrawRectangle(a,b,c,d)  FB_box(a,b,(a)+(c),(b)+(d))
-#define DrawString(a,b,c,d) FB_DrawString(a,(b)-chh+2,c,d)
+#define DrawString(a,b,c,d) FB_DrawString(a,b-baseline,c,d)
 #define DrawLine(a,b,c,d)  FB_line(a,b,c,d)
 #define DrawPoint(a,b)  FB_plot(a,b)
 #define CopyArea(a,b,c,d,e,f) FB_copyarea(a,b,c,d,e,f)
@@ -157,12 +149,13 @@ int mousey();
 int mousek();
 int mouses();
 
+void graphics_setdefaults();
 
-unsigned int get_color(int r, int g, int b);
+unsigned int get_color(int r, int g, int b, int a);
 #ifdef USE_X11
 extern char *display_name;  
 Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor);
 void fetch_icon_pixmap(int nummer);
+#endif
 #define fill_width 16
 #define fill_height 624
-#endif
