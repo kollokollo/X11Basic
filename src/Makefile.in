@@ -8,7 +8,7 @@ REGS= @regs@
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I${CCSROOT}/include
+INC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # X11 library path
 XLIBS=@X_LIBS@
@@ -116,6 +116,9 @@ DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 TINEDIR=tinexbasic-@version@
 TINEDIST=$(DIST) doc/tine-xbasic.html examples2/DESY/*
+DOOCSDIR=doocsxbasic-@version@
+DOOCSDIST=$(DIST) src/doocs-wrapper.cc doc/doocs-xbasic.html \
+                  doc/tine-xbasic.html examples2/DESY/*
 
 LINKFLAGS =
 WINLINKFLAGS =
@@ -123,7 +126,6 @@ WINLINKFLAGS =
 LIBS =  @libs@ @xtra@ @X_EXTRA_LIBS@
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 TINEWINLIBS = -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
-CCSLIBS = ${CCSROOT}/lib/libtine.a
 
 all :    configure Makefile xbasic
 
@@ -134,6 +136,8 @@ Makefile : Makefile.in
  
 #.c.o:
 #	$(CC) -c $(CFLAGS) -o $@ $<
+.cc.o:
+	g++ -c $(INC) -o $@ $<
 fft : $(AOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.fft $(AOBJS) \
 		$(LIBS) $(XLIBS)
@@ -189,10 +193,23 @@ tineexe: $(OBJS) main.o mathematics.o
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
 	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(DISTOBJS) \
 		 Windows.extension/fnmatch.o  Windows.extension/memfrob.o rpclib.lib $(TINEWINLIBS)
-tinexbasicdyn : $(OBJS) main.o mathematics.o
-	$(CC) -DTINE  $(LINKFLAGS) -o tinexbasic.dyn $(AOBJS) \
+tinexbasic.dyn : $(OBJS) main.o mathematics.o
+	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) \
 		$(LIBS)  -ltine $(XLIBS)
-	strip tinexbasic.dyn
+	strip $@
+tinexbasic : $(OBJS) main.o mathematics.o
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
+		$(LIBS)  /usr/lib/libtine.a $(XLIBS)
+	strip $@
+doocsxbasic.dyn : $(OBJS) main.o mathematics.o doocs-wrapper.o
+	$(CC) -DTINE -DDOOCS  $(LINKFLAGS) -o $@ $(AOBJS) doocs-wrapper.o \
+		$(LIBS)$(XLIBS) -ltine -lDOOCSclient -lDOOCSserver -lpthread
+	strip $@
+doocsxbasic : $(OBJS) main.o mathematics.o doocs-wrapper.o
+	g++ -DTINE -DDOOCS $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
+	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
+	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS) -lpthread
+	strip $@
 
 xbasic : $(DISTOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ $(DISTOBJS) \
@@ -203,17 +220,13 @@ csxbasic : $(OBJS)
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
 
-tinexbasic : $(OBJS) main.o mathematics.o
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
-		$(LIBS) $(CCSLIBS) $(XLIBS)
-	strip $@
 lib : $(LIBOBJS)
 	$(CC) -shared -o libx11basic.so $(LIBOBJS)
 winlib : x11basic.lib
 	$(WINCC) -shared -o libx11basic.dll x11basic.lib
 
-tlib : $(LIBOBJS)
-	$(CC) $(OPT) $(LINKFLAGS) -shared -o libtinex11basic.so $(LIBOBJS) $(CCSLIBS)
+libtinex11basic.so : $(LIBOBJS)
+	$(CC) $(OPT) $(LINKFLAGS) -shared -o $@ $(LIBOBJS)
 
 x11basic.a : $(LIBOBJS)
 	 ar -ru $@ $(LIBOBJS) 
@@ -223,8 +236,8 @@ x11basic.lib : clean
 	$(WINCC) -DWINDOWS -c mathematics.c
 	i686-pc-mingw32-ar -ru $@ $(WINLIBOBJS) 
 
-tx11basic.a : $(LIBOBJS)
-	 ar -ru $@ $(LIBOBJS)  $(CCSLIBS)
+tinex11basic.a : $(LIBOBJS)
+	 ar -ru $@ $(LIBOBJS)  
 
 dyn : lib main.o
 	$(CC) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
@@ -270,12 +283,14 @@ uninstall :
 	rm -f $(MANDIR)/man1/xbasic.1
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1
 clean :
-	rm -f xbasic xbasic.dyn xbasic.static xbc xbvm bytecode *.o *.so a.out *.a \
+	rm -f xbasic *.dyn xbasic.static xbc xbvm bytecode *.o *.so a.out *.a \
 	myzip myunzip bas2x11basic X11-Basic-examples-@version@.tar.myz \
-	X11-Basic-examples-@version@.tar
+	X11-Basic-examples-@version@.tar tinexbasic doocsxbasic
 
 distclean : clean
-	rm -f Makefile config.cache config.status config.log X11-Basic-examples-@version@.zip
+	rm -f Makefile config.cache config.status config.log 
+	rm -f X11-Basic-examples-@version@.zip
+	rm -rf autom4te.cache
 
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
@@ -287,6 +302,11 @@ tinedist : $(DIST2)
 	mkdir /tmp/$(TINEDIR)
 	(cd ..; tar cf - $(TINEDIST))|(cd /tmp/$(TINEDIR); tar xpf -)
 	(cd /tmp; tar cf - $(TINEDIR)|gzip -9 > $(TINEDIR).tar.gz)
+doocsdist : $(DIST2)
+	rm -rf /tmp/$(DOOCSDIR)
+	mkdir /tmp/$(DOOCSDIR)
+	(cd ..; tar cf - $(DOOCSDIST))|(cd /tmp/$(DOOCSDIR); tar xpf -)
+	(cd /tmp; tar cf - $(DOOCSDIR)|gzip -9 > $(DOOCSDIR).tar.gz)
 rpm :	dist
 	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
 	rpm -ba --clean x11basic.spec
@@ -296,6 +316,10 @@ rpm2 :	dist
 tinerpm :	tinedist
 	cp /tmp/$(TINEDIR).tar.gz /usr/src/packages/SOURCES/$(TINEDIR).tar.gz
 	rpmbuild -ba --clean tinexbasic.spec
+doocsrpm :	doocsdist
+	cp /tmp/$(DOOCSDIR).tar.gz /usr/src/packages/SOURCES/$(DOOCSDIR).tar.gz
+	rpmbuild -ba --clean doocsxbasic.spec
+
 # create DSL package (for Damn Small Linux MyDSL)	
 dslpackage : xbasic.staticreadline
 	(cd /dev/shm; mkdir -p home/dsl/.xtdesktop)

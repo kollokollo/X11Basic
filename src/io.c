@@ -159,7 +159,7 @@ void c_print(char *n) {
        wort_sep(v,',',TRUE,buffer,v);
        i=get_number(buffer);
        if(filenr[i]) fff=dptr[i];
-       else error(24,""); /* File nicht geoeffnet */
+       else xberror(24,""); /* File nicht geoeffnet */
        free(buffer);
     }
   if(strlen(v)) {
@@ -192,7 +192,7 @@ void c_input(char *n) {
     wort_sep(n,',',TRUE,t,s);
     e=get_number(t);
     if(filenr[e]) fff=dptr[e];
-    else error(24,""); /* File nicht geoeffnet */
+    else xberror(24,""); /* File nicht geoeffnet */
   } else strcpy(s,n);
   
   if(strlen(s)) {   
@@ -239,7 +239,7 @@ STRING f_lineinputs(char *n) {
     inbuf.len=strlen(inbuf.pointer);
     return(inbuf);
   } else {
-    error(24,""); /* File nicht geoeffnet */
+    xberror(24,""); /* File nicht geoeffnet */
     return(vs_error());
   }
 }
@@ -258,14 +258,14 @@ STRING f_inputs(char *n) {
       inbuf.len=(int)fread(inbuf.pointer,1,anz,fff);
       inbuf.pointer[anz]=0;
       return(inbuf);
-    } else error(24,""); /* File nicht geoeffnet */
+    } else xberror(24,""); /* File nicht geoeffnet */
   } else if(e==1) {
      int anz=(int)parser(s);
      inbuf.pointer=malloc(anz+1);
      inbuf.len=(int)fread(inbuf.pointer,1,anz,stdin);
      inbuf.pointer[anz]=0;
      return(inbuf);
-  } else error(32,"INPUT$"); /* Syntax Error */
+  } else xberror(32,"INPUT$"); /* Syntax Error */
   return(vs_error());
 }
 void c_lineinput(char *n) {
@@ -281,7 +281,7 @@ void c_lineinput(char *n) {
     wort_sep(n,',',TRUE,buffer,s);
     fff=get_fileptr(get_number(buffer));
     free(buffer);
-    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
   } else strcpy(s,n);
   if(strlen(s)) {
     e=arg2(s,TRUE,s,t);
@@ -340,7 +340,7 @@ void c_connect(PARAMETER *plist,int e) {
   unsigned char *address_holder;
   int sock;
   FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+  if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
   sock=fileno(fff);
   if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
   else { 
@@ -435,7 +435,7 @@ void c_open(char *n) {
         else if(modus=='O') strcpy(modus2,"w");
         else if(modus=='U') strcpy(modus2,"r+");
         else if(modus=='A') strcpy(modus2,"a+");
-        else error(21,""); /* bei Open nur erlaubt ...*/
+        else xberror(21,""); /* bei Open nur erlaubt ...*/
 	break;
       }
       case 1: { number=get_number(w1); break; } 
@@ -451,8 +451,8 @@ void c_open(char *n) {
    printf("number=%d, filename=<%s>, port=%d ($08x)\n",number,filename,port,port);
 #endif
 
-  if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
-  else if(number>99 || number<1) error(23,"");  /* File # falsch  */
+  if(filenr[number]) xberror(22,"");  /* File schon geoeffnet  */
+  else if(number>99 || number<1) xberror(23,"");  /* File # falsch  */
   else {
     /*  Sockets  */
     if(special=='C') { /* Connect */
@@ -671,7 +671,7 @@ void c_link(PARAMETER *plist, int e) {
   int number;
   if(e==2) {
     number=plist[0].integer;
-    if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
+    if(filenr[number]) xberror(22,"");  /* File schon geoeffnet  */
     else {
 #ifdef WINDOWS
       dptr[number]=LoadLibrary(plist[1].pointer);
@@ -683,7 +683,7 @@ void c_link(PARAMETER *plist, int e) {
       if(dptr[number]==NULL) io_error(errno,"LINK");
       else  filenr[number]=2;
 #else
-      error(9,"LINK"); /*Function or command %s not yet implemented*/
+      xberror(9,"LINK"); /*Function or command %s not implemented*/
 #endif
 #endif
     } 
@@ -694,7 +694,7 @@ void c_send(PARAMETER *plist, int e) {
   if(e>=2) {
     int sock;
     fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
     sock=fileno(fff);
     if(e>=4) {
       struct sockaddr_in host_address;
@@ -726,7 +726,7 @@ void c_receive(PARAMETER *plist, int e) {
     number=plist[0].integer;
     fff=get_fileptr(number);
     fdes=fileno(fff);
-    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
     memset((void*)&host_address,0,sizeof(host_address));
     host_address.sin_family=AF_INET;
     host_address_size=sizeof(host_address);
@@ -744,7 +744,7 @@ address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
   }
 }
 
-const struct {int sf; char xf; } table[] = {
+const struct {int sf; char xf; } ioemaptable[] = {
     { 0,   7 }, /* 0: No error status currently */
     { EPERM,   -51 }, /* 1: Not super-user */
     { ENOENT,  -33 }, /* 2: No such file or directory*/
@@ -834,18 +834,18 @@ const struct {int sf; char xf; } table[] = {
     { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
     { ECONNREFUSED,-111 }  /* 111: Connection refused */
   };
-const int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
+const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
   
 void io_error(int n, char *s) {
   int i;
   for(i=0;i<anztabs;i++) {
-    if(n==table[i].sf) {
-      error(table[i].xf,s);
+    if(n==ioemaptable[i].sf) {
+      xberror(ioemaptable[i].xf,s);
       return;    
     }
   }
   printf("errno=%d\n",n);
-  error(-1,s);  /* Allgemeiner IO-Fehler */
+  xberror(-1,s);  /* Allgemeiner IO-Fehler */
 }
 
 
@@ -868,7 +868,7 @@ void c_close(char *w) {
 #endif
 #endif
     }
-    else error(24,w); /* File nicht geoeffnet...*/
+    else xberror(24,w); /* File nicht geoeffnet...*/
   } else {
     for(i=0;i<ANZFILENR;i++) {
       if(filenr[i]==1) {
@@ -906,7 +906,7 @@ int f_exec(char *n) {
     i++;
     e=wort_sep(w2,',',TRUE,w1,w2);
   }
-  if(i==0) error(42,"EXEC"); /* Zu wenig Parameter */
+  if(i==0) xberror(42,"EXEC"); /* Zu wenig Parameter */
   else return(adr(gtt));
   return(0);
 }
@@ -929,14 +929,14 @@ void c_bget(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(e==3) {
     if(filenr[i]) fread((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
-    else error(24,""); /* File nicht geoeffnet */
+    else xberror(24,""); /* File nicht geoeffnet */
   }
 }
 void c_bput(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(e==3) {
     if(filenr[i]) fwrite((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
-    else error(24,""); /* File nicht geoeffnet */
+    else xberror(24,""); /* File nicht geoeffnet */
   }
 }
 void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
@@ -949,17 +949,17 @@ void c_unget(char *n) {
   FILE *fff=stdin;
   if(e>1) {
     fff=get_fileptr(get_number(v));
-    if(fff==NULL) {error(24,v);return;} /* File nicht geoeffnet */
+    if(fff==NULL) {xberror(24,v);return;} /* File nicht geoeffnet */
     i=(int)parser(w);
   } else if(e==1) i=(int)parser(v);
-  else {error(32,"PUTBACK");return;} /* Syntax error */
+  else {xberror(32,"PUTBACK");return;} /* Syntax error */
   ungetc(i,fff);
 }
 
 void c_flush(PARAMETER *plist,int e) {
   FILE *fff=stdout;
   if(e) fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */  
+  if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */  
   if(fflush(fff)) io_error(errno,"FLUSH");
 }
 
@@ -968,19 +968,19 @@ void c_seek(PARAMETER *plist,int e) {
   if(e>1) j=plist[1].integer;
   if(filenr[i]) {
     if(fseek(dptr[i],j,SEEK_SET)) io_error(errno,"SEEK");
-  } else error(24,""); /* File nicht geoeffnet */
+  } else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_relseek(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(filenr[i]) {
     if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
-  } else error(24,""); /* File nicht geoeffnet */
+  } else xberror(24,""); /* File nicht geoeffnet */
 }
 
 int inp8(PARAMETER *plist,int e) {
   unsigned char ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
   fread(&ergebnis,1,1,fff);
   return((int)ergebnis);
 }
@@ -991,7 +991,7 @@ int inpf(PARAMETER *plist,int e) {
 #ifndef WINDOWS
     int fp,i;
 #endif
-    if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+    if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
     fflush(fff);
 #ifndef WINDOWS
     fp=fileno(fff);
@@ -1005,14 +1005,14 @@ int inpf(PARAMETER *plist,int e) {
 int inp16(PARAMETER *plist,int e) {
   unsigned short ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */  
+  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
   fread(&ergebnis,sizeof(short),1,fff);
   return((int)ergebnis);
 }
 int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
-  if(fff==NULL) {error(24,"");return(-1);} /* File nicht geoeffnet */ 
+  if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */ 
   fread(&ergebnis,sizeof(long),1,fff);
   return(ergebnis);
 }
@@ -1070,11 +1070,11 @@ int f_symadr(PARAMETER *plist,int e) {
       if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
       #else
         adr=-1;
-        error(9,"SYM_ADR"); /*Function or command %s not implemented*/
+        xberror(9,"SYM_ADR"); /*Function or command %s not implemented*/
       #endif
     #endif
     free(sym);
-  } else error(24,""); /* File nicht geoeffnet */
+  } else xberror(24,""); /* File nicht geoeffnet */
   return(adr);
 }
 
@@ -1139,8 +1139,8 @@ void c_out(char *n) {
         }
 	e=wort_sep(w,',',TRUE,v,w);
       }  
-    } else error(24,""); /* File nicht geoeffnet */
-  } else error(32,"OUT"); /* Syntax error */
+    } else xberror(24,""); /* File nicht geoeffnet */
+  } else xberror(32,"OUT"); /* Syntax error */
 }
 #ifndef WINDOWS
 /* kbhit-Funktion   */
@@ -1380,11 +1380,21 @@ int f_ioctl(PARAMETER *plist,int e) {
   if(e>=2) {
     int sock;
     fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
     sock=fileno(fff);
     if (e==2) ret=ioctl(sock,plist[1].integer);
     else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
     if(ret==-1) io_error(errno,"ioctl");
   }
   return(ret);
+}
+
+
+void c_chdir(char *n) {
+  char *name=s_parser(n);
+  int ret=0;
+
+  ret=chdir(name);
+  if(ret==-1) io_error(errno,"chdir");
+  free(name);
 }

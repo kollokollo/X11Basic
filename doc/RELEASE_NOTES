@@ -8,3 +8,9 @@ Release notes for Version 1.14 (Apr 2007)
   they run 4 to 10 times faster 
 - Bug fixed which caused "Command  not allowed in interactive mode" errors
   This bug was introduced in Version 1.14 since release 1
+- worked on the control system routines (DOOCS)
+- fixed bug with fgetc
+- crosscompiled it with arm-linux for embedded linux
+- new CHDIR command
+- new SPAWN command (does still not work as wanted)
+- created doocsxbasic modification to use the FLASH control system at DESY

@@ -201,11 +201,11 @@ int bc_parser(char *funktion){  /* Rekursiver Parser */
     }
     if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
       if(strlen(w1)) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_DIV;return(bcerror);}
-      else { error(51,w2); return(bcerror); }/* "Parser: Syntax error?! "  */
+      else { xberror(51,w2); return(bcerror); }/* "Parser: Syntax error?! "  */
     }
     if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
       if(strlen(w1)) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_POW;return(bcerror);}    /* von rechts !!  */
-      else { error(51,w2); return(bcerror); } /* "Parser: Syntax error?! "  */
+      else { xberror(51,w2); return(bcerror); } /* "Parser: Syntax error?! "  */
     }
   }
   if(*s=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
@@ -219,8 +219,8 @@ int bc_parser(char *funktion){  /* Rekursiver Parser */
     pos2=s+strlen(s)-1;
     *pos++=0;
     if(*pos2!=')') {
-      printf("Geschlossene Klammer fehlt!\n");
-      error(51,w2); /* "Parser: Syntax error?! "  */
+      printf("Closing bracket is missing!\n");
+      xberror(51,w2); /* "Parser: Syntax error?! "  */
       return(bcerror);
     }
     /* $-Funktionen und $-Felder   */
@@ -233,7 +233,7 @@ int bc_parser(char *funktion){  /* Rekursiver Parser */
       /* Funktionsnr finden */
       pc2=procnr(s+1,2);
       if(pc2==-1) { 
-        error(44,s+1); /* Funktion  nicht definiert */
+        xberror(44,s+1); /* Funktion  nicht definiert */
         return(bcerror);
       }
       bcpc.pointer[bcpc.len++]=BC_PUSHUSERFUNC;        
@@ -432,7 +432,7 @@ int bc_parser(char *funktion){  /* Rekursiver Parser */
     /* Funktionsnr finden */
     pc2=procnr(s+1,2);
     if(pc2==-1) { 
-      error(44,s+1); /* Funktion  nicht definiert */
+      xberror(44,s+1); /* Funktion  nicht definiert */
       return(bcerror);
     }
     bcpc.pointer[bcpc.len++]=BC_PUSHUSERFUNC;        
@@ -494,7 +494,7 @@ int bc_parser(char *funktion){  /* Rekursiver Parser */
     return(bcerror);
   }  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
   }
-  error(51,s); /* Syntax error */
+  xberror(51,s); /* Syntax error */
   bcerror=51;
   return(bcerror);
 }
@@ -679,10 +679,10 @@ void bc_kommando(int idx) {
 	bcpc.pointer[bcpc.len++]=i;
 	bcpc.pointer[bcpc.len++]=count_parameter(w2); 
         return;
-      } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
+      } else xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
     } else if(i!=a) {
-       printf("Befehl uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name);
-    }  else error(32,w1);  /* Syntax Error */
+       printf("Command uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name);
+    }  else xberror(32,w1);  /* Syntax Error */
 }
 
 void bc_jumpto(int from, int ziel, int eqflag) {
@@ -838,7 +838,7 @@ void compile() {
         else if(o==P_IF) f++;
         else if(o==P_ENDIF) f--;
       }
-      if(j==prglen) error(36,"IF"); /*Programmstruktur fehlerhaft */
+      if(j==prglen) xberror(36,"IF"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
       else if(o==P_ELSEIF) {
         bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
@@ -866,7 +866,7 @@ void compile() {
         else if(o==P_IF) f++;
         else if(o==P_ENDIF) f--;
       }
-      if(j==prglen) error(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
+      if(j==prglen) xberror(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
       if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
       else if(o==P_ELSEIF) {
         bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
@@ -952,7 +952,7 @@ void compile() {
       bcpc.pointer[bcpc.len++]=BC_ZUWEIS;
     } else if((pcode[i].opcode&PM_SPECIAL)==P_NEXT) {
       int pp=pcode[i].integer;  /* Zeile it dem zugehoerigen For */
-      if(pp==-1) error(36,"NEXT"); /*Programmstruktur fehlerhaft */
+      if(pp==-1) xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */
       else {
         char *w1,*w2,*w3,*var,*limit,*step;
 	int ss,e,st=0;
@@ -1021,7 +1021,7 @@ void compile() {
         bc_jumpto(i,pp+1,1);
       }	
     } else if(pcode[i].opcode&P_IGNORE) printf(" * ");
-    else if(pcode[i].opcode&P_INVALID) error(32,program[i]); /*Syntax nicht korrekt*/
+    else if(pcode[i].opcode&P_INVALID) xberror(32,program[i]); /*Syntax nicht korrekt*/
     else if(pcode[i].opcode&P_EVAL)  bc_kommando(i);
     else if((pcode[i].opcode&PM_COMMS)>=anzcomms) {
       puts("Precompiler error...");

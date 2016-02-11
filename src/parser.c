@@ -44,11 +44,7 @@ double expm1(double a) {return(exp(a)-1);}
 #endif
 
 double f_nop(void *t) {return(0.0);}
-STRING vs_error() {
-  STRING e;
-  memcpy(e.pointer=malloc(e.len=7),"<ERROR>",7);
-  return(e);
-}
+STRING vs_error() {return(create_string("<ERROR>"));}
 #ifndef NOGRAPHICS
 int f_point(double v1, double v2) {  return(get_point((int)v1,(int)v2)); }
 #endif
@@ -124,6 +120,12 @@ double f_tineget(STRING n) { return(tineget(n.pointer)); }
 int f_tinesize(STRING n) { return(tinesize(n.pointer)); }
 int f_tinetyp(STRING n) { return(tinetyp(n.pointer)); }
 #endif
+#ifdef DOOCS
+double f_doocsget(STRING n) { return(doocsget(n.pointer)); }
+int f_doocssize(STRING n) { return(doocssize(n.pointer)); }
+int f_doocstyp(STRING n) { return(doocstyp(n.pointer)); }
+double f_doocstimestamp(STRING n) { return(doocstimestamp(n.pointer)); }
+#endif
 #ifdef CONTROL
 double f_csmax(STRING n) { return(csmax(n.pointer)); }
 double f_csmin(STRING n) { return(csmin(n.pointer)); }
@@ -139,19 +141,22 @@ int f_dpeek(int adr) { return((int)(*(short *)adr));}
 int f_lpeek(int adr) { return((int)(*(long *)adr));}
 int f_lof(PARAMETER *plist,int e) {
   if(filenr[plist[0].integer]) return(lof(dptr[plist[0].integer]));
-  else { error(24,""); return(0);} /* File nicht geoeffnet */
+  else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 int f_loc(PARAMETER *plist,int e) {
   if(filenr[plist[0].integer]) return(ftell(dptr[plist[0].integer]));
-  else { error(24,""); return(0);} /* File nicht geoeffnet */
+  else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 int f_eof(PARAMETER *plist,int e) {
   if(plist[0].integer==-2) return((myeof(stdin))?-1:0);
   else if(filenr[plist[0].integer]) {
     fflush(dptr[plist[0].integer]);
     return(myeof(dptr[plist[0].integer])?-1:0);
-  } else { error(24,""); return(0);} /* File nicht geoeffnet */
+  } else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
+
+#ifndef NOGRAPHICS
+
 int lsel_input(char *,STRING *,int,int);
 
 int f_listselect(PARAMETER *plist,int e) {
@@ -165,7 +170,7 @@ int f_listselect(PARAMETER *plist,int e) {
     return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(a),sel));
   }
 }
-
+#endif
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
@@ -219,6 +224,12 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,    "DEVICE"    , f_device,1,1   ,{PL_STRING}},
  { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
  { F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+#ifdef DOOCS
+ { F_SQUICK|F_DRET,  "DOOCSGET"     , f_doocsget ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "DOOCSSIZE"    , f_doocssize ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_DRET,  "DOOCSTIMESTAMP"    , f_doocstimestamp ,1,1   ,{PL_STRING}},
+ { F_SQUICK|F_IRET,  "DOOCSTYP"    , f_doocstyp ,1,1   ,{PL_STRING}},
+#endif
  { F_IQUICK|F_IRET,    "DPEEK"     , f_dpeek ,1,1     ,{PL_INT}},
 
  { F_PLISTE|F_IRET,    "EOF"       , f_eof ,1,1     ,{PL_FILENR}},
@@ -649,19 +660,7 @@ STRING f_xtrims(STRING n) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-STRING f_envs(STRING n) {
-  STRING ergebnis;
-  char *ttt=getenv(n.pointer);
-  if(ttt==NULL) {
-    ergebnis.pointer=malloc(1);
-    *ergebnis.pointer=0;
-  } else {
-    ergebnis.pointer=malloc(strlen(ttt)+1);
-    strcpy(ergebnis.pointer,ttt);
-  }
-  ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
-}
+STRING f_envs(STRING n) {return(create_string(getenv(n.pointer)));}
 #ifdef CONTROL
 STRING f_csgets(STRING n) {
   STRING ergebnis;
@@ -683,11 +682,8 @@ STRING f_cspnames(int n) {
 }
 #endif
 #ifdef TINE
-STRING f_tinegets(STRING n) {
-  STRING ergebnis;
-  ergebnis=tinegets(n.pointer);
-  return(ergebnis);
-}
+STRING f_tinegets(STRING n) { return(tinegets(n.pointer)); }
+
 STRING f_tineunits(STRING n) {
   STRING ergebnis;
   ergebnis.pointer=tineunit(n.pointer);
@@ -701,22 +697,20 @@ STRING f_tineinfos(STRING n) {
   return(ergebnis);
 }
 STRING f_tinequerys(PARAMETER *plist,int e) {
-  STRING ergebnis;
-  if(e>=2) {
-    ergebnis=tinequery(plist[0].pointer,plist[1].integer);
-  } else {
-    ergebnis.pointer=malloc(1);
-    ergebnis.len=0;
-  }
-  return(ergebnis);
+  if(e>=2) return(tinequery(plist[0].pointer,plist[1].integer));
+  else return(create_string(NULL));
 }
+#endif
+#ifdef DOOCS
+STRING f_doocsgets(STRING n) { return(doocsgets(n.pointer)); }
+STRING f_doocsinfos(STRING n) { return(doocsinfos(n.pointer)); }
 #endif
 STRING f_terminalnames(char *n) {
   STRING ergebnis;
   int i=get_number(n);
   if(filenr[i]) ergebnis.pointer=terminalname(fileno(dptr[i]));
   else {
-    error(24,""); /* File nicht geoeffnet */
+    xberror(24,""); /* File nicht geoeffnet */
     return(vs_error());
   }
   ergebnis.len=strlen(ergebnis.pointer);
@@ -733,18 +727,15 @@ STRING f_systems(STRING n) {
   } else {
     int len=0;
     int limit=1024;
-    char c;
+    int c;
     ergebnis.pointer=NULL;
     do {
       ergebnis.pointer=realloc(ergebnis.pointer,limit);
      /* printf("Bufferlaenge: %d Bytes.\n",limit); */
       while(len<limit) {
         c=fgetc(dptr);
-        if(c==EOF) {
-          ergebnis.pointer[len]='\0';
-          break;
-        }
-        ergebnis.pointer[len++]=c;
+        if(c==EOF) {ergebnis.pointer[len]='\0';break;}
+        ergebnis.pointer[len++]=(char)c;
       }
       limit+=len;
     } while(c!=EOF);
@@ -753,31 +744,14 @@ STRING f_systems(STRING n) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-STRING f_errs(int n) {
-  STRING ergebnis;
-  char *test=error_text((char)n,"");
-  ergebnis.pointer=malloc(strlen(test)+1);
-  ergebnis.len=strlen(test);
-  strcpy(ergebnis.pointer,test);
-  return(ergebnis);
-}
+STRING f_errs(int n) { return(create_string(error_text((char)n,""))); }
 STRING f_prgs(int n) {
-  STRING ergebnis;
-  char *test=program[min(prglen-1,max(n,0))];
-  ergebnis.pointer=malloc(strlen(test)+1);
-  ergebnis.len=strlen(test);
-  strcpy(ergebnis.pointer,test);
-  if(n>=prglen || n<0) error(16,""); /* Feldindex zu gross*/
-  return(ergebnis);
+  if(n>=prglen || n<0) xberror(16,"PRG$"); /* Feldindex zu gross*/
+  return(create_string(program[min(prglen-1,max(n,0))]));
 }
 STRING f_params(int n) {
-  STRING ergebnis;
-  char *test=param_argumente[min(param_anzahl-1,max(n,0))];
-  ergebnis.pointer=malloc(strlen(test)+1);
-  ergebnis.len=strlen(test);
-  strcpy(ergebnis.pointer,test);
-  if(n>=param_anzahl || n<0) ergebnis.len=0;
-  return(ergebnis);
+  if(n>=param_anzahl || n<0) return(create_string(NULL));
+  else return(create_string(param_argumente[min(param_anzahl-1,max(n,0))]));
 }
 STRING f_unixdates(int n) {
   STRING ergebnis;
@@ -930,14 +904,14 @@ STRING vs_time() {
   return(ergebnis);
 }
 STRING vs_trace() {
-  STRING ergebnis;
   if(pc>=0 && pc<prglen) {
-  ergebnis.pointer=malloc(strlen(program[pc])+1);
-  strcpy(ergebnis.pointer,program[pc]);
-  xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
-  ergebnis.len=strlen(ergebnis.pointer);
-  } else ergebnis=vs_error();
+    STRING ergebnis;
+    ergebnis.pointer=malloc(strlen(program[pc])+1);
+    strcpy(ergebnis.pointer,program[pc]);
+    xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
+    ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
+  } else return(vs_error());
 }
 STRING vs_terminalname() {
   STRING ergebnis;
@@ -945,14 +919,7 @@ STRING vs_terminalname() {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-STRING vs_inkey() {
-  STRING ergebnis;
-  char *t=inkey();
-  ergebnis.pointer=malloc(strlen(t)+1);
-  strcpy(ergebnis.pointer,t);
-  ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
-}
+STRING vs_inkey() {  return(create_string(inkey())); }
 
 const SYSSVAR syssvars[]= {  /* alphabetisch !!! */
  { PL_LEER,   "!nulldummy", vs_error},
@@ -981,6 +948,10 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK,    "CSUNIT$"   , f_csunits ,1,1   ,{PL_STRING}},
 #endif
  { F_PLISTE,    "DECRYPT$", f_decrypts ,2,2   ,{PL_STRING,PL_STRING}},
+#ifdef DOOCS
+ { F_SQUICK,    "DOOCSGET$"    , f_doocsgets ,1,1   ,{PL_STRING}},
+ { F_SQUICK,    "DOOCSINFO$"    , f_doocsinfos ,1,1   ,{PL_STRING}},
+#endif
 
  { F_PLISTE,    "ENCRYPT$", f_encrypts ,2,2   ,{PL_STRING,PL_STRING}},
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
@@ -1157,10 +1128,10 @@ int f_objc_offset(PARAMETER *plist,int e) {
   if(e==4) {
     if(plist[2].integer&FLOATTYP) x=(int)*((double *)plist[2].pointer);
     else if(plist[2].integer&INTTYP) x=*((int *)plist[2].pointer);
-    else error(58,""); /* Variable hat falschen Typ */
+    else xberror(58,""); /* Variable hat falschen Typ */
     if(plist[3].integer&FLOATTYP) y=(int)*((double *)plist[3].pointer);
     else if(plist[3].integer&INTTYP) y=*((int *)plist[3].pointer);
-    else error(58,""); /* Variable hat falschen Typ */
+    else xberror(58,""); /* Variable hat falschen Typ */
     e=objc_offset((char *)plist[0].integer,plist[1].integer,&x,&y);
     if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)x;
     else if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=x;
@@ -1213,7 +1184,7 @@ if(searchchr2(funktion,' ')!=NULL) {
     int nenner=(int)parser(w2);
     if(nenner) return((double)((int)parser(w1) / nenner));
     else {
-      error(0,w2); /* Division durch 0 */
+      xberror(0,w2); /* Division durch 0 */
       return(0);
     }
   }
@@ -1258,12 +1229,12 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
       double nenner;
       nenner=parser(w2);
       if(nenner!=0.0) return(parser(w1)/nenner);    /* von rechts !!  */
-      else { error(0,w2); return(0);  } /* Division durch 0 */
-    } else { error(51,w2); return(0); }/* "Parser: Syntax error?! "  */
+      else { xberror(0,w2); return(0);  } /* Division durch 0 */
+    } else { xberror(51,w2); return(0); }/* "Parser: Syntax error?! "  */
   }
   if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
     if(strlen(w1)) return(pow(parser(w1),parser(w2)));    /* von rechts !!  */
-    else { error(51,w2); return(0); } /* "Parser: Syntax error?! "  */
+    else { xberror(51,w2); return(0); } /* "Parser: Syntax error?! "  */
   }
 }
   if(*s=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
@@ -1276,7 +1247,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
       pos2=s+strlen(s)-1;
       *pos++=0;
 
-      if(*pos2!=')') error(51,w2); /* "Parser: Syntax error?! "  */
+      if(*pos2!=')') xberror(51,w2); /* "Parser: Syntax error?! "  */
       else {                         /* $-Funktionen und $-Felder   */
         *pos2=0;
 
@@ -1319,7 +1290,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	         int e;
 		 double val1,val2;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
-		   error(56,""); /* Falsche Anzahl Parameter */
+		   xberror(56,""); /* Falsche Anzahl Parameter */
 		   val1=parser(w1); val2=0;
 	         } else if(e==2) {
 	           val1=parser(w1); val2=parser(w2);
@@ -1331,7 +1302,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	         int e;
 		 int val1,val2;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
-		   error(56,""); /* Falsche Anzahl Parameter */
+		   xberror(56,""); /* Falsche Anzahl Parameter */
 		   val1=(int)parser(w1); val2=0;
 	         } else if(e==2) {
 	           val1=(int)parser(w1); val2=(int)parser(w2);
@@ -1353,13 +1324,13 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	
           } else if(type2(s) & FLOATTYP) {
             if((vnr=variable_exist(s,FLOATARRAYTYP))!=-1) return(floatarrayinhalt(vnr,pos));
-	    else { error(15,s); return(0); } /* Feld nicht dimensioniert  */
+	    else { xberror(15,s); return(0); } /* Feld nicht dimensioniert  */
           } else if(type2(s) & INTTYP) {
 	    char *r=varrumpf(s);
 	    if((vnr=variable_exist(r,INTARRAYTYP))!=-1) return((double)intarrayinhalt(vnr,pos));
-	    else { error(15,s); return(0); }  /* Feld nicht dimensioniert  */
+	    else { xberror(15,s); return(0); }  /* Feld nicht dimensioniert  */
 	    free(r);
-	  } else { error(15,s); return(0); }  /* Feld nicht dimensioniert  */
+	  } else { xberror(15,s); return(0); }  /* Feld nicht dimensioniert  */
         }
       }
     } else {  /* Also keine Klammern */
@@ -1389,7 +1360,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
       } else return(atof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
     }
   }
-  error(51,s); /* Syntax error */
+  xberror(51,s); /* Syntax error */
   return(0);
 }
 
@@ -1469,12 +1440,12 @@ ARRAY f_solvea(PARAMETER *plist, int e) {
   int anzzeilen,anzspalten;
   ergeb.typ=plist[0].typ;
   ergeb.dimension=1;
-  if(plist[0].integer!=2) error(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
-  if(plist[1].integer!=1) error(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
+  if(plist[0].integer!=2) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
+  if(plist[1].integer!=1) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
   anzspalten=*((int *)(plist[0].pointer+sizeof(int)));
   anzzeilen=*((int *)(plist[0].pointer));
 
-  if(anzzeilen!=*((int *)(plist[1].pointer))) error(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
+  if(anzzeilen!=*((int *)(plist[1].pointer))) xberror(81,""); /* "Matrizen haben nicht die gleiche Ordnung" */
 
   ergeb.pointer=malloc(INTSIZE+anzspalten*sizeof(double));
   *((int *)ergeb.pointer)=anzspalten;
@@ -1501,6 +1472,19 @@ ARRAY f_tinehistorya(PARAMETER *plist, int e) {
 	  return(tinehistory(plist[0].pointer,plist[1].integer,plist[2].integer));
 }
 #endif
+#ifdef DOOCS
+ARRAY doocsnames(char *n);
+ARRAY f_doocsgeta(PARAMETER *plist, int e) {
+  int o=0,nn=0;
+  if(e>1) nn=plist[1].integer;
+  if(e>2) o=plist[2].integer;
+  return(doocsvget(plist[0].pointer,nn,o));
+}
+ARRAY f_doocsnames(PARAMETER *plist, int e) {
+  return(doocsnames(plist[0].pointer));
+}
+#endif
+
 const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
  { F_ARGUMENT,  "!nulldummy",  f_nop ,0,0   ,{0}},
  { F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
@@ -1510,6 +1494,11 @@ const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,    "CSVGET"    , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
  { F_SQUICK,    "CVA"       , string_to_array ,1,1   ,{PL_STRING}},
+#ifdef DOOCS
+ { F_PLISTE,    "DOOCSGET"     , f_doocsgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_PLISTE,    "DOOCSNAMES"     , f_doocsnames ,1,1   ,{PL_STRING}},
+ { F_PLISTE,    "DOOCSVGET"    , f_doocsgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
+#endif
 
  { F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
  { F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
@@ -1576,11 +1565,11 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	array_smul(zw2,parser(w1));
 	return(zw2);
       }
-    } else error(51,""); /*Syntax Error*/
+    } else xberror(51,""); /*Syntax Error*/
   } else if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
     ARRAY zw2,zw1=array_parser(w1);
     e=(int)parser(w2);
-    if(e<0) error(51,""); /*Syntax Error*/
+    if(e<0) xberror(51,""); /*Syntax Error*/
     else if(e==0) {
       zw2=zw1;
       zw1=einheitsmatrix(zw2.typ,zw2.dimension,zw2.pointer);
@@ -1607,7 +1596,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
       char *pos2=s+strlen(s)-1;
       *pos++=0;
       if(*pos2!=')') {
-         error(51,w2); /* "Parser: Syntax error?! "  */
+         xberror(51,w2); /* "Parser: Syntax error?! "  */
       } else {                         /* $-Funktionen und $-Felder   */
 	  /* Liste durchgehen */
 	  int i=0,a=anzpafuncs-1,b,l=strlen(s);
@@ -1660,7 +1649,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
              fff=dptr[i];
              fread(varptr,sizeof(int),nn,fff);
              return(ergeb);
-           } else error(24,""); /* File nicht geoeffnet */
+           } else xberror(24,""); /* File nicht geoeffnet */
            return(ergeb);
 	 } else {
 	    int vnr;
@@ -1672,7 +1661,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1)  ergebnis=copy_var_array(vnr);
 	     else if((vnr=variable_exist(r,INTARRAYTYP))!=-1)    ergebnis=copy_var_array(vnr);
 	     else if((vnr=variable_exist(r,STRINGARRAYTYP))!=-1) ergebnis=copy_var_array(vnr);
-             else error(15,s);  /* Feld nicht dimensioniert  */
+             else xberror(15,s);  /* Feld nicht dimensioniert  */
 	   } else {
 	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1) {
 	       char w1[strlen(pos)+1],w2[strlen(pos)+1];
@@ -1743,7 +1732,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	     }  else if((vnr=variable_exist(s,STRINGARRAYTYP))!=-1) {
 	       puts("Noch nicht möglich...");
 	     } else {
-	       error(15,s);  /* Feld nicht dimensioniert  */
+	       xberror(15,s);  /* Feld nicht dimensioniert  */
 	       e=1;
   	       ergebnis=einheitsmatrix(FLOATARRAYTYP,1,&e);
 	     }
@@ -1796,7 +1785,7 @@ STRING string_parser(char *funktion) {
       *pos++=0;
 
       if(*pos2!=')') {
-        error(51,v); /* "Parser: Syntax error?! "  */
+        xberror(51,v); /* "Parser: Syntax error?! "  */
         ergebnis=vs_error();
       } else {                         /* $-Funktionen und $-Felder   */
         *pos2=0;
@@ -1835,7 +1824,7 @@ STRING string_parser(char *funktion) {
 	         int e;
 		 double val1,val2;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
-		   error(56,""); /* Falsche Anzahl Parameter */
+		   xberror(56,""); /* Falsche Anzahl Parameter */
 		   val1=parser(w1); val2=0;
 	         } else if(e==2)  val1=parser(w1); val2=parser(w2);
                  ergebnis=(psfuncs[i].routine)(val1,val2);
@@ -1855,19 +1844,15 @@ STRING string_parser(char *funktion) {
 	     v[strlen(v)-1]=0;
 	
              if((vnr=variable_exist(v,STRINGARRAYTYP))==-1) {
-	       error(15,v);         /*Feld nicht definiert*/
-	       ergebnis.pointer=malloc(1);
-	       ergebnis.len=0;
+	       xberror(15,v);         /*Feld nicht definiert*/
+	       ergebnis=create_string(NULL);
              } else {
 	       int dim=variablen[vnr].opcode;
 	       int indexliste[dim];
 	       
 	       if(make_indexliste(dim,pos,indexliste)==0)
 	         ergebnis=varstringarrayinhalt(vnr,indexliste);
-	       else {
-	         ergebnis.pointer=malloc(1);
-	         ergebnis.len=0;
-	       }
+	       else ergebnis=create_string(NULL);
 	    }
 	  }
         }
@@ -1880,7 +1865,7 @@ STRING string_parser(char *funktion) {
         *pos2=0;
         memcpy(ergebnis.pointer,v+1,strlen(v)-2+1);
       } else if(*pos2!='$') {
-        error(51,v); /* "Parser: Syntax error?! "  */
+        xberror(51,v); /* "Parser: Syntax error?! "  */
         ergebnis=vs_error();
       } else {                      /* einfache Variablen und Systemvariablen */
 	/* Liste durchgehen */
@@ -1896,8 +1881,7 @@ STRING string_parser(char *funktion) {
         }
         *pos2=0;
         if((vnr=variable_exist(v,STRINGTYP))==-1) {
-          ergebnis.pointer=malloc(1);
-	  ergebnis.len=0;
+          ergebnis=create_string(NULL);
         } else {
           ergebnis.pointer=malloc(variablen[vnr].opcode+1);
 	  ergebnis.len=variablen[vnr].opcode;
@@ -1940,9 +1924,9 @@ double do_funktion(char *name,char *argumente) {
     pos=argumente;
 
     pc2=procnr(buffer,2);
-    if(pc2==-1)   error(44,buffer); /* Funktion  nicht definiert */
+    if(pc2==-1)   xberror(44,buffer); /* Funktion  nicht definiert */
     else {
-	if(do_parameterliste(pos,procs[pc2].parameterliste)) error(42,buffer); /* Zu wenig Parameter */
+	if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
 	else {
 	  int oldbatch,osp=sp;
 	  pc2=procs[pc2].zeile;
@@ -1988,7 +1972,6 @@ int do_parameterliste(char *pos, char *pos2) {
 
 STRING do_sfunktion(char *name,char *argumente) {
   char *buffer,*pos;
-  STRING ergebnis;
   int pc2;
 
   buffer=malloc(strlen(name)+1);
@@ -1996,7 +1979,7 @@ STRING do_sfunktion(char *name,char *argumente) {
   pos=argumente;
   pc2=procnr(buffer,2);
   if(pc2!=-1) {
-	if(do_parameterliste(pos,procs[pc2].parameterliste)) error(42,buffer); /* Zu wenig Parameter */
+	if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
 	else {
 	  int oldbatch,osp=sp;
 	
@@ -2014,9 +1997,7 @@ STRING do_sfunktion(char *name,char *argumente) {
     free(buffer);
     return(returnvalue.str);
   }
-  error(44,buffer); /* Funktion  nicht definiert */
+  xberror(44,buffer); /* Funktion  nicht definiert */
   free(buffer);
-  ergebnis.pointer=malloc(1);
-  ergebnis.len=0;
-  return(ergebnis);
+  return(create_string(NULL));
 }

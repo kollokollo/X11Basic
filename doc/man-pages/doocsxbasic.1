@@ -1,0 +1,459 @@
+.TH DOOCSX11BASIC 1 10-Aug-2007 "Version 1.14" "DOOCS Basic Interpreter"
+.SH NAME
+
+doocsxbasic \- Basic interpreter for DOOCS (Distributed oo Control System)
+.SH SYNOPSIS
+.B doocsxbasic
+[--eval <expression>] [-e <command>] [-l] [<filename>]
+
+.SH DESCRIPTION
+
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates features like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on modern 
+computers.
+
+DOOCS is a distributed control system that was developed for HERA and TTF
+applications at DESY. It is an object oriented system design from the device
+server level up to the operator console. The communication is established by a
+standard set of data and address objects which are transferred by Remote
+Procedure Calls (ONC RPC) or other protocols.
+
+Doocsxbasic is a modification which combines the DOOCS functionality with the
+X11-Basic interpreter.
+(see the man page 
+.I x11basic(1)
+and
+.I doocs(3)
+).
+
+
+.SH COMMANDLINE OPTIONS
+.P
+.SS \ <file>
+load and run script <file>
+.br
+.SS \-l <file>
+only load script, do not execute
+.br
+.SS \--eval <expression>
+evaluate expression
+.br
+.SS \-e <command>
+execute command
+.br
+.SS \-version
+shows version, program and other information and exits
+.SS -h --help
+print a short help
+.SS --help <topic>
+print help on topic
+.SS --daemon
+daemon mode
+
+For detailed help and description of the implemented basic commands take a 
+look at the README file which comes with the X11Basic package. There is also a 
+full users manual available as *.pdf file on the homepage.
+
+.SH INTERACTIVE USE
+If no options are given on the command line, 
+.B doocsxbasic
+will run interactivly.
+
+A Prompt will be displayed and any command can be typed in. It will be
+excecuted immediately after pressing return or enter. The interpreter uses the 
+.B readline(3) 
+library. So the input is buffered and can be edited using the up and down 
+arrows on the keyboard.
+Readline offers editing capabilities while the user is
+entering the line. By default, the line editing commands
+are similar to those of emacs. 
+ 
+.B To quit program
+simply enter 
+.IR quit
+or press 
+.IR CTRL-C.
+.SH EXAMPLES
+.nf
+doocsxbasic testme.bas
+doocsxbasic -e 'alert 1,"Hello world !",1," OK ",b'
+doocsxbasic --eval 1+3-4*doocsget("TTF.VAC/PENNING/GLOBALS/HEMAGEN")
+doocsxbasic --help "*doocs*"
+.fi
+
+You can find many sample programs in the X11-Basic packages. For a description
+of the X11-Basic language please also see the X11-Basic documentation and or
+man-pages. Her we will only describe the modifications of doocsxbasic compared to
+the regular x11basic interpreter (Note that all 
+.B tine(3) 
+functions are also includes in doocsxbasic. So Please also refer to the 
+.B tinexbasic(1)
+man page.)
+
+
+.SH Doocsxbasic as shell:
+X11-Basic programs can be excecuted like shell scripts.
+If the doocsxbasic interpreter was installed in 
+.I /bin/
+any X11-Basic program with
+.nf
+ #!/bin/doocsxbasic
+.fi
+in the first command line can be excecuted directly.
+
+.SH The X11-Basic Language extentions for DOOCS
+
+Das Programm mit Kontrollsystemanbindung nennt sich DOOCSXBASIC. Diese Version
+Benutzt die DOOCS-Bibliothek der DESY-Datenbank. Alle Parameter sind zuganglich (sofern freigeschaltet) und werden
+mittels RPC-Protokoll von den ensprechenden Servern erfragt. 
+
+DOOCSXBASIC erlaubt ab Version 1.14 auch das Programmieren eines eigenen
+Servers.
+
+.SS DOOCS facility,device,location,property name convention
+
+Die Zugriffe zu den Parametern erfolgen ueber einen eindeutigen Namen, 
+der aus Facilitynamen (Beschleuniger bz. Subkomponente), Devicename, Location 
+und Propertyname besteht. Die Syntax ist wie folgt:
+
+.nf
+FACILITY/DEVICE/LOCATION/Property
+.fi
+
+e.g.
+
+.nf
+a=doocsget("TTF.VAC/PENNING/SEDAC/AMPLITUDE")
+.fi
+
+.SS DOOCS Commands
+
+.nf
+DOOCSBROADCAST <var>          -- **** not yet implemented
+DOOCSCALLBACK <var>,callback  -- link a callback procedure to a variable
+DOOCSEXPORT <var>[,...]       -- list of variables to be exported by server
+DOOCSMONITOR <var>[,callback] -- **** not yet implemented
+DOOCSPUT t$,???[,...]         -- set a value (client)
+DOOCSSERVER [name$]           -- initialize and register a Server
+DOOCSSET t$,???[,...]         -- same as doocsput
+.fi
+
+.SS DOOCS functions
+.nf
+a=DOOCSGET(p$)       -- get a single value (client)
+a=DOOCSSIZE(p$)      -- get the size of this property (client)
+a=DOOCSTYP(p$)       -- get the type of this property (client)
+a=DOOCSTIMESTAMP(p$) -- get the timestamp of the last change of this property (client)
+t$=DOOCSGET$(p$)     -- get a single text value (client)
+t$=DOOCSINFO$(p$)    -- get the properties comment (client)
+t$()=DOOCSNAMES(p$)  -- get a list of known device, location or property names
+a()=DOOCSVGET(p$)    -- get a vector/array (client)
+t$()=DOOCSVGET$(p$)  -- get a vector/array if strings (client)
+.fi
+
+.SS DOOCS system variable
+.nf
+a=CCSERR           -- DOOCS or TINE error code in case of errors
+.fi
+
+
+.SS Client application
+
+Data acquistion can either be synchronous (e.g. doocsget)  where execution is
+blocked until a call completes, or asynchronous  (e.g. doocsmonitor) where the
+results of a call are given to a callback routine upon completion.  Data  can
+also be 'monitored' asynchronously either at a supplied polling rate or  upon
+data change.  
+
+.B Get the value of a Propery from a server
+
+.nf
+.I a=doocsget("<Parameter>")
+.I a$=doocsget$("<Parameter>") 
+.fi
+
+
+Return value is the actual value of the parameter. In case of an error, zero 
+is returned (or the string "<ERROR>").
+
+.B Get the value of an Array Propery from a server
+
+.nf
+.I a()=doocsvget("<Parameter>" [, <number of values>[,<offset>]])
+.I b$()=doocsvget$("<Parameter>" [, <number of values>[,<offset>]])
+.fi
+
+The specified number of values is returned as an array.
+If an offset was specified, the array starts at this index.
+Das Ergebnis wird einem Feld zugewiesen, welches ggf. umdimensioniert wird. 
+Wird die Anzahl der Werte nicht angegeben, so wird der gesamte Vektor gelesen.
+Der erste Eintrag des Property-Vektors findet sich dann in a(0). Der letzte in
+a(n-1).
+
+
+.B Write a value to a Parameter
+
+.nf
+.I doocsput Parameter$, value
+.I doocsput Parameter$, text$
+.I doocsput Parameter$, array()
+.fi
+
+If write access to the parameter is granted, the parameter is set to 
+(overwritten with)  the specific value.
+
+.B Parameter-Vektor setzen
+
+.nf
+.I doocsvput Parameter$, Werte()[,n[,o]] 
+.I doocsvput Parameter$, Werte$()[,n[,o]]
+.fi
+
+Der angebene Parameter wird auf die angebenen Werte gesetzt. n=Anzahl der zu
+setzenden Werte, o=Offset.
+
+
+.B Query maximal number of values of a parameter 
+
+.I s=doocssize("<Parameter>")
+
+Return value is the number of values in this parameter.
+If the parameter is of type STRING, the length of the 
+string is returned.
+In case of an error, zero is returned and 
+.I ccserr 
+is set.
+
+.B Queryn type of a parameter 
+
+.I s=doocstyp("<Parameter>")
+
+Return value is the type of the parameter.
+Following Values are possible:
+.nf
+  0 --- DATA_NULL        0
+  1 --- DATA_INT         1
+  2 --- DATA_FLOAT       2
+  3 --- DATA_STRING      3
+  4 --- DATA_BOOL        4
+  5 --- DATA_STRING16    5
+ 10 --- DATA_YT         10
+ 11 --- DATA_XYT        11
+ 12 --- DATA_TDS        12
+ 13 --- DATA_XY         13
+ 14 --- DATA_IIII       14
+ 15 --- DATA_IFFF       15
+ 16 --- DATA_USTR       16
+ 17 --- DATA_FIS        17
+ 18 --- DATA_TTII       18
+ 19 --- DATA_SPECTRUM   19
+ 20 --- DATA_XML        20
+ 21 --- DATA_XYZS       21
+100 --- DATA_A_FLOAT   100
+101 --- DATA_A_TDS     101
+102 --- DATA_A_XY      102
+103 --- DATA_A_USTR    103
+104 --- DATA_A_FIS     104
+105 --- DATA_A_INT     105
+106 --- DATA_A_BYTE    106
+107 --- DATA_A_TDSi    107
+108 --- DATA_A_XYZS    108
+109 --- DATA_MDA_FLOAT 109
+.fi
+In case of an error, zero is returned and 
+.I ccserr 
+is set.
+
+.B Query timestamp of latest parameter change 
+
+.I s=doocstimestamp("<Parameter>")
+
+Return value is the unix-timestamp of the parameters latest change.
+In case of an error, zero is returned and 
+.I ccserr 
+is set.
+
+
+.B Query parameter information
+
+.I a$=doocsinfo$("<Parameter>")
+
+Return value is a string which contains some useful information about this parameter.
+In case of an error, "<ERROR>" is returned and 
+.I ccserr 
+is set.
+
+.B Query parameter names
+
+.I nam$()=doocsnames$(pattern$)
+
+Returns a string array with a list of names which match the pattern. 
+The only wildcard allowed is the "*",
+
+.SS Server application
+
+A simple DOOCS server can look like this:
+
+.nf
+doocsexport a,b,c
+doocsserver "MYSERVER"
+do
+  oa=a
+  pause 0.1
+  if a<>oa
+    print "Variable has changd: ",a
+  endif
+  exit if a=13
+loop
+quit
+.fi
+
+
+.B Server registration
+
+.I DOOCSSERVER [name$]
+
+Registers the server under the location name name$ at the equipment name server. 
+
+
+.B Export Properties
+
+.I DOOCSEXPORT <var1>[,<var2>,...]
+
+Bestimmt, welche X11-Basic Variablen vom Server exportiert werden sollen. 
+Der Inhalt dieser Variablen kann dann von den Clients gelesen oder veraendert
+werden.  
+
+.I DOOCSCALLBACK <var>,callback
+
+Sets a callback procedure which will be called after the variable var has 
+been changed by a client.
+
+.nf
+doocsexport a,b,c
+doocsserver "MYSERVER"
+doocscallback a,calback
+do
+  pause 0.1
+  exit if a=13
+loop
+quit
+procedure callback
+  print "Variable has changd: ",a
+return
+.fi
+
+
+
+.SS Variables
+
+There is one new variable:
+
+.I ccs_err
+which holds the TINE error code after a command excecution. 
+
+The interpretation of these error codes is as follows:
+
+.nf
+  0 ERR_NONE
+100 ERR_RPC
+101 ERR_ILL_SERVICE  
+102 ERR_RPC_TO       
+103 ERR_ENS          
+104 ERR_ILL_MON      
+105 ERR_ILL_PROTOCOL 
+106 ERR_EPICS_CALL   
+107 ERR_EPICS_UNSUP  
+108 ERR_NO_EPICS     
+109 ERR_EPICS_UNSUP_DAT 
+110 ERR_UNSUP_DAT    
+111 ERR_DIFF_DAT     
+112 ERR_OPT          
+113 ERR_RO_OPT       
+114 ERR_ILL_TYPE     
+115 ERR_STALE_DATA   
+116 ERR_OFFLINE      
+117 ERR_TMO          
+118 ERR_NO_DATA      
+119 ERR_ENS_NO_DATA  
+120 ERR_FAULTY_CHANS 
+121 ERR_SHMEM        
+.fi
+
+
+
+.SH Configuration
+
+A doocs control system application will need to make use of certain 
+configuration settings. A pure client application for instance will need to be
+able to resolve addresses for the servers it needs to talk to. A server
+application needs to identify itself and potentially change certain parameters
+away from their default settings.
+
+Besides direct configuration in the program code, there are some files which
+hold information. The Location of the files are set by Environment variables.
+
+.SH ENVIRONMENT
+
+If csv files are used to configure a tine server (normally the case) then  the
+server application must know where to look for the relevant files.  Client
+applications as well as server applications need to find the equipment name
+server(s). The address of the configured equipment name server is typically
+contained in a csv file named 'cshosts.csv'. The application will look in the
+working directory for this file unless the environment variable TINE_HOME is
+set to point to the default location.
+
+(refer to the 
+.B doocs(3) 
+man page)
+
+.I ENS_HOST
+=mskpc14
+
+
+.SH FILES
+
+(refer to the 
+.B doocs(3) 
+man page)
+
+
+.SH VERSION
+Page was created for V.1.14
+.SH BUG REPORTS
+
+If you find a bug in the X11-Basic interpreter or the DOOCS-Implementation, 
+you should report it. But first, you should make sure that it really is
+a bug, and that it appears in the latest version of the
+DOOCS-X11-Basic package that you have.
+
+Once you have determined that a bug actually exists, mail a
+bug report to kollo@users.sourceforge.net. If you have a fix,
+you are welcome to mail that as well! Suggestions may 
+be mailed to the X11-Basic mailing list on 
+www.sourceforge.net/projects/x11-basic  or posted to the bug
+tracking system.
+
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to kollo@users.sourceforge.net.
+.SH BUGS
+Still some bugs
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2007 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the GNU General Public License for more
+details.
+.SH SEE ALSO
+x11basic(1), xbasic(1), doocs(3), tine(3),  readline(3), xbc(1)

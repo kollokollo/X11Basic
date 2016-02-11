@@ -18,21 +18,25 @@
 /* und DESY in Hamburg. sonst bitte abschalten */
 
 #ifndef WINDOWS
-  #ifndef CONTROL
+#  ifndef CONTROL
   /*#define CONTROL*/
-  #endif 
+#  endif
 #endif
 #ifndef TINE
-//  #define TINE  
+//  #define TINE
 #endif 
+#ifndef DOOCS
+//#  define TINE
+//#  define DOOCS
+#endif
 
 #ifdef WINDOWS
-  #undef HAVE_READLINE
+#  undef HAVE_READLINE
 #endif
 
 /* If you do not want to have the graphics ... */
 
-/*#define NOGRAPHICS*/
+// #define NOGRAPHICS
 
 
 /* If you are allowed to use stron cryptographics ... */

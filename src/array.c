@@ -30,7 +30,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
       
       if(vnr==-1) {
         if(a[0]==0) neue_array_variable_and_free(r,convert_to_floatarray(inhalt), 0);
-        else error(15,name); /* Feld nicht dimensioniert */
+        else xberror(15,name); /* Feld nicht dimensioniert */
         free_array(inhalt);
       } else {
         if(a[0]==0) feed_array_and_free(vnr,convert_to_floatarray(inhalt));
@@ -41,7 +41,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
       
       if(vnr==-1) {
         if(*a==0) neue_array_variable_and_free(r,convert_to_intarray(inhalt), 0);
-        else error(15,name); /* Feld nicht dimensioniert */
+        else xberror(15,name); /* Feld nicht dimensioniert */
         free_array(inhalt);
       } else {
         if(*a==0) feed_array_and_free(vnr,convert_to_intarray(inhalt));
@@ -58,7 +58,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
   } else {
     if(vnr==-1) {
       if(a[0]==0) neue_array_variable_and_free(r, inhalt, sp);
-      else error(15,name); /* Feld nicht dimensioniert */
+      else xberror(15,name); /* Feld nicht dimensioniert */
     } else {
       if(a[0]==0) feed_array_and_free(vnr,inhalt);
       else feed_subarray_and_free(vnr,a,inhalt);
@@ -72,7 +72,7 @@ char *arrptr(char *n) {
   char *r=varrumpf(n);
   char *ergebnis=NULL;
   int vnr=variable_exist(r,typ);
-  if(vnr==-1) error(15,r); /* Feld nicht dimensioniert */
+  if(vnr==-1) xberror(15,r); /* Feld nicht dimensioniert */
   else ergebnis=variablen[vnr].pointer;
   return(ergebnis);
 }
@@ -415,7 +415,7 @@ ARRAY array_const(char *s) {
 ARRAY mul_array(ARRAY a1, ARRAY a2) {
   /* Teste ob die Typen fuer eine Multiplikation infrage kommen*/
   if(a1.dimension>2 || a2.dimension>2 || (a1.typ & STRINGTYP) || (a2.typ & STRINGTYP)) {
-    error(83,""); /*Matrizenprodukt nicht definiert*/
+    xberror(83,""); /*Matrizenprodukt nicht definiert*/
     return(nullmatrix(a1.typ,a1.dimension,a1.pointer));
   } else {
     /* Teste, ob die Dimensionierung fuer eine Multiplikation taugt: */
@@ -428,7 +428,7 @@ ARRAY mul_array(ARRAY a1, ARRAY a2) {
     else if(a2.dimension==1) {z2=1;s2=((int *)a2.pointer)[0];}
     else {z2=((int *)a2.pointer)[0];s2=((int *)a2.pointer)[1];}   
     if(s1!=z2) {
-      error(81,""); /*Matrizen haben nicht die gleiche Ordnung*/
+      xberror(81,""); /*Matrizen haben nicht die gleiche Ordnung*/
       return(nullmatrix(a1.typ,a1.dimension,a1.pointer));
     } else {
       ARRAY ergebnis;
@@ -514,21 +514,21 @@ ARRAY trans_array(ARRAY a) {
       }
     }
   } else 
-    error(85,"TRANS"); /* Transposition nur für zweidimensionale Matrizen.*/  
+    xberror(85,"TRANS"); /* Transposition nur für zweidimensionale Matrizen.*/  
   return(b);
 }
 ARRAY inv_array(ARRAY a) {
   if(a.dimension==0) {
     double d=*((double *)a.pointer);
-    if(d==0) error(0,""); /* Division durch Null */
+    if(d==0) xberror(0,""); /* Division durch Null */
     else d=1/d;
     return(form_array(a.typ,0,NULL,(char *)&d));
   } else if(a.dimension!=2) {
-    error(89,""); /* Array must be two dimensional */
+    xberror(89,""); /* Array must be two dimensional */
     return(nullmatrix(a.typ,a.dimension,a.pointer));
   } else {
     if(((int *)a.pointer)[0]!=((int *)a.pointer)[1]) {
-      error(86,""); /* Matrix nicht quadratisch */
+      xberror(86,""); /* Matrix nicht quadratisch */
       return(nullmatrix(a.typ,a.dimension,a.pointer));
     } else {
       ARRAY ergeb;
@@ -786,7 +786,7 @@ int make_indexliste(int dim, char *pos, int *index) {
   e=wort_sep(pos,',',TRUE,w1,w2);
   for(i=0;i<dim;i++) {
     if(e==0) {
-      error(18,"");  /* Falsche Anzahl Indizies */
+      xberror(18,"");  /* Falsche Anzahl Indizies */
       flag=1;
       break;
     }

@@ -25,7 +25,7 @@ void *obh;       /* old break handler  */
 
 int globalerr=0;
 
-void error(char errnr, char *bem) {
+void xberror(char errnr, char *bem) {
   extern int globalerr;
   globalerr=errnr;
   if(errcont) {   
@@ -73,6 +73,9 @@ void break_handler( int signum) {
     signal(signum, break_handler);
   } else {
     puts("** X11BASIC-QUIT");
+#ifdef DOOCS
+    doocssig_handler(signum);
+#endif  
     signal(SIGINT, obh);
     raise(signum);
   }
@@ -80,13 +83,13 @@ void break_handler( int signum) {
 void fatal_error_handler( int signum) {
   int obatch=batch;
   switch(signum) {
-  case SIGILL: error(104,""); break;
+  case SIGILL: xberror(104,""); break;
 #ifndef WINDOWS
-  case SIGBUS: error(102,""); break;
+  case SIGBUS: xberror(102,""); break;
 #endif
-  case SIGSEGV: error(101,""); break;
+  case SIGSEGV: xberror(101,""); break;
 #ifndef WINDOWS
-  case SIGPIPE: error(110,""); break;
+  case SIGPIPE: xberror(110,""); break;
 #endif
   default:
     printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
@@ -126,9 +129,9 @@ void timer_handler( int signum) {
       batch=min(oldbatch,batch);
       if(osp!=sp) {
 	pc=stack[--sp]; /* wenn error innerhalb der func. */
-      }
-      
+      }   
   }
+  
   signal(signum, timer_handler);
   if(everyflag) alarm(everytime); 
 }
@@ -145,9 +148,16 @@ void x11basicStartup() {
   obh=signal(SIGINT, break_handler);
   signal(SIGILL, fatal_error_handler);
   signal(SIGSEGV, fatal_error_handler);
-#ifndef WINDOWS
-  signal(SIGBUS, fatal_error_handler);
-  signal(SIGPIPE, fatal_error_handler);
+#ifndef  WINDOWS  
   signal(SIGALRM, timer_handler);
+  signal(SIGBUS, fatal_error_handler);
+#endif
+#ifdef DOOCS
+  signal(SIGPIPE, doocssig_handler);
+  signal(SIGTERM, doocssig_handler);
+#else
+#ifndef WINDOWS
+  signal(SIGPIPE, fatal_error_handler);
+#endif
 #endif
 }

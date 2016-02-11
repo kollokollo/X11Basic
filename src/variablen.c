@@ -90,7 +90,7 @@ void *varptr(char *n) {
   } 
   else vnr=variable_exist_or_create(r,typ);
  /* printf("varptr: typ=%d, r=%s, vnr=%d, indize=%d\n",typ,r,vnr,indize);*/
-  if(vnr==-1) error(57,n); /* Variable existiert nicht */
+  if(vnr==-1) xberror(57,n); /* Variable existiert nicht */
   else {
     if(typ & ARRAYTYP) ergebnis=(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
     else if(typ==STRINGTYP) {
@@ -254,7 +254,7 @@ int zuweis(char *name, double wert) {
    pos=strchr(name,'(');
    pos[0]=0;pos++;
    vnr=variable_exist(name,FLOATARRAYTYP);
-   if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
+   if(vnr==-1) xberror(15,name); /* Feld nicht dimensioniert */
    else {
 	pos2=searchchr2(pos,')');
 	if(pos2==NULL) puts("ARRAY-Zuweisung noch nicht möglich.");
@@ -277,7 +277,7 @@ int zuweis(char *name, double wert) {
           while(i && ndim<variablen[vnr].opcode) {
             xtrim(s,TRUE,s);
 	    idxn=(int)parser(s);
-	    if(idxn>bbb[ndim]) error(16,s); /* Feldindex zu gross */
+	    if(idxn>bbb[ndim]) xberror(16,s); /* Feldindex zu gross */
             else a=idxn+a*((int *)variablen[vnr].pointer)[ndim];
             ndim++; 
             i=wort_sep(t,',',TRUE,s,t); 
@@ -313,7 +313,7 @@ void zuweisi(char *name, int wert) {
     pos=strchr(name,'(');
     *pos=0;pos++;
     vnr=variable_exist(r,INTARRAYTYP);
-    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
+    if(vnr==-1) xberror(15,name); /* Feld nicht dimensioniert */
     else {
 	pos2=searchchr2(pos,')');
 	if(pos2==NULL) puts("ARRAY-Zuweisung an dieser Stelle nicht möglich.");
@@ -334,7 +334,7 @@ void zuweisi(char *name, int wert) {
           while(i && ndim<variablen[vnr].opcode) {
             xtrim(s,TRUE,s);
 	    idxn=(int)parser(s);
-	    if(idxn>bbb[ndim]) error(16,s); /* Feldindex zu gross */
+	    if(idxn>bbb[ndim]) xberror(16,s); /* Feldindex zu gross */
             else a=idxn+a*((int *)variablen[vnr].pointer)[ndim];
             ndim++; 
             i=wort_sep(t,',',TRUE,s,t); 
@@ -523,7 +523,7 @@ int zuweis_string(char *name, STRING inhalt) {
     w[strlen(w)-1]=0; /* $-Zeichen entfernen */
 
     vnr=variable_exist(w,STRINGARRAYTYP);
-    if(vnr==-1) error(15,w);  /* Feld nicht dimensioniert */
+    if(vnr==-1) xberror(15,w);  /* Feld nicht dimensioniert */
     else {
 
       /* Dimensionen bestimmen   */
@@ -542,13 +542,13 @@ int zuweis_string(char *name, STRING inhalt) {
         xtrim(ss,TRUE,ss);
 	if(ndim<variablen[vnr].opcode){
           idxn=(int)parser(ss);
-	  if(idxn>=bbb[ndim]) {error(16,ss); /* Feldindex zu gross*/ break;}
+	  if(idxn>=bbb[ndim]) {xberror(16,ss); /* Feldindex zu gross*/ break;}
           else anz=idxn+anz*bbb[ndim];
         }
         ndim++; 
         i=wort_sep(t,',',TRUE,ss,t); 
       } 
-      if(ndim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+      if(ndim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
       else {
           
 	pos=(char *)(variablen[vnr].pointer+ndim*INTSIZE+anz*(sizeof(int)+sizeof(char *)));
@@ -644,7 +644,7 @@ double arrayinhalt(char *name, char* index) {
   int vnr,ndim,a=0,i;
 /*  printf("ARRAYINHALT: %s %s\n",name,index);*/
   vnr=variable_exist(name,FLOATARRAYTYP);
-  if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
+  if(vnr==-1) xberror(15,name); /* Feld nicht dimensioniert */
   else {
     varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
     /* Index- Liste aufloesen  */
@@ -703,7 +703,7 @@ STRING varstringarrayinhalt(int vnr, int *indexliste) {
   int i,anz=0;
   STRING *varptr;
   for(i=0;i<dim;i++){
-    if(indexliste[i]>=bbb[i]) {error(16,""); /* Feldindex zu gross*/ break;}
+    if(indexliste[i]>=bbb[i]) {xberror(16,""); /* Feldindex zu gross*/ break;}
     else anz=indexliste[i]+anz*bbb[i];
   }
   varptr=(STRING *)(variablen[vnr].pointer+dim*INTSIZE);
@@ -766,5 +766,12 @@ void varcastfloat(int typ,void *pointer,double val) {
 }
 
 
-
+STRING create_string(char *n) {
+  STRING ergeb;
+  if(n) ergeb.len=strlen(n);
+  else ergeb.len=0;
+  ergeb.pointer=malloc(ergeb.len+1);
+  if(n) memcpy(ergeb.pointer,n,ergeb.len+1);
+  return(ergeb);
+}
 

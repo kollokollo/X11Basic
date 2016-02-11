@@ -19,6 +19,7 @@ int find_sfunc(char *);
 int count_parameter(char *);
 
 void break_handler( int);
+void doocssig_handler( int);
 void memdump(unsigned char *, int);
 void fatal_error_handler( int);
 void timer_handler( int);
@@ -83,8 +84,6 @@ void cs_init();
 void cs_exit();
 double csget(char *);
 char *csgets(char *);
-STRING tinegets(char *);
-STRING tinequery(char *,int );
 double do_funktion(char *,char *);
 STRING do_sfunktion(char *,char *);
 
@@ -123,7 +122,8 @@ void set_graphmode(int);
 char *rsearchchr(char *, char);
 char *rsearchchr2(char *,char,char *);
 char *searchchr(char *, char);
- 
+
+STRING create_string(char *); 
 
 /* Kontrollsystem */
 
@@ -152,6 +152,8 @@ void c_cssetcallback(char *);
 void sweep_value(int,float,float,float,int);
 #endif
 #ifdef TINE
+char *tineunit(char *n);
+char *tineinfo(char *n);
 void c_tinebroadcast(char *);
 void c_tinelisten(char *);
 void c_tinedeliver(char *);
@@ -160,4 +162,24 @@ void c_tinemonitor(PARAMETER *,int);
 void c_tineserver(PARAMETER *,int);
 void c_tinecycle(char *);
 void c_tineput(char *);
+STRING tinegets(char *);
+STRING tinequery(char *,int );
+STRING f_tineunits(STRING n);
 #endif
+#ifdef DOOCS
+ARRAY doocsvget(char *n,int nn, int o);
+ARRAY doocshistory(char *n,int start, int stop);
+void c_doocscallback(char *);
+void c_doocsexport(char *);
+void c_doocsput(char *);
+void c_doocsserver(PARAMETER *,int);
+STRING doocsgets(char *);
+STRING doocsinfos(char *);
+double doocsget(char *);
+double doocstimestamp(char *);
+int doocstyp(char *);
+int doocssize(char *);
+#endif
+
+
+

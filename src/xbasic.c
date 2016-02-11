@@ -59,10 +59,14 @@ extern const char libvdate[];
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
 #else
+#ifdef DOOCS
+const char xbasic_name[]="doocsxbasic";
+#else
 #ifdef TINE
 const char xbasic_name[]="tinexbasic";
 #else
 const char xbasic_name[]="xbasic";
+#endif
 #endif
 #endif
 int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
@@ -116,6 +120,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "CALL"     , c_exec,   1,-1,{PL_INT}},
  { P_CASE,       "CASE"     , c_case   ,1,1,{PL_NUMBER}},
  { P_ARGUMENT,   "CHAIN"    , c_chain  ,1,1,{PL_STRING}},
+ { P_ARGUMENT,   "CHDIR"    , c_chdir  ,1,1,{PL_STRING}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "CIRCLE"   , c_circle ,3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
@@ -162,6 +167,18 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "DIM"      , c_dim ,1,-1},
  { P_ARGUMENT,   "DIV"      , c_div ,2,2,{PL_NVAR,PL_NUMBER}},
  { P_DO,     "DO"       , c_do  ,0,0},
+#ifdef DOOCS
+/* { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,{PL_STRING}},
+ { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
+ { P_ARGUMENT,   "TINEDELIVER", c_tinedeliver,1,-1},   */
+ { P_ARGUMENT,   "DOOCSCALLBACK", c_doocscallback,2,3, {PL_VAR,PL_PROC,PL_PROC}},
+ { P_ARGUMENT,   "DOOCSEXPORT", c_doocsexport,1,-1},
+/* { P_ARGUMENT,   "TINELISTEN", c_tinelisten,1,-1,{PL_STRING}},
+ { P_PLISTE,     "TINEMONITOR", c_tinemonitor,2,3,{PL_STRING,PL_PROC,PL_INT}},*/
+ { P_ARGUMENT,   "DOOCSPUT"    , c_doocsput ,2,-1,{PL_STRING}},
+ { P_PLISTE,     "DOOCSSERVER" , c_doocsserver,0,2,{PL_STRING,PL_INT}},
+ { P_ARGUMENT,   "DOOCSSET"    , c_doocsput ,2,-1,{PL_STRING}},
+#endif
  { P_PLISTE,   "DPOKE"    , c_dpoke,       2,2,{PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
  { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,{PL_INT,PL_INT}},
@@ -200,7 +217,9 @@ const COMMAND comms[]= {
  { P_PLISTE,   "FLUSH"    , c_flush,0,1,{PL_FILENR}},
  { P_FOR,    "FOR"      , c_for,1,-1,{PL_EXPRESSION,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
  { P_PLISTE,    "FREE"      , c_free,1,1,{PL_INT}},
+#ifndef NOGRAPHICS
  { P_PLISTE,   "FULLW"    , c_fullw,0,1, {PL_FILENR}},
+#endif
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_EXPRESSION}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
@@ -266,9 +285,9 @@ const COMMAND comms[]= {
  { P_IGNORE|P_SIMPLE, "NOP",          c_nop,         0,0},
 #ifndef NOGRAPHICS
  { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
-#endif
  { P_PLISTE,   "OBJC_ADD"    , c_objc_add,      3,3,{PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "OBJC_DELETE"    , c_objc_delete,      2,2,{PL_INT,PL_INT}},
+#endif
  { P_ARGUMENT,   "ON"       , c_on,         1,-1},
  { P_ARGUMENT,   "OPEN"     , c_open,       3,4,{PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
@@ -358,6 +377,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,  "SORT",     c_sort,        2,3,{PL_ARRAY,PL_INT,PL_IARRAY}},
  { P_PLISTE,    "SOUND",     c_sound,        1,1,{PL_INT}},
 
+ { P_GOSUB,     "SPAWN"    , c_spawn,1,1,{PL_PROC}},
  { P_ARGUMENT,	"SPLIT"    , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 #ifndef NOGRAPHICS
  { P_PLISTE,	"SPUT"     , c_sput,      1,1,{PL_STRING}},
@@ -438,14 +458,14 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
         if(pliste[i]==PL_LABEL) {
           pret[i].integer=labelnr(w1);
           if(pret[i].integer==-1) {
-	    error(20,w1);/* Label nicht gefunden */
+	    xberror(20,w1);/* Label nicht gefunden */
             free_pliste(i,pret);
             return(-1);
 	  }
 	} else if(pliste[i]==PL_FILENR) {
            pret[i].integer=get_number(w1);
 	   if(pret[i].integer>99 || pret[i].integer<-2) {
-	     error(23,"");  /* File # falsch  */
+	     xberror(23,"");  /* File # falsch  */
 	     free_pliste(i,pret);
              return(-1);
            }
@@ -455,7 +475,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
             pos[0]=0;pos++;
             pos2=pos+strlen(pos)-1;
             if(pos2[0]!=')') {
-	      error(32,w1); /* Syntax error */
+	      xberror(32,w1); /* Syntax error */
 	      free_pliste(i,pret);
               return(-1);
             }
@@ -463,7 +483,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
           } else pos=w1+strlen(w1);
           pret[i].integer=procnr(w1,1);
           if(pret[i].integer==-1) {
-            error(19,w1); /* Procedure nicht gefunden */
+            xberror(19,w1); /* Procedure nicht gefunden */
 	    free_pliste(i,pret);
             return(-1);
           }
@@ -489,7 +509,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  pret[i].pointer=arr.pointer;
 	} else if((pliste[i] & PL_NVAR)) { ; /* Variable */
            pret[i].integer=type2(w1);
-	   if(!(pret[i].integer&FLOATTYP) && !(pret[i].integer&INTTYP)) error(58,n); /* Variable hat falschen Typ */
+	   if(!(pret[i].integer&FLOATTYP) && !(pret[i].integer&INTTYP)) xberror(58,n); /* Variable hat falschen Typ */
            pret[i].pointer=varptr(w1);
 	   if(pret[i].pointer==NULL) printf("Fehler bei varptr.\n");
 	} else if((pliste[i] & PL_VAR) || (pliste[i] & PL_KEY)) { ; /* Varname */
@@ -503,12 +523,10 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
      i++;
   }
   if(i<pmin) {
-    error(42,""); /* Zu wenig Parameter  */
+    xberror(42,""); /* Zu wenig Parameter  */
     free_pliste(i,pret);
     return(-1);
-  } else if(i==pmax && e) {
-    error(45,""); /* Zu viele Parameter  */
-  }
+  } else if(i==pmax && e) xberror(45,""); /* Zu viele Parameter  */
   return(i);
 }
 
@@ -837,7 +855,7 @@ int init_program() {
           pos[0]=0;pos++;
           pos2=pos+strlen(pos)-1;
           if(pos2[0]!=')') {
-	    puts("GOSUB: Syntax error bei Parameterliste");
+	    puts("GOSUB: Syntax error parameter list");
 	    structure_warning("GOSUB"); /*Programmstruktur fehlerhaft */
           } else pos2[0]=0;
         } else pos=buf+strlen(buf);
@@ -1069,10 +1087,10 @@ void kommando(char *cmd) {
         int e=make_pliste(comms[i].pmin,comms[i].pmax,(short *)comms[i].pliste,w2,&plist);
         (comms[i].routine)(plist,e);
 	if(e!=-1) free_pliste(e,plist);
-      } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
+      } else xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
     } else if(i!=a) {
        printf("Command needs to be more specific ! <%s...%s>\n",comms[i].name,comms[a].name);
-    }  else error(32,w1);  /* Syntax Error */
+    }  else xberror(32,w1);  /* Syntax Error */
 }
 
 
@@ -1094,7 +1112,7 @@ void programmlauf(){
       else if(pcode[opc].opcode&P_EVAL)  kommando(program[opc]);
       else if((pcode[opc].opcode&PM_TYP)==P_SIMPLE) {
         (comms[pcode[opc].opcode&PM_COMMS].routine)(NULL);
-      } else if(pcode[opc].opcode&P_INVALID) error(32,program[opc]); /*Syntax nicht korrekt*/
+      } else if(pcode[opc].opcode&P_INVALID) xberror(32,program[opc]); /*Syntax nicht korrekt*/
       else if((pcode[opc].opcode&PM_COMMS)>=anzcomms) {
         puts("Precompiler error...");
         kommando(program[opc]);

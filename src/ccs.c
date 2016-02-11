@@ -305,7 +305,7 @@ ARRAY *csvget(char *n,int nn, int o) {
 	if (CCSERR) printf("ERROR in ccs_get_subvector: %s\n", ccs_get_error_message());
 	return(ergebnis);
     } else {
-	error(46,n); /* Parameter hat falschen Typ */
+	xberror(46,n); /* Parameter hat falschen Typ */
 	return(ergebnis);
     }
   }
@@ -342,7 +342,7 @@ char *csgets(char *n) {
       ccs_err=CCSERR;
       return(ergebnis);
     } else {
-      error(47,n); /* Parameter hat falschen Typ */
+      xberror(47,n); /* Parameter hat falschen Typ */
       ergebnis=malloc(8);
       strcpy(ergebnis,"<ERROR>");
       ccs_err=CCSERR;
@@ -369,7 +369,7 @@ void c_cssetcallback(char *n) {
   }
   free(test);
   pc2=procnr(w2,1);
-  if(pc2==-1)   error(19,w2); /* Procedure nicht gefunden */
+  if(pc2==-1)   xberror(19,w2); /* Procedure nicht gefunden */
   else {
     if(pidanz<MAXPIDS) {
     ccs_disable_ccs_interrupts();
@@ -430,7 +430,7 @@ void c_csvput(char *w) {
       r=varrumpf(n);
       vnr=variable_exist(r,typ);
       free(r);
-      if(vnr==-1) error(15,n); /* Feld nicht dimensioniert */
+      if(vnr==-1) xberror(15,n); /* Feld nicht dimensioniert */
       else {
         int anz=min(do_dimension(vnr),nn);
         if( !(typ & (FLOATTYP | INTTYP))) {printf("CSVPUT: Muss Float-ARRAY sein. \n");return;}
@@ -657,7 +657,7 @@ void fix_tine_start() {
     MaxPollingRate = MinPollingRate = 50;
    /* nofeclog = TRUE; */
     defaultClientTimeout=100;
-    NGdebug=2;
+    NGdebug=2;   /* hier wollen wir spaeter mal eine 0 haben */
 }
 extern void closeClients(void);
 
@@ -994,7 +994,7 @@ STRING tinequery(char *n,int start) {
       dout.data.vptr = buf;
       din.dArrayLength = 1;
       din.dFormat = CF_LONG;
-      din.data.lptr = (long *)&start;
+      din.data.lptr = (UINT32 *)&start;
       rc=my_ExecLinkEx(w1,w2,&dout,&din,CA_READ,buflen);
       if(rc) {
         printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
@@ -1099,7 +1099,7 @@ ARRAY tinevget(char *n,int nn, int o) {
       free(buf);
     } else {
       printf("output format type %d is not implemented !\n",LFMT(prpinfo.prpFormat));
-      error(46,n); /* Parameter hat falschen Typ */
+      xberror(46,n); /* Parameter hat falschen Typ */
       free(buf);
       ergebnis.pointer=malloc(40);
       ((int *)ergebnis.pointer)[0]=1;
@@ -1458,12 +1458,12 @@ void c_tinebroadcast(char *n) {
   p=wort_sep(v,',',TRUE,w,v);
   xtrim(w,TRUE,w);
   typ=type2(w);
-  if(typ & CONSTTYP) error(32,"TINEBROADCAST");  /* Syntax error */
+  if(typ & CONSTTYP) xberror(32,"TINEBROADCAST");  /* Syntax error */
   else {
     r=varrumpf(w);
     vnr=variable_exist(r,typ);
     if(typ & ARRAYTYP) { /* ganzes Array  */
-      if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */   
+      if(vnr==-1) xberror(15,w); /* Feld nicht dimensioniert */   
       din.dFormat=CF_BYTE;
       din.dArrayLength=do_dimension(vnr);
       din.data.vptr=variablen[vnr].pointer;
@@ -1503,16 +1503,16 @@ void c_tinelisten(char *n) {
   p=wort_sep(v,',',TRUE,w,v);
   xtrim(w,TRUE,w);
   typ=type2(w);
-  if(typ & CONSTTYP) error(32,"TINELISTEN");  /* Syntax error */
+  if(typ & CONSTTYP) xberror(32,"TINELISTEN");  /* Syntax error */
   else {
     r=varrumpf(w);
     vnr=variable_exist(r,typ);
     if(p>1) {
       pc2=procnr(v,1);
-      if(pc2==-1)   error(19,v); /* Procedure nicht gefunden */
+      if(pc2==-1)   xberror(19,v); /* Procedure nicht gefunden */
     }
     if(typ & ARRAYTYP) { /* ganzes Array  */
-      if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */
+      if(vnr==-1) xberror(15,w); /* Feld nicht dimensioniert */
       
         dout.dFormat=CF_BYTE;
 	dout.dArrayLength=do_dimension(vnr);
@@ -1566,12 +1566,12 @@ void c_tineexport(char *n) {
   while(p) {
     xtrim(w,TRUE,w);
     typ=type2(w);
-    if(typ & CONSTTYP) error(32,"TINEEXPORT");  /* Syntax error */
+    if(typ & CONSTTYP) xberror(32,"TINEEXPORT");  /* Syntax error */
     else {
       r=varrumpf(w);
       vnr=variable_exist(r,typ);
       if(typ & ARRAYTYP) { /* ganzes Array  */
-        if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */
+        if(vnr==-1) xberror(15,w); /* Feld nicht dimensioniert */
         else len=do_dimension(vnr);
       }
       if(typ & STRINGTYP) etyp=CF_TEXT;

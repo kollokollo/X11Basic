@@ -193,8 +193,8 @@ typedef struct {
   long opcode;
   char name[20];
   void (*routine)();
-  char pmin;        /* Mindestanzahl an Parametern */
-  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } COMMAND;
 
@@ -202,8 +202,8 @@ typedef struct {
   long opcode;
   char name[20];
   double (*routine)();
-  char pmin;        /* Mindestanzahl an Parametern */
-  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } FUNCTION;
 
@@ -211,8 +211,8 @@ typedef struct {
   int opcode;
   char name[20];
   STRING (*routine)();
-  char pmin;        /* Mindestanzahl an Parametern */
-  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } SFUNCTION;
 
@@ -220,8 +220,8 @@ typedef struct {
   int opcode;
   char name[20];
   ARRAY (*routine)();
-  char pmin;        /* Mindestanzahl an Parametern */
-  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
   short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } AFUNCTION;
 

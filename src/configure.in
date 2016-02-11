@@ -109,7 +109,7 @@ AC_CHECK_HEADERS([sys/kd.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.
 
 # Checks for libraries.
 # `-lX11':
-AC_CHECK_LIB([X11], [main], xlibs="-lX11",,[$X_LIBS])
+AC_CHECK_LIB([X11], [XOpenDisplay], xlibs="${xlibs} -lX11",,[$X_LIBS])
 # `-ldl':
 AC_CHECK_LIB([dl], [dlopen], [
 libs="$libs -ldl"
@@ -124,21 +124,25 @@ AC_CHECK_LIB([m], [sqrt], AC_DEFINE(HAVE_SQRT,1,[sqrt in Mathlib]))
 AC_CHECK_LIB([m], [pow], AC_DEFINE(HAVE_POW,1,[pow in Mathlib]))
 AC_CHECK_LIB([m], [expm1], AC_DEFINE(HAVE_EXPM1,1,[expm1 in Mathlib]))
 AC_CHECK_LIB([m], [log1p], AC_DEFINE(HAVE_LOG1P,1,[log1p in Mathlib]))
-# `-lreadline':
-AC_CHECK_LIB([readline], [readline], [
-libs="$libs -lreadline"
-AC_DEFINE(HAVE_READLINE,1,[readline in readline])
-])
+
 # `-ltermcap':
 #AC_CHECK_LIB([termcap], [main], libs="$libs -ltermcap")
 # `-lcurses':
 AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
 # `-lncurses':
 AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses")
+
+# `-lreadline':
+AC_CHECK_LIB([readline], [readline], [
+libs="$libs -lreadline"
+AC_DEFINE(HAVE_READLINE,1,[readline in readline])
+],,[$libs])
 # `-lx11basic':
-#AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS -lX11 -lm])
+#AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])
 # `-ltine':
 AC_CHECK_LIB([tine], [_SystemCycle],AC_DEFINE(HAVE_TINE,1,[_SystemCycle in dynamical TINE lib]),,[ -lm])
+# `-lDOOCSclient':
+AC_CHECK_LIB([DOOCSclient], [eq_int],AC_DEFINE(HAVE_DOOCS,1,[eq_int in dynamical DOOCS lib]),,[ -lm -lpthread -ltine])
 # `-lvgagl -lvga':
 AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
 

@@ -305,12 +305,12 @@ void cast_to_int(PARAMETER *sp) {
 int bc_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(verbose) printf("bc_%s(%d) ",psfuncs[i].name,anzarg);
   if(anzarg<psfuncs[i].pmin) {
-    error(42,psfuncs[i].name); /* Zu wenig Parameter  */
+    xberror(42,psfuncs[i].name); /* Zu wenig Parameter  */
     return 1-anzarg;
   }
   if((anzarg>psfuncs[i].pmax && !(psfuncs[i].pmax==-1)) || 
     (anzarg && (psfuncs[i].opcode&PM_TYP)==P_SIMPLE)) {
-    error(45,psfuncs[i].name); /* Zu viele Parameter  */
+    xberror(45,psfuncs[i].name); /* Zu viele Parameter  */
     return 1-anzarg;
   } 	      
   sp-=anzarg;
@@ -380,12 +380,12 @@ int bc_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
 int bc_func(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(verbose) printf("bc_%s(%d) ",pfuncs[i].name,anzarg);
   if(anzarg<pfuncs[i].pmin) {
-    error(42,pfuncs[i].name); /* Zu wenig Parameter  */
+    xberror(42,pfuncs[i].name); /* Zu wenig Parameter  */
     return 1-anzarg;
   }
   if((anzarg>pfuncs[i].pmax && !(pfuncs[i].pmax==-1)) || 
     (anzarg && (pfuncs[i].opcode&PM_TYP)==P_SIMPLE)) {
-    error(45,pfuncs[i].name); /* Zu viele Parameter  */
+    xberror(45,pfuncs[i].name); /* Zu viele Parameter  */
     return 1-anzarg;
   } 	      
   sp-=anzarg;
@@ -522,11 +522,11 @@ int bc_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(verbose) printf("bc_%s(%d)_%d\n",comms[i].name,anzarg,i);
 #ifdef EXTRACHECK
   if(anzarg<comms[i].pmin) {
-    error(42,comms[i].name); /* Zu wenig Parameter  */
+    xberror(42,comms[i].name); /* Zu wenig Parameter  */
     return -anzarg;
   }
   if((anzarg>comms[i].pmax && !(comms[i].pmax==-1)) || (anzarg && (comms[i].opcode&PM_TYP)==P_SIMPLE)) {
-    error(45,comms[i].name); /* Zu viele Parameter  */
+    xberror(45,comms[i].name); /* Zu viele Parameter  */
     return -anzarg;
   }  
 #endif
@@ -645,18 +645,18 @@ int bc_zuweisindex(PARAMETER *sp,int dim) {    /*  */
     if(key[strlen(key)-1]=='%') {
       key[strlen(key)-1]=0;
       if((vnr=variable_exist(key,INTARRAYTYP))!=-1) {
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
       /*  printf("Zuweis: %d %d %g \n",sp[-1].typ,sp[-1].integer,sp[-1].real);*/
         if(sp[-1].typ==PL_FLOAT) zuweisibyindex(vnr,index,(int)sp[-1].real);
         else if(sp[-1].typ==PL_INT) zuweisibyindex(vnr,index,sp[-1].integer);
         else printf("ERROR: Zuweis, Typen ungleich.\n");
-      } else error(15,key);  /* Feld nicht dimensioniert  */
+      } else xberror(15,key);  /* Feld nicht dimensioniert  */
     } else if(key[strlen(key)-1]=='$') {
       key[strlen(key)-1]=0;
       
       if((vnr=variable_exist(key,STRINGARRAYTYP))!=-1) {
         STRING s;
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
         if(sp[-1].typ==PL_STRING) {
 	  s.pointer=sp[-1].pointer;
 	  s.len=sp[-1].integer;
@@ -664,17 +664,15 @@ int bc_zuweisindex(PARAMETER *sp,int dim) {    /*  */
  	  zuweissbyindex(vnr,index,s);
 	  free(s.pointer);
 	} else printf("ERROR: Zuweis, Typen ungleich.\n");
-      } else {
-        error(15,key);  /* Feld nicht dimensioniert  */
-      }	
+      } else xberror(15,key);  /* Feld nicht dimensioniert  */
     } else {
       if((vnr=variable_exist(key,FLOATARRAYTYP))!=-1) {
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
        /* printf("Zuweis: %d %d %g \n",sp[-1].typ,sp[-1].integer,sp[-1].real);*/
         if(sp[-1].typ==PL_FLOAT) zuweisbyindex(vnr,index,sp[-1].real);
         else if(sp[-1].typ==PL_INT) zuweisbyindex(vnr,index,(double)sp[-1].integer);
         else printf("ERROR: Zuweis, Typen ungleich.\n");
-      } else  error(15,key); /* Feld nicht dimensioniert  */
+      } else  xberror(15,key); /* Feld nicht dimensioniert  */
     }
     free(key);    
   } else {
@@ -710,30 +708,30 @@ int bc_pusharrayelem(PARAMETER *sp, int dim) {    /*  */
     if(key[strlen(key)-1]=='%') {
       key[strlen(key)-1]=0;
       if((vnr=variable_exist(key,INTARRAYTYP))!=-1) {
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
         sp[-1].integer=varintarrayinhalt(vnr,index);
-      } else error(15,key);  /* Feld nicht dimensioniert  */
+      } else xberror(15,key);  /* Feld nicht dimensioniert  */
       sp[-1].typ=PL_INT;    
     } else if(key[strlen(key)-1]=='$') {
       key[strlen(key)-1]=0;
       
       if((vnr=variable_exist(key,STRINGARRAYTYP))!=-1) {
         STRING s;
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
 	s=varstringarrayinhalt(vnr,index);
         sp[-1].pointer=s.pointer;
 	sp[-1].integer=s.len; 
       } else {
-        error(15,key);  /* Feld nicht dimensioniert  */
+        xberror(15,key);  /* Feld nicht dimensioniert  */
 	sp[-1].pointer=malloc(1);
 	sp[-1].integer=0;
       }	
       sp[-1].typ=PL_STRING;
     } else {
       if((vnr=variable_exist(key,FLOATARRAYTYP))!=-1) {
-        if(dim!=variablen[vnr].opcode) error(18,"");  /* Falsche Anzahl Indizies */
+        if(dim!=variablen[vnr].opcode) xberror(18,"");  /* Falsche Anzahl Indizies */
         sp[-1].real=varfloatarrayinhalt(vnr,index);
-      } else  error(15,key); /* Feld nicht dimensioniert  */
+      } else  xberror(15,key); /* Feld nicht dimensioniert  */
       sp[-1].typ=PL_FLOAT;
     }
     free(key);    

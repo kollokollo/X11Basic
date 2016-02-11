@@ -24,28 +24,28 @@
 #endif
 
 char *lineinput( FILE *n, char *line) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
-  char c; int i=0;
+  int c; int i=0;
  
   while((c=fgetc(n))!=EOF) {
-      if(c=='\n') {
-	  line[i]='\0';
+      if(c==(int)'\n') {
+	  line[i]=(int)'\0';
 	  return line;
 	}
-	else line[i++]=c;
+	else line[i++]=(char)c;
     }
     line[i]='\0';
     return line;
 }
 char *input( FILE *n, char *line) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
-  char c; 
+  int c; 
   int  i=0,ff=0;
   while((c=fgetc(n))!=EOF) {
-      if(c=='\n' || (c==',' && ff==0)) {
+      if(c==(int)'\n' || (c==(int)',' && ff==0)) {
 	  line[i]='\0';
 	  return line;
 	}
-	else if(c=='\"') ff=!ff;
-	else line[i++]=c;
+	else if(c==(int)'\"') ff=!ff;
+	else line[i++]=(char)c;
     }
     line[i]='\0';
     return line;
@@ -64,7 +64,7 @@ long lof( FILE *n) {
 
 
 int myeof(FILE *n) {
-  char c=fgetc(n);
+  int c=fgetc(n);
   ungetc(c,n);
   return c==EOF;
 }

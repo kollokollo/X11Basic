@@ -282,7 +282,7 @@ void c_dotodraw(char *n) {
   t=malloc(strlen(n)+1);u=malloc(strlen(n)+1);
   xtrim(n,TRUE,n);
   e2=wort_sep(n,',',TRUE,u,t);
-  if(e2<2) error(42,"DRAW TO"); /* Zu wenig Parameter */
+  if(e2<2) xberror(42,"DRAW TO"); /* Zu wenig Parameter */
   else {
     x=(int)parser(u);
     y=(int)parser(t);
@@ -308,7 +308,7 @@ void c_draw(char *n) {
     if(strlen(t)) {
       e2=wort_sep(t,',',TRUE,u,t);
       
-      if(e2<2) error(42,"DRAW"); /* Zu wenig Parameter */
+      if(e2<2) xberror(42,"DRAW"); /* Zu wenig Parameter */
       else {
         turtlex=(int)parser(u);
         turtley=(int)parser(t);
@@ -456,8 +456,8 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
              r=varrumpf(w1);
              vnry=variable_exist(r,typ);
              free(r);
-	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
-	   } else printf("SCOPE: Kein ARRAY. \n");
+	     if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
+	   } else printf("SCOPE: no ARRAY.\n");
 	   break;
 	   }
 	 case 1: {   /* Array mit x-Werten */
@@ -467,7 +467,7 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
              r=varrumpf(w1);
              vnrx=variable_exist(r,typ);
              free(r);
-	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	   } else scip=1;
 	   break;
 	   } 
@@ -535,9 +535,9 @@ void do_polygon(int doit,char *n) {
              r=varrumpf(w1);
              vnrx=variable_exist(r,typ);
              free(r);
-	     if(vnrx==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	     else anz=min(anz,do_dimension(vnrx));
-	   } else printf("POLYLINE/FILL/MARK: Kein ARRAY. \n");
+	   } else printf("POLYLINE/FILL/MARK: no ARRAY.\n");
 	   break;
 	   }
 	 case 2: {   /* Array mit x-Werten */
@@ -547,7 +547,7 @@ void do_polygon(int doit,char *n) {
              r=varrumpf(w1);
              vnry=variable_exist(r,typ);
              free(r);
-	     if(vnry==-1) error(15,w1); /* Feld nicht dimensioniert */
+	     if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	     anz=min(anz,do_dimension(vnry));
 	   } else printf("POLYLINE/FILL/MARK: Kein ARRAY. \n");
 	   break;
@@ -1547,7 +1547,7 @@ void c_menu(char *n) {
     sel=do_menu_select();
     if(sel>=0) {
       sprintf(pos,"%d",sel);
-      if(do_parameterliste(pos,procs[menuaction].parameterliste)) error(42,pos); /* Zu wenig Parameter */
+      if(do_parameterliste(pos,procs[menuaction].parameterliste)) xberror(42,pos); /* Zu wenig Parameter */
       else {
         batch=1;
         pc2=procs[menuaction].zeile;
@@ -1573,8 +1573,8 @@ void c_menudef(char *n) {
              r=varrumpf(w1);
              vnr=variable_exist(r,typ);
              free(r);
-	     if(vnr==-1) error(15,w1); /* Feld nicht dimensioniert */
-	   } else printf("MENUDEF: Kein ARRAY. \n");
+	     if(vnr==-1) xberror(15,w1); /* Feld nicht dimensioniert */
+	   } else printf("MENUDEF: no ARRAY.\n");
 	   break;
 	   }
 	 case 1: {   
@@ -1587,10 +1587,9 @@ void c_menudef(char *n) {
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
-  if(i<2) {
-    error(42,""); /* Zu wenig Parameter  */
-  } else {
-    if(pc2==-1)   error(19,w2); /* Procedure nicht gefunden */
+  if(i<2) xberror(42,""); /* Zu wenig Parameter  */
+  else {
+    if(pc2==-1)   xberror(19,w2); /* Procedure nicht gefunden */
     else {
       if(vnr>-1) {
  	nn=do_dimension(vnr);

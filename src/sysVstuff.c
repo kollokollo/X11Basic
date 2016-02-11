@@ -125,26 +125,21 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 
 
 int opensem( key_t key) {   /* Open the semaphore set - do not create! */
-     int sid;
-        if((*sid = semget(key, 0, 0666)) == -1) {
-                printf("Semaphore set does not exist!\n");
-                
-        }
-	return(sid);
+  int sid;
+  if((*sid = semget(key, 0, 0666)) == -1) printf("Semaphore set does not exist!\n");
+  return(sid);
 }
 
 
-void createsem(int *sid, key_t key, int members)
-{
-        int cntr;
-        union semun semopts;
+void createsem(int *sid, key_t key, int members) {
+  int cntr;
+  union semun semopts;
 
-
-        if(members > SEMMSL) {
-                printf("Sorry, max number of semaphores in a set is %d\n",
-                         SEMMSL);
-                exit(1);
-        }
+  if(members > SEMMSL) {
+	  printf("Sorry, max number of semaphores in a set is %d\n",
+		   SEMMSL);
+	  exit(1);
+  }
 
 
         printf("Attempting to create new semaphore set with %d members\n",
