@@ -20,6 +20,7 @@ do
 	print string$(79,"-")
 	PRINT "Neues Spiel:"
 	PRINT
+        k=0
 	z=RANDOM(1000)
 	DO
 		INPUT "Die Ratezahl eingeben:",r

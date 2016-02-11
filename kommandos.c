@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "xbasic.h"
+#include "protos.h"
 
 
 
@@ -43,7 +44,6 @@ void c_gosub(char *n) {
 	
     }
     free(buffer);
-    return;  
 }
       
 
@@ -64,10 +64,9 @@ void c_local(char *n) {
 }
 
 void c_goto(char *n) {
-    char *b,*buffer;
-    b=indirekt2(n);
+    char *b=indirekt2(n);
     pc=labelnr(b);
-    if(pc==-1) {error(20,buffer);/* Label nicht gefunden */ batch=0;}
+    if(pc==-1) {error(20,b);/* Label nicht gefunden */ batch=0;}
     else batch=1;
     free(b);
 }
@@ -197,9 +196,8 @@ c_dodim(char *w){
 }
 
 void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
-  pc=0; sp=0; echo=1;
+  pc=sp=0;
   erase_all_variables();
-  /* init_parser(); */
   batch=1;
   do_restore();
 }
@@ -276,12 +274,6 @@ void c_read(char *n) {
   }
 }
 
-void c_else(char *n) {
-  /*gehe zum naechsten ENDIF*/
-    pc=suchep(pc,1,P_ENDIF,P_IF,P_ENDIF);
-    if(pc==-1) error(36,"ELSE"); /*Programmstruktur fehlerhaft !*/ 
-    pc++;
-}
 void c_case(char *n) {  /* case und default */
   /*gehe zum naechsten ENDSELECT*/
     pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
@@ -293,16 +285,53 @@ void c_list(char *n) {
   int i;
   for(i=0;i<prglen;i++) printf("%s\n",program[i]);
 }
+
+char *plist_zeile(P_CODE *code) {
+  char *ergebnis=malloc(MAXLINELEN);
+  int i;
+  ergebnis[0]=0;
+  if(code->opcode&P_INVALID) strcat(ergebnis,"==> ");
+  if(code->opcode==P_LABEL) {
+    strcat(ergebnis,labels[code->integer].name);
+    strcat(ergebnis,":");
+  } else if(code->opcode==P_REM) {
+    strcat(ergebnis,"' ");
+    strcat(ergebnis,code->argument);
+  } else if((code->opcode&PM_COMMS)<anzcomms) {
+    strcat(ergebnis,comms[(code->opcode&PM_COMMS)].name);
+    if(code->panzahl) {
+      strcat(ergebnis," ");
+      for(i=0;i<code->panzahl;i++) {
+        strcat(ergebnis,code->ppointer[i].pointer);
+	strcat(ergebnis,",");
+      }
+      ergebnis[strlen(ergebnis)-1]=0;
+    }
+  } else if((code->opcode)&P_EVAL) strcpy(ergebnis,code->argument);
+  else strcpy(ergebnis,"???");
+  
+  return(ergebnis);
+}
+int plist_printzeile(P_CODE *code, int level) {
+  int j;
+  char *zeile=plist_zeile(code);
+  if(code->opcode & P_LEVELOUT) level--;
+  for(j=0;j<level;j++) printf("  ");
+  printf("%s\n",zeile);
+  if(code->opcode & P_LEVELIN) level++;
+  free(zeile);
+  return(level);
+}
+
 void c_plist(char *n) {
-  int i,j,f=0;
+  int i,f=0;
   for(i=0;i<prglen;i++) { 
-    char w[strlen(program[i])+1];
-    xtrim(program[i],TRUE,w);
-    printf("%4d: $%4x | (%5d) |",i,pcode[i],ptimes[i]);
-    if(pcode[i].opcode & P_LEVELINOUT) {for(j=0;j<f-1;j++) printf("  ");printf("%s\n",w);}
-    else if(pcode[i].opcode & P_LEVELIN) {for(j=0;j<f;j++) printf("  ");printf("%s\n",w);f++;}
-    else if(pcode[i].opcode & P_LEVELOUT) {f--;for(j=0;j<f;j++) printf("  ");printf("%s\n",w);}
-    else {for(j=0;j<f;j++) printf("  ");printf("%s\n",w);}
+    printf("%4d: $%06x |",i,pcode[i]);
+  #if DEBUG
+    printf(" (%5d) |",ptimes[i]);
+  #endif
+    printf(" %3d,%d |",pcode[i].integer,pcode[i].panzahl);
+    f=plist_printzeile(&pcode[i],f);
   }
 }
 
@@ -512,16 +541,7 @@ void c_dump(char *n) {
 }
 
 void c_end(char *n) {
-  char w1[MAXSTRLEN],w2[MAXSTRLEN];
-  
-  wort_sep(n,' ',TRUE,w1,w2);
-  if(strcmp(w1,"")==0) batch=0; 
-  else if(strcmp(w1,"IF")==0) ;
-  else if(strcmp(w1,"FUNCTION")==0) c_return(w2);
-  else if(strcmp(w1,"FROCEDURE")==0) c_return(w2);
-  else if(strcmp(w1,"WHILE")==0) c_wend(w2);
-  else if(strcmp(w1,"DO")==0) c_loop(w2);
-  else  printf("Unbekannter Befehl: END <%s> <%s>\n",w1,w2);
+  batch=0; 
 }
 
 void c_on(char *n) {
@@ -591,7 +611,7 @@ void c_swap(char *n) {
   }
 } 
 
-void c_do(char *n) {
+void c_do(char *n) {   /* wird normalerweise ignoriert */
   char w1[strlen(n)+1],w2[strlen(n)+1];
   
   wort_sep(n,' ',TRUE,w1,w2);
@@ -684,22 +704,39 @@ void c_void(char *n) {
   if(type2(n) & STRINGTYP) {
     char *erg=s_parser(n);
     free(erg);
-  } else {
-    parser(n);
-  }
+  } else parser(n);
 }
 void c_nop(char *n) { return; }
 
-void c_inc(char *n) { zuweis(n,parser(n)+1.0);}
-void c_dec(char *n) { zuweis(n,parser(n)-1.0);}
+void c_inc(char *n) {
+  int typ=type2(n);
+  void *v;
+  v=varptr(n);
+  if(v==NULL) printf("Fehler bei varptr.\n");
+  else {
+    if(typ&FLOATTYP) *((double *)v)=*((double *)v)+1;
+    else if(typ&INTTYP) *((int *)v)++;
+    else error(58,n); /* Variable hat falschen Typ */
+  }
+}
+
+void c_dec(char *n) { 
+  int typ=type2(n);
+  void *v;
+  v=varptr(n);
+  if(v==NULL) printf("Fehler bei varptr.\n");
+  else {
+    if(typ&FLOATTYP) *((double *)v)=*((double *)v)-1;
+    else if(typ&INTTYP) *((int *)v)--;
+    else error(58,n); /* Variable hat falschen Typ */
+  }
+}
 void c_cls(char *n) { printf("\033[2J\033[H");}
 void c_home(char *n) { printf("\033[H");}
 void c_version(char *n) { printf("XBASIC Version: %s vom %s \n",version,vdate);}
 
 void c_error(char *w) {
-  char err;
-  err=(char)parser(w);
-  error(err,"");
+  error((char)parser(w),"");
 }
 void c_pause(char *w) {
   int dummy,i=0;
@@ -800,7 +837,7 @@ void c_exit(char *n) {
 void c_break(char *n) {
   int i,f=0,o;
   for(i=pc; (i<prglen && i>=0);i++) {
-    o=pcode[i].opcode;
+    o=pcode[i].opcode&PM_SPECIAL;
     if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f==0) break;
     else if(o & P_LEVELIN) f++;
     else if(o & P_LEVELOUT) f--;
@@ -817,7 +854,7 @@ void c_if(char *n) {
     int i,f=0,o;
   
     for(i=pc; (i<prglen && i>=0);i++) {
-      o=pcode[i].opcode;
+      o=pcode[i].opcode&PM_SPECIAL;
       if((o==P_ENDIF || o==P_ELSE)  && f==0) break;
       else if(o==P_IF) f++;
       else if(o==P_ENDIF) f--;
@@ -825,7 +862,7 @@ void c_if(char *n) {
     
     if(i==prglen) { error(36,"IF"); /*Programmstruktur fehlerhaft */return;}
     pc=i+1;
-    if(pcode[i].opcode==P_ELSE) {
+    if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) {
       xtrim(program[i],TRUE,w1);
       wort_sep(w1,' ',TRUE,w2,w3);
       wort_sep(w3,' ',TRUE,w1,w2);
@@ -843,41 +880,37 @@ void c_select(char *n) {
   /* Case-Anweisungen finden */
   
   for(i=pc; (i<prglen && i>=0);i++) {
-    o=pcode[i].opcode;
+    o=pcode[i].opcode&PM_SPECIAL;
     if((o==P_DEFAULT || o==P_CASE)  && f==0) break;
     else if(o==P_SELECT) f++;
     else if(o==P_ENDSELECT) f--;
   }
     
-   if(i==prglen) { error(36,"IF"); /*Programmstruktur fehlerhaft */return;}
+   if(i==prglen) { error(36,"SELECT"); /*Programmstruktur fehlerhaft */return;}
    pc=i;
    xtrim(program[pc],TRUE,w1);
    wort_sep(w1,' ',TRUE,w2,w3);
    pc++;
-   if(pcode[i].opcode==P_ELSE){
+   if((pcode[i].opcode&PM_SPECIAL)==P_ELSE){
      wort_sep(w3,' ',TRUE,w1,w2);
      if(strcmp(w1,"IF")==0) c_if(w2);
    }
   
 }
-void c_loop(char *n) {
-   pc=suchep(pc-2,-1,P_DO,P_LOOP,P_DO); 
-   if(pc==-1)  error(36,"LOOP"); /*Programmstruktur fehlerhaft */
+
+void bidnm(char *n) {
+  error(38,n); /* Befehl im Direktmodus nicht moeglich */
 }
-void c_wend(char *n) {
-   pc=suchep(pc-2,-1,P_WHILE,P_WEND,P_WHILE); 
-   if(pc==-1)  error(36,"WEND"); /*Programmstruktur fehlerhaft */
-}
+
 void c_next(char *n) {
   char w1[MAXSTRLEN],w2[MAXSTRLEN],w3[MAXSTRLEN],var[MAXSTRLEN];
   double step, limit;
   int ss,e,f=0,hpc=pc;
 
-   pc=suchep(pc-2,-1,P_FOR,P_NEXT,P_FOR); 
+   pc=pcode[pc-1].integer; 
    if(pc==-1) {error(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
 
-   xtrim(program[pc],TRUE,w1);
-   wort_sep(w1,' ',TRUE,w2,w1);
+   strcpy(w1,pcode[pc].ppointer->pointer);
    wort_sep(w1,' ',TRUE,w2,w3);
  
    /* Variable bestimmem */
@@ -926,22 +959,22 @@ void c_for(char *n) {
   } else {printf("Syntax Error ! FOR %s\n",n); batch=0;}
 }
 void c_until(char *n) {
-   int npc;
   if(parser(n)==0) {
-    npc=suchep(pc-2,-1,P_REPEAT,P_UNTIL,P_REPEAT);
+    int npc=pcode[pc-1].integer;
     if(npc==-1) error(36,"UNTIL"); /*Programmstruktur fehlerhaft */
-    pc=npc;
+    else pc=npc+1;
   }
 }
 
 void c_while(char *n) {
-  int npc;
   if(parser(n)==0) {
-    npc=suchep(pc,1,P_WEND,P_WHILE,P_WEND);
+    int npc=pcode[pc-1].integer;
     if(npc==-1) error(36,"WHILE"); /*Programmstruktur fehlerhaft */
-    pc=npc+1;
+    pc=npc;
   } 
 }
+
+
 void c_wort_sep(char *n) {
   do_wort_sep(n);
 }

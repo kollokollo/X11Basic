@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "defs.h"
 #include "xbasic.h"
+#include "protos.h"
 
 
 /* Variablen-Verwaltung   */
@@ -60,7 +62,6 @@ void *arrayvarptr(int vnr, char *n,int size) {
   
   char s[strlen(n)+1],t[strlen(n)+1];
   int ndim=0,a=0,i;
-/*  printf("ARRAYINHALT: %s %s\n",name,index);*/
   
   if(vnr!=-1)  {
     
@@ -77,7 +78,6 @@ void *arrayvarptr(int vnr, char *n,int size) {
 }
 void *arrayvarptr2(int vnr, int *indexliste,int size) {
   int ndim=0,a=0,i=0;
-/*  printf("ARRAYINHALT: %s %s\n",name,index);*/
   if(vnr!=-1)  {
     /* Index- Liste aufloesen  */
     while(ndim<variablen[vnr].opcode) a=indexliste[ndim]+a*((int *)variablen[vnr].pointer)[ndim++];
@@ -85,41 +85,34 @@ void *arrayvarptr2(int vnr, int *indexliste,int size) {
   } else return(NULL);
 }
 
-char *varptr(char *n) {
+void *varptr(char *n) {
   int typ=type2(n);
   char *r=varrumpf(n);
-  char *ergebnis=NULL;
-  char *pos=strchr(r,'(');
+  void *ergebnis=NULL;
+  char *pos=strchr(n,'(');
   int vnr,indize=0;
 
-  if(pos!=NULL) {pos[0]=0; pos++;indize=1;}
-  vnr=variable_exist(r,typ);
-  if(vnr==-1) {
-    printf("VARPTR: Variable nicht vorhanden.\n");
-  } else {
-    if(typ & ARRAYTYP) {
-      if(indize) {  
-        if(typ==FLOATTYP) ergebnis=arrayvarptr(vnr,pos,sizeof(double));      
-        else if(typ==INTTYP) ergebnis=arrayvarptr(vnr,pos,sizeof(int));      
-        else if(typ==STRINGTYP) ergebnis=((STRING *)(arrayvarptr(vnr,pos,sizeof(STRING))))->pointer;      
-      } else ergebnis=(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
-    } else if(typ==STRINGTYP) {
-      if(indize) ;
+  if(pos!=NULL) {
+    pos[0]=0; 
+    pos++;
+    indize=1; 
+    vnr=variable_exist(r,typ|ARRAYTYP);
+  } 
+  else vnr=variable_exist(r,typ);
+ /* printf("varptr: typ=%d, r=%s, vnr=%d, indize=%d\n",typ,r,vnr,indize);*/
+  if(vnr==-1) error(57,n); /* Variable existiert nicht */
+  else {
+    if(typ & ARRAYTYP) ergebnis=(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
+    else if(typ==STRINGTYP) {
+      if(indize) ergebnis=((STRING *)(arrayvarptr(vnr,pos,sizeof(STRING))))->pointer;
       else ergebnis=variablen[vnr].pointer;
     } else if(typ==INTTYP) {
-      if(indize) ergebnis=(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
-      else ergebnis=(char *)&variablen[vnr].opcode;
+      if(indize) ergebnis=arrayvarptr(vnr,pos,sizeof(int)); 
+      else ergebnis=(void *)&variablen[vnr].opcode;
+    } else if(typ==FLOATTYP) {
+      if(indize) ergebnis=arrayvarptr(vnr,pos,sizeof(double)); 
+      else ergebnis=(void *)&variablen[vnr].zahl;
     }
-    else if(typ==FLOATTYP) {
-      if(indize) ;
-      else ergebnis=(char *)&variablen[vnr].zahl;
-    }
-  /* Unterscheide folgende Faelle:
-      1. Floatvariable
-      2. Intvariable
-      3. Stringvariable
-      4. Array
-      5. Array-Element  */
     else ergebnis=variablen[vnr].pointer;
   }
   return(ergebnis);

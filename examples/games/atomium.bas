@@ -14,7 +14,7 @@ bh=380         ! Bildschirmdaten
 ADD by,1
 SUB bw,1
 ADD bh,by-2
-
+lc=0
 
 rot=get_color(65530,0,0)
 gelb=get_color(65530,40000,0)
@@ -44,6 +44,7 @@ LINE 0,303,639,303
 LINE 0,322,639,322
 spiel=TRUE
 ON MENU BUTTON 1,1,1 GOSUB button
+' every 1,lauf
 CLR cnt
 DO
   color gruen
@@ -63,7 +64,6 @@ DO
   @check_win
 
   IF s$(ABS(spieler)+1)="Computer" AND spiel
-    @lauf
     timevalue=ctimer
     @computer
     print "Zugzeit: ";ctimer-timevalue
@@ -74,7 +74,7 @@ DO
     stack(stackp-1)=y
     SUB stackp,4
   ELSE IF s$(ABS(spieler)+1)="Thinkhalf" AND spiel
-    @lauf
+    
     timevalue=ctimer
     @thinkhalf(spieler)
     print "Zugzeit: ";ctimer-timevalue
@@ -85,7 +85,7 @@ DO
     stack(stackp-1)=y
     SUB stackp,4
   ELSE IF s$(ABS(spieler)+1)="Thinklocal" AND spiel
-    @lauf
+    
     @local
     ' Zug ausfuehren
     stack(stackp-4)=256*255
@@ -94,7 +94,7 @@ DO
     stack(stackp-1)=y
     SUB stackp,4
   ELSE IF s$(ABS(spieler)+1)="Think1" AND spiel
-    @lauf
+    
     @think1
     ' Zug ausfuehren
     stack(stackp-4)=256*255
@@ -117,7 +117,7 @@ DO
 '        NEXT mx
 '      ENDIF
      
-      @lauf
+      
       mouseevent x,y,k
       @button(x,y,k)
     UNTIL fertig
@@ -218,6 +218,7 @@ PROCEDURE lauf
   color rot
   deftext 0,0.064,0.1,0
   text 0,318,MID$(lt$,lc/2+1,100)
+  vsync
 RETURN
 PROCEDURE setzte(x,y)
   feld(x,y)=((feld(x,y) and 255)+1) or (ABS(spieler)+1)*256
@@ -396,7 +397,7 @@ PROCEDURE check_win
   text 350,260,s$(abs(spieler)+1)+" ist dran !"
 
   IF a=0 AND b>1
-    color rot
+    color 2
     pbox 320,240,520,300
     color schwarz
     box 320,240,520,300
@@ -404,7 +405,7 @@ PROCEDURE check_win
     CLR spiel
   ENDIF
   IF b=0 AND a>1
-    color rot
+    color 2
     pbox 320,240,520,300
     color schwarz
     box 320,240,520,300
@@ -852,7 +853,7 @@ procedure mbutton(button_x,button_y,button_t$,sel)
   h=20
   color grau
   pbox x+5,y+5,x+w+5,y+h+5
-  color abs(sel<>0)*schwarz+abs(sel=0)*weiss
+  color abs(sel=0)
   pbox x,y,x+w,y+h
   if sel
    color weiss

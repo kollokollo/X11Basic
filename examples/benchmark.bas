@@ -1,5 +1,8 @@
 echo off
-cls
+
+count=0
+cc=0
+goto iii
 print "Benchmarktest:"
 print
 t=ctimer
@@ -16,6 +19,45 @@ while i<10000
   inc i
 wend
 print "While: ";ctimer-t;" Sekunden."
+
+print
+pause 2
+t=ctimer
+i=0
+repeat
+  gosub test
+  inc i
+until i>=10000
+print "REPEAT: ";ctimer-t;" Sekunden."
+iii:
+print
+pause 2
+t=ctimer
+i=0
+repeat
+  dec i
+until i<=-30000
+print "REPEAT: DEC  ";ctimer-t;" Sekunden."
+
+print
+pause 2
+t=ctimer
+i=0
+repeat
+  inc i
+until i>=30000
+print "REPEAT: INC  ";ctimer-t;" Sekunden."
+
+print
+pause 2
+t=ctimer
+i=0
+repeat
+  i=i+1
+until i>=30000
+print "REPEAT: zuweis  ";ctimer-t;" Sekunden."
+
+
 
 end
 

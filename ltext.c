@@ -3,8 +3,6 @@
 
 /* Letzte Bearbeitung 30.11.1997   */
 
-
-
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
@@ -76,8 +74,6 @@ double ltextlen (double s, int pflg, char *tt)
    double obxx,bxx=0,msin,mcos;
    int a,i,j,len,len2,fx,fy,charw;
   
-  
-
   len=strlen(tt);
   if(len>0) {
     for(i=0;i<len;i++) {

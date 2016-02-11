@@ -7,9 +7,9 @@
 *                                                             *
 ***************************************************************
 
-
+#########################
  Bedienungsanleitung: 
- -------------------- 
+######################### 
 
 Das Programm kann mit folgenden Parametern aufgerufen werden:  
 
@@ -24,6 +24,21 @@ Beispiel:
 xbasic testme.bas
 xbasic -e 'alert 1,"Hallo !",1," OK ",b'
 xbasic --eval 1+3-4*3
+
+X11-Basic als Daemon:
+=====================
+wird X11-Basic mit
+xbasic --daemon
+gestartet, so erscheint bei der Kommandoeingabe kein Prompt und es erfolgt kein 
+Echo der Tastatureingabe.
+
+X11-Basic als Shell:
+====================
+X11-Basic Programme koennen auch wie Shell-Scripts gestartet werden.
+Hierzu installiert man xbasic in /bin/. Mit der Anweisung
+#!/bin/xbasic
+in der ersten Zeile des Scipts wird es als X11-Basic-Programm ausgefuehrt.
+
 
 
 Kurzanleitung zu X11BASIC:
@@ -40,6 +55,8 @@ Integervariablen tragen die Endung %, Zeichenketten ein $, felder ein ().
 Variablen ohne Endung werden als float interpretiert.
 Pointer sind Integer, Funktionsergebnisse werden durch @ gekennzeichnet
 Logische Ausdruecke soind ebenfalls vom Typ Interger.
+Typenumwandlungen werden bei Bedarf automatisch vorgenommen, wo dies moeglich
+ist. 
 
 Die Variablen werden dynamisch verwaltet, so sind beliebig grosse Zeichenketten
 und Felder moeglich. Die Grenze ist hier nur der maximal allozierbare Speicher
@@ -340,8 +357,12 @@ DATE$                 Aktuelles Datum
 ==================== Befehle ==============================
 
 ADD a,b			-- gleiche Wirkung wie a=a+b
+AFTER n,procedure
 ALERT a%,b$,c%,d$,e%	-- Warn- und Infobox
+ARRAYFILL
+ARRAYCOPY
 
+BEEP
 BELL			-- Warnton
 BGET #n,a%,n%
 BLOAD f$,a%[,l%]	-- Laed File an Adresse
@@ -351,37 +372,89 @@ BPUT
 BREAK                   -- entspricht EXIT IF true
 BSAVE f$,a%,l%		-- Speichert l% Bytes ab Adresse a% in File f$
 
+CASE
+CHAIN
+CIRCLE
+CLEAR
+CLEARW
+CLOSE  [[#]n%]          -- I/O-Kanal schliessen
+CLOSEW [[#]n%]          -- Fenster schliessen
 CLR a,b%,c(),f$		-- Löscht Variableninhalte
+CLS                     -- Loescht Textscreen/Console
 color n%		-- Farbe auswählen
+CONT                    -- Programmausfuehrung fortfahren
 
 DATA 1,"Hallo",...	-- Definiert Konstanten im Programmcode
+DEC var                 -- Decrementiere var
+DEFAULT                 -- siehe SELECT * CASE * DEFAULT * ENDSELECT
+DEFFILL
+DEFLINE
 DEFMOUSE i%		-- aendert das Erscheinungsbild des Mauscursors.
+DEFTEXT
+DIM
+DIV 
 DO * LOOP		-- Endlosschleife
+DRAW [[x1,y1] TO] x2,y2
 DUMP			-- Variablenliste
 DUMP "@"                -- Liste der Funktionen und Prozeduren
 DUMP ":"                -- Liste der Labels
 
+ECHO {ON|OFF}           -- Programmzeilenechomodus ein-/ausschalten
+ELLIPSE
+ELSE
 END			-- Programmende, kehrt zurueck in den Direktmodus
+ENDFUNCTION
+ENDIF
+ENDSELECT
+ERASE
+ERROR n%                -- loest Fehler Nr. n% aus
+EVENT
+EVERY
 EXIT IF a		-- Verlaesst Schleife wenn Bedingung a erfuellt ist
 
-FILESELECT titel$,pfad$,default$,f$  --
-FOR * NEXT		-- For Next Schleife
 FFT a(),i		-- Fouriertransformation. i=-1 Ruecktransformation
 			   Dim?(a()) muss Zweierpotenz sein.
+FILESELECT titel$,pfad$,default$,f$  --
 FLUSH [#n]              -- Output flushen
+
+FOR * NEXT		-- For Next Schleife
 FORM_INPUT t$
 FUNCTION * ENDFUNC
 
-IF * ELSE IF * ELSE * ENDIF 
-i%=INT(a)		-- rundet auf naechste ganze Zahl ab
+GOSUB
+GOTO
+GRAPHMODE
 
+HOME                    -- Textcursor home
+
+
+IF * ELSE IF * ELSE * ENDIF 
+INC
+INFOW
+INPUT
+
+KEYEVENT
+
+LET
+LINE
+LINEINPUT
 LIST			-- Listet Programmcode
 LOAD a$			-- Laed Programm (Dateiname in a$)
+LOCAL
+LOOP
 LTEXT x%,y%,t$          -- Line-Text
 
+MERGE
+MOUSE
+MOUSEEVENT
+MOTIONEVENT
+MOVEW
 MUL a,b			-- a=a*b
 
 NEW			-- Loescht alle Variablen und haelt Programmausfuehrung an.
+NEXT
+NOP
+NOOP
 
 ON * GOSUB     
 ON BREAK GOSUB
@@ -403,6 +476,8 @@ PUTBACK [#n,]a%   -- Zeichen mit ASCII-Code a% an inputkanal zurueckgeben
 
 QUIT           -- Verlaesst den XBASIC-Interpreter
 
+RANDOMIZE
+READ
 RELSEEK #n,d
 REM Kommentar  -- Kommentarzeile
 REPEAT * UNTIL
@@ -421,10 +496,8 @@ SYSTEM t$      -- Führt Shell-Kommando aus
 TEXT x,y,t$
 TROFF
 TRON
-a=TRUE         -- TRUE hat immer den Wahrheitswert -1
 
-
-
+VERSION        -- Gibt xbasic Versionsinformationen aus
 VOID a         -- Berechnet Ausdruck a und vergisst Ergebnis
 VSYNC          -- Aktualisiert die Grafikausgabe
 
@@ -440,11 +513,12 @@ a%=ARRPTR(b())         -- Adresse des Array-Descriptors
 a%=ASC(t$)             -- ASCII-Wert des ersten Zeichens von t$
 b=ATN(a)               -- Arcustangens
 b=ATAN(a)              -- Arcustangens
+b=ATAN2(a,c)           -- Arcustangens alle 4 Sektoren
 
-b$=BIN$(a%[,n%])
+b$=BIN$(a%[,n%])       -- Stellt a% als Binaerzahl mit n% Stellen
 
-t$=CHR$(a%)
-b=COS(a)
+t$=CHR$(a%)            -- Zeichen mit ASCII-Code a%
+b=COS(a)               -- Cosinus
 CVI * CVL * CVS * CVF * CVD
 
 DFREE
@@ -452,8 +526,8 @@ DEG
 DIM?
 DPEEK
 
-EOF(#n)
-EXIST(fname$)
+EOF(#n)                 -- -1 wenn Ende des Files #n erreicht, sonst 0
+EXIST(fname$)           -- -1 wenn File fname$ existiert, sonst 0
 b=EXP(a)		-- Exponentialfuntion
 
 b=FRAC(a)		-- Liefert den nichtganzzahligen Anteil an a
@@ -466,7 +540,7 @@ c%=GET_COLOR(r%,g%,b%) -- Alloziert eine Farbe in der Farbtabelle und gibt die
 			  zurueckgegeben, die der angeforderten am naechsten
 			  kommt.
 
-t$=HEX$(a[,n])
+t$=HEX$(a%[,n%])        -- a% als Hexadezimalzahl
 
 c%=INP(#n)		-- Liest ein Zeichen (Byte) vom Kanal. Kanal -2 ist stdin
 i%=INP%(#n)
@@ -474,7 +548,7 @@ t$=INPUT$(#n,anz%)
 INSTR
 i=INT(a)		-- Schneidet die Nachkommastellen ab, liefert ganze Zahl
 
-LEFT$
+LEFT$(a$[,n%])
 l%=LEN(t$)
 b=LN(a)			-- Natuerlicher Logarithmus
 p%=LOC(#n)		-- Position des Filepointers (--> SEEK/RELSEEK)
@@ -499,8 +573,8 @@ c%=POINT(x%,y%)         -- Liefert Farbwert des Punkts der Grafik im aktuellen F
 POS
 
 
-RANDOM(n%)
-RIGHT$
+RANDOM(n%)              -- Zufallszahl zwischen [0 und n%[
+RIGHT$(a$,n%)
 
 
 b=SIN(a)		-- Sinus
@@ -526,8 +600,62 @@ a%=VARPTR(v)		-- Adresse der Variablen v
 
 
 
+##############################################################################
+
+Befehl: OPEN
+============
+Syntax:  OPEN mode$,[#]n%,f$[,port%]
+
+Beschreibung:
+
+Mit diesem Befehl werden Dateien (streams) geoeffnet. Es kann sich hierbei nicht
+nur um regulaere Files handeln, sondern eskoennen auch spezielle Files und
+Sockets geoeffnet werden. 
+
+mode$  "O" = output (write only), "I" = input (read only), "U" = read and write
+       "A" = append
+       Der Zweite Buchstabe spezifiziert den Typ:
+       ""   default ist regulaeres File
+       "C"  Socket connect
+       "S"  Socket listen
+       "A"  Socket accept connection
+       
+f$     Filename oder Hostname
+n%     Kanalnummer
+port%  gibt den Port fuer die Verbindung (Socket) an.
+
+
+Beispiele:
+  OPEN "I",#1,"data.dat"    ---- Oeffnet File "data.dat" zum Lesen
+
+  OPEN "UC",#1,"localhost",80 ---- Oeffnet Port 80 zum Lesen und Schreiben
+
+
+#############################################################################
+
+
+Befehl: CLOSE
+=============
+Syntax:  CLOSE [[#]n%]
+
+Beschreibung:
+
+Mit diesem Befehl wird ein zuvor geoeffneter Kanal geschlossen.
+
+n%     Kanalnummer
+
+Wird keine Kanal angegeben, werden alle offenen Kanaele geschlossen
+
+
+#############################################################################
+
+
+
 BUGS:
 =====
+
+- Exponentialdarstellungen von Zahlen mit negativem Exponent (z.B. 2e-5) werden 
+  vom Parser nicht verdaut. (Abhilfe: 2/1e5)
 
 noch nicht alles implementiert.  Syntax nicht idiotensicher.
 

@@ -8,7 +8,7 @@ REGS= @regs@
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I/sgt4/include -I${CCSROOT}/include
+INC=@X_CFLAGS@ -I${CCSROOT}/include
 
 # for MONITOR=1 we need a System V compatible curses library - I need to
 # write an Autoconf macro to test for that...
@@ -41,21 +41,24 @@ CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
 DISTOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
         mathemat_dummy.o runtime.o wort_sep.o xtrim.o ltext.o\
-	kommandos.o gkommandos.o do_gets.o errortxt.o window.o
+	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
+	sysVstuff.o
 
 OBJS=$(DISTOBJS)
 
-AOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o mathematics.o runtime.o\
-	kommandos.o gkommandos.o do_gets.o errortxt.o window.o wort_sep.o xtrim.o ltext.o
+AOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
+	mathematics.o runtime.o\
+	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
+	wort_sep.o xtrim.o ltext.o sysVstuff.o
 
 
 CSRC=$(OBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 
-DIST=$(DISTCSRC) xbasic.h fdata.c window.h file.h options.h\
-	Makefile.in\
+DIST=$(DISTCSRC) defs.h globals.h xbasic.h fdata.c window.h file.h protos.h options.h\
+	Makefile.in ptypes.h vtypes.h\
 	configure config/*.[hc]\
-	config.guess \
+	config.guess INSTALL \
         configure.in\
         bitmaps/* doc/* examples/*
 
@@ -78,6 +81,10 @@ fft : $(AOBJS)
 
 xbasic : $(OBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(OBJS) \
+		$(LIBS) $(XLIBS)
+
+csxbasic : $(OBJS) 
+	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
 
 install : all

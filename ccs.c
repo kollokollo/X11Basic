@@ -8,7 +8,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "xbasic.h"
+#include "protos.h"
 
 /* Falls mit Kontrollsystem  */
 

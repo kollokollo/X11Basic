@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "protos.h"
 #include "xbasic.h"
 #include "window.h"
 
@@ -95,22 +96,16 @@ void c_savescreen(char *n) {
         RootWindow(display[usewindow],XDefaultScreen(display[usewindow]) ),
 	&root,&x,&y,&w,&h,&b,&d); 
       XGetWindowAttributes(display[usewindow], root, &xwa);
-      
-  
+    
     Image=XGetImage(display[usewindow],root,
                 x, y, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
-   
 		
     if(d==8) {
       map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
       XQueryColors(display[usewindow], map, ppixcolor,256);
-    }    
-    
-
-    data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);    
-    
-	
+    }
+    data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);	
     bsave(name,data,len);
     XDestroyImage(Image);free(name);free(data);
 }
@@ -142,6 +137,16 @@ void c_savewindow(char *n) {
     XDestroyImage(Image);
     free(data);
     free(name);
+}
+
+void c_box(char *n) {
+ c_x4(n,1);
+}
+void c_pbox(char *n) {
+ c_x4(n,2);
+}
+void c_line(char *n) {
+ c_x4(n,0);
 }
 
 int c_x4(char *n, int k) {

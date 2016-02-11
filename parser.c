@@ -13,11 +13,191 @@
 #include <time.h>
 #include <errno.h>
 
+#include "defs.h"
 #include "xbasic.h"
+#include "protos.h"
+
+double f_nop(void *t) {return(0.0);}
+int f_point(double v1, double v2) {  return(get_point((int)v1,(int)v2)); }
+int f_bclr(double v1, double v2) { return((int)v1 & ~ (1 <<((int)v2))); }
+int f_bset(double v1, double v2) { return((int)v1 | (1 <<((int)v2))); }
+int f_bchg(double v1, double v2) { return((int)v1 ^ (1 <<((int)v2))); }
+int f_btst(double v1, double v2) { return((((int)v1 & (1 <<((int)v2)))==0) ?  0 : -1); }
+
+int f_len(char *);
+int f_asc(char *);
+int f_int(double b) {return((int)b);}
+double f_pred(double b) {return(ceil(b-1));}
+int f_succ(double b) {return((int)(b+1));}
+int f_sgn(double b) {return(sgn(b));}
+double f_frac(double b) {return(b-((double)((int)b)));}
+int f_fak(double);
+int f_random(double d) {return((int)((double)rand()/RAND_MAX*d));}
+double f_rnd(double d) {return((double)rand()/RAND_MAX);}
+int  f_srand(double d) {srand((int)d);return(0);}
+double f_deg(double d) {return(d/PI*180);}
+double f_rad(double d) {return(d*PI/180);}
+int  f_dimf(char *pos) {return((double)do_dimension(variable_exist_type(pos)));}
+int f_cssize(char *),f_cspid(char *);
+double f_csres(char *),f_csmin(char *),f_csmax(char *),f_csget(char *);
+double f_ltextlen(char *),f_val(char *);
+
+FUNCTION pfuncs[]= {  /* alphabetisch !!! */
+
+ { F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
+ { F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "ASC"       , f_asc ,1,1   ,{PL_STRING}},
+ { F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ASINH"      , asinh ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ATAN"      , atan ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ATAN2"     , atan2 ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ATANH"     , atanh ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "ATN"       , atan ,1,1     ,{PL_NUMBER}},
+
+ { F_DQUICK|F_IRET,    "BCHG"      , f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_DQUICK|F_IRET,    "BCLR"      , f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_DQUICK|F_IRET,    "BSET"      , f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_DQUICK|F_IRET,    "BTST"      , f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
+
+ { F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_DRET,  "CSGET"     , f_csget ,1,1   ,{PL_STRING}},
+ { F_ARGUMENT|F_DRET,  "CSMAX"     , f_csmax ,1,1   ,{PL_STRING}},
+ { F_ARGUMENT|F_DRET,  "CSMIN"     , f_csmin ,1,1   ,{PL_STRING}},
+ { F_ARGUMENT|F_IRET,  "CSPID"     , f_cspid ,1,1   ,{PL_STRING}},
+ { F_ARGUMENT|F_DRET,  "CSRES"     , f_csres ,1,1   ,{PL_STRING}},
+ { F_ARGUMENT|F_IRET,  "CSSIZE"    , f_cssize ,1,1   ,{PL_STRING}},
+
+ { F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
+
+ { F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
+
+ { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+
+ { F_DQUICK|F_IRET,    "FAK"       , f_fak ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "FRAC"       , f_frac ,1,1     ,{PL_NUMBER}},
+
+ { F_ARGUMENT|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_NUMBER|PL_FILENR}},
+ { F_ARGUMENT|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_NUMBER|PL_FILENR}},
+ { F_ARGUMENT|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_NUMBER|PL_FILENR}},
+ { F_ARGUMENT|F_IRET,  "INP%"      , inp32 ,1,1      ,{PL_NUMBER|PL_FILENR}},
+ { F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
+ 
+ { F_ARGUMENT|F_IRET,  "LEN"       , f_len ,1,1   ,{PL_STRING}},
+ { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_DRET,  "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
+
+ { F_DQUICK|F_DRET,    "MOD"       , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+
+ { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+ { F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
+
+ { F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "RANDOM"    , f_random ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
+
+ { F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
+
+ { F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "TYP?"       , type2 ,1,1     ,{PL_ALL}},
+
+ { F_ARGUMENT|F_DRET,  "VAL"       , f_val ,1,1     ,{PL_ALL}},
+
+ { F_ARGUMENT|F_IRET,  "WORT_SEP"    , do_wort_sep ,3,-1     ,{PL_STRING,0}},
+ 
+};
+int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);
+
+int f_asc(char *n) {
+  char *test=s_parser(n);
+  int ergebnis=(int)test[0];
+  free(test);  
+  return(ergebnis);
+}
+
+int f_len(char *n) {
+  char *test=s_parser(n);
+  int ergebnis=strlen(test);
+  free(test);  
+  return(ergebnis);
+}
+double f_ltextlen(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=ltextlen(ltextxfaktor,ltextpflg,test);
+  free(test);  
+  return(ergebnis);
+}
+double f_val(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=atof(test);
+  free(test);  
+  return(ergebnis);
+}
+double f_csmax(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=csmax(test);
+  free(test);  
+  return(ergebnis);
+}
+double f_csmin(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=csmin(test);
+  free(test);  
+  return(ergebnis);
+}
+double f_csres(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=csres(test);
+  free(test);  
+  return(ergebnis);
+}
+double f_csget(char *n) {
+  char *test=s_parser(n);
+  double ergebnis=csget(test);
+  free(test);  
+  return(ergebnis);
+}
+int f_cssize(char *n) {
+  char *test=s_parser(n);
+  int ergebnis=cssize(test);
+  free(test);  
+  return(ergebnis);
+}
+int f_cspid(char *n) {
+  char *test=s_parser(n);
+  int ergebnis=cspid(test);
+  free(test);  
+  return(ergebnis);
+}
+
+int f_fak(double n) {
+  int i,s=1,k=(int)n;
+  for(i=2;i<=k;i++) {s=s*i;} 
+  return(s);
+}
 
 int vergleich(char *w1,char *w2) {
-  int e,v;
-  e=type2(w1);
+  int v;
+  int e=type2(w1);
   if((e | INTTYP | FLOATTYP)!=(type2(w2) | INTTYP | FLOATTYP )) {
     printf("Typen ungleich bei Vergleich..\n");
     printf("1: %d    2: %d \n",type2(w1),type2(w2));
@@ -35,91 +215,92 @@ int vergleich(char *w1,char *w2) {
     free(a);free(b);
   } else {
     double x=(parser(w1)-parser(w2));
-    if(x==0) v=0;
-    else if(x<0) v=-1;
-    else v=1;
+    if(x==0) return(0);
+    else if(x<0) return(-1);
+    else return(1);
   }
-  /*printf("Vergleich: %d\n",v);*/
   return(v);
 }
 
-double parser(char *funktion){
-  char *s,*w1,*w2,*pos,*pos2;
-  double ergebnis=0.0;
+double parser(char *funktion){  /* Rekursiver num. Parser */
+  char *pos,*pos2;
+  char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
   int e,vnr;
-#ifdef DEBUG
-  static int depth;
-#endif
-/* Rekursiver Parser */
-  s=malloc(strlen(funktion)+1);w1=malloc(strlen(funktion)+1);w2=malloc(strlen(funktion)+1);
+
   strcpy(s,funktion);
   xtrim(s,TRUE,s);  /* Leerzeichen vorne und hinten entfernen */
-#ifdef DEBUG
-  printf("%d:parser: %s \n",depth,funktion);
-  depth++;
-#endif
+
+  /* printf("Parser: <%s>\n");*/
   /* Dann Logische Operatoren AND OR NOT ... */ 
-       if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  ergebnis=(double)((int)parser(w1) & (int)parser(w2));    /* von rechts !!  */
-  else if(wort_sepr2(s,"&&",TRUE,w1,w2)>1)     ergebnis=(double)((int)parser(w1) & (int)parser(w2));    
-  else if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   ergebnis=(double)((int)parser(w1) | (int)parser(w2));    
-  else if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     ergebnis=(double)((int)parser(w1) | (int)parser(w2));    
-  else if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     ergebnis=(double)((int)parser(w1) | (int)parser(w2));    
-  else if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) ergebnis=(double)~((int)parser(w1) & (int)parser(w2));    
-  else if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  ergebnis=(double)~((int)parser(w1) | (int)parser(w2));    
-  else if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  ergebnis=(double)((int)parser(w1) ^ (int)parser(w2));    
-  else if(wort_sepr2(s," EOR ",TRUE,w1,w2)>1)  ergebnis=(double)((int)parser(w1) ^ (int)parser(w2));    
-  else if(wort_sepr2(s," EQV ",TRUE,w1,w2)>1)  ergebnis=(double)~((int)parser(w1) ^ (int)parser(w2));    
-  else if(wort_sepr2(s," IMP ",TRUE,w1,w2)>1)  ergebnis=(double)(~((int)parser(w1) ^ (int)parser(w2)) | (int)parser(w2));    
-  else if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  ergebnis=fmod(parser(w1),parser(w2));    
-  else if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1) { 
+
+  if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) & (int)parser(w2)));    /* von rechts !!  */
+  if(wort_sepr2(s,"&&",TRUE,w1,w2)>1)     return((double)((int)parser(w1) & (int)parser(w2)));    
+  if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   return((double)((int)parser(w1) | (int)parser(w2)));    
+  if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
+  if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
+  if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) return((double)~((int)parser(w1) & (int)parser(w2)));    
+  if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  return((double)~((int)parser(w1) | (int)parser(w2)));    
+  if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) ^ (int)parser(w2)));	 
+  if(wort_sepr2(s," EOR ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) ^ (int)parser(w2)));	 
+  if(wort_sepr2(s," EQV ",TRUE,w1,w2)>1)  return((double)~((int)parser(w1) ^ (int)parser(w2)));    
+  if(wort_sepr2(s," IMP ",TRUE,w1,w2)>1)  return((double)(~((int)parser(w1) ^ (int)parser(w2)) | (int)parser(w2)));    
+  if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  return(fmod(parser(w1),parser(w2)));
+  if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1) { 
     int nenner=(int)parser(w2);
-    if(nenner) ergebnis=(double)((int)parser(w1) / nenner);    
-    else error(0,w2); /* Division durch 0 */
- } else if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {        
-    if(strlen(w1)==0) {  
-      ergebnis=(double)(~(int)parser(w2));    /* von rechts !!  */
-    } /* Ansonsten ist NOT Teil eines Variablennamens */
-    
-  } else if(wort_sep2(s,"==",TRUE,w1,w2)>1) { /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
-    if(vergleich(w1,w2)==0) ergebnis=-1;
+    if(nenner) return((double)((int)parser(w1) / nenner));    
+    else {
+      error(0,w2); /* Division durch 0 */
+      return(0);
+    }
+  } 
+  if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {        
+    if(strlen(w1)==0) return((double)(~(int)parser(w2)));    /* von rechts !!  */
+    /* Ansonsten ist NOT Teil eines Variablennamens */
+  }
+  if(wort_sep2(s,"==",TRUE,w1,w2)>1) { /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
+    if(vergleich(w1,w2)==0) return(-1); else return(0);
   } else if(wort_sep2(s,"<>",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)!=0) ergebnis=-1;
+    if(vergleich(w1,w2)!=0) return(-1); else return(0);
   } else if(wort_sep2(s,"><",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)!=0) ergebnis=-1; 
+    if(vergleich(w1,w2)!=0) return(-1);  else return(0);
   } else if(wort_sep2(s,"<=",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)<=0) ergebnis=-1; 
+    if(vergleich(w1,w2)<=0) return(-1);  else return(0);
   } else if(wort_sep2(s,">=",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)>=0) ergebnis=-1; 
+    if(vergleich(w1,w2)>=0) return(-1);  else return(0);
   } else if(wort_sep(s,'=',TRUE,w1,w2)>1) {
-    if(vergleich(w1,w2)==0) ergebnis=-1;
+    if(vergleich(w1,w2)==0) return(-1);  else return(0);
   } else if(wort_sep(s,'<',TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)<0) ergebnis=-1;
+    if(vergleich(w1,w2)<0)  return(-1);  else return(0);
   } else if(wort_sep(s,'>',TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)>0) ergebnis=-1;
-  } else if(wort_sep(s,'+',TRUE,w1,w2)>1) {           /* Addition/Subtraktion/Vorzeichen  */
-    if(strlen(w1)) ergebnis=parser(w1)+parser(w2);
-    else ergebnis=parser(w2);   /* war Vorzeichen + */
-  } else if(wort_sepr(s,'-',TRUE,w1,w2)>1) {           
-    if(strlen(w1)) ergebnis=parser(w1)-parser(w2);    /* von rechts !!  */
-    else ergebnis=-parser(w2);   /* war Vorzeichen - */
+    if(vergleich(w1,w2)>0)  return(-1);  else return(0);
+  } 
+  if(wort_sep(s,'+',TRUE,w1,w2)>1) {           /* Addition/Subtraktion/Vorzeichen  */
+    if(strlen(w1)) return(parser(w1)+parser(w2));
+    else return(parser(w2));   /* war Vorzeichen + */
+  } else if(wort_sepr(s,'-',TRUE,w1,w2)>1) {       /* von rechts !!  */    
+    if(strlen(w1)) {
+      if(strlen(w1)>1 && w1[strlen(w1)-1]=='E') {
+        if(strchr("1234567890.",w1[strlen(w1)-2])==NULL)  return(parser(w1)-parser(w2));
+        else printf("+++Konflikt ! 1<%s> 2<%s>\n",w1,w2);
+      } else return(parser(w1)-parser(w2));    
+    } else return(-parser(w2));   /* war Vorzeichen - */
   } else if(wort_sepr(s,'*',TRUE,w1,w2)>1) {           
-    if(strlen(w1)) ergebnis=parser(w1)*parser(w2);    
+    if(strlen(w1)) return(parser(w1)*parser(w2));    
     else printf("Pointer noch nicht integriert! %s\n",w2);   /* war pointer - */
   } else if(wort_sepr(s,'/',TRUE,w1,w2)>1) {        
     if(strlen(w1)) {
       double nenner;
       nenner=parser(w2); 
-      if(nenner!=0.0) ergebnis=parser(w1)/nenner;    /* von rechts !!  */
-      else error(0,w2); /* Division durch 0 */
-    } else error(51,w2); /* "Parser: Syntax error?! "  */
+      if(nenner!=0.0) return(parser(w1)/nenner);    /* von rechts !!  */
+      else { error(0,w2); return(0);  } /* Division durch 0 */
+    } else { error(51,w2); return(0); }/* "Parser: Syntax error?! "  */
   } else if(wort_sepr(s,'^',TRUE,w1,w2)>1) {           
-    if(strlen(w1)) ergebnis=pow(parser(w1),parser(w2));    /* von rechts !!  */
-    else error(51,w2); /* "Parser: Syntax error?! "  */
-  
-  } else if(s[0]=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
+    if(strlen(w1)) return(pow(parser(w1),parser(w2)));    /* von rechts !!  */
+    else { error(51,w2); return(0); } /* "Parser: Syntax error?! "  */
+  } 
+  if(s[0]=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
     s[strlen(s)-1]=0;
-    ergebnis=parser(s+1);
-    
+    return(parser(s+1));
     /* SystemFunktionen Subroutinen und Arrays */
   } else {
     pos=searchchr(s, '(');
@@ -130,236 +311,151 @@ double parser(char *funktion){
     
       if(pos2[0]!=')') error(51,w2); /* "Parser: Syntax error?! "  */
       else {                         /* $-Funktionen und $-Felder   */
-         pos2[0]=0;
-       
-        if(strcmp(s,"ABS")==0)        ergebnis=fabs(parser(pos));
-	else if(strcmp(s,"ASIN")==0)  ergebnis=asin(parser(pos));
-	else if(strcmp(s,"INT")==0)   ergebnis=(double)(int)parser(pos);
-	else if(strcmp(s,"PRED")==0)   ergebnis=ceil(parser(pos)-1);
-	else if(strcmp(s,"SUCC")==0)   ergebnis=(double)(int)(parser(pos)+1);
-	else if(strcmp(s,"FRAC")==0)  {double d=parser(pos);ergebnis=d-((double)((int)d));}
-        else if(strcmp(s,"SGN")==0)   ergebnis=sgn(parser(pos));
-        else if(strcmp(s,"ACOS")==0)  ergebnis=acos(parser(pos));
-        else if(strcmp(s,"ATAN")==0)  ergebnis=atan(parser(pos));
-        else if(strcmp(s,"CEIL")==0)  ergebnis=ceil(parser(pos));
-        else if(strcmp(s,"EXP")==0)   ergebnis=exp(parser(pos));
-        else if(strcmp(s,"FAK")==0) { 
-	  int i,s=1,k;
-	  k=(int)parser(pos);
-	  for(i=2;i<=k;i++) {s=s*i;} 
-	  ergebnis=s;
-	}
-  	else if(strcmp(s,"FLOOR")==0) ergebnis=floor(parser(pos));
-  	else if(strcmp(s,"LN")==0)    ergebnis=log(parser(pos));
-  	else if(strcmp(s,"LOG")==0)   ergebnis=log(parser(pos));
-  	else if(strcmp(s,"LOG10")==0) ergebnis=log10(parser(pos));
-  	else if(strcmp(s,"RAND")==0)  ergebnis=(double)rand();
-  	else if(strcmp(s,"RANDOM")==0)ergebnis=(int)((double)rand()/RAND_MAX*parser(pos));
-  	else if(strcmp(s,"RND")==0)   ergebnis=(double)rand()/RAND_MAX;
-  	else if(strcmp(s,"SRAND")==0) {srand((int)parser(pos));ergebnis=0;}
-  	else if(strcmp(s,"SIN")==0)   ergebnis=sin(parser(pos));
-  	else if(strcmp(s,"SINH")==0)  ergebnis=sinh(parser(pos));
-  	else if(strcmp(s,"COS")==0)   ergebnis=cos(parser(pos));
-  	else if(strcmp(s,"COSH")==0)  ergebnis=cosh(parser(pos));
-  	else if(strcmp(s,"TAN")==0)   ergebnis=tan(parser(pos));
-  	else if(strcmp(s,"TANH")==0)  ergebnis=tanh(parser(pos));
-  	else if(strcmp(s,"DEG")==0)   ergebnis=(parser(pos)/2/PI*360);
-  	else if(strcmp(s,"RAD")==0)   ergebnis=(parser(pos)/360*2*PI);
-  	else if(strcmp(s,"SQR")==0)   ergebnis=sqrt(parser(pos));
-  	else if(strcmp(s,"SQRT")==0)  ergebnis=sqrt(parser(pos));   
+        pos2[0]=0;
 
-        else if(strcmp(s,"LEN")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=(double)strlen(test);
-	  free(test);  
-        }else if(strcmp(s,"ASC")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=(double)test[0];
-	  free(test); 
-	}else if(strcmp(s,"DIM?")==0)  {
-	   /* printf("DIM?: <%s>\n",pos); */
-	    ergebnis=(double)do_dimension(variable_exist_type(pos));
-	}else if(strcmp(s,"TYP?")==0)  ergebnis=(double)type2(pos);
-	else if(strcmp(s,"LTEXTLEN")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=ltextlen(ltextxfaktor,ltextpflg,test);
+        /* Funktionen, die double zurueckliefern */
+
+      if(strcmp(s,"EXIST")==0)  {
+	  char *test=s_parser(pos);
+	  double ergebnis=-(double)exist(test);
 	  free(test);   
-        }else if(strcmp(s,"VAL")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=atof(test);
-	  free(test);   
-        }else if(strcmp(s,"EXIST")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=-(double)exist(test);
-	  free(test);   
+	  return(ergebnis);
         }else if(strcmp(s,"LOF")==0)  {
 	  int i=get_number(pos);
-	  if(filenr[i]) ergebnis=(double)lof(dptr[i]);
-	  else error(24,""); /* File nicht geoeffnet */
+	  if(filenr[i]) return((double)lof(dptr[i]));
+	  else { error(24,""); return(0);} /* File nicht geoeffnet */
         }else if(strcmp(s,"LOC")==0)  {
 	  int i=get_number(pos);
-	  if(filenr[i]) ergebnis=(double)ftell(dptr[i]);
-	  else error(24,""); /* File nicht geoeffnet */
+	  if(filenr[i]) return((double)ftell(dptr[i]));
+	  else { error(24,""); return(0); } /* File nicht geoeffnet */
 	}else if(strcmp(s,"EOF")==0)  {
 	  int i=get_number(pos);
-	  if(i==-2) ergebnis=(double)((eof(stdin)) ? -1 : 0);
-	  else if(filenr[i]) ergebnis=(double)((eof(dptr[i])) ? -1 : 0);
-	  else error(24,""); /* File nicht geoeffnet */	
-	}else if(strcmp(s,"INP")==0)  ergebnis=(double)inp8(pos);
-        else if(strcmp(s,"INP?")==0)  ergebnis=(double)inpf(pos);
-	else if(strcmp(s,"INP&")==0)  ergebnis=(double)inp16(pos);
-	else if(strcmp(s,"INP%")==0)  ergebnis=(double)inp32(pos);
-	else if(strcmp(s,"WORT_SEP")==0)  ergebnis=(double)do_wort_sep(pos);
-
-	else if(strcmp(s,"MIN")==0)  {
-	  char *w1,*w2;
+	  if(i==-2) return((double)((eof(stdin)) ? -1 : 0));
+	  else if(filenr[i]) return((double)((eof(dptr[i])) ? -1 : 0));
+	  else { error(24,""); return(0); } /* File nicht geoeffnet */	
+	} else if(strcmp(s,"MIN")==0)  {
 	  int e;
-	  w1=malloc(strlen(pos)+1);w2=malloc(strlen(pos)+1);
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=min(parser(w1),parser(w2));
-	  free(w1);free(w2);   
-        
+	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(min(parser(w1),parser(w2)));
 	}else if(strcmp(s,"MAX")==0)  {
-	  char *w1,*w2;
-	  int e;
-	  w1=malloc(strlen(pos)+1);w2=malloc(strlen(pos)+1);
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=max(parser(w1),parser(w2));
-	  free(w1);free(w2); 
-	}else if(strcmp(s,"FORM_ALERT")==0)  {
-	  char *w1,*w2;
-	  int e;
-	  w1=malloc(strlen(pos)+1);w2=malloc(strlen(pos)+1);
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=0;
-	  else if(e==2)	 {
-	    char *ttt;
-	    ttt=s_parser(w2);
-	    ergebnis=form_alert((int)parser(w1),ttt);
-	    free(ttt);
-	  }
-	  free(w1);free(w2); 
-	}else if(strcmp(s,"POINT")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
-	  e=wort_sep(pos,',',TRUE,w1,w2);
-	  ergebnis=get_point((int)parser(w1),(int)parser(w2));
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(max(parser(w1),parser(w2)));
+	}else if(strcmp(s,"FORM_ALERT")==0)  {
+	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
+	  int e;
+	  
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(0);
+	  else if(e==2)	 {
+	    char *ttt=s_parser(w2);
+	    double ergebnis=form_alert((int)parser(w1),ttt);
+	    free(ttt);
+	    return(ergebnis);
+	  }
 	}else if(strcmp(s,"ADD")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
 	  
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=parser(w1)+parser(w2);
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(parser(w1)+parser(w2));
 	}else if(strcmp(s,"SUB")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
 	  
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=parser(w1)-parser(w2);
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(parser(w1)-parser(w2));
 	 }else if(strcmp(s,"MUL")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=parser(w1)*parser(w2);
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(parser(w1)*parser(w2));
 	 }else if(strcmp(s,"DIV")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=parser(w1)/parser(w2);
-	 }else if(strcmp(s,"MOD")==0)  {
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
+	  else if(e==2)	  return(parser(w1)/parser(w2));
+	 }
+	 else if(strcmp(s,"ROUND")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=fmod(parser(w1),parser(w2));
-	   
-	 }else if(strcmp(s,"ROUND")==0)  {
-	  char *w1,*w2;
-	  int e;
-	  w1=malloc(strlen(pos)+1);w2=malloc(strlen(pos)+1);
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=round(parser(w1));
+	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(round(parser(w1)));
 	  else if(e==2)	{
 	    int kommast=-(int)parser(w2);
-	    ergebnis=round(parser(w1)/pow(10,kommast))*pow(10,kommast); 
+	    return(round(parser(w1)/pow(10,kommast))*pow(10,kommast)); 
 	  }
-	  free(w1);free(w2); 
-	}else if(strcmp(s,"BCLR")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=(double)((int)parser(w1) & ~ (1 <<((int)parser(w2))));
-	}else if(strcmp(s,"BSET")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=(double)((int)parser(w1) | (1 <<((int)parser(w2))));
-	}else if(strcmp(s,"BCHG")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=(double)((int)parser(w1) ^ (1 <<((int)parser(w2))));
-	}else if(strcmp(s,"BTST")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) ergebnis=parser(w1);
-	  else if(e==2)	  ergebnis=(double) (((int)parser(w1) & (1 <<((int)parser(w2))))==0) ?
-	  0 : -1;
+	  
 	}else if(strcmp(s,"GET_COLOR")==0)  {
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1],w3[strlen(pos)+1];
 	 
 	  wort_sep(pos,',',TRUE,w1,w2);
 	  wort_sep(w2,',',TRUE,w2,w3);
 
-	  ergebnis=(double)get_color((int)parser(w1),(int)parser(w2),(int)parser(w3));
-	}else if(strcmp(s,"ARRPTR")==0)  ergebnis=(double)arrptr(pos);
-	else if(strcmp(s,"VARPTR")==0)  ergebnis=(double)varptr(pos);
-	else if(strcmp(s,"MALLOC")==0)  ergebnis=(double)(int)malloc((int)parser(pos));
-	else if(strcmp(s,"FREE")==0)  {free((char *)((int)parser(pos)));ergebnis=(double)errno;}
-	else if(strcmp(s,"PEEK")==0)  ergebnis=(double)(int)((char *)((int)parser(pos)))[0];
-	else if(strcmp(s,"LPEEK")==0)  ergebnis=(double)(int)((int *)((int)parser(pos)))[0];
-	else if(strcmp(s,"DPEEK")==0)  ergebnis=(double)(int)((short *)((int)parser(pos)))[0];  
-        else if(strcmp(s,"CSPID")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=(double)cspid(test);
-	  free(test);  
-        }else if(strcmp(s,"CSGET")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=csget(test);
-	  free(test);  
-        }else if(strcmp(s,"CSSIZE")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=(double)cssize(test);
-	  free(test);  
-        }else if(strcmp(s,"CSRES")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=csres(test);
-	  free(test);  
-        }else if(strcmp(s,"CSMIN")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=csmin(test);
-	  free(test);  
-        }else if(strcmp(s,"CSMAX")==0)  {
-	  char *test;
-	  test=s_parser(pos);
-	  ergebnis=csmax(test);
-	  free(test);  
-        } else if(s[0]=='@') ergebnis=do_funktion(s+1,pos);	  
-        else if(type2(s) & FLOATTYP) {
-          if((vnr=variable_exist(s,FLOATARRAYTYP))!=-1) ergebnis=floatarrayinhalt(vnr,pos);
-        } else if(type2(s) & INTTYP) {
-	  char *r=varrumpf(s);
-	  if((vnr=variable_exist(r,INTARRAYTYP))!=-1) ergebnis=(double)intarrayinhalt(vnr,pos);
-	  free(r);
-	}
-	else error(15,s);  /* Feld nicht dimensioniert  */
+	  return((double)get_color((int)parser(w1),(int)parser(w2),(int)parser(w3)));
+	}else if(strcmp(s,"ARRPTR")==0)  return((double)arrptr(pos));
+	else if(strcmp(s,"VARPTR")==0)  return((double)(int)varptr(pos));
+	else if(strcmp(s,"MALLOC")==0)  return((double)(int)malloc((int)parser(pos)));
+	else if(strcmp(s,"FREE")==0)  {free((char *)((int)parser(pos)));return((double)errno);}
+	else if(strcmp(s,"PEEK")==0)  return((double)(int)((char *)((int)parser(pos)))[0]);
+	else if(strcmp(s,"LPEEK")==0)  return((double)(int)((int *)((int)parser(pos)))[0]);
+	else if(strcmp(s,"DPEEK")==0)  return((double)(int)((short *)((int)parser(pos)))[0]);  
+
+
+        else 
+	if(s[0]=='@') return(do_funktion(s+1,pos));
+	else {
+	  /* Liste durchgehen */
+	  int i=0,oa,a=anzcomms,b;
+          for(b=0; b<strlen(s); b++) {
+            while(s[b]>(pfuncs[i].name)[b] && i<a) i++;
+            oa=a;a=i;
+            while(s[b]<(pfuncs[a].name)[b]+1 && a<oa) a++;
+            if(i==a) break;
+          }
+          if(i<anzpfuncs && strcmp(s,pfuncs[i].name)==0) {
+	      
+	      
+	      if((pfuncs[i].opcode&FM_TYP)==F_SIMPLE || pfuncs[i].pmax==0) {
+	        if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(NULL));
+		else return((pfuncs[i].routine)(NULL));
+	      } 
+	      
+	      if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
+	      	if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(pos));
+		else return((pfuncs[i].routine)(pos));
+	      } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) ; /* Noch nicht moeglich */
+	      
+	      if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
+	        double ue=parser(pos);
+		
+	      	if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(ue));
+		else return((pfuncs[i].routine)(ue));
+	
+	      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
+	       	 char w1[strlen(pos)+1],w2[strlen(pos)+1];
+	         int e;
+		 double val1,val2;
+	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
+		   printf("Falsche Anzahl Parameter");
+		   val1=parser(w1); val2=0;
+	         } else if(e==2)	{
+	           val1=parser(w1); val2=parser(w2);
+	         }
+                if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(val1,val2));
+		else return((pfuncs[i].routine)(val1,val2));
+	       
+	      }
+          } else if(type2(s) & FLOATTYP) {
+            if((vnr=variable_exist(s,FLOATARRAYTYP))!=-1) return(floatarrayinhalt(vnr,pos));
+	    else { error(15,s); return(0); } /* Feld nicht dimensioniert  */
+          } else if(type2(s) & INTTYP) {
+	    char *r=varrumpf(s);
+	    if((vnr=variable_exist(r,INTARRAYTYP))!=-1) return((double)intarrayinhalt(vnr,pos));
+	    else { error(15,s); return(0); }  /* Feld nicht dimensioniert  */
+	    free(r);
+	  } else { error(15,s); return(0); }  /* Feld nicht dimensioniert  */
+        }
       }
     } else {
       /* Dann Systemvariablen und einfache Variablen */
@@ -367,9 +463,9 @@ double parser(char *funktion){
       if(strcmp(s,"STIMER")==0) { /* Sekunden-Timer */
         time_t timec;
         timec = time(&timec);
-        ergebnis=(double)timec;
+        return((double)timec);
       } else if(strcmp(s,"CTIMER")==0) {
-	ergebnis=(double)clock()/CLOCKS_PER_SEC;
+	return((double)clock()/CLOCKS_PER_SEC);
       } else if(strcmp(s,"TIMER")==0) {
         struct timespec t;
 	struct {
@@ -377,29 +473,31 @@ double parser(char *funktion){
                int  tz_dsttime;     /* type of dst correction */
        } tz;
 	gettimeofday(&t,&tz);
-	ergebnis=(double)t.tv_sec+(double)t.tv_nsec/1000000;      
-      } else if(strcmp(s,"ERR")==0)    ergebnis=(double)err;
-      else if(strcmp(s,"CCSERR")==0)   ergebnis=(double)ccs_err;
-      else if(strcmp(s,"CCSAPLID")==0) ergebnis=(double)aplid;
-      else if(strcmp(s,"PC")==0)       ergebnis=(double)pc;
-      else if(strcmp(s,"SP")==0)       ergebnis=(double)sp;
-      else if(strcmp(s,"PI")==0)       ergebnis=PI;
-      else if(strcmp(s,"TRUE")==0)     ergebnis=-1;
-      else if(strcmp(s,"FALSE")==0)    ergebnis=0;
-      else if(strcmp(s,"MOUSEX")==0)   ergebnis=(double)mousex();
-      else if(strcmp(s,"MOUSEY")==0)   ergebnis=(double)mousey();
-      else if(strcmp(s,"MOUSEK")==0)   ergebnis=(double)mousek();
-      else if(strcmp(s,"MOUSES")==0)   ergebnis=(double)mouses();
-      else if(s[0]=='@')               ergebnis=do_funktion(s+1,"");
-      else if((vnr=variable_exist(s,FLOATTYP))!=-1) ergebnis=variablen[vnr].zahl;
-      else ergebnis=atof(s);  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
+	return((double)t.tv_sec+(double)t.tv_nsec/1000000);      
+      } else if(strcmp(s,"ERR")==0)    return((double)err);
+      else if(strcmp(s,"CCSERR")==0)   return((double)ccs_err);
+      else if(strcmp(s,"CCSAPLID")==0) return((double)aplid);
+      else if(strcmp(s,"PC")==0)       return((double)pc);
+      else if(strcmp(s,"SP")==0)       return((double)sp);
+      else if(strcmp(s,"PI")==0)       return(PI);
+      else if(strcmp(s,"TRUE")==0)     return(-1);
+      else if(strcmp(s,"FALSE")==0)    return(0);
+      else if(strcmp(s,"MOUSEX")==0)   return((double)mousex());
+      else if(strcmp(s,"MOUSEY")==0)   return((double)mousey());
+      else if(strcmp(s,"MOUSEK")==0)   return((double)mousek());
+      else if(strcmp(s,"MOUSES")==0)   return((double)mouses());
+      else if(s[0]=='@')               return(do_funktion(s+1,""));
+      else if((vnr=variable_exist(s,FLOATTYP))!=-1) return(variablen[vnr].zahl);
+      else if(s[strlen(s)-1]=='%') {
+        s[strlen(s)-1]=0;
+      
+        if((vnr=variable_exist(s,INTTYP))!=-1) return((double)variablen[vnr].opcode);
+        else return(0);   
+     } else return(atof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
     }
   }
-  free(s);free(w1);free(w2);
-#ifdef DEBUG
-  depth--;
-#endif
-  return(ergebnis);
+  printf("Parser: der angegebene Ausdruck ist Fehlerhaft: <%s>\n",s);
+  return(0);
 }
 
 ARRAY *array_parser(char *funktion) { /* Array-Parser  */
@@ -642,11 +740,11 @@ char *s_parser(char *funktion) { /* String-Parser  */
 /* Rekursiv und so, dass dynamische Speicherverwaltung ! */
 /* Trenne ersten Token ab, und uebergebe rest derselben Routine */
 
- char *t,*u,*v,*w,*ergebnis,*pos,*pos2,*inhalt;
+ char *t,*u,*ergebnis,*pos,*pos2,*inhalt;
  int e,vnr;
+ char v[strlen(funktion)+1],w[strlen(funktion)+1];
 
- v=malloc(strlen(funktion)+1);w=malloc(strlen(funktion)+1);
- 
+ /*printf("S-Parser: <%s>\n",funktion);*/
  e=wort_sep(funktion,'+',TRUE,v,w);
  if(e==2) {
    t=s_parser(v);
@@ -655,7 +753,7 @@ char *s_parser(char *funktion) { /* String-Parser  */
    strcpy(ergebnis,t);strcat(ergebnis,u);
    free(t);free(u); 
  } else {
-   /*printf("parser: <%s>\n",funktion);*/
+   /*printf("s-parser: <%s>\n",funktion);*/
    strcpy(v,funktion);
    pos=searchchr(v, '(');
    if(pos!=NULL) {
@@ -675,6 +773,7 @@ char *s_parser(char *funktion) { /* String-Parser  */
           ergebnis[0]=(char)parser(pos);
 	  ergebnis[1]=0;
        } else if(strcmp(v,"STR$")==0) ergebnis=float_to_string(pos);   /* STR$(a[,b[,c[,d]]])     */
+       else if(strcmp(v,"BIN$")==0)   ergebnis=bin_to_string(pos);
        else if(strcmp(v,"HEX$")==0)   ergebnis=hexoct_to_string('x',pos);
        else if(strcmp(v,"OCT$")==0)   ergebnis=hexoct_to_string('o',pos);
        else if(strcmp(v,"SPACE$")==0) { 
@@ -715,7 +814,7 @@ char *s_parser(char *funktion) { /* String-Parser  */
 	  buffer=s_parser(w1);
 	  free(w1);
 	  if(e<2) j=1;
-	  else j=min(max((int)parser(w2),0),strlen(ergebnis));
+	  else j=min(max((int)parser(w2),0),strlen(buffer)); 
 	  free(w2);
 	  j=min(j,strlen(buffer));
 	  ergebnis=malloc(j+1);
@@ -743,7 +842,7 @@ char *s_parser(char *funktion) { /* String-Parser  */
 	    j=min(j,strlen(buffer));
 	    i=min(i,strlen(buffer));
 	    ergebnis=malloc(strlen(buffer)+1);
-	    strcpy(ergebnis,buffer+j-1);
+	    strcpy(ergebnis,&buffer[j-1]);
 	    ergebnis[i]=0;
 	    free(buffer);
 	  }
@@ -786,6 +885,18 @@ char *s_parser(char *funktion) { /* String-Parser  */
             strcpy(ergebnis,ttt);
 	  }
 	  free(test);
+	} else if(strcmp(v,"PARAM$")==0) {
+          char *ttt;
+	  int i=(int)parser(pos);
+	  if(i<param_anzahl) ttt=param_argumente[i];
+          else ttt=NULL;
+	  if(ttt==NULL) {
+	    ergebnis=malloc(1);
+	    ergebnis[0]=0;
+	  } else {
+            ergebnis=malloc(strlen(ttt)+1);
+            strcpy(ergebnis,ttt);
+	  }
        } else if(strcmp(v,"LOWER$")==0) { 
           int i=0;
           ergebnis=s_parser(pos); 
@@ -864,7 +975,6 @@ char *s_parser(char *funktion) { /* String-Parser  */
        } 
      }
    } else {
-     
      pos2=v+strlen(v)-1;
      if(v[0]=='"' && pos2[0]=='"') {  /* Konstante  */
        ergebnis=malloc(strlen(v)-2+1);
@@ -885,10 +995,9 @@ char *s_parser(char *funktion) { /* String-Parser  */
          strncpy(ergebnis,ctime(&timec)+11,8);
          ergebnis[8]=0;
        } else if(strcmp(v,"DATE")==0) {
-         ergebnis=malloc(11);
 	 timec = time(&timec);
 	 loctim=localtime(&timec);
-	 sprintf(ergebnis,"%2d.%2d.%4d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+	 asprintf(&ergebnis,"%2d.%2d.%4d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
          pos=ergebnis; while(pos[0]!=0) {if(pos[0]==' ') pos[0]='0'; pos++;}
        } else if(strcmp(v,"TRACE")==0) { 
          ergebnis=malloc(strlen(program[pc])+1);
@@ -910,7 +1019,6 @@ char *s_parser(char *funktion) { /* String-Parser  */
      }
    }
  }
- free(v);free(w);
  return(ergebnis);
 }
 
@@ -919,10 +1027,10 @@ char *float_to_string(char *pos) {
 
           /* STR$(a[,b[,c[,d]]])     */
           char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  char formatter[20];
+	  char *formatter;
 	  int j,e,b=-1,c=13,mode=0,i=0;
 	  double a;
-	  char *ergebnis=malloc(50);
+	  char *ergebnis;
 	  
           e=wort_sep(pos,',',TRUE,w1,w2); 
 	  while(e) {
@@ -941,10 +1049,11 @@ char *float_to_string(char *pos) {
           }
 	  
 	  
-	  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%dg",b,c);
-	  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%dg",b,c);
-	  else  sprintf(formatter,"%%.13g");
-          sprintf(ergebnis,formatter,a);
+	  if(mode==0 && b!=-1) asprintf(&formatter,"%%%d.%dg",b,c);
+	  else if (mode==1 && b!=-1) asprintf(&formatter,"%%0%d.%dg",b,c);
+	  else  asprintf(&formatter,"%%.13g");
+          asprintf(&ergebnis,formatter,a);
+	  free(formatter);
 	  return(ergebnis);
 }
 char *hexoct_to_string(char n,char *pos) {
@@ -954,7 +1063,7 @@ char *hexoct_to_string(char n,char *pos) {
 	  char formatter[20];
 	  int j,e,b=-1,c=13,mode=0,i=0;
 	  unsigned int a;
-	  char *ergebnis=malloc(50);
+	  char *ergebnis;
           e=wort_sep(pos,',',TRUE,w1,w2); 
 	  while(e) {
 	    if(strlen(w1)) {
@@ -975,7 +1084,31 @@ char *hexoct_to_string(char n,char *pos) {
 	  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%d%c",b,c,n);
 	  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%d%c",b,c,n);
 	  else  sprintf(formatter,"%%.13%c",n);
-          sprintf(ergebnis,formatter,a);
+          asprintf(&ergebnis,formatter,a);
+	  return(ergebnis);
+}
+char *bin_to_string(char *pos) {
+          char w1[strlen(pos)+1],w2[strlen(pos)+1];
+	  int j,e,b=8,i=0;
+	  unsigned int a;
+	  char *ergebnis=malloc(64);
+          e=wort_sep(pos,',',TRUE,w1,w2); 
+	  while(e) {
+	    if(strlen(w1)) {
+              switch(i) {
+	      case 0: {a=(unsigned int)parser(w1);break;}
+	      case 1: {b=min(32,max(0,(int)parser(w1)));break;}
+              default: break;
+              }
+            }
+	    e=wort_sep(w2,',',TRUE,w1,w2);
+            i++;
+          }
+	  i=0;
+	  for(j=b;j>0;j--) {
+	    ergebnis[i++]=((a&(1<<(j-1)))  ? '1':'0');
+	  }
+	  ergebnis[i]=0;
 	  return(ergebnis);
 }
 
@@ -1062,7 +1195,7 @@ char *do_sfunktion(char *name,char *argumente) {
       }
     error(44,buffer); /* Funktion  nicht definiert */
     free(buffer);
-    ergebnis=malloc(1);
+    ergebnis=malloc(2);
     ergebnis[0]=0;
     return(ergebnis);  
  }

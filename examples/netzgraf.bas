@@ -7,9 +7,6 @@ DIM y(sx,sy)
 dx=12/sx
 dy=12/sy
 m=120
-mt=500
-bw=640
-bh=400
 
 gelb=get_color(65535,65535,0)
 gruen=get_color(10000,65535,10000)
@@ -25,9 +22,7 @@ color gruen
 vsync
 FOR i=0 TO sx
   FOR j=0 TO sy
-  
-    z=mt/4*EXP(-SQR((i-50)^2+(j-40)^2)/15)*COS(SQR((i-50)^2+(j-40)^2)/2)^2
-   ' z=m*SIN(i/2/pi)*SIN(j/2/pi)
+    z=m*SIN(i/2/pi)*SIN(j/2/pi)
     
     x(i,j)=200+(i-j)*2*s
     y(i,j)=100+j*s-z
@@ -56,6 +51,5 @@ FOR i=0 TO sx-1
   vsync
 NEXT i
 vsync
-
 alert 0,"Fertig",1,"OK",balert
 quit

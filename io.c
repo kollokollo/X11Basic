@@ -14,9 +14,15 @@
 #include <unistd.h>
 #include <termios.h>
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #include "file.h"
+#include "defs.h"
 #include "xbasic.h"
+#include "protos.h"
+
 
 void io_error(int,char *);
 
@@ -195,80 +201,184 @@ int get_number(char *w) {
     return((int)parser(w));
 }
 
-void c_open(char *w) {
-  char modus;
-  char v[strlen(w)+1],t[strlen(w)+1];
-  int number,e;
-  char *buffer,modus2[5];
-      
-  e=wort_sep(w,',',TRUE,v,t);
-  if(e) {
-     char *mod;
-     /* Modus */
-     mod=s_parser(v);
-     modus=toupper(mod[0]);
-     free(mod);
-  }
-  e=wort_sep(t,',',TRUE,v,t);
-  if(e) number=get_number(v);    /* Nummer */
-  
-  e=wort_sep(t,',',TRUE,v,t);
-  if(e) {
-    buffer=s_parser(v);   /* Filenamen */
+/* Internetroutinen */
 
-    if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
-    else if(number>99 || number<1) error(23,"");  /* File # falsch  */
-    else {
-      if(modus=='I') strcpy(modus2,"r");
-      else if(modus=='O') strcpy(modus2,"w");
-      else if(modus=='U') strcpy(modus2,"r+");
-      else if(modus=='A') strcpy(modus2,"a+");
-      else error(21,""); /* bei Open nur erlaubt ...*/
-    
-      dptr[number]=fopen(buffer,modus2);
-      if(dptr[number]==NULL) io_error(errno,"OPEN");
-      else  filenr[number]=1;
-    
-    }
-    free(buffer);
-  } else error(32,"OPEN"); /*Sytax error*/
+int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port) {
+  struct hostent *hostinfo;
+  name->sin_family=AF_INET;
+  name->sin_port=htons(port);
+  hostinfo=gethostbyname(hostname);
+  if(hostinfo==NULL) return(-1);
+  name->sin_addr=*(struct in_addr *)hostinfo->h_addr;
+  return(0);
 }
 
-void io_error(int n, char *s) {
-  switch(n) {
-  case EACCES:
-  case ENOTDIR:
-  case ELOOP:
-  case ENXIO:
-    error(-36,s); /* Zugriff nicht m"oglich */
-    break;
-  case ENOENT:
-    error(-33,s); /* File not found */
-    break;
-  case EMFILE:
-    error(-35,s); /* Zu viele Dateien offen */
-    break;
-  case ENFILE:
-    error(-12,s); /* Zur Zeit sind keine weiteren offenen Files möglich */
-    break;
-  case EFBIG:
-    error(-13,s); /* File zu gross */
-    break;
-  case EBADF:
-    error(-37,s); /* Ungültiges Handle */
-    break;
+int make_socket(unsigned short int port) {
+  int sock;
+  struct sockaddr_in name;
+  sock=socket(PF_INET, SOCK_STREAM,0);
+  if(sock<0) return(-1);
+  name.sin_family=AF_INET;
+  name.sin_port=htons(port);
+  name.sin_addr.s_addr=htonl(INADDR_ANY);
+  if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
+  return(sock);
+}
+
+/* Universelle OPEN-Funktion. Oeffnet Files, Devices, und sockets   */
+/* OPEN "I",#1,filename$[,port]   */
+
+
+void c_open(char *n) {
+  char modus,special=0;
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int number=1,e,port=5555,i=0;
+  char *filename=NULL;
+  char modus2[5]="r";
   
-  case ENOSPC:
-    error(-28,s); /* No Space left on device */
-    break;
-  case EROFS:
-    error(-30,s); /* FILE SYSTEM SCHREIBGESCHUetzt */
-    break;
-  case EIO:
-  default:      
-    printf("errno=%d\n",n);
-    error(-1,s);  /* Allgemeiner IO-Fehler */
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+     if(strlen(w1)) {
+       switch(i) {
+         case 0: { /* Modus */     
+	   char *mod=s_parser(w1);      /* Modus */
+           modus=toupper(mod[0]);
+	   special=toupper(mod[1]);
+           free(mod);
+           if(modus=='I') strcpy(modus2,"r");
+           else if(modus=='O') strcpy(modus2,"w");
+           else if(modus=='U') strcpy(modus2,"r+");
+           else if(modus=='A') strcpy(modus2,"a+");
+           else error(21,""); /* bei Open nur erlaubt ...*/
+	   break;
+	 }
+	 case 1: {  number=get_number(w1);    /* Nummer */ break; } 
+	 case 2: { filename=s_parser(w1); break; } 
+	 case 3: { port=(int)parser(w1); break; } 	   
+         default: break;
+       }
+     }
+     i++;
+     e=wort_sep(w2,',',TRUE,w1,w2);
   }
+  
+  if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
+  else if(number>99 || number<1) error(23,"");  /* File # falsch  */
+  else {
+
+      
+      /* Hier koennte man Named Pipes einbauen .... */
+
+      /*  Sockets  */
+      if(special=='C') { /* Connect */
+        int sock;
+	struct sockaddr_in servername;
+	 
+        printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+        sock=socket(PF_INET, SOCK_STREAM,0);
+	if(sock<0) {
+	  printf("ERROR: socket\n");
+	  dptr[number]=NULL;
+	} else {
+	  if(init_sockaddr(&servername,filename,port)<0) {
+	    printf("ERROR: init\n");
+	    dptr[number]=NULL;
+	  } else { 
+	    if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) {
+              printf("ERROR: connect\n");
+	      dptr[number]=NULL;
+	    } else {
+              dptr[number]=fdopen(sock,modus2);
+	    }
+	  }
+	}
+      } else if(special=='S') { /* serve */
+        int sock;
+        printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+        sock=make_socket(port);
+	if(sock<0) {
+	  printf("ERROR: make_socket\n");
+	  dptr[number]=NULL;
+	} else {
+	  if(listen(sock,1)<0) {
+	    printf("ERROR: listen\n");
+	    dptr[number]=NULL;
+	  } else { 
+	    
+              dptr[number]=fdopen(sock,modus2);
+	    
+	  }
+	}
+ 
+
+      } else if(special=='A') { /* accept */
+        int sock,sock2;
+	size_t size;	
+	struct sockaddr_in clientname;
+
+        printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+        if(filenr[port]) {
+	  sock=fileno(dptr[port]);
+	  size=sizeof(clientname);
+	  sock2=accept(sock,(struct sockaddr *) &clientname,&size);
+	  if(sock2<0) {
+	    printf("ERROR: accept\n");
+	    dptr[number]=NULL;
+	  } else { 
+	    printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), 
+	      ntohs(clientname.sin_port),sock2);
+            dptr[number]=fdopen(sock2,modus2);
+	    
+	  }
+	} else printf("Socket #d nicht geoeffnet.\n",port); 
+      } else dptr[number]=fopen(filename,modus2);
+      if(dptr[number]==NULL) io_error(errno,"OPEN");
+      else  filenr[number]=1;
+  }
+  free(filename);
+}
+
+
+
+
+
+void io_error(int n, char *s) {
+  struct {int sf; char xf; } table[] = {
+    { EACCES,  -36 }, /* Zugriff nicht m"oglich */
+    { ENOTDIR, -36 }, 
+    { ELOOP,   -36 }, 
+    { ENXIO,   -36 }, 
+    { ENOENT,  -33 }, /* File not found */
+    { EMFILE,  -35 }, /* Zu viele Dateien offen */
+    { ENFILE,  -12 }, /* Zur Zeit sind keine weiteren offenen Files möglich */
+    { EFBIG,   -13 }, /* File zu gross */
+    { EBADF,   -37 }, /* Ungültiges Handle */
+    { ENOTSOCK,-37 },
+    { EINVAL,  -37 },
+    { ETIMEDOUT,-2 }, /* Timeout */
+    { ECONNREFUSED, -48 }, /* Verbindungsaufbau verweigert */
+    { EISCONN, -47 }, /* Verbindung schon geöffnet */
+    { ENOTCONN,-45 }, /* keine Verbindung */
+    { EADDRINUSE,-44 },/* Besetzt, Verbindung nicht moeglich */
+    { EADDRNOTAVAIL,-43 },/* Verbindungsaufbau nicht moeglich */
+    { ENETUNREACH,-43 },
+    { ENOSPC,  -28 }, /* No Space left on device */
+    { EOPNOTSUPP,-32 }, /* Ungueltige Funktionsnummer */
+    { EPIPE,   -50 }, /* Verbindung wurde unterbrochen */
+    { ENOBUFS, -23 }, /* File Table overflow */
+    { EROFS,   -30 }, /* FILE SYSTEM SCHREIBGESCHUetzt */
+    { EIO,      -1 } /* Allgemeiner IO-Fehler */
+  };
+  int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
+  int i;
+  for(i=0;i<anztabs;i++) {
+    if(n==table[i].sf) {
+      error(table[i].xf,s);
+      return;    
+    }
+  }
+  printf("errno=%d\n",n);
+  error(-1,s);  /* Allgemeiner IO-Fehler */
 }
 
 
@@ -391,7 +501,7 @@ void c_relseek(char *n) {
     } else error(24,""); /* File nicht geoeffnet */
   } else error(32,"RELSEEK"); /* Syntax error */
 }
-char inp8(char *n) {
+int inp8(char *n) {
   int i=get_number(n);
   char ergebnis;
   FILE *fff;
@@ -411,7 +521,7 @@ int inpf(char *n) {
     return(((eof(fff)) ? 0 : -1));
   } else {error(24,"");return(-1);} /* File nicht geoeffnet */
 }
-short inp16(char *n) {
+int inp16(char *n) {
   int i=get_number(n);
   short ergebnis;
   FILE *fff=stdin;
@@ -423,7 +533,7 @@ short inp16(char *n) {
   } else error(24,""); /* File nicht geoeffnet */
   return(-1);
 }
-short inp32(char *n) {
+int inp32(char *n) {
   int i=get_number(n);
   unsigned int ergebnis;
   FILE *fff=stdin;

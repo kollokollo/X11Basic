@@ -12,7 +12,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xbasic.h"
+
+#include "protos.h"
+
+#define FALSE 0
+#define TRUE (!FALSE)
+extern const char version[];           /* Programmversion           */
+extern const char vdate[];
+extern const char xbasic_name[];
+extern char ifilename[];
+extern int loadfile,runfile,daemonf;
+extern int pc,sp,prglen,err,errcont,everyflag;
+extern int programbufferlen;
 
 void usage(){
   printf("\n Bedienungsanleitung: \n");
@@ -32,7 +43,7 @@ void intro(){
   printf("*                   von Markus Hoffmann 1997                  *\n");
   printf("*                                                             *\n");
   printf("*                                                             *\n");
-  printf("* Programmversion vom %s                              *\n",vdate);
+  printf("* Programmversion vom %s           *\n",vdate);
   printf("*                                                             *\n");
   printf("***************************************************************\n\n"); 
 }
@@ -57,18 +68,22 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();
       usage();
-      quitflag=1;
+      quitflag=1;   
+    } else if (strcmp(argumente[count],"--daemon")==FALSE) {
+      intro();
+      daemonf=1;
     } else {
-      loadfile=TRUE;
-      strcpy(ifilename,argumente[count]); 
+      if(!loadfile) {
+        loadfile=TRUE;
+        strcpy(ifilename,argumente[count]); 
+      }
     }
    }
    if(quitflag) c_quit("");
 }
 
-int loadprg(char *filename) {
+void loadprg(char *filename) {
 
-  programbufferlen=0;prglen=0; pc=0; sp=0;
+  programbufferlen=prglen=pc=sp=0;
     mergeprg(filename);
-    return(0);
 }

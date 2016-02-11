@@ -28,24 +28,26 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "version.h"
+#include "protos.h"
 #include "xbasic.h"
-#include "file.h"
-#include "window.h"
 
 
-const char version[]="1.00";           /* Programmversion           */
-const char vdate[]="01.01.1999";
+const char version[]=VERSION;           /* Programmversion           */
+const char vdate[]=VERSION_DATE;
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
 #else
 const char xbasic_name[]="x11basic";
 #endif
 
-int pc=0,sp=0,prglen=0,echo=TRUE,batch=0,errcont=0,everyflag=0;
+int pc=0,sp=0,prglen=0,echo=0,batch=0,errcont=0,everyflag=0;
 int everytime=0,alarmpc=-1;
 char ifilename[100]="input.bas";       /* Standartfile             */
 int loadfile=FALSE;
 int stack[STACKSIZE];
+/*int param_anzahl; */             /* fuer PARAM$()*/
+/*char **param_argumente;*/
 
 /* fuer die Dateiverwaltung     */
 FILE *dptr[100];
@@ -64,178 +66,191 @@ void *obh;       /* old break handler  */
 /* Kommandoliste: muss alphabetisch sortiert sein !   */
 
 COMMAND comms[]= {
- { P_PRINT,  "?"        , c_print},
+
+ { P_ARGUMENT,  "!nulldummy", bidnm ,0,0   ,{0}},
+ { P_ARGUMENT,  "?"         , c_print ,0,-1 ,{0}},
     
- { P_EVAL,   "ADD"      , c_add  },
- { P_EVAL,   "AFTER"    , c_after  },
- { P_EVAL,   "ALERT"    , c_alert  },
- { P_EVAL,   "ARRAYFILL", c_arrayfill},
- { P_EVAL,   "ARRAYCOPY", c_arraycopy},
+ { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
+ { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2 },
+ { P_ARGUMENT,   "ALERT"    , c_alert     ,5, 5,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
+ { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2},
+ { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2},
 
- { P_BELL,   "BEEP"     , c_beep},
- { P_BELL,   "BELL"     , c_beep},
- { P_EVAL,   "BGET"     , c_bget},
- { P_EVAL,   "BLOAD"    , c_bload},
- { P_EVAL,   "BMOVE"    , c_bmove}, 
- { P_EVAL,   "BPUT"     , c_bput},
- { P_BREAK,  "BREAK"    , c_break}, 
- { P_EVAL,   "BSAVE"    , c_bsave},
+ { P_SIMPLE, "BEEP"     , c_beep      ,0, 0},
+ { P_SIMPLE, "BELL"     , c_beep      ,0, 0},
+ { P_ARGUMENT,   "BGET"     , c_bget      ,1,-1},
+ { P_ARGUMENT,   "BLOAD"    , c_bload     ,1,-1},
+ { P_ARGUMENT,   "BMOVE"    , c_bmove     ,1,-1}, 
+ { P_ARGUMENT,   "BOX"      , c_box       ,4, 4},
+ { P_ARGUMENT,   "BPUT"     , c_bput      ,1,-1},
+ { P_BREAK,  "BREAK"    , c_break     ,0, 0}, 
+ { P_ARGUMENT,   "BSAVE"    , c_bsave     ,1,-1},
 
- { P_CASE,   "CASE"     , c_case},
- { P_EVAL,   "CHAIN"    , c_chain},
- { P_EVAL,   "CIRCLE"   , c_circle},
- { P_EVAL,   "CLEAR"    , c_clear},
- { P_EVAL,   "CLEARW"   , c_clearw},
- { P_EVAL,   "CLOSE"    , c_close},
- { P_EVAL,   "CLOSEW"   , c_closew},
- { P_EVAL,   "CLR"      , c_clr},
- { P_EVAL,   "CLS"      , c_cls},
- { P_EVAL,   "COLOR"    , c_color},
- { P_CONT,   "CONT"     , c_cont},
+ { P_CASE,   "CASE"     , c_case   ,1,1},
+ { P_ARGUMENT,   "CHAIN"    , c_chain  ,1,1},
+ { P_ARGUMENT,   "CIRCLE"   , c_circle ,3,4},
+ { P_ARGUMENT,   "CLEAR"    , c_clear  ,0,-1},
+ { P_ARGUMENT,   "CLEARW"   , c_clearw ,0,1},
+ { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1},
+ { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1},
+ { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1},
+ { P_SIMPLE, "CLS"      , c_cls    ,0,0},
+ { P_ARGUMENT,   "COLOR"    , c_color  ,1,1},
+ { P_SIMPLE, "CONT"     , c_cont   ,0,0},
 /* Kontrollsystembefehle  */
 #ifdef CONTROL 
 
- { P_EVAL,   "CSPUT"    , c_csput},
- { P_EVAL,   "CSCLEARCALLBACKS"    , c_csclearcallbacks},
- { P_EVAL,   "CSSET"    , c_csput},
- { P_EVAL,   "CSSETCALLBACK"    , c_cssetcallback},
- { P_EVAL,   "CSSWEEP"  , c_cssweep},
- { P_EVAL,   "CSVPUT"   , c_csvput},
+ { P_ARGUMENT,   "CSPUT"    , c_csput ,1,-1},
+ { P_SIMPLE, "CSCLEARCALLBACKS"    , c_csclearcallbacks,0,0},
+ { P_ARGUMENT,   "CSSET"    , c_csput,1,-1},
+ { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,1,-1},
+ { P_ARGUMENT,   "CSSWEEP"  , c_cssweep,2,-1},
+ { P_ARGUMENT,   "CSVPUT"   , c_csvput,1,-1},
 #endif
 
- { P_DATA,   "DATA"     , c_nop  },
- { P_EVAL,   "DEC"      , c_dec},
- { P_DEFAULT,"DEFAULT"  , c_case},
- { P_EVAL,   "DEFFILL"  , c_deffill},
- { P_EVAL,   "DEFLINE"  , c_defline},
- { P_EVAL,   "DEFMOUSE" , c_defmouse},
- { P_EVAL,   "DEFTEXT"  , c_deftext},
- { P_EVAL,   "DIM"      , c_dim},
- { P_EVAL,   "DIV"      , c_div},
- { P_DO,     "DO"       , c_do  },
- { P_EVAL,   "DRAW"     , c_draw},
+ { P_DATA,   "DATA"     , c_nop ,0,-1 },
+ { P_ARGUMENT,   "DEC"      , c_dec, 1,1},
+ { P_DEFAULT,"DEFAULT"  , c_case, 0,0},
+ { P_ARGUMENT,   "DEFFILL"  , c_deffill ,1,-1},
+ { P_ARGUMENT,   "DEFLINE"  , c_defline ,1,-1},
+ { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1},
+ { P_ARGUMENT,   "DEFTEXT"  , c_deftext,1,-1},
+ { P_ARGUMENT,   "DIM"      , c_dim ,1,-1},
+ { P_ARGUMENT,   "DIV"      , c_div ,2,2},
+ { P_DO,     "DO"       , c_do  ,0,0},
+ { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1},
 
- { P_EVAL,   "DUMP"     , c_dump},
+ { P_ARGUMENT,   "DUMP"     , c_dump ,0,1},
+
+ { P_ARGUMENT,   "ECHO"     , c_echo ,1,1},
+ { P_ARGUMENT,   "ELIPSE"     , c_ellipse,4,5},
+ { P_ARGUMENT,   "ELLIPSE"  , c_ellipse,4,5},
+ { P_ELSE,   "ELSE"     , bidnm  ,0,2},
+ { P_SIMPLE, "END"      , c_end   ,0,0},
+ { P_ENDPROC,"ENDFUNC"  , c_return,0,0},
+ { P_ENDPROC,"ENDFUNCTION", c_return,0,0},
+ { P_ENDIF,  "ENDIF"       , bidnm  ,0,0},
+ { P_ENDSELECT,"ENDSELECT" , bidnm  ,0,0},
+ { P_ENDSELECT,"ENDSWITCH" , bidnm  ,0,0},
+ { P_ARGUMENT,   "ERASE"    , c_erase,0,-1},
+ { P_ARGUMENT,   "ERROR"    , c_error,0,1},
+ { P_ARGUMENT,   "EVENT"    , c_allevent,0,-1},
+ { P_ARGUMENT,   "EVERY"    , c_every,0,-1},
+ { P_ARGUMENT,   "EXIT"     , c_exit,0,-1},
+/*
+ { P_ARGUMENT,   "EXPORT"     , c_export,1,2, {PL_ALL, PL_NUMBER}},  
+*/
+ { P_ARGUMENT,   "FFT"      , c_fft,0,-1},
+ { P_ARGUMENT,   "FILESELECT", c_fileselect,3,-1},
+ { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
+ { P_FOR,    "FOR"      , c_for,1,-1},
+ { P_PROC,   "FUNCTION" , c_end,1,-1},
+
+ { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1},
+ { P_ARGUMENT,   "GOTO"     , c_goto,1,1},
+ { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1},
+
+ { P_SIMPLE, "HOME"     , c_home,0,0},
+
+ { P_IF,     "IF"       , c_if,1,-1},
+ { P_ARGUMENT,   "INC"      , c_inc,1,1},
+ { P_ARGUMENT,   "INFOW"    , c_infow,2,2},
+ { P_ARGUMENT,   "INPUT"    , c_input,1,-1},
+
+ { P_ARGUMENT,   "KEYEVENT" , c_keyevent,0,-1},
 
 
- { P_EVAL,   "ECHO"     , c_echo},
- { P_EVAL,   "ELIPSE"     , c_ellipse},
- { P_EVAL,   "ELLIPSE"     , c_ellipse},
- { P_ELSE,   "ELSE"     , c_else  },
- { P_END,    "END"      , c_end},
- { P_ENDPROC,"ENDFUNC"  , c_return},
- { P_ENDPROC,"ENDFUNCTION", c_return},
- { P_ENDIF,  "ENDIF"    , c_nop  },
- { P_ENDSELECT,"ENDSELECT" , c_nop  },
- { P_ENDSELECT,"ENDSWITCH" , c_nop  },
- { P_EVAL,   "ERASE"    , c_erase},
- { P_EVAL,   "ERROR"    , c_error},
- { P_EVAL,   "EVENT"    , c_allevent},
- { P_EVAL,   "EVERY"    , c_every},
- { P_EVAL,   "EXIT"     , c_exit},
-
- { P_EVAL,   "FFT"      , c_fft},
- { P_EVAL,   "FILESELECT", c_fileselect},
- { P_EVAL,   "FLUSH"    , c_flush},
- { P_FOR,    "FOR"      , c_for},
- { P_PROC,   "FUNCTION" , c_end},
-
- { P_EVAL,   "GOSUB"    , c_gosub},
- { P_EVAL,   "GOTO"     , c_goto},
- { P_EVAL,   "GRAPHMODE", c_graphmode},
-
- { P_EVAL,   "HOME"     , c_home},
-
- { P_IF,     "IF"       , c_if},
- { P_EVAL,   "INC"      , c_inc},
- { P_EVAL,   "INFOW"    , c_infow},
- { P_EVAL,   "INPUT"    , c_input},
-
- { P_EVAL,   "KEYEVENT" , c_keyevent},
-
-
- { P_EVAL,   "LET"      , c_let},
- { P_EVAL,   "LINEINPUT", c_lineinput},
+ { P_ARGUMENT,   "LET"      , c_let,1,-1},
+ { P_ARGUMENT,   "LINE"     , c_line,4,4},
+ { P_ARGUMENT,   "LINEINPUT", c_lineinput,1,2},
  
- { P_EVAL,   "LIST"     , c_list},
- { P_EVAL,   "LOAD"     , c_load},
- { P_EVAL,   "LOCAL"    , c_local},
- { P_LOOP,   "LOOP"     , c_loop},
- { P_EVAL,   "LTEXT"    , c_ltext},
+ { P_SIMPLE, "LIST"     , c_list,0,0},
+ { P_ARGUMENT,   "LOAD"     , c_load,1,1},
+ { P_ARGUMENT,   "LOCAL"    , c_local,1,-1},
+ { P_LOOP,   "LOOP"     , bidnm,0,0},
+ { P_ARGUMENT,   "LTEXT"    , c_ltext,0,-1},
 
- { P_EVAL,   "MERGE"    , c_merge},
- { P_EVAL,   "MOUSE"    , c_mouse},
- { P_EVAL,   "MOUSEEVENT" , c_mouseevent},
- { P_EVAL,   "MOTIONEVENT" , c_motionevent},
- { P_EVAL,   "MOVEW"    , c_movew},
- { P_EVAL,   "MUL"      , c_mul},
+ { P_ARGUMENT,   "MERGE"    , c_merge,1,1},
+ { P_ARGUMENT,   "MOUSE"    , c_mouse,1,4},
+ { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,-1},
+ { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,-1},
+ { P_ARGUMENT,   "MOVEW"    , c_movew,0,-1},
+ { P_ARGUMENT,   "MUL"      , c_mul,2,2},
  
- { P_NEW,    "NEW"      , c_new},
- { P_NEXT,   "NEXT"     , c_next},
- { P_EVAL,   "NOROOTWINDOW", c_norootwindow},
+ { P_SIMPLE, "NEW"      , c_new,0,0},
+ { P_NEXT,   "NEXT"     , c_next,0,1},
+ { P_IGNORE|P_SIMPLE, "NOOP",         c_nop,         0,0},
+ { P_IGNORE|P_SIMPLE, "NOP",          c_nop,         0,0},
+ { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
 
- { P_EVAL,   "ON"       , c_on},
- { P_EVAL,   "OPEN"     , c_open},
- { P_EVAL,   "OPENW"    , c_openw},
- { P_EVAL,   "OUT"      , c_out},
+ { P_ARGUMENT,   "ON"       , c_on,         1,-1},
+ { P_ARGUMENT,   "OPEN"     , c_open,       1,-1},
+ { P_ARGUMENT,   "OPENW"    , c_openw,      1,-1},
+ { P_ARGUMENT,   "OUT"      , c_out,        2,-1},
 
- { P_EVAL,   "PAUSE"    , c_pause},
- { P_EVAL,   "PCIRCLE"  , c_pcircle},
- { P_EVAL,   "PELIPSE"  , c_pellipse},
- { P_EVAL,   "PLIST"    , c_plist},
- { P_EVAL,   "PLOT"     , c_plot},
- { P_PRINT,  "PRINT"    , c_print},
- { P_PROC,   "PROCEDURE", c_end  },
- { P_IGNORE, "PROGRAM"  , c_nop  },
- { P_EVAL,   "PUTBACK"  , c_unget},
+ { P_ARGUMENT,   "PAUSE"    , c_pause,      1,1},
+ { P_ARGUMENT,   "PBOX"     , c_pbox ,      4,4},
+ { P_ARGUMENT,   "PCIRCLE"  , c_pcircle,    3,4},
+ { P_ARGUMENT,   "PELLIPSE"  , c_pellipse,   4,5},
+ { P_SIMPLE, "PLIST"    , c_plist,      0,0},
+ { P_ARGUMENT,   "PLOT"     , c_plot,       2,2},
+ { P_ARGUMENT,  "PRINT"    , c_print,       0,-1},
+ { P_PROC,   "PROCEDURE", c_end  ,      0,0},
+ { P_IGNORE, "PROGRAM"  , c_nop  ,      0,0},
+ /* Ausdruck als Message queuen
+  { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALL,PL_NUMBER}},
+ */
+ { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,2},
 
- { P_EVAL,   "QUIT"     , c_quit},
+ { P_SIMPLE, "QUIT"     , c_quit,       0,0},
 
+ { P_IGNORE, "RANDOMIZE", c_nop  ,      0,0},
+ { P_ARGUMENT,   "READ"     , c_read,       1,-1},
+ { P_ARGUMENT,   "RELSEEK"  , c_relseek,    2,2},
+ { P_REM,    "REM"      , c_nop  ,      0,0},
+ { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
+ { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1},
+ { P_ARGUMENT,   "RETURN"   , c_return,     0,1},
+ { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
+ { P_SIMPLE, "RUN"      , c_run,        0,0},
 
- { P_IGNORE, "RANDOMIZE", c_nop  },
- { P_EVAL,   "READ"     , c_read},
- { P_EVAL,   "RELSEEK"  , c_relseek},
- { P_REM,    "REM"      , c_nop  },
- { P_REPEAT, "REPEAT"   , c_nop  },
- { P_EVAL,   "RESTORE"  , c_restore},
- { P_EVAL,   "RETURN"   , c_return},
- { P_EVAL,   "ROOTWINDOW", c_rootwindow},
- { P_EVAL,   "RUN"      , c_run},
+ { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1},
+ { P_ARGUMENT,   "SAVEWINDOW", c_savewindow,1,1},
+ { P_ARGUMENT,   "SCOPE"    , c_scope,      1,-1},
+ { P_ARGUMENT,   "SEEK"     , c_seek,       1,-1},
+ { P_SELECT, "SELECT"   , c_select,     1,1},
+ /*
+ { P_ARGUMENT,   "SEMGIVE"  , c_semgive, 1,2,{PL_NUMBER,PL_NUMBER}},
+ { P_ARGUMENT,   "SEMTAKE"  , c_semtake, 1,2,{PL_NUMBER,PL_NUMBER}},
+ */
+ { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1},
+ { P_ARGUMENT,	"SETMOUSE" , c_setmouse,   1,-1},
+ { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
+ { P_ARGUMENT,	"SIZEW"    , c_sizew,      1,-1},
+ { P_SIMPLE,	"STOP"     , c_stop,       0,0},
+ { P_ARGUMENT,	"SUB"      , c_sub,        2,2},
+ { P_ARGUMENT,	"SWAP"     , c_swap,       2,2},
+ { P_SELECT,	"SWITCH"   , c_select,     1,1},
+ { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1},
 
- { P_EVAL,   "SAVESCREEN"    , c_savescreen},
- { P_EVAL,   "SAVEWINDOW"    , c_savewindow},
- { P_EVAL,   "SCOPE"    , c_scope},
- { P_EVAL,   "SEEK"     , c_seek},
- { P_SELECT, "SELECT"   , c_select},
- { P_EVAL,   "SETFONT"  , c_setfont},
- { P_EVAL,   "SETMOUSE" , c_setmouse},
- { P_EVAL,   "SHOWPAGE" , c_vsync},
- { P_EVAL,   "SIZEW"    , c_sizew},
+ { P_ARGUMENT,	"TEXT"     , c_text,       3,3},
+ { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2},
+ { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
+ { P_SIMPLE,	"TRON"     , c_tron,       0,0},
+
+ { P_UNTIL,	"UNTIL"    , c_until,      1,1},
+ { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1},
+
+ { P_SIMPLE,	"VERSION"  , c_version,    0,0},
+ { P_ARGUMENT,	"VOID"     , c_void,       1,1},
+ { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
+
+ { P_WEND,	"WEND"     , bidnm,       0,0},
+ { P_WHILE,	"WHILE"    , c_while,      1,1},
+ { P_ARGUMENT,	"WORT_SEP" , c_wort_sep,  2,-1},
  
- { P_STOP,   "STOP"     , c_stop},
- { P_EVAL,   "SUB"      , c_sub},
- { P_EVAL,   "SWAP"     , c_swap},
- { P_SELECT, "SWITCH"   , c_select},
- { P_EVAL,   "SYSTEM"   , c_system},
-
- { P_EVAL,   "TEXT"     , c_text},
- { P_EVAL,   "TITLEW"    , c_titlew},
- { P_EVAL,   "TROFF"    , c_troff},
- { P_EVAL,   "TRON"     , c_tron},
-
- { P_UNTIL,  "UNTIL"    , c_until},
- { P_EVAL,   "USEWINDOW", c_usewindow},
-
- { P_EVAL,   "VERSION"  , c_version},
- { P_EVAL,   "VOID"     , c_void},
- { P_EVAL,   "VSYNC"    , c_vsync},
-
- { P_WEND,   "WEND"     , c_wend},
- { P_WHILE,  "WHILE"    , c_while},
- { P_EVAL,   "WORT_SEP" , c_wort_sep},
- 
- { P_EVAL,   "XLOAD"    , c_xload},
- { P_EVAL,   "XRUN"     , c_xrun},
+ { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
+ { P_SIMPLE,	"XRUN"     , c_xrun,     0,0},
 
 
 };
@@ -265,9 +280,9 @@ void fatal_error_handler( int signum) {
 
   if(batch) {
     if(pc>=0) {
-      printf("Zeile  pc-1   : %s\n",program[pc-1]);
-      printf("Zeile: Pc=%d  : %s\n",pc,program[pc]);
-      printf("Zeile  pc+1   : %s\n",program[pc+1]);
+      printf("Zeile  pc-1   : %s\n",program[pc-2]);
+      printf("Zeile: Pc=%d  : %s\n",pc-1,program[pc-1]);
+      printf("Zeile  pc+1   : %s\n",program[pc]);
 
     } else printf("PC negativ !\n");
       printf("Stack-Pointer: SP=%d\n",sp);
@@ -303,7 +318,25 @@ void timer_handler( int signum) {
 }
 
 
+P_CODE make_pcode(char *n) {
+  int oa,i,a,b;
+  char w1[strlen(n)+1],w2[strlen(n)+1];
 
+  /* Kommandoliste durchsuchen, moeglichst effektiv ! */
+
+  i=0;a=anzcomms;
+  for(b=0; b<strlen(w1); b++) {
+    while(w1[b]>(comms[i].name)[b] && i<a) i++;
+    oa=a;a=i;
+    while(w1[b]<(comms[a].name)[b]+1 && a<oa) a++;
+    if(i==a) break;
+  }
+  if(i<anzcomms) {
+    if(strcmp(w1,comms[i].name)==0) {(comms[i].routine)(w2);return;}
+  }   
+  
+
+}
 
 int mergeprg(char *fname) {
   char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,len,typ;  FILE *dptr;
@@ -314,6 +347,7 @@ int mergeprg(char *fname) {
   programbuffer=realloc(programbuffer,programbufferlen+len+1);
   bload(fname,programbuffer+programbufferlen,len);
   programbufferlen+=len;
+  clear_parameters();
 
   /* Zeilenzahl herausbekommen */
   pos=programbuffer;
@@ -338,13 +372,17 @@ int mergeprg(char *fname) {
  
     
     strcpy(zeile, program[i]);
+    pcode[i].panzahl=0;
+    pcode[i].ppointer=NULL;
+    pcode[i].argument=NULL;
 
-    wort_sep2(zeile," ! ",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
+    wort_sep2(zeile," !",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
     xtrim(zeile,TRUE,zeile);
-    if(wort_sep(zeile,' ',TRUE,zeile,buffer)==0) {
-      pcode[i].opcode=P_IGNORE;
-    } else if(zeile[0]=='\'') {
+    if(wort_sep(zeile,' ',TRUE,zeile,buffer)==0) pcode[i].opcode=P_IGNORE|P_NOCMD;	      
+    else if(zeile[0]=='\'' || zeile[0]=='#') {
       pcode[i].opcode=P_REM;
+      pcode[i].argument=malloc(strlen(buffer)+1);
+      strcpy(pcode[i].argument,buffer);
     } else if(zeile[strlen(zeile)-1]==':') {
       zeile[strlen(zeile)-1]=0;
 #ifdef DEBUG
@@ -381,18 +419,100 @@ int mergeprg(char *fname) {
         int j;
 	
       /* Rest Transformieren    */
-        pcode[i].opcode=P_EVAL;
-        pcode[i].pointer=program[i];
+       
         for(j=0;j<anzcomms; j++) {
 	  if(strcmp(zeile,comms[j].name)==0) {
-	    pcode[i].opcode=comms[j].opcode;
+	    pcode[i].opcode=comms[j].opcode|j;
+	    if(comms[j].pmax==0 || (pcode[i].opcode & P_SIMPLE)) {
+	      pcode[i].panzahl=0;
+	      pcode[i].ppointer=NULL;
+	    } else {
+	      int e,ii=0;
+	      char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
+	      
+	      xtrim(buffer,TRUE,buffer); /* hier Parameter abseparieren */
+	      pcode[i].argument=malloc(strlen(buffer)+1);
+	      strcpy(pcode[i].argument,buffer);
+	      
+	      /* Parameter finden */
+	      e=wort_sep(buffer,',',TRUE,w1,w2);
+              while(e) {
+ 	        e=wort_sep(w2,',',TRUE,w1,w2);
+                ii++;
+              }
+	      if((comms[j].pmin>ii && comms[j].pmin!=-1) || (comms[j].pmax<ii && comms[j].pmax!=-1))  printf("Warnung: Z.%d Falsche Anzahl Parameter.\n",i); /*Programmstruktur fehlerhaft */ 
+	      pcode[i].panzahl=ii;
+	      if(ii==0) {
+	        pcode[i].ppointer=NULL;
+	      } else {
+	        pcode[i].ppointer=malloc(sizeof(PARAMETER)*ii);
+		
+                e=wort_sep(buffer,',',TRUE,w1,w2); ii=0;
+		while(e) {
+		  
+	          if(strlen(w1)) {
+                    pcode[i].ppointer[ii].typ=PL_EVAL; 
+		    pcode[i].ppointer[ii].pointer=malloc(strlen(w1)+1);
+		    strcpy(pcode[i].ppointer[ii].pointer,w1);
+
+     		  } else  {
+		    pcode[i].ppointer[ii].typ=PL_LEER;
+		    pcode[i].ppointer[ii].pointer=NULL;
+		  }
+		  e=wort_sep(w2,',',TRUE,w1,w2);
+                  ii++;
+                }
+		
+	      }
+
+	       
+	    }
+	    /* Einige Befehle noch nachbearbeiten */
+	    if(strcmp(zeile,"LOOP")==0) { /*Zugehoeriges Do suchen */
+	      pcode[i].integer=suchep(i-1,-1,P_DO,P_LOOP,P_DO); 
+              if(pcode[i].integer==-1)  printf("Warnung: LOOP: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+	    } else  if(strcmp(zeile,"WEND")==0) { /*Zugehoeriges WHILE suchen */
+              pcode[i].integer=suchep(i-1,-1,P_WHILE,P_WEND,P_WHILE); 
+              if(pcode[i].integer==-1)  printf("Warnung: WEND: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+	    } else  if(strcmp(zeile,"NEXT")==0) { /*Zugehoeriges FOR suchen */
+              pcode[i].integer=suchep(i-1,-1,P_FOR,P_NEXT,P_FOR); 
+              if(pcode[i].integer==-1)  printf("Warnung: NEXT: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+	    } else  if(strcmp(zeile,"UNTIL")==0) { /*Zugehoeriges REPEAT suchen */
+              pcode[i].integer=suchep(i-1,-1,P_REPEAT,P_UNTIL,P_REPEAT); 
+              if(pcode[i].integer==-1)  printf("Warnung: UNTIL: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+	    }
 	    break;
 	  }
+	}
+	if(j==anzcomms) { /* Kein Befehl passt... */
+	  pcode[i].opcode=P_EVAL|P_NOCMD;
+	  pcode[i].panzahl=0;
+	  pcode[i].ppointer=NULL;
+	  pcode[i].argument=malloc(strlen(buffer)+1);
+	  strcpy(pcode[i].argument,buffer);
+	 /* printf("Warnung: Zeile %d Unbek. Befehl: <%s>\n",i,zeile);*/
 	}
       }
     }
     
   } 
+  /* Pass 2 */
+  for(i=0; i<prglen;i++) {
+  
+    if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) { /* Suche Endif */
+      pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1; 
+      if(pcode[i].integer==0)  printf("Warnung: ELSE: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) { /* Suche Endif */
+      pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1; 
+      if(pcode[i].integer==0)  printf("Warnung: IF: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_WHILE) { /* Suche WEND */
+      pcode[i].integer=suchep(i+1,1,P_WEND,P_WHILE,P_WEND)+1; 
+      if(pcode[i].integer==0)  printf("Warnung: WHILE: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+    } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) { /* Suche NEXT */
+      pcode[i].integer=suchep(i+1,1,P_NEXT,P_FOR,P_NEXT)+1; 
+      if(pcode[i].integer==0)  printf("Warnung: FOR: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+    }
+  }
   free(buffer);free(zeile); 
 }
 
@@ -401,6 +521,18 @@ void clear_labelliste() {
   if(anzlabels) {
     for(i=0;i<anzlabels;i++) free(labels[i].name);
     anzlabels=0;
+  }
+}
+void clear_parameters() {
+  int i;
+  if(prglen) {
+    for(i=0;i<prglen;i++) {
+      if(pcode[i].ppointer!=NULL) {
+        free(pcode[i].ppointer->pointer);
+        free(pcode[i].ppointer);
+      }
+      free(pcode[i].argument);
+    }
   }
 }
 
@@ -449,15 +581,6 @@ char *indirekt2(char *funktion) {
 }
 
 
-
-char *rsearchchr2(char *start,char c,char *end) {
-  int f=0;
-  while((start[0]!=c || f) && start>=end) {
-    if(start[0]=='\"') f= !f;
-    start--;
-  }
-  return(start);
-}
 
 int type2(char *ausdruck) {
   char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
@@ -528,7 +651,7 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
   int i,f=0,o;
 
   for(i=begin; (i<prglen && i>=0);i+=richtung) {
-    o=pcode[i].opcode;
+    o=pcode[i].opcode&PM_SPECIAL;
     if(o==such && f==0) return(i);
     else if(o==w1) f++;
     else if(o==w2) f--;
@@ -544,7 +667,7 @@ char *print_arg(char *ausdruck) {
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
   
   /*printf("print_arg: %s\n",ausdruck);*/
-  ergebnis=malloc(1);
+  ergebnis=malloc(4);
   ergebnis[0]=0;
   e=arg2(ausdruck,TRUE,w1,w2);
   while(e!=0) {
@@ -637,43 +760,41 @@ void kommando(char *cmd) {
     strcat(test2,w2);  
     kommando(test2);
     free(test2);
-  }
-  
-  /* Jetzt die restlichen Grafik-Routinen  */
-   else if(strcmp(w1,"BOX")==0) c_x4(w2,1);
-   else if(strcmp(w1,"LINE")==0) c_x4(w2,0);
-   else if(strcmp(w1,"PBOX")==0) c_x4(w2,2);
-   else  {
-    printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);
-
-    }
+  } else  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);
 }
 
 
 void programmlauf(){
-    int isp,ipc;
+    int isp,ipc,opc;
 #ifdef DEBUG
-    int opc,timer;
+    int timer;
 #endif    
     isp=sp;ipc=pc;
     while(batch && pc<prglen && pc>=0 && sp>=isp)  {
       if(echo) printf("%s\n",program[pc]);
 #ifdef DEBUG      
-      timer=clock();opc=pc;
-#endif   
-      switch(pcode[pc].opcode) {
-        case P_IGNORE:
-	case P_REM: 
-	case P_ENDIF:
-	case P_ENDSELECT:
-	case P_REPEAT:
-	case P_LABEL:
-	case P_DATA:
-	  pc++;break;
-	case P_PROC: pc++;c_end("");break;
-	case P_WEND: pc++;c_wend("");break;  
-	case P_STOP: pc++;c_stop("");break;  
-        default: kommando(program[pc++]);
+      timer=clock();
+#endif 
+      opc=pc;  
+      if(pcode[opc].opcode&P_PREFETCH) pc=pcode[opc].integer;
+      else pc++;
+      if(pcode[opc].opcode&P_IGNORE) ;
+      else if(pcode[opc].opcode&P_EVAL)  kommando(program[opc]);
+      else if((pcode[opc].opcode&PM_TYP)==P_SIMPLE) {
+        (comms[pcode[opc].opcode&PM_COMMS].routine)(NULL);      
+      } else if(pcode[opc].opcode&P_INVALID) {
+        printf("Zeile %d: Syntax nicht korrekt: %s\n",ipc,program[opc]);
+	batch=0;
+      }
+      else if((pcode[opc].opcode&PM_COMMS)>=anzcomms) {
+        printf("Precompiler error...\n");
+        kommando(program[opc]);
+      } else {
+        if(pcode[opc].opcode&P_ARGUMENT)
+          (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].argument);
+        else if(pcode[opc].opcode&P_PLISTE)
+	 (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].ppointer);
+        else printf("Was denn noch ?: %s\n",program[opc]);
       }
 #ifdef DEBUG
       ptimes[opc]=(int)((clock()-timer)/1000);  /* evaluiert die
@@ -699,6 +820,8 @@ main(int anzahl, char *argumente[]) {
   signal(SIGALRM, timer_handler);
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
   atexit(reset_input_mode);
+  param_anzahl=anzahl;
+  param_argumente=argumente;
   
   if(anzahl<2) {    /* Kommandomodus */
     intro();
@@ -719,7 +842,8 @@ main(int anzahl, char *argumente[]) {
   for(;;) {
     programmlauf();
     echo=0;batch=0;
-    zw=do_gets("> ");
+    if(daemonf) zw=simple_gets("");
+    else zw=do_gets("> ");
     if(zw==NULL) {
       c_quit("");
     } else {

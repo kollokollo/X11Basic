@@ -101,3 +101,24 @@ invert_case_line (count, key)
   rl_point = end - direction;
 }
 
+char *simple_gets(char *prompt) {
+  char *buffer=malloc(1024);  
+  if (line_read != (char *)NULL)
+    {
+      free (line_read);
+      line_read = (char *)NULL;
+    }
+  set_input_mode_echo(0);
+  /* Get a line from the user. */
+  printf(prompt);
+  fflush(stdout);
+  line_read = fgets(buffer,1024,stdin);
+  if(line_read==NULL) free(buffer);
+  /*set_input_mode_echo(0);*/
+
+  /* If the line has any text in it, save it on the history. */
+  if (line_read && *line_read)
+    add_history (line_read);
+
+  return (line_read);
+}

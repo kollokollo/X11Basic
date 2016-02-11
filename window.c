@@ -808,7 +808,7 @@ typedef struct fileinfo
   } FINFO;
 #define ANZSHOW 13
 #define FWW 34
-void draw_filelist(FINFO *filenamen,int anzfiles,int showstart, RECT box) {
+void draw_filelist(FINFO *filenamen,int *filenamensel,int anzfiles,int showstart, RECT box) {
 
   int i,j;
  /* Directory */
@@ -823,11 +823,29 @@ void draw_filelist(FINFO *filenamen,int anzfiles,int showstart, RECT box) {
     for(i=0;i<ANZSHOW;i++) {
       j=showstart+i;
       if(j<anzfiles) {
+      
+        if(filenamensel[j]==1)  XSetForeground(display[usewindow],gc[usewindow],schwarz);
+        else XSetForeground(display[usewindow],gc[usewindow],weiss);
+
+        XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],
+	box.x+chw*2+1,box.y+(9+i)*chh+1,chw*(FWW-2)-1,chh-1);      
+	
+	
+	if(filenamensel[j]==1) XSetForeground(display[usewindow],gc[usewindow],weiss);
+
+        else XSetForeground(display[usewindow],gc[usewindow],schwarz);
+        
+	
+
+
         XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
           box.x+chw*5,box.y+(10+i)*chh-2,filenamen[j].name,min(strlen(filenamen[j].name),FWW-6));
 	if(filenamen[j].typ & FT_DIR)   
 	  XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],
           box.x+3*chw,box.y+(10+i)*chh-chh/2-2,5,6);   
+
+          XSetForeground(display[usewindow],gc[usewindow],schwarz);
+
 
       } else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
        box.x+chw*5,box.y+(10+i)*chh," ",1);
@@ -942,7 +960,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   #define ANZBUTTONS 7
   #define ANZEFELDER 2
   char *ergebnis;
-  int i=0,cy=1,j;
+  int i=0,cy=1,j,k;
   
   BUTTON buttons[ANZBUTTONS]; 
   ETEXT efeld[ANZEFELDER];
@@ -959,6 +977,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   XGCValues gc_val;
   
   FINFO filenamen[MAXANZFILES];
+  int filenamensel[MAXANZFILES];
+  
   int anzfiles,showstart=0;
 
 
@@ -1090,7 +1110,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
     box.x+2*chw,box.y+8*chh,chw*2,chh*1);   
 
     /* Directory */
-    draw_filelist(filenamen,anzfiles,showstart,box);
+    draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
     draw_mask(mask, box);
     draw_scaler(anzfiles,showstart,box);
 
@@ -1134,10 +1154,11 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 		     draw_efeld(&efeld[0]);
 	             if(cy==0) draw_ecursor(&efeld[cy]);
 		     anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
+		     for(k=0;k<anzfiles;k++) filenamensel[k]=0;
                      sort_dir(filenamen,anzfiles);
                      draw_mask(mask,box);
 	             showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	             draw_filelist(filenamen,anzfiles,showstart,box);
+	             draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	             draw_scaler(anzfiles,showstart,box);
 		     activate();
 		   }
@@ -1151,9 +1172,10 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	           if(cy==0) draw_ecursor(&efeld[cy]);
 		   anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
                    sort_dir(filenamen,anzfiles);
+		   for(k=0;k<anzfiles;k++) filenamensel[k]=0;
                    draw_mask(mask,box);
 	           showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	           draw_filelist(filenamen,anzfiles,showstart,box);
+	           draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	           draw_scaler(anzfiles,showstart,box);
 		   activate();
 		   
@@ -1164,14 +1186,14 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 		} else if(i==5) {
 		  if(showstart<anzfiles-ANZSHOW) {
 	            showstart++;
-	            draw_filelist(filenamen,anzfiles,showstart,box);
+	            draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	            draw_scaler(anzfiles,showstart,box);
 	            activate();
 	          }
 		} else if(i==4) {
 		  if(showstart) {
 	            showstart--;
-	            draw_filelist(filenamen,anzfiles,showstart,box);
+	            draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	            draw_scaler(anzfiles,showstart,box);
 	            activate();
 	          }
@@ -1199,7 +1221,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
                 sort_dir(filenamen,anzfiles);
                 draw_mask(mask,box);
 	       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	       draw_filelist(filenamen,anzfiles,showstart,box);
+	       draw_filelist(filenamen, filenamensel,anzfiles,showstart,box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	  } else if(event.xbutton.x>box.x+FWW*chw &&
@@ -1248,7 +1270,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 		     (chh*(ANZSHOW-2)*(1-min(1,(float)(ANZSHOW)/anzfiles)))
 		     *(anzfiles-ANZSHOW);
 		     showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	             draw_filelist(filenamen,anzfiles,showstart,box);
+	             draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	             draw_scaler(anzfiles,showstart,box);
 	             activate();
 		     break; 
@@ -1256,7 +1278,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 		 }
 	       }
 	       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	       draw_filelist(filenamen,anzfiles,showstart,box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	  } else if(event.xbutton.x>box.x+2*chw && event.xbutton.x<box.x+FWW*chw
@@ -1279,11 +1301,15 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	           if(cy==0) draw_ecursor(&efeld[cy]);
 		   anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
                    sort_dir(filenamen,anzfiles);
+		   for(k=0;k<anzfiles;k++) filenamensel[k]=0;
                    draw_mask(mask,box);
 	           showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	           draw_filelist(filenamen,anzfiles,showstart,box);
+	           draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	           draw_scaler(anzfiles,showstart, box);
 		 } else {
+		   for(k=0;k<anzfiles;k++) filenamensel[k]=0;
+		   filenamensel[showstart+j]=1;
+		   draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 		   strcpy(efeld[1].p,filenamen[showstart+j].name);
 		   efeld[1].cp=strlen(efeld[1].p);efeld[1].shift=0;
 		   draw_efeld(&efeld[1]);
@@ -1354,28 +1380,28 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	   } else if(ks==0xff54) {
 	     if(showstart<anzfiles-ANZSHOW) {
 	       showstart++;
-	       draw_filelist(filenamen,anzfiles,showstart, box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart, box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	     }
 	   } else if(ks==0xff52) {
 	     if(showstart) {
 	       showstart--;
-	       draw_filelist(filenamen,anzfiles,showstart, box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart, box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	     }
 	   } else if(ks==0xff56) {
 	     if(showstart<anzfiles-ANZSHOW) {
 	       showstart=max(0,min(showstart+ANZSHOW,anzfiles-ANZSHOW));
-	       draw_filelist(filenamen,anzfiles,showstart,box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	       draw_scaler(anzfiles,showstart,box);
 	       activate();
 	     }
 	   } else if(ks==0xff55) {
 	     if(showstart) {
 	       showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));
-	       draw_filelist(filenamen,anzfiles,showstart, box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart, box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	     }  
@@ -1386,7 +1412,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
                 sort_dir(filenamen,anzfiles);
                 draw_mask(mask, box);
 	       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
-	       draw_filelist(filenamen,anzfiles,showstart,box);
+	       draw_filelist(filenamen,filenamensel,anzfiles,showstart,box);
 	       draw_scaler(anzfiles,showstart, box);
 	       activate();
 	     

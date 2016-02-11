@@ -240,3 +240,12 @@ char *rsearchchr(char *buf, char c) {
   }
   return(NULL);
 }
+
+char *rsearchchr2(char *start,char c,char *end) {
+  int f=0;
+  while((start[0]!=c || f) && start>=end) {
+    if(start[0]=='\"') f= !f;
+    start--;
+  }
+  return(start);
+}

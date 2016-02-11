@@ -1,7 +1,11 @@
 AC_INIT(defs.h)
-version="1.00"
+version="1.01"
+vdate=`date`
 AC_SUBST(version)
-echo "#define VERSION \"$version\"">version.h
+cat > version.h  <<EOF
+#define VERSION "$version"
+#define VERSION_DATE "$vdate"
+EOF
 #### PROGRAMS
 AC_PROG_CC
 AC_ISC_POSIX
