@@ -14,7 +14,7 @@
 
 
 
-                       VERSION 1.15
+                       VERSION 1.16
 
             (C) 1997-2008 by Markus Hoffmann
               (kollo@users.sourceforge.net)
@@ -25,6 +25,7 @@
  **  letzte Bearbeitung: Feb. 2005   von Markus Hoffmann		   **
  **  letzte Bearbeitung: Feb. 2007   von Markus Hoffmann		   **
  **  letzte Bearbeitung: Jan. 2008   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: Dez. 2010   von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -46,10 +47,12 @@
 #include "config.h"
 #include "defs.h"
 #include "options.h"
+#include "ptypes.h"
 #include "protos.h"
 #include "kommandos.h"
 #include "gkommandos.h"
 #include "globals.h"
+#include "io.h"
 
 
 const char libversion[]=VERSION;           /* Programmversion           */
@@ -66,7 +69,11 @@ const char xbasic_name[]="doocsxbasic";
 #ifdef TINE
 const char xbasic_name[]="tinexbasic";
 #else
+#ifdef USE_SDL
+const char xbasic_name[]="sdlxbasic";
+#else
 const char xbasic_name[]="xbasic";
+#endif
 #endif
 #endif
 #endif
@@ -88,6 +95,11 @@ int anzlabels=0;
 PROCEDURE procs[ANZPROCS];
 int anzprocs=0;
 int usewindow=DEFAULTWINDOW;
+
+/*  Fuer DATA statements */
+char *databuffer=NULL;  /* Hier werden alle DATA-Inhalte gespeichert.*/
+int databufferlen=0;
+int datapointer=0; 
 
 /* Kommandoliste: muss alphabetisch sortiert sein !   */
 
@@ -120,8 +132,8 @@ const COMMAND comms[]= {
 
  { P_ARGUMENT,   "CALL"     , c_exec      ,1,-1,{PL_INT}},
  { P_CASE,       "CASE"     , c_case      ,1, 1,{PL_NUMBER}},
- { P_ARGUMENT,   "CHAIN"    , c_chain     ,1, 1,{PL_STRING}},
- { P_ARGUMENT,   "CHDIR"    , c_chdir     ,1, 1,{PL_STRING}},
+ { P_PLISTE,     "CHAIN"    , c_chain     ,1, 1,{PL_STRING}},
+ { P_PLISTE,     "CHDIR"    , c_chdir     ,1, 1,{PL_STRING}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "CIRCLE"   , c_circle    ,3, 5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
@@ -161,7 +173,7 @@ const COMMAND comms[]= {
  { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,{PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "DEFLINE"  , c_defline ,1,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "DEFMARK"  , c_defmark,1,3,{PL_INT,PL_INT,PL_INT}},
- { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1,{PL_INT}},
+ { P_PLISTE,   "DEFMOUSE" , c_defmouse, 1,1,{PL_INT}},
  { P_PLISTE,   "DEFTEXT"  , c_deftext,1,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 #endif
  { P_PLISTE,   "DELAY"    , c_pause,      1,1,{PL_NUMBER}},
@@ -184,9 +196,9 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,{PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT,   "DUMP"     , c_dump ,0,1,{PL_STRING}},
+ { P_PLISTE,   "DUMP"     , c_dump ,0,1,{PL_STRING}},
 
- { P_ARGUMENT,   "ECHO"     , c_echo ,1,1,{PL_KEY}},
+ { P_PLISTE,   "ECHO"     , c_echo ,1,1,{PL_KEY}},
  { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
@@ -224,8 +236,8 @@ const COMMAND comms[]= {
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_EXPRESSION}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
- { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,{PL_FILENR,PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR}},
- { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,{PL_VAR,PL_VAR,PL_VAR,PL_VAR,PL_VAR}},
+ { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,{PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
 #endif
  { P_GOSUB,     "GOSUB"    , c_gosub,1,1,{PL_PROC}},
  { P_GOTO,       "GOTO"     , c_goto,1,1,{PL_LABEL}},
@@ -255,7 +267,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "LINK"     , c_link,       2,2,{PL_FILENR,PL_STRING}},
 
  { P_PLISTE,     "LIST"     , c_list,0,2,{PL_INT,PL_INT}},
- { P_ARGUMENT,   "LOAD"     , c_load,1,1,{PL_STRING}},
+ { P_PLISTE,     "LOAD"     , c_load,1,1,{PL_STRING}},
  { P_ARGUMENT,   "LOCAL"    , c_local,1,-1},
  { P_PLISTE,     "LOCATE"    , c_locate,2,2,{PL_INT,PL_INT}},
  { P_LOOP,       "LOOP"     , bidnm,0,0},
@@ -279,7 +291,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,5},
  { P_PLISTE,   "MOVEW"    , c_movew,3,3, {PL_FILENR,PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT,  "MSYNC"     , c_msync  ,2,2,{PL_INT, PL_INT}},
+ { P_PLISTE,  "MSYNC"     , c_msync  ,2,2,{PL_INT, PL_INT}},
  { P_ARGUMENT,   "MUL"      , c_mul,2,2,{PL_NVAR,PL_NUMBER}},
 
  { P_SIMPLE, "NEW"      , c_new,0,0},
@@ -292,7 +304,7 @@ const COMMAND comms[]= {
  { P_PLISTE,   "OBJC_DELETE"    , c_objc_delete,      2,2,{PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,   "ON"       , c_on,         1,-1},
- { P_ARGUMENT,   "OPEN"     , c_open,       3,4,{PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
+ { P_PLISTE,     "OPEN"     , c_open,       3,4,{PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "OPENW"    , c_openw,      1,1,{PL_FILENR}},
 #endif
@@ -341,25 +353,23 @@ const COMMAND comms[]= {
  { P_PLISTE,     "RELSEEK"  , c_relseek,    2,2,{PL_FILENR,PL_INT}},
  { P_REM,    "REM"      , c_nop  ,      0,0},
  { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
- { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1,{PL_LABEL}},
+ { P_PLISTE,   "RESTORE"  , c_restore,    0,1,{PL_LABEL}},
  { P_RETURN,   "RETURN"   , c_return,     0,1},
 #ifndef NOGRAPHICS
  { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
  { P_SIMPLE, "RSRC_FREE", c_rsrc_free,0,0},
- { P_ARGUMENT, "RSRC_LOAD", c_rsrc_load,1,1,{PL_STRING}},
+ { P_PLISTE, "RSRC_LOAD", c_rsrc_load,1,1,{PL_STRING}},
 #endif
 
  { P_SIMPLE, "RUN"      , c_run,        0,0},
 
- { P_ARGUMENT,   "SAVE"     , c_save,0,1,{PL_STRING}},
+ { P_PLISTE,   "SAVE"     , c_save,0,1,{PL_STRING}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "SAVESCREEN", c_savescreen,1,1,{PL_STRING}},
  { P_PLISTE,   "SAVEWINDOW", c_savewindow,1,1,{PL_STRING}},
  { P_ARGUMENT,   "SCOPE"    , c_scope,      1,-1},
 #endif
-#ifdef USE_VGA
  { P_PLISTE,   "SCREEN"    , c_screen,      1,1,{PL_INT}},
-#endif
  { P_PLISTE,   "SEEK"     , c_seek,       1,2,{PL_FILENR,PL_INT}},
  { P_SELECT, "SELECT"   , c_select,     1,1,{PL_CONDITION}},
  /*
@@ -368,17 +378,17 @@ const COMMAND comms[]= {
  */
  { P_PLISTE, "SEND"   , c_send,     2,4,{PL_FILENR,PL_STRING,PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1,{PL_STRING}},
+ { P_PLISTE,	"SETFONT"  , c_setfont,    1,1,{PL_STRING}},
  { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,{PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,	"SGET" , c_sget,   1,1,{PL_SVAR}},
 #endif
- { P_ARGUMENT,  "SHM_DETACH"      , c_detatch,1,1,{PL_INT}},
+ { P_PLISTE,  "SHM_DETACH"      , c_detatch,1,1,{PL_INT}},
  { P_PLISTE,    "SHM_FREE" , c_shm_free,1,1,{PL_INT}},
 #ifndef NOGRAPHICS
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
  { P_PLISTE,	"SIZEW"    , c_sizew,      3,3,{PL_FILENR,PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT,  "SORT",     c_sort,        2,3,{PL_ARRAY,PL_INT,PL_IARRAY}},
+ { P_ARGUMENT,    "SORT",     c_sort,        1,3,{PL_ARRAYVAR,PL_INT,PL_IARRAYVAR}},
  { P_PLISTE,    "SOUND",     c_sound,        1,1,{PL_INT}},
 
  { P_GOSUB,     "SPAWN"    , c_spawn,1,1,{PL_PROC}},
@@ -389,10 +399,10 @@ const COMMAND comms[]= {
  { P_SIMPLE,	"STOP"     , c_stop,       0,0},
  { P_ARGUMENT,	"SUB"      , c_sub,        2,2,{PL_NVAR,PL_NUMBER}},
  { P_ARGUMENT,	"SWAP"     , c_swap,       2,2,{PL_VAR,PL_VAR}},
- { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1,{PL_STRING}},
+ { P_PLISTE,	"SYSTEM"   , c_system,     1,1,{PL_STRING}},
 
 #ifndef NOGRAPHICS
- { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
+ { P_PLISTE,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
 #endif
 #ifdef TINE
  { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,{PL_STRING}},
@@ -413,7 +423,7 @@ const COMMAND comms[]= {
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
 
  { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1,{PL_FILENR}},
- { P_ARGUMENT,  "UNMAP"    , c_unmap  ,2,2,{PL_INT, PL_INT}},
+ { P_PLISTE,    "UNMAP"    , c_unmap  ,2,2,{PL_INT, PL_INT}},
  { P_UNTIL,	"UNTIL"    , c_until,      1,1,{PL_CONDITION}},
 #ifndef NOGRAPHICS
  { P_PLISTE,	"USEWINDOW", c_usewindow,  1,1,{PL_FILENR}},
@@ -424,6 +434,7 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
 #endif
+ { P_PLISTE,     "WATCH"     , c_watch,1,1,{PL_STRING}},
 
  { P_WEND,	"WEND"     , bidnm,       0,0},
  { P_WHILE,	"WHILE"    , c_while,      1,1,{PL_CONDITION}},
@@ -506,8 +517,39 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  pret[i].typ=arr.typ;
 	  pret[i].integer=arr.dimension;
 	  pret[i].pointer=arr.pointer;
+	} else if(pliste[i]==PL_IARRAY) {  /* Int-Array */
+          ARRAY arr=array_parser(w1);
+          if((arr.typ&INTARRAYTYP)!=INTARRAYTYP) {
+	    printf("Syntax error: Kein INTEGER ARRAY!\n");
+            xberror(58,w1); /* Variable %s has incorrect type */
+            free_array(arr);
+	    free_pliste(i,pret);
+            return(-1);  
+          }
+	  pret[i].typ=arr.typ;
+	  pret[i].integer=arr.dimension;
+	  pret[i].pointer=arr.pointer;
+	} else if(pliste[i]==PL_FARRAY) {  /* float-Array */
+          ARRAY arr=array_parser(w1);
+          if((arr.typ&FLOATARRAYTYP)!=FLOATARRAYTYP) {
+	    printf("Syntax error: Kein FLOAT ARRAY!\n");
+            xberror(58,w1); /* Variable %s has incorrect type */
+            free_array(arr);
+	    free_pliste(i,pret);
+            return(-1);  
+          }
+	  pret[i].typ=arr.typ;
+	  pret[i].integer=arr.dimension;
+	  pret[i].pointer=arr.pointer;
 	} else if(pliste[i]==PL_SARRAY) {  /* String-Array */
           ARRAY arr=array_parser(w1);
+          if((arr.typ&STRINGARRAYTYP)!=STRINGARRAYTYP) {
+	    printf("Syntax error: Kein STRING ARRAY!\n");
+            xberror(58,w1); /* Variable %s has incorrect type */
+            free_array(arr);
+	    free_pliste(i,pret);
+            return(-1);  
+          }
 	  pret[i].typ=arr.typ;
 	  pret[i].integer=arr.dimension;
 	  pret[i].pointer=arr.pointer;
@@ -516,13 +558,16 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	   if(!(pret[i].integer&FLOATTYP) && !(pret[i].integer&INTTYP)) xberror(58,n); /* Variable hat falschen Typ */
            pret[i].pointer=varptr(w1);
 	   if(pret[i].pointer==NULL) printf("Fehler bei varptr.\n");
-	} else if((pliste[i] & PL_VAR) || (pliste[i] & PL_KEY)) { ; /* Varname */
+	} else if(pliste[i] & PL_VAR) { ; /* Varname */
 	  pret[i].pointer=malloc(strlen(w1)+1);
 	  strcpy(pret[i].pointer,w1);
 	  pret[i].integer=strlen(w1);
-        } else puts("unknown parameter type.");
+ 	} else if(pliste[i] & PL_KEY) { ; /* Keyword */
+	  pret[i].pointer=malloc(strlen(w1)+1);
+	  strcpy(pret[i].pointer,w1);
+	  pret[i].integer=strlen(w1);
+       } else puts("unknown parameter type.");
       } else pret[i].typ=PL_LEER;
-
       e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
@@ -668,6 +713,8 @@ int init_program() {
 
   clear_labelliste();
   clear_procliste();
+  databufferlen=0;
+
 
   /* Label- und Procedurliste Erstellen und p_code transformieren*/
 
@@ -704,18 +751,36 @@ int init_program() {
       pcode[i].opcode=P_GOSUB|find_comm("GOSUB");  /* Hier fehlt die comms nr */
     } else if(zeile[strlen(zeile)-1]==':') {
       zeile[strlen(zeile)-1]=0;
-#ifdef DEBUG
+#ifdef DEBUG 
       printf("Label gefunden: %s in Zeile %d  \n",zeile,i);
 #endif
       labels[anzlabels].name=malloc(strlen(zeile)+1);
       strcpy(labels[anzlabels].name,zeile);
       labels[anzlabels].zeile=i;
+      labels[anzlabels].datapointer=(char *)(databufferlen?(databufferlen+1):databufferlen);
       pcode[i].opcode=P_LABEL;
       pcode[i].integer=anzlabels;
+  //    printf("LABEL: %s %d %d \n",labels[anzlabels].name,
+  //    labels[anzlabels].zeile,(int)labels[anzlabels].datapointer);
       anzlabels++;
+    } else if(strcmp(zeile,"DATA")==0) {
+#ifdef DEBUG
+      printf("DATA Statement found in line %d. <%s>\n",i,buffer);
+#endif
+      databuffer=realloc(databuffer,databufferlen+strlen(buffer)+2);
+      if(databufferlen) databuffer[databufferlen++]=',';
+      
+      memcpy(databuffer+databufferlen,buffer,strlen(buffer));
+      databufferlen+=strlen(buffer);
+      databuffer[databufferlen]=0;
+   //   printf("databuffer now contains %d Bytes.\n",databufferlen);
+   //   printf("databuffer=<%s>\n",databuffer);
     } else {
       typ=(strcmp(zeile,"PROCEDURE")==0 | 2*(strcmp(zeile,"FUNCTION")==0));
       if(typ) {
+#ifdef DEBUG
+        printf("procedure or function found in line %d.\n",i);
+#endif
         pos2=searchchr(buffer,'(');
         if(pos2 != NULL) {
           pos2[0]=0;pos2++;
@@ -870,7 +935,7 @@ int init_program() {
       /* Wenn indirect, dann PREFETCH und IGNORE aufheben */
       if(*(pcode[i].argument)=='&') pcode[i].opcode&=~(P_PREFETCH|P_IGNORE);
       else {
-        pcode[i].integer=labelnr(pcode[i].argument);
+        pcode[i].integer=labelzeile(pcode[i].argument);
         /* Wenn label nicht gefunden, dann PREFETCH und IGNORE aufheben */
         if(pcode[i].integer==-1)  {
 	  printf("Label %s not found!\n",pcode[i].argument);
@@ -907,6 +972,15 @@ void clear_parameters() {
 }
 
 int labelnr(char *n) {
+  int i;
+  if(anzlabels) {
+    for(i=0;i<anzlabels;i++) {
+      if(strcmp(labels[i].name,n)==0) return(i);
+    }
+  }
+  return(-1);
+}
+int labelzeile(char *n) {
   int i;
   if(anzlabels) {
     for(i=0;i<anzlabels;i++) {

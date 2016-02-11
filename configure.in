@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.15], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.16], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -137,6 +137,10 @@ AC_CHECK_LIB([readline], [readline], [
 libs="$libs -lreadline"
 AC_DEFINE(HAVE_READLINE,1,[readline in readline])
 ],,[$libs])
+# `-lSDL':
+AC_CHECK_LIB([SDL], [SDL_MapRGB], AC_DEFINE(HAVE_SDL,1,[Simple Direct Media present]))
+AC_CHECK_LIB([SDL_gfx], [hlineRGBA], AC_DEFINE(HAVE_SDL_GFX,1,[Simple Direct Media GFX]))
+
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])
 # `-ltine':
@@ -325,7 +329,7 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
-AC_CHECK_FUNCS([nanosleep alarm atexit getcwd gethostbyname gettimeofday inet_ntoa memmove memfrob select socket strchr strdup strstr utime])
+AC_CHECK_FUNCS([nanosleep inotify_init alarm atexit getcwd gethostbyname gettimeofday inet_ntoa memmove memfrob select socket strchr strdup strstr utime])
 
 
 # Versioning

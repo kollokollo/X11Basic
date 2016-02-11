@@ -29,9 +29,10 @@ char **param_argumente;
 
 extern char *programbuffer;
 extern int programbufferlen;
-int datazeile;              /* fuer Restore, read , DATA */
-char *datapos;
+
+extern int datapointer;              /* fuer Restore, read , DATA */
 extern char *databuffer;
+extern int databufferlen;
 
 
 /* fuer die Dateiverwaltung     */

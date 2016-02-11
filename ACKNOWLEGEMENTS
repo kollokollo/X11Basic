@@ -1,18 +1,1 @@
-\chapter*{Acknowlegements}
-
-Thanks to all people, who helped me to realize this package.
-
-Many  thanks  to  the developers of GFA-Basic. This basic made me
-start programming in the 1980s. Many ideas and most of  the  command 
-syntax has been taken from the ATARI ST implementation.
-
-Thanks to sourceforge.net for hosting this project on the web.
-
-Unfortuantely  derivates  of the routines of the famous book 
-"numerical recepies in C" are not allowed to be distributed as  part
-of  the  X11-Basic program. So I have not included all of the 
-mathematics features of X11-Basic in this  distribution.      (see 
-\verb|mathemat_dummy.c|).  If you own the book and have a licence 
-you may ask me for the sources of the routines.
-
-
+../doc/ACKNOWLEGEMENTS

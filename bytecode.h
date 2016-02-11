@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 128
 
-
+#define BC_VERSION 0x116
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
@@ -19,7 +19,7 @@ typedef struct {
   unsigned long symbolseglen; /* not used */
   unsigned long reserved1;    /* reserved, not used */
   unsigned long reserved2;    /* reserved, not used */
-  unsigned short version;     /* version, currently=1 */
+  unsigned short version;     /* version, currently=0x116 */
 } BYTECODE_HEADER;
 
 /* Operand Stack Manipulation Operators */
@@ -40,6 +40,7 @@ typedef struct {
 #define BC_PUSHSYS 'y'
 #define BC_PUSHSSYS 'w'
 #define BC_PUSHASYS 'z'
+#define BC_PUSHVV 'W'
 #define BC_PUSHV 'v'
 #define BC_PUSHARRAYELEM 'V'
 #define BC_PUSHCOMM 'c'
@@ -84,6 +85,7 @@ typedef struct {
 #define BC_BSR  0x16         /* Branch to Subroutine */
 #define BC_JSR  0x17         /* jump to Subroutine */
 #define BC_RTS  0x18         /* Return from Subroutine */
+#define BC_RESTORE  0x19     /* Restore datapointer */
 
 /* Interpretierungen */
 
@@ -93,9 +95,11 @@ typedef struct {
 #define BC_COMMENT    '\''
 #define BC_ZUWEIS      2
 #define BC_ZUWEISINDEX 3
+#define BC_EVAL        4
 
 
 /* Protos */
 
 PARAMETER *virtual_machine(STRING, int *);
-
+void bc_jumptosr2(int ziel);
+void plist_to_stack(PARAMETER *pp, short *pliste, int anz, int pmin, int pmax);

@@ -31,12 +31,37 @@
 #endif
 
 #ifdef WINDOWS
-#  undef HAVE_READLINE
+  #undef HAVE_READLINE
+  #define X_DISPLAY_MISSING
+  #define WINDOWS_NATIVE
 #endif
+
 
 /* If you do not want to have the graphics ... */
 
 // #define NOGRAPHICS
+
+
+#if defined HAVE_SDL && defined HAVE_SDL_GFX
+  #ifndef NOGRAPHICS
+    #ifdef WINDOWS
+    #define USE_SDL
+    #undef WINDOWS_NATIVE
+    #endif
+  #endif
+#endif
+
+//    #define USE_SDL
+
+#ifndef X_DISPLAY_MISSING
+  #ifndef USE_SDL
+    #ifndef NOGRAPHICS
+      #define USE_X11
+    #endif
+  #endif
+#endif
+
+
 
 
 /* If you are allowed to use stron cryptographics ... */

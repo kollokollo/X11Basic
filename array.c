@@ -53,7 +53,7 @@ void array_zuweis_and_free(char *name, ARRAY inhalt) {
       printf("ztyp=%d typ=%d\n",ztyp,typ);
       printf("ARRAY: Typ=%d\n",inhalt.typ);
       printf("       dim=%d\n",inhalt.dimension);
-      printf("       ptr=%d\n",inhalt.pointer);
+      printf("       ptr=%d\n",(int)inhalt.pointer);
     }
   } else {
     if(vnr==-1) {

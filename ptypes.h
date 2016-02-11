@@ -13,8 +13,9 @@
 #include "vtypes.h"
 
 typedef struct {
-  char *name;
-  int zeile;
+  char *name;        /*Name des Labels*/
+  int zeile;         /*Programmzeielennummer (fuer Goto) */
+  char *datapointer; /*Pointer zum datenbereich (fuer Restore) */
 } LABEL;
 
 typedef struct {
@@ -244,6 +245,7 @@ typedef struct {
 #define PL_LEER     1
 #define PL_OPTIONAL 1
 
+#define PL_TYP     0x3c
 #define PL_KEY     2
 #define PL_INT     4
 #define PL_FLOAT   8
@@ -266,6 +268,11 @@ typedef struct {
 #define PL_SVAR    0x4000
 #define PL_NVAR   (PL_IVAR|PL_FVAR)
 #define PL_VAR   (PL_SVAR|PL_NVAR)
+#define PL_FARRAYVAR 0
+#define PL_IARRAYVAR 0
+#define PL_SARRAYVAR 0
+#define PL_ARRAYVAR (PL_FARRAYVAR|PL_IARRAYVAR|PL_SARRAYVAR)
+
 #define PL_ALLVAR   (PL_ARRAY|PL_SVAR|PL_NVAR)
 #define PL_ALL   (PL_VAR|PL_ADD)
 #define PL_VALUE (PL_INT|PL_FLOAT|PL_STRING)

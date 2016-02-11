@@ -12,9 +12,41 @@
 #include <math.h>
 #include "defs.h"
 #include "ptypes.h"
+#include "vtypes.h"
+#include "protos.h"
+#include "gkommandos.h"
+#include "functions.h"
 
 
+double f_nop(void *t) {return(0.0);}
+#ifndef HAVE_LOGB
+double logb(double a) {return(log(a)/log(2));}
+#endif
+#ifndef HAVE_LOG1P
+double log1p(double a) {return(log(1+a));}
+#endif
+#ifndef HAVE_EXPM1
+double expm1(double a) {return(exp(a)-1);}
+#endif
+#ifndef NOGRAPHICS
+int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
+#endif
+int f_bclr(double v1, double v2) {return((int)v1 & ~ (1 <<((int)v2)));}
+int f_bset(double v1, double v2) {return((int)v1 | (1 <<((int)v2)));}
+int f_bchg(double v1, double v2) {return((int)v1 ^ (1 <<((int)v2)));}
+int f_btst(double v1, double v2) {return((((int)v1 & (1 <<((int)v2)))==0) ?  0 : -1); }
+int f_shr(double v1, double v2)  {return(((int)v1)>>((int)v2));}
+int f_shl(double v1, double v2)  {return(((int)v1)<<((int)v2));}
+int f_int(double b) {return((int)b);}
+int f_fix(double b) {if(b>=0) return((int)b);
+                      else return(-((int)(-b)));}
+double f_pred(double b) {return(ceil(b-1));}
 
+int f_fak(int k) {
+  int i,s=1;
+  for(i=2;i<=k;i++) {s=s*i;}
+  return(s);
+}
 
 int f_combin(PARAMETER *plist,int e) {
   int z=1,n=plist[0].integer,k=plist[1].integer,i;
@@ -149,6 +181,7 @@ int f_crc(PARAMETER *plist,int e) {
   if(e>=1)  return(update_crc(plist[1].integer, plist[0].pointer, plist[0].integer));
 }
 
+STRING f_errs(int n) { return(create_string(error_text((char)n,NULL))); }
 
 STRING f_lowers(STRING n) {   
   int i=0;
@@ -218,6 +251,37 @@ STRING f_lefts(PARAMETER *plist,int e) {
     memcpy(ergebnis.pointer,plist[0].pointer,ergebnis.len);
     if(e<2) ergebnis.len=1;
     else ergebnis.len=min(max(plist[1].integer,0),ergebnis.len);
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+  }
+  return(ergebnis);
+}
+
+/* Gibt das i te Wort aus Zeichenkette zurueck (mit Blank getrennt, Teile in
+Anfuehrungszeichen werden als ein Wort behandelt. (c) Markus Hoffmann 2010)*/
+STRING f_words(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  int i=0,j=0,k;
+  int c=1;
+  int l=1;
+  int f=0;
+  char *p;
+  if(e>=2) l=plist[1].integer;
+  if(e>=1) {
+    
+    k=ergebnis.len=plist[0].integer;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+
+    p=plist[0].pointer;
+    while(i<k) {
+      if(p[i]==' ' && !f) c++;
+      else if(p[i]=='"') f=!f;
+      else if(c==l) ergebnis.pointer[j++]=p[i];
+      i++; 
+    }
+    ergebnis.pointer[j]=0;
+    ergebnis.len=j;
   } else {
     ergebnis.pointer=malloc(1);
     ergebnis.len=0;

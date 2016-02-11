@@ -18,25 +18,16 @@
 #include <string.h>
 #include "defs.h"
 #include "vtypes.h"
+#include "graphics.h"
 
-#ifdef FRAMEBUFFER
-#include "framebuffer.h"
-#endif
 
 #ifdef WINDOWS
   #include "Windows.extension/fnmatch.h"
 #else
-  #ifdef USE_VGA
-    #include <vga.h>
-    #include <vgagl.h>
-  #else
-  #ifndef FRAMEBUFFER
-    #include <X11/XWDFile.h>
-  #endif
-  #endif
   #include <fnmatch.h>
 #endif
 
+#include "aes.h"
 #include "window.h"
 
 
@@ -44,55 +35,13 @@
 /* GEM-Globals   */
 
 #ifndef NOGRAPHICS
-int chw=4,chh=8,baseline=7,depth=8;
-const struct { unsigned short r,g,b;} gem_colordefs[]={
-{65535,65535,65535},  /* WHITE */
-{0,0,0},/*BLACK  */
-{65535,0,0},/* RED */
-{0,65535,0},/* GREEN */
-{0,0,65535},/* BLUE */
-{0,65535,65535},/* CYAN */
-{65535,65535,0},/* YELLOW */
-{65535,0,65535},/* MAGENTA */
-{40000,40000,40000},/* LWHITE */
-{20000,20000,20000},/* LBLACK */
-{65535,32000,32000},/* LRED */
-{32000,65535,32000},/* LGREEN */
-{32000,32000,65535},/* LBLUE */
-{32000,65535,65535},/* LCYAN  */
-{65535,65535,32000},/* LYELLOW */
-{65535,32000,65535},/* LMAGENTA */
-};
-int gem_colors[16];
-
-ARECT sbox;
-
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   HANDLE keyevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE buttonevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE motionevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE tsync=INVALID_HANDLE_VALUE; /* handle for win thread event */
-#else
-#ifndef USE_VGA
-#ifndef FRAMEBUFFER
-  char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
-  #include "bitmaps/bombe_gross.bmp"
-
-void fetch_icon_pixmap(int nummer) {
-  GC gc;XGCValues gc_val;
-  char t[10];
-  sprintf(t,"%2d",nummer);
-  icon_pixmap[nummer]=XCreateBitmapFromData(display[nummer],win[nummer],
-    bombe_gross_bits,bombe_gross_width,bombe_gross_height);
-  gc = XCreateGC(display[nummer], icon_pixmap[nummer], 0, &gc_val);
-  XSetForeground(display[nummer], gc, 0);
-  XDrawString(display[nummer],icon_pixmap[nummer],gc,9,24,t,strlen(t));
-  XFreeGC(display[nummer],gc);
-}
-#endif
-#endif
 #endif
 
 
@@ -103,10 +52,12 @@ int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned
       printf("No more windows !\n");
       return(-2);
   }
+#if DEBUG
   printf("createwindow %d\n",nummer);
+#endif
   return(create_window2(nummer,title,info,x,y,w,h));
 }
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   RECT cr; /* client area rectangle */
   int nr=-1,i;
@@ -247,7 +198,10 @@ static DWORD winthread(PWORD par) { /* procedure for WIN95-thread */
   ExitThread(0);
   return(0);
 }
-#endif
+#endif  // Windows native
+
+
+
 int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
 
   int screen_num;              /* Ein Server kann mehrere Bildschirme haben */
@@ -258,14 +212,14 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
 #endif
   if(winbesetzt[nummer]) {
     printf("X11-Basic: Window %d already open !\n",nummer);
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   MessageBox(NULL,"X11-Basic: Window already open !" , "Error!",
 			MB_ICONEXCLAMATION | MB_OK);
 #endif			
  return(-1);
 
   } else {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   if (buttonevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
   if (keyevent==INVALID_HANDLE_VALUE) keyevent=CreateEvent(NULL,FALSE,FALSE,NULL);
   if (motionevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -302,25 +256,41 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
   }
   winbesetzt[nummer]=1;
   WaitForSingleObject(tsync,INFINITE);
-#else
+#endif
 #ifdef USE_VGA
   vga_init();
-
-#else
+#endif
 #ifdef FRAMEBUFFER
-  FbRender_Open();
+  Fb_Open();
+#endif
 
-#else
+#if defined USE_X11 || defined USE_SDL
+    strcpy(wname[nummer],title);
+    strcpy(iname[nummer],info);
+#endif
+
+#ifdef USE_SDL
+    if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
+    if(!(display[nummer]=SDL_SetVideoMode(WINDOW_DEFAULT_W, 
+       WINDOW_DEFAULT_H, 32,
+    // SDL_FULLSCREEN |
+       SDL_HWSURFACE|SDL_SRCALPHA))) {
+      printf("cannot open SDL surface \n");
+      SDL_Quit();
+      return(-1);
+    }
+    atexit(SDL_Quit);
+    SDL_WM_SetCaption(title,info);
+    /* Enable Unicode translation */
+    SDL_EnableUNICODE( 1 );
+#endif
+#ifdef USE_X11
   XGCValues gc_val;            /* */
   Window root;
   char *wn;
   char *in;
   XTextProperty win_name, icon_name;
   char *agv[1];
-
-
-    strcpy(wname[nummer],title);
-    strcpy(iname[nummer],info);
     wn=wname[nummer];
     in=iname[nummer];
 
@@ -376,61 +346,65 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
   gc[nummer] = XCreateGC(display[nummer], win[nummer], 0, &gc_val);
 
   XSetForeground(display[nummer], gc[nummer], foreground);
-#endif 
-winbesetzt[nummer]=1; 
-#endif  /*VGA*/
 #endif
-
+    winbesetzt[nummer]=1; 
   }
   return(nummer);
 }
+#ifdef USE_SDL
+#define XEvent union SDL_Event
+#define Expose 0
+#endif
 
-#ifndef WINDOWS
+#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
 void handle_event(int,XEvent *);
 #endif
 
+
 void open_window(int nr) {
  if(winbesetzt[nr]) {
-#ifdef WINDOWS
-#else
-#ifndef USE_VGA
+#ifdef WINDOWS_NATIVE
+#endif
+#ifndef USE_SDL
     XEvent event;
     /* Das Fensterauf den Screen Mappen */
 
     XMapWindow(display[nr], win[nr]);
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
     XNextEvent(display[nr], &event);
 #endif
     handle_event(nr,&event);
-#endif
 #endif
   }
 }
 
 void close_window(int nr) {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   if(winbesetzt[nr]) DestroyWindow(win_hwnd[nr]);
-#else
+#endif
 #ifdef USE_VGA
   vga_setmode(TEXT);
-#else
+#endif
+#ifdef USE_SDL
+#endif
+#ifdef USE_X11
   XEvent event;
       if(winbesetzt[nr]) {
         XUnmapWindow(display[nr], win[nr]);
         XCheckWindowEvent(display[nr],win[nr],ExposureMask, &event);
       }
 #endif
-#endif
 }
-#ifndef WINDOWS
+
+#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
 void handle_event(int nr,XEvent *event) {
   switch (event->type) {
 
     /* Das Redraw-Event */
+
+#ifdef USE_X11
     case Expose:
       /* if (event.xexpose.count != 0)    break; */
-
-#ifndef FRAMEBUFFER
      XCopyArea(display[nr],pix[nr],event->xexpose.window,gc[nr],
      event->xexpose.x,
      event->xexpose.y,
@@ -438,7 +412,6 @@ void handle_event(int nr,XEvent *event) {
      event->xexpose.height,
      event->xexpose.x,
      event->xexpose.y);
-#endif
       break;
 #ifdef DEBUG
     case GraphicsExpose:
@@ -463,6 +436,21 @@ void handle_event(int nr,XEvent *event) {
       printf("Window-Event: %d\n",event->type);
       break;
 #endif
+#endif
+#ifdef USE_SDL
+/* wahrscheinlich muessen wir gar nix tun...*/
+  case SDL_QUIT:
+    printf("OOps, window close request. What should I do?\n");
+    break;
+  case SDL_ACTIVEEVENT: 
+    if ( event->active.state & SDL_APPACTIVE ) {
+        if ( event->active.gain ) {
+            printf("App activated\n");
+        } else {
+            printf("App iconified\n");
+        }
+    }
+#endif
   }
 }
 #endif
@@ -471,8 +459,14 @@ void handle_event(int nr,XEvent *event) {
 void handle_window(int winnr) {
   if(winbesetzt[winnr]) {
 
-#ifdef WINDOWS
-#else
+#ifdef WINDOWS_NATIVE
+#endif
+#ifdef USE_SDL
+  SDL_Event event;
+  while(SDL_PollEvent(&event)) handle_event(winnr,&event);
+  
+#endif
+#ifdef USE_X11
    XEvent event;
    while(XCheckWindowEvent(display[winnr],win[winnr],
         ExposureMask|ButtonPressMask|PointerMotionMask|KeyPressMask, 
@@ -504,6 +498,7 @@ int fetch_rootwindow() {
 #ifndef WINDOWS
 #ifndef USE_VGA
 #ifndef FRAMEBUFFER
+#ifndef USE_SDL
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
   unsigned long foreground,background;
   int i,x,y,w,h,b,d;
@@ -539,11 +534,12 @@ int fetch_rootwindow() {
 #endif
 #endif
 #endif
+#endif
   return(0);
 }
 
 void activate() {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   HDC hdc;
   RECT interior;
   graphics();
@@ -554,8 +550,11 @@ void activate() {
 
   ReleaseDC(win_hwnd[usewindow],hdc);
 
-#else
-#ifndef FRAMEBUFFER
+#endif
+#ifdef USE_SDL
+  SDL_Flip(display[usewindow]); 
+#endif
+#ifdef USE_X11
    Window root;
    XGCValues gc_val;
    int ox,oy,ow,oh,ob,d;
@@ -570,871 +569,19 @@ void activate() {
 
    XFlush(display[usewindow]);
    XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],0,0,ow,oh,0,0);
-#endif
    handle_window(usewindow);
-#ifndef FRAMEBUFFER
    gc_val.function=of;
    XChangeGC(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
 #endif
-#endif
 }
 
-
-
-/*-------------------------------------------------------------------*/
-/*               Routine zum Abspeichern von X-Image                 */
-/*             Bitmaps.            (c) Markus hoffmann               */
-/*-------------------------------------------------------------------*/
-
-
-
-/* swap some long ints.  (n is number of BYTES, not number of longs) */
-swapdws (char *bp, unsigned n) {
-  register char c;
-  register char *ep = bp + n;
-  register char *sp;
-
-  while (bp<ep) {
-    sp=bp+3;
-    c=*sp;*sp=*bp; *bp++=c; sp=bp+1;
-    c=*sp;*sp=*bp; *bp++=c; bp+=2;
-  }
-}
-
-#ifndef WINDOWS
-#ifndef USE_VGA
-#ifndef FRAMEBUFFER
-char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
-    XWDFileHeader *data;
-    unsigned long swaptest = 1;
-    char image_name[]="X11-BASIC Grafik";
-    int header_len=sizeof(XWDFileHeader)+((strlen(image_name)+1+7) & -8);
-    int colortable_len,ncolors=0,i;
-    XWDColor *color;
-    if(image->depth==8) ncolors=256;
-    colortable_len=ncolors*sizeof(XWDColor);
-    *len=header_len+colortable_len+image->height*image->bytes_per_line;
-    data=malloc(header_len+colortable_len+image->height*image->bytes_per_line);
-    color=(XWDColor *)((int)data+header_len);
-    memcpy((void *)((int)data+header_len+colortable_len),image->data,image->height*image->bytes_per_line);
-    memcpy((void *)((int)data+sizeof(XWDFileHeader)),image_name,strlen(image_name));
-    data->header_size=(CARD32)header_len;
-    data->file_version=(CARD32)XWD_FILE_VERSION;
-    data->pixmap_format=(CARD32)image->format;
-    data->pixmap_depth=(CARD32)image->depth;
-    data->pixmap_width=(CARD32)image->width;
-    data->pixmap_height=(CARD32)image->height;
-    data->xoffset=(CARD32)image->xoffset;
-    data->byte_order=(CARD32)image->byte_order;
-    data->bitmap_unit=(CARD32)image->bitmap_unit;
-    data->bitmap_bit_order=(CARD32)image->bitmap_bit_order;
-    data->bitmap_pad=image->bitmap_pad;
-    data->bits_per_pixel=image->bits_per_pixel;
-    data->bytes_per_line=image->bytes_per_line;
-
-      data->colormap_entries = ncolors;
-      data->ncolors          = ncolors;
-
-    data->visual_class   = (CARD32)visual->class;
-    data->red_mask       = (CARD32)visual->red_mask;
-    data->green_mask     = (CARD32)visual->green_mask;
-    data->blue_mask      = (CARD32)visual->blue_mask;
-    data->bits_per_rgb   = (CARD32)visual->bits_per_rgb;
-
-    data->window_width=(CARD32)image->width;
-    data->window_height=(CARD32)image->height;
-    data->window_x        = 0;
-    data->window_y        = 0;
-    data->window_bdrwidth = 0;
-    if(ncolors){  /* Farbtabelle */
-      for(i=0;i<ncolors;i++)  {
-        color[i].pixel = (CARD32)i;
-        color[i].red   = (CARD16)(pixc+i)->red;
-        color[i].green = (CARD16)(pixc+i)->green;
-        color[i].blue  = (CARD16)(pixc+i)->blue;
-        color[i].flags = (CARD8)(DoRed | DoGreen | DoBlue);
-        color[i].pad   = (CARD8)0;
-      }
-    }
-    if (*(char *) &swaptest)    swapdws((char *)data, sizeof(XWDFileHeader));
-    return((char *)data);
-}
-#endif
-
-void bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth) {
-  unsigned short *ptr1  = (unsigned short*)fbp;
-  int r,g,b,i,j,w,h,offset,d,ib,ic=0;
-  unsigned int compression,ncol;
-  char *buf2,*buf3;
-  
-  if(data==NULL) return;
-  ptr1+=x;
-  BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
-  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
-
-  if(header->bfType!=BF_TYPE) {
-    printf("Put-Image: Error: wrong bitmap format!\n");
-    memdump(data,64);
-    return;
-  }
-  /* diese komische Akrobatik muss wohl sein (jedenfalls fuer den ARM-linux compiler */
-  compression=data[30]| (data[31]<<8) | (data[32]<<16)| (data[33]<<24); 
-
-  if(compression!=BI_RGB) {
-    printf("\033[H BITMAPINFOHEADERLEN=%d  \n",BITMAPINFOHEADERLEN);
-    printf("&iheader-data      =%d \n",(long)iheader-(long)data);
-    printf("bisize-data        =%d %d  \n",(long)(&(iheader->biSize))-(long)data,iheader->biSize);
-    printf("biwidth-data       =%d %d  \n",(long)(&(iheader->biWidth))-(long)data,iheader->biWidth);
-    printf("biHeight-data      =%d %d  \n",(long)(&(iheader->biHeight))-(long)data,iheader->biHeight);
-    printf("biPlanes-data      =%d %d  \n",(long)(&(iheader->biPlanes))-(long)data,iheader->biPlanes);
-    printf("biBitCount-data    =%d %d  \n",(long)(&(iheader->biBitCount))-(long)data,iheader->biBitCount);
-    printf("biCompression-data =%d %d  \n",(long)(&(iheader->biCompression))-(long)data,iheader->biCompression);
-    printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
-    memdump(data,64);
-    return;
-  }
-  ncol=iheader->biClrUsed;
-  RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-  
-  w=iheader->biWidth;
-  h=iheader->biHeight;
- /* d=iheader->biBitCount;  */
-  d=data[28]| (data[29]<<8); 
-
-  if(d==0) {
-    printf("w=%d, h=%d, d=%d\n",w,h,d);
-    return;
-  }
-  offset=data[10]| (data[11]<<8) | (data[12]<<16)| (data[13]<<24); 
-
-  if(w<=0||h<=0|| x+w>bw||h>bh) return;
-  buf3=buf2=data+offset;
-  
-  if((depth!=24 && depth!=16&& depth!=32)||d==16) {printf("Bitmap-Konvertierung nicht moeglich!\n");}
-  
-  for(i=h-1;i>=0;i--) {
-      for(j=0;j<w;j++) {
-        if(d==24) {
-          b=*buf2++;g=*buf2++;r=*buf2++;
-        } else if(d==16) {
-          
-        } else if(d==8) {
-          b=*buf2++;
-	  if(b<ncol) {
-	    r=coltable[b].rgbRed;g=coltable[b].rgbGreen;b=coltable[b].rgbBlue;
-	  } else {
-	    r=b;
-	    g=b;
-	  }
-      } else if(d==1) {
-        if(ic==0) {
-	  ib=*buf2++;
-	  ic=8;
-	}
-	ic--;
-	if(ncol>=2) {
-	  r=coltable[((ib>>ic)&1)].rgbRed;
-	  g=coltable[((ib>>ic)&1)].rgbGreen;
-	  b=coltable[((ib>>ic)&1)].rgbBlue;	
-	} else r=b=g=((ib>>ic)&1)*255;
-      } else if(d==4) {
-        if(ic==0) {
-	  ib=*buf2++;
-	  ic=8;
-	}
-	ic-=4;
-	if(ncol>=16) {
-	  r=coltable[((ib>>ic)&0xf)].rgbRed;
-	  g=coltable[((ib>>ic)&0xf)].rgbGreen;
-	  b=coltable[((ib>>ic)&0xf)].rgbBlue;	
-	} else r=b=g=((ib>>ic)&0xf)*16;
-      } else if(d==2) {
-        if(ic==0) {
-	  ib=*buf2++;
-	  ic=8;
-	}
-	ic-=2;
-	if(ncol>=4) {
-	  r=coltable[((ib>>ic)&0x3)].rgbRed;
-	  g=coltable[((ib>>ic)&0x3)].rgbGreen;
-	  b=coltable[((ib>>ic)&0x3)].rgbBlue;	
-	} else r=b=g=((ib>>ic)&0x3)*64;
-      } else {
-        r=255*(i&4);b=255*(i&4);g=255*(j&4);
-      }
-      if(depth==16) ptr1[j+i*bw]=
-        ((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f));
-      else if(depth==24) {
-        ((char *)ptr1)[j*3+0+i*bw*3]=r;
-        ((char *)ptr1)[j*3+1+i*bw*3]=g;
-        ((char *)ptr1)[j*3+2+i*bw*3]=b;
-      } else if(depth==32) {
-        ((char *)ptr1)[j*4+0+i*bw*4]=b;
-        ((char *)ptr1)[j*4+1+i*bw*4]=g;
-        ((char *)ptr1)[j*4+2+i*bw*4]=r;
-      }
-    }    
-    buf2=(char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
-  }  
-}
-
-#ifndef FRAMEBUFFER
-XImage *xwdtoximage(char *data,Visual *visual, int depth) {
-  char *adr;
-
-  /* Pruefen, ob es sich um eine BMP Datei handelt. */
-
-  if(*((unsigned short int *)data)==BF_TYPE) {
-#if DEBUG
-    printf("BMP-File!\n");
-#endif
-    int dd,w,o,h,bpl,ncol;
-    BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
-    BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
-    ncol=iheader->biClrUsed;
-    RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-    w=iheader->biWidth;
-    h=iheader->biHeight;
-    dd=iheader->biBitCount;
-
-    if(iheader->biCompression!=BI_RGB) {
-      printf("Put-Image: Compressed Bitmaps are not supported !\n");
-    }
-    o=*((int *)(data+10));
-    if(depth==24) bpl=w*4; 
-    else bpl=w*depth/8; 
-#if DEBUG
-    printf("w=%d, h=%d, d=%d, depth=%d bpl=%d\n",w,h,dd,depth,bpl);
-#endif
-
-
-    adr=malloc(h*bpl);
-    if(depth==24) bmp2bitmap(data,adr,0,w,h,32);
-    else bmp2bitmap(data,adr,0,w,h,depth);
-    return(XCreateImage(display[usewindow],visual,depth,ZPixmap,0,adr,w,h,8,bpl));
-  } else {
-    unsigned long swaptest = 1;
-    if (*(char *) &swaptest)    swapdws(data, sizeof(XWDFileHeader));
-#if DEBUG
-    printf("xwd-Name: %s\n",data+sizeof(XWDFileHeader));
-    printf("Version: %d\n",((XWDFileHeader *)data)->file_version);
-    printf("pixmap_format: %d\n",((XWDFileHeader *)data)->pixmap_format);
-    printf("pixmap_depth: %d\n",((XWDFileHeader *)data)->pixmap_depth);
-    printf("ncolors: %d\n",((XWDFileHeader *)data)->ncolors);
-    printf("xoffset: %d\n",((XWDFileHeader *)data)->xoffset);
-    printf("pixmap_width: %d\n",((XWDFileHeader *)data)->pixmap_width);
-    printf("pixmap_height: %d\n",((XWDFileHeader *)data)->pixmap_height);
-    printf("bitmap_pad: %d\n",((XWDFileHeader *)data)->bitmap_pad);
-    printf("bytes_per_line: %d\n",((XWDFileHeader *)data)->bytes_per_line);
-#endif
-    if(((XWDFileHeader *)data)->file_version!=(CARD32)XWD_FILE_VERSION) {
-      printf("Achtung: Falsche XWD Version: %d\n",((XWDFileHeader *)data)->file_version);
-      adr=malloc(32*32*depth/8);
-      return(XCreateImage(display[usewindow],visual,depth,ZPixmap,0,adr,32,32,8,32*depth/8));  
-    } else {
-      adr=malloc(((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
-      memcpy(adr,data+((XWDFileHeader *)data)->header_size+((XWDFileHeader *)data)->ncolors*sizeof(XWDColor),((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
-    }
-    return(XCreateImage(display[usewindow],visual,
-    ((XWDFileHeader *)data)->pixmap_depth,
-    ((XWDFileHeader *)data)->pixmap_format,
-    ((XWDFileHeader *)data)->xoffset,
-    adr,
-    ((XWDFileHeader *)data)->pixmap_width,
-    ((XWDFileHeader *)data)->pixmap_height,
-    ((XWDFileHeader *)data)->bitmap_pad,
-    ((XWDFileHeader *)data)->bytes_per_line));
-  }
-}
-#endif
-#endif
-#endif
-
-/* Alloziert einen Farbeintrag in der Palette.
-   Rueckgabewert ist die Nummer des Farbeintrags.
-   Ist kein neuer Eintrag mehr frei, so wird die Nummer des Eintrags
-   zurueckgeliefert, der der spezifizierten Farbe am naechsten kommt.
-   Diese Routine kann also kein XAllocColor failed mehr produzieren.
-
-   (c) markus hoffmann  1998                                   */
-#ifndef WINDOWS
-#ifndef FRAMEBUFFER
- Status my_XAllocColor(Display *,Colormap,XColor *);
-#endif
-#endif
-int get_color(int r, int g, int b) {
-#ifdef WINDOWS
-  return(RGB(r>>8,g>>8,b>>8));
-#else
-#ifdef FRAMEBUFFER
-  return(FB_get_color(r,g,b));
-#else
-  Colormap map;
-  XColor pixcolor;
-
-  map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay ( display[usewindow] ) );
-
-  pixcolor.red=r;
-  pixcolor.green=g;
-  pixcolor.blue=b;
-  if(my_XAllocColor(display[usewindow], map, &pixcolor)==0)
-    printf("could not switch to color.\n");
-
-  return(pixcolor.pixel);
-#endif
-#endif
-}
-
-#ifndef WINDOWS
-#ifndef FRAMEBUFFER
-Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
-  Status rval;
-  if((rval=XAllocColor(display, map, pixcolor))==0) {
-    int i,r,g,b;
-    unsigned long e=0xfffffff,d;
-    XColor savecolor;
-    XColor ppixcolor[256];
-	for(i=0;i<256;i++) ppixcolor[i].pixel=i;
-	XQueryColors(display, map, ppixcolor,256);
-	
-    r=pixcolor->red;
-    g=pixcolor->green;
-    b=pixcolor->blue;
-
-    savecolor=*pixcolor;
-	
-   for(i=0;i<256;i++) {
-     d=(ppixcolor[i].red-r)/16*(ppixcolor[i].red-r)/16+
-       (ppixcolor[i].green-g)/16*(ppixcolor[i].green-g)/16+
-       (ppixcolor[i].blue-b)/16*(ppixcolor[i].blue-b)/16;
-     if(d<e) {
-       e=d;
-       savecolor=ppixcolor[i];
-     }
-   }
-   /*
-   printf("Gewuenscht: r= %x, g=%x, b=%x.\n",r,g,b);
-   printf("Farbe wurde abgewandelt: %d, Close %d.\n",savecolor.pixel, e);
-   if(e==0) printf("** Volltreffer: recycled \n");
-   printf("Neu: r= %x, g=%x, b=%x.\n",savecolor.red,savecolor.green,savecolor.blue);
-   */
-   rval=XAllocColor(display, map, &savecolor);
-   pixcolor->pixel=savecolor.pixel;
-  }
-  return(rval);
-
-}
-#endif
-#endif
-
-/**** Flood Fill *********************************************************/
-
-#define QUEUESIZE   256		/* The size of Queue (400) */
-
-#define FF_UP	    1
-#define FF_DN	   -1
-
-#define SCAN_UNTIL  0
-#define SCAN_WHILE  1
-#define FF_FILLED   (!0)
-
-
-struct	tagParams	{
-		int    xl;     /* leftmost pixel in run */
-		int    xr;     /* rightmost pixel in run */
-		int y;	    /* y-coordinate of run */
-		unsigned char f; /* TRUE if run is filled (blocked) */
-};
-
-struct tagQUEUE	{
-	struct tagQUEUE	*pQ;     /* pointer to opposite queue */
-	int 	    d;	    /* direction (UP or DN) */
-	int 	    n;	    /* number of unfilled runs in queue */
-	int 	    h;	    /* index of head of queue */
-	int 	    t;	    /* index of tail of queue */
-	struct tagParams *run;
-};
-
-typedef	struct tagQUEUE	FF_QUEUE;
-
-int 	ff_scan_left(int, int, int, int );
-int 	ff_scan_right(int,int, int, int );
-void    ff_add_queue(FF_QUEUE *,int,int, int, int );
-int	ff_next_branch(int,int,int,int,int);
-int	ff_in_queue(FF_QUEUE *,int,int,int);
-
-
-void  ffill(int x0,int y0,int fill_color, int border_color) {
-  int y=y0,x,xl=x0,xr=x0,xln,xrn;
-  int qp,bcd;
-  int scan_type;
-  struct tagParams ff_buf1[QUEUESIZE];
-  struct tagParams ff_buf2[QUEUESIZE];
-  FF_QUEUE Qup,Qdn,*Q;
-
-   /* do nothing if the seed pixel is a border pixel */
-  if(border_color==-1)  {
-    border_color=get_point(x0,y0);
-    scan_type=SCAN_WHILE;
-  } else  scan_type=SCAN_UNTIL;
-  if(scan_type==SCAN_UNTIL) {
-    if(get_point(x0,y0)==border_color) return;
-  } else {
-    if(get_point(x0,y0)==fill_color) return;
-  }
-  Qup.run = ff_buf1;
-  Qdn.run = ff_buf2;
-  Qup.pQ = &Qdn;		/* pointer to opposite queue */
-  Qup.d = FF_UP; 		/* direction for queue */
-  Qup.h = -1;
-  Qup.t = 0;
-  Qup.n = 0;
-
-  Qdn.pQ = &Qup;
-  Qdn.d = FF_DN;
-  Qdn.h = -1;
-  Qdn.t = 0;
-  Qdn.n = 0;
-  /* put the seed run in the up queue */
-  Q = &Qup;
-  ff_add_queue(Q,ff_scan_left(x0,y0,border_color,scan_type),
-		ff_scan_right(x0,y0,border_color,scan_type),y0,!FF_FILLED);
-
-  for(;;) {
-    if(Q->n==0) {
-      Q=Q->pQ;
-      if(Q->n==0) break;
-    }
-    qp = Q->h;
-    while(qp>=Q->t) {
-      if(!Q->run[qp].f) {
-	y=Q->run[qp].y;
-	xl=Q->run[qp].xl;
-	xr=Q->run[qp].xr;
-	line(xl,y,xr+1,y);      /* fill the run */
-	activate();
-	Q->run[qp].f=FF_FILLED;
-	Q->n--;
-	break;
-      } else qp-- ;
-    }
-/*    printf("Queue(%d) [%d,%d]:  n=%d\n",Q->d,Q->h,Q->t,Q->n);*/
-    if(Q->d==FF_UP) {
-      while((Q->h>qp)&&(Q->run[Q->h].y<(y-1))) Q->h--;
-    } else {
-      while((Q->h>qp)&&(Q->run[Q->h].y>(y+1))) Q->h--;
-    }
-    xln=ff_next_branch(xl,xr,y+Q->d,border_color,scan_type);
-    while(xln>=0) {
-      x=(xln>xl)?xln:xl;
-      xrn=ff_scan_right(x,y+Q->d,border_color,scan_type);
-      if(!ff_in_queue(Q,xln,xrn,y+Q->d)) ff_add_queue(Q,xln,xrn,y+Q->d,!FF_FILLED);
-      if(xrn>(xr-2)) break;
-      else {
-        x=xrn+2;
-	xln=ff_next_branch(x,xr,y+Q->d,border_color,scan_type);
-      }
-    }
-    bcd=0;
-    xln=ff_next_branch(xl,xr,y-Q->d,border_color,scan_type);
-    while(xln>=0) {
-      x=(xln>xl)?xln:xl;
-      xrn=ff_scan_right(x,y-Q->d,border_color,scan_type);
-      if(!ff_in_queue(Q,xln,xrn,y-Q->d)) {
-        ff_add_queue( Q->pQ, xln, xrn, y-Q->d,!FF_FILLED);
-        bcd=1;
-      }
-      if(xrn>(xr-2)) break;
-      else {
-        x=xrn+2;
-	xln=ff_next_branch(x,xr,y-Q->d,border_color,scan_type);
-      }
-    }
-    if(bcd) {
-      Q=Q->pQ;
-      ff_add_queue(Q,xl,xr,y,FF_FILLED);
-    }
-  }
-}
-int ff_scan_left(int xl,int y, int ucPixel, int f ) {
-/*  printf("Scan-left: x=%d,y=%d  ",xl,y);*/
-  if(f==SCAN_UNTIL)  {
-    if(get_point(xl,y)==ucPixel) return -1;
-    do {
-      if(--xl<sbox.x) break;
-    } while(get_point(xl,y)!=ucPixel);
-  }  else {
-    if(get_point(xl,y)!=ucPixel) return -1;
-    do {
-      if(--xl<sbox.x) break;
-    } while (get_point(xl,y)==ucPixel);
-  }
-  return ++xl;
-}
-
-
-int ff_scan_right(int xr,int y,int ucPixel,int f) {
-/*  printf("Scan-right: x=%d,y=%d  ",xr,y); */
-  if(f==SCAN_UNTIL) {
-    if(get_point(xr,y)==ucPixel) return -1;
-    do {
-      if(++xr>=sbox.x+sbox.w) break;
-    } while(get_point(xr,y)!=ucPixel);
-  } else {
-    if(get_point(xr,y)!=ucPixel) return -1;
-    do  {
-      if(++xr>=sbox.x+sbox.w) break;
-    } while(get_point(xr,y)==ucPixel);
-  }
-  return --xr;
-}
-
-void  ff_add_queue(FF_QUEUE *Q,int xl,int xr,int y,int f) {
-  int   qp,i;
-/*    printf("Add-queue: x=%d..%d,y=%d\n",xl,xr,y); */
-  if(Q->d==FF_UP) {
-    for ( qp = Q->t; qp <= Q->h; qp++ )
-      if ( Q->run[qp].y <= y ) break;
-  } else {
-    for ( qp = Q->t; qp <= Q->h; qp++ )
-      if ( Q->run[qp].y >= y ) break;
-  }
-  if(qp<=Q->h) {
-    Q->h++;
-    for(i=Q->h;i>qp;--i) {
-      Q->run[i].xl=Q->run[i-1].xl;
-      Q->run[i].xr=Q->run[i-1].xr;
-      Q->run[i].y=Q->run[i-1].y;
-      Q->run[i].f=Q->run[i-1].f;
-    }
-  } else Q->h++;
-  Q->run[qp].xl=xl;
-  Q->run[qp].xr=xr;
-  Q->run[qp].y=y;
-  Q->run[qp].f=f;
-  if(!f) Q->n++ ;
-}
-
-int ff_next_branch(int xl,int xr,int y,int border_color,int scan_type) {
-  int xln;
-/*  printf("Next Branch: x=[%d,%d] y=%d   %d %d\n",xl,xr,y,sbox.y,sbox.h);*/
-  if((y<sbox.y)||(y>=sbox.y+sbox.h)) return(-1);
-  xln=ff_scan_left(xl,y,border_color,scan_type);
-  if(xln==-1) {
-    xln=ff_scan_right(xl,y,border_color,(scan_type==SCAN_WHILE)?SCAN_UNTIL:SCAN_WHILE);
-    if(xln<xr) xln++ ;
-    else xln=-1;
-  }
-  return xln;
-}
-int ff_in_queue(FF_QUEUE *Q, int xl, int xr, int y) {
-  int  qp;
-  if(Q->d==FF_UP) {
-    for(qp=Q->h;qp>=0;--qp) {
-      if( Q->run[qp].y>y ) break;
-      if((Q->run[qp].y==y) && (Q->run[qp].xl==xl) && (Q->run[qp].xr==xr))
-	return(1);
-    }
-  } else {
-    for(qp=Q->h;qp>=0;--qp) {
-      if(Q->run[qp].y<y) break;
-      if((Q->run[qp].y==y) && (Q->run[qp].xl==xl) && (Q->run[qp].xr==xr))
-	return(1);
-    }
-  }
-  return(0);
-}
-
-
-
-/**** End ******************* Flood Fill ********************************/
 
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
 
 
-
-void load_GEMFONT(int n) {
-#ifdef WINDOWS
-  SIZE siz;
-  GetTextExtentPoint(bitcon[usewindow],"Sg", 2,&siz);
-  chw=siz.cx/2;
-  chh=siz.cy;
-  baseline=chh-2;
-#else
-#ifdef FRAMEBUFFER
-  if(n==FONT_BIG) {
-    chw=8;
-    chh=16;
-    baseline=chh-2;   
-  } else {
-    chw=CharWidth;
-    chh=CharHeight;
-    baseline=chh-0;
-  }
-#else
-  XGCValues gc_val;
-  XFontStruct *fs;
-  if(n==FONT_SMALL) fs=XLoadQueryFont(display[usewindow], GEMFONTSMALL);
-  else fs=XLoadQueryFont(display[usewindow], GEMFONT);
-  if(fs!=NULL)  {
-     gc_val.font=fs->fid;
-     XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
-     chw=fs->max_bounds.width,chh=fs->max_bounds.ascent+fs->max_bounds.descent;
-     baseline=fs->max_bounds.ascent;
-  }
-#endif  
-#endif
-}
-
-void gem_init() {
-  int i;
-#ifdef WINDOWS
-  RECT interior;
-
-  GetClientRect(win_hwnd[usewindow],&interior);
-  sbox.x=interior.left;
-  sbox.y=interior.top;
-  sbox.w=interior.right-interior.left;
-  sbox.h=interior.bottom-interior.top;
-#else
-  int border;
-#ifndef FRAMEBUFFER
-  Window root;
-#endif
-#ifdef DEBUG
-  printf("gem_init: usewin=%d\n",usewindow);
-  printf("sbox=(%d,%d,%d,%d)\n",sbox.x,sbox.y,sbox.w,sbox.h);
-#endif
-    /* Screendimensionen bestimmem */
-#ifdef FRAMEBUFFER
-  FB_get_geometry(&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth);
-#else 
-    XGetGeometry(display[usewindow],win[usewindow],&root,&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth);
-#if 0
-   weiss=WhitePixel(display[usewindow], DefaultScreen(display[usewindow]));
-   schwarz=BlackPixel(display[usewindow], DefaultScreen(display[usewindow]));
-#endif
-#endif
-   load_GEMFONT(FONT_DEFAULT);
-#endif
-
-   for(i=0;i<16;i++)
-   gem_colors[i]=get_color(gem_colordefs[i].r,gem_colordefs[i].g,gem_colordefs[i].b);
-}
-
-
-#if 0
-void box_center(ARECT *b) {
-    b->x=sbox.x+(sbox.w-b->w)/2; /* Koordinaten fuer Bildmitte: */
-    b->y=sbox.y+(sbox.h-b->h)/2;
-}
-#endif
-
-/* -------------------------------- AES-Implementationen ------------------*/
-
-RSHDR *rsrc=NULL;    /* Adresse der Recource im Speicher */
-
-/* Form-Alert-Routine. Dem GEM nachempfunden.
-(c) markus Hoffmann   1998               */
-
-double ltext(int, int, double, double, double , int, char *);
-
-int form_alert(int dbut,char *n) {
-  return(form_alert2(dbut,n,NULL));
-}
-int form_alert2(int dbut,char *n, char *tval) {
-  char *bzeilen[30],*bbuttons[30],*buffer[30];
-  int anzzeilen=0,anzbuttons=0,anztedinfo=0,anzbuffer=0;
-  int symbol,sbut=0;
-  char *pos;
-  char **ein=bzeilen;
-  int i=0,j=strlen(n),k=0,l=0;
-  TEDINFO tedinfo[32];
-  OBJECT objects[64]={{-1,1,1,G_BOX, 0, OUTLINED, 0x00021100, 0,0,100,100}};
-  int objccount=1;
-  int x,y,w,h;
-#ifdef DEBUG
-  printf("**form_alert:\n");
-#endif
-
-  while(i<j) {
-    if(n[i]=='[') {
-      pos=&n[i+1];
-      k++;l=0;
-    } else if(n[i]==']') {
-      n[i]=0;
-      if(k>0) ein[l++]=pos;
-      if(k==1) {
-        symbol=atoi(pos);
-	ein=bzeilen;
-      } else if(k==2) {
-        ein=bbuttons;anzzeilen=l;
-      } else if(k==3) anzbuttons=l;
-    }
-    else if(n[i]=='|') {ein[l]=pos;n[i]=0;pos=n+i+1;l++;};
-    i++;
-  }
-
-  if(anzbuttons) {
-    /* Box-Abmessungen bestimmen */
-    int textx;
-    int maxc=0;
-
-    graphics();
-    gem_init();
-
-    if(symbol) {objects[0].ob_width=objects[0].ob_height=textx=64;}
-    else {objects[0].ob_width=objects[0].ob_height=textx=0;}
-
-     /*Raender*/
-    objects[0].ob_width+=chh*2;
-    objects[0].ob_height=max(objects[0].ob_height+2*max(chh,16),max(chh,16)*2+(anzzeilen+2)*chh);
-
-
-    for(i=0;i<anzzeilen;i++) maxc=max(maxc,strlen(bzeilen[i]));
-    objects[0].ob_width+=chw*maxc;
-
-     /* Buttons  */
-    maxc=0;
-    for(i=0;i<anzbuttons;i++) maxc=max(maxc,strlen(bbuttons[i]));
-    objects[0].ob_width=max(objects[0].ob_width,chw*(4+(maxc+1)*anzbuttons+2*(anzbuttons-1)));
-
-    for(i=0;i<anzbuttons; i++) {
-      objects[objccount].ob_x=objects[0].ob_width/2-chw*((maxc+1)*anzbuttons+2*(anzbuttons-1))/2+i*chw*(maxc+3);
-      objects[objccount].ob_y=objects[0].ob_height-2*max(chh,16);
-      objects[objccount].ob_width=(chw+1)*maxc;
-#ifdef FRAMEBUFFER
-      objects[objccount].ob_height=max(chh,16)+3;
-#else
-      objects[objccount].ob_height=chh+3;
-#endif
-      objects[objccount].ob_spec=(LONG)bbuttons[i];
-      objects[objccount].ob_head=-1;
-      objects[objccount].ob_tail=-1;
-      objects[objccount].ob_next=objccount+1;
-      objects[objccount].ob_type=G_BUTTON;
-      objects[objccount].ob_flags=SELECTABLE|EXIT;
-      objects[objccount].ob_state=NORMAL;
-      objccount++;
-    }
-
-    if(dbut>0 && dbut<=anzbuttons) {
-      objects[dbut].ob_flags|=DEFAULT;
-    }
-
-    for(i=0;i<anzzeilen;i++) {
-      objects[objccount].ob_x=textx+chh;
-      objects[objccount].ob_y=(1+i)*chh;
-      objects[objccount].ob_width=chw*strlen(bzeilen[i]);
-      objects[objccount].ob_height=chh;
-      objects[objccount].ob_spec=(LONG)bzeilen[i];
-      objects[objccount].ob_head=-1;
-      objects[objccount].ob_tail=-1;
-      objects[objccount].ob_next=objccount+1;
-      objects[objccount].ob_type=G_STRING;
-      objects[objccount].ob_flags=NONE;
-      objects[objccount].ob_state=NORMAL;
-      objccount++;
-      /* Input-Felder finden */
-      if(strlen((char *)objects[objccount-1].ob_spec)) {
-        for(j=0;j<strlen((char *)objects[objccount-1].ob_spec);j++) {
-	  if(((char *)(objects[objccount-1].ob_spec))[j]==27) {
-            ((char *)(objects[objccount-1].ob_spec))[j]=0;
-	    objects[objccount].ob_x=textx+chh+chw*j+chw;
-            objects[objccount].ob_y=(1+i)*chh;
-            objects[objccount-1].ob_width=chw*(strlen((char *)objects[objccount-1].ob_spec));
-            objects[objccount].ob_width=chw*(strlen(bzeilen[i]+j+1));
-            objects[objccount].ob_height=chh;
-            objects[objccount].ob_spec=(LONG)&tedinfo[anztedinfo];
-            objects[objccount].ob_head=-1;
-            objects[objccount].ob_tail=-1;
-            objects[objccount].ob_next=objccount+1;
-            objects[objccount].ob_type=G_FTEXT;
-            objects[objccount].ob_flags=EDITABLE;
-            objects[objccount].ob_state=NORMAL;
-	    tedinfo[anztedinfo].te_ptext=(LONG)(bzeilen[i]+j+1);
-	    buffer[anzbuffer]=malloc(strlen((char *)tedinfo[anztedinfo].te_ptext)+1);
-	    tedinfo[anztedinfo].te_ptmplt=(LONG)(buffer[anzbuffer++]);
-	    tedinfo[anztedinfo].te_pvalid=(LONG)(bzeilen[i]+j+1);
-	    tedinfo[anztedinfo].te_font=FONT_IBM;
-	    tedinfo[anztedinfo].te_just=TE_LEFT;
-	    tedinfo[anztedinfo].te_junk1=strlen((char *)tedinfo[anztedinfo].te_ptext);
-	    tedinfo[anztedinfo].te_junk2=0;
-	    tedinfo[anztedinfo].te_color=0x1100;
-	    tedinfo[anztedinfo].te_thickness=1;
-	    tedinfo[anztedinfo].te_txtlen=strlen((char *)tedinfo[anztedinfo].te_ptext);
-	    tedinfo[anztedinfo].te_tmplen=strlen((char *)tedinfo[anztedinfo].te_ptext);
-	    anztedinfo++;
-            objccount++;
-	  /*  printf("Objcount: %d\n",objccount);*/
-	  }
-	}
-      }
-    }
-    if(symbol>=1) {
-      objects[objccount].ob_x=2*chw;
-      objects[objccount].ob_y=chw;
-      objects[objccount].ob_width=50;
-      objects[objccount].ob_height=50;
-      objects[objccount].ob_spec=symbol;
-      objects[objccount].ob_head=-1;
-      objects[objccount].ob_tail=-1;
-      objects[objccount].ob_next=objccount+1;
-      objects[objccount].ob_type=G_ALERTTYP;
-      objects[objccount].ob_flags=NONE;
-      objects[objccount].ob_state=NORMAL;
-      objccount++;
-
-    }
-    objects[objccount-1].ob_next=0;
-    objects[0].ob_tail=objccount-1;
-    objects[objccount-1].ob_flags|=LASTOB;
-
-      /* Objektbaum Zentrieren */
-    form_center(objects, &x,&y,&w,&h);
-
-
-  /* Erst den Graphic-Kontext retten  */
-
-    form_dial(0,0,0,0,0,x,y,w,h);
-    form_dial(1,0,0,0,0,x,y,w,h);
-    objc_draw(objects,0,-1,0,0);
-    sbut=form_do(objects);
-
-    form_dial(3,0,0,0,0,x,y,w,h);
-    form_dial(2,0,0,0,0,x,y,w,h);
-
-    if(tval!=NULL) { /* Textfelder zusammensuchen  */
-
-      tval[0]=0;
-      for(i=0;i<objccount;i++) {
-
-        if(objects[i].ob_flags & EDITABLE) {
-	  strcat(tval,(char *)((TEDINFO *)objects[i].ob_spec)->te_ptext);
-	  tval[strlen(tval)+1]=0;
-	  tval[strlen(tval)]=13;
-	}
-      }
-    }
-    while(anzbuffer) {
-      free(buffer[--anzbuffer]);
-    }
-  }
-  return(sbut);
-}
-
-
-int rsrc_free() {
-  free(rsrc);
-  rsrc=NULL;
-  return(0);
-}
 void put_bitmap(char *adr,int x,int y,int w, int h) {
-#ifdef WINDOWS
-
-#else
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
   Pixmap bitpix;
   bitpix=XCreateBitmapFromData(display[usewindow],win[usewindow],
     adr,w,h);
@@ -1442,650 +589,43 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
      0,0,w,h,x,y,1);
     XFreePixmap(display[usewindow],bitpix);
 #endif
+#ifdef USE_SDL
+  SDL_Surface *data;
+  SDL_Surface *image;
+  int bpl=(w+1)>>3;
+  data=SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 1, 0,0,0,0);
+  memcpy(data->pixels,adr,bpl*h);
+  image=SDL_DisplayFormat(data);
+  SDL_FreeSurface(data);
+  SDL_Rect a={0,0,image->w,image->h};
+  SDL_Rect b={x,y,0,0};
+  SDL_BlitSurface(image, &a,display[usewindow], &b);
+  SDL_FreeSurface(image);
+
 #endif
 }
 
-
-void WSWAP(char *adr) {
-  char a;
-  a=adr[0];
-  adr[0]=adr[1];
-  adr[1]=a;
-}
-void LSWAP(short *adr) {
-  short a;
-  a=adr[0];
-  adr[0]=adr[1];
-  adr[1]=a;
-}
-void LWSWAP(short *adr) {
-  short a;
-  WSWAP((char *)&adr[0]);
-  WSWAP((char *)&adr[1]);
-  a=adr[0];
-  adr[0]=adr[1];
-  adr[1]=a;
-}
-
-int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
-  signed char randdicke=0;
-  char zeichen,opaque=0;
-  int fillcolor=BLACK,pattern=9;
-  int textcolor=BLACK,textmode,framecolor=BLACK;
-  int i,drawbg=1,drawtext=1;
-  int obx=tree[idx].ob_x+rootx;
-  int oby=tree[idx].ob_y+rooty;
-  int obw=tree[idx].ob_width;
-  int obh=tree[idx].ob_height;
-
-#ifdef DEBUG
-  printf("Drawobjc: %d   head=%d  next=%d tail=%d\n",idx,tree[idx].ob_head,
-  tree[idx].ob_next, tree[idx].ob_tail);
-#endif
-  switch(LOBYTE(tree[idx].ob_type)) {
-  case G_BOX:
-  case G_BOXCHAR:
-    zeichen=(tree[idx].ob_spec & 0xff000000)>>24;
-    randdicke=(tree[idx].ob_spec & 0xff0000)>>16;
-    fillcolor=(tree[idx].ob_spec & 0xf);
-    textcolor=(tree[idx].ob_spec & 0xf00)>>8;
-    textmode=(tree[idx].ob_spec & 0x80)>>7;
-    framecolor=(tree[idx].ob_spec & 0xf000)>>12;
-    pattern=(tree[idx].ob_spec & 0x70)>>4;
-    break;
-
-  case G_IBOX:
-    zeichen=(tree[idx].ob_spec & 0xff000000)>>24;
-    randdicke=0;
-    fillcolor=(tree[idx].ob_spec & 0xf);
-    textcolor=(tree[idx].ob_spec & 0xf00)>>8;
-    textmode=(tree[idx].ob_spec & 0x80)>>7;
-    framecolor=(tree[idx].ob_spec & 0xf000)>>12;
-    pattern=(tree[idx].ob_spec & 0x70)>>4;
-    break;
-
-  case G_TEXT:
-  case G_FTEXT:
-    framecolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>12) & 0xf;
-    textcolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>8) & 0xf;
-    opaque=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>7) & 1;
-    pattern=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>4) & 7;
-    fillcolor=(((TEDINFO *)((int)tree[idx].ob_spec))->te_color) & 0xf;
-    randdicke=0;
-    break;
-  case G_STRING:
-  case G_TITLE:
-    randdicke=0;
-    if(tree[idx].ob_state & SELECTED) {
-       fillcolor=WHITE;
-       pattern=9;
-     } else {
-       drawbg=0;
-     }
-    break;
-  case G_BUTTON:
-    randdicke=-1;
-    fillcolor=WHITE;
-    pattern=9;
-    break;
-
-  case G_BOXTEXT:
-  case G_FBOXTEXT:
-    framecolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>12) & 0xf;
-    textcolor=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>8) & 0xf;
-    opaque=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>7) & 1;
-    pattern=((((TEDINFO *)((int)tree[idx].ob_spec))->te_color)>>4) & 7;
-    fillcolor=(((TEDINFO *)((int)tree[idx].ob_spec))->te_color) & 0xf;
-    randdicke=((TEDINFO *)((int)tree[idx].ob_spec))->te_thickness;
-    break;
-  default:
-    drawbg=0;
-    break;
-  }
-
-  if(tree[idx].ob_state & SELECTED) {
-    fillcolor=fillcolor^1;
-    textcolor=textcolor^1;
-  }
-  if(tree[idx].ob_flags & EXIT) randdicke--;
-  if(tree[idx].ob_flags & DEFAULT) randdicke--;
-
-
-
-if (drawbg) {
-
-/* Zeichnen  */
-  if(tree[idx].ob_state & OUTLINED) {
-    SetForeground(gem_colors[WHITE]);
-    FillRectangle(obx-3,oby-3,obw+6,obh+6);
-    SetForeground(gem_colors[framecolor]);
-    DrawRectangle(obx-3,oby-3,obw+6,obh+6);
-  }
-  if(tree[idx].ob_state & SHADOWED) {
-    SetForeground(gem_colors[BLACK]);
-    FillRectangle(obx+obw,oby+chh/2,chw,obh);
-    FillRectangle(obx+chw,oby+obh,obw,chh/2);
-  }
-
-
-/* Hintergrund zeichnen */
-  SetForeground(gem_colors[WHITE]);
-  if(!opaque) {FillRectangle(obx,oby,obw,obh);}
-
-
-  if(pattern) {
-    SetForeground(gem_colors[fillcolor]);
-    SetFillStyle(FillStippled);
-    set_fill(pattern);
-    FillRectangle(obx,oby,obw,obh);
-    SetFillStyle(FillSolid);
-  }
-}
-
-/* Text zeichnen   */
-
-  SetForeground(gem_colors[textcolor]);
-  if(tree[idx].ob_state & SELECTED) {
-    SetBackground(gem_colors[BLACK]);
-  } else SetBackground(gem_colors[WHITE]);
-  
-  if(tree[idx].ob_state & DISABLED) {SetForeground(gem_colors[LWHITE]);}
-
-  switch(LOBYTE(tree[idx].ob_type)) {
-    char *text;
-    char chr[2];
-    TEDINFO *ted;
-    int x,y,i;
-  case G_STRING:
-  case G_TITLE:
-    text=(char *)((int)tree[idx].ob_spec);
-    DrawString(obx,oby+chh-2,text,strlen(text));
-  case G_BOX:
-  case G_IBOX:
-    break;
-  case G_BUTTON:
-    text=(char *)((int)tree[idx].ob_spec);
-    DrawString(obx+(obw-chw*strlen(text))/2,oby+chh-2+(obh-chh)/2,text,strlen(text));
-    break;
-  case G_BOXCHAR:
-    DrawString(obx+(obw-chw)/2,oby+chh-2+(obh-chh)/2,&zeichen,1);
-    break;
-  case G_ALERTTYP:
-    chr[0]=tree[idx].ob_spec+4;
-    chr[1]=0;
-    SetForeground(gem_colors[RED]);
-    #ifndef WINDOWS
-    XSetLineAttributes(display[usewindow], gc[usewindow], 2, 0,0,0);
-    #endif
-    ltext(obx,oby,0.5,0.5,0,0,chr);
-    if(tree[idx].ob_spec==3) ltext(obx+4,oby+12,0.5/6,0.5/2,0,0,"STOP");
-    #ifndef WINDOWS
-    XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
-    #endif
-    break;
-  case G_TEXT:
-  case G_FTEXT:
-  case G_BOXTEXT:
-  case G_FBOXTEXT:
-    ted=(TEDINFO *)((int)tree[idx].ob_spec);
-    text=(char *)(ted->te_ptext);
-    load_GEMFONT(ted->te_font);
-    if(tree[idx].ob_type==G_FTEXT || tree[idx].ob_type==G_FBOXTEXT){
-      if(ted->te_junk1-ted->te_junk2>ted->te_tmplen) ted->te_junk2=ted->te_junk1-ted->te_tmplen;
-      if(ted->te_junk1-ted->te_junk2<0) ted->te_junk2=ted->te_junk1;
-      for(i=0;i<ted->te_tmplen;i++) {
-        if(i<strlen((char *)(ted->te_ptext))) ((char *)(ted->te_ptmplt))[i]=((char *)(ted->te_ptext))[i+ted->te_junk2];
-	else ((char *)(ted->te_ptmplt))[i]='_';
-      }
-      ((char *)ted->te_ptmplt)[ted->te_tmplen]=0;
-      text=(char *)(ted->te_ptmplt);
-    }
-    if(ted->te_just==TE_LEFT) {
-      x=obx; y=oby+chh-2+(obh-chh)/2;
-    } else if(ted->te_just==TE_RIGHT) {
-      x=obx+obw-chw*strlen(text); y=oby+chh-2+(obh-chh)/2;
-    } else {
-      x=obx+(obw-chw*strlen(text))/2; y=oby+chh-2+(obh-chh)/2;
-    }
-
-    DrawString(x,y,text,strlen(text));
-    SetForeground(gem_colors[RED]);
-    if(strlen((char *)(ted->te_ptext))>ted->te_tmplen+ted->te_junk2)
-      DrawString(obx+obw,oby+obh,">",1);
-    if(ted->te_junk2)
-      DrawString(obx-chw,oby+obh,"<",1);
-    load_GEMFONT(FONT_DEFAULT);
-    break;
-  case G_IMAGE:
-    {BITBLK *bit=(BITBLK *)((int)tree[idx].ob_spec);
-    unsigned int adr;
-
-    adr=*((LONG *)&(bit->bi_pdata));
-    SetForeground(gem_colors[(bit->bi_color) & 0xf]);
-    SetBackground(gem_colors[WHITE]);
-
-    put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);
-   }
-    break;
-  case G_ICON:
-    {ICONBLK *bit=(ICONBLK *)((int)tree[idx].ob_spec);
-    unsigned int adr;
-    adr=*(LONG *)&bit->ib_pmask;
-
-    SetForeground(gem_colors[WHITE]);
-    put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
-    FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
-    adr=*(LONG *)&bit->ib_pdata;
-    SetBackground(gem_colors[WHITE]);
-    SetForeground(gem_colors[BLACK]);
-    put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
-    /* Icon-Text */
-    load_GEMFONT(FONT_SMALL);
-    DrawString(obx+bit->ib_xtext,oby+bit->ib_ytext+bit->ib_htext,(char *)*(LONG *)&bit->ib_ptext,strlen((char *)*(LONG *)&bit->ib_ptext));
-    /* Icon char */
-    load_GEMFONT(FONT_DEFAULT);}
-    break;
-  default:
-    printf("Unbekanntes Objekt #%d\n",tree[idx].ob_type);
-  }
-
-/* Rand zeichnen */
-  if(randdicke) {
-    SetForeground(gem_colors[framecolor]);
-    if(randdicke>0) {
-      for(i=0;i<randdicke;i++) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
-    } else if(randdicke<0) {
-      for(i=0;i>randdicke;i--) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
-    }
-  }
-  if(tree[idx].ob_state & CROSSED) {
-    SetForeground(gem_colors[RED]);
-    DrawLine(obx,oby,obx+obw,oby+obh);
-    DrawLine(obx+obw,oby,obx,oby+obh);
-  }
-}
-
-
-int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
-  int idx=start;
-#ifdef DEBUG
-  printf("**objc_draw: von %d bis %d\n",start,stop);
-#endif
-  draw_object(tree,idx,rootx,rooty);
-  if(tree[idx].ob_flags & LASTOB) return(1);
-  if(idx==stop) return(1);
-  if(tree[idx].ob_head!=-1) {
-    if(!(tree[idx].ob_flags & HIDETREE)) {
-      objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty);
-    }
-  }
-  while(tree[idx].ob_next!=-1) {
-    idx=tree[idx].ob_next;
-    draw_object(tree,idx,rootx,rooty);
-    if(tree[idx].ob_flags & LASTOB) return(1);
-    if(tree[idx].ob_head!=-1) {
-      if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty );
-    }
-    if(idx==stop) return(1);
-  }
-}
-
-
-int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr) {
-  if(re_gtype==R_TREE) {
-    char **ptreebase;
-    if(re_gindex>=rsrc->rsh_ntree) return(0);
-    ptreebase = (char **)((unsigned int)rsrc+(unsigned int)rsrc->rsh_trindex);
-    *re_gaddr=(char *)(((int)ptreebase[re_gindex]+(int)rsrc));
-    return(1);
-  } else if(re_gtype==R_FRSTR) {
-    char **ptreebase;
-    if(re_gindex>=rsrc->rsh_nstring) return(0);
-    ptreebase=(char **)((unsigned int)rsrc+(unsigned int)rsrc->rsh_frstr);
-    *re_gaddr=(char *)(((int)ptreebase[re_gindex]+(int)rsrc));
-    return(1);
-  } else return(0);
-}
-
-void fix_trindex() {
-  int i;
-  char **ptreebase;
-  int anzahl;
-  ptreebase = (char **)((unsigned int)rsrc+(unsigned int)rsrc->rsh_trindex);
-  anzahl=rsrc->rsh_ntree;
-  if(anzahl) {
-  if(rsrc->rsh_vrsn==0) {
-    for(i = anzahl-1; i >= 0; i--) {
-      LWSWAP((short *)(&ptreebase[i]));
-    }
-  }
-  }
-}
-void fix_frstrindex() {
-  int i;
-  char **ptreebase;
-  int anzahl;
-
-  ptreebase = (char **)((unsigned int)rsrc+(unsigned int)rsrc->rsh_frstr);
-  anzahl=rsrc->rsh_nstring;
-  if(anzahl) {
-    if(rsrc->rsh_vrsn==0) {
-      for(i = anzahl-1; i >= 0; i--) {
-        LWSWAP((short *)(&ptreebase[i]));
-      }
-    }
-  }
-}
-void fix_objc() {
-  int i,j;
-  OBJECT *base;
-  int anzahl;
-
-  base = (OBJECT *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_object);
-  anzahl=rsrc->rsh_nobs;
-  if(anzahl) {
-    for(i =0; i < anzahl; i++) {
-      if(rsrc->rsh_vrsn==0) {
-	for(j=0;j<sizeof(OBJECT)/2;j++) {
-          WSWAP((char *)((int)&base[i]+2*j));
-        }
-        LSWAP((short *)&(base[i].ob_spec));
-      }
-      if(!(base[i].ob_type==G_BOX || base[i].ob_type==G_BOXCHAR||
-	      base[i].ob_type==G_IBOX || base[i].ob_type==G_ALERTTYP))
-	    base[i].ob_spec+=(LONG)rsrc;	
-	
-      base[i].ob_x=     LOBYTE(base[i].ob_x)*chw+     HIBYTE(base[i].ob_x);
-      base[i].ob_y=     LOBYTE(base[i].ob_y)*chh+     HIBYTE(base[i].ob_y);
-      base[i].ob_width= LOBYTE(base[i].ob_width)*chw+ HIBYTE(base[i].ob_width);
-      base[i].ob_height=LOBYTE(base[i].ob_height)*chh+HIBYTE(base[i].ob_height);
-    }
-  }
-}
-void fix_tedinfo() {
-  int i,j;
-  TEDINFO *base;
-  int anzahl;
-  base = (TEDINFO *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_tedinfo);
-  anzahl=rsrc->rsh_nted;
-    if(anzahl) {
-      for(i =0; i < anzahl; i++) {
-	if(rsrc->rsh_vrsn==0) {
-	  for(j=0;j<sizeof(TEDINFO)/2;j++) {
-            WSWAP((char *)((int)&base[i]+2*j));
-          }
-          LSWAP((short *)&(base[i].te_ptext));
-          LSWAP((short *)&(base[i].te_ptmplt));
-          LSWAP((short *)&(base[i].te_pvalid));
-        }
-      base[i].te_ptext+=(LONG)rsrc;	
-      base[i].te_ptmplt+=(LONG)rsrc;	
-      base[i].te_pvalid+=(LONG)rsrc;	
-    }
-  }
-}
-void fix_bitblk() {
-  unsigned int i,j,k,l,m,n=0;
-  BITBLK *base;
-  int anzahl;
-  base = (BITBLK *)((LONG)rsrc+(LONG)rsrc->rsh_bitblk);
-  anzahl=rsrc->rsh_nbb;
-#if DEBUG
-  printf("sizeof: %d\n",sizeof(BITBLK));
-#endif
-  if(anzahl) {
-    for(i =0; i < anzahl; i++) {
-      if(rsrc->rsh_vrsn==0) {
-	for(j=0;j<sizeof(BITBLK)/2;j++) {
-          WSWAP((char *)((int)&base[i]+2*j));
-        }
-	LSWAP((short *)&(base[i].bi_pdata));
-      }
-      *((LONG *)&base[i].bi_pdata)+=(LONG)rsrc;
-      if(rsrc->rsh_vrsn==0) {
-      k=*((LONG *)&base[i].bi_pdata);
-#if DEBUG
-	  printf("Bitmap #%d at %x\n",i,k);
-	  printf("w=%d h=%d x=%d y=%d c=%d\n",base[i].bi_wb,base[i].bi_hl,base[i].bi_x,base[i].bi_y,base[i].bi_color);
-#endif
-	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
-            WSWAP((char *)(k+2*j));
-          }
-	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
-	    n=0;
-            l=((WORD *)(k+2*j))[0];
-	    for(m=0;m<16;m++) {
-	      n=n<<1;
-	      n|=(l & 1);
-	      l=l>>1;	
-	    }
-	   *((WORD *)(k+2*j))=n;
-        }
-      }
-    }
-  }
-}
-void fix_iconblk() {
-  unsigned int i,j,k,l,m,n=0;
-  ICONBLK *base;
-  int anzahl;
-  base = (ICONBLK *)((LONG)rsrc+(LONG)rsrc->rsh_iconblk);
-  anzahl=rsrc->rsh_nib;
-  if(anzahl) {
-    for(i =0; i < anzahl; i++) {
-      if(rsrc->rsh_vrsn==0) {
-	    for(j=0;j<sizeof(ICONBLK)/2;j++) {
-              WSWAP((char *)((int)&base[i]+2*j));
-            }
-	    LSWAP((short *)&(base[i].ib_pmask));
-	    LSWAP((short *)&(base[i].ib_pdata));
-	    LSWAP((short *)&(base[i].ib_ptext));
-	  }
-	  *(LONG *)&base[i].ib_pmask+=(LONG)rsrc;
-	  *(LONG *)&base[i].ib_pdata+=(LONG)rsrc;
-	  *(LONG *)&base[i].ib_ptext+=(LONG)rsrc;
-#if DEBUG
-	  printf("Icon #%d name %s  ",i,*(LONG *)&base[i].ib_ptext);
-	  printf("w=%d h=%d x=%d y=%d c=<%c>\n",base[i].ib_wicon,base[i].ib_hicon,
-	  base[i].ib_xicon,base[i].ib_yicon,base[i].ib_char);
-#endif
-          if(rsrc->rsh_vrsn==0) {
-            k=*(LONG *)&base[i].ib_pmask;
-
-	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-              WSWAP((char *)(k+2*j));
-            }
-	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-	      n=0;
-              l=((WORD *)(k+2*j))[0];
-	      for(m=0;m<16;m++) {
-	        n=n<<1;
-	        n|=(l & 1);
-	        l=l>>1;
-	      }
-	      *((WORD *)(k+2*j))=n;
-            }
-            k=*(LONG *)&base[i].ib_pdata;
-	
-	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-           WSWAP((char *)(k+2*j));
-         }
-	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-	   n=0;
-           l=((WORD *)(k+2*j))[0];
-	   for(m=0;m<16;m++) {
-	     n=n<<1;
-	     n|=(l & 1);
-	     l=l>>1;
-	   }
-	   *((WORD *)(k+2*j))=n;
-        }
-      }
-    }
-  }
-}
-
-
-void  objc_add(OBJECT *tree,int p,int c) {
-  if(tree[p].ob_tail<0) {
-    tree[p].ob_head = c;
-    tree[p].ob_tail = c;
-    tree[c].ob_next = p;
-  } else {
-    tree[c].ob_next = p;
-    tree[tree[p].ob_tail].ob_next = c;
-    tree[p].ob_tail = c;
-  }
-}
-
-void objc_delete(OBJECT *tree,int object) {
-  int i=0;
-  int prev=-1;
-  int next=tree[object].ob_next;	
-  if(next!=-1) {
-    if(tree[next].ob_tail==object) next=-1;
-  }
-  while(1) {	
-    if((tree[i].ob_next==object) && (tree[object].ob_tail!=i)) {
-      prev=i;
-      tree[i].ob_next=tree[object].ob_next;
-      break;
-    }
-    if(tree[i].ob_flags & LASTOB) break;
-    i++;
-  }
-  i=0;
-  while(1) {	
-    if(tree[i].ob_head==object) tree[i].ob_head=next;
-    if(tree[i].ob_tail == object) tree[i].ob_tail=prev;
-    if(tree[i].ob_flags & LASTOB) break;
-    i++;
-  }
-}
-
-
-
-
-/* *****************************  */
-/*     objc_offset                  */
-
-int objc_offset(OBJECT *tree,int object,int *x,int *y) {
-  if((tree == NULL)) return(0);
-  *x=*y=0;
-  while(1) {
-    int last;	
-    *x+=tree[object].ob_x;
-    *y+=tree[object].ob_y;
-    if((tree[object].ob_next<0) || (object==0)) break;		
-    do {
-      last=object;
-      object=tree[object].ob_next;
-    } while(last!=tree[object].ob_tail);	
-  }
-  if(object==0) return 1;
-  else return 0;
-}
-
-
-
-
-/* *****************************  */
-/*     objc_find                  */
-
-int objc_find(OBJECT *tree,int x,int y) {
-  int i=0;
-  int sbut=-1;
-  int idx=0;
-  int stop=-1;
-  int flag=0;
-  int rootx=0;
-  int rooty=0;
-  while(1) {
-    if(x>=tree[idx].ob_x+rootx && x<tree[idx].ob_x+tree[idx].ob_width+rootx &&
-    y>=tree[idx].ob_y+rooty && y<tree[idx].ob_y+tree[idx].ob_height+rooty) {
-      sbut=idx;
-      if(tree[idx].ob_head!=-1) {
-        if(!(tree[idx].ob_flags & HIDETREE)) {
-          stop=tree[idx].ob_tail;
-          rootx+=tree[idx].ob_x;
-          rooty+=tree[idx].ob_y;
-          idx=tree[idx].ob_head;
-          flag=1;
-        }
-      }
-    }
-    if(flag) flag=0;
-    else {
-      if(tree[idx].ob_flags & LASTOB) return(sbut);
-      if(idx==stop) return(sbut);
-      if(tree[idx].ob_next!=-1) idx=tree[idx].ob_next;
-      else return(sbut);
-    }
-  }
-}
-
-int rootob(OBJECT *tree,int onr) {
-  int idx=onr;
-  int sbut;
-
-  while(1) {
-    sbut=idx;
-    idx=tree[idx].ob_next;
-    if(idx==-1) return(-1);
-    if(tree[idx].ob_tail==sbut) return(idx);
-  }
-}
-int relobxy(OBJECT *tree,int ndx,int *x, int *y){
-  *x=tree[ndx].ob_x;
-  *y=tree[ndx].ob_y;
-  while((ndx=rootob(tree,ndx))>=0){
-    *x+=tree[ndx].ob_x;
-    *y+=tree[ndx].ob_y;
-  }
-}
-void draw_edcursor(OBJECT *tree,int ndx){
-     TEDINFO *ted=(TEDINFO *)(tree[ndx].ob_spec);
-     int x,y;
-     relobxy(tree,ndx,&x,&y);
-     SetForeground(gem_colors[RED]);
-     DrawLine(x+chw*(ted->te_junk1-ted->te_junk2),y,x+chw*(ted->te_junk1-ted->te_junk2),
-     y+chh+4);
-     SetForeground(gem_colors[BLACK]);
-}
-
-int finded(OBJECT *tree,int start, int r) {
-    /*  editierbare Objekt finden */
-  int idx=start;
-  int sbut=-1;
-  if(r>0 && !(tree[idx].ob_flags & LASTOB)) idx++;
-  else if(r<0 && idx>0) idx--;
-
-  while(1) {
-    if(tree[idx].ob_flags & EDITABLE) {sbut=idx;break;}
-    if(tree[idx].ob_flags & LASTOB) break;
-    if(r<0)idx--;
-    else idx++;
-    if(idx<0) break;
-  }
-  return(sbut);
-}
 #ifdef FRAMEBUFFER
   char *spix[30];
 #endif
   int sgccount=0;
 
 int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int w2, int h2 ) {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   static HDC sgc[30];
   static HBITMAP spix[30];
-#else
-#ifndef FRAMEBUFFER
+#endif
+#ifdef USE_X11
   static GC *sgc[30];
   static Pixmap *spix[30];
   XGCValues gc_val;
   GC pgc;
   Pixmap ppix;
 #endif
+#ifdef USE_SDL
+  static SDL_Surface *spix[30];
+  SDL_Rect a={x2-3,y2-3,w2+8,h2+8};
+  SDL_Rect b={0,0,w2+8,h2+8};
 #endif
 #ifdef DEBUG
   printf("**form_dial:\n");
@@ -2093,16 +633,17 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
 
   switch(fo_diflag){
   case 0:
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   sgc[sgccount]=CreateCompatibleDC(bitcon[usewindow]);
   spix[sgccount]=CreateCompatibleBitmap(bitcon[usewindow],w2+8,h2+8);
   SelectObject(sgc[sgccount],spix[sgccount]);
   BitBlt(sgc[sgccount],0,0,w2+8,h2+8,bitcon[usewindow],x2-3,y2-3,SRCCOPY);
-#else
+#endif
   /* Erst den Graphic-Kontext retten  */
 #ifdef FRAMEBUFFER
    spix[sgccount]=FB_get_image(x2-3,y2-3,w2+8,h2+8,NULL);
-#else
+#endif
+#ifdef USE_X11
     sgc[sgccount]=malloc(sizeof(GC));
     pgc=XCreateGC(display[usewindow], win[usewindow], 0, &gc_val);
 
@@ -2120,21 +661,32 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     spix[sgccount]=malloc(sizeof(Pixmap));
     memcpy(spix[sgccount],&ppix,sizeof(Pixmap));
 #endif
+#ifdef USE_SDL
+  printf("Save bg: %d %d %d %d\n",a.x,a.y,a.w,a.h);
+  spix[sgccount]=SDL_CreateRGBSurface(SDL_SWSURFACE,a.w,a.h,32,0,0,0,0);
+  SDL_BlitSurface(display[usewindow], &a,spix[sgccount], &b);
 #endif
     sgccount++;
    break;
    case 3:
    /* Hintergrund restaurieren  */
    sgccount--;
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
     BitBlt(bitcon[usewindow],x2-3,y2-3,w2+8,h2+8,sgc[sgccount],0,0,SRCCOPY);
     DeleteObject(spix[sgccount]);
     DeleteDC(sgc[sgccount]);
     activate();
+#endif
+#ifdef USE_SDL
+//  printf("restore bg: %d %d %d %d b %d %d %d %d\n",a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h);
+    SDL_BlitSurface(spix[sgccount], &b,display[usewindow], &a);
+    SDL_FreeSurface(spix[sgccount]);
+    activate();
 #else
 #ifdef FRAMEBUFFER
     FB_put_image(spix[sgccount],x2-3,y2-3);
-#else
+#endif
+#ifdef USE_X11
     XCopyArea(display[usewindow], *(spix[sgccount]),pix[usewindow],gc[usewindow],0,0,w2+8,h2+8,x2-3,y2-3);
     XFreePixmap(display[usewindow],*(spix[sgccount]));
     XCopyGC(display[usewindow],*sgc[sgccount],GCForeground| GCFunction |GCLineWidth |GCLineStyle| GCFont, gc[usewindow]);
@@ -2150,30 +702,22 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
   }
 }
 
-int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
-  /* Objektbaum Zentrieren */
-#ifdef DEBUG
-  printf("**form_center:\n");
-#endif
 
-  tree->ob_x=sbox.x+(sbox.w-tree->ob_width)/2;
-  tree->ob_y=sbox.y+(sbox.h-tree->ob_height)/2;
-  *x=tree->ob_x;
-  *y=tree->ob_y;
-  *w=tree->ob_width;
-  *h=tree->ob_height;
-  return(0);
-}
+
 
 
 int form_do(OBJECT *tree) {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   HANDLE evn[3];
-#else
+#endif
+#if defined FRAMEBUFFER || defined USE_X11|| defined USE_SDL
   XEvent event;
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
   XGCValues gc_val;
 #endif
+#endif
+#ifdef USE_SDL
+  int e;
 #endif
   int exitf=0,bpress=0;
   int sbut,edob=-1,idx;
@@ -2197,47 +741,63 @@ int form_do(OBJECT *tree) {
 
   /* Auf Tasten/Maus reagieren */
   activate();
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   evn[0]=keyevent;
   evn[1]=buttonevent;
   ResetEvent(evn[0]);
   ResetEvent(evn[1]);
-
 #endif
 #ifdef FRAMEBUFFER
   FB_mouse(1);
 #endif
   while(exitf==0) {
-#ifdef WINDOWS
-  WaitForMultipleObjects(2,evn,FALSE,INFINITE);
-  switch (global_eventtype) {
-#else
+#ifdef WINDOWS_NATIVE
+    WaitForMultipleObjects(2,evn,FALSE,INFINITE);
+    switch (global_eventtype) {
+#endif
+#if defined USE_X11 || defined FRAMEBUFFER
     XWindowEvent(display[usewindow], win[usewindow],KeyPressMask |KeyReleaseMask|ExposureMask |ButtonReleaseMask| ButtonPressMask, &event);
+#endif
+#if defined USE_SDL
+    e=SDL_WaitEvent(&event);
+    if(e==0) return;
+    while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_KEYDOWN &&
+        event.type!=SDL_MOUSEBUTTONUP) { 
+     handle_event(usewindow,&event);
+     e=SDL_WaitEvent(&event);
+     if(e==0) return;
+    }
+#endif
+#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
     switch (event.type) {
-#ifndef FRAMEBUFFER
       char buf[4];
+#endif
+#ifdef USE_X11
       XComposeStatus status;
       KeySym ks;
-#endif
     /* Das Redraw-Event */
     case Expose:
-#ifndef FRAMEBUFFER
       XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
           event.xexpose.x,event.xexpose.y,
           event.xexpose.width,event.xexpose.height,
           event.xexpose.x,event.xexpose.y);
-#endif
       break;
 #endif
-
+#if defined USE_X11 || defined FRAMEBUFFER
     /* Bei Mouse-Taste: */
     case ButtonPress:
-#ifdef WINDOWS
-      if(global_mousek==1) {
-        sbut=objc_find(tree,global_mousex,global_mousey);
-#else
       if(event.xbutton.button==1) {
         sbut=objc_find(tree,event.xbutton.x,event.xbutton.y);
+#endif
+#ifdef USE_SDL
+    case SDL_MOUSEBUTTONDOWN:
+      if(event.button.button==1) {
+         sbut=objc_find(tree,event.button.x,event.button.y);
+#endif
+#ifdef WINDOWS_NATIVE
+    case ButtonPress:
+      if(global_mousek==1) {
+        sbut=objc_find(tree,global_mousex,global_mousey);
 #endif
         if(sbut!=-1) {
 	if((tree[sbut].ob_flags & SELECTABLE) && !(tree[sbut].ob_state & DISABLED)) {
@@ -2274,24 +834,48 @@ int form_do(OBJECT *tree) {
 	}
       } else bpress=1;
       break;
+#ifdef USE_SDL
+    case SDL_MOUSEBUTTONUP:
+#else
     case ButtonRelease:
+#endif
       if(bpress) exitf=1;
       break;
-
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
     case KeyChar:   /* Return gedrueckt ? */
     printf("ks=%04x  \n",global_keycode);
     if((global_keycode & 255)==13) {                /* RETURN  */
-#else
-    case KeyPress:   /* Return gedrueckt ? */
+#endif
+#ifdef USE_SDL
+    case SDL_KEYDOWN:   /* Return gedrueckt ? */
+#if DEBUG 
+      printf("Keydown: %d\n",event.key.keysym.sym);
+      /* Print the hardware scancode first */
+      printf( "Scancode: 0x%02X", event.key.keysym.scancode );
+      /* Print the name of the key */
+      printf( ", Name: %s", SDL_GetKeyName( event.key.keysym.sym ) );
+      printf(", Unicode: " );
+      if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 ){
+        printf( "%c (0x%04X)", (char)event.key.keysym.unicode,
+             event.key.keysym.unicode );
+      } else {
+        printf( "? (0x%04X)", event.key.keysym.unicode );
+      }
+      printf("\n");
+#endif     
+      if(event.key.keysym.sym==SDLK_RETURN) {                /* RETURN  */
+#endif
 #ifdef FRAMEBUFFER
+    case KeyPress:   /* Return gedrueckt ? */
       if((event.xkey.ks & 255)==13) {                /* RETURN  */
-#else
+#endif
+#ifdef USE_X11
+    case KeyPress:   /* Return gedrueckt ? */
       XLookupString((XKeyEvent *)&event,buf,sizeof(buf),&ks,&status);
 
-      if((ks & 255)==13) {                /* RETURN  */
+      if((ks & 255)==13) {                /* RETURN  */  
 #endif
-#endif
+
         int idx=0;
 	while(1) {
 	  if(tree[idx].ob_flags & DEFAULT) {
@@ -2303,25 +887,29 @@ int form_do(OBJECT *tree) {
 	  if(tree[idx].ob_flags & LASTOB) break;
 	  idx++;
 	}
-      } else if(edob>=0){
+      } else if(edob>=0) { /*Ist ein ed-object vorhanden ?*/
          int i;
          TEDINFO *ted=(TEDINFO *)(tree[edob].ob_spec);
-#ifndef WINDOWS
+
 #ifdef FRAMEBUFFER
          if(HIBYTE(event.xkey.ks)) {
-#else
+#endif
+#ifdef USE_X11
          if(HIBYTE(ks)) {
 #endif
-#endif
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
            if((global_keycode & 255)==8) {          /* BSP */
-#else
+#endif
 #ifdef FRAMEBUFFER
 	   if(event.xkey.ks==0xff08) {                  /* BACKSPACE   */
-#else
+#endif
+#ifdef USE_X11
 	   if(ks==0xff08) {                  /* BACKSPACE   */
 #endif
+#ifdef USE_SDL
+           if(event.key.keysym.sym==SDLK_BACKSPACE) {    /* BACKSPACE */
 #endif
+
 	     if(ted->te_junk1>0) {
 	       int len=strlen((char *)ted->te_ptext);
 	       i=ted->te_junk1--;
@@ -2329,33 +917,47 @@ int form_do(OBJECT *tree) {
 	       ((char *)ted->te_ptext)[i-1]=0;
 	       objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
 	     }
-#ifndef WINDOWS
+
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff51) { /* LEFT */
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff51) { /* LEFT */
-#endif  
+#endif
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_LEFT) {   /* LEFT */
+#endif
 	     if(ted->te_junk1>0) ted->te_junk1--;
-	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
+	     objc_draw(tree,0,-1,0,0);
+	     draw_edcursor(tree,edob);activate();
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff53) { /* RIGHT */
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff53) { /* RIGHT */
 #endif  
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_RIGHT) {   /* RIGHT */
+#endif  
+
 
 	     int len=strlen((char *)ted->te_ptext);
 	     if(ted->te_junk1<len && ((char *)ted->te_ptext)[ted->te_junk1]) ted->te_junk1++;
              objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-#endif
-#ifdef WINDOWS
+
+#ifdef WINDOWS_NATIVE
            } else if((global_keycode & 255)==9) {          /* TAB */
-#else
+#endif
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff09) {          /* TAB */
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff09) {          /* TAB */
 #endif
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_TAB) {   /* TAB */
 #endif
+
 	     /* Suche naechstes ED-Feld oder wieder das erste */
 	     int cp=ted->te_junk1;
 	     i=finded(tree,edob,1);
@@ -2364,11 +966,15 @@ int form_do(OBJECT *tree) {
 	     ted=(TEDINFO *)(tree[edob].ob_spec);
 	     ted->te_junk1=min(cp,strlen((char *)ted->te_ptext));
 	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-#ifndef WINDOWS
+
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff52) {
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff52) {
+#endif
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_PAGEUP) {   
 #endif
 	   /* Suche vorangehendes ED-Feld */
 	     int cp=ted->te_junk1;
@@ -2378,8 +984,12 @@ int form_do(OBJECT *tree) {
 	     objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();}
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff54) { /* Page down */
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff54) { /* Page down */
+#endif
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_PAGEDOWN) {   
 #endif
 	     int cp=ted->te_junk1;
 	     /* Suche naechstes ED-Feld  */
@@ -2391,57 +1001,92 @@ int form_do(OBJECT *tree) {
 	       objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);
 	       activate();
 	     }
-#endif
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
            } else if((global_keycode & 255)==0x1b) {   /* ESC  */
-#else
+#endif
 #ifdef FRAMEBUFFER
 	   } else if(event.xkey.ks==0xff1b) {   /* ESC  */
-#else
+#endif
+#ifdef USE_X11
 	   } else if(ks==0xff1b) {   /* ESC  */
 #endif
+#ifdef USE_SDL
+           } else if(event.key.keysym.sym==SDLK_ESCAPE) {    /* ESC  */
 #endif
+
+
 	   ((char *)ted->te_ptext)[0]=0;
 	   ted->te_junk1=0;
-	   objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-#ifndef WINDOWS
+	   objc_draw(tree,0,-1,0,0);
+	   draw_edcursor(tree,edob);activate();
+
+
 #ifdef FRAMEBUFFER
 	   } else printf("Key: %x\n",event.xkey.ks);
-#else
-	   } else printf("Key: %x\n",ks);
 #endif
+#ifdef USE_X11
+	   } else printf("Key: %x\n",(unsigned int)ks);
 #endif
-	} else {
+#ifdef USE_SDL
+           } else {
+      printf("Keydown: %d\n",event.key.keysym.sym);
+      /* Print the hardware scancode first */
+      printf( "Scancode: 0x%02X", event.key.keysym.scancode );
+      /* Print the name of the key */
+      printf( ", Name: %s", SDL_GetKeyName( event.key.keysym.sym ) );
+      printf(", Unicode: " );
+      if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 ) {
+        printf( "%c (0x%04X)", (char)event.key.keysym.unicode,
+             event.key.keysym.unicode );
+      } else {
+        printf( "? (0x%04X)", event.key.keysym.unicode );
+      }
+      printf("\n");
+      if(event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 ) {
+#endif
+#if defined USE_X11 || defined FRAMEBUFFER
+	} else { /*HIBYTE*/
+#endif
 	  i=ted->te_txtlen-1;
 	  while(i>ted->te_junk1) {((char *)ted->te_ptext)[i]=((char *)ted->te_ptext)[i-1];i--;}
 	
 	  if(ted->te_junk1<ted->te_txtlen) {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
             ((char *)ted->te_ptext)[ted->te_junk1]=(char)global_keycode;
-#else
+#endif
 #ifdef FRAMEBUFFER
 	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)event.xkey.ks;
-#else
+#endif
+#ifdef USE_X11
 	    ((char *)ted->te_ptext)[ted->te_junk1]=(char)ks;
 #endif
+#ifdef USE_SDL
+            ((char *)ted->te_ptext)[ted->te_junk1]=(char)event.key.keysym.unicode;
 #endif
 	    ted->te_junk1++;
 	  }	
 	  objc_draw(tree,0,-1,0,0);draw_edcursor(tree,edob);activate();
-        }
-      }
+#ifdef USE_SDL
+      } /* unicode*/ 
+#endif
+      } /* if HIBYTE*/
+      } /* if edob*/
       break;
+#ifdef USE_SDL
+    case SDL_KEYUP:
+#else
     case KeyRelease:
+#endif
       if(bpress) exitf=1;
       break;
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
     default:
       ResetEvent(evn[0]);
       ResetEvent(evn[1]);
       break;
 #endif
-    }
-  }
+    } /* switch */
+  } /* while */
 #ifdef FRAMEBUFFER
   FB_mouse(0);
 #endif
@@ -2504,17 +1149,16 @@ int rsrc_load(char *filename) {
 int do_menu_select() {
   int nr,i,j,textx,sel=-1;
   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
-#ifndef WINDOWS
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
   Window root_return,child_return;
 #endif
-#endif
   graphics();
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   win_x_return=global_mousex;
   win_y_return=global_mousey;
   mask_return=global_mousek;
-#else
+#endif
+#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
@@ -2600,13 +1244,12 @@ int do_menu_select() {
   }
   return(-1);
 }
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
 HBITMAP schubladepix;
 HDC schubladedc;
-#else
-#ifndef FRAMEBUFFER
-Pixmap schubladepix;
 #endif
+#ifdef USE_X11
+Pixmap schubladepix;
 #endif
 int schubladeff=0;
 int schubladenr;
@@ -2627,16 +1270,15 @@ void do_menu_open(int nr) {
   }
   schubladeh=chh*menutitlelen[nr]+2;
      /* Hintergrund retten  */
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   schubladedc=CreateCompatibleDC(bitcon[usewindow]);
   schubladepix=CreateCompatibleBitmap(bitcon[usewindow],schubladew,schubladeh);
   SelectObject(schubladedc,schubladepix);
   BitBlt(schubladedc,0,0,schubladew,schubladeh,bitcon[usewindow],schubladex,schubladey,SRCCOPY);
-#else
-#ifndef FRAMEBUFFER
+#endif
+#ifdef USE_X11
   schubladepix=XCreatePixmap(display[usewindow],win[usewindow],schubladew,schubladeh,depth);
   XCopyArea(display[usewindow], pix[usewindow],schubladepix,gc[usewindow],schubladex,schubladey,schubladew,schubladeh,0,0);
-#endif
 #endif
   schubladeff=1;
   schubladenr=nr;
@@ -2645,7 +1287,7 @@ void do_menu_open(int nr) {
 void do_menu_edraw() {
   int i;
     SetForeground(gem_colors[WHITE]);
-#ifndef WINDOWS
+#if defined USE_X11 || defined FRAMEBUFFER
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
 #endif
     FillRectangle(schubladex,schubladey,schubladew-1,schubladeh-1);
@@ -2668,16 +1310,15 @@ void do_menu_edraw() {
 }
 void do_menu_close() {
   if(schubladeff) {
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
     BitBlt(bitcon[usewindow],schubladex,schubladey,schubladew,schubladeh,schubladedc,0,0,SRCCOPY);
     DeleteObject(schubladepix);
     DeleteDC(schubladedc);
-#else
-#ifndef FRAMEBUFFER
+#endif
+#ifdef USE_X11
     XCopyArea(display[usewindow], schubladepix,pix[usewindow],gc[usewindow],0,0,schubladew,schubladeh
     ,schubladex,schubladey);
     XFreePixmap(display[usewindow],schubladepix);
-#endif
 #endif
     schubladeff=0;
   }
@@ -2688,7 +1329,7 @@ void do_menu_draw() {
   gem_init();
 
   SetForeground(gem_colors[WHITE]);
-#ifndef WINDOWS
+#if defined USE_X11 || defined FRAMEBUFFER
     XSetLineAttributes(display[usewindow], gc[usewindow], 1, 0,0,0);
 #endif
     FillRectangle(sbox.x,sbox.y,sbox.w,chh);
@@ -2739,35 +1380,28 @@ int dir_bytes(FINFO *dir,int anzfiles) {
   return(byt);
 }
 
-
 void make_filelist(OBJECT *objects,FINFO *filenamen,int *filenamensel,int anzfiles,int showstart){
   int i,j;
   TEDINFO *ted;
-
   for(i=0;i<ANZSHOW;i++) {
     j=showstart+i;
     ted=(TEDINFO *)objects[18+2*i].ob_spec;
     objects[18+2*i+1].ob_spec&=0x00ffffff;
       if(j<anzfiles) {
-
         if(filenamensel[j]==1) objects[18+2*i].ob_state=SELECTED;
         else objects[18+2*i].ob_state=NORMAL;
-	
         ted->te_ptext=(LONG)filenamen[j].name;
 	objects[18+2*i].ob_flags=SELECTABLE|TOUCHEXIT|RBUTTON;
 	if(filenamen[j].typ & FT_DIR) objects[18+2*i+1].ob_spec|=0x44000000;
 	else objects[18+2*i+1].ob_spec|=0x20000000;
-
       } else {
         ted->te_ptext=(LONG)"";
         objects[18+2*i].ob_state=NORMAL;
         objects[18+2*i].ob_flags=NONE;
-	
         objects[18+2*i+1].ob_spec|=0x20000000;
     }
   }
 }
-
 
 int compare_dirs(FINFO *a,FINFO *b) {
   if(a->typ==FT_DIR && b->typ!=FT_DIR) return(-1);
@@ -2842,12 +1476,16 @@ void make_scaler(OBJECT *objects,int anzfiles,int showstart){
 
 char *fsel_input(char *titel, char *pfad, char *sel) {
   char btitel[128],mask[128],dpfad[128],buffer[128];
-  char feld1[128],feld2[128],xfeld1[50],xfeld2[20];
+  char feld1[128],feld2[128];
   char *ergebnis;
   int i,j,k;
   int sbut=-1;
-#ifndef WINDOWS
+#if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
+#endif
+#ifdef USE_SDL
+  SDL_Event event;
+  int e;
 #endif
   FINFO filenamen[MAXANZFILES];
 
@@ -2856,10 +1494,10 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   int anzfiles,showstart=0;
 
   TEDINFO tedinfo[4+ANZSHOW]={
-  {(LONG)btitel,(LONG)btitel,(LONG)btitel,FONT_BIG,0,TE_CNTR,0x1200,0,0,0,0},
-  {(LONG)mask,(LONG)mask,(LONG)mask,FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
-  {(LONG)feld1,(LONG)xfeld1,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
-  {(LONG)feld2,(LONG)xfeld2,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
+  {(LONG)btitel,(LONG)"",(LONG)"",FONT_BIG,0,TE_CNTR,0x1200,0,0,0,0},
+  {(LONG)mask,(LONG)"",(LONG)"",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
+  {(LONG)feld1,(LONG)"__________________________________________________",(LONG)"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
+  {(LONG)feld2,(LONG)"____________________",(LONG)"XXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
   };
   int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[18+2*ANZSHOW]={
@@ -2917,11 +1555,11 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 #endif
 
   tedinfo[0].te_txtlen=strlen(btitel);
-  tedinfo[0].te_tmplen=strlen(btitel);
+  tedinfo[0].te_tmplen=0;
   for(i=0;i<ANZSHOW;i++){
-   tedinfo[4+i].te_ptext=(LONG)"Hallo";
-    tedinfo[4+i].te_ptmplt=(LONG)buffer;
-    tedinfo[4+i].te_pvalid=(LONG)btitel;
+    tedinfo[4+i].te_ptext=(LONG)"________________________________";
+    tedinfo[4+i].te_ptmplt=(LONG)"________________________________";
+    tedinfo[4+i].te_pvalid=(LONG)"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     tedinfo[4+i].te_font=FONT_IBM;
     tedinfo[4+i].te_just=TE_LEFT;
     tedinfo[4+i].te_color=0x1110;
@@ -3054,14 +1692,35 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
       make_filelist(objects,filenamen, filenamensel,anzfiles,showstart);
       make_scaler(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
     } else if(sbut==15) {    /* Scalerhintergrund */
-      #ifndef WINDOWS
+#ifdef USE_SDL
+      e=SDL_WaitEvent(&event);
+      if(e==0) return;
+      while(event.type!=SDL_MOUSEBUTTONUP) { 
+        handle_event(usewindow,&event);
+        e=SDL_WaitEvent(&event);
+        if(e==0) return;
+      }
+      relobxy(objects,16,&obx, &oby);
+      if(event.button.y<oby) {
+	     showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));
+             make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
+             make_scaler(objects,anzfiles,showstart);
+      } else if(event.button.y>oby+objects[16].ob_height) {
+	     showstart=max(0,min(showstart+ANZSHOW,anzfiles-ANZSHOW));
+             make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
+             make_scaler(objects,anzfiles,showstart);
+      }
+
+#endif
+
+      #if defined USE_X11 || defined FRAMEBUFFER
       XWindowEvent(display[usewindow], win[usewindow],
        ButtonReleaseMask|ExposureMask , &event);
       switch (event.type) {
 
     /* Das Redraw-Event */
       case Expose:
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
         XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
           event.xexpose.x,event.xexpose.y,
           event.xexpose.width,event.xexpose.height,
@@ -3086,13 +1745,15 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
       int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;
       int ssold=showstart;
       int sssold=showstart;
-      #ifndef WINDOWS
-      #ifndef FRAMEBUFFER
+      #ifdef USE_X11
       Window root_return,child_return;
       #endif
+      #if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
        XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
+      #endif
+      #if defined USE_X11 || defined FRAMEBUFFER 
 
       while(ex==0) {
        XWindowEvent(display[usewindow], win[usewindow],
@@ -3101,7 +1762,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 
     /* Das Redraw-Event */
       case Expose:
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
         XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
           event.xexpose.x,event.xexpose.y,
           event.xexpose.width,event.xexpose.height,
@@ -3163,7 +1824,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   form_dial(3,0,0,0,0,x,y,w,h);
   form_dial(2,0,0,0,0,x,y,w,h);
   ergebnis=malloc(strlen(dpfad)+strlen((char *)tedinfo[3].te_ptext)+2);
-  if(sbut==1) sprintf(ergebnis,"%s/%s",dpfad,tedinfo[3].te_ptext);
+  if(sbut==1) sprintf(ergebnis,"%s/%s",dpfad,(char *)tedinfo[3].te_ptext);
   else ergebnis[0]=0;
   return(ergebnis);
 }
@@ -3205,20 +1866,20 @@ void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
 /* List-Select */
 
 int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
-  char btitel[128],mask[128],dpfad[128],buffer[128];
+  char btitel[128],mask[128],buffer[128];
   char feld2[128],xfeld1[50],findmsk[50];
   int ergebnis;
   int i,j,k;
   int sbut=-1;
-#ifndef WINDOWS
+#if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
 #endif
   int filenamensel[anzfiles];
   int showstart=0;
   TEDINFO tedinfo[4+ANZSHOW]={
-  {(LONG)btitel,(LONG)btitel,(LONG)btitel,FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
-  {(LONG)mask,(LONG)mask,(LONG)mask,FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
-  {(LONG)findmsk,(LONG)xfeld1,(LONG)btitel,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
+  {(LONG)btitel,(LONG)"",(LONG)"",FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
+  {(LONG)mask,(LONG)"",(LONG)"",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
+  {(LONG)findmsk,(LONG)"________________________",(LONG)"XXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
   };
   int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[15+2*ANZSHOW]={
@@ -3261,7 +1922,7 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
   strcpy(mask,"*");
 
   tedinfo[0].te_txtlen=strlen(btitel);
-  tedinfo[0].te_tmplen=strlen(btitel);
+  tedinfo[0].te_tmplen=0;
   tedinfo[1].te_junk1=24;
   tedinfo[1].te_junk2=strlen(mask);
   tedinfo[2].te_txtlen=24;
@@ -3271,8 +1932,8 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
 
   for(i=0;i<ANZSHOW;i++){
     tedinfo[4+i].te_ptext=(LONG)"Hallo";
-    tedinfo[4+i].te_ptmplt=(LONG)buffer;
-    tedinfo[4+i].te_pvalid=(LONG)btitel;
+    tedinfo[4+i].te_ptmplt=(LONG)"______________________________";
+    tedinfo[4+i].te_pvalid=(LONG)"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     tedinfo[4+i].te_font=FONT_IBM;
     tedinfo[4+i].te_just=TE_LEFT;
     tedinfo[4+i].te_color=0x1110;
@@ -3367,14 +2028,14 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
       make_list(objects,strs, filenamensel,anzfiles,showstart);
       make_scaler2(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
     } else if(sbut==LISTSELECT_SCALERP) {    /* Scalerhintergrund */
-      #ifndef WINDOWS
+      #if defined FRAMEBUFFER || defined USE_X11
       XWindowEvent(display[usewindow], win[usewindow],
        ButtonReleaseMask|ExposureMask , &event);
       switch (event.type) {
 
     /* Das Redraw-Event */
       case Expose:
-#ifndef FRAMEBUFFER
+#ifdef USE_X11
         XCopyArea(display[usewindow],pix[usewindow],win[usewindow],gc[usewindow],
           event.xexpose.x,event.xexpose.y,
           event.xexpose.width,event.xexpose.height,
@@ -3399,8 +2060,8 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
       int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;
       int ssold=showstart;
       int sssold=showstart;
-      #ifndef WINDOWS
-#ifndef FRAMEBUFFER
+      #if defined USE_X11 || defined FRAMEBUFFER
+#ifdef USE_X11
       Window root_return,child_return;
 #endif
        XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
@@ -3460,3 +2121,43 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
 
 
 #endif /* nographics */
+void do_sizew(int winnr,int w,int h) {
+#ifdef WINDOWS_NATIVE
+        RECT interior;
+        GetClientRect(win_hwnd[winnr],&interior);
+        MoveWindow(win_hwnd[winnr],interior.left,interior.top,w,h,1);
+#endif
+#ifdef USE_X11
+        Pixmap pixi;
+	Window root;
+	int ox,oy,ow,oh,ob,d;
+	
+	XGetGeometry(display[winnr],win[winnr],&root,&ox,&oy,&ow,&oh,&ob,&d);
+	pixi=XCreatePixmap(display[winnr], win[winnr], w, h, d);
+        XResizeWindow(display[winnr], win[winnr], w, h);
+	XCopyArea(display[winnr],pix[winnr],pixi,gc[winnr],0,0,min(w,ow),min(h,oh),0,0);
+	XFreePixmap(display[winnr],pix[winnr]);	
+	pix[winnr]=pixi;
+	XFlush(display[winnr]);
+#endif
+#ifdef USE_SDL
+  SDL_FreeSurface(display[winnr]);
+  if(!(display[winnr]=SDL_SetVideoMode(w, 
+       h, 32,
+    // SDL_FULLSCREEN |
+       SDL_HWSURFACE))) {
+      printf("cannot open SDL surface \n");
+      SDL_Quit();
+      return;
+    }
+
+#endif
+}
+void do_movew(int winnr,int x,int y) {
+#ifdef USE_X11
+      XMoveWindow(display[winnr], win[winnr], x, y);
+#endif
+#ifdef WINDOWS_NATIVE
+      MoveWindow(win_hwnd[winnr], x, y,640,400,1);
+#endif  
+}

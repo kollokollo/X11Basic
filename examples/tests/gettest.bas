@@ -1,4 +1,4 @@
-f$="fish_24.xwd"
+f$="fish.xwd"
 randomize timer
 ' fileselect "Image laden...","./*.xwd","",f$
 if len(f$)

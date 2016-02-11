@@ -12,12 +12,15 @@ color gelb
 text 100,100,"Draw with Mouse, Middle Mouse Button=QUIT, right=change color"
 vsync
 do
-  mouseevent x,y,k,,,s
+  mouseevent x,y,k,,s
+  print "Klick:",x,y,k
   if k=1
     draw x,y
     vsync
-    while mousek=1
-      draw to mousex,mousey
+    while k=1
+      motionevent x,y,k,,s
+      print x,y,k
+      draw to x,y
       vsync
     wend
   endif
@@ -34,7 +37,6 @@ do
     vsync
     color get_color(random(65536),random(65536),random(65536))
   endif
-  mouse ,,k
   exit if k=2
 loop
 quit

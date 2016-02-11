@@ -1,7 +1,7 @@
 #
-# spec file for package X11Basic (Version 1.15), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.16), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2007
+# Copyright  (c)  Markus Hoffmann 1997-2011
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
@@ -9,11 +9,11 @@
 Summary: A Basic Interpreter with X11-Graphics capabilities
 Vendor: Markus Hoffmann
 Name: X11Basic
-Version: 1.15
-Release: 3
+Version: 1.16
+Release: 2
 Copyright: GPL
 Group: Development/Languages
-Source: http://x11-basic.sourceforge.net/X11Basic-1.15.tar.gz
+Source: http://x11-basic.sourceforge.net/X11Basic-1.16.tar.gz
 URL: http://x11-basic.sourceforge.net/
 Packager: Markus Hoffmann <kollo@users.sourceforge.net>
 BuildRequires:	XFree86-devel
@@ -40,7 +40,7 @@ Also an ANSI-Basic-to-X11-Basic-converter (bas2x11basic) is included.
 
 You will find the compiler sourcecode and some other sample programs in
 /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs
-can be found in X11-Basic-examples-1.15.zip, which you can download from the
+can be found in X11-Basic-examples-1.16.zip, which you can download from the
 homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version
 of the manual can be found there.
 

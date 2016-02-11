@@ -1,4 +1,6 @@
-setfont "*writer*18*"
+color 0
+pbox 0,0,640,400
+setfont "*Courier*12*"
 deftext 1
 color get_color(65535,10000,10000)
 deftext ,0.08,0.16,0
@@ -10,5 +12,6 @@ for x=0 to 15
     vsync
   next y
 next x
+pause 5
 alert 0,"Fertig !",1," OK ",dummy
 quit

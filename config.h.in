@@ -20,12 +20,16 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
+/* Define to 1 if you have the `inotify_init' function. */
+#undef HAVE_INOTIFY_INIT
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
 
 /* dlopen in dllib */
 #undef HAVE_DLOPEN
+
 
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
@@ -105,6 +109,12 @@
 
 /* eq_int in dynamical DOOCS lib */
 #undef HAVE_DOOCS
+
+/* Simple Direct Media present */
+#undef HAVE_SDL
+
+/* Simple Direct Media GFX */
+#undef HAVE_SDL_GFX
 
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT

@@ -11,11 +11,12 @@
         ###############################################################
   
  
- 		    		  VERSION 1.14
+ 		    		  VERSION 1.16
 
- 		       (C) 1997-2007 by Markus Hoffmann
+ 		       (C) 1997-2011 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
- 		    (see http://x11-basic.sourceforge.net/)
+ 		    (see http://x11-basic.sourceforge.net/
+		     and http://www.opentom.org/X11-Basic/)
 
 			      ALL RIGHTS RESERVED
  	THIS PROGRAM IS PROVIDED "AS IS" WITHOUT A WARRANTY OF ANY KIND
@@ -23,14 +24,14 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  So Sep 23 14:02:42 CEST 2007
+          Last change to this file:  Mo 4. Apr 19:42:40 CEST 2011
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
           preter  with  full  X  capability that integrates fratures
           like shell scripting, cgi-Programming and  full  graphical
           visualisation  into  the  easy  to learn basic language on
-          moden computers.
+          modern computers.
 
           The syntax is most similar to the old GFA-Basic  ATARI  ST
           implementation.  Old gfa-programs should run with only few
@@ -48,7 +49,8 @@ About this document
       pseudo compiler xbc(1).
 
       The latest information and updates and new versions of  X11-Basic
-      can be found at http://x11-basic.sourceforge.net/.
+      can be found at http://x11-basic.sourceforge.net/ and 
+      http://www.opentom.org/X11-Basic/ .
 
        
 ===============================================================================
@@ -182,8 +184,12 @@ About this document
 
     The  actual implementation runs on Unix workstations (like HP/UX,
     DEC alpha and maybe others) and Linux-PCs with the X-Window  sys­
-    tem.  A  MS-Windows  version  has been started. Also Hand-held PC
-    Versions or adaptations to VxWorks are actually been thought  of.
+    tem.  A  MS-Windows  version is also available (though the support 
+    is limited and not every command is guaranteed to work). In case 
+    where no X11 implementation is available, X11-Basic can be compiled 
+    with a frambuffer-device graphics engine. Such a version for the 
+    TomTom Navigation devices is available. Also porting X11-Basic
+    to more embedded systems is possible.
 
     X11-Basic  is  as  well suited to novices as programming wizards,
     and is appropriate for virtually all programming tasks. For  sci­
@@ -217,12 +223,30 @@ About this document
    for example in side of a loop. Whole libraries can be added with the      
    merge command (-> MERGE).                                                 
 
+   A converter (--> bas2x11basic) allows to convert regular (with line 
+   numbers) ANSI-Basic programs to X11-Basic.
+
 
                            Copyright information                            
-                                                                             
-   X11-Basic is free software and distributed under the GNU License. Read    
-   the file COPYING for details.                                             
-                                                                             
+
+   Copyright (C) 1997-2011 by Markus Hoffmann 
+
+   X11-Basic is free software; you can redistribute it and/or modify it 
+   under the terms of the GNU General Public License as published by the 
+   Free Software Foundation; either version 2 of the License, or (at your 
+   option) any later version.
+
+   This program is distributed in the hope that it will be useful, but 
+   WITHOUT ANY WARRANTY; without even the implied warranty of 
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+   Public License for more details.
+
+   Read the file COPYING for details.
+   
+   (Basically that means, free, open source, use and modify as you like, don't
+   incorporate it into non-free software, no warranty of any sort, don't blame
+   me if it doesn't work.)
+
                                                                             
 2. Usage                                    
                                                                              
@@ -235,8 +259,8 @@ About this document
 SuSE-Linux and RedHat                                                        
                                                                              
    If you got a Redhat-Package (RPM) e.g. the File                           
-   X11Basic-1.09-4.i386.rpm, then you can install this package (beeing       
-   root) with rpm -i X11Basic-1.09-4.i386.rpm.                               
+   X11Basic-1.16-4.i386.rpm, then you can install this package (beeing       
+   root) with rpm -i X11Basic-1.16-4.i386.rpm.                               
                                                                              
    This is a very convienient way at least for the Linux distributions       
    SuSE and RedHat of installing the interpreter and its documentation,      
@@ -266,16 +290,15 @@ SuSE-Linux and RedHat
 Debian based distributions
 
   As with Ubuntu linux the popularity of debian based linux distributions  has
-  dramatically increases in the recent past. RPM is not used for  debian based
-  distributions. But with the RPM to DEB converter alien,  a .deb package can
-  be created out of the .rpm files. If you hesitate to do so,  there are also
-  ready-made debian packages available on various sources. You  just need to
-  look for them on the internet. Al though they are maintained by  third party
-  volunteers, the file system structure should be similar to what is  described
-  in the previous chapter, so you should expect to find the same files  at the
-  same place. 
-
-		  
+  dramatically increases in the recent past. 
+  Therefor X11-Basic also comes in packages called (e.g.) 
+  x11basic_1.16-1_i386.deb. Usually you can very easili install the file from 
+  a File-Browser with simply double clicking on it. Also a
+  dpkg -i x11basic_1.16-1_i386.deb  will do. 
+  The file system structure should be similar to what is  described in the 
+  previous chapter (explaining the RedHat packages), so you should expect to 
+  find the same files at the same place.
+  	  
 		                                                             
 Other linux distributions                                                    
 
@@ -286,7 +309,7 @@ Other linux distributions
   know) there exist no packages for any other system.
                                                                              
    For all other systems you will have to get the source-package             
-   X11Basic-1.14.tar.gz and compile the sources (which is very easy, by      
+   X11Basic-1.16.tar.gz and compile the sources (which is very easy, by      
    the way). This should work for all linux distributions, and probably      
    with little modifications also for HPUX, for DEC/alpha and FreeBSD and    
    maybe others.                                                             
@@ -301,26 +324,22 @@ Other linux distributions
                                                                              
    These will suffice to get you started.                                                               
                                                                              
-   Unpack X11Basic-1.09.tar.gz with                                          
+   Unpack X11Basic-1.16.tar.gz with                                          
                                                                              
- tar xzf X11Basic-1.09.tar.gz                                                
+ tar xzf X11Basic-1.16.tar.gz                                                
                                                                              
-   go into the X11Basic-1.09 directory and do a                              
+   go into the X11Basic-1.16 directory and do a                              
                                                                              
- sh ./install.sh                                                               
+   ./configure
+   make
+   sudo make install
+
+   Thats all you will have to do (for more detailed installation instructions 
+   read the file INSTALL, which comes with the package).
                                                                              
-   Thats all you will have to do (except for something goes wrong).          
-                                                                             
-   A xbasic binary will be compiled into the ./src/ directory                
-                                                                             
- cd src/                                                                     
- make install                                                                
-                                                                             
-   will copy the binary in ${HOME}/bin/.                                     
-                                                                             
-   If the `install.sh' script fails, please contact me                       
-   (kollo@users.sourceforge.net) and send me the output it generated         
-   (install.log).                                                            
+   If the `configure' script fails, please contact me
+   (kollo@users.sourceforge.net) and send me the output it generated
+   (config.log). I am going to try to help you to fix the problem.
 
 make the pseudo-compiler work, libraries                                     
                                                                              
@@ -382,6 +401,9 @@ The bytecode compiler and the virtual machine
 
   Please try the bytecode compiler out and maybe you want to report errors
   etc.  
+  Some of the example programs are known to work well with the bytecode 
+  compiler: e.g. mandel-simple.bas. The bytecode will execute about 4 times 
+  faster than the interpreted program.
 
 
 Support                                                                      
@@ -402,7 +424,7 @@ Support
      * How does the program behave on your computer ? What did you expect    
        ?                                                                     
      * Which version of X11-Basic are you using ? Please try the latest      
-       one ! You also might fill in the bug report form.                     
+       one!                    
        
 
   
@@ -412,7 +434,10 @@ Support
                                                                              
    The simplest way is to just start it by the command xbasic. Then you      
    can use the interpreter in interactive mode. Just try to enter some       
-   X11-Basic commands.                                                       
+   X11-Basic commands. The interpreter itself also accepts several options 
+   via the commandline. Please also read the man-page (man xbasic) for more 
+   details.
+                                                      
 
 Command line parameters                                                      
                                                                              
@@ -477,7 +502,7 @@ Command line parameters
     for X11-Basic programs in nedit.
 --------------------------------------------------------------------------------
 
-3. The pseudo compiler
+3. The xbc  pseudo compiler
 
   The X11-Basic package is shipped with a pseudo compiler, which
   makes  stand-alone binaries out of Basic source code. Actually this
@@ -501,12 +526,19 @@ Command line parameters
 
   See the man page xbc(1) for further information on the compiler.          
                                                                              
+3.2 The xb2c X11Basic to C translator
+-------------------------------------
 
---------------------------------------------------------------------------------
+  In the latest package a program called xb2c is included. It is ment to be a
+  translator, which should translate the X11Basic language to C source files.
+  These C source files finally can be compiled.
+
+  At least thats the idea. The implementation does not work currently. Be 
+  patient, this is still work in progress.
+
 
 4. The WINDOWS Version of X11-Basic
-
-Invocation
+-----------------------------------
 
    After you have run the setup program, X11-Basic can be invoked in three
    ways:
@@ -521,6 +553,17 @@ Invocation
    3. Create a file containing your X11-Basic-program. This file should have    
       the extension ".bas". Double-click on this file then invokes X11-Basic,   
       to execute your program.                                                
+
+5. The TomTom Version of X11-Basic
+----------------------------------
+
+  On http://www.opentom.org/X11-Basic you will find a Version of X11-basic which
+  has been specially compiled for tomtom navigation devices. They run linux
+  based on the ARM processor. No X11 Graphics is needed, since X11Basic comes
+  with a native framebuffer graphics support. Not all graphics features have the
+  same result than on a X11-Installation, but it is sufficient to run most of
+  the programs on the embedded devices. A Package and installation instructions
+  can be found on that web-side. 
 
 --------------------------------------------------------------------------------
                    The ANSI-Basic to X11-Basic converter                    
@@ -547,8 +590,20 @@ Invocation
                                Getting Started                               
                                                                              
    This chapter describes all you need to know to write your own programs    
-   in X11-Basic.                                                             
-                                                                             
+   in X11-Basic.                
+
+Introduction to this Dialect of BASIC
+-------------------------------------
+
+The programming language BASIC has been around since the 1960s. BASIC is an
+acronym and it stands for "Beginners All Purpose Symbolic Instruction
+Code". BASIC was originally designd to be a programming language that is easy
+to use for a wide range of projects by anyone.
+X11-Basic is a dialect of this but it is not a BASIC in its original form. It
+is more a mix of classic BASIC with structured languages like PASCAL and
+Modula-2. The Syntax of X11-Basic is oriented to the  famous GFA-BASIC which
+was developped for the ATARI ST in 1985.  
+                                                                            
 
 2. Description of the X11-Basic language
 
@@ -3735,6 +3790,34 @@ DESCRIPTION:
 			   Dim?(a()) muss Zweierpotenz sein.
 SEE ALSO:
 ##############################################################################
+Function: FILEEVENT$
+Syntax:   t$=FILEEVENT$
+
+DESCRIPTION:
+
+       Returns a string with event information on watched files and directories.
+       If the string is empty, no events are pending. The events consist of 3 
+       charackters followed by a blank and optionally followed by a filename. 
+       The first three charackters have the folllowing meaning:
+       1st: "d" means: the file is a directory
+       2nd: "X" created, "O" OPENed, "C" closed, "M" moved, "D" deleted
+       3rd: "r" read, "w" write, "a" attributes were changed
+
+       When  monitoring  a  directory,  the events  above can occur for files in
+       the directory,  in  which  case  the  name field  in  the  returned
+       string identifies the name of the file within the directory.
+
+SEE ALSO:    WATCH
+EXAMPLE:
+	WATCH "/tmp"
+	DO
+	  a$=FILEEVENT$
+	  IF LEN(a$)
+	    PRINT a$
+	  ENDIF
+	LOOP
+
+##############################################################################
 
 Command:  FILESELECT
 Syntax:   FILESELECT <title$>,<path$>,<default$>,<string-variable>
@@ -5630,13 +5713,45 @@ DESCRIPTION:
 
 SEE ALSO: POINT(),PLOT
 ##############################################################################
-
-PSAVE a$                -- writes the reformatted BASIC-program into file with 
-                           the name a$      
-PUT x,y,g$              -- displays graphic stored in g$ at postion x,y
-PUTBACK [#n,]a         -- puts character a back to input channel n
-PUT_BITMAP t$,i,i,i,i
 ##############################################################################
+Command: PUT
+Syntax : PUT <x>,<y>,<var$>[,<scale>[,<transparency>[,xs,ys,w,h]]]
+
+DESCRIPTION:
+
+	Maps a graphic contained in var$ into the graphic window at coordinate
+	x,y. The picture can be scaled by <scale> factor (default: 1). If you
+	want to paint  only a portion of the image you can specify the
+	coordinates, width and  hight of a rectangular area of the image (after
+	scaling).  If transparency is given and the picture has a color table, 
+	this is interpreted as a color index, which  will be treated as
+	transparent. 
+	
+	If an alpha channel is presend, this is used as a threshold for the
+	alpha value (0-255). Default is 32. If the coordinates xs,ys,w,h are
+	given, only a rectangular part of the image is mapped.  The file or data
+	format used in var$ is a BMP file format. It can contain uncompressed
+	bitmaps optionally with alpha channel of 1,8,16,24, or 32 bit depth. If
+	you want to use .png files for your icons to be mapped with PUT, first
+	convert them with ImageMagic to BMP: e.g. convert in.png -depth 32
+	out.bmp Also the alpha channel can be preserved. The images also can be
+	included into the sourcecode of the program. See the tool inline.bas on
+	how to make inline data. Here also a good compression will take
+	effect.  
+EXAMPLE:
+      OPEN "I",#1,"picture.bmp"
+      t$=INPUT$(#1,lof(#1))
+      CLOSE #1
+      CLEARW 
+      PUT 0,0,t$,2               ! scaled by a factor of 2
+      PUT 100,0,t$,,,0,0,20,20   ! put only a 20x20 area
+      SHOWPAGE
+
+SEE ALSO:  GET, PUT_BITMAP
+#############################################################################
+PUT_BITMAP t$,i,i,i,i
+PUTBACK [#n,]a         -- puts character a back to input channel n
+PSAVE a$                -- writes the reformatted BASIC-program into file with 
 ##############################################################################
 
 Command: QUIT
@@ -6696,6 +6811,28 @@ SEE ALSO:  SHOWPAGE
 ##############################################################################
 ##############################################################################
 
+Command:  WATCH
+Syntax:   WATCH filename$
+DESCRIPTION:
+
+       WATCH can be used to monitor individual files, or to monitor 
+       directories.   When  a  directory is monitored, FILEEVENT$ will 
+       return events for the directory itself, and for files inside the 
+       directory.
+       Note that WATCH is not available on every operating system.
+
+SEE ALSO:    FILEEVENT$
+EXAMPLE:
+	WATCH "/tmp"
+	DO
+	  a$=FILEEVENT$
+	  IF LEN(a$)
+	    PRINT a$
+	  ENDIF
+	LOOP
+	
+##############################################################################
+
 Command:  WHILE
 Syntax:   WHILE <num-expression>
 DESCRIPTION:
@@ -6733,6 +6870,19 @@ DESCRIPTION:
 	Returns lower 16 bits of b and expands sign.
 
 SEE ALSO: BYTE(), CARD(), SWAP()
+
+#############################################################################
+
+Function: WORD$()
+Syntax: a$=WORD$(b$,n)
+DESCRIPTION:
+
+	Returns the n'th word of b$. Words must be separated by space. 
+
+EXAMPLE:
+	a$=WORD$("Hallo, this is a string.",3)
+ 
+SEE ALSO: SPLIT, WORT_SEP()
 
 #############################################################################
 Command:  WORT_SEP
@@ -7101,8 +7251,34 @@ Version 1.13 (Feb 2006)
 
 Version 1.14 (Apr 2007)
 ~~~~~~~~~~~~~~~~~~~~~~~~
+- improved the init_program routines
+- woked on the bytecode compiler
+- new programs xbbc and xbvm  + man pages
+- the bytecodecompiler and virtual machine are still full of bugs
+- some sample programs can already be compiled to bytecode, 
+  they run 4 to 10 times faster 
+- Bug fixed which caused "Command  not allowed in interactive mode" errors
+  This bug was introduced in Version 1.14 since release 1
+- worked on the control system routines (DOOCS)
+- fixed bug with fgetc
+- crosscompiled it with arm-linux for embedded linux
+- new CHDIR command
+- new SPAWN command (does still not work as wanted)
+- created doocsxbasic modification to use the FLASH control system at DESY
 
+Version 1.15 (Feb 2008)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- New command: PIPE
+- New commands: GET_SCREENSIZE, GET_GEOMETRY
+- Implemented BMP file format (for PUT)
+- produced a framebuffer-graphics version of X11-basic
 
+Release notes for Version 1.16 (Dez 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Bugfix in SORT (Feb 2010)
+- new function word$() June 2010
+- Improved DATA/RESTORE handling Dez 2010
+- Improved bytecode/xbvm
 
 --------------------------------------------------------------------------------
 *Acknowlegements

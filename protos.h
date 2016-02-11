@@ -1,3 +1,4 @@
+
 /* PROTOS.H (c) Markus Hoffmann  */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -5,8 +6,6 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
-#include "vtypes.h"
-#include "ptypes.h"
 
 /* Prototypen */
 
@@ -24,7 +23,6 @@ void memdump(unsigned char *, int);
 void fatal_error_handler( int);
 void timer_handler( int);
 double ltext(int, int, double, double, double , int, char *);
-char *inkey();
 int make_pliste(int,int,short *,char *,PARAMETER **);
 void free_pliste(int,PARAMETER *);
 void free_parameter(PARAMETER);
@@ -53,7 +51,7 @@ void clear_labelliste();
 void clear_procliste();
 char *varrumpf(char *);
 STRING f_inputs(char *);
-STRING f_lineinputs(char *);
+STRING f_lineinputs(PARAMETER *,int);
 int f_freefile();
 STRING vs_error();
 char *float_to_string(char *);

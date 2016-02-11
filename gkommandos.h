@@ -20,7 +20,7 @@ void c_copyarea      (PARAMETER *,int);
 void c_deffill       (PARAMETER *,int);
 void c_defline       (PARAMETER *,int);
 void c_defmark       (PARAMETER *,int);
-void c_defmouse      (char *);
+void c_defmouse      (PARAMETER *,int);
 void c_deftext       (PARAMETER *,int);
 void c_draw          (char *);
 void c_ellipse       (PARAMETER *,int);
@@ -62,15 +62,20 @@ void c_savescreen  (PARAMETER *,int);
 void c_savewindow  (PARAMETER *,int);
 void c_scope       (char *);
 void c_screen      (PARAMETER *,int);
-void c_setfont     (char *);
+void c_setfont     (PARAMETER *,int);
 void c_setmouse    (PARAMETER *,int);
 void c_sget        (char *);
 void c_sizew       (PARAMETER *,int);
 void c_sput        (PARAMETER *,int);
-void c_text        (char *);
+void c_text        (PARAMETER *,int);
 void c_titlew      (PARAMETER *,int);
 void c_topw        (PARAMETER *,int);
 void c_usewindow   (PARAMETER *,int);
 void c_vsync       (char *);
 void c_xload       (char *);
 void c_xrun        (char *);
+
+
+int get_point(int x, int y);
+
+

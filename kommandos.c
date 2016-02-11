@@ -28,12 +28,15 @@
 #include "protos.h"
 #include "options.h"
 #include "kommandos.h"
+#include "array.h"
 
 #ifdef WINDOWS
 #include <windows.h>
 #include <string.h>
 #include <io.h>
 #endif
+
+
 /*****************************************/
 /* Kommandos zur Programmablaufkontrolle */
 
@@ -134,17 +137,15 @@ void c_local(char *n) {
 
 void c_goto(char *n) {
   char *b=indirekt2(n);
-  pc=labelnr(b);
+  pc=labelzeile(b);
   if(pc==-1) {xberror(20,b);/* Label nicht gefunden */ batch=0;}
   else batch=1;
   free(b);
 }
 
 
-void c_system(char *n) {
-    char *buffer=s_parser(n);
-    system(buffer);
-    free(buffer);
+void c_system(PARAMETER *plist,int e) {
+    system(plist[0].pointer);
 }
 void c_edit(char *n) {
     char filename[strlen(ifilename)+8];
@@ -281,62 +282,47 @@ void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen *
   pc=sp=0;
   erase_all_variables();
   batch=1;
-  do_restore();
+  do_restore(0);
 }
 
-void c_chain(char *n){ c_load(n); c_run(""); }
+void c_chain(PARAMETER *plist,int e){ c_load(plist,e); c_run(""); }
 
 void c_cont(char *n) {
   if(pc<=prglen) batch=1;
   else xberror(41,"");     /*CONT nicht moeglich !*/
 }
 
-void c_restore(char *n) {
-  char *b;
-  b=indirekt2(n);
-  if(strlen(b)) {
-    datazeile=labelnr(b);
-    if(datazeile==-1) xberror(20,b);/* Label nicht gefunden */ 
-    else next_data_line();
-  } else do_restore();
-  free(b);
+void c_restore(PARAMETER *plist,int e) {
+  if(e) {
+    do_restore((int)labels[plist[0].integer].datapointer);
+  //  printf("RESTORE: %d %s\n",plist[0].integer,labels[plist[0].integer].name);
+  } else do_restore(0);
 }
 
-void do_restore() {
-  datazeile=0;
-  next_data_line();
-}
-char *databuffer=NULL;
-void next_data_line() {
-  datazeile=suche(datazeile+1,1,"DATA","BEFEHLGIBTESNICHT","BEFEHLGIBTESNICHT2");
-  if(datazeile>=0) {
-    int i=0;
-    while(!isalnum((program[datazeile])[i])) i++;
-    databuffer=realloc(databuffer,strlen(program[datazeile])+1);
-    strcpy(databuffer,program[datazeile]+i+5);
-  } else {
-    free(databuffer);
-    databuffer=NULL;
-  }
+void do_restore(int offset) {
+  datapointer=offset;
+ // printf("DO RESTORE %d\n",offset);
 }
 char *get_next_data_entry() {
-  int e=0;
+  char *ptr,*ptr2;
   char *ergebnis=NULL;
-  char t[MAXSTRLEN];
-  /* printf("Databuffer $%08x contains: <%s>\n",(long)databuffer,databuffer); */
-  if(databuffer==NULL) next_data_line();
-  if(databuffer) {
-    e=wort_sep(databuffer,',',FALSE,t,databuffer);
-    if(e==0) {
-      next_data_line();
-      if(databuffer) e=wort_sep(databuffer,',',FALSE,t,databuffer);
-    }
-  }  
-  if(e) {
-      ergebnis=malloc(strlen(t)+1);
-      strcpy(ergebnis,t);
-      return(ergebnis);
-  } else return(NULL);
+  if(databufferlen==0 || databuffer==NULL || datapointer>=databufferlen) return(NULL);
+  ptr=databuffer+datapointer;
+  ptr2=searchchr(ptr,',');
+ // printf("Inhalt: k2=%d <%s>\n",ptr2-ptr,ptr);
+  if(ptr2==NULL) {
+    ergebnis=malloc(databufferlen-datapointer+1);
+    strncpy(ergebnis,ptr,databufferlen-datapointer);
+    ergebnis[databufferlen-datapointer]=0;
+    datapointer=databufferlen;
+  } else {
+    ergebnis=malloc(ptr2-ptr+1);
+    strncpy(ergebnis,ptr,(int)(ptr2-ptr));
+    datapointer+=(ptr2-ptr)+1;
+    ergebnis[ptr2-ptr]=0;
+  } 
+//  printf("READ: <%s>\n",ergebnis);
+  return(ergebnis);
 }
 
 void c_read(char *n) {
@@ -451,38 +437,36 @@ void c_plist(char *n) {
   }
 }
 
-void c_load(char *n) { 
-  programbufferlen=0;  
-  c_merge(n); 
+void c_load(PARAMETER *plist, int e) { 
+  programbufferlen=prglen=pc=sp=0;
+  c_merge(plist,e); 
 }
-void c_save(char *n) { 
+void c_save(PARAMETER *plist, int e) { 
   if(programbufferlen) {
-    char *name=s_parser(n);
-    if(strlen(name)==0 || strlen(n)==0) {
-      strcpy(name,ifilename);
-    }
+    char *name;
+    if(e) name=plist[0].pointer;
+    else name=ifilename;
+    if(strlen(name)==0) name=ifilename;
     if(exist(name)) {
       char buf[100];
       sprintf(buf,"mv %s %s.bak",name,name);
       system(buf);
     }
     saveprg(name);
-    free(name);
   }
 }
 
-void c_merge(char *n){
-  char *name=s_parser(n);
-  if(exist(name)) {
-    if(programbufferlen==0) strcpy(ifilename,name);
-    mergeprg(name);
-  } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",name);
-  free(name);
+void c_merge(PARAMETER *plist, int e){
+  if(exist(plist[0].pointer)) {
+    if(programbufferlen==0) strcpy(ifilename,plist[0].pointer);
+    mergeprg(plist[0].pointer);
+  } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",plist[0].pointer);
 }
 
 void c_new(char *n) {
   erase_all_variables();
-  batch=0;programbufferlen=0;prglen=0;
+  batch=0;
+  programbufferlen=prglen=pc=sp=0;
   strcpy(ifilename,"new.bas");
 }
 void c_let(char *n) {  
@@ -599,53 +583,92 @@ void c_fit_linear(char *n) {
   }
 }
 
+/* Sort-Funktion (wie qsort() ), welche ausserdem noch ein integer-Array mitsortiert */
 
-void do_sort(double *a,long n,double *b) {
-  unsigned long i,ir,j,l;
-  double rra,index;
-
+void do_sort(void *a, size_t n,size_t size,int(*compar)(const void *, const void *), int *b) {
+ // printf("sort: n=%d size=%d\n",n,size);
   if (n<2) return;
+  if(b==NULL) qsort(a,n,size,compar);
+  else { 
+    void *rra=malloc(size);
+    unsigned long i,ir,j,l;
+    int index;
+
   l=(n>>1)+1;
   ir=n;
   for(;;) {
     if(l>1) {
-      rra=a[l-2];
-      index=b[--l-1];
+      memcpy(rra,a+size*(l-2),size);
+      l--;
+      index=b[l-1];
     } else {
-      rra=a[ir-1];
+      memcpy(rra,a+size*(ir-1),size);
       index=b[ir-1];
-      a[ir-1]=a[1-1];
+      memcpy(a+size*(ir-1),a+size*(1-1),size);
       b[ir-1]=b[1-1];
       if (--ir==1) {
-        *a=rra;
+        memcpy(a,rra,size);
         *b=index;
         break;
       }
     }
     i=l;j=l+l;
     while(j<=ir) {
-      if(j<ir && a[j-1]<a[j]) j++;
-      if(rra<a[j-1]) {
-	a[i-1]=a[j-1]; b[i-1]=b[j-1];
+      if(j<ir && compar(a+size*(j-1),a+size*j)<0) j++;
+      if(compar(rra,a+size*(j-1))<0) {
+	memcpy(a+size*(i-1),a+size*(j-1),size); 
+	b[i-1]=b[j-1];
 	i=j;
 	j<<=1;
       } else j=ir+1;
     }
-    a[i-1]=rra;b[i-1]=index;
+    memcpy(a+size*(i-1),rra,size);
+    b[i-1]=index;
+  }
+  free(rra);
   }
 }
 
+
+/*The sort functions for all variable types */
+static int cmpstring(const void *p1, const void *p2) {
+ // printf("cmpstring\n");
+  return(memcmp(((STRING *)p1)->pointer,((STRING *)p2)->pointer,min(((STRING *)p1)->len,((STRING *)p2)->len)));
+}
+static int cmpdouble(const void *p1, const void *p2) {
+  if(*(double *)p1==*(double *)p2) return(0);
+  else if(*(double *)p1>*(double *)p2) return(1);
+  else return(-1);
+}
+static int cmpint(const void *p1, const void *p2) {
+  if((*(int *)p1)==(*(int *)p2)) return(0);
+  else if((*(int *)p1)>(*(int *)p2)) return(1);
+  else return(-1);
+}
+
+/* Sortierfunktion fuer ARRAYS 
+
+Todo: 
+* Umstellen auf pliste.
+* Stringsortierung bei unterschiedlicher Laenge ist nicht optimal.
+* Indexarray muss INTARRAYTYP sein. Das geht auch flexibler! (mit allarray)
+
+*/
+
+
+
 void c_sort(char *n) {  
   char w1[strlen(n)+1],w2[strlen(n)+1];                  
-  int e,typ,scip=0,i=0,size;  
+  int e,typ,typi,scip=0,i=0,size;  
   int vnrx=-1,vnry=-1,ndata=0; 
   char *r;
+ // printf("c_sort\n");
   e=wort_sep(n,',',TRUE,w1,w2);
   while(e) {
     scip=0;
     if(strlen(w1)) {
       switch(i) {
-        case 0: { /* Array mit x-Werten */     
+        case 0: { /* Array  */     
 	  /* Typ bestimmem. Ist es Array ? */
           typ=type2(w1);
 	  if(typ & ARRAYTYP) {
@@ -653,6 +676,11 @@ void c_sort(char *n) {
             vnrx=variable_exist(r,typ);
             free(r);
 	    if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
+	    else {
+	      ARRAY dummy=array_info(vnrx);
+	      ndata=anz_eintraege(dummy);
+             // printf("Anz-Eintraege liefert: %d\n",ndata);
+	    }
 	  } else puts("SORT: Kein ARRAY.");
 	  break;
         }
@@ -661,13 +689,13 @@ void c_sort(char *n) {
 	  break;
 	case 2: {   /* Array mit index-Tabelle */
           /* Typ bestimmem. Ist es Array ? */
-          typ=type2(w1);
-	  if(typ & ARRAYTYP) {
+          typi=type2(w1);
+	  if(typi==INTARRAYTYP) {
             r=varrumpf(w1);
-            vnry=variable_exist(r,typ);
+            vnry=variable_exist(r,typi);
             free(r);
 	    if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
-	  } else puts("FIT: Kein ARRAY.");
+	  } else puts("SORT: Kein INT-ARRAY.");
 	  break;
 	} 
         default: break;
@@ -676,10 +704,20 @@ void c_sort(char *n) {
     if(scip==0) e=wort_sep(w2,',',TRUE,w1,w2);
     i++;
   }
-  if(i>=2 && ndata>1) {
-    do_sort((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
-    ,ndata,
-    (double *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));
+ // printf("typ= %x %x\n",typ,FLOATARRAYTYP);
+  if(i>=1 && ndata>1) {
+    if(typ==STRINGARRAYTYP) 
+      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+      ,ndata,sizeof(STRING),cmpstring,
+      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));      
+    else if(typ==INTARRAYTYP) 
+      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+      ,ndata,sizeof(int),cmpint,
+      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));      
+    else if(typ==FLOATARRAYTYP)  
+      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+      ,ndata,sizeof(double),cmpdouble,
+      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));
   }
 }
 
@@ -867,15 +905,12 @@ void c_arrayfill(char *n) {
 void c_memdump(PARAMETER *plist,int e) {
   memdump((char *)plist[0].integer,plist[1].integer);
 }
-void c_dump(char *n) {
+void c_dump(PARAMETER *plist,int e) {
   int i;
   char kkk=0;
   
-  if(strlen(n)) {
-    char *kom=s_parser(n);
-    kkk=kom[0];
-    free(kom);
-  }
+  if(e) kkk=((char *)plist[0].pointer)[0];
+
   if(kkk==0 || kkk=='%') {
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==INTTYP) printf("%s%%=%d   [%d]\n",variablen[i].name, 
@@ -1095,14 +1130,14 @@ void c_on(char *n) {
     
     if(strcmp(w1,"ERROR")==0) {
       errcont=(mode>0);
-      if(mode==2) errorpc=labelnr(w3);
+      if(mode==2) errorpc=labelzeile(w3);
       else if(mode==3) {
         errorpc=procnr(w3,1);
 	if(errorpc!=-1) errorpc=procs[errorpc].zeile;      
       }
     } else if(strcmp(w1,"BREAK")==0) {
       breakcont=(mode>0);
-      if(mode==2) breakpc=labelnr(w3);
+      if(mode==2) breakpc=labelzeile(w3);
       else if(mode==3) {
         breakpc=procnr(w3,1);
 	if(breakpc!=-1) breakpc=procs[breakpc].zeile;
@@ -1434,8 +1469,8 @@ void c_error(PARAMETER *plist,int e) {
 void c_free(PARAMETER *plist,int e) {
   free((char *)plist[0].integer);
 }
-void c_detatch(char *w) {
-  int r=shm_detatch((int)parser(w));
+void c_detatch(PARAMETER *plist,int e) {
+  int r=shm_detatch(plist[0].integer);
   if(r!=0) io_error(r,"DETATCH");
 }
 void c_shm_free(PARAMETER *plist,int e) {
@@ -1453,15 +1488,17 @@ void c_pause(PARAMETER *plist,int e) {
 #endif
 }
 
-void c_echo(char *n) {
+void c_echo(PARAMETER *plist,int e) {
+  char *n=plist[0].pointer;
   if(strcmp(n,"ON")==0) echoflag=TRUE; 
   else if(strcmp(n,"OFF")==0) echoflag=FALSE;
   else  echoflag=(int)parser(n);
 }
-void c_stop(char *n) { batch=0;} 
-void c_tron(char *n) {  echoflag=1;}
-void c_troff(char *n) { echoflag=0;}
-void c_beep(char *n) { printf("\007");}
+
+void c_stop()  {batch=0;} 
+void c_tron()  {echoflag=1;}
+void c_troff() {echoflag=0;}
+void c_beep()  {printf("\007");}
  
 void c_clear(char *w){  erase_all_variables(); }
 
@@ -1493,8 +1530,11 @@ c_doclr(char *v) {
   if(typ & ARRAYTYP) { /* ganzes Array  */
     if(vnr==-1) xberror(15,r); /* Feld nicht dimensioniert */ 
     else {
-      if(typ & STRINGTYP) fill_string_array(vnr,""); 
-      else if(typ & INTTYP) fill_int_array(vnr,0); 
+      if(typ & STRINGTYP) {
+        STRING a=create_string("");
+        fill_string_array(vnr,a);
+	free_string(a); 
+      } else if(typ & INTTYP) fill_int_array(vnr,0); 
       else if(typ & FLOATTYP) fill_float_array(vnr,0.0);
     }
   } else {
@@ -1657,11 +1697,13 @@ void c_next(char *n) {
 void c_for(char *n) {
   /* erledigt nur die erste Zuweisung  */
   char w1[strlen(n)+1],w2[strlen(n)+1],w3[strlen(n)+1];
-  
+  int typ;
   wort_sep(n,' ',TRUE,w1,w2);
   if(searchchr(w1,'=')!=NULL) {
     wort_sep(w1,'=',TRUE,w2,w3);
-    zuweis(w2,parser(w3));
+    typ=vartype(w2);
+    if(typ & INTTYP) zuweisi(w2,parser(w3));
+    else zuweis(w2,parser(w3));
   } else {printf("Syntax Error ! FOR %s\n",n); batch=0;}
 }
 void c_until(char *n) {

@@ -1,4 +1,5 @@
 ' Bitmaptest for X11-Basic V.1.12
+' Since version 1.16 there are better ways to use bitmaps....
 
 
 biene$=""

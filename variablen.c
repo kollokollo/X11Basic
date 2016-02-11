@@ -11,6 +11,8 @@
 #include <string.h>
 #include <math.h>
 #include "defs.h"
+#include "ptypes.h"
+#include "vtypes.h"
 #include "protos.h"
 #include "globals.h"
 #include "array.h"
@@ -105,6 +107,7 @@ void *varptr(char *n) {
     }
     else ergebnis=variablen[vnr].pointer;
   }
+  free(r);
   return(ergebnis);
 }
 void erase_all_variables() {
@@ -754,6 +757,8 @@ int typlaenge(int typ) {
 }
 
 
+
+
 /************************* CASTS *******************************/
 
 void varcastint(int typ,void *pointer,int val) {
@@ -772,6 +777,7 @@ STRING create_string(char *n) {
   else ergeb.len=0;
   ergeb.pointer=malloc(ergeb.len+1);
   if(n) memcpy(ergeb.pointer,n,ergeb.len+1);
+  else *(ergeb.pointer)=0;
   return(ergeb);
 }
 

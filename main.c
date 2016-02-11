@@ -17,6 +17,8 @@
 #include <sysexits.h>
 #endif
 #include "defs.h"
+#include "ptypes.h"
+#include "parser.h"
 
 void reset_input_mode();
 void x11basicStartup();
@@ -47,40 +49,40 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char *program[MAXPRGLEN];
 
-void intro(){
-  puts("***************************************************************");
-  printf("*           %10s                     V.%5s            *\n",xbasic_name, version);
-  puts("*                    by Markus Hoffmann 1997-2008 (c)         *");
-  puts("*                                                             *");
+void intro() {
+  printf("**********************************************************\n"
+         "*    %10s                     V.%5s              *\n"
+         "*                       by Markus Hoffmann 1997-2010 (c) *\n"
+         "*                                                        *\n"
 #ifdef GERMAN
-  printf("* Programmversion vom     %30s      *\n",vdate);
-  printf("* Library V. %s vom     %30s      *\n",libversion,libvdate);
+         "* Programmversion vom     %30s *\n"
+         "* Library V. %s vom     %30s *\n"
 #else
-  printf("* version date:           %30s      *\n",vdate);
-  printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
+         "* version date:           %30s *\n"
+         "* library V.%s date:    %30s *\n"
 #endif
-  puts("***************************************************************");
-  puts("");
+         "**********************************************************\n\n",
+	     xbasic_name,version,vdate,libversion,libvdate);
 }
 
-void usage(){
+void usage() {
+  printf(
 #ifdef GERMAN
-  puts("\n  Bedienungsanleitung:\n --------------------- \n");
-  printf(" %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n",xbasic_name,ifilename);
-  puts("-l                  --- Programm nur laden");
-  puts("-e <kommando>       --- Basic Kommando ausführen");
-  puts("--eval <ausdruck>   --- Num. Ausdruck auswerten");
-  puts("-h --help           --- Diese Kurzhilfe");
-  puts("--help <Stichwort>  --- Hilfe zum Stichwort/Befehl\n");
+    "Bedienung: %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n"
+    " -l\t\t--- Programm nur laden\n"
+    " -e <kommando>\t--- Basic Kommando ausführen\n"
+    " --eval <ausdruck>\t--- Num. Ausdruck auswerten\n"
+    " -h --help\t--- Diese Kurzhilfe\n"
+    " --help <Stichwort>\t--- Hilfe zum Stichwort/Befehl\n"
 #else
-  puts("\n Usage:\n ------ \n");
-  printf(" %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n",xbasic_name,ifilename);
-  puts("-l                  --- do not run the program (only load)");
-  puts("-e <command>        --- execute basic command");
-  puts("--eval <exp>        --- evaluate num. expression");
-  puts("-h --help           --- Usage");
-  puts("--help <topic>      --- Print help on topic\n");
+    "Usage: %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n"
+    " -l\t\t--- do not run the program (only load)\n"
+    " -e <command>\t--- execute basic command\n"
+    " --eval <exp>\t--- evaluate num. expression\n"
+    " -h --help\t--- Usage\n"
+    " --help <topic>\t--- Print help on topic\n"
 #endif
+    ,xbasic_name,ifilename);
 }
 
 void kommandozeile(int anzahl, char *argumente[]) {

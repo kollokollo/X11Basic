@@ -16,6 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+
 #ifndef WINDOWS
 #ifdef __hpux
 #define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
@@ -57,22 +58,14 @@
 #include "defs.h"
 #include "globals.h"
 #include "protos.h"
+#include "io.h"
 
 #ifdef WINDOWS
-#define FD_SETSIZE 4096
-#define EINPROGRESS   WSAEINPROGRESS
-#define EWOULDBLOCK   WSAEWOULDBLOCK
-#define gettimeofday(a,b) QueryPerformanceCounter(a)
-#else 
-#define send(s,b,l,f) write(s,b,l)
-#define recv(s,b,l,f) read(s,b,l)
-#define closesocket(s) close(s)
-#define ioctlsocket(a,b,c) ioctl(a,b,c)
+#undef HAVE_INOTIFY_INIT
 #endif
-
-void io_error(int,char *);
-
-
+#ifdef HAVE_INOTIFY_INIT
+#include <sys/inotify.h>
+#endif
 
 
 /* Get the number of rows and columns for this screen. */
@@ -229,15 +222,38 @@ void c_input(char *n) {
     free(text);
   }  
 }
-STRING f_lineinputs(char *n) {
-  int i=get_number(n);
+
+/*
+Es werden beliebig lange Zeilen eingelesen, dafuer wird der buffer mit realloc
+vergroessert, wenn noetig. Zurueckgegeben wird Zeile als STRING. 
+Liest bis \n oder eof oder 0. Die Laenge kann deshalb mit strlen ermittelt
+werden. Zeile wird Nullterminiert
+*/
+
+STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
+  int c; int i=0;
+  STRING line;
+  int l=MAXSTRLEN;
+  line.pointer=malloc(l+1);
+  line.len=0;
+  
+  while((c=fgetc(n))!=EOF) {
+    if(c==(int)'\n') break;
+    if(c==0) break;
+    (line.pointer)[i++]=(char)c;
+    if(i>l) {
+      l+=MAXSTRLEN;
+      line.pointer=realloc(line.pointer,l+1);
+    }
+  }
+  (line.pointer)[i]='\0';
+  line.len=i;
+  return(line);
+}
+STRING f_lineinputs(PARAMETER *plist,int e) {
+  int i=plist[0].integer;
   if(filenr[i]) {
-    STRING inbuf;
-    FILE *fff=dptr[i];
-    inbuf.pointer=malloc(MAXSTRLEN);
-    lineinput(fff,inbuf.pointer);
-    inbuf.len=strlen(inbuf.pointer);
-    return(inbuf);
+    return(longlineinput(dptr[i]));
   } else {
     xberror(24,""); /* File nicht geoeffnet */
     return(vs_error());
@@ -302,10 +318,13 @@ void c_lineinput(char *n) {
       xtrim(s,TRUE,s);
       if(fff==stdin) u=do_gets(text);
       else {
-        u=lineinput(fff,inbuf);
+        STRING a;
+        a=longlineinput(fff);
+	u=a.pointer;
       }
       if(type2(s) & STRINGTYP) zuweiss(s,u);
       else zuweis(s,parser(u));
+      if(fff!=stdin) free(u);
       e=arg2(t,TRUE,s,t);
     }
     free(text);
@@ -382,25 +401,22 @@ int make_UDP_socket(unsigned short int port) {
 
 //#define DEBUG 1
 
-void c_open(char *n) {
+void c_open(PARAMETER *plist, int e) {
   char modus,special=0;
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int number=1,e,port=0,i=0;
-  char *filename=NULL;
-  char modus2[5]="r";
+  int number=1,port=0,i=0;
+  char *filename=plist[2].pointer;
+  char *modus2="r";
   int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
- /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-    if(strlen(w1)) {
-      switch(i) {
-      case 0: { /* Modus */     
-        char *mod=s_parser(w1);      /* Modus */
-        modus=toupper(mod[0]);
-	special=toupper(mod[1]);
-	if(special=='X') {
-	  char ww1[strlen(mod)+1],ww2[strlen(mod)+1];
-	  int ii=0,ee=wort_sep(mod,':',TRUE,ww1,ww2);
+
+
+  if(e>=4) port=plist[3].integer;
+  modus=toupper(((char *)plist[0].pointer)[0]);
+  special=toupper(((char *)plist[0].pointer)[1]);
+  number=plist[1].integer;  /*File #*/
+  
+  if(special=='X') { /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
+    char ww1[plist[0].integer+1],ww2[plist[0].integer+1];
+    int ii=0,ee=wort_sep(plist[0].pointer,':',TRUE,ww1,ww2);
 	  ee=wort_sep(ww2,',',TRUE,ww1,ww2);
 	  while(ee) {
      	    if(strlen(ww1)) {
@@ -423,30 +439,18 @@ void c_open(char *n) {
 	    }
 	    ii++;
             ee=wort_sep(ww2,',',TRUE,ww1,ww2);
-	    
 	  }
 #if DEBUG
 	  printf("baud=%d, bits=%d, stopbits=%d, parity=%d\n",baud,bits,
 	  stopbits,parity);
 #endif
-	}
-        free(mod);
-        if(modus=='I') strcpy(modus2,"r");
-        else if(modus=='O') strcpy(modus2,"w");
-        else if(modus=='U') strcpy(modus2,"r+");
-        else if(modus=='A') strcpy(modus2,"a+");
-        else xberror(21,""); /* bei Open nur erlaubt ...*/
-	break;
-      }
-      case 1: { number=get_number(w1); break; } 
-      case 2: { filename=s_parser(w1); break; } 
-      case 3: { port=(int)parser(w1);  break; } 	   
-      default: break;
-      }
-    }
-    i++;
-    e=wort_sep(w2,',',TRUE,w1,w2);
-  } 	    
+  }
+  if(modus=='I') modus2="r";
+  else if(modus=='O') modus2="w";
+  else if(modus=='U') modus2="r+";
+  else if(modus=='A') modus2="a+";
+  else xberror(21,""); /* bei Open nur erlaubt ...*/
+
 #ifdef DEBUG
    printf("number=%d, filename=<%s>, port=%d ($08x)\n",number,filename,port,port);
 #endif
@@ -660,11 +664,10 @@ void c_open(char *n) {
           ioctl(fp, TIOCSDTR, 0);
 #endif /* TIOCSDTR */
         }
-      } else printf("No TTY: cannot set %s !\n");
+      } else printf("No TTY: cannot set attributes!\n");
   #endif /* WINDOWS */
     }
   }
-  free(filename);
 }
 
 void c_link(PARAMETER *plist, int e) {
@@ -674,7 +677,7 @@ void c_link(PARAMETER *plist, int e) {
     if(filenr[number]) xberror(22,"");  /* File schon geoeffnet  */
     else {
 #ifdef WINDOWS
-      dptr[number]=LoadLibrary(plist[1].pointer);
+      dptr[number]=(FILE *)LoadLibrary(plist[1].pointer);
       if(dptr[number]==NULL) io_error(GetLastError(),"LINK");
       else  filenr[number]=2;
 #else
@@ -1293,7 +1296,7 @@ STRING print_arg(char *ausdruck) {
   }
   return(ergebnis);
 }
-STRING do_using(double num,STRING format){
+STRING do_using(double num,STRING format) {
   STRING dest;
   int a,p,p2,r,i,j; /* dummy */
   int neg,ln=0,vorz=1;
@@ -1421,11 +1424,67 @@ int f_ioctl(PARAMETER *plist,int e) {
 }
 
 
-void c_chdir(char *n) {
-  char *name=s_parser(n);
-  int ret=0;
-
-  ret=chdir(name);
+void c_chdir(PARAMETER *plist,int e) {
+  int ret=chdir(plist[0].pointer);
   if(ret==-1) io_error(errno,"chdir");
-  free(name);
+}
+
+static int watch_fd=-2;
+void c_watch(PARAMETER *plist, int e) {
+#ifdef HAVE_INOTIFY_INIT
+  if(watch_fd==-2) watch_fd=inotify_init();
+  if(watch_fd<0) io_error(errno,"WATCH");
+  else {
+    int wd=inotify_add_watch(watch_fd,plist[0].pointer,IN_ALL_EVENTS);
+    if(wd<0) io_error(errno,"WATCH");  
+    else printf("Watch descriptor for %s is: %d.\n",(char *)plist[0].pointer,wd);
+  }
+ #else
+  if(watch_fd<0) xberror(9,"WATCH"); /* WATCH is not available in this implementation. */
+#endif
+}
+/*If we ever want an UNWATCH function, we have to store a table with 
+  filenames associated with watch desciptors.*/
+
+char *fileevent() {
+  char *erg=malloc(1);
+  erg[0]=0;
+  if(watch_fd<0) {
+  } else {
+#ifdef HAVE_INOTIFY_INIT
+  #define EVENT_SIZE  (sizeof(struct inotify_event))
+  #define BUF_LEN     (1024*(EVENT_SIZE+16))
+  char buf[BUF_LEN];
+  int len=read(watch_fd, buf, BUF_LEN);
+  struct inotify_event *event;
+  int i=0;
+  char fields[5]="--- ";
+  while(i<len) {
+    fields[0]='-';
+    fields[1]='-';
+    fields[2]='-';
+    event=(struct inotify_event *)&buf[i];
+    if(event->mask&IN_ISDIR) fields[0]='d';
+    if(event->mask&IN_ACCESS) fields[2]='r'; /* ACCESS/r */
+    if(event->mask&IN_MODIFY) fields[2]='w'; /* MODIFY */
+    if(event->mask&IN_ATTRIB) fields[2]='a'; /* ATTRIB */
+    if(event->mask&IN_CLOSE_WRITE)   fields[1]='C'; /*CLOSE_WRITE */
+    if(event->mask&IN_CLOSE_NOWRITE) fields[1]='c'; /* CLOSE_NOWRITE */
+    if(event->mask&IN_OPEN)        fields[1]='O'; /* OPEN  */
+    if(event->mask&IN_CREATE)      fields[1]='X'; /* CREATE */
+    if(event->mask&IN_MOVED_FROM)  fields[1]='M'; /* MOVED_FROM */
+    if(event->mask&IN_MOVED_TO)    fields[1]='m'; /* MOVED_TO */
+    if(event->mask&IN_DELETE)      fields[1]='d'; /* DELETE file */
+    if(event->mask&IN_DELETE_SELF) fields[1]='D'; /* DELETE_SELF */
+
+    erg=realloc(erg,strlen(erg)+5+event->len);
+    strcat(erg,fields);
+    if(event->len) strcat(erg,event->name);
+    i+=EVENT_SIZE+event->len;
+    if(i<len) strcat(erg," ");
+  }
+/*Also here it is essential to distinguish between diferent watch descriptors....*/
+#endif
+  }
+  return(erg);
 }

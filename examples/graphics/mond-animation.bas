@@ -389,8 +389,8 @@ do
 for i=1 to 28
   t$="a$=plune"+str$(i)+"_bmp$"
   &t$
-  put 100,100,a$
-  text 100,150,str$(i)+" "
+  put 100,100,a$,4
+  text 100,180,str$(i)+" "
   print i
   vsync
   pause 0.1  

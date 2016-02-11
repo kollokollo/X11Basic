@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include "ptypes.h"
 #include "protos.h"
 #include "globals.h"
 #include "options.h"

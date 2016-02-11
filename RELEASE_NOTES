@@ -1,19 +1,3 @@
-Release notes for Version 1.14 (Apr 2007)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- improved the init_program routines
-- woked on the bytecode compiler
-- new programs xbbc and xbvm  + man pages
-- the bytecodecompiler and virtual machine are still full of bugs
-- some sample programs can already be compiled to bytecode, 
-  they run 4 to 10 times faster 
-- Bug fixed which caused "Command  not allowed in interactive mode" errors
-  This bug was introduced in Version 1.14 since release 1
-- worked on the control system routines (DOOCS)
-- fixed bug with fgetc
-- crosscompiled it with arm-linux for embedded linux
-- new CHDIR command
-- new SPAWN command (does still not work as wanted)
-- created doocsxbasic modification to use the FLASH control system at DESY
 
 Release notes for Version 1.15 (Feb 2008)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,3 +5,22 @@ Release notes for Version 1.15 (Feb 2008)
 - New commands: GET_SCREENSIZE, GET_GEOMETRY
 - Implemented BMP file format (for PUT)
 - produced a framebuffer-graphics version of X11-basic
+
+Release notes for Version 1.16 (Dez 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Bugfix in SORT (Feb 2010)
+- new function word$() June 2010
+- Improved DATA/RESTORE handling Dez 2010
+- Improved xbbc/bytecode/xbvm
+- Fixed memory leak accuring in varptr()
+- added xbbc and xbvm to windows distribution
+- started xb2c project
+- new psydocompiler for MS-WINDOWS, can produce standalone .exe files 
+- Bug fixed: LINEINPUT and LINEINPUT$() now can read arbitrary long lines
+- fixed bug with PBOX: now 2nd coordinate is inside the filled area.
+- new commands WATCH/(UNWATCH)/FILEEVENT$
+- fixed bug with bitmaps (PUT)
+- added support for bitmaps with transparency/alpha channel
+- fixed bug in DEFFILL
+- fixed bug in objc_draw()
+- Adapted windows version to use the SDL library

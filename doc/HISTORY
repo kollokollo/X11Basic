@@ -173,6 +173,16 @@ Version 1.14 (Apr 2007)
 
 Version 1.15 (Feb 2008)
 ~~~~~~~~~~~~~~~~~~~~~~~~
+- New command: PIPE
+- New commands: GET_SCREENSIZE, GET_GEOMETRY
+- Implemented BMP file format (for PUT)
+- produced a framebuffer-graphics version of X11-basic
 
+Release notes for Version 1.16 (Dez 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Bugfix in SORT (Feb 2010)
+- new function word$() June 2010
+- Improved DATA/RESTORE handling Dez 2010
+- Improved bytecode/xbvm
 
 --------------------------------------------------------------------------------

@@ -1,0 +1,122 @@
+.TH XB2C 1 09-Apr-2007 "Version 1.15" "Linux Basic to C Translator"
+.SH NAME
+xb2c (X11-Basic to C translator) \- X11-Basic to C translator 
+.SH SYNOPSIS
+.B xb2c
+.RI "[ " option " ] " <filename>
+
+.SH DESCRIPTION
+
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates fratures like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on moden 
+computers.
+
+.IR xb2c
+can be used to convert *.bas script-Files into C sourcecode, which can be
+compiled with the gnu C compiler. The sources depend on the x11basic.a or 
+libx11basic.so libraries, which therefor should be linked.  The compiled 
+programs will be faster that the interpreted oned and even a bit faster that 
+the bytecode processed ones (see 
+.I xbbc(1)
+) and (
+.I xbvm(1)
+. Since 
+.I xb2c
+is a real compiler (compared to the X11-Basic psydo-compiler (
+.I xbc
+)), some restrictions to the code apply.
+
+.B For a desciption of the X11-basic language and Usage of the interpreter see
+.I xbasic(1).
+
+.SH Filenames
+
+Xb2c processes one input file. The Suffix of the input file is usually .bas.
+The default output file name is 
+.I basic.c
+but you can specify alternate names with the -o option.
+.SH OPTIONS
+.TP
+.BI "\-o " file
+Place output in file \c
+.I file\c
+\&.  This applies regardless to whatever
+sort of output xb2c is producing.
+.Sp
+Since only one output file can be specified, it does not make sense to
+use `\|\c
+.B \-o\c
+\&\|' when compiling more than one input file, unless you are
+producing an executable file as output.
+.Sp
+If you do not specify `\|\c
+.B \-o\c
+\&\|', the default is to put an executable file
+in `\|\c
+.B b.b\c
+ .
+.SS \--version
+shows version, program and other information and exits
+.SS -h --help
+print a short help
+
+For detailed help and description of the implemented basic commands take a 
+look at the README file. 
+
+
+.SH EXAMPLES
+.nf
+xb2c testme.bas
+    produces a file basic.c
+xbbc testme.bas -o testme.c
+    produces a file testme.c
+.fi
+
+You can find many sample programs in 
+.I /usr/share/doc/packages/X11Basic/examples.
+.SH The basic to C translator
+Actually this compiler is really a
+translator. 
+This translator is not yet highly optimized.
+There is no way to recreate the .bas source code from the c file.. 
+But still the c file is platform independant.
+
+.SH VERSION
+Page was created for V.1.15
+.SH BUG REPORTS       
+
+If you find a bug in the X11-Basic to C translator, you should
+report it. But first,  you  should make sure that it really is
+a bug, and that it appears in the latest version of the
+X11-Basic package that you have.
+
+Once  you have determined that a bug actually exists, mail a
+bug report to kollo@users.sourceforge.net. If you have a fix,
+you  are  welcome  to  mail that as well!  Suggestions  may 
+be  mailed  to the x11-basic mailing list on 
+www.sourceforge.net/projects/x11-basic  or posted to the bug
+tracking system.
+
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to kollo@users.sourceforge.net.
+.SH BUGS
+Still some bugs
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2010 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software;  you  can  redistribute  it
+and/or modify it under the terms of the GNU General Public
+License as published  by  the  Free  Software  Foundation;
+either  version  2 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that  it  will  be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+PURPOSE.   See  the  GNU  General  Public License for more
+details.
+.SH SEE ALSO
+xbasic(1), xbvm(1), xbc(1), xbbc(1)

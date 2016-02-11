@@ -56,12 +56,10 @@
 #define sgn(x)   ((x<0)?-1:1)
 #define rad(x)   (PI*x/180)
 #define deg(x)   (180*x/PI)
-#ifndef WINDOWS
 #ifndef LOBYTE
   #define LOBYTE(x) ((unsigned char) ((x) & 0xff))
 #endif
 #ifndef HIBYTE
   #define HIBYTE(x) ((unsigned char) ((x) >> 8 & 0xff))
-#endif
 #endif
 #endif
