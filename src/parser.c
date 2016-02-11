@@ -997,7 +997,8 @@ char *s_parser(char *funktion) { /* String-Parser  */
        } else if(strcmp(v,"DATE")==0) {
 	 timec = time(&timec);
 	 loctim=localtime(&timec);
-	 asprintf(&ergebnis,"%2d.%2d.%4d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+	 ergebnis=malloc(12);
+	 sprintf(ergebnis,"%2d.%2d.%4d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
          pos=ergebnis; while(pos[0]!=0) {if(pos[0]==' ') pos[0]='0'; pos++;}
        } else if(strcmp(v,"TRACE")==0) { 
          ergebnis=malloc(strlen(program[pc])+1);
@@ -1048,11 +1049,12 @@ char *float_to_string(char *pos) {
             i++;
           }
 	  
-	  
-	  if(mode==0 && b!=-1) asprintf(&formatter,"%%%d.%dg",b,c);
-	  else if (mode==1 && b!=-1) asprintf(&formatter,"%%0%d.%dg",b,c);
-	  else  asprintf(&formatter,"%%.13g");
-          asprintf(&ergebnis,formatter,a);
+	  formatter=malloc(24);
+	  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%dg",b,c);
+	  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%dg",b,c);
+	  else  sprintf(formatter,"%%.13g");
+	  ergebnis=malloc(20);
+          sprintf(ergebnis,formatter,a);
 	  free(formatter);
 	  return(ergebnis);
 }
@@ -1084,7 +1086,8 @@ char *hexoct_to_string(char n,char *pos) {
 	  if(mode==0 && b!=-1) sprintf(formatter,"%%%d.%d%c",b,c,n);
 	  else if (mode==1 && b!=-1) sprintf(formatter,"%%0%d.%d%c",b,c,n);
 	  else  sprintf(formatter,"%%.13%c",n);
-          asprintf(&ergebnis,formatter,a);
+	  ergebnis=malloc(20);
+          sprintf(ergebnis,formatter,a);
 	  return(ergebnis);
 }
 char *bin_to_string(char *pos) {

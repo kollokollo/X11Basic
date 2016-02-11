@@ -1,5 +1,5 @@
 AC_INIT(defs.h)
-version="1.01"
+version="1.02"
 vdate=`date`
 AC_SUBST(version)
 cat > version.h  <<EOF

@@ -73,16 +73,17 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
  { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2 },
  { P_ARGUMENT,   "ALERT"    , c_alert     ,5, 5,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
+ { P_ARGUMENT,   "ALERT_DO" , c_alert_do  ,3, 3,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
  { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2},
  { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2},
 
  { P_SIMPLE, "BEEP"     , c_beep      ,0, 0},
  { P_SIMPLE, "BELL"     , c_beep      ,0, 0},
- { P_ARGUMENT,   "BGET"     , c_bget      ,1,-1},
+ { P_ARGUMENT,   "BGET"     , c_bget      ,3, 3},
  { P_ARGUMENT,   "BLOAD"    , c_bload     ,1,-1},
- { P_ARGUMENT,   "BMOVE"    , c_bmove     ,1,-1}, 
+ { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3,{PL_INT,PL_INT,PL_INT} }, 
  { P_ARGUMENT,   "BOX"      , c_box       ,4, 4},
- { P_ARGUMENT,   "BPUT"     , c_bput      ,1,-1},
+ { P_ARGUMENT,   "BPUT"     , c_bput      ,3, 3},
  { P_BREAK,  "BREAK"    , c_break     ,0, 0}, 
  { P_ARGUMENT,   "BSAVE"    , c_bsave     ,1,-1},
 
@@ -144,6 +145,7 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "FILESELECT", c_fileselect,3,-1},
  { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
  { P_FOR,    "FOR"      , c_for,1,-1},
+ { P_ARGUMENT,    "FORM_DO"      , c_form_do,2,2},
  { P_PROC,   "FUNCTION" , c_end,1,-1},
 
  { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1},
@@ -212,6 +214,9 @@ COMMAND comms[]= {
  { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1},
  { P_ARGUMENT,   "RETURN"   , c_return,     0,1},
  { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
+ { P_SIMPLE, "RSRC_FREE", c_rsrc_load,0,0},
+ { P_ARGUMENT, "RSRC_LOAD", c_rsrc_load,1,1},
+
  { P_SIMPLE, "RUN"      , c_run,        0,0},
 
  { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1},
@@ -697,7 +702,7 @@ char *print_arg(char *ausdruck) {
           strcat(ergebnis,a3); 
 	  free(a3);
         } else {
-	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+13);
+	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+15);
 	  sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
         }
       }

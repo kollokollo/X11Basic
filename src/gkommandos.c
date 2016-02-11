@@ -1148,6 +1148,114 @@ void c_fileselect(char *n) {
   
   free(sel);free(varname);free(pfad);free(titel);
 }
+
+int rsrc_load(char *);
+
+void c_rsrc_load(char *n) {
+  char *pname=s_parser(n);
+
+  
+    if(rsrc_load(pname)) printf("Fehler bei RSRC_LOAD.\n");
+    
+  
+  free(pname);
+}
+void c_rsrc_free(char *n) {
+  if(rsrc_free()) printf("Fehler bei RSRC_FREE.\n");
+}
+void c_form_do(char *n) {
+
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int backval;
+  int i=0,e;
+  char *varname=NULL;
+  int tnr=0;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+       switch(i) {
+         case 0: {
+	   tnr=(int)parser(w1);
+	   break;
+	   }
+	 
+	 case 1: {
+	   varname=malloc(strlen(w1)+1);
+	   strcpy(varname,w1);
+	   break;
+	   } 
+	 
+	 
+         default: break;
+       }
+     }
+  
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i>=1) {	  
+    OBJECT *tree;
+    graphics();
+    gem_init();
+    rsrc_gaddr(R_TREE,tnr,&tree);
+    backval=form_do(tree);
+   
+    
+    
+    zuweis(varname,(double)backval);
+    
+   
+  } else error(42,""); /* Zu wenig Parameter  */
+  
+  free(varname);
+
+
+}
+void c_alert_do(char *n) {
+
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  int backval;
+  int i=0,e;
+  char *varname=NULL;
+  int tnr=0,def=1;
+  e=wort_sep(n,',',TRUE,w1,w2);
+  while(e) {
+       if(strlen(w1)) {
+       switch(i) {
+         case 0: {
+	   tnr=(int)parser(w1);
+	   break;
+	   }
+        case 1: {
+	   def=(int)parser(w1);
+	   break;
+	   }
+	 
+	 case 2: {
+	   varname=malloc(strlen(w1)+1);
+	   strcpy(varname,w1);
+	   break;
+	   } 
+	 
+	 
+         default: break;
+       }
+     }
+  
+     e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i>=2) {	  
+    char *tree;
+    graphics();
+    gem_init();
+    rsrc_gaddr(R_FRSTR,tnr,&tree);
+    backval=form_alert(def,tree);
+    zuweis(varname,(double)backval);
+  } else error(42,""); /* Zu wenig Parameter  */
+  free(varname);
+}
+
 void c_xload(char *n) {
     char *name=fsel_input("Programm laden:","./*.bas","");
     if(strlen(name)) {

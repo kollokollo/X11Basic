@@ -55,13 +55,32 @@ AOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
 CSRC=$(OBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 
-DIST=$(DISTCSRC) defs.h globals.h xbasic.h fdata.c window.h file.h protos.h options.h\
-	Makefile.in ptypes.h vtypes.h\
-	configure config/*.[hc]\
-	config.guess INSTALL \
-        configure.in\
-        bitmaps/* doc/* examples/*
+DIST= doc/* \
+      src/xbasic.c \
+      src/file.c \
+      src/ccs.c \
+      src/io.c \
+      src/parser.c \
+      src/variablen.c \
+      src/mathemat_dummy.c \
+      src/runtime.c \
+      src/wort_sep.c \
+      src/xtrim.c \
+      src/ltext.c \
+      src/kommandos.c \
+      src/gkommandos.c \
+      src/do_gets.c \
+      src/errortxt.c \
+      src/window.c \
+      src/sysVstuff.c src/defs.h src/globals.h src/xbasic.h src/fdata.c \
+      src/window.h src/file.h src/protos.h src/options.h \
+	src/Makefile.in src/ptypes.h src/vtypes.h\
+	src/configure src/config/*\
+	src/config.guess src/INSTALL \
+        src/configure.in\
+        src/bitmaps/* examples/*
 
+DIST2=$(DISTOBJS:.o=.c)
 DEPSRC=$(CSRC) $(MOREOBJ:.o=.c)
 
 DIR=X11Basic-@version@
@@ -96,10 +115,10 @@ clean :
 distclean : clean
 	rm -f Makefile config.cache config.status
 
-dist :	$(DIST)
+dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
-	tar cf - $(DIST)|(cd /tmp/$(DIR); tar xpf -)
+	(cd ..; tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
 
 depend : $(DEPSRC) 

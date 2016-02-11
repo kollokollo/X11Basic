@@ -277,9 +277,23 @@ Wahrheitswert verbundener Ausdrücke verschiedene Programmabläufe zu ermöglichen
 Logische Operatoren können aber auch dazu benutzt werden, um Bitfolgen zu
 verknüpfen.
 
+Strukturiertes Programmieren
+============================
 
-
-
+Der Interpreter nennt sich zwar Basic, jedoch gibt es gegenueber den 
+Uralt-Basic-Dialekten Einschr"ankungen und Erweiterungen, die Strukturiertes
+Programmieren erlaubt. Die Programme sind dann "ubersichtlicher.
+Zeilennummern gibt es nicht und in jeder Zeile kann hoechstens eine Anweisung
+stehen.
+Spr"unge mit GOTO sind zwar m"oglich, aber nicht n"otig, da alle g"angigen
+Schleifentypen zur Verf"ugung stehen, einschliesslich einem Befehl fuer weitere
+Abbruchbedingungen (--> EXIT IF).
+Selbstdefinierte Prozeduren und Funktionen mit Parameterliste und 
+R"uckgabewerten jeden Typs sind m"oglich.
+Die Programmstruktur eines Programms erlaubt also "ublicherweise ein Hauptteil,
+z.B. eine Schleife, von der aus Unterprogramme aufgerufen werden.
+Mit einem Kommando (--> MERGE) lassen sich so auch ganze Bibliotheken 
+hinzuzubinden.
 
 
 ------ Anweisungen -------------
@@ -357,16 +371,16 @@ DATE$                 Aktuelles Datum
 ==================== Befehle ==============================
 
 ADD a,b			-- gleiche Wirkung wie a=a+b
-AFTER n,procedure
+AFTER n,procedure       -- Nach n Sekunden wird die Procedure einmal ausgefuehrt
 ALERT a%,b$,c%,d$,e%	-- Warn- und Infobox
-ARRAYFILL
-ARRAYCOPY
+ARRAYFILL a(),b         -- F"ullt ganzes Array mit Wert
+ARRAYCOPY ziel(),b()    -- Kopiert ganzes Array inclusive Dimensionierung
 
-BEEP
-BELL			-- Warnton
-BGET #n,a%,n%
+BEEP			-- Warnton auf der Console Ausl"osen
+BELL			-- dasselbe wie BEEP
+BGET #f,a%,n%		-- Liest n% Bytes aus File #f nach Adresse a%
 BLOAD f$,a%[,l%]	-- Laed File an Adresse
-BMOVE q%,z%,n%
+BMOVE q%,z%,n%          -- Kopiert n% Bytes grossen Speicherbereich
 BOX x1%,y1%,x2%,y2%	-- Rechteck zeichenen
 BPUT
 BREAK                   -- entspricht EXIT IF true
@@ -374,7 +388,7 @@ BSAVE f$,a%,l%		-- Speichert l% Bytes ab Adresse a% in File f$
 
 CASE
 CHAIN
-CIRCLE
+CIRCLE x%,y%,r%
 CLEAR
 CLEARW
 CLOSE  [[#]n%]          -- I/O-Kanal schliessen
@@ -648,6 +662,63 @@ Wird keine Kanal angegeben, werden alle offenen Kanaele geschlossen
 
 
 #############################################################################
+
+Funktion: ROUND
+===============
+Syntax: a=ROUND(b[,n])
+
+Beschreibung:
+
+Liefert auf n Nachkommastellen gerundeten Wert von b.
+n<0: Es wird vor dem Komma gerundet
+
+#############################################################################
+
+Funktion: SWAP
+===============
+Syntax: a%=SWAP(b%)
+
+Beschreibung:
+
+Liefert Wert durch Vertauschen der High und Low-Words von b%.
+
+Siehe auch: BYTE(), CARD(), WORD()
+#############################################################################
+
+Funktion: BYTE
+===============
+Syntax: a%=BYTE(b%)
+
+Beschreibung:
+
+Liefert untere 8 Bits von von b%. (identisch mit a%=b% AND 255)
+
+Siehe auch: CARD(), WORD(), SWAP()
+#############################################################################
+
+Funktion: CARD
+===============
+Syntax: a%=CARD(b%)
+
+Beschreibung:
+
+Liefert untere 16 Bits von von b%. (identisch mit a%=b% AND (2^16-1))
+
+Siehe auch: BYTE(), WORD(), SWAP()
+#############################################################################
+
+Funktion: WORD
+===============
+Syntax: a%=WORD(b%)
+
+Beschreibung:
+
+Liefert untere 16 Bits von von b% und erweitert Vorzeichenrichtig.
+
+Siehe auch: BYTE(), CARD(), SWAP()
+#############################################################################
+
+
 
 
 

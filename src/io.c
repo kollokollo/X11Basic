@@ -393,15 +393,12 @@ void c_close(char *w) {
     } else error(24,w); /* File nicht geoeffnet...*/
 
   } else {
-    printf("CLOSE: alles [");
     for(i=0;i<100;i++) {
 	if(filenr[i]) {
-	  printf("#%d ",i);
           if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
 	  else filenr[i]=0;
         }
     }
-    printf("]\n");
   }
 }
 
@@ -440,13 +437,42 @@ void c_bsave(char *n) {
   }
 }
 void c_bget(char *n) {
-
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  char *adr;
+  int anzahl;
+  int e=wort_sep(n,',',TRUE,w1,w2);
+  int i=get_number(w1);
+  e=wort_sep(w2,',',TRUE,w1,w2);
+  adr=(char *)(int)parser(w1);
+  anzahl=(int)parser(w2);
+  if(filenr[i]) {
+    fread(adr,1,anzahl,dptr[i]);
+  } else {error(24,w1);return;} /* File nicht geoeffnet */
 }
 void c_bput(char *n) {
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  char *adr;
+  int anzahl;
+  int e=wort_sep(n,',',TRUE,w1,w2);
+  int i=get_number(w1);
+  e=wort_sep(w2,',',TRUE,w1,w2);
+  adr=(char *)(int)parser(w1);
+  anzahl=(int)parser(w2);
+  if(filenr[i]) {
+    fwrite(adr,1,anzahl,dptr[i]);
+  } else {error(24,w1);return;} /* File nicht geoeffnet */
 
 }
-void c_bmove(char *n) {
-
+void c_bmove(char *n) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  char *ziel;
+  int anzahl;
+  int e=wort_sep(n,',',TRUE,w1,w2);
+  char *quelle=(char *)(int)parser(w1);
+  e=wort_sep(w2,',',TRUE,w1,w2);
+  ziel=(char *)(int)parser(w1);
+  anzahl=(int)parser(w2);
+  memmove(ziel,quelle,(size_t)anzahl);
 }
 void c_unget(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
@@ -509,7 +535,7 @@ int inp8(char *n) {
   else if(filenr[i]) fff=dptr[i];
   else {error(24,"");return(-1);} /* File nicht geoeffnet */
   fread(&ergebnis,sizeof(char),1,fff);
-  return(ergebnis);
+  return((int)ergebnis);
 }
 int inpf(char *n) {
   int i=get_number(n);
@@ -529,7 +555,7 @@ int inp16(char *n) {
   if(filenr[i]) {
     fff=dptr[i];
     fread(&ergebnis,sizeof(short),1,fff);
-    return(ergebnis);
+    return((int)ergebnis);
   } else error(24,""); /* File nicht geoeffnet */
   return(-1);
 }

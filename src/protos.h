@@ -108,7 +108,7 @@ void c_on(char *),c_restore(char *),c_swap(char *);
 void handle_window(int),c_bload(char *),c_bsave(char *),c_bmove(char *);
 void c_bput(char *),c_bget(char *),c_wort_sep(char *);
 void c_addsubmuldiv(char *,int),c_unget(char *);
-void c_after(char *),c_every(char *);
+void c_after(char *),c_every(char *),c_rsrc_load(char *),c_rsrc_free(char *),c_form_do(char *),c_alert_do(char *);
 void programmlauf();
 
 /* Grafikroutinen */
