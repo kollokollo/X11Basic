@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<!-- This file is part of X11BASIC, the basic interpreter for Unix/X
+ * ============================================================
+ * X11BASIC is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ -->
+<head>
+<meta charset="UTF-8">
+<title> X11-Basic Manual</title>
+<style asd="asd"><!--
+
+.code { font-family:'Courier New',monospace; margin-left: 36; }
+
+--></style>
+</head><body bgcolor=c0c0ff  vlink="purple" alink="red">
+<font face="Arial" size="4" color="black">
+"Nearly all digital computers talk to themselves in binary
+codes. We talk to each other in English. This means that either we have to learn
+binary codes, or we have to teach the computer English." (The Z80-Manual)
+</font>
+
+
+
+<div align="center">
+<table border="0" cellpadding="4" cellspacing="8">
+<tr>
+<td valign="top">
+  <table border cellpadding="2" cellspacing="0" width="100%">
+    <tr>
+      <td bgcolor="#99CCCC">
+      <p align="center">
+      <font face="Arial" size="4" color="black">
+      <strong>X11-Basic, The Manual</strong></font></td>
+    </tr>
+    <tr>
+      <td bgcolor="#FFFFCC">
+        <ul type="disc">
+    	   <li>The <b>X11-Basic User Manual</b> 
+	   (<a href="X11-Basic-manual.pdf"><font face="Arial">PDF Version</font></a>) (1 MBytes)
+    	   <li>read the <a href="Quickstart-Android.html">
+	   <font face="Arial">Quickstart tutorial on the <b>Android Version</b> of X11-Basic.</font></a> 
+	   (<a href="Quickstart-Android.pdf"><font face="Arial">PDF Version</font></a>) (430 kBytes)
+    	   <li>read the 
+	   <font face="Arial">Quickstart tutorial on the <b>TomTom Version</b> of X11-Basic </font>
+	   (<a href="Quickstart-TomTom.pdf"><font face="Arial">PDF Version</font></a>) (67 kBytes) 
+	   and the discussion on compatibility issues (<a href="Quickstart-TomTom-discussion.pdf">
+	   <font face="Arial">PDF Version</font></a>) (45 kBytes).
+    	   <li>read the <a href="Quickstart-Windows.html">
+	   <font face="Arial">Quickstart tutorial on the <b>WINDOWS Version</b> of X11-Basic.</font></a> 
+	   (<a href="Quickstart-Windows.pdf"><font face="Arial">PDF Version</font></a>) (25 kBytes)
+    	   <li>read the <a href="Quickstart-Compiler.html">
+	   <font face="Arial">Quickstart tutorial on how to use the X11-Basic compiler.</font></a> 
+	   (<a href="Quickstart-Compiler.pdf"><font face="Arial">PDF Version</font></a>) (57 kBytes)
+    	   <li>read the notes on <a href="Compatibility.html">
+	   <font face="Arial">Compatibility issues</font></a> for X11-Basic on different platforms. 
+	   (<a href="Compatibility.pdf"><font face="Arial">PDF Version</font></a>) (57 kBytes)
+    	   <li>read the <a href="FAQ.html">
+	   <font face="Arial">Frequently Asked Questions (<b>FAQ</b>)</font></a> 
+	   (<a href="FAQ.pdf"><font face="Arial">PDF Version</font></a>) (43 kBytes)
+    	 </ul>
+    	 </td>
+    </tr>
+    </table>
+    <table border cellpadding="2" cellspacing="0" width="100%">
+    <tr>
+    <td bgcolor="#99CCCC"><p align="center"><font face="Arial" size="4" color="black"><strong>X11-Basic, german documents</strong></font></td>
+                </tr>
+                <tr>
+                    <td bgcolor="#FFFFCC">
+		    <ul type="disc">
+		       <li><a href="x11basic-deutsch.html"><font face="Arial">Einstieg in X11-Basic</font></a>     
+		       <li><a href="faq_de.html"><font face="Arial">Noch Fragen ?</font></a>     
+                     </ul>
+		     </td>
+                </tr>
+     </table>
+<table border cellpadding="2" cellspacing="0" width="100%">
+  <tr><td bgcolor="#99CCCC"><p align="center"><font face="Arial" size="4" color="black">
+  <strong>Copyright + License</strong></font></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#FFFFCC">
+      <p>
+      <font face="Arial">  the </font>
+      <a href="COPYING"><font face="Arial">Gnu General Public License</a>.
+      </font>
+    </td>
+  </tr>
+</table>
+
+
+     
+</td>
+<td valign="top">
+<table border cellpadding="2" cellspacing="0" width="100%">
+<tr>
+  <td bgcolor="#99CCCC"><p align="center">
+  <font face="Arial" size="4" color="black">
+  <strong>X11-Basic, english documents</strong></font></td>
+</tr>
+<tr>
+<td bgcolor="#FFFFCC">
+<ul type="disc">
+<li><a href="INSTALL"><font face="Arial">General Installation instructions</a></font>
+<li><a href="Compile.html"><font face="Arial">Instructions on how to compile X11-Basic on different platforms</a></font>(<a href="Compile.pdf"><font face="Arial">PDF Version</font></a>) (59 kBytes)
+<li><a href="Framebuffer.html"><font face="Arial">Instructions on how to compile a framebuffer-only version of 
+X11-Basic e.g. for the Raspberry Pi</a></font>(<a href="Framebuffer.pdf"><font face="Arial">PDF Version</font></a>) (56 kBytes)
+<li><a href="x11basic.1.html"><font face="Arial">x11basic man-page -- The X11-Basic Interpreter</a></font>
+<li><a href="xbc.1.html"><font face="Arial">xbc man-page -- The X11-Basic Pseudo Compiler</a></font>
+<li><a href="xbbc.1.html"><font face="Arial">xbbc man-page -- The X11-Basic Bytecode Compiler</a></font>
+<li><a href="xbvm.1.html"><font face="Arial">xbvm man-page -- The X11-Basic Virtual Machine</a></font>
+<li><a href="xb2c.1.html"><font face="Arial">xb2c man-page -- The X11-Basic to C translator</a></font>
+<li><a href="bas2x11basic.1.html"><font face="Arial">bas2x11basic man-page -- The ANSI-Basic to X11-Basic translator</a></font>
+</ul></td>
+</tr>
+</table><table border cellpadding="2" cellspacing="0" width="100%">
+  <tr><td bgcolor="#99CCCC"><p align="center"><font face="Arial" size="4" color="black"><strong>Documentation of selected X11-Basic Programs</strong></font></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#FFFFCC">
+ <ul type="disc">
+  <li><a href="gui2bas.1.html"><font face="Arial">gui2bas man-page -- The Graphics User Interface Formatter</a></font>
+  <li><a href="X11-Basic-Ballerburg.html"><font face="Arial">Ballerburg</a></font>
+      (<a href="X11-Basic-Ballerburg.pdf"><font face="Arial">PDF Version</font></a>) (58 kBytes)
+  <li><font face="Arial">Ov2proc</font>
+      (<a href="X11-Basic-Ov2proc.pdf"><font face="Arial">PDF Version</font></a>) (60 kBytes)
+  <li><font face="Arial">TTaltimeter</font>
+      (<a href="X11-Basic-TTaltimeter.pdf"><font face="Arial">PDF Version</font></a>) (60 kBytes)
+  <li><font face="Arial">TTCar</font>
+      (<a href="X11-Basic-TTCar.pdf"><font face="Arial">PDF Version</font></a>) (177 kBytes) + <a href="X11-Basic-TTcar-discussion.pdf"><font face="Arial">Discussion</font></a>)
+  <li><font face="Arial">TTmoto</font>
+       (<a href="X11-Basic-TTmoto.pdf"><font face="Arial">PDF Version</font></a>) (167 kBytes)
+  <li><font face="Arial">TTsky</font>
+       (<a href="X11-Basic-TTsky.pdf"><font face="Arial">PDF Version</font></a>) (49 kBytes)
+  <li><a href="http://gps-earth.sourceforge.net/"><font face="Arial">GPS-Earth</font></a> 
+ </ul>
+    </td>
+  </tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

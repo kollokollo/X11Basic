@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" dir="ltr" lang="en"><head>
+		<meta name="sfhaproxy" content="NOFOOTER,NOHEADER">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="Content-Style-Type" content="text/css">
+		<meta name="generator" content="MediaWiki 1.15.1">
+		<meta name="robots" content="noindex,follow">
+		<meta name="keywords" content="X11-Basic compiler,Compatibility,Tcc">
+		<link rel="alternate" type="application/x-wiki" title="Edit" href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=X11-Basic_compiler&amp;action=edit">
+		<link rel="edit" title="Edit" href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=X11-Basic_compiler&amp;action=edit">
+		<link rel="shortcut icon" href="https://sourceforge.net/favicon.ico">
+		<link rel="search" type="application/opensearchdescription+xml" href="https://sourceforge.net/apps/mediawiki/x11-basic/opensearch_desc.php" title="x11-basic (en)">
+		<link rel="alternate" type="application/rss+xml" title="x11-basic RSS Feed" href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Special:RecentChanges&amp;feed=rss">
+		<link rel="alternate" type="application/atom+xml" title="x11-basic Atom Feed" href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Special:RecentChanges&amp;feed=atom">
+		<title>SourceForge.net: X11-Basic compiler - x11-basic</title>
+		<link rel="stylesheet" href="CQ_files/commonPrint.css" type="text/css">
+		<link rel="stylesheet" href="CQ_files/index_004.css" type="text/css">
+		<link rel="stylesheet" href="CQ_files/index.css" type="text/css">
+		<link rel="stylesheet" href="CQ_files/index_002.css" type="text/css">
+		<link rel="stylesheet" href="CQ_files/index_003.css" type="text/css">
+		<!--[if lt IE 7]><script type="text/javascript" src="/apps/mediawiki/x11-basic/skins/common/IEFixes.js?207"></script>
+		<meta http-equiv="imagetoolbar" content="no" /><![endif]-->
+
+		<script type="text/javascript">/*<![CDATA[*/
+		var skin = "sourceforge";
+		var stylepath = "/apps/mediawiki/x11-basic/skins";
+		var wgArticlePath = "/apps/mediawiki/x11-basic/index.php?title=$1";
+		var wgScriptPath = "/apps/mediawiki/x11-basic";
+		var wgScript = "/apps/mediawiki/x11-basic/index.php";
+		var wgVariantArticlePath = false;
+		var wgActionPaths = {};
+		var wgServer = "https://sourceforge.net";
+		var wgCanonicalNamespace = "";
+		var wgCanonicalSpecialPageName = false;
+		var wgNamespaceNumber = 0;
+		var wgPageName = "X11-Basic_compiler";
+		var wgTitle = "X11-Basic compiler";
+		var wgAction = "view";
+		var wgArticleId = "23";
+		var wgIsArticle = true;
+		var wgUserName = "Kollo";
+		var wgUserGroups = ["admin", "editor", "*", "user", "autoconfirmed"];
+		var wgUserLanguage = "en";
+		var wgContentLanguage = "en";
+		var wgBreakFrames = false;
+		var wgCurRevisionId = 362;
+		var wgVersion = "1.15.1";
+		var wgEnableAPI = true;
+		var wgEnableWriteAPI = true;
+		var wgSeparatorTransformTable = ["", ""];
+		var wgDigitTransformTable = ["", ""];
+		var wgRestrictionEdit = [];
+		var wgRestrictionMove = [];
+		var wgAjaxWatch = {"watchMsg": "Watch", "unwatchMsg": "Unwatch", "watchingMsg": "Watching…", "unwatchingMsg": "Unwatching…"};
+		/*]]>*/</script>
+
+		<script type="text/javascript" src="CQ_files/wikibits.js"><!-- wikibits js --></script><style type="text/css">@import "/apps/mediawiki/x11-basic/skins/sourceforge/FF2Fixes.css";</style>
+		<!-- Head Scripts -->
+		<script type="text/javascript" src="CQ_files/ajax.js"></script>
+		<script type="text/javascript" src="CQ_files/ajaxwatch.js"></script>
+		<script type="text/javascript" src="CQ_files/index.php"><!-- site js --></script>
+	
+
+</head>
+<body class="mediawiki ltr ns-0 ns-subject page-X11-Basic_compiler skin-sourceforge">
+
+    
+
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content">
+		<a name="top" id="top"></a>
+				<h1 id="firstHeading" class="firstHeading">X11-Basic compiler</h1>
+		<div id="bodyContent">
+			<h3 id="siteSub">From x11-basic</h3>
+			<div id="contentSub"></div>
+									<div id="jump-to-nav">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>			<!-- start content -->
+			<p>In addition to the interpreter <tt>xbasic</tt> (or <tt>xbasic.exe</tt>) the X11-Basic package ships with a real <b>compiler</b>.
+</p><p>The compilation process is done in three steps:
+</p>
+<ol><li> The BASIC sourcecode (<tt>*.bas</tt>) is translated into bytecode (<tt>*.b</tt>) --&gt; <tt>xbbc</tt>
+</li><li> The bytecode is translated to C sourcecode (using a pseudo assembling language implementing a stack machine). --&gt; <tt>xb2c</tt>
+</li><li> Finally the produced C source is compiled into native excecutables via a C compiler like <tt>gcc</tt> or <tt>tcc</tt>
+</li></ol>
+<p>Steps 1 and 2 are still portable and platform independant. 
+</p><p>Alternatively
+</p>
+<ul><li> On UNIX and linux systems BASIC source code can behave like a 
+shell script, beeing executed as if it was an excecutable file (involung
+ the interpreter, which therefore needs to be installed.). 
+</li><li> The BASIC sourcecode can be packed together with the 
+interpreter runtime library to form a standalone executable (thus still 
+interpreted, but sourcecode is not eaysily readable anymore.).
+</li><li> The bytecode can be packed together with a virtual machine (--&gt; <tt>xbvm</tt>)to form a standalone executable (thus not really compiled to native code, but already much faster).
+</li><li> Steps 1 to 3 can be done in a very convinient way using <tt>xbc</tt> which invokes the necessary steps.
+</li></ul>
+<a name="Optimizations" id="Optimizations"></a><h3> <span class="mw-headline">Optimizations</span></h3>
+<p>Constant propagation is done for all operations. 
+</p>
+<a name="The_xbc_compiler" id="The_xbc_compiler"></a><h2> <span class="mw-headline">The <tt>xbc</tt> compiler</span></h2>
+<p>The program <tt>xbc</tt> is written in X11-Basic and compiles itself. 
+You can find the compiler source code in examples/compiler/xbc.bas. 
+</p>
+<pre> xbasic xbc.bas
+</pre>
+<p>Will produce a compiled file called <tt>xbc</tt> which can be directly excecuted. 
+</p><p>Please note: If you link your programs dynamically, you will 
+eventually have to compile them again when the libx11basic.so will have 
+changed due to a version update of your X11-Basic package.
+</p><p>See the man page xbc(1) for further information on the compiler.
+</p>
+<a name="compiling_X11-Basic_programs_under_MS_WINDOWS" id="compiling_X11-Basic_programs_under_MS_WINDOWS"></a><h2> <span class="mw-headline">compiling X11-Basic programs under MS WINDOWS</span></h2>
+<p>The X11-Basic packages comes with the compiler xbbc.exe. This is the 
+bytecode compiler. Compiling a basic program is as easy as draging the 
+.bas source file onto the xbbc.exe icon. A bytecode file b.b will be 
+produced.
+You can run this bytecode with the virtual machine:
+</p>
+<pre>xbvm.exe b.b
+</pre>
+<hr>
+<div class="thumb tright"><div class="thumbinner" style="width:182px;"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Comp-choice.png" class="image" title="Different possibilities to compile X11-basic programs under MS Windows"><img alt="" src="CQ_files/180px-Comp-choice.png" class="thumbimage" border="0" height="120" width="180"></a>  <div class="thumbcaption"><div class="magnify"><a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=File:Comp-choice.png" class="internal" title="Enlarge"><img src="CQ_files/magnify-clip.png" alt="" height="11" width="15"></a></div>Different possibilities to compile X11-basic programs under MS Windows</div></div></div>
+<p>If you want to produce a standalone executable from your BASIC sourcecode, you can use <tt>xbc.exe</tt>, which is a small compiler-IDE.
+</p><p>The program will ask you for the sourcecode file and the filename
+ of the .exe to be produced. It then compiles the basic program to 
+bytecode and attaches it to a copy of xbvm.exe, thus making this 
+standalone. 
+</p><p>The IDE will also ask you which method of compilation should be used. You have four options:
+</p>
+<ol><li> make bytecode, then make a standalone exe from the bytecode,
+</li><li> make bytecode, then translate bytecode to C, and use tcc to compile it,|
+</li><li> only produce bytecode, will produce b.b (see above).
+</li><li> pseudo compile, then use tcc.
+</li></ol>
+<p>Option 1 is recommended. For options 2 and 4 <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Tcc" title="Tcc">tcc</a> needs to be installed (see below).
+</p><p>In most cases a generated standalone .exe file is what you want. 
+Option 1 will do, al though internally bytecode is interpreted by a 
+virtual machine.  
+If you want a real native compiled program (which is even a little 
+faster and smaller in size), you will need a C compiler, e.g. tcc. If 
+you have installed tcc, you can use Option 2 (or 4, which is not 
+recommended, because it will produce slow and internally interpretted 
+code)
+</p>
+<hr>
+<p><tt>xbc.exe</tt> should do all necessary steps to get there, but if 
+you want to understand what is going on, you can do the compile steps 
+manually:
+</p><p>Drag your bytecode (b.b) onto <tt>xb2c.exe</tt>. This will produce a translated C source file <tt>11.c</tt>
+</p><p>You can now compile this to native excecutables using a C 
+compiler, e.g. gcc or tcc. If you do not have a C compiler installed 
+yet, I recommend to get tcc (tiny C compiler) from that page: <a href="http://bellard.org/tcc/" class="external free" title="http://bellard.org/tcc/" rel="nofollow">http://bellard.org/tcc/</a>
+To use tcc together with X11-basic, tcc needs to be installed and tcc needs to be in the PATH.
+</p><p>To compile X11-Basic programs, you need <tt>x11basic.lib, libgfx.lib</tt>, and <tt>xb2csol.h</tt> e.g.
+</p>
+<pre>tcc.exe 11.c x11basic.lib -o myprogram.exe
+</pre>
+<hr>
+<p>Please see also the <a href="https://sourceforge.net/apps/mediawiki/x11-basic/index.php?title=Compatibility" title="Compatibility">compatibility</a> issues on using the compiler.
+</p><p>(<i>maybe you want to improve these instructions</i>)
+</p>
+<div class="visualClear"></div>
+<div id="footer">
+<ul id="f-list">
+<li id="lastmod"> This page was last modified on 28 November 2013, at 13:30.</li>
+</ul>
+</div>
+</div>
+
+<script type="text/javascript">if (window.runOnloadHook) runOnloadHook();</script>
+
+
+</body></html>
