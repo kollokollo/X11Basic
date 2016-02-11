@@ -13,10 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include "ptypes.h"
+#include "defs.h"
 #include "x11basic.h"
-#include "globals.h"
-#include "options.h"
+#include "variablen.h"
+#include "xbasic.h"
 
 
 void *obh;       /* old break handler  */

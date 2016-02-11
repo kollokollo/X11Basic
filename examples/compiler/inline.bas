@@ -1,6 +1,12 @@
 ' This program codes a File for use for the INLINE$()-Function in
 ' X11-Basic V.1.06                    (c) Markus Hoffmann
 '           V.1.15 2010 MH
+'
+'* This file is part of X11BASIC, the basic interpreter for Unix/X
+'* ======================================================================
+'* X11BASIC is free software and comes with NO WARRANTY - read the file
+'* COPYING for details
+'*
 
 docomp=1    ! Flag if compression should be used
 chuncklen=63   ! length of a line
@@ -103,13 +109,13 @@ procedure doit(f$)
       t$=t$+chr$(36+(peek(varptr(a$)+1) and 0xf)*4+(peek(varptr(a$)+2) and 0xc0)/64)
       t$=t$+chr$(36+(peek(varptr(a$)+2) and 0x3f))
       print n$+"$="+n$+"$+"+chr$(34)+t$+chr$(34)
-    endif
-    if comp
-      print n$+"_"+b$+"$=UNCOMPRESS$(INLINE$("+n$+"$))"
-    else
-      print n$+"_"+b$+"$=INLINE$("+n$+"$)"
-    endif
-  else
-    print "inline.bas: ";f$;" does not exist."
-  endif
-return
+    ENDIF
+    IF comp
+      PRINT n$+"_"+b$+"$=UNCOMPRESS$(INLINE$("+n$+"$))"
+    ELSE
+      PRINT n$+"_"+b$+"$=INLINE$("+n$+"$)"
+    ENDIF
+  ELSE
+    PRINT "inline.bas: ";f$;" does not exist."
+  ENDIF
+RETURN

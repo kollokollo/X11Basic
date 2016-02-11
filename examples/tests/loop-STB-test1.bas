@@ -4,15 +4,15 @@
 ' X11-basic wins (of course...)
 '
 PRINT "Kilo-OPs Benchmarks ";DATE$;" - ";TIME$
-DIM m(5)
+DIM m(5+1)
 loop%=10000
 
 PRINT "Benchmark 1 : FOR-loop(";loop%;") "
 t = TIMER
 tdif = loop%
-FOR i% = 1 TO loop%
-  k% = i%
-NEXT i%
+FOR i = 1 TO loop%
+  k% = i
+NEXT i
 timedif = TIMER-t
 PRINT "Time= ";timedif;"  Kilo-OPs= ";INT(tdif/timedif)
 

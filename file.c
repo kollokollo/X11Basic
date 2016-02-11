@@ -78,6 +78,12 @@ int myeof(FILE *n) {
   ungetc(c,n);
   return c==EOF;
 }
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+#ifndef S_IRGRP
+#define S_IRGRP 0
+#endif
 
 
 /* Saves an area in memory starting at adr with length len to a file
@@ -85,7 +91,7 @@ int myeof(FILE *n) {
    RETURNS: 0 on success and -1 on error */
 
 int bsave(char *name, char *adr, size_t len) { 
-  int fdis=creat(name,0644);
+  int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   if(fdis==-1) return(-1);
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
   return(close(fdis));
@@ -99,7 +105,7 @@ int bsave(char *name, char *adr, size_t len) {
 size_t bload(char *name, char *adr, size_t len) {	
   FILE *fdis;
 	
-  fdis=fopen(name,"r");
+  fdis=fopen(name,"rb");
   if(fdis==NULL) return(0);
   if(len==-1) len=lof(fdis);
   if(len>0) len=fread(adr,1,len,fdis);

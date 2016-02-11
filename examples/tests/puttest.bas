@@ -440,9 +440,9 @@ p01705_bmp$=UNCOMPRESS$(INLINE$(p01705$))
 color schwarz
 pbox 0,0,640,400
 for j=0 to 12
-for i=0 to 19
-  put i*32,j*32,p00225_bmp$
-next i
+  for i=0 to 19
+    put i*32,j*32,p00225_bmp$
+  next i
 next j
 put 32,32,p01469_bmp$
 color gelb
@@ -451,7 +451,7 @@ text 100,170,"GET und PUT mit XBASIC V.1.16   (c) Markus Hoffmann"
 text 100,190,"the animation is done with bitmaps from files."
 num=6
 i=0
-dim dx(num),dy(num),x(num),y(num),hinter$(num),kugel$(num),m(num)
+dim dx(num+1),dy(num+1),x(num+1),y(num+1),hinter$(num+1),kugel$(num+1),m(num+1)
 arrayfill m(),1
 m(2)=0.7
 arrayfill dy(),1

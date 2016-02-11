@@ -8,23 +8,29 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x117
+#define BC_VERSION 0x118
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
   unsigned char offs;       /* sizeof(BYTECODE_HEADER)-2*/
   unsigned long textseglen; /* size of the text/code segment */
-  unsigned long dataseglen; /* size of the data segment */
-  unsigned long bssseglen;    /* not used */
+  unsigned long rodataseglen; /* size of the readonly data segment */
+  unsigned long sdataseglen; /* size of the data segment for DATA statements*/
+  unsigned long dataseglen;   /* size of the data segment */
+  unsigned long bssseglen;    /* storage space for variables */
   unsigned long symbolseglen; /* size of the symbol table segment */
   unsigned long stringseglen; /* size of the string segment */
-  unsigned short reserved;    /* reserved, not used */
+  unsigned long relseglen;    /* size of the relocation data */
+  unsigned short flags;       /* not used */
   unsigned short version;     /* version, currently=0x117 */
 } BYTECODE_HEADER;
 
 
+#define EXE_REL 1     /* If relocation is needed */
+
 typedef struct {
-  unsigned short typ;      /* Typ of the symbol */
+  unsigned char typ;      /* Typ of the symbol */
+  unsigned char subtyp;
   unsigned long name;      /* Pointer to Symbol string table */
   unsigned long adr;       /* address */
 } BYTECODE_SYMBOL;
@@ -67,11 +73,11 @@ typedef struct {
                         /*   00010101  --- */
 #define BC_BSR     0x16 /*   00010110  --- BSR Branch to Subroutine */
 #define BC_JSR     0x17 /*   00010111  --- JSR jump to Subroutine */
-                        /*   00011000  ---  */
+#define BC_BLKSTART 0x18 /*   00011000  --- Save context */
 #define BC_BEQs    0x19 /*   00011001  --- BEQ.s short Branch if 0 */
 #define BC_BEQ     0x1a /*   00011010  --- BEQ   short Branch if 0 */
 #define BC_JEQ     0x1b /*   00011011  --- JEQ jump if 0 */
-                        /*   00011100  ---  */
+#define BC_BLKEND  0x1c /*   00011100  --- Restore context */
                         /*   00011101  ---  */
                         /*   00011110  ---  */
 #define BC_RESTORE 0x1f /*   00011111  --- RESTORE Restore datapointer */
@@ -148,17 +154,31 @@ typedef struct {
 /* Gruppe 10: Operatoren (x in 0 out)   */
 #define BC_POP      0xa0 /*    10100000  --- POP */
 #define BC_CLEAR    0xa4 /*    10100100  --- CLEAR remove all elements from stack*/
+#define BC_LOCAL    0xa6 /*    10100110  --- LOCAL */
 #define BC_NOOP     0xa8 /*    10101000  --- NOOP */
-#define BC_ZUWEIS   0xac /*    10101100  --- ZUWEIS */
+#define BC_ZUWEIS   0xae /*    10101110  --- ZUWEIS */
 #define BC_COMMENT  0xaf /*    10101111  --- Comment */
    
 /* Gruppe 11: Variablen Management */
-#define BC_PUSHA    0xb0 /*    10110000  --- */
+#define BC_PUSHVVI    0xb0 /*    10110000  --- */
 #define BC_ZUWEISINDEX 0xb3 /*    10110011  --- */
 #define BC_EVAL     0xb4 /*    10110100  --- EVAL */
 #define BC_PUSHV    0xb8 /*    10111000  --- PUSHV */
 #define BC_PUSHVV   0xbc /*    10111100  --- PUSHVV */
 #define BC_PUSHARRAYELEM 0xbf /* 10111111  --- PUSHARRAYELEM */
+
+/* Gruppe 12: Memory Management */
+#define BC_LOADi    0xc3 /*    11000011  --- push integer from address*/
+#define BC_LOADf    0xc7 /*    11000111  --- push float from address */
+#define BC_LOADs    0xcb /*    11001011  --- push string from address */
+#define BC_LOADa    0xcf /*    11001111  --- push array from address */
+
+/* Gruppe 13: Memory Management */
+#define BC_SAVEi    0xd3 /*    11010011  --- store integer from address*/
+#define BC_SAVEf    0xd7 /*    11010111  --- store float from address */
+#define BC_SAVEs    0xdb /*    11011011  --- store string from address */
+#define BC_SAVEa    0xdf /*    11011111  --- store array from address */
+
 
 #define BC_FALSE  BC_PUSH0     /* Push a logical FALSE */
 #define BC_TRUE   BC_PUSHM1     /* Push a logical TRUE */
@@ -178,3 +198,35 @@ PARAMETER *virtual_machine(STRING, int *);
 void bc_jumptosr2(int ziel);
 void plist_to_stack(PARAMETER *pp, short *pliste, int anz, int pmin, int pmax);
 void compile();
+void bc_pushv_name(char *var);
+void bc_pushv(int vnr);
+void bc_zuweis_name(char *var);
+int vm_x2i(PARAMETER *sp);
+int vm_x2f(PARAMETER *sp);
+int vm_add(PARAMETER *sp);
+int vm_sub(PARAMETER *sp);
+int vm_mul(PARAMETER *sp);
+int vm_pow(PARAMETER *sp);
+int vm_mod(PARAMETER *sp);
+int vm_equal(PARAMETER *sp);
+int vm_greater(PARAMETER *sp);
+int vm_less(PARAMETER *sp);
+int vm_sysvar(PARAMETER *sp,int n);
+int vm_ssysvar(PARAMETER *sp,int n);
+int vm_asysvar(PARAMETER *sp,int n);
+int vm_dup(PARAMETER *sp);
+int vm_exch(PARAMETER *sp);
+int vm_neg(PARAMETER *sp);
+void cast_to_real(PARAMETER *sp);
+void cast_to_int(PARAMETER *sp);
+int vm_sfunc(PARAMETER *sp,int i, int anzarg);
+int vm_func(PARAMETER *sp,int i, int anzarg);
+int vm_comm(PARAMETER *sp,int i, int anzarg);
+int vm_pushvv(int vnr,PARAMETER *sp);
+int vm_zuweis(int vnr,PARAMETER *sp);
+void zuweis_v_parameter(VARIABLE *v,PARAMETER *p);
+int vm_zuweisindex(int vnr,PARAMETER *sp,int dim);
+int vm_pusharrayelem(int vnr,PARAMETER *sp, int dim);
+int vm_pushv(int vnr,PARAMETER *sp);
+void  push_v(PARAMETER *p, VARIABLE *v);
+int vm_eval(PARAMETER *sp);

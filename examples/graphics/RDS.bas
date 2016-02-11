@@ -8,7 +8,7 @@ by=0
 bw=640
 bh=400
 mt=120
-dim zeil(bw+mt)
+dim zeil(bw+mt+1)
 usewindow 0
 usewindow 1
 vsync

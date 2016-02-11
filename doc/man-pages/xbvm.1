@@ -1,4 +1,4 @@
-.TH XBVM 1 09-Apr-2011 "Version 1.17" "Linux Basic Compiler"
+.TH XBVM 1 09-Apr-2011 "Version 1.18" "Linux Basic Compiler"
 .SH NAME
 xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter 
 .SH SYNOPSIS
@@ -9,14 +9,14 @@ xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter
 
 X11-Basic is a dialect of the BASIC programming language with graphics
 capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
+full graphical visualisation into the easy to learn BASIC language on modern 
 computers.
 
 .IR xbvm
 can be used to execute bytecode-binaries which where compiled with 
 .I xbbc(1)
  . These bytecode 
-files run about 4 to 10 times faster than the interpreted .bas files. 
+files run about 10 times faster than the interpreted .bas files. 
 
 .B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
@@ -29,35 +29,36 @@ Xbvm processes one input file. The Suffix of the input file is usually .b.
 .TP
 .BI "\-q "
 Be quiet and print less debug information 
- .
+.BI "\-v "
+Be more verbose and print debug information 
 .SS \--version
 shows version, program and other information and exits
 .SS -h --help
 print a short help
 
 For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+look at the README file and the X11-Basic manual. 
 
 
 .SH EXAMPLES
 .nf
 xbvm testme.b
-xbbc -q testme.b
+xbbc -v testme.b
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The virtual machine
 Actually this interpreter is a stack machine. The bytecode is very compact 
-and similar
-to machine code. It would not be a big step to compile it to assembler.  
+and similar to machine code. It would not be a big step to compile it to 
+assembler.  
 This interpreter is highly optimized, so that the gain in 
 excecution speed is immense. Especially complex formulas are 
 speed up by a factor 10.
 There is no way to recreate the source code from the bytecode. 
 
 .SH VERSION
-Page was created for V.1.14
+Page was created for V.1.18
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic virtual machine, you should

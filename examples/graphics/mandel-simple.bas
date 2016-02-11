@@ -1,8 +1,10 @@
 ' Mandelbrotfraktale (c) Markus Hoffmann
+' Simple and direct drawing algorithm.
+'
 bx=0
 by=0
-bw=256
-bh=256
+bw=256*2
+bh=256*2
 
 sx=-2.2
 sy=-1.7
@@ -30,5 +32,6 @@ for x=bx to bx+bw
 vsync
 next x
 print timer-t;" Sekunden."
+~inp(-2)
 quit
 data "Benchmark fot the virtual machine by Markus Hoffmann 2010"

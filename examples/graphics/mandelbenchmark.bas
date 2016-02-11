@@ -42,8 +42,9 @@ out:
     x=0
     y=y+1
     showpage
-    print at(10,1);y;"  "
+    print y;"  ";chr$(13);
+    flush
   endif    
 wend
-print timer-t
+print timer-t;" Seconds.  ";86/(timer-t);" times."
 quit

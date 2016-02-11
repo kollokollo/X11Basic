@@ -12,6 +12,7 @@ bpy=24
 gelb=get_color(65535,65535,0)
 color gelb
 text 100,100,"COLORTEST X11-BASIC"
+t=timer
 do
   x=random(64)
   y=random(64)
@@ -26,11 +27,13 @@ do
       endif
       pbox x*8,y*8,x*8+8,y*8+8
       ' pcircle x*16,y*16,5
-      color 1
+      ' color 1
       ' text x*16-5,y*16+3,str$(c,3,3)
       ' circle x*16,y*16,5
       vsync
     next y
   next x
+  exit if true
 loop
+print timer-t;" Sek."
 quit

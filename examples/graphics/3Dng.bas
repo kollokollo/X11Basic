@@ -1,3 +1,6 @@
+' 3D-Grafik benchmark (c) Markus Hoffmann, die Idee und das Programm kommt noch aus der ATARI-ST Zeit
+'
+'
 DIM pxU(4),pyU(4)
 '
 '
@@ -5,7 +8,7 @@ bxU=0
 byU=18
 bwU=640
 bhU=400-50
-' CLIP bxU,byU,bwU,bhU
+CLIP bxU,byU,bwU,bhU
 ' Koordinaten:
 '
 bwU=bhU
@@ -52,6 +55,7 @@ schwarz=get_color(0,0,0)
 grau=get_color(32000,32000,32000)
 gelb=get_color(65535,65535,32000)
 blau=get_color(32000,32000,65535)
+clearw 1
 color grau
 pbox 0,0,bwU,bhU
 color weiss
@@ -82,21 +86,22 @@ for i=z1/2 to z2/2 step (z2-z1)/12
   LINE @kx(x1,y2,i),@ky(x1,y2,i),@kx(x2,y2,i),@ky(x2,y2,i)
 next i
 color gelb
-text 20,20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
+text bxU+20,byU+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
 color schwarz
 LINE @kx(x1,y1,0),@ky(x1,y1,0),@kx(x1,y2,0),@ky(x1,y2,0)
 LINE @kx(x1,y2,0),@ky(x1,y2,0),@kx(x2,y2,0),@ky(x2,y2,0)
 POLYline 4,pxU(),pyU()
 
 vsync
-
-FOR y=y2 TO y1 STEP -sy
+tim=timer
+FOR y=y2 DOWNTO y1 STEP sy
   IF SGN(y)<>SGN(yy)
     LINE @kx(x1,0,0),@ky(x1,0,0),@kx(x2,0,0),@ky(x2,0,0)
     LINE @kx(0,0,z1),@ky(0,0,z1),@kx(0,0,z2),@ky(0,0,z2)
   ENDIF
   yy=y
   FOR x=x1 TO x2 STEP sx
+ ' print x,y
     z=@f(x,y)
     zz=@f(x+sx,y)
     zzz=@f(x,y+sy)
@@ -136,6 +141,7 @@ FOR y=y2 TO y1 STEP -sy
 NEXT y
 '
 ' BSAVE "E:\ablage\funktion.doo",XBIOS(3),32000
+print timer-tim;" Sekunden."
 alert 0,"Fertig !",1," OK ",balert
 quit
 '
@@ -176,6 +182,8 @@ ENDFUNC
 FUNCTION ky(x,y,z)
   LOCAL xx
   '  Verschiebe an den Beobachterstandpunkt
+  
+  
   x=x-stx
   y=y-sty
   z=z-stz

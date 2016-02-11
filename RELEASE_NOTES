@@ -1,29 +1,18 @@
 
-Release notes for Version 1.16 (Feb 2010)
+Release notes for Version 1.18 (Sept 2011)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Bugfix in SORT (Feb 2010)
-- new function word$() June 2010
-- Improved DATA/RESTORE handling Dez 2010
-- Improved xbbc/bytecode/xbvm
-- Fixed memory leak accuring in varptr()
-- added xbbc and xbvm to windows distribution
-- started xb2c project
-- new psydocompiler for MS-WINDOWS, can produce standalone .exe files 
-- Bug fixed: LINEINPUT and LINEINPUT$() now can read arbitrary long lines
-- fixed bug with PBOX: now 2nd coordinate is inside the filled area.
-- new commands WATCH/(UNWATCH)/FILEEVENT$
-- fixed bug with bitmaps (PUT)
-- added support for bitmaps with transparency/alpha channel
-- fixed bug in DEFFILL
-- fixed bug in objc_draw()
+- Reworked variable management
+- Reworked xb2c compiler, produced code is now much(!) faster.
+- interpreter is now 8% faster
+- virtual machine is 20 times faster than interpreter
+- compiled code is 30 times faster than interpreter
+- improved detection of const expressions.
+- improved detection of fieldindex too large (less segfaults now)
+- fixed a memory leak
+- updated the documentation
+- changed DIM behavior: DIM a(10) means elements a(0) to a(9) are there.
+- fixed some bugs. 
+- New command: CURVE
+- Implemented DEFFN
+- Optimized Compiler: simple math functions and Square
 
-
-Release notes for Version 1.17 (May 2011)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Adapted windows version to use the SDL library (2011-04)
-- added PLAYSOUND command (works only in SDL and WINDOWS version) 2011-05
-- modifyed syntax of SOUND command 2011-05
-- added ALSA sound support for SOUND command. 2011-05
-- made syntax a bit more tolerant against extra blanks
-- bugfix with BOX (confusion with curses library, segfault)
-- worked on the xb2c compiler/translator 2011-08

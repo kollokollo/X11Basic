@@ -16,12 +16,12 @@
 #include <unistd.h>
 #include <string.h>
  
-#include "config.h"
+
 #include "defs.h"
-#include "globals.h"
-#include "variablen.h"
-#include "xbasic.h"
 #include "x11basic.h"
+#include "variablen.h"
+#include "parameter.h"
+#include "xbasic.h"
 #include "array.h"
 #include "functions.h"
 #include "afunctions.h"
@@ -50,7 +50,20 @@ double f_rnd(double d) {return((double)rand()/RAND_MAX);}
 int  f_srand(double d) {srand((int)d);return(0);}
 double f_deg(double d) {return(d/PI*180);}
 double f_rad(double d) {return(d*PI/180);}
-int  f_dimf(char *pos) {return((double)do_dimension(variable_exist_type(pos)));}
+int  f_dimf(char *pos) {
+  int typ=vartype(pos);
+  char *r=varrumpf(pos);
+  int subtyp,vnr;
+  if(typ&ARRAYTYP) {subtyp=typ&(~ARRAYTYP);typ=ARRAYTYP;}
+  else subtyp=0;
+  vnr=var_exist(pos,typ,subtyp,0);
+  free(r);
+  if(vnr==-1) {
+    xberror(15,pos); /* Feld nicht dimensioniert */
+    return(0);
+  }
+  return((double)do_dimension(&variablen[vnr]));
+}
 int f_asc(STRING n) {  return((int)n.pointer[0]); }
 int f_cvi(STRING n) {  return((int)(*((short *)n.pointer))); }
 int f_cvl(STRING n) {  return((int)(*((long *)n.pointer))); }
@@ -74,7 +87,7 @@ int f_mode(STRING n)   { return(stat_mode(n.pointer)); }
 double f_val(STRING n) { return(myatof(n.pointer)); }
 double f_ltextlen(STRING n) { return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
 
-char *arrptr(char *);
+char *arrptr(PARAMETER *,int);
 #ifdef TINE
 double f_tinemax(STRING n) { return(tinemax(n.pointer)); }
 double f_tinemin(STRING n) { return(tinemin(n.pointer)); }
@@ -102,6 +115,7 @@ int f_peek(int adr) { return((int)(*(char *)adr));}
 int f_dpeek(int adr) { return((int)(*(short *)adr));}
 int f_lpeek(int adr) { return((int)(*(long *)adr));}
 int f_lof(PARAMETER *plist,int e) {
+// dump_parameterlist(plist,e);
   if(filenr[plist[0].integer]) return(lof(dptr[plist[0].integer]));
   else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
@@ -117,50 +131,71 @@ int f_eof(PARAMETER *plist,int e) {
   } else { xberror(24,""); return(0);} /* File nicht geoeffnet */
 }
 
+int f_wort_sep(PARAMETER *plist,int e) {
+  STRING str1,str2;
+  int ret;
+  str1.pointer=malloc(plist->integer+1);
+  str2.pointer=malloc(plist->integer+1);
+  
+  ret=wort_sep2(plist[0].pointer,plist[1].pointer,plist[2].integer,str1.pointer,str2.pointer);
+  str1.len=strlen(str1.pointer);
+  str2.len=strlen(str2.pointer);
+  if(e>3)  varcaststring_and_free(plist[3].typ,(STRING *)plist[3].pointer,str1);  
+  else free_string(&str1);
+  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
+  else free_string(&str2);
+  return(ret);
+}
+
+
+
+
 #ifndef NOGRAPHICS
 
 int lsel_input(char *,STRING *,int,int);
 
 int f_listselect(PARAMETER *plist,int e) {
   int sel=-1;
-  if(e==3) sel=plist[2].integer;
-  if(e>=2) {
+  if(e>2) sel=plist[2].integer;
+  if(e>1) {
     ARRAY a;
-    a.pointer=plist[1].pointer;
-    a.dimension=plist[1].integer;
-    a.typ=plist[1].typ;
-    return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(a),sel));
+    a=*(ARRAY *)&(plist[1].integer);
+    return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(&a),sel));
   }
   return(0);
 }
 #endif
 
+/*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
+  output liefern.
+  */
+
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
- { F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
- { F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ADD"     , f_add ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "ARRPTR"    , arrptr ,1,1     ,{PL_ARRAY}},
- { F_SQUICK|F_IRET,    "ASC"       , f_asc ,1,1   ,{PL_STRING}},
- { F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ASINH"      , asinh ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ATAN"      , atan ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ATAN2"     , atan2 ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ATANH"     , atanh ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "ATN"       , atan ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_ARGUMENT|F_DRET,  "!nulldummy", f_nop ,0,0   ,{0}},
+ { F_CONST|F_DQUICK|F_DRET,    "ABS"       , fabs ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ACOS"      , acos ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ADD"     , f_add ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_PLISTE|F_IRET,  "ARRPTR"    , arrptr ,1,1     ,{PL_ARRAY}},
+ { F_CONST|F_SQUICK|F_IRET,    "ASC"       , f_asc ,1,1   ,{PL_STRING}},
+ { F_CONST|F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ASINH"      , asinh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ATAN"      , atan ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ATAN2"     , atan2 ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ATANH"     , atanh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "ATN"       , atan ,1,1     ,{PL_NUMBER}},
 
- { F_DQUICK|F_IRET,    "BCHG"      , f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_DQUICK|F_IRET,    "BCLR"      , f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_DQUICK|F_IRET,    "BSET"      , f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
- { F_DQUICK|F_IRET,    "BTST"      , f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BCHG"      , f_bchg,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BCLR"      , f_bclr,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BSET"      , f_bset,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_DQUICK|F_IRET,    "BTST"      , f_btst,2,2     ,{PL_NUMBER,PL_NUMBER }},
 
- { F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_IRET,    "COMBIN"    , f_combin ,2,2     ,{PL_INT,PL_INT}},
- { F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_IRET,    "CRC"       , f_crc ,1,2     ,{PL_STRING, PL_INT}},
+ { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , cbrt ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "CEIL"      , ceil ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_IRET,    "COMBIN"    , f_combin ,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_DQUICK|F_DRET,    "COS"       , cos ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "COSH"      , cosh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_IRET,    "CRC"       , f_crc ,1,2     ,{PL_STRING, PL_INT}},
 #ifdef CONTROL
  { F_SQUICK|F_DRET,  "CSGET"     , f_csget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "CSMAX"     , f_csmax ,1,1   ,{PL_STRING}},
@@ -169,16 +204,16 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_DRET,  "CSRES"     , f_csres ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_IRET,  "CSSIZE"    , f_cssize ,1,1   ,{PL_STRING}},
 #endif
- { F_SQUICK|F_DRET,  "CVD"       , f_cvd ,1,1     ,{PL_STRING}},
- { F_SQUICK|F_DRET,  "CVF"       , f_cvf ,1,1     ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CVI"       , f_cvi ,1,1     ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CVL"       , f_cvl ,1,1     ,{PL_STRING}},
- { F_SQUICK|F_IRET,  "CVS"       , f_cvf ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_DRET,  "CVD"       , f_cvd ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_DRET,  "CVF"       , f_cvf ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVI"       , f_cvi ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVL"       , f_cvl ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,  "CVS"       , f_cvf ,1,1     ,{PL_STRING}},
 
- { F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
  { F_SQUICK|F_IRET,    "DEVICE"    , f_device,1,1   ,{PL_STRING}},
- { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
- { F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
+ { F_CONST|F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 #ifdef DOOCS
  { F_SQUICK|F_DRET,  "DOOCSGET"     , f_doocsget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_IRET,  "DOOCSSIZE"    , f_doocssize ,1,1   ,{PL_STRING}},
@@ -189,16 +224,16 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_PLISTE|F_IRET,    "EOF"       , f_eof ,1,1     ,{PL_FILENR}},
 
- { F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
- { F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
+ { F_CONST|F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "EXEC"       , f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_SQUICK|F_IRET,    "EXIST"      , f_exist ,1,1     ,{PL_STRING}},
- { F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
 
- { F_IQUICK|F_IRET,    "FACT"       , f_fak ,1,1     ,{PL_INT}},
- { F_DQUICK|F_IRET,    "FIX"       , f_fix ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "FACT"       , f_fak ,1,1     ,{PL_INT}},
+ { F_CONST|F_DQUICK|F_IRET,    "FIX"       , f_fix ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
 #ifdef HAVE_FORK
  { F_SIMPLE|F_IRET,    "FORK"     , fork ,0,0     },
 #else
@@ -206,55 +241,55 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 #endif
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "FORM_ALERT", f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
- { F_PLISTE|F_IRET,    "FORM_CENTER", f_form_center ,5,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { F_PLISTE|F_IRET,    "FORM_CENTER", f_form_center ,1,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
  { F_PLISTE|F_IRET,    "FORM_DIAL", f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "FORM_DO",   f_form_do ,1,1   ,{PL_INT}},
 #endif
- { F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
  { F_SIMPLE|F_IRET,    "FREEFILE"  , f_freefile ,0,0  },
 
  { F_DQUICK|F_DRET,    "GASDEV"   , f_gasdev ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "GET_COLOR", f_get_color ,3,3   ,{PL_INT,PL_INT,PL_INT}},
 #endif
- { F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
- { F_IQUICK|F_IRET,    "GRAY"     , f_gray ,1,1     ,{PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_IQUICK|F_IRET,    "GRAY"     , f_gray ,1,1     ,{PL_INT}},
 
- { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
  { F_SQUICK|F_IRET,    "INODE"     , f_inode,1,1   ,{PL_STRING}},
  { F_PLISTE|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_FILENR}},
  { F_PLISTE|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_FILENR}},
  { F_PLISTE|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_FILENR}},
  { F_PLISTE|F_IRET,  "INP%"      , inp32 ,1,1      ,{PL_FILENR}},
- { F_PLISTE|F_IRET,  "INSTR"     , f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,  "INSTR"     , f_instr ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
- { F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "INT"       , f_int ,1,1     ,{PL_NUMBER}},
  { F_PLISTE|F_IRET,    "IOCTL"     , f_ioctl ,2,3     ,{PL_FILENR,PL_INT,PL_INT}},
- { F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "JULIAN"    , f_julian ,1,1     ,{PL_STRING}},
 
- { F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "LISTSELECT", f_listselect ,2,3   ,{PL_STRING,PL_SARRAY,PL_INT}},
 #endif
- { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
 
  { F_PLISTE|F_IRET,    "LOC"       , f_loc ,1,1     ,{PL_FILENR}},
  { F_PLISTE|F_IRET,    "LOF"       , f_lof ,1,1     ,{PL_FILENR}},
 
- { F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
  { F_IQUICK|F_IRET,    "LPEEK"    , f_lpeek ,1,1     ,{PL_INT}},
  { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
 
  { F_IQUICK|F_IRET,    "MALLOC"    , f_malloc ,1,1     ,{PL_INT}},
- { F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
- { F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
- { F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_CONST|F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
  { F_SQUICK|F_IRET,    "MODE"     , f_mode,1,1   ,{PL_STRING}},
- { F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
  { F_SQUICK|F_IRET,    "NLINK"     , f_nlink,1,1   ,{PL_STRING}},
 
@@ -263,45 +298,45 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE|F_IRET,    "OBJC_FIND", f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "OBJC_OFFSET", f_objc_offset ,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
 #endif
- { F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
 
  { F_IQUICK|F_IRET,    "PEEK"      , f_peek ,1,1     ,{PL_INT}},
 #ifndef NOGRAPHICS
  { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
 #endif
- { F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
 #ifndef NOGRAPHICS
  { F_DQUICK|F_IRET,    "PTST"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
 #endif
 
- { F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RANDOM"    , f_random ,1,1     ,{PL_NUMBER}},
  { F_IQUICK|F_IRET,    "REALLOC"    , f_realloc ,2,2     ,{PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,    "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
- { F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_NUMBER,PL_INT}},
+ { F_CONST|F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_NUMBER,PL_INT}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "RSRC_GADDR", f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
 #endif
 
- { F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_IRET,    "SHL"      , f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SHL"      , f_shl,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_IQUICK|F_IRET,    "SHM_ATTACH"    , shm_attach ,1,1     ,{PL_INT}},
  { F_IQUICK|F_IRET,    "SHM_MALLOC"    , shm_malloc ,2,2     ,{PL_INT,PL_INT}},
- { F_DQUICK|F_IRET,    "SHR"      , f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SHR"      , f_shr,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
  { F_SQUICK|F_IRET,    "SIZE"     , f_size,1,1   ,{PL_STRING}},
- { F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
- { F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
  { F_PLISTE|F_IRET,    "SYM_ADR"   , f_symadr ,2,2   ,{PL_FILENR,PL_STRING}},
 
- { F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
- { F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "TAN"       , tan ,1,1     ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK|F_DRET,    "TANH"       , tanh ,1,1     ,{PL_NUMBER}},
 #ifdef TINE
  { F_SQUICK|F_DRET,  "TINEGET"     , f_tineget ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_DRET,  "TINEMAX"     , f_tinemax ,1,1   ,{PL_STRING}},
@@ -309,13 +344,13 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,  "TINESIZE"    , f_tinesize ,1,1   ,{PL_STRING}},
  { F_SQUICK|F_IRET,  "TINETYP"    , f_tinetyp ,1,1   ,{PL_STRING}},
 #endif
- { F_DQUICK|F_DRET,    "TRUNC"     , f_fix ,1,1     ,{PL_NUMBER}},
- { F_ARGUMENT|F_IRET,  "TYP?"       , type2 ,1,1     ,{PL_ALL}},
+ { F_CONST|F_DQUICK|F_DRET,    "TRUNC"     , f_fix ,1,1     ,{PL_NUMBER}},
+ { F_ARGUMENT|F_IRET,  "TYP?"       , type ,1,1     ,{PL_ALLVAR}},
 
- { F_SQUICK|F_DRET,  "VAL"       , f_val ,1,1     ,{PL_STRING}},
- { F_ARGUMENT|F_IRET,  "VARPTR"    , varptr ,1,1     ,{PL_ALL}},
+ { F_CONST|F_SQUICK|F_DRET,  "VAL"       , f_val ,1,1     ,{PL_STRING}},
+ { F_ARGUMENT|F_IRET,  "VARPTR"    , varptr ,1,1     ,{PL_ALLVAR}},
 
- { F_ARGUMENT|F_IRET,  "WORT_SEP" , do_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { F_PLISTE|F_IRET,  "WORT_SEP" , f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 
 };
 const int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);
@@ -368,37 +403,37 @@ double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
 double v_pi() {return(PI);}
 extern int mousex(),mousey(), mousek(), mouses();
 const SYSVAR sysvars[]= {  /* alphabetisch !!! */
- { PL_LEER,   "!nulldummy", v_false},
+ { NOTYP,   "!nulldummy", v_false},
 #ifdef CONTROL
- { PL_INT,    "CCSAPLID",   v_ccsaplid},
+ { INTTYP,    "CCSAPLID",   v_ccsaplid},
 #endif
- { PL_INT,    "CCSERR",     v_ccserr},
- { PL_INT,    "COLS",       v_cols},
- { PL_FLOAT,  "CTIMER",     v_ctimer},
- { PL_INT,    "ERR",        v_err},
- { PL_INT,    "FALSE",      v_false},
+ { INTTYP,    "CCSERR",     v_ccserr},
+ { INTTYP,    "COLS",       v_cols},
+ { FLOATTYP,  "CTIMER",     v_ctimer},
+ { INTTYP,    "ERR",        v_err},
+ { CONSTTYP|INTTYP,    "FALSE",      v_false},
 #ifndef NOGRAPHICS
- { PL_INT,    "MOUSEK",     mousek},
- { PL_INT,    "MOUSES",     mouses},
- { PL_INT,    "MOUSEX",     mousex},
- { PL_INT,    "MOUSEY",     mousey},
+ { INTTYP,    "MOUSEK",     mousek},
+ { INTTYP,    "MOUSES",     mouses},
+ { INTTYP,    "MOUSEX",     mousex},
+ { INTTYP,    "MOUSEY",     mousey},
 #endif
- { PL_INT,    "PC",         v_pc},
- { PL_FLOAT,  "PI",         v_pi},
- { PL_INT,    "ROWS",       v_rows},
- { PL_INT,    "SP",         v_sp},
- { PL_INT,    "STIMER",     v_stimer},
- { PL_FLOAT,  "TIMER",      v_timer},
- { PL_INT,    "TRUE",       v_true},
+ { INTTYP,    "PC",         v_pc},
+ { CONSTTYP|FLOATTYP,  "PI",         v_pi},
+ { INTTYP,    "ROWS",	    v_rows},
+ { INTTYP,    "SP",	    v_sp},
+ { INTTYP,    "STIMER",     v_stimer},
+ { FLOATTYP,  "TIMER",      v_timer},
+ { CONSTTYP|INTTYP,    "TRUE",       v_true},
 #ifdef WINDOWS
- { PL_INT,    "WIN32?",     v_true},
+ { CONSTTYP|INTTYP,    "WIN32?",     v_true},
 #else
- { PL_INT,    "WIN32?",     v_false},
+ { CONSTTYP|INTTYP,    "WIN32?",     v_false},
 #endif
 #ifndef WINDOWS
- { PL_INT,    "UNIX?",      v_true},
+ { CONSTTYP|INTTYP,    "UNIX?",      v_true},
 #else
- { PL_INT,    "UNIX?",      v_false},
+ { CONSTTYP|INTTYP,    "UNIX?",      v_false},
 #endif
 };
 const int anzsysvars=sizeof(sysvars)/sizeof(SYSVAR);
@@ -417,61 +452,61 @@ const int anzsyssvars=sizeof(syssvars)/sizeof(SYSSVAR);
 
 const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
 
- { F_ARGUMENT,  "!nulldummy", f_nop ,0,0   ,{0}},
- { F_SQUICK,    "ARID$"     , f_arids ,1,1   ,{PL_STRING}},
- { F_SQUICK,    "ARIE$"     , f_aries ,1,1   ,{PL_STRING}},
- { F_PLISTE,    "BIN$"      , f_bins ,1,2   ,{PL_INT,PL_INT}},
- { F_SQUICK,    "BWTD$"     , f_bwtds ,1,1   ,{PL_STRING}},
- { F_SQUICK,    "BWTE$"     , f_bwtes ,1,1   ,{PL_STRING}},
+ { F_CONST|F_ARGUMENT,  "!nulldummy", f_nop ,0,0   ,{0}},
+ { F_CONST|F_SQUICK,    "ARID$"     , f_arids ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "ARIE$"     , f_aries ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "BIN$"      , f_bins ,1,2   ,{PL_INT,PL_INT}},
+ { F_CONST|F_SQUICK,    "BWTD$"     , f_bwtds ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "BWTE$"     , f_bwtes ,1,1   ,{PL_STRING}},
 
- { F_IQUICK,    "CHR$"      , f_chrs ,1,1   ,{PL_INT}},
- { F_SQUICK,    "COMPRESS$" , f_compresss ,1,1   ,{PL_STRING}},
+ { F_CONST|F_IQUICK,    "CHR$"      , f_chrs ,1,1   ,{PL_INT}},
+ { F_CONST|F_SQUICK,    "COMPRESS$" , f_compresss ,1,1   ,{PL_STRING}},
 #ifdef CONTROL
  { F_SQUICK,    "CSGET$"    , f_csgets ,1,1   ,{PL_STRING}},
  { F_IQUICK,    "CSPNAME$"  , f_cspnames ,1,1   ,{PL_INT}},
  { F_SQUICK,    "CSUNIT$"   , f_csunits ,1,1   ,{PL_STRING}},
 #endif
- { F_PLISTE,    "DECRYPT$", f_decrypts ,2,2   ,{PL_STRING,PL_STRING}},
+ { F_CONST|F_PLISTE,    "DECRYPT$", f_decrypts ,2,2   ,{PL_STRING,PL_STRING}},
 #ifdef DOOCS
  { F_SQUICK,    "DOOCSGET$"    , f_doocsgets ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "DOOCSINFO$"    , f_doocsinfos ,1,1   ,{PL_STRING}},
 #endif
 
- { F_PLISTE,    "ENCRYPT$", f_encrypts ,2,2   ,{PL_STRING,PL_STRING}},
+ { F_CONST|F_PLISTE,    "ENCRYPT$", f_encrypts ,2,2   ,{PL_STRING,PL_STRING}},
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
- { F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
- { F_PLISTE,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
- { F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
+ { F_CONST|F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_PLISTE,  "HEX$"    , f_hexs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_SQUICK,    "INLINE$" , f_inlines ,1,1   ,{PL_STRING}},
  { F_ARGUMENT,  "INPUT$"  , f_inputs ,1,2   ,{PL_FILENR,PL_INT}},
- { F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
+ { F_CONST|F_IQUICK,    "JULDATE$" , f_juldates ,1,1   ,{PL_INT}},
 
- { F_PLISTE,    "LEFT$" , f_lefts ,1,2   ,{PL_STRING,PL_INT}},
+ { F_CONST|F_PLISTE,    "LEFT$" , f_lefts ,1,2   ,{PL_STRING,PL_INT}},
  { F_PLISTE,    "LINEINPUT$" , f_lineinputs ,1,1   ,{PL_FILENR}},
- { F_SQUICK,    "LOWER$"    , f_lowers ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "LOWER$"    , f_lowers ,1,1   ,{PL_STRING}},
 
- { F_PLISTE,    "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_INT,PL_INT}},
- { F_AQUICK,    "MKA$"    , array_to_string ,1,1   ,{PL_ARRAY}},
- { F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_NUMBER}},
- { F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
- { F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_INT}},
- { F_IQUICK,    "MKL$"    , f_mkls ,1,1   ,{PL_INT}},
- { F_DQUICK,    "MKS$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
- { F_SQUICK,    "MTFD$"  , f_mtfds ,1,1   ,{PL_STRING}},
- { F_SQUICK,    "MTFE$"  , f_mtfes ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "MID$"    , f_mids ,2,3   ,{PL_STRING,PL_INT,PL_INT}},
+ { F_CONST|F_AQUICK,    "MKA$"    , array_to_string ,1,1   ,{PL_ARRAY}},
+ { F_CONST|F_DQUICK,    "MKD$"    , f_mkds ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_DQUICK,    "MKF$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_IQUICK,    "MKI$"    , f_mkis ,1,1   ,{PL_INT}},
+ { F_CONST|F_IQUICK,    "MKL$"    , f_mkls ,1,1   ,{PL_INT}},
+ { F_CONST|F_DQUICK,    "MKS$"    , f_mkfs ,1,1   ,{PL_NUMBER}},
+ { F_CONST|F_SQUICK,    "MTFD$"  , f_mtfds ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "MTFE$"  , f_mtfes ,1,1   ,{PL_STRING}},
 
- { F_PLISTE,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,  "OCT$"    , f_octs ,1,4   ,{PL_INT,PL_INT,PL_INT,PL_INT}},
 
  { F_IQUICK,    "PARAM$"  , f_params ,1,1   ,{PL_INT}},
- { F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
- { F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
- { F_SQUICK,    "REVERSE$"  , f_reverses ,1,1   ,{PL_STRING}},
- { F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
- { F_SQUICK,    "RLD$"  , f_rlds ,1,1   ,{PL_STRING}},
- { F_SQUICK,    "RLE$"  , f_rles ,1,1   ,{PL_STRING}},
+ { F_CONST|F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
+ { F_CONST|F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
+ { F_CONST|F_SQUICK,    "REVERSE$"  , f_reverses ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
+ { F_CONST|F_SQUICK,    "RLD$"  , f_rlds ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "RLE$"  , f_rles ,1,1   ,{PL_STRING}},
 
- { F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
- { F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
- { F_PLISTE,  "STRING$" , f_strings ,2,2   ,{PL_INT,PL_STRING}},
+ { F_CONST|F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
+ { F_CONST|F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,  "STRING$" , f_strings ,2,2   ,{PL_INT,PL_STRING}},
  { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
  { F_PLISTE,    "TERMINALNAME$"    , f_terminalnames ,1,1 ,{PL_FILENR}},
 #ifdef TINE
@@ -480,15 +515,15 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,    "TINEQUERY$"  , f_tinequerys ,2,2   ,{PL_STRING,PL_INT}},
  { F_SQUICK,    "TINEUNIT$"   , f_tineunits ,1,1   ,{PL_STRING}},
 #endif
- { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
- { F_SQUICK,    "UCASE$"    , f_uppers ,1,1   ,{PL_STRING}},
- { F_SQUICK,    "UNCOMPRESS$" , f_uncompresss ,1,1   ,{PL_STRING}},
- { F_IQUICK,    "UNIXDATE$" , f_unixdates ,1,1   ,{PL_INT}},
- { F_IQUICK,    "UNIXTIME$" , f_unixtimes ,1,1   ,{PL_INT}},
- { F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
- { F_PLISTE,    "WORD$"    , f_words ,2,2   ,{PL_STRING,PL_INT}},
- { F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "UCASE$"    , f_uppers ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "UNCOMPRESS$" , f_uncompresss ,1,1   ,{PL_STRING}},
+ { F_CONST|F_IQUICK,    "UNIXDATE$" , f_unixdates ,1,1   ,{PL_INT}},
+ { F_CONST|F_IQUICK,    "UNIXTIME$" , f_unixtimes ,1,1   ,{PL_INT}},
+ { F_CONST|F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
+ { F_CONST|F_PLISTE,    "WORD$"    , f_words ,2,2   ,{PL_STRING,PL_INT}},
+ { F_CONST|F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}},
 
 };
 const int anzpsfuncs=sizeof(psfuncs)/sizeof(SFUNCTION);
@@ -496,14 +531,14 @@ const int anzpsfuncs=sizeof(psfuncs)/sizeof(SFUNCTION);
 
 int vergleich(char *w1,char *w2) {
   int v;
-  int e=type2(w1);
-  if((e | INTTYP | FLOATTYP)!=(type2(w2) | INTTYP | FLOATTYP )) {
+  int e=type(w1)&(~CONSTTYP);
+  if((e | INTTYP | FLOATTYP)!=((type(w2)&(~CONSTTYP)) | INTTYP | FLOATTYP )) {
     puts("Typen ungleich bei Vergleich!");
-    printf("1: %d    2: %d \n",type2(w1),type2(w2));
+    printf("1: %d    2: %d \n",type(w1)&(~CONSTTYP),type(w2)&(~CONSTTYP));
     return(-1);
   }
   if(e & ARRAYTYP) {
-    puts("Arrays an dieser Stelle noch nicht möglich.");
+    puts("Arrays/vergleich an dieser Stelle noch nicht möglich.");
     return(0);
   }
   else if(e & STRINGTYP) {
@@ -555,22 +590,20 @@ int f_glob(PARAMETER *plist,int e) {
 }
 #ifndef NOGRAPHICS
 int f_form_alert(PARAMETER *plist,int e) {
-  if(e==2) return(form_alert(plist[0].integer,plist[1].pointer));
-  else return(-1);
+  return(form_alert(plist[0].integer,plist[1].pointer));
 }
 int f_form_center(PARAMETER *plist,int e) {
-  int x,y,w,h;
+  int x,y,w,h,ret;
   graphics();
   gem_init();
-  if(e==1) return(form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h));
-  else if(e==5) {
-    e=form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h);
+  if(e) ret=form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h);
+  if(e>4) {
     if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
     if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
     if(plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
     if(plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,h);
-    return(e);
-  } else return(-1);
+  }
+  return(ret);
 }
 int f_form_dial(PARAMETER *plist,int e) {
   if(e==9) {
@@ -597,41 +630,42 @@ int f_objc_draw(PARAMETER *plist,int e) {
   } else return(-1);
 }
 int f_objc_find(PARAMETER *plist,int e) {
-  if(e==3) {
-    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer
-    ,plist[2].integer));
-  } else return(-1);
+    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer));
 }
 int f_objc_offset(PARAMETER *plist,int e) {
-  int x,y;
-  if(e==4) {
-    if(plist[2].integer&FLOATTYP) x=(int)*((double *)plist[2].pointer);
-    else if(plist[2].integer&INTTYP) x=*((int *)plist[2].pointer);
-    else xberror(58,""); /* Variable hat falschen Typ */
-    if(plist[3].integer&FLOATTYP) y=(int)*((double *)plist[3].pointer);
-    else if(plist[3].integer&INTTYP) y=*((int *)plist[3].pointer);
-    else xberror(58,""); /* Variable hat falschen Typ */
-    e=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
-    if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)x;
-    else if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=x;
-     if(plist[3].integer&FLOATTYP) *((double *)plist[3].pointer)=(double)y;
-    else if(plist[3].integer&INTTYP) *((int *)plist[3].pointer)=y;
-    return(e);
-  } else return(-1);
+  int x,y,ret;
+
+  if(e>2 && plist[2].typ!=PL_LEER) {
+    int typ;
+    if((typ=variablen[plist[2].integer].typ)==ARRAYTYP) 
+      typ=variablen[plist[2].integer].pointer.a->typ;
+    if(typ==INTTYP) x=*((int *)plist[2].pointer);
+    else if(typ==FLOATTYP) x=(int)*((double *)plist[2].pointer);
+  }
+  if(e>3 && plist[3].typ!=PL_LEER) {
+    int typ;
+    if((typ=variablen[plist[3].integer].typ)==ARRAYTYP) 
+      typ=variablen[plist[3].integer].pointer.a->typ;
+    if(typ==INTTYP) y=*((int *)plist[3].pointer);
+    else if(typ==FLOATTYP) y=(int)*((double *)plist[3].pointer);
+  }
+  ret=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
+
+  if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,x);
+  if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,y);
+
+  return(ret);
 }
 int f_get_color(PARAMETER *plist,int e) {
-  if(e==3) {
-    graphics();
-    return(get_color(plist[0].integer,plist[1].integer,plist[2].integer));
-  } else return(-1);
+  graphics();
+  return(get_color(plist[0].integer,plist[1].integer,plist[2].integer));
 }
 int f_rsrc_gaddr(PARAMETER *plist,int e) {
   int i;
   char *ptr;
-  if(e==2) {
-    i=rsrc_gaddr(plist[0].integer,plist[1].integer,&ptr);
-    if(i>0) return((int)ptr);
-  } return(-1);
+  i=rsrc_gaddr(plist[0].integer,plist[1].integer,&ptr);
+  if(i>0) return((int)ptr);
+  else return(0);
 }
 #endif
 
@@ -639,10 +673,12 @@ int f_rsrc_gaddr(PARAMETER *plist,int e) {
 
 double parser(char *funktion){  /* Rekursiver num. Parser */
   char *pos,*pos2;
-  char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
+  char s[strlen(funktion)+1],w1buf[strlen(funktion)+1],w2buf[strlen(funktion)+1];
   int vnr;
+  char *w1=w1buf;
+  char *w2=w2buf;
 
-  /* printf("Parser: <%s>\n");*/
+//   printf("Parser: <%s>\n",funktion);
 
   /* Logische Operatoren AND OR NOT ... */
 
@@ -683,9 +719,9 @@ if(searchchr2_multi(s,"<=>")!=NULL) {
   if(wort_sep2(s,"><",TRUE,w1,w2)>1) return(vergleich(w1,w2)?-1:0);
   if(wort_sep2(s,"<=",TRUE,w1,w2)>1) return((vergleich(w1,w2)<=0)?-1:0);
   if(wort_sep2(s,">=",TRUE,w1,w2)>1) return((vergleich(w1,w2)>=0)?-1:0);
-  if(wort_sep(s,'=',TRUE,w1,w2)>1)   return(vergleich(w1,w2)?0:-1);
-  if(wort_sep(s,'<',TRUE,w1,w2)>1)   return((vergleich(w1,w2)<0)?-1:0);
-  if(wort_sep(s,'>',TRUE,w1,w2)>1)   return((vergleich(w1,w2)>0)?-1:0);
+  if(wort_sep_destroy(s,'=',TRUE,&w1,&w2)>1)   return(vergleich(w1,w2)?0:-1);
+  if(wort_sep_destroy(s,'<',TRUE,&w1,&w2)>1)   return((vergleich(w1,w2)<0)?-1:0);
+  if(wort_sep_destroy(s,'>',TRUE,&w1,&w2)>1)   return((vergleich(w1,w2)>0)?-1:0);
 }
  /* Addition/Subtraktion/Vorzeichen  */
 if(searchchr2_multi(s,"+-")!=NULL) {
@@ -737,7 +773,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
         if(*s=='@') return(do_funktion(s+1,pos));
 	else {
 	  /* Liste durchgehen */
-	  int i=0,a=anzpfuncs-1,b,l=strlen(s);
+	  int i=0,stype,a=anzpfuncs-1,b,l=strlen(s);
           for(b=0; b<l; b++) {
             while(s[b]>(pfuncs[i].name)[b] && i<a) i++;
             while(s[b]<(pfuncs[a].name)[b] && a>i) a--;
@@ -770,24 +806,26 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 	       	 char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	         int e;
-		 double val1,val2;
+		 double val1=0,val2=0;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
 		   xberror(56,""); /* Falsche Anzahl Parameter */
-		   val1=parser(w1); val2=0;
+		   val1=parser(w1); 
 	         } else if(e==2) {
-	           val1=parser(w1); val2=parser(w2);
+	           val1=parser(w1); 
+		   val2=parser(w2);
 	         }
                 if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(val1,val2));
 		else return((pfuncs[i].routine)(val1,val2));
 	      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
 	       	 char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	         int e;
-		 int val1,val2;
+		 int val1=0,val2=0;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
 		   xberror(56,""); /* Falsche Anzahl Parameter */
-		   val1=(int)parser(w1); val2=0;
+		   val1=(int)parser(w1); 
 	         } else if(e==2) {
-	           val1=(int)parser(w1); val2=(int)parser(w2);
+	           val1=(int)parser(w1); 
+		   val2=(int)parser(w2);
 	         }
                 if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(val1,val2));
 		else return((pfuncs[i].routine)(val1,val2));
@@ -804,13 +842,24 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",s);
 	   /* Nicht in der Liste ? Dann kann es noch ARRAY sein   */
 	
-          } else if(type2(s) & FLOATTYP) {
-            if((vnr=variable_exist(s,FLOATARRAYTYP))!=-1) return(floatarrayinhalt(vnr,pos));
-	    else { xberror(15,s); return(0); } /* Feld nicht dimensioniert  */
-          } else if(type2(s) & INTTYP) {
+          } else if((stype=type(s)) & FLOATTYP) {
+	 // printf("Parser: stype=$%x, <%s>\n",stype,s);
+            if((vnr=var_exist(s,ARRAYTYP,FLOATTYP,0))!=-1) {
+	  //  printf("vnr=%d \n",vnr);
+	  //  c_dump(NULL,0);
+              ARRAY *a=variablen[vnr].pointer.a;
+	      int indexliste[a->dimension];
+	      make_indexliste(a->dimension,pos,indexliste);
+	      return(floatarrayinhalt2(a,indexliste));
+	    } else { xberror(15,s); return(0); } /* Feld nicht dimensioniert  */
+          } else if(stype & INTTYP) {
 	    char *r=varrumpf(s);
-	    if((vnr=variable_exist(r,INTARRAYTYP))!=-1) return((double)intarrayinhalt(vnr,pos));
-	    else { xberror(15,s); return(0); }  /* Feld nicht dimensioniert  */
+	    if((vnr=var_exist(r,ARRAYTYP,INTTYP,0))!=-1) {
+              ARRAY *a=variablen[vnr].pointer.a;
+	      int indexliste[a->dimension];
+	      make_indexliste(a->dimension,pos,indexliste);
+	      return((double)intarrayinhalt2(a,indexliste));
+	    } else { xberror(15,s); return(0); }  /* Feld nicht dimensioniert  */
 	    free(r);
 	  } else { xberror(15,s); return(0); }  /* Feld nicht dimensioniert  */
         }
@@ -828,16 +877,16 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
           }
           if(strcmp(s,sysvars[i].name)==0) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/
-	   if((sysvars[i].opcode)==PL_INT) return((double)((int (*)())sysvars[i].routine)());
-	   if((sysvars[i].opcode)==PL_FLOAT) return((sysvars[i].routine)());
+	   if(sysvars[i].opcode&INTTYP) return((double)((int (*)())sysvars[i].routine)());
+	   if(sysvars[i].opcode&FLOATTYP) return((sysvars[i].routine)());
           }
       /* erst integer abfangen (xxx% oder xxx&), dann rest */
 
       if(*s=='@')                              return(do_funktion(s+1,""));
-      if((vnr=variable_exist(s,FLOATTYP))!=-1) return(variablen[vnr].zahl);
+      if((vnr=var_exist(s,FLOATTYP,0,0))!=-1) return(*variablen[vnr].pointer.f);
       if(s[strlen(s)-1]=='%') {
         s[strlen(s)-1]=0;
-        if((vnr=variable_exist(s,INTTYP))!=-1) return((double)variablen[vnr].opcode);
+        if((vnr=var_exist(s,INTTYP,0,0))!=-1) return((double)*variablen[vnr].pointer.i);
         return(0);
       } else return(myatof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
     }
@@ -847,30 +896,30 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 }
 
 const AFUNCTION pafuncs[]= {  /* alphabetisch !!! */
- { F_ARGUMENT,  "!nulldummy",  f_nop ,0,0   ,{0}},
- { F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
- { F_PLISTE,    "1"         , f_einsmat ,1,1   ,{PL_INT}},
+ { F_CONST|F_ARGUMENT,  "!nulldummy",  f_nop ,0,0   ,{0}},
+ { F_CONST|F_PLISTE,    "0"         , f_nullmat ,2,2   ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE,    "1"         , f_einsmat ,1,1   ,{PL_INT}},
 #ifdef CONTROL
  { F_PLISTE,    "CSGET"     , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "CSVGET"    , f_csvgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
- { F_SQUICK,    "CVA"       , string_to_array ,1,1   ,{PL_STRING}},
+ { F_CONST|F_SQUICK,    "CVA"       , string_to_array ,1,1   ,{PL_STRING}},
 #ifdef DOOCS
  { F_PLISTE,    "DOOCSGET"     , f_doocsgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "DOOCSNAMES"     , f_doocsnames ,1,1   ,{PL_STRING}},
  { F_PLISTE,    "DOOCSVGET"    , f_doocsgeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
 
- { F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
- { F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
- { F_PLISTE,  "SOLVE"       , f_solvea ,2,2   ,{PL_ARRAY,PL_ARRAY}},
+ { F_CONST|F_AQUICK,  "INV"         , inv_array ,1,1   ,{PL_NARRAY}},
+ { F_CONST|F_PLISTE,  "SMUL"        , f_smula ,2,2   ,{PL_ARRAY,PL_FLOAT}},
+ { F_CONST|F_PLISTE,  "SOLVE"       , f_solvea ,2,2   ,{PL_ARRAY,PL_ARRAY}},
 
 #ifdef TINE
  { F_PLISTE,    "TINEGET"     , f_tinegeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "TINEVGET"    , f_tinegeta ,1,3   ,{PL_STRING,PL_INT,PL_INT}},
  { F_PLISTE,    "TINEHISTORY" , f_tinehistorya ,3,3   ,{PL_STRING,PL_INT,PL_INT}},
 #endif
- { F_AQUICK,    "TRANS"     , trans_array ,1,1   ,{PL_ARRAY}},
+ { F_CONST|F_AQUICK,    "TRANS"     , trans_array ,1,1   ,{PL_ARRAY}},
 
 };
 const int anzpafuncs=sizeof(pafuncs)/sizeof(AFUNCTION);
@@ -898,7 +947,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
       ARRAY zw1=array_parser(w1);
       ARRAY zw2=array_parser(w2);
       array_add(zw1,zw2);
-      free_array(zw2);
+      free_array(&zw2);
       return(zw1);
     } else return(array_parser(w2));
   } else if(wort_sepr(s,'-',TRUE,w1,w2)>1) {
@@ -906,7 +955,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
       ARRAY zw1=array_parser(w1);
       ARRAY zw2=array_parser(w2);
       array_sub(zw1,zw2);
-      free_array(zw2);
+      free_array(&zw2);
       return(zw1);
     } else {
       ARRAY zw2=array_parser(w2);
@@ -915,11 +964,11 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
     }
   } else if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
     if(strlen(w1)) {
-      if(type2(w1) & ARRAYTYP) {
+      if(type(w1) & ARRAYTYP) {
         ARRAY zw1=array_parser(w1);
 	ARRAY zw2=array_parser(w2);
         ARRAY ergebnis=mul_array(zw1,zw2);
-        free_array(zw1); free_array(zw2);
+        free_array(&zw1); free_array(&zw2);
         return(ergebnis);
       } else {    /* Skalarmultiplikation */
         ARRAY zw2=array_parser(w2);
@@ -934,12 +983,12 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
     else if(e==0) {
       zw2=zw1;
       zw1=einheitsmatrix(zw2.typ,zw2.dimension,zw2.pointer);
-      free_array(zw2);
+      free_array(&zw2);
     } else if(e>1) {
       int i;
       for(i=1;i<e;i++) {
         zw2=mul_array(zw1,zw1);
-	free_array(zw1);
+	free_array(&zw1);
 	zw1=zw2;
       }
     }
@@ -982,13 +1031,13 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
 	        ARRAY ergebnis,a=array_parser(pos);
 		ergebnis=(pafuncs[i].routine)(a);
-		free_array(a);
+		free_array(&a);
 	      	return(ergebnis);
 	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_SQUICK) {
 	        ARRAY ergebnis;
 		STRING a=string_parser(pos);
 		ergebnis=(pafuncs[i].routine)(a);
-		free_string(a);
+		free_string(&a);
 	      	return(ergebnis);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",s);
           }/* Nicht in der Liste ?    */
@@ -1007,8 +1056,9 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	   ((int *)(ergeb.pointer))[0]=nn;
            if(filenr[i]) {
 	     int *varptr=ergeb.pointer+INTSIZE;
-             fff=dptr[i];
-             fread(varptr,sizeof(int),nn,fff);
+             if(i=fread(varptr,sizeof(int),nn,dptr[i])<nn) {
+	       io_error(errno,"fread");
+	     }
              return(ergeb);
            } else xberror(24,""); /* File nicht geoeffnet */
            return(ergeb);
@@ -1019,83 +1069,18 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	   /* Hier sollten keine Funktionen mehr auftauchen  */
 	   /* Jetzt uebergebe spezifiziertes Array, evtl. reduziert*/
 	   if(strlen(pos)==0) {
-	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1)  ergebnis=copy_var_array(vnr);
-	     else if((vnr=variable_exist(r,INTARRAYTYP))!=-1)    ergebnis=copy_var_array(vnr);
-	     else if((vnr=variable_exist(r,STRINGARRAYTYP))!=-1) ergebnis=copy_var_array(vnr);
+	     if((vnr=var_exist(r,ARRAYTYP,0,0))!=-1) ergebnis=double_array(variablen[vnr].pointer.a);
              else xberror(15,s);  /* Feld nicht dimensioniert  */
 	   } else {
-	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1) {
-	       char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	       int e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
-	       int indexe[variablen[vnr].opcode];
-	       int indexo[variablen[vnr].opcode];
-	       int indexa[variablen[vnr].opcode];
-	
-	     /* Dimension des reduzierten Arrays bestimmen */
-	       ergebnis.typ=FLOATTYP;
-	       e=wort_sep(pos,',',TRUE,w1,w2);
-	       while(e) {
-	         if(w1[0]!=':' && w1[0]!=0) {
-		   indexo[ndim++]=(int)parser(w1);
-		   rdim++;
-		 } else indexo[ndim++]=-1;
-		
-	         e=wort_sep(w2,',',TRUE,w1,w2);
-	       }
-	
-             /* Dimensionierung uebertragen */
-	       ergebnis.dimension=max(variablen[vnr].opcode-rdim,1);
-	       ergebnis.pointer=malloc(INTSIZE*ergebnis.dimension);
-	       rdim=0;ndim=0;anz=1;
-	       e=wort_sep(pos,',',TRUE,w1,w2);
-	       while(e) {
-	         indexa[rdim]=anz;		
-	         if(w1[0]==':' || w1[0]==0) {
-		
-		   ((int *)(ergebnis.pointer))[ndim++]=((int *)(variablen[vnr].pointer))[rdim];
-		   anz=anz*(((int *)variablen[vnr].pointer)[rdim]);
-		 }
-		 rdim++;
-	         e=wort_sep(w2,',',TRUE,w1,w2);
-	       }	
-
- 	       ergebnis.pointer=realloc(ergebnis.pointer,INTSIZE*ergebnis.dimension+anz*sizeof(double));
-
-	      /*Loop fuer die Komprimierung */
-
-	       for(j=0;j<anz;j++) {
-	         int jj=j;
-	         /* Indexliste aus anz machen */
-                 for(k=variablen[vnr].opcode-1;k>=0;k--) {
-		   if(indexo[k]==-1) {
-		     indexe[k]=jj/indexa[k];
-		     jj=jj % indexa[k];
-		
-		   } else indexe[k]=indexo[k];
-		 }
-		 if(jj!=0) puts("Rechnung geht nicht auf.");
-		 /* Testen ob passt  */
-	         /*printf("j=%d : indexe[]=",j);*/
-		 anz2=0;
-	         for(k=0;k<variablen[vnr].opcode;k++) {
-		   /*printf(" %d",indexe[k]);*/
-		   anz2=anz2*((int *)variablen[vnr].pointer)[k]+indexe[k];
-		 }
-	         /*printf("\n");
-		 printf("--anz2=%d\n",anz2);*/
-
-		 /* jetzt kopieren */
-		
-		 ((double *)(ergebnis.pointer+INTSIZE*ergebnis.dimension))[j]=((double *)(variablen[vnr].pointer+INTSIZE*variablen[vnr].opcode))[anz2];
-	       }
-	     } else if((vnr=variable_exist(r,INTARRAYTYP))!=-1) {
-	       puts("Noch nicht möglich...");
-	     }  else if((vnr=variable_exist(s,STRINGARRAYTYP))!=-1) {
-	       puts("Noch nicht möglich...");
+	     if((vnr=var_exist(r,ARRAYTYP,0,0))!=-1) {
+	       int indexliste[variablen[vnr].pointer.a->dimension];
+	       int ii=count_parameters(pos);
+	       make_indexliste(ii,pos,indexliste);
+	       ergebnis=get_subarray(variablen[vnr].pointer.a,indexliste);	
 	     } else {
 	       xberror(15,s);  /* Feld nicht dimensioniert  */
 	       e=1;
-  	       ergebnis=einheitsmatrix(FLOATARRAYTYP,1,&e);
+  	       ergebnis=einheitsmatrix(FLOATTYP,1,&e);
 	     }
 	   }
 	   free(r);
@@ -1106,14 +1091,12 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
   }
   /* Offenbar war der String leer oder so */
   e=0;
-  return(nullmatrix(FLOATARRAYTYP,0,&e));
+  return(nullmatrix(FLOATTYP,0,&e));
 }
 
 
 char *s_parser(char *funktion) { /* String-Parser  */
   STRING e=string_parser(funktion);
-  e.pointer=realloc(e.pointer,e.len+1);
-  (e.pointer)[e.len]=0;
   return(e.pointer);
 }
 STRING string_parser(char *funktion) {
@@ -1131,6 +1114,7 @@ STRING string_parser(char *funktion) {
     memcpy(ergebnis.pointer,t.pointer,t.len);
     memcpy(ergebnis.pointer+t.len,u.pointer,u.len+1);
     ergebnis.len=u.len+t.len;
+    ergebnis.pointer[ergebnis.len]=0;
     free(t.pointer);free(u.pointer);
     return(ergebnis);
   } else {
@@ -1182,11 +1166,14 @@ STRING string_parser(char *funktion) {
 	      } else if(psfuncs[i].pmax==2 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 	       	 char w1[strlen(pos)+1],w2[strlen(pos)+1];
 	         int e;
-		 double val1,val2;
+		 double val1=0,val2=0;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
 		   xberror(56,""); /* Falsche Anzahl Parameter */
-		   val1=parser(w1); val2=0;
-	         } else if(e==2)  val1=parser(w1); val2=parser(w2);
+		   val1=parser(w1); 
+	         } else if(e==2) { 
+		   val1=parser(w1); 
+		   val2=parser(w2);
+		 }
                  ergebnis=(psfuncs[i].routine)(val1,val2);
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_SQUICK) {
                 STRING test=string_parser(pos);
@@ -1197,17 +1184,17 @@ STRING string_parser(char *funktion) {
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_AQUICK) {
                 ARRAY test=array_parser(pos);
 	        ergebnis=(psfuncs[i].routine)(test);
-		free_array(test);
+		free_array(&test);
 	      } else printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",v);
 	    } else {/* Nicht in der Liste ? Dann kann es noch ARRAY sein   */
 	     int vnr;
 	     v[strlen(v)-1]=0;
 	
-             if((vnr=variable_exist(v,STRINGARRAYTYP))==-1) {
+             if((vnr=var_exist(v,ARRAYTYP,STRINGTYP,0))==-1) {
 	       xberror(15,v);         /*Feld nicht definiert*/
 	       ergebnis=create_string(NULL);
              } else {
-	       int dim=variablen[vnr].opcode;
+	       int dim=variablen[vnr].pointer.a->dimension;
 	       int indexliste[dim];
 	       
 	       if(make_indexliste(dim,pos,indexliste)==0)
@@ -1224,6 +1211,7 @@ STRING string_parser(char *funktion) {
         ergebnis.len=strlen(v)-2;
         *pos2=0;
         memcpy(ergebnis.pointer,v+1,strlen(v)-2+1);
+	ergebnis.pointer[ergebnis.len]=0;
       } else if(*pos2!='$') {
         xberror(51,v); /* "Parser: Syntax error?! "  */
         ergebnis=vs_error();
@@ -1240,13 +1228,8 @@ STRING string_parser(char *funktion) {
 	  return((syssvars[i].routine)());
         }
         *pos2=0;
-        if((vnr=variable_exist(v,STRINGTYP))==-1) {
-          ergebnis=create_string(NULL);
-        } else {
-          ergebnis.pointer=malloc(variablen[vnr].opcode+1);
-	  ergebnis.len=variablen[vnr].opcode;
-	  memcpy(ergebnis.pointer,variablen[vnr].pointer,ergebnis.len);
-        }
+        if((vnr=var_exist(v,STRINGTYP,0,0))==-1) ergebnis=create_string(NULL);
+        else ergebnis=double_string(variablen[vnr].pointer.s);
       }
     }
   }
@@ -1256,87 +1239,92 @@ STRING string_parser(char *funktion) {
 
 
 double do_funktion(char *name,char *argumente) {
-  char *buffer,*pos;
-  int pc2;
+  int oldbatch,osp=sp;
+  int pc2=procnr(name,2|4);  /*FUNCTION und DEFFN*/
+  int typ;
+//printf("do function <%s> <%s>\n",name,argumente);
+  if(pc2==-1) {
+    xberror(44,name); /* Funktion  nicht definiert */
+    return(0.0);
+  } 
+  typ=procs[pc2].typ;
+  
+  if(do_parameterliste(argumente,procs[pc2].parameterliste,procs[pc2].anzpar)) {
+    xberror(42,name); /* Zu wenig Parameter */
+    return(0.0);
+  }
+  pc2=procs[pc2].zeile;
 
-  buffer=malloc(strlen(name)+1);
-  strcpy(buffer,name);
-  pos=argumente;
-
-    pc2=procnr(buffer,2);
-    if(pc2==-1)   xberror(44,buffer); /* Funktion  nicht definiert */
-    else {
-	if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
-	else {
-	  int oldbatch,osp=sp;
-	  pc2=procs[pc2].zeile;
-	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-	  else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
-	  oldbatch=batch;batch=1;
-	  programmlauf();
-	  batch=min(oldbatch,batch);
-	  if(osp!=sp) {
-	    pc=stack[--sp]; /* wenn error innerhalb der func. */
-            puts("Error within FUNCTION.");
-	  }
-	}
-	free(buffer);
-	return(returnvalue.f);
-      }
-  free(buffer);
-  return(0.0);
+  if(typ==4) {
+//    printf("Auszuwerten: <%s>\n",pcode[pc2].argument);
+    returnvalue.f=parser(pcode[pc2].argument);
+    restore_locals(sp+1);
+  } else {
+    if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+    else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+    oldbatch=batch;batch=1;
+    programmlauf();
+    batch=min(oldbatch,batch);
+    if(osp!=sp) {
+      pc=stack[--sp]; /* wenn error innerhalb der func. */
+      puts("Error within FUNCTION.");
+    }
+  }
+  return(returnvalue.f);
 }
 
  /* loese die Parameterliste auf und weise die Werte auf die neuen lokalen
     Variablen zu */
 
-int do_parameterliste(char *pos, char *pos2) {
-  char w3[strlen(pos)+1],w4[strlen(pos)+1];
-  char w5[strlen(pos2)+1],w6[strlen(pos2)+1];
-  int e1,e2;
- /* printf("GOSUB: <%s> <%s>\n",pos,pos2);*/
-  e1=wort_sep(pos,',',TRUE,w3,w4);
-  e2=wort_sep(pos2,',',TRUE,w5,w6);
+int do_parameterliste(char *pos, int *l,int n) {
+  char buf[strlen(pos)+1];
+  char *w1,*w2;
+  int e;
+  int i=0;
+  strcpy(buf,pos);
+  e=wort_sep_destroy(buf,',',TRUE,&w1,&w2);
+
   sp++;  /* Uebergabeparameter sind lokal ! */
-  while(e1 && e2) {
+  while(e && i<n) {
   /*  printf("ZU: %s=%s\n",w3,w5); */
-    c_dolocal(w5,w3);
-    e1=wort_sep(w4,',',TRUE,w3,w4);
-    e2=wort_sep(w6,',',TRUE,w5,w6);
+    c_dolocal(l[i++],w1);
+    e=wort_sep_destroy(w2,',',TRUE,&w1,&w2);
   }
   sp--;
-  return((e1!=e2) ? 1 : 0);
+  if(e || i<n) xberror(56,pos); /* Falsche Anzahl Parameter */
+  return((i!=n) ? 1 : 0);
 }
 
 
 STRING do_sfunktion(char *name,char *argumente) {
-  char *buffer,*pos;
-  int pc2;
-
-  buffer=malloc(strlen(name)+1);
-  strcpy(buffer,name);
-  pos=argumente;
-  pc2=procnr(buffer,2);
-  if(pc2!=-1) {
-	if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
-	else {
-	  int oldbatch,osp=sp;
-	
-	  pc2=procs[pc2].zeile;
-	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-	  else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
-	  oldbatch=batch;batch=1;
-	  programmlauf();
-	  batch=min(oldbatch,batch);
-	  if(osp!=sp) {
-	    pc=stack[--sp]; /* wenn error innerhalb der func. */
-            puts("Error within FUNCTION.");
-	  }
-	}
-    free(buffer);
-    return(returnvalue.str);
+  int oldbatch,osp=sp;
+  int pc2=procnr(name,2|4);  /*FUNCTION und DEFFN*/
+  int typ;
+  if(pc2==-1) {
+    xberror(44,name); /* Funktion  nicht definiert */
+    return(create_string(NULL));
+  } 
+  typ=procs[pc2].typ;
+  if(do_parameterliste(argumente,procs[pc2].parameterliste,procs[pc2].anzpar)) {
+    xberror(42,name); /* Zu wenig Parameter */
+    return(create_string(NULL));
   }
-  xberror(44,buffer); /* Funktion  nicht definiert */
-  free(buffer);
-  return(create_string(NULL));
+  pc2=procs[pc2].zeile;
+
+  if(typ==4) {
+//    printf("Auszuwerten: <%s>\n",pcode[pc2].argument);
+    returnvalue.str=string_parser(pcode[pc2].argument);
+    restore_locals(sp+1);
+  } else {
+    if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+    else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
+    oldbatch=batch;batch=1;
+    programmlauf();
+    batch=min(oldbatch,batch);
+    if(osp!=sp) {
+      pc=stack[--sp]; /* wenn error innerhalb der func. */
+      puts("Error within FUNCTION.");
+    }
+  }
+  return(returnvalue.str);
 }

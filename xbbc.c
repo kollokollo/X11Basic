@@ -24,15 +24,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "config.h"
 #include "defs.h"
-#include "globals.h"
 #include "x11basic.h"
-#include "functions.h"
-#include "ptypes.h"
-#include "io.h"
-#include "file.h"
-
 #include "bytecode.h"
 
 
@@ -49,50 +42,64 @@ STRING strings;     /* Holds comments and sybol names */
 BYTECODE_SYMBOL *symtab;
 int anzsymbols;
 
+char *rodata=NULL;
+int rodatalen=0;
+int bssdatalen=0;
+
 int donops=0;
 int docomments=0;
 
 
-extern void reset_input_mode(),x11basicStartup();
-extern int param_anzahl;
-extern char **param_argumente;
 int programbufferlen=0;
 char *programbuffer=NULL;
-const char version[]="1.17"; /* Version Number. Put some useful information here */
-const char vdate[]="2011-08-16";   /* Creation date.  Put some useful information here */
-extern const char libversion[];
-extern const char libvdate[];
+const char version[]="1.18"; /* Version Number. Put some useful information here */
+const char vdate[]="2011-08-26";   /* Creation date.  Put some useful information here */
 char *program[MAXPRGLEN];
 int prglen=0;
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+#ifndef S_IRGRP
+#define S_IRGRP 0
+#endif
+
 int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
-  int fdis=creat(name,0644);
+  int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   
   BYTECODE_HEADER h;
   if(fdis==-1) return(-1);
   
+  add_rodata(ifilename,strlen(ifilename));
+  
+  
   h.BRAs=BC_BRAs;
   h.offs=sizeof(BYTECODE_HEADER)-2;
   h.textseglen=len;
-  h.dataseglen=dlen;
-  h.bssseglen=0;
+  h.rodataseglen=rodatalen;
+  h.sdataseglen=dlen;
+  h.dataseglen=0;
+  h.bssseglen=bssdatalen;
   if(dostrip) {h.symbolseglen=0;h.stringseglen=0;}
   else {
     h.symbolseglen=anzsymbols*sizeof(BYTECODE_SYMBOL);
     h.stringseglen=strings.len;
   }
   h.version=BC_VERSION;
+  h.relseglen=0;
 
   if(verbose) {
     printf("Info:\n");
-    printf("  Size of   Text-Segment: %d\n",h.textseglen);
-    printf("  Size of   Data-Segment: %d\n",h.dataseglen);
-    printf("  Size of String-Segment: %d\n",h.stringseglen);
-    printf("  Size of Symbol-Segment: %d (%d symbols)\n",h.symbolseglen,anzsymbols);
+    printf("  Size of   Text-Segment: %d\n",(int)h.textseglen);
+    printf("  Size of roData-Segment: %d\n",(int)h.rodataseglen);
+    printf("  Size of   Data-Segment: %d\n",(int)h.sdataseglen);
+    printf("  Size of    bss-Segment: %d\n",(int)h.bssseglen);
+    printf("  Size of String-Segment: %d\n",(int)h.stringseglen);
+    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h.symbolseglen,anzsymbols);
   }
-
   if(write(fdis,&h,sizeof(BYTECODE_HEADER))==-1) io_error(errno,"write");
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
+  if(rodatalen) if(write(fdis,rodata,rodatalen)==-1) io_error(errno,"write");
   if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");
   if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write");
   if(write(fdis,symtab,h.symbolseglen)==-1) io_error(errno,"write");
@@ -108,7 +115,7 @@ void doit(char *ausdruck) {
   memdump(bcpc.pointer,bcpc.len);
   printf("Virtual Machine: %d Bytes\n",bcpc.len);
   p=virtual_machine(bcpc,&n);
-  dump_stack(p,n);
+  dump_parameterlist(p,n);
   free_pliste(n,p);
 }
 

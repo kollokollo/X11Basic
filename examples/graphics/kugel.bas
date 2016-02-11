@@ -75,6 +75,7 @@ line @kx(0.9,-85/180*pi,i/180*pi),@ky(0.9,-85/180*pi,i/180*pi),@kx(1,-pi/2,0),@k
 next i  
 
 vsync
+~inp(-2)
 end
 
 function f(x)

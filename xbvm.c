@@ -17,9 +17,8 @@
 #include <sysexits.h>
 #endif
 #include "defs.h"
-#include "vtypes.h"
-#include "ptypes.h"
-#include "parser.h"
+#include "x11basic.h"
+#include "variablen.h"
 #include "bytecode.h"
 
 void reset_input_mode();
@@ -57,7 +56,10 @@ int verbose=0;
 
 char selfseek[]="4007111";
 
-
+BYTECODE_SYMBOL *symtab;
+extern char *rodata;
+char *strings;
+char *fixup;   /* Relocation information */
 
 void intro(){
   printf("**********************************************************\n"
@@ -147,37 +149,145 @@ void kommandozeile(int anzahl, char *argumente[]) {
 }
 
 
-void loadbcprg(char *filename) {  
+int loadbcprg(char *filename) {  
   int len;
+  char *adr;
   FILE *dptr;
-  dptr=fopen(filename,"r"); len=lof(dptr); fclose(dptr);
-  bcpc.pointer=malloc(len);
+  dptr=fopen(filename,"rb"); len=lof(dptr); fclose(dptr);
+  bcpc.pointer=adr=malloc(len+1);
   bload(filename,bcpc.pointer,len);
   bcpc.len=len;
   if(verbose) printf("%s loaded (%d Bytes)\n",filename,bcpc.len);
+ // memdump(bcpc.pointer,32);
+ 
+  /* Ueberpruefe ob ein gueltiger Header dabei ist */
+
+  if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)-2) {
+    BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)adr;
+    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    if(bytecode->version!=BC_VERSION) {
+      printf("WARNING: This Bytecode was compiled for a different version of"
+      "X11-Basic.\n ERROR.\n");
+      return(-1);
+    }
+    /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
+    if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
+      bcpc.len+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
+      bcpc.pointer=adr=realloc(adr,bcpc.len);
+    }
+    return(0);
+  } else {
+    printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
+    return(-1);
+  }
 }
 
+/* We assume that the segments are in following order: 
+   HEADER
+   TEXT
+   RODATA
+   SDATA
+   DATA
+   BSS  --- STRINGS  
+        --- SYMBOL
+	--- RELOCATION
+	*/
+void do_relocation(char *adr,unsigned char *fixup, int l);
+
 char *code_init(char *adr) {
+  int i,a,vnr,vnr2,typ;
+  char *name;
+  char *bsseg;
   /* Ueberpruefe ob ein gueltiger Header dabei ist und setze databuffer */
   if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)-2) {
+    BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)adr;
     clear_parameters();
     programbufferlen=prglen=pc=sp=0;
-    if(verbose) printf("Bytecode header found (V.%x)\n",
-    ((BYTECODE_HEADER *)adr)->version);
-    if(((BYTECODE_HEADER *)adr)->version!=BC_VERSION) {
+    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    if(bytecode->version!=BC_VERSION) {
       printf("WARNING: This Bytecode was compiled for a different version of"
       "X11-Basic.\n ERROR.\n");
       return(NULL);
     }
-    databuffer=adr+((BYTECODE_HEADER *)adr)->textseglen+sizeof(BYTECODE_HEADER);
-    databufferlen=((BYTECODE_HEADER *)adr)->dataseglen;
+        
+    /* Set up the data buffer */
+    databuffer=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
+    databufferlen=bytecode->sdataseglen;
     if(verbose) printf("Databuffer $%08x contains: <%s>\n",(unsigned int)databuffer,databuffer);
+
+    rodata=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
+    bsseg=strings=&adr[sizeof(BYTECODE_HEADER)+
+                 bytecode->textseglen+
+		 bytecode->rodataseglen+
+		 bytecode->sdataseglen+
+		 bytecode->dataseglen];
+
+    /* Jetzt Variablen anlegen.*/
+    symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
+                                   bytecode->textseglen+
+		                   bytecode->rodataseglen+
+		                   bytecode->sdataseglen+
+				   bytecode->dataseglen+
+				   bytecode->stringseglen);
+    a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+    if(a>0) {
+      for(i=0;i<a;i++) {
+        if(symtab[i].typ==STT_OBJECT) {
+	  typ=symtab[i].subtyp;
+	  if(symtab[i].name) name=&strings[symtab[i].name];
+          else {
+	    name=malloc(64);
+	    sprintf(name,"VAR_%x",vnr);
+          }
+	  /*Hier erstmal nur int und float im bss ablegen, da noch nicht geklaert ist, 
+	  wie wir strings und arrays hier initialisieren koennen ohne die symboltabelle 
+	  zu ueberschreiben*/
+	  
+	  if(typ&ARRAYTYP) vnr2=add_variable(name,ARRAYTYP,typ&(~ARRAYTYP));
+	  else if(typ==STRINGTYP) vnr2=add_variable(name,typ,0);
+	  else vnr2=add_variable_adr(name,typ,bsseg+symtab[i].adr);
+        }  
+      }
+    }
+    if(verbose) printf("%d variables.\n",anzvariablen);
+    if(verbose) c_dump(NULL,0);
+
+    fixup=(char *)(adr+sizeof(BYTECODE_HEADER)+
+                       bytecode->textseglen+
+		       bytecode->rodataseglen+
+		       bytecode->sdataseglen+
+		       bytecode->dataseglen+
+		       bytecode->stringseglen+
+		       bytecode->symbolseglen);
+    if((bytecode->flags&EXE_REL)==EXE_REL && bytecode->relseglen>0) 
+      do_relocation(adr,fixup,bytecode->relseglen);
+
+   /*Now: clear bss segment. This will probably overwrite symbol table and strings and relocation info*/
+    if(bytecode->bssseglen>0) bzero(bsseg,bytecode->bssseglen);
+
     return(adr);
   } else {
-    printf("VM: ERROR, file format not recognized.\n");
+    printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
     return(NULL);
   }
 }
+
+void do_relocation(char *adr,unsigned char *fixup, int l) {
+  int i=0;
+  long ll;
+  while(i<l) {
+    if(fixup[i]==0) break;
+    else if(fixup[i]==1) adr+=254;
+    else {
+      adr+=fixup[i];
+      memcpy(&ll,adr,sizeof(long));
+      ll+=(long)adr;
+      memcpy(adr,&ll,sizeof(long));
+    }
+  
+  } 
+}
+
 
 
 void doit(STRING bcpc) {
@@ -185,10 +295,11 @@ void doit(STRING bcpc) {
   int n;
   if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
   p=virtual_machine(bcpc,&n);
-  dump_stack(p,n);  
+  dump_parameterlist(p,n);  
   free_pliste(n,p);
 }
-main(int anzahl, char *argumente[]) {
+
+int main(int anzahl, char *argumente[]) {
 
   x11basicStartup();   /* initialisieren   */
 
@@ -198,16 +309,19 @@ main(int anzahl, char *argumente[]) {
   param_argumente=argumente;
 
 
-  if(anzahl<2) {    /* Programm ist vom Compiler hintendrangepackt. */
+   /* Programm ist vom Compiler hintendrangepackt. */
     if(atoi(selfseek)!=4007111) {
       int s=atoi(selfseek);
-      int len;
+      char filename[strlen(argumente[0])+8];
+      char filename2[strlen(argumente[0])+8];
       FILE *dptr;
-      if(verbose)   printf("selfseek=%s %d\n",selfseek,s);
-      dptr=fopen(argumente[0],"r"); len=lof(dptr); fclose(dptr);
-      bcpc.pointer=malloc(len);
-      bload(argumente[0],bcpc.pointer,len);
-      bcpc.len=len;
+      wort_sep(argumente[0],'.',FALSE,filename,filename2);
+      if(!exist(filename)) strcat(filename,".exe");
+      if(!exist(filename)) printf("ERROR: could not link X11-Basic code.\n");
+      if(verbose) printf("selfseek=%s %d\n",selfseek,s);
+      dptr=fopen(filename,"rb"); bcpc.len=lof(dptr); fclose(dptr);
+      bcpc.pointer=malloc(bcpc.len+1);
+      bload(filename,bcpc.pointer,bcpc.len);
       bcpc.pointer+=s;
       bcpc.len-=s;
 
@@ -215,16 +329,18 @@ main(int anzahl, char *argumente[]) {
       if(code_init(bcpc.pointer)) doit(bcpc);
       else printf("Something is wrong, no code!\n");
     }
-    intro();
     
+  if(anzahl<2) {
+   intro();
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
-        loadbcprg(ifilename);
-	if(runfile) {
-          if(code_init(bcpc.pointer)) doit(bcpc);
-        }
+        if(loadbcprg(ifilename)==0) {
+  	  if(runfile) {
+            if(code_init(bcpc.pointer)) doit(bcpc);
+          }
+	}
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }

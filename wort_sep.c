@@ -34,10 +34,12 @@
 
 
   */
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h> 
+#include "wort_sep.h" 
 
-int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
+int wort_sep(char *t,char c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
 
   /* klamb=0 : keine Klammern werden beruecksichtigt
@@ -63,6 +65,34 @@ int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
     return(2);
   }
 }
+int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2)    {
+  int f=0, klam=0;
+
+  /* klamb=0 : keine Klammern werden beruecksichtigt
+     klamb=1 : normale Klammern werden beruecksichtigt
+     klamb=2 : eckige Klammern werden beruecksichtigt
+     klamb=4 : geschweifte Klammern werden beruecksichtigt
+  */
+
+  if(!(*t)) {*w1=*w2=t;return(0);}
+  *w1=t;
+  while(*t && (*t!=c || f || klam>0)) {
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    t++;
+  }
+  if(!(*t)) {
+    *w2=t;
+    return(1);
+  } else {
+    *t++=0;
+    *w2=t;
+    return(2);
+  }
+}
+
+
 /* Dasselbe fuer eine Liste von n Zeichen */
 int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
@@ -273,7 +303,49 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
   }
 }
 
+/* Funktion Trennt w1(w2) string in w1 und w2 auf */ 
 
+int klammer_sep(char *t,char *w1, char *w2)    {
+  char *pos,*pos2;
+  
+  if(!(*t)) return(*w1=*w2=0);
+  if((pos=searchchr(t,'('))!=NULL) {
+    strncpy(w1,t,pos-t);
+    w1[pos-t]=0;
+    pos++;
+    if((pos2=searchchr2(pos,')'))!=NULL) {
+      pos2++;
+      if(*pos2) printf("<%s> klammer_sep: Hier war ein Rest: <%s>\n",t,pos2);
+    } else printf("WARNING: fehlende schliessende Klammer <%s>\n",t);
+    strncpy(w2,pos,pos2-pos);
+    w2[pos2-pos-1]=0;
+   // printf("w1=<%s>, w2=<%s>\n",w1,w2);
+    return(2);
+  } else {
+    strcpy(w1,t);
+    *w2=0;
+    return(1);
+  }
+}
+int klammer_sep_destroy(char *t,char **w1, char **w2) {
+  char *pos,*pos2;
+  
+  if(!(*t)) {*w1=*w2=t; return(0);}
+  *w1=t;
+  
+  if((pos=searchchr(t,'('))!=NULL) {
+    *pos++=0;
+    *w2=pos;
+    if((pos2=searchchr2(pos,')'))!=NULL) {
+      *pos2++=0;
+      if(*pos2) printf("<%s> klammer_sep: Hier war ein Rest: <%s>\n",t,pos2);
+    } else printf("WARNING: fehlende schliessende Klammer <%s>\n",t);
+    return(2);
+  } else {
+    *w2=&t[strlen(t)];
+    return(1);
+  }
+}
 
 int arg2(char *t,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, i=0, j=0,ergeb;
@@ -320,6 +392,9 @@ char *searchchr2(char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! *
   }
   return(NULL);
 }
+
+/*Dasselbe, aber jetzt werden mehrere Zeichen gefunden */
+
 char *searchchr2_multi(char *buf, char *c) { 
  int f=0,klam=0;
   while(*buf!=0) {

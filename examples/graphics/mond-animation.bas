@@ -379,8 +379,13 @@ plune9$=plune9$+"@P^U0LPcP:5TW3()AO*$6[<MGWTaX&<X@\N9Eb,c]X_:*EVN`2Z52,>H8X/FNUC
 plune9$=plune9$+"CDa.%aA;573ZCO7VDG9>\/7C/RK4;P;,6Ib$0)T;KB:*c*RKSMM[-E4N$4$$"
 plune9_bmp$=UNCOMPRESS$(INLINE$(plune9$))
 
+
+bw%=320
+bh%=200
+sizew ,bw%,bh%
 color 0
-pbox 0,0,320,200
+
+pbox 0,0,bw%,bh%
 color get_color(40000,30000,0)
 deftext 1
 text 10,30,"MOON-Phase-Animation with X11-Basic"
@@ -391,12 +396,11 @@ for i=1 to 28
   &t$
   put 100,100,a$,4
   text 100,180,str$(i)+" "
-  print i
   vsync
   pause 0.1  
 next i
 loop
-
+quit
 
 ' nph=0  Neumond
 ' nph=1  1. viertel

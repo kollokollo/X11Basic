@@ -63,13 +63,13 @@
 
 #include "file.h"
 #include "defs.h"
-#include "globals.h"
-#include "xbasic.h"
 #include "x11basic.h"
+#include "variablen.h"
+#include "parameter.h"
+#include "xbasic.h"
 #include "wort_sep.h"
 #include "parser.h"
 #include "array.h"
-#include "variablen.h"
 #include "io.h"
 #include "sfunctions.h"
 
@@ -157,38 +157,46 @@ void c_unmap(PARAMETER *plist,int e) {
 void c_locate(PARAMETER *plist,int e) {
   printf("\033[%.3d;%.3dH",plist[0].integer,plist[1].integer);
 }
-void c_print(char *n) {
-  char v[strlen(n)+1];
-  char c;
-  FILE *fff;
-  int i;
-  fff=stdout;
-  strcpy(v,n);
-   if(v[0]=='#') {
-       char *buffer=malloc(strlen(v)+1);
-       wort_sep(v,',',TRUE,buffer,v);
-       i=get_number(buffer);
-       if(filenr[i]) fff=dptr[i];
-       else xberror(24,""); /* File nicht geoeffnet */
-       free(buffer);
-    }
-  if(strlen(v)) {
-      if(v[strlen(v)-1]==';' || v[strlen(v)-1]==',' || v[strlen(v)-1]=='\'') {
-        STRING buffer;
-        c=v[strlen(v)-1];
-        v[strlen(v)-1]=0;
-        buffer=print_arg(v);
-	fwrite(buffer.pointer,1,buffer.len,fff);
-        if(c=='\'') fputc(' ',fff);
-        else if(c==',') fputc('\011',fff);
-	free(buffer.pointer);
+void c_print(PARAMETER *plist,int e) {
+  if(e) {
+    int i;
+    char *v;
+    FILE *fff=stdout;
+// printf("C_PRINT: \n");
+// dump_parameterlist(plist,e);
+
+    for(i=0;i<e;i++) {
+      if(plist[i].typ==PL_EVAL || plist[i].typ==PL_KEY) {
+          v=plist[i].pointer;
+          if(i==0 && v[0]=='#') {  /* Sonderbehandlung fuer erstes.. */
+            int ii=get_number(v);
+            if(filenr[ii]) fff=dptr[ii];
+            else xberror(24,""); /* File nicht geoeffnet */
+          } else if(strlen(v)) {
+	    STRING buffer=print_arg(v);
+	    fwrite(buffer.pointer,1,buffer.len,fff);
+            free(buffer.pointer);
+	    if(i!=e-1) fputc('\011',fff);
+	    else {
+              if(v[strlen(v)-1]!=';' && v[strlen(v)-1]!='\'') 
+	      fputc('\n',fff);
+            }
+	  } else {
+	    if(i!=e-1) fputc('\011',fff);
+	  }
+      } else if(plist[i].typ==PL_FILENR) {
+        if(i==0) {
+	  int ii=plist[i].integer;
+	    if(filenr[ii]) fff=dptr[ii];
+            else xberror(24,""); /* File nicht geoeffnet */
+	} else printf("ERROR: Syntax error, PRINT filenummer an falscher Stelle.\n");
+      } else if(plist[i].typ==PL_LEER) {
+        if(i!=e-1) fputc('\011',fff);
       } else {
-        STRING buffer=print_arg(v);
-	fwrite(buffer.pointer,1,buffer.len,fff);
-        fputc('\n',fff);
-	free(buffer.pointer);
+        printf("PRINT: Falscher typ. $%x\n",plist[i].typ);
       }
-  } else fputc('\n',fff);
+    }
+  } else putchar('\n');
 }
 
 void c_input(char *n) {
@@ -215,10 +223,8 @@ void c_input(char *n) {
       if(e==3) strcat(text," ? ");
       else if(e!=2) strcat(text," ");
       e=arg2(t,TRUE,s,t);
-    } else {
-      text=malloc(3);
-      strcpy(text,"? ");
-    }
+    } else text=strdup("? ");
+    
      /* Wenn Terminal: Jetzt ganze Zeile einlesen */
     if(fff==stdin) v=do_gets(text);
     u=inbuf;
@@ -231,9 +237,14 @@ void c_input(char *n) {
 	  e2=arg2(v,TRUE,u,v);
 	}
       } else u=input(fff,inbuf);
-     
-      if(type2(s) & STRINGTYP) zuweiss(s,u);
-      else zuweis(s,parser(u));
+      printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
+      if(type(s) & STRINGTYP) {
+        STRING str;
+	str.len=strlen(u);
+	str.pointer=u;
+	str=double_string(&str);
+        zuweis_string_and_free(s,str);
+      } else xzuweis(s,u);
       e=arg2(t,TRUE,s,t);
     }
     free(text);
@@ -303,47 +314,55 @@ STRING f_inputs(char *n) {
 }
 void c_lineinput(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
-  char *u,*text;
-  int e;
+  char *u,*text=NULL;
+  int e,i=0,typ;
   FILE *fff=stdin;
-  if(n[0]=='#') {
-    char *buffer=malloc(strlen(n)+1);
-    
-    wort_sep(n,',',TRUE,buffer,s);
-    fff=get_fileptr(get_number(buffer));
-    free(buffer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
-  } else strcpy(s,n);
-  if(strlen(s)) {
-    e=arg2(s,TRUE,s,t);
-    if(s[0]=='\"') {
-      u=s_parser(s);
-      text=malloc(strlen(u)+4);
-      strcpy(text,u);
-      free(u);
+  e=arg2(n,TRUE,s,t);
+  while(strlen(s)) {
+    typ=type(s);
+    if(typ==(CONSTTYP|STRINGTYP)) {
+       u=s_parser(s);
+       if(text) {
+         text=realloc(text,strlen(text)+strlen(u)+4);
+	 strcpy(text+strlen(text),u);
+       } else {
+         text=malloc(strlen(u)+4);
+	 strcpy(text,u);
+       }
+       free(u);
       if(e==3) strcat(text," ? ");
       if(e!=2) strcat(text," ");
-      e=arg2(t,TRUE,s,t);
+       
+    } else if(i==0 && (typ&FILENRTYP)==FILENRTYP) {
+      fff=get_fileptr(get_number(s));
+      if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
     } else {
-      text=malloc(3);
-      strcpy(text,"? ");
-    }
-        
-    while(e!=0) {
-      xtrim(s,TRUE,s);
-      if(fff==stdin) u=do_gets(text);
-      else {
-        STRING a;
-        a=longlineinput(fff);
-	u=a.pointer;
+      if(text==NULL) text=strdup("? ");
+      if(fff==stdin) {
+        u=do_gets(text);
+        if(typ & STRINGTYP) {
+	  STRING str;
+	  str.len=strlen(u);
+	  str.pointer=u;
+	  str=double_string(&str);
+	  zuweis_string_and_free(s,str);
+        } else zuweis(s,parser(u));
+      } else {
+        STRING a=longlineinput(fff);
+        if(typ & STRINGTYP) zuweis_string_and_free(s,a);
+        else {
+	  zuweis(s,parser(a.pointer));
+          free(a.pointer);
+        }
       }
-      if(type2(s) & STRINGTYP) zuweiss(s,u);
-      else zuweis(s,parser(u));
-      if(fff!=stdin) free(u);
-      e=arg2(t,TRUE,s,t);
+
+      free(text);
+      text=NULL;
     }
-    free(text);
+    e=arg2(t,TRUE,s,t);
+    i++;
   }
+  if(text) free(text);
 }
 /********************/
 /* File-Routinen    */
@@ -427,6 +446,9 @@ void c_open(PARAMETER *plist, int e) {
   special=toupper(((char *)plist[0].pointer)[1]);
   number=plist[1].integer;  /*File #*/
   
+ // printf("OPEN: <%s> number=%d, special=%c modus=%c port=%d\n",filename, number,special,modus,port);
+  
+  
   if(special=='X') { /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
     char ww1[plist[0].integer+1],ww2[plist[0].integer+1];
     int ii=0,ee=wort_sep(plist[0].pointer,':',TRUE,ww1,ww2);
@@ -458,10 +480,10 @@ void c_open(PARAMETER *plist, int e) {
 	  stopbits,parity);
 #endif
   }
-  if(modus=='I') modus2="r";
-  else if(modus=='O') modus2="w";
-  else if(modus=='U') modus2="r+";
-  else if(modus=='A') modus2="a+";
+  if(modus=='I') modus2="rb";
+  else if(modus=='O') modus2="wb";
+  else if(modus=='U') modus2="rb+";
+  else if(modus=='A') modus2="ab+";
   else xberror(21,""); /* bei Open nur erlaubt ...*/
 
 #ifdef DEBUG
@@ -729,34 +751,31 @@ void c_send(PARAMETER *plist, int e) {
   }
 }
 void c_receive(PARAMETER *plist, int e) {
-  int number;
   FILE *fff;
-  char buffer[1500];
 	 struct	sockaddr_in	host_address;
 	 socklen_t 	host_address_size;
 	 unsigned	char	*address_holder;
+  STRING str;  
 
-  if(e>=2) {
-    int len,fdes;
-    number=plist[0].integer;
-    fff=get_fileptr(number);
-    fdes=fileno(fff);
+    int fdes;
+    str.pointer=malloc(1500);
+    fff=get_fileptr(plist[0].integer);
     if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
+    fdes=fileno(fff);
     memset((void*)&host_address,0,sizeof(host_address));
     host_address.sin_family=AF_INET;
     host_address_size=sizeof(host_address);
-    if((len=recvfrom(fdes,buffer,1500,0,(struct sockaddr*)&host_address,
-       &host_address_size))<0) {io_error(errno,"recvfrom()");return;}
+    if((str.len=recvfrom(fdes,str.pointer,1500,0,(struct sockaddr*)&host_address,
+       &host_address_size))<0) {io_error(errno,"recvfrom()");free(str.pointer);return;}
 address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
 #if DEBUG
     printf("Port  obtained %d Bytes message '%s' from host %d.%d.%d.%d.\n",
-    len,buffer,address_holder[0],address_holder[1],address_holder[2],
+    str.len,buffer,address_holder[0],address_holder[1],address_holder[2],
     address_holder[3]);
 #endif
-    zuweissbuf(plist[1].pointer,buffer,len);
-    if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=host_address.sin_addr.s_addr;
-    if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)host_address.sin_addr.s_addr;
-  }
+    varcaststring(plist[1].integer,plist[1].pointer,str);
+    if(e>2) varcastint(plist[2].integer,plist[2].pointer,host_address.sin_addr.s_addr);
+  free(str.pointer);
 }
 
 static const struct {int sf; char xf; } ioemaptable[] = {
@@ -866,15 +885,15 @@ void io_error(int n, char *s) {
 }
 
 
-void c_close(char *w) {
+void c_close(PARAMETER *plist,int e) {
   int i;
-
-  if(strlen(w)) {
-    i=get_number(w);
-    if(filenr[i]==1) { 
-      if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
-      else filenr[i]=0;
-    } else if(filenr[i]==2) { 
+  if(e) {
+    while(--e>=0) {
+      i=plist[e].integer;
+      if(filenr[i]==1) { 
+        if(fclose(dptr[i])==EOF) io_error(errno,"CLOSE");
+        else filenr[i]=0;
+      } else if(filenr[i]==2) { 
 #ifdef WINDOWS
       if(FreeLibrary(dptr[i])==0) io_error(GetLastError(),"UNLINK");
       else filenr[i]=0;
@@ -884,8 +903,9 @@ void c_close(char *w) {
       else filenr[i]=0;
 #endif
 #endif
+      }
+      else xberror(24,""); /* File nicht geoeffnet...*/
     }
-    else xberror(24,w); /* File nicht geoeffnet...*/
   } else {
     for(i=0;i<ANZFILENR;i++) {
       if(filenr[i]==1) {
@@ -937,16 +957,16 @@ void c_bload(PARAMETER *plist,int e) {
 }
 
 void c_bsave(PARAMETER *plist,int e) {
-  if(e==3) { 
-      if(bsave(plist[0].pointer,(char *)plist[1].integer,plist[2].integer)==-1)
+  if(bsave(plist[0].pointer,(char *)plist[1].integer,plist[2].integer)==-1)
         io_error(errno,"BSAVE");
-  }
 }
 void c_bget(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(e==3) {
-    if(filenr[i]) fread((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
-    else xberror(24,""); /* File nicht geoeffnet */
+    if(filenr[i]) {
+      e=fread((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
+      if(e<plist[2].integer) xberror(26,""); /* Fileende erreicht EOF */
+    } else xberror(24,""); /* File nicht geoeffnet */
   }
 }
 void c_bput(PARAMETER *plist,int e) {
@@ -986,17 +1006,14 @@ void c_pipe(PARAMETER *plist,int e) {
 
 
 
-void c_unget(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int i,e=wort_sep(n,',',TRUE,v,w);
-  FILE *fff=stdin;
+void c_unget(PARAMETER *plist,int e) {
   if(e>1) {
-    fff=get_fileptr(get_number(v));
-    if(fff==NULL) {xberror(24,v);return;} /* File nicht geoeffnet */
-    i=(int)parser(w);
-  } else if(e==1) i=(int)parser(v);
-  else {xberror(32,"PUTBACK");return;} /* Syntax error */
-  ungetc(i,fff);
+    FILE *fff;
+    if(plist->typ==PL_LEER) fff=stdin;
+    else fff=get_fileptr(plist->integer);
+    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */
+    ungetc(plist[1].integer,fff);
+  } else  ungetc(plist->integer,stdin);
 }
 
 void c_flush(PARAMETER *plist,int e) {
@@ -1024,7 +1041,7 @@ int inp8(PARAMETER *plist,int e) {
   unsigned char ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-  fread(&ergebnis,1,1,fff);
+  if(fread(&ergebnis,1,1,fff)<1) {xberror(26,"");return(-1);}/* Fileende erreicht EOF */  
   return((int)ergebnis);
 }
 int inpf(PARAMETER *plist,int e) {
@@ -1049,14 +1066,14 @@ int inp16(PARAMETER *plist,int e) {
   unsigned short ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */  
-  fread(&ergebnis,sizeof(short),1,fff);
+  if(fread(&ergebnis,sizeof(short),1,fff)<1)  io_error(errno,"fread");
   return((int)ergebnis);
 }
 int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
   FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */ 
-  fread(&ergebnis,sizeof(long),1,fff);
+  if(fread(&ergebnis,sizeof(long),1,fff)<1)  io_error(errno,"fread");
   return(ergebnis);
 }
 
@@ -1123,13 +1140,13 @@ int f_symadr(PARAMETER *plist,int e) {
 
 
 char *terminalname(int fp) {
-  char *name=NULL,*erg;
+  char *name="";
   #ifndef WINDOWS
   if(isatty(fp)) name=ttyname(fp);
+  return(strdup(name));
+  #else
+  return(strdup("windows-term"));
   #endif
-  erg=malloc(strlen(name)+1);
-  strcpy(erg,name);
-  return(erg);
 }
 
 
@@ -1145,7 +1162,7 @@ void c_out(char *n) {
     if(fff!=NULL) {
       e=wort_sep(w,',',TRUE,v,w);
       while(e) {
-        typ=type2(v);
+        typ=type(v);
 	if(typ & ARRAYTYP) {
 	  ARRAY zzz=array_parser(v);    
 	  for(j=0;j<zzz.dimension;j++) a=a*(((int *)zzz.pointer)[j]);
@@ -1164,7 +1181,7 @@ void c_out(char *n) {
 	    }
 	  }
 	 
-	  free_array(zzz);
+	  free_array(&zzz);
 	} else if(typ & FLOATTYP){
 	 double zzz;
 	 zzz=parser(v);
@@ -1268,16 +1285,17 @@ STRING print_arg(char *ausdruck) {
       if(strlen(a1)) {    
         int typ,ee;
 	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
-	typ=type2(a1);
+	typ=type(a1);
 	
 	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
 	  if(typ & STRINGTYP) ;
 	  else ;
 	} else if(typ & STRINGTYP) {
           STRING a3=string_parser(a1);
-	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+a3.len);
+	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+a3.len+1);
           memcpy(ergebnis.pointer+ergebnis.len,a3.pointer,a3.len);
 	  ergebnis.len+=a3.len;
+	  ergebnis.pointer[ergebnis.len]=0;
 	  free(a3.pointer);
         } else {
 	  if(ee==2) {

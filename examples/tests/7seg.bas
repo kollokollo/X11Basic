@@ -4,7 +4,7 @@
 '
 
 
-ziff()=[0x7b,0x42,0x37,0x67,0x4e,0x6d,0x7d,0x43,0x7f,0x6f]
+ziff%()=[0x7b,0x42,0x37,0x67,0x4e,0x6d,0x7d,0x43,0x7f,0x6f]
 
 rot=get_color(65535,0,0)
 grau=get_color(15535,0,0)
@@ -90,7 +90,7 @@ procedure put7(x,y,s,c)
   local i
   color schwarz
   pbox x,y,x+s*32,y+s*64
-d()=[3,3,29,3;29,3,29,29;3,32,29,32;3,3,3,29;3,32,3,61;3,61,29,61;29,61,29,32;34,64,35,64]
+d%()=[3,3,29,3;29,3,29,29;3,32,29,32;3,3,3,29;3,32,3,61;3,61,29,61;29,61,29,32;34,64,35,64]
 for i=0 to 7
   if btst(c,i)
     color rot
@@ -98,7 +98,7 @@ for i=0 to 7
     color grau
   endif
   defline ,4*s,2
-  line x+d(i,0)*s*0.8,y+d(i,1)*s*0.6,x+d(i,2)*s*0.8,y+d(i,3)*s*0.6
+  line x+d%(i,0)*s*0.8,y+d%(i,1)*s*0.6,x+d%(i,2)*s*0.8,y+d%(i,3)*s*0.6
 next i
 return
 
@@ -110,7 +110,7 @@ function conv$(t$)
       if len(a$)
         poke varptr(a$)+len(a$)-1,peek(varptr(a$)+len(a$)-1) or 0x80
       else
-        a$=chr$(ziff(0) or 0x80)
+        a$=chr$(ziff%(0) or 0x80)
       endif
     else  if peek(varptr(t$)+i)=asc(" ")
       a$=a$+chr$(0)
@@ -125,7 +125,7 @@ function conv$(t$)
     else  if peek(varptr(t$)+i)=asc("a")
       a$=a$+chr$(0x5f)
    else
-      a$=a$+chr$(ziff(peek(varptr(t$)+i)-asc("0")))
+      a$=a$+chr$(ziff%(peek(varptr(t$)+i)-asc("0")))
     endif
   next i
   return a$

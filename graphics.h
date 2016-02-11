@@ -134,8 +134,8 @@ extern const unsigned char asciiTable[];
 
 
 
-
-extern int marker_typ,marker_size;
+extern unsigned char marker_typ;
+extern int marker_size;
 extern int boundary;
 extern unsigned int baseline,chh,chw;
 extern double ltextwinkel,ltextxfaktor,ltextyfaktor;

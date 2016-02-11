@@ -1,7 +1,7 @@
 ' wurm. Nach einer Idee aus Spektrum der Wissenschaft
 ' (c) Markus Hoffmann V.1.08
 '
-DIM xkreis(25), ykreis(25)
+DIM xkreis(25+1), ykreis(25+1)
 xkreis(1)=80/2                 
 ykreis(1)=24/2                 
 ri=0

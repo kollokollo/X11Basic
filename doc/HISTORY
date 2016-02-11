@@ -198,4 +198,14 @@ Release notes for Version 1.16 (Feb 2010)
 - fixed bug in DEFFILL
 - fixed bug in objc_draw()
 
+Release notes for Version 1.17 (May 2011)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Adapted windows version to use the SDL library (2011-04)
+- added PLAYSOUND command (works only in SDL and WINDOWS version) 2011-05
+- modifyed syntax of SOUND command 2011-05
+- added ALSA sound support for SOUND command. 2011-05
+- made syntax a bit more tolerant against extra blanks
+- bugfix with BOX (confusion with curses library, segfault)
+- worked on the xb2c compiler/translator 2011-08
+
 --------------------------------------------------------------------------------

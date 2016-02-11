@@ -13,12 +13,12 @@
 #include <ctype.h>
 #include <math.h>
 #include "defs.h"
-#include "ptypes.h"
+#include "x11basic.h"
+#include "variablen.h"
+#include "xbasic.h"
 #include "gkommandos.h"
 #include "functions.h"
 #include "wort_sep.h"
-#include "variablen.h"
-#include "x11basic.h"
 #include "number.h"
 #include "decode.h"
 
@@ -322,6 +322,7 @@ STRING f_chrs(int n) {
   ergebnis.pointer=malloc(2);
   ergebnis.len=1;
   *ergebnis.pointer=(char)n;
+  *(ergebnis.pointer+1)=0;
   return(ergebnis);
 }
 STRING f_mkis(int n) {   
@@ -329,6 +330,7 @@ STRING f_mkis(int n) {
   ergebnis.pointer=malloc(sizeof(short)+1);
   ergebnis.len=sizeof(short);
   *((short *)ergebnis.pointer)=(short)n;
+  *(ergebnis.pointer+sizeof(short))=0;
   return(ergebnis);
 }
 STRING f_mkls(int n) {   
@@ -336,6 +338,7 @@ STRING f_mkls(int n) {
   ergebnis.pointer=malloc(sizeof(long)+1);
   ergebnis.len=sizeof(long);
   *((long *)ergebnis.pointer)=(long)n;
+  *(ergebnis.pointer+sizeof(long))=0;
   return(ergebnis);
 }
 STRING f_mkfs(double n) {   
@@ -343,6 +346,7 @@ STRING f_mkfs(double n) {
   ergebnis.pointer=malloc(sizeof(float)+1);
   ergebnis.len=sizeof(float);
   *((float *)ergebnis.pointer)=(float)n;
+  *(ergebnis.pointer+sizeof(float))=0;
   return(ergebnis);
 }
 STRING f_mkds(double n) {   
@@ -350,6 +354,7 @@ STRING f_mkds(double n) {
   ergebnis.pointer=malloc(sizeof(double)+1);
   ergebnis.len=sizeof(double);
   *((double *)ergebnis.pointer)=n;
+  *(ergebnis.pointer+sizeof(double))=0;
   return(ergebnis);
 }
 STRING f_inlines(STRING n) {   
@@ -357,14 +362,15 @@ STRING f_inlines(STRING n) {
   char *pos1=n.pointer;
   char *pos2;
   ergebnis.len=n.len*3/4;
-  pos2=ergebnis.pointer=malloc(ergebnis.len);
+  pos2=ergebnis.pointer=malloc(ergebnis.len+1);
   while(pos2-ergebnis.pointer<ergebnis.len-2) {
   *pos2=(((pos1[0]-36) & 0x3f)<<2)|(((pos1[1]-36) & 0x30)>>4);
-  pos2[1]=(((pos1[1]-36) & 0xf)<<4)|(((pos1[2]-36) & 0x3c)>>2);
-  pos2[2]=(((pos1[2]-36) & 0x3)<<6)|(((pos1[3]-36) & 0x3f));
-  pos2+=3;
-  pos1+=4;
+    pos2[1]=(((pos1[1]-36) & 0xf)<<4)|(((pos1[2]-36) & 0x3c)>>2);
+    pos2[2]=(((pos1[2]-36) & 0x3)<<6)|(((pos1[3]-36) & 0x3f));
+    pos2+=3;
+    pos1+=4;
   }
+  (ergebnis.pointer)[ergebnis.len]=0;
   return(ergebnis);
 }
 STRING f_reverses(STRING n) {   
@@ -373,6 +379,7 @@ STRING f_reverses(STRING n) {
   ergebnis.pointer=malloc(n.len+1);
   ergebnis.len=n.len;
   while(i<n.len) {ergebnis.pointer[i]=n.pointer[n.len-i-1]; i++;}
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 
@@ -406,6 +413,7 @@ STRING f_rles(STRING n) {  /*Run Length Encoding*/
     last=c;
   }
   ergebnis.len=j;
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 STRING f_rlds(STRING n) {  /*Run Length Decoding*/
@@ -435,6 +443,7 @@ STRING f_rlds(STRING n) {  /*Run Length Decoding*/
       last=c;
   }
   ergebnis.len=j;
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 
@@ -469,6 +478,7 @@ STRING f_mtfes(STRING n) {  /* Move To Front Encoding*/
       order[0]=c;
     }  
   ergebnis.len=n.len;
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 STRING f_mtfds(STRING n) {  /* Move To Front Decoding*/
@@ -488,6 +498,7 @@ STRING f_mtfds(STRING n) {  /* Move To Front Decoding*/
       order[0]=c;
     }  
   ergebnis.len=n.len;
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 
@@ -512,6 +523,7 @@ STRING f_bwtes(STRING n) {  /* Burrows-Wheeler transform*/
     }
   }
   ergebnis.len=n.len+sizeof(int);
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
@@ -550,6 +562,7 @@ STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
     }
   }
   ergebnis.len=size;
+  (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
 

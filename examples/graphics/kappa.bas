@@ -1,0 +1,15 @@
+' How to make a circle with bezier curves.
+'
+CLEARW
+VSYNC
+k=4*(SQRT(2)-1)/3
+
+FOR r=1 TO 200 STEP 10
+  COLOR GET_COLOR(65535,65535,65535)
+  CIRCLE 200,200,r
+  COLOR GET_COLOR(65535,0,0)
+  CURVE 200,200-r,200+r*k,200-r,200+r,200-r*k,200+r,200
+NEXT r
+VSYNC
+PAUSE 5
+QUIT

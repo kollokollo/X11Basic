@@ -21,13 +21,10 @@
 #include <sysexits.h>
 #endif
 
-#include "globals.h"
+#include "defs.h"
 #include "x11basic.h"
-#include "ptypes.h"
-#include "wort_sep.h"
-#include "xbasic.h"
-#include "file.h"
 #include "bytecode.h"
+#include "variablen.h"
 //#include "xb2c.h"
 
 
@@ -35,20 +32,22 @@ char ifilename[128]="b.b";       /* Standard inputfile  */
 char ofilename[128]="11.c";       /* Standard outputfile     */
 int loadfile=FALSE;
 int verbose=0;
-
+int nomain=0;
 
 BYTECODE_HEADER *bytecode;
 
 BYTECODE_SYMBOL *symtab;
 char *strings;
 unsigned char *datasec;
+char *rodata;
+
 
 FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.17";        /* Programmversion*/
-const char vdate[]="2011-08-16";
+const char version[]="1.18";        /* Programmversion*/
+const char vdate[]="2011-08-26";
 char *programbuffer=NULL;
 char *program[MAXPRGLEN];
 int programbufferlen=0;
@@ -68,6 +67,7 @@ void usage(){
   printf(" %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
   printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
   puts("-h --help\t--- Usage\n"
+       "-l       \t--- suppress the main function\n"
        "-v\t\t--- be more verbose");
 
 }
@@ -83,11 +83,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
       intro();usage();
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();usage();
-    } else if (strcmp(argumente[count],"-v")==FALSE) {
-      verbose++;
-    } else if (strcmp(argumente[count],"-q")==FALSE) {
-      verbose--;
-    } else {
+    } else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
+    else if(strcmp(argumente[count],"-q")==FALSE)   verbose--;
+    else if(strcmp(argumente[count],"-l")==FALSE)   nomain=1;
+    else {
       if(!loadfile) {
         loadfile=TRUE;
         strcpy(ifilename,argumente[count]);
@@ -121,10 +120,10 @@ void data_section() {
   int i=0,c;
   int count=0;
   fprintf(optr,"/* compiled by xb2c. */\n\n");
-  if(bytecode->dataseglen) {
-    fprintf(optr,"const char datasec[%d]=\n",(int)bytecode->dataseglen);
+  if(bytecode->sdataseglen) {
+    fprintf(optr,"static const char datasec[%d]=\n",(int)bytecode->sdataseglen);
     fprintf(optr,"\"");
-    while(i<bytecode->dataseglen) {
+    while(i<bytecode->sdataseglen) {
       if(havesymbol(i,STT_DATAPTR)>=0) {
         fprintf(optr,"\"\n    \"");
 	count=0;
@@ -161,41 +160,142 @@ void data_section() {
 
 void compile() {
   char *buf;
+  
   char c;
-  int i,a,n,b;
-  short ss;
+  int i,a,n,b,redo;
+  short ss,ss2;
   double d;
   char *bcpc=(char *)bytecode+sizeof(BYTECODE_HEADER);
   unsigned char cmd;
+  int vidx[1000];
+  int pcount=0;
+
   a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
   if(a>0) { 
+    fprintf(optr,"\n/* Function prototypes */\n");
     for(i=0;i<a;i++) {
       if(symtab[i].typ==STT_FUNC) {
         if(symtab[i].name)
-           fprintf(optr,"void %s();\t/* $%x */\n",&strings[symtab[i].name],symtab[i].adr);
-        else  fprintf(optr,"void FUNC_%x();\t /* 0x%x */\n",symtab[i].adr,symtab[i].adr);
+           fprintf(optr,"void proc_%s();\t/* $%x */\n",&strings[symtab[i].name],(unsigned int)symtab[i].adr);
+        else  fprintf(optr,"void FUNC_%x();\t /* 0x%x */\n",(unsigned int)symtab[i].adr,(unsigned int)symtab[i].adr);
       }
     }
   }
-  fprintf(optr,"\nmain(int anzahl, char *argumente[]) {\n"
+  
+  /*Jetzt Variablen:*/
+  if(a>0) { 
+    int count=0;
+    fprintf(optr,"\n/* Variables */\n");
+    for(i=0;i<a;i++) {
+      if(symtab[i].typ==STT_OBJECT) {
+        int typ,subtyp;
+	typ=symtab[i].subtyp;
+	if(typ&ARRAYTYP) {
+  	  subtyp=typ&(~ARRAYTYP);
+	  typ=ARRAYTYP;
+        } else subtyp=0;
+	if(typ==INTTYP)         fprintf(optr,"int    VARi_");
+	else if(typ==FLOATTYP)  fprintf(optr,"double VARf_");
+	else if(typ==STRINGTYP) fprintf(optr,"STRING VARs_");
+	else if(typ==ARRAYTYP)  fprintf(optr,"ARRAY  VARa_");
+        vidx[count]=i;
+        if(symtab[i].name)
+              fprintf(optr,"%s;  /* typ=0x%x, subtyp=0x%x; vnr=%d sym=%d $%04x: */\n",&strings[symtab[i].name],typ,subtyp,count,i,(unsigned int)symtab[i].adr);
+        else  fprintf(optr,"_%d; /* typ=0x%x, subtyp=0x%x;        sym=%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
+        count++;
+      }
+      fflush(optr);
+    }
+  }
+  
+  
+  if(nomain) {
+    char nn[256];
+    int i=0;
+    int j=0;
+    while(ifilename[i]) {
+      nn[j++]=ifilename[i];
+      if(ifilename[i]=='/' || ifilename[i]=='\\') j=0;
+      if(ifilename[i]=='.') {j--;break;}
+      i++;
+    }
+    nn[j]=0;
+    
+    fprintf(optr,"\nvoid lib_%s_init() {\n",nn);
+  } else {
+    fprintf(optr,"\nmain(int anzahl, char *argumente[]) {\n"
                "  MAIN_INIT;\n");
-  fprintf(optr,"databufferlen=%d;\n",bytecode->dataseglen);
-  if(bytecode->dataseglen) fprintf(optr,"databuffer=datasec;\n");
+    fprintf(optr,"databufferlen=%d;\n",(int)bytecode->dataseglen);
+    if(bytecode->dataseglen) fprintf(optr,"databuffer=datasec;\n");
+  }
+  
+  if(a>0) { 
+    int count=0;
+    for(i=0;i<a;i++) {
+      if(symtab[i].typ==STT_OBJECT) {
+        int typ,subtyp;
+	char vnam[256];
+	typ=symtab[i].subtyp;
+	if(typ&ARRAYTYP) {
+  	  subtyp=typ&(~ARRAYTYP);
+	  typ=ARRAYTYP;
+        } else subtyp=0;
+        vidx[count]=i;
+        
+	if(typ==INTTYP)         sprintf(vnam,"VARi_");
+	else if(typ==FLOATTYP)  sprintf(vnam,"VARf_");
+	else if(typ==STRINGTYP) sprintf(vnam,"VARs_");
+	else if(typ==ARRAYTYP)  sprintf(vnam,"VARa_");
+	
+	
+	if(typ==INTTYP || typ==FLOATTYP) {
+          if(symtab[i].name)
+                fprintf(optr,"  add_variable_adr(\"%s\",0x%x,(char *)&%s%s); /*%d $%02x: */\n",&strings[symtab[i].name],typ,vnam,&strings[symtab[i].name],count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable_adr(\"VAR_%d\",0x%x,(char *)&%s_%d); /*%d $%04x */\n",count,typ,vnam,count,vidx[count],(unsigned int)symtab[i].adr);
+	} else {
+          if(symtab[i].name)
+                fprintf(optr,"  add_variable(\"%s\",0x%x,0x%x); /*%d $%02x: */\n",&strings[symtab[i].name],typ,subtyp,count,(unsigned int)symtab[i].adr);
+          else  fprintf(optr,"  add_variable(\"VAR_%d\",0x%x,0x%x); /*%d $%04x */\n",count,typ,subtyp,vidx[count],(unsigned int)symtab[i].adr);
+	}
+        count++;
+      }
+      fflush(optr);
+    }
+  }
+
   
   i=0;
   while((cmd=bcpc[i]) && i<bytecode->textseglen) {
-    if((b=havesymbol(i,STT_FUNC))>=0) {
-      fprintf(optr,"}\nvoid %s() {\n",&strings[symtab[b].name]);
-    } 
+    fflush(optr);
+    
+    redo=0;
     fprintf(optr,"/* %02x */",i);
-
     if((b=havesymbol(i,STT_LABEL))>=0) 
       fprintf(optr,"%s:  ",&strings[symtab[b].name]);
     else if((b=havesymbol(i,0))>=0) {
       if(symtab[b].name)
         fprintf(optr,"%s:  ",&strings[symtab[b].name]);
-      else fprintf(optr,"LBL_%x:  ",symtab[b].adr);
+      else fprintf(optr,"LBL_%x:  ",(unsigned int)symtab[b].adr);
     } else fprintf(optr,"    ");
+       
+    
+    if((b=havesymbol(i,STT_FUNC))>=0) {
+      redo=1;
+      if(pcount==0)
+        fprintf(optr,";\n}\nvoid proc_%s() {\n",&strings[symtab[b].name]);
+      else
+        fprintf(optr,"exit(-1);\n}\nvoid proc_%s() {\n",&strings[symtab[b].name]);
+      pcount++;
+    } 
+    if(redo && (b=havesymbol(i,STT_LABEL))>=0) {
+      fprintf(optr,"/* %02x */",i);
+      fprintf(optr,"%s:  ",&strings[symtab[b].name]);
+    } else if(redo && (b=havesymbol(i,0))>=0) {
+      fprintf(optr,"/* %02x */",i);
+      if(symtab[b].name)
+        fprintf(optr,"%s:  ",&strings[symtab[b].name]);
+      else fprintf(optr,"LBL_%x:  ",(unsigned int)symtab[b].adr);
+    } else if(redo) fprintf(optr,"    ");
     i++;
      switch(cmd) {
     case BC_NOOP:
@@ -205,7 +305,7 @@ void compile() {
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
       a-=sizeof(BYTECODE_HEADER);
       if((b=havesymbol(a,STT_FUNC))>=0) {
-        fprintf(optr,"%s();",&strings[symtab[b].name]);
+        fprintf(optr,"proc_%s();",&strings[symtab[b].name]);
         fprintf(optr,"\t/* JSR(0x%x);*/\n",a);
       } else fprintf(optr,"JSR(0x%x);\n",a);
       break;
@@ -246,9 +346,15 @@ void compile() {
     case BC_BSR:
       memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
       if((b=havesymbol(i+ss,STT_FUNC))>=0) {
-        fprintf(optr,"%s();",&strings[symtab[b].name]);
+        fprintf(optr,"proc_%s();",&strings[symtab[b].name]);
         fprintf(optr,"\t/* BSR(%d); $%x */\n",ss,i+ss);
       } else fprintf(optr,"BSR(%d);\n",ss);
+      break;
+    case BC_BLKEND:
+      fprintf(optr,"restore_locals(sp--);\n");
+      break;
+    case BC_BLKSTART:
+      fprintf(optr,"sp++;\n");
       break;
     case BC_RTS:
       fprintf(optr,"return;\n");
@@ -269,9 +375,41 @@ void compile() {
         fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* BEQ_s(%d); */\n",i+c,c);
       else fprintf(optr,"BEQ_s(%d);\t/* $%x */\n",c,i+c); 
       break;
+    case BC_LOADi:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"LOADi(0x%x);\n",a);
+      break;
+    case BC_LOADf:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"LOADf(0x%x);\n",a);
+      break;
+    case BC_LOADs:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"LOADs(0x%x);\n",a);
+      break;
+    case BC_LOADa:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"LOADa(0x%x);\n",a);
+      break;
+    case BC_SAVEi:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"SAVEi(0x%x);\n",a);
+      break;
+    case BC_SAVEf:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"SAVEf(0x%x);\n",a);
+      break;
+    case BC_SAVEs:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"SAVEs(0x%x);\n",a);
+      break;
+    case BC_SAVEa:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"SAVEa(0x%x);\n",a);
+      break;
     case BC_PUSHF:
       memcpy(&d,&bcpc[i],sizeof(double));i+=sizeof(double);
-      fprintf(optr,"PUSHF(%g);\n",d);
+      fprintf(optr,"PUSHF(%.13g);\n",d);
       break;
     case BC_PUSHI:
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
@@ -284,34 +422,26 @@ void compile() {
     case BC_PUSHB:
       fprintf(optr,"PUSHB(%d);\n",bcpc[i++]);
       break;
-    case BC_PUSHLEER:
-      fprintf(optr,"PUSHLEER;\n");
-      break;
-    case BC_PUSH0:
-      fprintf(optr,"PUSH0;\n");
-      break;
-    case BC_PUSH1:
-      fprintf(optr,"PUSH1;\n");
-      break;
-    case BC_PUSH2:
-      fprintf(optr,"PUSH2;\n");
-      break;
-    case BC_PUSHM1:
-      fprintf(optr,"PUSHM1;\n");
-      break;
-    case BC_PUSHS:
-      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
-      buf=malloc(2*a+1);
-      b=frishmemcpy(buf,&bcpc[i],a);
-      buf[b]=0;
-      fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,a);
-      i+=a;
-      free(buf);
-      break;
+    case BC_PUSHLEER: fprintf(optr,"PUSHLEER;\n"); break;
+    case BC_PUSH0:    fprintf(optr,"PUSH0;\n");    break;
+    case BC_PUSH1:    fprintf(optr,"PUSH1;\n");    break;
+    case BC_PUSH2:    fprintf(optr,"PUSH2;\n");    break;
+    case BC_PUSHM1:   fprintf(optr,"PUSHM1;\n");   break;
     case BC_PUSHFUNC:
       a=bcpc[i++]&0xff;
       n=bcpc[i++]&0xff;
-      fprintf(optr,"PUSHFUNC(%d,%d); /* %s */\n",a,n,pfuncs[a].name);
+      if(a==find_func("ABS") || a==find_func("ACOS") || a==find_func("ACOSH") || a==find_func("ASIN") || a==find_func("ASINH") ||
+         a==find_func("ATAN") || a==find_func("ATN") || a==find_func("ATANH")) 
+        fprintf(optr,"PFUNC_%s; /* %s() */\n",pfuncs[a].name,pfuncs[a].name);
+      else if(a==find_func("CBRT") || a==find_func("CEIL") || a==find_func("COS") || a==find_func("COSH") || a==find_func("EXP") ||
+         a==find_func("EXPM1") || a==find_func("FLOOR") || a==find_func("HYPOT")) 
+        fprintf(optr,"PFUNC_%s; /* %s() */\n",pfuncs[a].name,pfuncs[a].name);
+       else if(a==find_func("LN") || a==find_func("LOG") || a==find_func("LOG10") || a==find_func("LOG1P") || a==find_func("LOGB") ||
+         a==find_func("RAND") || a==find_func("SIN") || a==find_func("SINH")) 
+        fprintf(optr,"PFUNC_%s; /* %s() */\n",pfuncs[a].name,pfuncs[a].name);
+       else if(a==find_func("SQR") || a==find_func("SQRT") || a==find_func("TAN") || a==find_func("TANH")) 
+        fprintf(optr,"PFUNC_%s; /* %s() */\n",pfuncs[a].name,pfuncs[a].name);
+      else fprintf(optr,"PUSHFUNC(%d,%d); /* %s */\n",a,n,pfuncs[a].name);
       break;
     case BC_PUSHSFUNC:
       a=bcpc[i++]&0xff;
@@ -321,6 +451,11 @@ void compile() {
     case BC_PUSHCOMM:
       a=bcpc[i++]&0xff;
       n=bcpc[i++]&0xff;
+      if(a==find_comm("VSYNC") || a==find_comm("SHOWPAGE") || a==find_comm("BEEP") || a==find_comm("BELL") || a==find_comm("END") || 
+                  a==find_comm("INC") || a==find_comm("DEC") ) {
+         fprintf(optr,"COMM_%s; /* %d %d %s */\n",comms[a].name,a,n,comms[a].name);
+      }
+      else
       fprintf(optr,"PUSHCOMM(%d,%d); /* %s */\n",a,n,comms[a].name);
       break;
     case BC_PUSHSYS:
@@ -336,128 +471,104 @@ void compile() {
       fprintf(optr,"PUSHASYS(%d); /* %s */\n",a,"??");
       break;
     case BC_PUSHX:
-      a=bcpc[i++];
-      buf=malloc(a*2+1);
-      b=frishmemcpy(buf,&bcpc[i],a);
+      n=bcpc[i++];
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      buf=malloc(n*2+1);
+      b=frishmemcpy(buf,rodata+a,n);
       buf[b]=0;
-      fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,a);
-      i+=a;
+      fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,n);
       free(buf);
+      break;
+    case BC_PUSHS:
+      { int len;
+      memcpy(&len,&bcpc[i],sizeof(int));i+=sizeof(int);
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      buf=malloc(2*len+1);
+      b=frishmemcpy(buf,rodata+a,len);
+      buf[b]=0;
+      fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,len);
+      free(buf);
+      }
       break;
     case BC_COMMENT:
       a=bcpc[i++];
       fprintf(optr,"/* %s (%d)*/\n",&bcpc[i],a);
       i+=a;
       break;
-    case BC_ADD:
-      fprintf(optr,"ADD;\n");
-      break;
-    case BC_ADDi:
-      fprintf(optr,"ADDi;\n");
-      break;
-    case BC_ADDf:
-      fprintf(optr,"ADDf;\n");
-      break;
-    case BC_ADDs:
-      fprintf(optr,"ADDs;\n");
-      break;
-    case BC_OR:
-      fprintf(optr,"OR;\n");
-      break;
-    case BC_XOR:
-      fprintf(optr,"XOR;\n");
-      break;
-    case BC_SUB:
-      fprintf(optr,"SUB;\n");
-      break;
-    case BC_SUBi:
-      fprintf(optr,"SUBi;\n");
-      break;
-    case BC_SUBf:
-      fprintf(optr,"SUBf;\n");
-      break;
-    case BC_MUL:
-      fprintf(optr,"MUL;\n");
-      break;
-    case BC_MULi:
-      fprintf(optr,"MULi;\n");
-      break;
-    case BC_MULf:
-      fprintf(optr,"MULf;\n");
-      break;
-    case BC_DIV:
-      fprintf(optr,"DIV;\n");
-      break;
-    case BC_POW:
-      fprintf(optr,"POW;\n");
-      break;
-    case BC_AND:
-      fprintf(optr,"AND;\n");
-      break;
-    case BC_EQUAL:
-      fprintf(optr,"EQUAL;\n");
-      break;
-    case BC_GREATER:
-      fprintf(optr,"GREATER;\n");
-      break;
-    case BC_LESS:
-      fprintf(optr,"LESS;\n");
-      break;
-    case BC_DUP:
-      fprintf(optr,"DUP;\n");
-      break;
-    case BC_EXCH:
-      fprintf(optr,"EXCH;\n");
-      break;
-    case BC_CLEAR:
-      fprintf(optr,"CLEAR;\n");
-      break;
-    case BC_COUNT:
-      fprintf(optr,"COUNT;\n");
-      break;
-    case BC_NEG:
-      fprintf(optr,"NEG;\n");
-      break;
-    case BC_NOT:
-      fprintf(optr,"NOT;\n");
-      break;
-    case BC_X2I:
-      fprintf(optr,"X2I;\n");
-      break;
-    case BC_X2F:
-      fprintf(optr,"X2F;\n");
-      break;
-    case BC_MOD:
-      fprintf(optr,"MOD;\n");
-      break;
-    case BC_POP:
-      fprintf(optr,"POP;\n");
+    case BC_ADD:  fprintf(optr,"ADD;\n");  break;
+    case BC_ADDi: fprintf(optr,"ADDi;\n"); break;
+    case BC_ADDf: fprintf(optr,"ADDf;\n"); break;
+    case BC_ADDs: fprintf(optr,"ADDs;\n"); break;
+    case BC_AND:  fprintf(optr,"AND;\n");  break;
+    case BC_OR:   fprintf(optr,"OR;\n");   break;
+    case BC_XOR:  fprintf(optr,"XOR;\n");  break;
+    case BC_SUB:  fprintf(optr,"SUB;\n");  break;
+    case BC_SUBi: fprintf(optr,"SUBi;\n"); break;
+    case BC_SUBf: fprintf(optr,"SUBf;\n"); break;
+    case BC_MUL:  fprintf(optr,"MUL;\n");  break;
+    case BC_MULi: fprintf(optr,"MULi;\n"); break;
+    case BC_MULf: fprintf(optr,"MULf;\n"); break;
+    case BC_DIV:  fprintf(optr,"DIV;\n");  break;
+    case BC_POW:  fprintf(optr,"POW;\n");  break;
+    case BC_EQUAL:fprintf(optr,"EQUAL;\n");break;
+    case BC_GREATER:fprintf(optr,"GREATER;\n");break;
+    case BC_LESS: fprintf(optr,"LESS;\n"); break;
+    case BC_DUP:  fprintf(optr,"DUP;\n");  break;
+    case BC_EXCH: fprintf(optr,"EXCH;\n"); break;
+    case BC_CLEAR:fprintf(optr,"CLEAR;\n");break;
+    case BC_COUNT:fprintf(optr,"COUNT;\n");break;
+    case BC_NEG:  fprintf(optr,"NEG;\n");  break;
+    case BC_NOT:  fprintf(optr,"NOT;\n");  break;
+    case BC_X2I:  fprintf(optr,"X2I;\n");  break;
+    case BC_X2F:  fprintf(optr,"X2F;\n");  break;
+    case BC_MOD:  fprintf(optr,"MOD;\n");  break;
+    case BC_POP:  fprintf(optr,"POP;\n");  break;
+    case BC_EVAL: fprintf(optr,"EVAL;\n"); break;
+    case BC_LOCAL:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(ss==-1) {
+        printf("Error, Variable gibts nicht.\n");
+	fprintf(optr,"LOCAL(%d); /* ERROR */\n",ss);
+      } else fprintf(optr,"LOCAL(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEIS:
-      fprintf(optr,"ZUWEIS;\n");
-      break;
-    case BC_PUSHVV:
-      fprintf(optr,"PUSHVV;\n");
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(ss==-1) {
+        printf("Error, Variable gibts nicht.\n");
+	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
+      } else fprintf(optr,"ZUWEIS(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEISINDEX:
-      a=bcpc[i++]&0xff;
-      fprintf(optr,"ZUWEISINDEX(%d);\n",a);
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      memcpy(&ss2,&bcpc[i],sizeof(short));i+=sizeof(short);
+      fprintf(optr,"ZUWEISINDEX(%d,%d); /* %s */\n",ss,ss2,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_PUSHV:
-      fprintf(optr,"PUSHV;\n");
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(ss==-1) {
+        printf("Error, Variable gibts nicht.\n");
+	fprintf(optr,"PUSHV(%d); /* ERROR */\n",ss);
+      } else fprintf(optr,"PUSHV(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
+      break;
+    case BC_PUSHVV:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      fprintf(optr,"PUSHVV(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
+      break;
+    case BC_PUSHVVI:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      memcpy(&ss2,&bcpc[i],sizeof(short));i+=sizeof(short);
+      fprintf(optr,"PUSHVVI(%d,%d); /* %s */\n",ss,ss2,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_PUSHARRAYELEM:      
-      a=bcpc[i++]&0xff;
-      fprintf(optr,"PUSHARRAYELEM(%d);\n",a);
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      memcpy(&ss2,&bcpc[i],sizeof(short));i+=sizeof(short);
+      fprintf(optr,"PUSHARRAYELEM(%d,%d); /* %s */\n",ss,ss2,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_RESTORE:
       memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
       fprintf(optr,"RESTORE(0x%x);",a);
       if((b=havesymbol(a,STT_DATAPTR))>=0) fprintf(optr,"\t/* %s */\n",&strings[symtab[b].name]);
       else fprintf(optr,"\n");
-      break;
-    case BC_EVAL:
-      fprintf(optr,"EVAL;\n");
       break;
     default:
       printf("VM: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
@@ -477,7 +588,7 @@ int loadbcprg(char *filename) {
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
     fprintf(optr,"/* X11-Basic-Code-VM.c (%s)\n",filename);
-    fprintf(optr,"   X11-BAsic-Compiler Version 1.17\n"
+    fprintf(optr,"   X11-BAsic-Compiler Version 1.18\n"
                  "   (c) Markus Hoffmann 2002-2011\n"
                  "*/\n");
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
@@ -486,22 +597,58 @@ int loadbcprg(char *filename) {
       "X11-Basic.\n ");
     }
     fprintf(optr,"/*\nBytecode: %s (%d Bytes)\n",filename,len);
-    fprintf(optr,"txt:  $%08x %d\n",sizeof(BYTECODE_HEADER),bytecode->textseglen);
-    fprintf(optr,"data: $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen,bytecode->dataseglen);
-    datasec=(unsigned char *)&p[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
-    fprintf(optr,"bss:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen,bytecode->bssseglen);
-    fprintf(optr,"str:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen,bytecode->stringseglen);
-    fprintf(optr,"sym:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen+bytecode->stringseglen,bytecode->symbolseglen);
-    strings=&p[sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen];
+        /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
+    if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
+      len+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
+printf("need realooc\n");
+      p=realloc(p,len);
+      bytecode=(BYTECODE_HEADER *)p;
+    }
+    
+    fprintf(optr,"txt:  $%08x %d\n",sizeof(BYTECODE_HEADER),(int)bytecode->textseglen);
+    fprintf(optr,"rodata: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                      (unsigned int)bytecode->textseglen,(int)bytecode->rodataseglen);
+    rodata=p+sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen;
+    fprintf(optr,"sdata: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                      (unsigned int)bytecode->textseglen+
+				      (unsigned int)bytecode->rodataseglen,(int)bytecode->sdataseglen);
+    fprintf(optr,"data: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                    (unsigned int)bytecode->textseglen+
+				    (unsigned int)bytecode->rodataseglen+
+				    (unsigned int)bytecode->sdataseglen,(int)bytecode->dataseglen);
+    datasec=(unsigned char *)&p[sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen+
+    bytecode->rodataseglen];
+    fprintf(optr,"bss:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                    (unsigned int)bytecode->textseglen+
+				    (unsigned int)bytecode->rodataseglen+
+				    (unsigned int)bytecode->sdataseglen+
+				    (unsigned int)bytecode->dataseglen,(int)bytecode->bssseglen);
+    fprintf(optr,"str:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                   (unsigned int)bytecode->textseglen+
+				   (unsigned int)bytecode->rodataseglen+
+				   (unsigned int) bytecode->sdataseglen+
+				   (unsigned int)bytecode->dataseglen,(int)bytecode->stringseglen);
+    fprintf(optr,"sym:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+                                   (unsigned int)bytecode->textseglen+
+				    (unsigned int)bytecode->rodataseglen+
+				    (unsigned int)bytecode->sdataseglen+
+				   (unsigned int)bytecode->dataseglen+
+				   (unsigned int)bytecode->stringseglen,(int)bytecode->symbolseglen);
+    strings=p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->rodataseglen+bytecode->sdataseglen+
+    bytecode->dataseglen;
     fprintf(optr,"Strings: %s\n",strings);
-    symtab=(BYTECODE_SYMBOL *)(p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen+bytecode->stringseglen);
+    symtab=(BYTECODE_SYMBOL *)(p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->rodataseglen+bytecode->sdataseglen+
+                                 bytecode->dataseglen+bytecode->stringseglen);
     c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+
     fprintf(optr,"%d symbols.\n",c);
     for(i=0;i<c;i++) {
-      if(verbose) fprintf(optr,"%d : $%08x %s\n",i,symtab[i].adr,&strings[symtab[i].name]);
+      if(verbose) fprintf(optr,"%d : $%08x %s\n",i,(unsigned int)symtab[i].adr,&strings[symtab[i].name]);
     }
     fprintf(optr,"    */\n");
     fprintf(optr,"#include <x11basic/xb2csol.h>\n");
+    fprintf(optr,"\n\n");
+    fflush(optr);
     return(0);
   } else {
     printf("VM: ERROR, file format not recognized.\n");

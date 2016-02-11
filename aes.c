@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
+#include "x11basic.h"
 #include "graphics.h"
 #include "aes.h"
 #include "file.h"

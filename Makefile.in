@@ -34,7 +34,7 @@ DEF= @def@
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
-CC=@CC@ $(REGS)
+CC=@CC@ $(REGS) -g
 
 # Cross-Compiler fuer Windows-Excecutable
 
@@ -51,17 +51,17 @@ CPP=@CPP@
 CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
 
-OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
+OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o parameter.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
-	sysVstuff.o aes.o graphics.o sound.o number.o decode.o
+	sysVstuff.o aes.o graphics.o sound.o number.o decode.o virtual-machine.o
 
 # Object group for framebuffer variant
 
-OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
+OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o array.o parameter.o\
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o do_gets.o errortxt.o number.o decode.o \
-	sysVstuff.o aes.o  sound.o
+	sysVstuff.o aes.o  sound.o virtual-machine.o
 
 # Sources for libx11basic
 
@@ -70,7 +70,7 @@ LIBCSRCFB=$(OBJS:.o=.c) framebuffer.c mathematics.c spat-a-fnt.c 5x7.c
 
 DISTOBJS=$(OBJS) main.o mathemat_dummy.o
 LIBOBJS= $(OBJS) mathematics.o
-EXTRAOBJS= virtual-machine.o bytecode.o xbbc.o xbvm.o xb2c.o framebuffer.o spat-a-fnt.o 5x7.o
+EXTRAOBJS= bytecode.o xbbc.o xbvm.o xb2c.o framebuffer.o spat-a-fnt.o 5x7.o
 WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
 AOBJS=   main.o $(LIBOBJS)
 BOBJS=   main.o blowfish.o $(LIBOBJS)
@@ -80,8 +80,8 @@ DEPSRC=  $(CSRC)
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  aes.h array.h bitmap.h defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
-       options.h xbasic.h window.h vtypes.h ptypes.h bytecode.h number.h \
+HSRC=  aes.h array.h bitmap.h defs.h file.h functions.h gkommandos.h kommandos.h \
+       options.h xbasic.h window.h bytecode.h number.h  parameter.h \
        framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h \
        sound.h wort_sep.h variablen.h mathematics.h sysVstuff.h x11basic.h \
        decode.h xb2csol.h
@@ -89,6 +89,10 @@ HSRC=  aes.h array.h bitmap.h defs.h file.h functions.h gkommandos.h globals.h k
 EXAMPLES=examples2/calculation/randomminmax.bas \
         examples2/calculation/sieve.bas \
         examples2/calculation/sqr.bas \
+        examples/c-usage/c-demo.c \
+        examples/c-usage/c-demo2.c \
+        examples/c-usage/library.bas \
+        examples/c-usage/Makefile \
         examples/compiler/bas2x11basic.bas \
         examples/compiler/gui2bas.bas \
         examples/graphics/*.bas \
@@ -129,7 +133,10 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
         examples/compiler/bas2x11basic.bas \
         examples/compiler/gui2bas.bas \
         examples/compiler/xbc-win.bas \
-        examples/compiler/c-demo.c \
+        examples/c-usage/c-demo.c \
+        examples/c-usage/c-demo2.c \
+        examples/c-usage/library.bas \
+        examples/c-usage/Makefile \
 	examples/tests/* \
 	examples/graphics/* 
 
@@ -140,7 +147,10 @@ BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       examples/compiler/inline.bas \
       examples/compiler/bas2x11basic.bas \
       examples/compiler/gui2bas.bas \
-      examples/compiler/c-demo.c \
+      examples/c-usage/c-demo.c \
+      examples/c-usage/c-demo2.c \
+      examples/c-usage/library.bas \
+      examples/c-usage/Makefile \
       examples/tests/* \
       examples/graphics/* 
 
@@ -226,19 +236,19 @@ xbc : xbasic libx11basic.so
 
 # Make the bytecode compiler xbbc
 
-xbbc : bytecode.h bytecode.o virtual-machine.o xbbc.c
-	gcc -o $@ xbbc.c bytecode.o virtual-machine.o -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
+xbbc : bytecode.h bytecode.o  xbbc.c
+	gcc -o $@ xbbc.c bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
 	strip $@
-xbbcstatic : xbbc.c bytecode.h bytecode.o virtual-machine.o x11basic.a
-	gcc -o xbbc xbbc.c bytecode.o virtual-machine.o x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses		
+xbbcstatic : xbbc.c bytecode.h bytecode.o  x11basic.a
+	gcc -o xbbc xbbc.c bytecode.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
 
 # Make the virtual machine for interpreting the bytecode
 
-xbvm : bytecode.h xbvm.c virtual-machine.o 
-	gcc -o $@ xbvm.c virtual-machine.o -L .$(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
+xbvm : bytecode.h xbvm.c 
+	gcc -o $@ xbvm.c  -L .$(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
 	strip $@
-xbvmstatic : bytecode.h xbvm.c virtual-machine.o bytecode.h x11basic.a
-	gcc -o xbvm xbvm.c virtual-machine.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses	
+xbvmstatic : bytecode.h xbvm.c  bytecode.h x11basic.a
+	gcc -o xbvm xbvm.c   x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -263,24 +273,22 @@ xbasic.exe: x11basic.lib main.c
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
 	 $(WINLIBS)
 	strip $@
-xbbc.exe: x11basic.lib bytecode.h bytecode.c xbbc.c virtual-machine.c
+xbbc.exe: x11basic.lib bytecode.h bytecode.c xbbc.c 
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
-	virtual-machine.c  $(MYWINLIBS) $(WINLIBS)
+	$(MYWINLIBS) $(WINLIBS)
 	strip $@
 
-xbvm.exe: x11basic.lib bytecode.h xbvm.c virtual-machine.c
+xbvm.exe: x11basic.lib bytecode.h xbvm.c 
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
-	virtual-machine.c  $(MYWINLIBS) $(WINLIBS)
+	 $(MYWINLIBS) $(WINLIBS)
 	strip $@
 
 # Make th X11-Xasic psydocompiler (for MS WINDOWS)
 
-xbc-win.b : xbbc examples/compiler/xbc-win.bas
-	LD_LIBRARY_PATH=. ./xbbc examples/compiler/xbc-win.bas -o $@
-xbc.exe : xbasic xbc-win.b examples/compiler/xbc-win.bas xbvm.exe
-	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc-win.bas xbc-win.b -o $@
+xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-win.bas -o $@
 	chmod 755 $@ 
-	strip $@
+
 
 ###################################################
 
@@ -364,17 +372,17 @@ xbasic.tomtom :  main.c x11basic.a.tomtom
 	arm-linux-strip $@
 	rm -f config.h
 
-xbvm.tomtom : bytecode.h xbvm.c virtual-machine.c x11basic.a.tomtom
+xbvm.tomtom : bytecode.h xbvm.c  x11basic.a.tomtom
 	rm -f config.h
 	ln -s config.h.tomtom config.h
-	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ xbvm.c virtual-machine.c x11basic.a.tomtom $(LIBS2)  
+	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ xbvm.c  x11basic.a.tomtom $(LIBS2)  
 	arm-linux-strip $@
 	rm -f config.h
 
-xbbc.tomtom : xbbc.c bytecode.h bytecode.c virtual-machine.c x11basic.a.tomtom
+xbbc.tomtom : xbbc.c bytecode.h bytecode.c  x11basic.a.tomtom
 	rm -f config.h
 	ln -s config.h.tomtom config.h
-	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@  xbbc.c bytecode.c virtual-machine.c x11basic.a.tomtom $(LIBS2) 
+	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@  xbbc.c bytecode.c  x11basic.a.tomtom $(LIBS2) 
 	rm -f config.h
 
 
@@ -485,7 +493,7 @@ xb2c :  xb2c.c
 	gcc -o $@ xb2c.c  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
 	strip $@
 xb2cstatic : xb2c.c x11basic.a
-	gcc -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline	
+	gcc -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 
 x11basic.tga: x11basic.pov
 	povray +I$< +O$@ +FT +W160 +H200 +V -D +X
@@ -528,7 +536,7 @@ uninstall :
 	rm -f $(INCDIR)/xb2csol.h
 	rmdir $(INCDIR)
 clean :
-	rm -f *.o a.out b.b xbc-win.b Makefile.bak x11basic.a \
+	rm -f *.o a.out b.out b.b Makefile.bak \
 	backup-*.tgz
 
 distclean : clean
@@ -563,9 +571,10 @@ rpm :	$(DIR).tar.gz x11basic.spec
 #	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
 deb :	$(BINDIST)
-	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ --arch i386 \
+	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ --pkgrelease 3 --arch i386 \
 	--maintainer kollo@users.sourceforge.net --requires libreadline5 --backup \
-	--pkggroup Interpreters --provides libx11basic --provides xbasic
+	--pkggroup interpreters --provides libx11basic  \
+	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
 tinerpm : $(TINEDIR).tar.gz tinexbasic.spec
 	cp $(TINEDIR).tar.gz /usr/src/packages/SOURCES/

@@ -14,12 +14,11 @@
 #include <errno.h>
 #include <time.h>
 
-#include "config.h"
 #include "defs.h"
-#include "globals.h"
 #include "x11basic.h"
-#include "sfunctions.h"
 #include "variablen.h"
+#include "xbasic.h"
+#include "sfunctions.h"
 #include "parser.h"
 #include "io.h"
 #include "wort_sep.h"
@@ -62,6 +61,7 @@ STRING f_aries(STRING n) {  /* order-0 adaptive arithmetic encoding */
   *put_pointer++=(buffer>>bits_to_go);
   put_size++;
   ergebnis.len=put_size;
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 STRING f_arids(STRING n) {  /* order-0 adaptive arithmetic decoding */
@@ -98,6 +98,7 @@ STRING f_arids(STRING n) {  /* order-0 adaptive arithmetic decoding */
         update_model(symbol);
     }
   ergebnis.len=j;
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -274,8 +275,8 @@ STRING f_bins(PARAMETER *plist,int e) {
   if(e==2) b=max(0,plist[1].integer);
   ergebnis.pointer=malloc(b+1);
   for(j=b;j>0;j--) ergebnis.pointer[i++]=((a&(1<<(j-1)))  ? '1':'0');
-  ergebnis.pointer[i]=0;
   ergebnis.len=i;
+  ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
 
@@ -320,16 +321,15 @@ STRING vs_time() {
   ergebnis.pointer=malloc(9);
   strncpy(ergebnis.pointer,ctime(&timec)+11,8);
   ergebnis.len=8;
+  ergebnis.pointer[8]=0;
   return(ergebnis);
 }
 STRING vs_trace() {
   if(pc>=0 && pc<prglen) {
-    STRING ergebnis;
-    ergebnis.pointer=malloc(strlen(program[pc])+1);
-    strcpy(ergebnis.pointer,program[pc]);
+    STRING ergebnis=create_string(program[pc]);
     xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
     ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
+    return(ergebnis);
   } else return(vs_error());
 }
 STRING vs_terminalname() {

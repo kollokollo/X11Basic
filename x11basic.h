@@ -6,18 +6,110 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+#ifndef __X11BASIC
+#define __X11BASIC
 
-/* Prototypen  fuer die Libx11basic.s	   */
-const char *error_text(unsigned char errnr, char *bem);
-void xberror(char errnr, char *bem);
-void reset_input_mode();
-void x11basicStartup();
+/*  Allgemeine Konstanten */
 
-void kommando(char *);   /* This is for single command execution: */
-void loadprg(char *);
-void programmlauf();
+#ifndef FALSE
+  #define FALSE    0
+  #define TRUE     (!FALSE)
+#endif
+#define PI       3.141592653589793
+#define E        2.718281828459
 
-/* Global Variables*/
+/*Variablen Typen*/
+
+typedef struct {
+  int len;
+  char *pointer;
+} STRING;
+
+typedef struct {
+  int dimension;
+  void *pointer;
+  unsigned short typ;
+} ARRAY;
+
+typedef struct {
+  unsigned int typ;
+  char *name;
+  union {
+    int *i;
+    double *f;
+    STRING *s;
+    ARRAY *a;
+  } pointer;
+  int local;
+} VARIABLE;
+
+/* X11Basic strukturen, welche f"ur lib aufrufe benoetigt werden.*/
+
+struct PARAMETER {
+  unsigned short typ;
+  double real;
+  int integer;     /*   das kann auch als STRING pointer und ARRAY pointer dienen*/
+  void *pointer;
+  unsigned short arraytyp; /* reserviert, damit man auch ARRAY pointer machen kann*/
+  short panzahl;
+  struct PARAMETER *ppointer;   /*Unterparameter wie indizies */
+};
+typedef struct PARAMETER PARAMETER;
+
+typedef struct {
+  long opcode;
+  char name[20];
+  void (*routine)();
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} COMMAND;
+
+typedef struct {
+  long opcode;
+  char name[20];
+  double (*routine)();
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} FUNCTION;
+
+typedef struct {
+  long opcode;
+  char name[20];
+  STRING (*routine)();
+  signed char pmin;        /* Mindestanzahl an Parametern */
+  signed char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  unsigned short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+} SFUNCTION;
+
+typedef struct {
+  int opcode;
+  char name[20];
+  double (*routine)();
+} SYSVAR;
+
+typedef struct {
+  int opcode;
+  char name[20];
+  STRING (*routine)();
+} SYSSVAR;
+ 
+typedef struct {
+  char *name;        /*Name des Labels*/
+  int zeile;         /*Programmzeielennummer (fuer Goto) */
+  unsigned long int datapointer; /*Pointer zum datenbereich (fuer Restore) */
+} LABEL;
+
+typedef struct {
+  char *name;       /*Name der Procedure (incl Rueckgabetyp)*/
+  int typ;          /* 1=PROC 2=FUNC 4=DEFFN */
+  int zeile;
+  int anzpar;
+  int *parameterliste;  /* Liste mit Variablennummern*/
+} PROCEDURE;
+
+/* Globale Variablen */
 
 extern int databufferlen;
 extern char *databuffer;
@@ -27,6 +119,61 @@ extern int param_anzahl;
 extern char **param_argumente;
 extern const char xbasic_name[];
 extern int pc,sp,err,errcont,everyflag,batch,echoflag;
+extern char ifilename[];
+extern int stack[];
+extern int datapointer;
+
+extern const int anzsysvars;
+extern const SYSVAR sysvars[];
+extern const int anzsyssvars;
+extern const SYSSVAR syssvars[];
+
+extern const int anzcomms;
+extern const COMMAND comms[];
+extern const int anzpfuncs;
+extern const FUNCTION pfuncs[];
+extern const int anzpsfuncs;
+extern const SFUNCTION psfuncs[];
+
+extern int anzvariablen;
+extern VARIABLE variablen[];
+
+extern int anzlabels, anzprocs;
+extern PROCEDURE  procs[];
+extern LABEL labels[];
+
+extern int filenr[];
+extern FILE *dptr[];
+extern int ccs_err;
+/* Variablen, welche ausserhalb der lib definiert werden muessen */
+
+extern int prglen;
+extern int runfile,daemonf;
+extern int programbufferlen;
+extern char *programbuffer;
+extern char *program[];
+
+
+
+/* Prototypen  fuer die Libx11basic.s	   */
+
+
+
+const char *error_text(unsigned char errnr, char *bem);
+void xberror(char errnr, char *bem);
+void reset_input_mode();
+void x11basicStartup();
+
+void kommando(char *);   /* This is for single command execution: */
+void loadprg(char *);
+int mergeprg(char *fname);
+
+void programmlauf();
+
+void do_run();
+void do_help(char *);
+void quit_x11basic(int c);
+double parser(char *funktion);
 
 /* Hilfsfunktionen */
 
@@ -72,8 +219,7 @@ double do_funktion(char *,char *);
 
 void do_menu_draw();
 int  do_menu_select();
-void do_polygon(int,char *);
-void do_restore();
+
 void set_fill(int);
  
 void activate();
@@ -138,6 +284,13 @@ int doocssize(char *);
 
 /* API for The virtual machine */
 
+int pusharg(PARAMETER **opstack, char *typ,...);
+int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...);
+double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
+STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
+ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 
+
+#endif
 
 

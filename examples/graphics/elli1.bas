@@ -1,4 +1,3 @@
-echo off
 clearw
 f=40
 color get_color(0,65535,0)
@@ -21,4 +20,6 @@ DO
   t0=t0+1
   EXIT IF t0>11
 LOOP
+pause 5
 
+quit

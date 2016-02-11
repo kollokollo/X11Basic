@@ -9,6 +9,7 @@ input "f(x)=",f$
 clearw
 a$="y="+f$
 gprint a$
+dump
 color get_color(65535,32000,0)
 for x=0 to 300
   &a$

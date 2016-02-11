@@ -6,7 +6,6 @@
  * COPYING for details
  */
 
-#include "ptypes.h"
 
 int f_instr      (PARAMETER *,int);
 int f_rinstr     (PARAMETER *,int);
@@ -21,12 +20,11 @@ int f_rsrc_gaddr (PARAMETER *,int);
 int f_objc_find  (PARAMETER *,int);
 int f_get_color  (PARAMETER *,int);
 
-int do_parameterliste(char *pos, char *pos2);
+int do_parameterliste(char *pos, int *,int);
 int vergleich(char *w1,char *w2);
 double parser(char *funktion);
 ARRAY array_parser(char *funktion);
 STRING string_parser(char *);
 char *s_parser(char *funktion);
 double do_funktion(char *name,char *argumente);
-int do_parameterliste(char *pos, char *pos2);
 STRING do_sfunktion(char *name,char *argumente);

@@ -28,6 +28,8 @@
   #include <alsa/asoundlib.h>
   #include <pthread.h>   /* Posix 1003.1c threads */
 #endif
+
+#include "x11basic.h"
 #include "sound.h"
 
 void speaker(int frequency);

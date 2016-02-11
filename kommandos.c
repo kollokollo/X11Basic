@@ -22,18 +22,18 @@
 #include <sysexits.h>
 #endif
 #include <ctype.h>
-#include "defs.h"
 #include <time.h>
 #include <errno.h>
-#include "ptypes.h"
-#include "vtypes.h"
-#include "globals.h"
-#include "options.h"
+
+#include "defs.h"
+#include "x11basic.h"
+#include "parameter.h"
+#include "variablen.h"
+#include "xbasic.h"
+
 #include "kommandos.h"
 #include "array.h"
-#include "variablen.h"
 #include "sound.h"
-#include "xbasic.h"
 #include "parser.h"
 #include "wort_sep.h"
 #include "io.h"
@@ -69,7 +69,7 @@ void c_gosub(char *n) {
     pc2=procnr(buffer,1);
     if(pc2==-1)   xberror(19,buffer); /* Procedure nicht gefunden */
     else {       
-	if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
+	if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) xberror(42,buffer); /* Zu wenig Parameter */
 	else { batch=1;
 	  pc2=procs[pc2].zeile;
 	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
@@ -110,7 +110,7 @@ void c_spawn(char *n) {
     pid_t forkret=fork();
     if(forkret==-1) io_error(errno,"SPAWN");
     if(forkret==0) {
-      if(do_parameterliste(pos,procs[pc2].parameterliste)) xberror(42,buffer); /* Zu wenig Parameter */
+      if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) xberror(42,buffer); /* Zu wenig Parameter */
       else { 
         batch=1;
         pc2=procs[pc2].zeile;
@@ -129,20 +129,11 @@ void c_spawn(char *n) {
 }
       
 
-void c_local(char *n) {
-  /* wenn globalere Variablen mit variablen.local < sp existiert,
-     dann lege gleichnamige neu an mit aktuellem sp*/ 
-  char *v,*w;
-  int p;
-  v=malloc(strlen(n)+1);w=malloc(strlen(n)+1);
-  strcpy(v,n);
-  p=wort_sep(v,',',TRUE,w,v);
-    while(p) {
-      xtrim(w,TRUE,w);
-      c_dolocal(w,""); 
-      p=wort_sep(v,',',TRUE,w,v); 
-    }
-  free(v);free(w);
+void c_local(PARAMETER *plist,int e) {
+  int i;
+  if(e) {
+    for(i=0;i<e;i++) do_local(plist[i].integer,sp);
+  }
 }
 
 void c_goto(char *n) {
@@ -155,137 +146,71 @@ void c_goto(char *n) {
 
 
 void c_system(PARAMETER *plist,int e) {
-    system(plist[0].pointer);
+  if(system(plist[0].pointer)==-1) io_error(errno,"system");
 }
 void c_edit(char *n) {
     char filename[strlen(ifilename)+8];
-    char buffer2[strlen(ifilename)+1];
-    char buffer[200];
-    
-    strcpy(buffer2,ifilename);
+    char buffer[256];
+    char *buffer2=strdup(ifilename);
+    int sret;
     sprintf(filename,"%s.~~~",ifilename);
     saveprg(filename);
-    sprintf(buffer,"$EDITOR %s",filename); system(buffer);
+    sprintf(buffer,"$EDITOR %s",filename); 
+    sret=system(buffer);
     c_new("");  
     strcpy(ifilename,buffer2);
+    free(buffer2);
     mergeprg(filename);
-    sprintf(buffer,"rm -f %s",filename); system(buffer);
+    sprintf(buffer,"rm -f %s",filename); 
+    sret=system(buffer);
 }
 
-void c_after(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2);  
-  int pc2;
-  if(e<2) {
-    xberror(42,"AFTER"); /* Zu wenig Parameter  */
-    return;
-  }
-  pc2=procnr(w2,1);
-  if(pc2==-1)   xberror(19,w2); /* Procedure nicht gefunden */
-  else {
+void c_after(PARAMETER *plist,int e) {
     everyflag=0;
-    alarmpc=pc2;
-    alarm((int)parser(w1));
-  }
+    alarmpc=plist[1].integer; /*Proc nummer*/
+    alarm(plist[0].integer);     /*Zeit in sec*/
 }
 
-void c_every(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2),pc2;
-  if(e<2) {
-    xberror(42,"EVERY"); /* Zu wenig Parameter  */
-    return;
-  }
-  pc2=procnr(w2,1);
-  if(pc2==-1)   xberror(19,w2); /* Procedure nicht gefunden */
-  else {
-    everyflag=1;
-    alarmpc=pc2;
-    everytime=(int)parser(w1);
-    alarm(everytime);
-  }
+void c_every(PARAMETER *plist,int e) {
+  everyflag=1;
+  alarmpc=plist[1].integer; /*Proc nummer*/
+  everytime=plist[0].integer; /*Zeit in sec*/
+  alarm(everytime);
 }
 
 
 void c_dodim(char *w) {
-  char *pos,*pos2,*v,*s,*t,*ppp;
+  char w1[strlen(w)+1],w2[strlen(w)+1];
+  int e=klammer_sep(w,w1,w2);
  
-  int i,ndim=0,a=1,vnr,typ;
-  char **qqq;
- 
-  v=malloc(strlen(w)+1);
-  strcpy(v,w);
- /*  printf("DODIM: %s\n",w); */
-
-  pos=searchchr(v, '(');
-  if(pos==NULL) xberror(32,"DIM"); /* Syntax nicht Korrekt */
+  if(e<2) xberror(32,"DIM"); /* Syntax nicht Korrekt */
   else {
-    pos2=v+strlen(v)-1;
-    pos[0]=0;
-    pos++;
+    char *s,*t;
+    ARRAY arr;
+    int ndim=count_parameters(w2);
+    int dimlist[ndim];
+    int i,vnr,typ;
+    char *r=varrumpf(w1);
+    typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */
 
-    if(pos2[0]!=')') xberror(32,"DIM"); /* Syntax nicht Korrekt */
-    else {
-      /* Typ Bestimmen  */
-      pos2[0]=0;
-      typ=type2(v);
-      if(searchchr("$%#", v[strlen(v)-1])!=NULL) v[strlen(v)-1]=0;
-
-      /* Dimensionen bestimmen   */
-      s=malloc(strlen(pos)+1);
-      t=malloc(strlen(pos)+1);
+    /* Dimensionen bestimmen   */
      
-      strcpy(s,pos);
-      i=wort_sep(s,',',TRUE,s,t);
-      while(i) {
-        xtrim(s,TRUE,s);
-        a=a*((int)parser(s)+1);
-        ndim++; 
-        i=wort_sep(t,',',TRUE,s,t); 
-      }
-     /* printf("DIM: %s Typ:%d %d %d \n",v,typ,ndim,a);  */
-      typ=typ|ARRAYTYP;
-      vnr=variable_exist(v,typ);
-      if(vnr==-1) {
-        vnr=anzvariablen;
-	variablen[vnr].name=malloc(strlen(v)+1);
-	strcpy(variablen[vnr].name,v);
-	variablen[vnr].typ=typ;
-	variablen[vnr].local=0;    /* Arrays immer global */
-        anzvariablen++;
-      } else {
-        if(typ==STRINGARRAYTYP)  erase_string_array(vnr); 	
-	free(variablen[vnr].pointer);
-      }
-      variablen[vnr].opcode=ndim;
-      if(typ==STRINGARRAYTYP)   {
-        variablen[vnr].pointer=malloc(ndim*INTSIZE+a*(sizeof(STRING)));
-        ppp=(char *)(variablen[vnr].pointer+ndim*INTSIZE);
-        for(i=0;i<a;i++) {
-	  ((int *)ppp)[0]=0;   /* Laenge */
-	  ppp+=sizeof(int);
-	  qqq=(char **)ppp;
-	  qqq[0]=malloc(1);
-	  ppp+=sizeof(char *);
-	}
-      } else if(typ==INTARRAYTYP) variablen[vnr].pointer=malloc(ndim*INTSIZE+a*sizeof(int));
-      else variablen[vnr].pointer=malloc(ndim*INTSIZE+a*sizeof(double)); 
-
-    /*  printf("----DIM? %d %d \n",ndim,a);*/ 
-      strcpy(s,pos);
-      ndim=0;
-      i=wort_sep(s,',',TRUE,s,t);
-      while(i) {
-        xtrim(s,TRUE,s);
-        ((int *)variablen[vnr].pointer)[ndim]=(int)parser(s)+1;
-        ndim++; 
-        i=wort_sep(t,',',TRUE,s,t); 
-      }
-      
-      free(s);free(t);
+    i=wort_sep_destroy(w2,',',TRUE,&s,&t);
+    ndim=0;
+    while(i) {
+      xtrim(s,TRUE,s);
+      dimlist[ndim++]=(int)parser(s);
+      i=wort_sep_destroy(t,',',TRUE,&s,&t); 
     }
+// printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
+    vnr=add_variable(r,ARRAYTYP,typ);
+      
+    /*(Re-) Dimensionieren*/      
+      
+    free_array(variablen[vnr].pointer.a); /*Alten Inhalt freigeben*/
+    *(variablen[vnr].pointer.a)=create_array(typ,ndim,dimlist);
+    free(r);
   }
-  free(v);
 }
 static void do_restore(int offset) {
   datapointer=offset;
@@ -293,8 +218,11 @@ static void do_restore(int offset) {
 }
 
 void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
+  do_run();
+}
+void do_run() {
   pc=sp=0;
-  erase_all_variables();
+  clear_all_variables();
   batch=1;
   do_restore(0);
 }
@@ -335,26 +263,35 @@ char *get_next_data_entry() {
   return(ergebnis);
 }
 
-void c_read(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e;
-  char *t,*u;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e>0) {
+void c_read(PARAMETER *plist,int e) {
+  int i;
+  VARIABLE *v;
+  char *t;
+  for(i=0;i<e;i++) {
     t=get_next_data_entry();
-    if(t!=NULL) {
-      if(type2(w1) & STRINGTYP) {
-        if(t[0]=='\"') u=s_parser(t);
-        else {
-          u=malloc(strlen(t)+1);
-	  strcpy(u,t);
-        }
-        zuweiss(w1,u);
-	free(u);
-      } else zuweis(w1,parser(t));
-      free(t);
-    } else xberror(34,""); /* Zu wenig Data */
-    e=wort_sep(w2,',',TRUE,w1,w2);
+    if(t==NULL) xberror(34,""); /* Zu wenig Data */
+    else {
+    switch(plist[i].typ) {
+    case PL_ARRAYVAR: 
+      printf("Read array. Noch nicht moeglich.\n");
+      break;
+    case PL_SVAR:
+      free_string((STRING *)plist[i].pointer);
+      if(*t=='\"') *((STRING *)(plist[i].pointer))=string_parser(t);
+      else *((STRING *)(plist[i].pointer))=create_string(t);
+      break;
+    case PL_IVAR:
+      *((int *)(plist[i].pointer))=(int)parser(t);
+      break;
+    case PL_FVAR:
+      *((double *)(plist[i].pointer))=parser(t);
+      break;
+    default:
+      printf("ERROR: READ, unknown var type.\n");
+      dump_parameterlist(&plist[i],1);
+    }
+    free(t);
+    }
   }
 }
 
@@ -387,6 +324,91 @@ void c_list(PARAMETER *plist, int e) {
   for(i=a;i<o;i++) printf("%s\n",program[i]);
 }
 
+char *plist_paramter(PARAMETER *p) {
+  static char ergebnis[256];
+  switch(p->typ) {
+  case PL_EVAL:
+  case PL_KEY:
+    strcpy(ergebnis,p->pointer);
+    break;
+  case PL_LEER:
+    *ergebnis=0;
+    break;
+  case PL_FLOAT:
+  case PL_NUMBER:
+    sprintf(ergebnis,"%g",p->real);
+    break;
+  case PL_INT:
+    sprintf(ergebnis,"%d",p->integer);
+    break;
+  case PL_FILENR:
+    sprintf(ergebnis,"#%d",p->integer);
+    break;
+  case PL_STRING:
+    sprintf(ergebnis,"\"%s\"",(char *)p->pointer);
+    break;
+  case PL_LABEL:
+    strcpy(ergebnis,labels[p->integer].name);
+    break;
+  case PL_IVAR:
+    sprintf(ergebnis,"%s%%",variablen[p->integer].name);
+    break;
+  case PL_SVAR:
+    sprintf(ergebnis,"%s$",variablen[p->integer].name);
+    break;
+  case PL_FVAR:
+    strcpy(ergebnis,variablen[p->integer].name);
+    break;
+  case PL_NVAR:
+  case PL_VAR:
+  case PL_ALLVAR:
+  case PL_ARRAYVAR:
+    switch(variablen[p->integer].typ) {
+    case INTTYP:
+      sprintf(ergebnis,"%s%%",variablen[p->integer].name);
+      break;
+    case FLOATTYP:
+      sprintf(ergebnis,"%s",variablen[p->integer].name);
+      break;
+    case STRINGTYP:
+      sprintf(ergebnis,"%s$",variablen[p->integer].name);
+      break;
+    case ARRAYTYP:
+      switch(p->arraytyp) {
+      case INTTYP:
+        sprintf(ergebnis,"%s%%()",variablen[p->integer].name);
+        break;
+      case FLOATTYP:
+        sprintf(ergebnis,"%s()",variablen[p->integer].name);
+        break;
+      case STRINGTYP:
+        sprintf(ergebnis,"%s$()",variablen[p->integer].name);
+        break;
+      default:
+        sprintf(ergebnis,"%s?()",variablen[p->integer].name);
+        break;
+      }
+      break;
+    }
+  default: 
+    sprintf(ergebnis,"<ups$%x>",p->typ);
+  }
+  if(p->panzahl) {
+    strcat(ergebnis,"(");
+        char *buf;
+	int i;
+        for(i=0;i<p->panzahl;i++) {
+          buf=plist_paramter(&(p->ppointer[i]));
+          strcat(ergebnis,buf);
+	  free(buf);
+	  if(i<p->panzahl-1) strcat(ergebnis,",");
+        }
+    
+    strcat(ergebnis,")");
+  }
+  return(strdup(ergebnis));
+}
+
 char *plist_zeile(P_CODE *code) {
   char *ergebnis=malloc(MAXLINELEN);
   int i;
@@ -403,19 +425,26 @@ char *plist_zeile(P_CODE *code) {
     strcat(ergebnis,labels[code->integer].name);
     strcat(ergebnis,":");
   } else if((code->opcode)&P_EVAL) {
-    strcat(ergebnis,"eval ---> ");
- 
+    strcat(ergebnis,"eval ---> "); 
     strcat(ergebnis,code->argument);
-  }  
-  else if((code->opcode&PM_COMMS)<anzcomms) {
+  } else if((code->opcode&P_ZUWEIS)==P_ZUWEIS) {
+    sprintf(ergebnis,"zuweis %d ---> %s",code->integer,code->argument); 
+    
+  } else if((code->opcode&PM_COMMS)<anzcomms) {
     strcat(ergebnis,comms[(code->opcode&PM_COMMS)].name);
-    if(code->panzahl) {
-      strcat(ergebnis," ");
-      for(i=0;i<code->panzahl;i++) {
-        strcat(ergebnis,code->ppointer[i].pointer);
-	strcat(ergebnis,",");
+    if((code->opcode&PM_SPECIAL)==P_ARGUMENT) strcat(ergebnis,code->argument);
+    else if((code->opcode&PM_SPECIAL)==P_PLISTE) {
+      if(code->panzahl) {
+        char *buf;
+        strcat(ergebnis," ");
+      
+        for(i=0;i<code->panzahl;i++) {
+          buf=plist_paramter(&(code->ppointer[i]));
+          strcat(ergebnis,buf);
+	  free(buf);
+	  if(i<code->panzahl-1) strcat(ergebnis,",");
+        }
       }
-      ergebnis[strlen(ergebnis)-1]=0;
     }
   } else sprintf(ergebnis,"=?=> %d",(int)code->opcode);
   if(code->etyp==PE_COMMENT) {
@@ -460,7 +489,7 @@ void c_save(PARAMETER *plist, int e) {
     if(exist(name)) {
       char buf[100];
       sprintf(buf,"mv %s %s.bak",name,name);
-      system(buf);
+      if(system(buf)==-1) io_error(errno,"system");
     }
     saveprg(name);
   }
@@ -489,16 +518,18 @@ void c_let(char *n) {
 void c_quit(PARAMETER *plist, int e) { 
   int ecode=0;
   if(e) ecode=plist[0].integer; 
+  quit_x11basic(ecode); 
+}
+
+void quit_x11basic(int c) {
 #ifndef NOGRAPHICS
   close_window(usewindow); 
 #endif
-
   free(programbuffer);
-  
 #ifdef CONTROL
   cs_exit();
 #endif
-  exit(ecode); 
+  exit(c); 
 }
 
 /* Linearer Fit (regression) optional mit Fehlerbalken in x und y Richtung  */
@@ -516,10 +547,10 @@ void c_fit_linear(char *n) {
        switch(i) {
          case 0: { /* Array mit x-Werten */     
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnrx=variable_exist(r,typ);
+             vnrx=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	   } else puts("FIT: Kein ARRAY.");
@@ -527,10 +558,10 @@ void c_fit_linear(char *n) {
 	   }
 	 case 1: {   /* Array mit y-Werten */
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnry=variable_exist(r,typ);
+             vnry=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	   } else puts("FIT: Kein ARRAY.");
@@ -538,10 +569,10 @@ void c_fit_linear(char *n) {
 	   } 
 	 case 2: {   /* Array mit err-Werten */
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnre=variable_exist(r,typ);
+             vnre=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnre==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	     else mtw=1;
@@ -550,10 +581,10 @@ void c_fit_linear(char *n) {
 	   } 
 	 case 3: {   /* Array mit err-Werten */
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnre2=variable_exist(r,typ);
+             vnre2=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnre2==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	     else mtw=2;
@@ -564,16 +595,16 @@ void c_fit_linear(char *n) {
 	   ndata=(int)parser(w1); 
 	   if(vnrx!=-1 && vnry!=-1) {
              if(mtw==2 && vnre!=-1 && vnre2!=-1) {
-	       linear_fit_exy((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
-		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,
-		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE),
-		   (double *)(variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE),
+	       linear_fit_exy((double *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE),ndata,
+		   (double *)(variablen[vnre].pointer.a->pointer+variablen[vnre].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnre2].pointer.a->pointer+variablen[vnre2].pointer.a->dimension*INTSIZE),
 		   &a,&b,&siga,&sigb,&chi2,&q); 
 
 	     } else {
-	       linear_fit((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
-		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,(mtw)?(
-		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit((double *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE),ndata,(mtw)?(
+		   (double *)(variablen[vnre].pointer.a->pointer+variablen[vnre].pointer.a->dimension*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
              }
 	   }
 	   break; 
@@ -667,68 +698,34 @@ Todo:
 
 
 
-void c_sort(char *n) {  
-  char w1[strlen(n)+1],w2[strlen(n)+1];                  
-  int e,typ,typi,scip=0,i=0;
-  int vnrx=-1,vnry=-1,ndata=0; 
+void c_sort(PARAMETER *plist,int e) {  
+  int typ,subtyp;
+  int vnrx,vnry=-1,ndata=0; 
   char *r;
- // printf("c_sort\n");
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-    scip=0;
-    if(strlen(w1)) {
-      switch(i) {
-        case 0: { /* Array  */     
-	  /* Typ bestimmem. Ist es Array ? */
-          typ=type2(w1);
-	  if(typ & ARRAYTYP) {
-            r=varrumpf(w1);
-            vnrx=variable_exist(r,typ);
-            free(r);
-	    if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
-	    else {
-	      ARRAY dummy=array_info(vnrx);
-	      ndata=anz_eintraege(dummy);
-             // printf("Anz-Eintraege liefert: %d\n",ndata);
-	    }
-	  } else puts("SORT: Kein ARRAY.");
-	  break;
-        }
-	case 1: 
-	  ndata=(int)parser(w1);
-	  break;
-	case 2: {   /* Array mit index-Tabelle */
-          /* Typ bestimmem. Ist es Array ? */
-          typi=type2(w1);
-	  if(typi==INTARRAYTYP) {
-            r=varrumpf(w1);
-            vnry=variable_exist(r,typi);
-            free(r);
-	    if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
-	  } else puts("SORT: Kein INT-ARRAY.");
-	  break;
-	} 
-        default: break;
-      }
-    }
-    if(scip==0) e=wort_sep(w2,',',TRUE,w1,w2);
-    i++;
-  }
- // printf("typ= %x %x\n",typ,FLOATARRAYTYP);
-  if(i>=1 && ndata>1) {
-    if(typ==STRINGARRAYTYP) 
-      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+
+  vnrx=plist[0].integer;
+  ndata=anz_eintraege(variablen[vnrx].pointer.a);
+
+  if(e>=2) ndata=plist[1].integer;
+  if(e>=3) vnry=plist[2].integer;
+  typ=variablen[vnrx].typ;
+  subtyp=variablen[vnrx].pointer.a->typ;
+  
+ //  printf("c_sort vnr=%d ndata=%d vnry=%d\n",vnrx,ndata,vnry);
+
+
+  if(subtyp==STRINGTYP) 
+    do_sort((void *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE)
       ,ndata,sizeof(STRING),cmpstring,
-      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));      
-    else if(typ==INTARRAYTYP) 
-      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+      (int *)((vnry!=-1)?(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE):NULL));      
+  else if(subtyp==INTTYP) 
+      do_sort((void *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE)
       ,ndata,sizeof(int),cmpint,
-      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));      
-    else if(typ==FLOATARRAYTYP)  
-      do_sort((void *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE)
+      (int *)((vnry!=-1)?(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE):NULL));      
+  else if(subtyp==FLOATTYP)  
+      do_sort((void *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE)
       ,ndata,sizeof(double),cmpdouble,
-      (int *)((vnry!=-1)?(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE):NULL));
-  }
+      (int *)((vnry!=-1)?(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE):NULL));
 }
 
 /* Allgemeine Fit-Funktion  mit Fehlerbalken in y Richtung  */
@@ -747,10 +744,10 @@ void c_fit(char *n) {
        switch(i) {
          case 0: { /* Array mit x-Werten */     
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnrx=variable_exist(r,typ);
+             vnrx=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnrx==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	   } else puts("FIT: Kein ARRAY.");
@@ -758,10 +755,10 @@ void c_fit(char *n) {
 	   }
 	 case 1: {   /* Array mit y-Werten */
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnry=variable_exist(r,typ);
+             vnry=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnry==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	   } else puts("FIT: no ARRAY.");
@@ -769,10 +766,10 @@ void c_fit(char *n) {
 	   } 
 	 case 2: {   /* Array mit err-Werten */
 	   /* Typ bestimmem. Ist es Array ? */
-           typ=type2(w1);
+           typ=type(w1)&(~CONSTTYP);
 	   if(typ & ARRAYTYP) {
              r=varrumpf(w1);
-             vnre=variable_exist(r,typ);
+             vnre=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
              free(r);
 	     if(vnre==-1) xberror(15,w1); /* Feld nicht dimensioniert */
 	     else mtw=1;
@@ -788,16 +785,16 @@ void c_fit(char *n) {
 	 case 6: {   /* Ausdruck, der Angibt, welche Parameter zu fitten sind */  	 
 	   if(vnrx!=-1 && vnry!=-1) {
              if(mtw==2 && vnre!=-1 && vnre2!=-1) {
-	       linear_fit_exy((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
-		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,
-		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE),
-		   (double *)(variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE),
+	       linear_fit_exy((double *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE),ndata,
+		   (double *)(variablen[vnre].pointer.a->pointer+variablen[vnre].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnre2].pointer.a->pointer+variablen[vnre2].pointer.a->dimension*INTSIZE),
 		   &a,&b,&siga,&sigb,&chi2,&q); 
 
 	     } else {
-	       linear_fit((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
-		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,(vnre!=-1)?(
-		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit((double *)(variablen[vnrx].pointer.a->pointer+variablen[vnrx].pointer.a->dimension*INTSIZE),
+		   (double *)(variablen[vnry].pointer.a->pointer+variablen[vnry].pointer.a->dimension*INTSIZE),ndata,(vnre!=-1)?(
+		   (double *)(variablen[vnre].pointer.a->pointer+variablen[vnre].pointer.a->dimension*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
              }
 	   }
 	   break; 
@@ -825,16 +822,16 @@ void c_fft(char *n) {
     char *r;
      /* Typ bestimmem. Ist es Array ? */
  
-    typ=type2(v);
+    typ=type(v)&(~CONSTTYP);
     if(typ & ARRAYTYP) {
       r=varrumpf(v);
-      vnr=variable_exist(r,typ);
+      vnr=var_exist(r,ARRAYTYP,typ&(~ARRAYTYP),0);
       free(r);
       if(vnr==-1) xberror(15,v); /* Feld nicht dimensioniert */ 
       else {
         if(typ & FLOATTYP) {
-	  int nn=do_dimension(vnr);    
-	  double *varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
+	  int nn=do_dimension(&variablen[vnr]);
+	  double *varptr=(double  *)(variablen[vnr].pointer.a->pointer+variablen[vnr].pointer.a->dimension*INTSIZE);
 
 	  if(e==2) isign=(int)parser(w);
 	  realft(varptr,(nn-1)/2,isign);
@@ -846,75 +843,92 @@ void c_fft(char *n) {
 }
 
 
-void c_arraycopy(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  
-  if(wort_sep(n,',',TRUE,v,w)==2) {
-     int typ1,typ2,vnr1,vnr2;
-     char *r1,*r2;
-     xtrim(v,TRUE,v);
-     xtrim(w,TRUE,w);
-     /* Typ bestimmem. Ist es Array ? */
- 
-     typ1=type2(v);
-     typ2=type2(w);
-     
-    if((typ1 & ARRAYTYP) && (typ2 & ARRAYTYP)) {
-      r1=varrumpf(v);
-      r2=varrumpf(w);
-      
-      vnr1=variable_exist(r1,typ1);
-      vnr2=variable_exist(r2,typ2);
-      
-      free(r1);free(r2);
-      
-      if(vnr1==-1 || vnr2==-1) xberror(15,""); /* Feld nicht dimensioniert */ 
-      else {
-        if((typ1 & STRINGTYP) && (typ2 & STRINGTYP)) copy_string_array(vnr1,vnr2); 
-        else if((typ1 & INTTYP) && (typ2 & INTTYP))  copy_int_array(vnr1,vnr2); 
-        else if((typ1 & FLOATTYP) && (typ2 & FLOATTYP))
-	  copy_float_array(vnr1,vnr2);
-	else if((typ1 & FLOATTYP) && (typ2 & INTTYP))
-	  convert_int_to_float_array(vnr1,vnr2);
-	else if((typ1 & INTTYP) && (typ2 & FLOATTYP))
-	  convert_float_to_int_array(vnr1,vnr2);
-	else puts("ARRAYCOPY: inkompatible types.");
-      }
-    } else puts("ARRAYCOPY: not an ARRAY.");
-  } else xberror(32,"ARRAYCOPY"); /* Syntax error */
-
+void c_arraycopy(PARAMETER *plist,int e) {
+  int vnr1=plist[0].integer;
+  int vnr2=plist[1].integer;
+  ARRAY *arr1=variablen[vnr1].pointer.a;
+  ARRAY *arr2=variablen[vnr2].pointer.a;
+  ARRAY a;
+  switch(arr1->typ) {
+  case INTTYP:
+      if(arr2->typ==INTTYP) a=double_array(arr2);
+      else if(arr2->typ==FLOATTYP) a=convert_to_intarray(arr2);
+      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      break;
+  case FLOATTYP:
+      if(arr2->typ==FLOATTYP) a=double_array(arr2);
+      else if(arr2->typ==INTTYP) a=convert_to_floatarray(arr2);
+      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      break;
+  case STRINGTYP:
+      if(arr2->typ==STRINGTYP) a=double_array(arr2);
+      else printf("ARRAYCOPY: ARRAY hat falschen typ.\n");
+      break;
+  default:
+    printf("ERROR: arraycopy : typ? $%x \n",variablen[vnr1].typ);
+  }
+  free_array(arr1);
+  *arr1=a;
 }
-void c_arrayfill(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
+
+void c_arrayfill(PARAMETER *plist,int e) {
+  int vnr=plist[0].integer;
+  int typ;
+//  printf("ARRAYFILL: vnr=%d\n",vnr);
+  ARRAY *arr=variablen[vnr].pointer.a;
+  ARRAY a;
   
-  if(wort_sep(n,',',TRUE,v,w)==2) {
-     int typ,vnr;
-     char *r;
-     
-     xtrim(v,TRUE,v);
-     xtrim(w,TRUE,w);
-     /* Typ bestimmem. Ist es Array ? */
- 
-     typ=type2(v);
-    if(typ & ARRAYTYP) {
-      r=varrumpf(v);
-      vnr=variable_exist(r,typ);
-      free(r);
-      if(vnr==-1) xberror(15,v); /* Feld nicht dimensioniert */ 
-      else {
-        if(typ & STRINGTYP) {
-	  STRING str=string_parser(w);
-	  fill_string_array(vnr,str);
-	  free(str.pointer); 
-        } else if(typ & INTTYP) fill_int_array(vnr,(int)parser(w)); 
-        else if(typ & FLOATTYP) fill_float_array(vnr,parser(w));
-      }
-    } else xberror(32,"ARRAYFILL: not an ARRAY.");
-  } else xberror(32,"ARRAYFILL"); /* Syntax error */
+  switch(arr->typ) {
+  case INTTYP:
+    if(plist[1].typ==PL_FLOAT) plist[1].integer=(int)plist[1].real;
+    else if(plist[1].typ!=PL_INT) printf("ERROR: ARRAYFILL: falscher typ\n");
+    a=create_int_array(arr->dimension,arr->pointer,plist[1].integer);
+    break;
+  case FLOATTYP:
+    if(plist[1].typ==PL_INT) plist[1].real=(double)plist[1].integer;
+    else if(plist[1].typ!=PL_FLOAT) printf("ERROR: ARRAYFILL: falscher typ\n");
+    a=create_float_array(arr->dimension,arr->pointer,plist[1].real);
+    break;
+  case STRINGTYP:
+    if(plist[1].typ!=PL_STRING) printf("ERROR: ARRAYFILL: falscher typ\n");
+    a=create_string_array(arr->dimension,arr->pointer,(STRING *)&(plist[1].integer));
+    break;  
+  default:
+    printf("ERROR: arrayfill : typ? $%x var is not an array\n",variablen[vnr].typ);
+  }
+  free_array(arr);
+  *arr=a;
 }
 void c_memdump(PARAMETER *plist,int e) {
   memdump((unsigned char *)plist[0].integer,plist[1].integer);
 }
+
+char *varinfo(VARIABLE *v) {
+  static char info[128];
+  char *buf;
+  char a;
+  int i=0;
+  switch(v->typ) {
+    case INTTYP:   sprintf(info,"%s%%=%d",v->name,*(v->pointer.i));break;
+    case FLOATTYP: sprintf(info,"%s=%.13g",v->name,*(v->pointer.f)); break;
+    case STRINGTYP:
+      buf=malloc(v->pointer.s->len+1);
+      while(i<v->pointer.s->len && i<80) {
+        a=(v->pointer.s->pointer)[i];
+        if(isprint(a)) buf[i]=a;
+	else buf[i]='.';
+        i++;
+      } 
+      buf[i]=0;
+      sprintf(info,"%s$=\"%s\" (len=%d)",v->name,buf,v->pointer.s->len);
+      free(buf);
+      break;
+    default:
+      sprintf(info,"?_var_?=?_? ");
+  }
+  return(info);
+}
+
 void c_dump(PARAMETER *plist,int e) {
   int i;
   char kkk=0;
@@ -923,37 +937,31 @@ void c_dump(PARAMETER *plist,int e) {
 
   if(kkk==0 || kkk=='%') {
     for(i=0;i<anzvariablen;i++) {
-      if(variablen[i].typ==INTTYP) printf("%s%%=%d   [%d]\n",variablen[i].name, 
-        variablen[i].opcode,variablen[i].local);
+      if(variablen[i].typ==INTTYP) 
+        printf("%02d: %s\n",i,varinfo(&variablen[i]));
     }
   }
   if(kkk==0) {
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==FLOATTYP) 
-        printf("%s=%.13g    [%d]\n",variablen[i].name,variablen[i].zahl, variablen[i].local);
+        printf("%02d: %s\n",i,varinfo(&variablen[i]));
     }
   }
   if(kkk==0 || kkk=='$') {
-    char *buf;
     for(i=0;i<anzvariablen;i++) {
       if(variablen[i].typ==STRINGTYP) {
-        buf=malloc(variablen[i].opcode+1);
-	memcpy(buf,variablen[i].pointer,variablen[i].opcode);
-	(buf)[variablen[i].opcode]=0;
-        printf("%s$=\"%s\"   [%d]\n",variablen[i].name,buf,
-        variablen[i].local);
-        free(buf);
+        printf("%02d: %s\n",i,varinfo(&variablen[i]));
       }
     }
   }
   if(kkk==0 || kkk=='%' || kkk=='(') {
     for(i=0;i<anzvariablen;i++) {
-      if(variablen[i].typ==INTARRAYTYP) {
+      if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==INTTYP) {
         int j;
-        printf("%s%%(",variablen[i].name);
-        for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
-	  else  printf("%d",((int *)variablen[i].pointer)[j]);
+        printf("%02d: %s%%(",i,variablen[i].name);
+        for(j=0;j<variablen[i].pointer.a->dimension;j++) {
+          if(j>0) printf(",%d",((int *)variablen[i].pointer.a->pointer)[j]);
+	  else  printf("%d",((int *)variablen[i].pointer.a->pointer)[j]);
         }
         puts(")");
       }
@@ -962,12 +970,12 @@ void c_dump(PARAMETER *plist,int e) {
   
   if(kkk==0 || kkk=='(') {
     for(i=0;i<anzvariablen;i++) {
-      if(variablen[i].typ==FLOATARRAYTYP) {
+      if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==FLOATTYP) {
         int j;
-        printf("%s(",variablen[i].name);
-        for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
-  	  else  printf("%d",((int *)variablen[i].pointer)[j]);
+        printf("%02d: %s(",i,variablen[i].name);
+        for(j=0;j<variablen[i].pointer.a->dimension;j++) {
+          if(j>0) printf(",%d",((int *)variablen[i].pointer.a->pointer)[j]);
+  	  else  printf("%d",((int *)variablen[i].pointer.a->pointer)[j]);
         }
         printf(")  [%d]\n",variablen[i].local);
       }
@@ -975,12 +983,12 @@ void c_dump(PARAMETER *plist,int e) {
   }
   if(kkk==0 || kkk=='$' || kkk=='(') {
     for(i=0;i<anzvariablen;i++) {
-      if(variablen[i].typ==STRINGARRAYTYP) {
+      if(variablen[i].typ==ARRAYTYP && variablen[i].pointer.a->typ==STRINGTYP) {
         int j;
-        printf("%s$(",variablen[i].name);
-        for(j=0;j<variablen[i].opcode;j++) {
-          if(j>0) printf(",%d",((int *)variablen[i].pointer)[j]);
-  	  else  printf("%d",((int *)variablen[i].pointer)[j]);
+        printf("%02d: %s$(",i,variablen[i].name);
+        for(j=0;j<variablen[i].pointer.a->dimension;j++) {
+          if(j>0) printf(",%d",((int *)variablen[i].pointer.a->pointer)[j]);
+  	  else  printf("%d",((int *)variablen[i].pointer.a->pointer)[j]);
         }
         puts(")");
       }
@@ -1085,7 +1093,7 @@ void c_dump(PARAMETER *plist,int e) {
       printf(")\n");
     }    
     for(i=0;i<anzpsfuncs;i++) {
-      printf("%3d: [%08x] %s(",i,psfuncs[i].opcode,psfuncs[i].name);  
+      printf("%3d: [%08x] %s(",i,(unsigned int)psfuncs[i].opcode,psfuncs[i].name);  
       if(psfuncs[i].pmin) {
         for(j=0;j<psfuncs[i].pmin;j++) {
 	  switch(psfuncs[i].pliste[j]) {
@@ -1177,61 +1185,152 @@ void c_on(char *n) {
   }
 }
 
-void c_add(char *n) {c_addsubmuldiv(n,1);}
-void c_sub(char *n) {c_addsubmuldiv(n,2);}
-void c_mul(char *n) {c_addsubmuldiv(n,3);}
-void c_div(char *n) {c_addsubmuldiv(n,4);}
-
-void c_addsubmuldiv(char *n,int z) {
-  char var[strlen(n)+1],t[strlen(n)+1];
-  int e;
-  
-  e=wort_sep(n,',',TRUE,var,t);
-  if(e<2) xberror(42,"");  /* Zuwenig Parameter ! */
-  else {
-    if(z==1)      zuweis(var,parser(var)+parser(t));
-    else if(z==2) zuweis(var,parser(var)-parser(t));
-    else if(z==3) zuweis(var,parser(var)*parser(t));
-    else if(z==4) zuweis(var,parser(var)/parser(t));
-    else xberror(32,""); /* Syntax error */
+void c_add(PARAMETER *plist,int e) {
+  int vnr=plist[0].integer;
+  char *varptr=plist[0].pointer;
+  int typ=variablen[vnr].typ;
+  if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
+  switch(typ) {
+  case INTTYP:
+    if(plist[1].typ==PL_INT) {
+      *((int *)varptr)+=plist[1].integer;
+    } else if(plist[1].typ==PL_FLOAT) {
+      *((int *)varptr)+=(int)plist[1].real;    
+    } else printf("ADD. Argument wrong, must be flt.\n");
+    break;
+  case FLOATTYP:
+    if(plist[1].typ==PL_FLOAT) {
+      *((double *)varptr)+=plist[1].real;
+    } else if(plist[1].typ==PL_INT) {
+      *((double *)varptr)+=(double)plist[1].integer;    
+    } else printf("ADD. Argument wrong, must be flt.\n");
+    break;
+  case STRINGTYP:
+    if(plist[1].typ==PL_STRING) {
+      STRING *s=(STRING *)varptr;
+      s->pointer=realloc(s->pointer,s->len+plist[1].integer+1);
+      memcpy(s->pointer+s->len,plist[1].pointer,plist[1].integer);
+      s->len+=plist[1].integer;
+      (s->pointer)[s->len]=0;
+    } else printf("ADD. Argument wrong, must be string.\n");
+    break;
+  default:
+    printf("ADD: typ unbek. $%x\n",typ);
+    xberror(32,""); /* Syntax error */
+  }
+}
+void c_sub(PARAMETER *plist,int e) {
+  int vnr=plist[0].integer;
+  char *varptr=plist[0].pointer;
+  int typ=variablen[vnr].typ;
+  if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
+//  printf("SUB: vnr=%d\n",vnr);
+//  dump_parameterlist(plist,e);
+  switch(typ) {
+  case INTTYP:
+    if(plist[1].typ==PL_INT) {
+      *((int *)varptr)-=plist[1].integer;
+    } else if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((int *)varptr)-=(int)plist[1].real;    
+    } else printf("SUB. Argument wrong, must be flt.\n");
+    break;
+  case FLOATTYP:
+    if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((double *)varptr)-=plist[1].real;
+    } else if(plist[1].typ==PL_INT) {
+      *((double *)varptr)-=(double)plist[1].integer;    
+    } else printf("SUB. Argument wrong, must be flt.\n");
+    break;
+  default:
+    xberror(32,""); /* Syntax error */
+  }
+}
+void c_mul(PARAMETER *plist,int e) {
+  int vnr=plist[0].integer;
+  char *varptr=plist[0].pointer;
+  int typ=variablen[vnr].typ;
+  if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
+//  printf("MUL: vnr=%d\n",vnr);
+//  dump_parameterlist(plist,e);
+  switch(typ) {
+  case INTTYP:
+    if(plist[1].typ==PL_INT) {
+      *((int *)varptr)*=plist[1].integer;
+    } else if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((int *)varptr)*=(int)plist[1].real;    
+    } else printf("MUL. Argument wrong, must be flt.\n");
+    break;
+  case FLOATTYP:
+    if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((double *)varptr)*=plist[1].real;
+    } else if(plist[1].typ==PL_INT) {
+      *((double *)varptr)*=(double)plist[1].integer;    
+    } else printf("MUL. Argument wrong, must be flt.\n");
+    break;
+  default:
+    xberror(32,""); /* Syntax error */
+  }
+}
+void c_div(PARAMETER *plist,int e) {
+  int vnr=plist[0].integer;
+  char *varptr=plist[0].pointer;
+  int typ=variablen[vnr].typ;
+  if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
+//  printf("DIV: vnr=%d\n",vnr);
+//  dump_parameterlist(plist,e);
+  switch(typ) {
+  case INTTYP:
+    if(plist[1].typ==PL_INT) {
+      *((int *)varptr)/=plist[1].integer;
+    } else if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((int *)varptr)/=(int)plist[1].real;    
+    } else printf("DIV. Argument wrong, must be flt.\n");
+    break;
+  case FLOATTYP:
+    if(plist[1].typ==PL_FLOAT || plist[1].typ==PL_NUMBER) {
+      *((double *)varptr)/=plist[1].real;
+    } else if(plist[1].typ==PL_INT) {
+      *((double *)varptr)/=(double)plist[1].integer;    
+    } else printf("DIV. Argument wrong, must be flt.\n");
+    break;
+  default:
+    xberror(32,""); /* Syntax error */
   }
 }
 
-void c_swap(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int e,vnr1,vnr2;
-  e=wort_sep(n,',',TRUE,v,w);
-  if(e<2) xberror(42,"");  /* Zuwenig Parameter ! */
-  else {
-     char *r1,*r2;
-     int typ;
-     typ=type2(v);
-     if(typ!=type2(w)) xberror(58,w); /* Variable %s ist vom falschen Typ */
-     else {
-       r1=varrumpf(v);
-       r2=varrumpf(w);
-       vnr1=variable_exist(r1,typ);
-       vnr2=variable_exist(r2,typ);
-       if(vnr1==-1 || vnr2==-1) xberror(57,w); /* Variable %s noch nicht initialisiert */
-       else if(vnr1!=vnr2) {    
-           char *zb=variablen[vnr1].name;
-	   variablen[vnr1].name=variablen[vnr2].name;
-           variablen[vnr2].name=zb;
-	   /* evtl noch Plaetze Tauschen, damit sich auch die varnr aendern */
-       }
-       free(r1);free(r2);
-     }
-  }
+
+
+void c_swap(PARAMETER *plist,int e) {
+  VARIABLE tmp;
+  char *zb;
+  int vnr1,vnr2;
+  vnr1=plist[0].integer;
+  vnr2=plist[1].integer;
+  // printf("SWAP: %d %d\n",vnr1,vnr2);
+  if(vnr1==vnr2 && plist[0].pointer==plist[1].pointer) return;
+  if(plist[0].typ!=plist[1].typ) {
+  printf("$%x $%x",variablen[plist[0].integer].typ,variablen[plist[1].integer].typ);
+     xberror(58,""); /* Variable %s ist vom falschen Typ */
+     return;
+   }
+//   switch(typ) {
+/* Was ist, wenn wir eine variable mit einem Arrayindex vertauschen ?*/     
+//   default:
+     tmp=variablen[plist[0].integer];
+     zb=variablen[plist[0].integer].name;
+     variablen[plist[0].integer]=variablen[plist[1].integer];
+     variablen[plist[0].integer].name=zb;
+     zb=variablen[plist[1].integer].name;
+     variablen[plist[1].integer]=tmp;     
+     variablen[plist[1].integer].name=zb;
+//   }
 } 
 
 void c_do(char *n) {   /* wird normalerweise ignoriert */
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  
-  wort_sep(n,' ',TRUE,w1,w2);
-  if(strcmp(w1,"")==0) ; 
-  else if(strcmp(w1,"WHILE")==0) c_while(w2);
-  else if(strcmp(w1,"UNTIL")==0) ;
-  else  printf("Unbekannter Befehl: DO <%s> <%s>\n",w1,w2);
+  if(*n==0) ; 
+  else if(strncmp(n,"WHILE",5)==0) c_while(n);
+  else if(strncmp(n,"UNTIL",5)==0) ;
+  else  printf("Unbekannter Befehl: DO <%s>\n",n);
 }
 
 void c_dim(char *n) {
@@ -1243,73 +1342,28 @@ void c_dim(char *n) {
      p=wort_sep(v,',',TRUE,w,v); 
   }
 }
-void c_erase(char *n) {
-  char v[strlen(n)+1],w[strlen(n)+1];
-  int p=wort_sep(n,',',TRUE,w,v);
-  while(p) {
-     xtrim(w,TRUE,w);
-     c_doerase(w);
-     p=wort_sep(v,',',TRUE,w,v); 
-  }
+void c_erase(PARAMETER *plist,int e) {
+  while(e) erase_variable(&variablen[plist[--e].integer]);
 }
 
-void c_doerase(char *w){
- char *pos,*pos2,*v;
- int vnr,typ;
- 
-  v=malloc(strlen(w)+1);
-  strcpy(v,w); 
- 
- 
-  pos=searchchr(v, '(');
-  if(pos==NULL) xberror(32,"ERASE"); /* Syntax error */
-  else {
-    pos2=v+strlen(v)-1;
-    pos[0]=0;
-    pos++;
-
-    if(pos2[0]!=')') xberror(32,"ERASE"); /* Syntax error */
-    else {
-      /* Typ Bestimmen  */
-      pos2[0]=0;
-      typ=type2(v);
-      if(searchchr("$%#", v[strlen(v)-1])!=NULL) v[strlen(v)-1]=0;
-      
-      
-      typ=typ|ARRAYTYP;
-      vnr=variable_exist(v,typ);
-      if(vnr==-1) xberror(15,v); /* Feld nicht dimensioniert */ 
-      else {
-        if(typ==STRINGARRAYTYP)  erase_string_array(vnr);
-	free(variablen[vnr].pointer);
-      
-        /* Jetzt noch aus Variablenliste entfernen  */
-        
-	if(vnr<anzvariablen-1) variablen[vnr]=variablen[anzvariablen-1];
-	anzvariablen--;
-      }
-    }
-  }
-  free(v);
-}
 
 
 void c_return(char *n) {
   if(sp>0) {
-    if(strlen(n)) {
-      if(type2(n) & STRINGTYP) {
+    if(n && strlen(n)) {
+      if(type(n) & STRINGTYP) {
         returnvalue.str=string_parser(n); /* eigentlich muss auch der Funktionstyp 
                                        	 abgefragt werden */
       } else returnvalue.f=parser(n);
     }
-    local_vars_loeschen(sp-1);
+    restore_locals(sp);
     pc=stack[--sp];
   }
   else xberror(93,""); /*Stack-Error !*/
 }
 
 void c_void(char *n) { 
-  if(type2(n) & STRINGTYP) {
+  if(type(n) & STRINGTYP) {
     char *erg=s_parser(n);
     free(erg);
   } else parser(n);
@@ -1317,29 +1371,18 @@ void c_void(char *n) {
 void c_nop(char *n) { return; }
 
 void c_inc(PARAMETER *plist,int e) {
-  if(e) {
-    if(plist[0].integer&FLOATTYP) 
-      *((double *)plist[0].pointer)=*((double *)plist[0].pointer)+1;
-    else if(plist[0].integer&INTTYP)
-//#ifdef __hpux
-//      *((int *)plist[0].pointer)=*((int *)plist[0].pointer)+1; 
-//#else
-      (*((int *)plist[0].pointer))++;
-//#endif
-  }
+  int typ=variablen[plist->integer].typ;
+  if(typ==ARRAYTYP) typ=variablen[plist->integer].pointer.a->typ;
+  if(typ&FLOATTYP) (*((double *)plist->pointer))++;
+  else if(typ&INTTYP) (*((int *)plist->pointer))++;
+//    else printf("INC seltsam. $%x\n",variablen[plist->integer].typ);
 }
 
 void c_dec(PARAMETER *plist,int e) { 
-  if(e) {
-    if(plist[0].integer&FLOATTYP) 
-      *((double *)plist[0].pointer)=*((double *)plist[0].pointer)-1;
-    else if(plist[0].integer&INTTYP) 
-// #ifdef __hpux
-//    *((int *)plist[0].pointer)=*((int *)plist[0].pointer)-1;
-// #else
-    (*((int *)plist[0].pointer))--;
-// #endif
-  }
+  int typ=variablen[plist->integer].typ;
+  if(typ==ARRAYTYP)   typ=variablen[plist->integer].pointer.a->typ;
+  if(typ&FLOATTYP)    (*((double *)plist->pointer))--;
+  else if(typ&INTTYP) (*((int *)plist->pointer))--;
 }
 void c_cls(char *n) { 
 #ifdef WINDOWS
@@ -1383,9 +1426,11 @@ void c_version(char *n) { printf("X11-BASIC Version: %s %s\n",version,vdate);}
 #else
 #include "Windows.extension/fnmatch.h"
 #endif
-void c_help(char *w) {
-  if(strlen(w)==0) puts("HELP [topic]");
-  else {
+void c_help(PARAMETER *plist,int e) {
+  if(e==0) puts("HELP [topic]");
+  else do_help(plist[0].pointer);
+}  
+void do_help(char *w) {
     int j,i;
     for(i=0;i<anzcomms;i++) {
     
@@ -1399,6 +1444,7 @@ void c_help(char *w) {
 	      case PL_STRING: printf("t$"); break;
 	      case PL_NUMBER: printf("num"); break;
 	      case PL_SVAR: printf("var$"); break;
+	      case PL_IVAR: printf("var%%"); break;
 	      case PL_NVAR: printf("var"); break;
 	      case PL_KEY: printf("KEY"); break;
 	      case PL_FARRAY: printf("a()"); break;
@@ -1423,6 +1469,7 @@ void c_help(char *w) {
 	      case PL_NUMBER: printf("num"); break;
 	      case PL_SVAR: printf("var$"); break;
 	      case PL_NVAR: printf("var"); break;
+	      case PL_IVAR: printf("var%%"); break;
 	      case PL_KEY: printf("KEY"); break;
 	      case PL_FARRAY: printf("a()"); break;
 	      case PL_IARRAY: printf("h%%()"); break;
@@ -1457,8 +1504,8 @@ void c_help(char *w) {
     }
      for(i=0;i<anzsysvars;i++) {
       if(fnmatch(w,sysvars[i].name,FNM_NOESCAPE)==0) {
-        if(sysvars[i].opcode==PL_INT) printf("int ");
-	else if(sysvars[i].opcode==PL_FLOAT) printf("flt ");
+        if(sysvars[i].opcode&INTTYP) printf("int ");
+	else if(sysvars[i].opcode&FLOATTYP) printf("flt ");
 	else printf("??? ");
         printf("%s\n",sysvars[i].name);          
       }
@@ -1468,8 +1515,6 @@ void c_help(char *w) {
         printf("%s\n",syssvars[i].name);          
       }
     }
-  
-  }
 }
 void c_error(PARAMETER *plist,int e) {
   xberror(plist[0].integer,"");
@@ -1506,84 +1551,47 @@ void c_echo(PARAMETER *plist,int e) {
 void c_stop()  {batch=0;} 
 void c_tron()  {echoflag=1;}
 void c_troff() {echoflag=0;}
-void c_beep()  {printf("\007");}
+void c_beep()  {putchar('\007');}
  
-void c_clear(char *w){  erase_all_variables(); }
+void c_clear(PARAMETER *plist,int e){clear_all_variables(); }
 
-void c_clr(char *n){  
- char *v,*w;
-  int p;
-  v=malloc(strlen(n)+1);w=malloc(strlen(n)+1);
-  strcpy(v,n);
-  p=wort_sep(v,',',TRUE,w,v);
-    while(p) {
-     xtrim(w,TRUE,w);
-     c_doclr(w);
-     p=wort_sep(v,',',TRUE,w,v); 
+void c_clr(PARAMETER *plist,int e){  
+//  printf("CLR: pointer=%x\n",(int)plist[0].pointer);
+  while(--e>=0) {
+ //  printf("clr: typ=$%x\n",plist[e].typ);
+    switch(plist[e].typ) {
+    case PL_ARRAYVAR: 
+    case PL_IARRAYVAR: 
+    case PL_FARRAYVAR: 
+    case PL_SARRAYVAR: 
+      clear_variable(&variablen[plist[e].integer]);
+      break;
+    case PL_SVAR:
+      *(((STRING *)(plist[e].pointer))->pointer)=0;
+      ((STRING *)(plist[e].pointer))->len=0;
+      break;
+    case PL_IVAR:
+      *((int *)(plist[e].pointer))=0;
+      break;
+    case PL_FVAR:
+      *((double *)(plist[e].pointer))=0;
+      break;
+    default:
+      printf("ERROR: CLR, unknown var type. i=%d pc=%d\n",e,pc);
+      dump_parameterlist(plist,1);
     }
-  free(v);free(w);
-}
-
-void c_doclr(char *v) {
-  char *r,*pos;
-  int vnr,typ; 
- 
- /* Typ bestimmem. Ist es Array ? */
- 
-  typ=type2(v);
-  if(typ & CONSTTYP) {xberror(32,"CLR"); return;} /* Syntax error */
-  r=varrumpf(v);
-  vnr=variable_exist(r,typ);
-
-  if(typ & ARRAYTYP) { /* ganzes Array  */
-    if(vnr==-1) xberror(15,r); /* Feld nicht dimensioniert */ 
-    else {
-      if(typ & STRINGTYP) {
-        STRING a=create_string("");
-        fill_string_array(vnr,a);
-	free_string(a); 
-      } else if(typ & INTTYP) fill_int_array(vnr,0); 
-      else if(typ & FLOATTYP) fill_float_array(vnr,0.0);
-    }
-  } else {
-    int indize=((pos=strchr(v,'('))!=NULL); 
-    if(indize) vnr=variable_exist(r,typ | ARRAYTYP);
-    if(vnr==-1) {   /* Variable existiert gar nicht */
-        if(indize) xberror(15,r); /* Feld nicht dimensioniert */ 
-	else {
-	  if(typ & STRINGTYP) neue_string_variable(r,(STRING){0,""},0); 
-	  else if(typ & INTTYP) neue_int_variable(r,0,0); 
-	  else if(typ & FLOATTYP) neue_float_variable(r,0.0,0);
-        }
-      } else {      /* Variable existiert */
-      
-        /* Hier wird Feld/indexe abgefangen  */
-	if(!indize) {
-          if(typ & STRINGTYP) {
-	     variablen[vnr].pointer=realloc(variablen[vnr].pointer,1);
-	     *(variablen[vnr].pointer)=0;
-	     variablen[vnr].opcode=0; 
-	  } else {
-	    variablen[vnr].opcode=0;
-	    variablen[vnr].zahl=0.0;
-	  } 
-	} else {
-	  if(typ & STRINGTYP) zuweiss(v,""); 
-	  else zuweis(v,0.0);
-	}
-      } 	
   }
-  free(r);
 }
+
 
 void c_exit(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   
   wort_sep(n,' ',TRUE,w1,w2);
-  if(strcmp(w1,"")==0) c_return(""); 
+  if(*w1==0) c_return(n); 
   else if(strcmp(w1,"IF")==0) {
     if(parser(w2)==-1) c_break("");
-  } else  printf("Unbekannter Befehl: EXIT <%s> <%s>\n",w1,w2);
+  } else  printf("Unbekannter Befehl: EXIT <%s>\n",n);
 }
 
 void c_break(char *n) {
@@ -1602,9 +1610,7 @@ void c_break(char *n) {
 }
 
 void c_if(char *n) {
-  char w1[MAXSTRLEN],w2[MAXSTRLEN],w3[MAXSTRLEN];
-  
-  if((int)parser(n)==0) { 
+  if((int)parser(n)==0) {  
     int i,f=0,o;
   
     for(i=pc; (i<prglen && i>=0);i++) {
@@ -1617,17 +1623,18 @@ void c_if(char *n) {
     if(i==prglen) { xberror(36,"IF"); /*Programmstruktur fehlerhaft */return;}
     pc=i+1;
     if(o==P_ELSEIF) {
+      char w1[MAXSTRLEN],*w2,*w3,*w4;
       xtrim(program[i],TRUE,w1);
-      wort_sep(w1,' ',TRUE,w2,w3);
-      wort_sep(w3,' ',TRUE,w1,w2);
-      if(strcmp(w1,"IF")==0) c_if(w2); 
+      wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
+      wort_sep_destroy(w3,' ',TRUE,&w3,&w4);
+      if(strcmp(w3,"IF")==0) c_if(w4); 
     } 
   }
 }
 
 void c_select(char *n) {
   int i,wert,wert2,f=0,o;
-  char w1[MAXSTRLEN],w2[MAXSTRLEN],w3[MAXSTRLEN];
+  char w1[MAXSTRLEN],*w2,*w3;
   
   wert=(int)parser(n);
   
@@ -1644,7 +1651,7 @@ void c_select(char *n) {
      pc=i;
      if((pcode[i].opcode&PM_SPECIAL)==P_CASE) {
        xtrim(program[pc],TRUE,w1);
-       wort_sep(w1,' ',TRUE,w2,w3);
+       wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
        wert2=parser(w3);
        if(wert==wert2) break;
      } else break;
@@ -1656,63 +1663,72 @@ void bidnm(char *n) {
   xberror(38,n); /* Befehl im Direktmodus nicht moeglich */
 }
 
-void c_next(char *n) {
-  char w1[MAXSTRLEN],w2[MAXSTRLEN],w3[MAXSTRLEN],var[MAXSTRLEN];
-  double step, limit;
-  int ss,e,f=0,hpc=pc;
+void c_next(PARAMETER *plist,int e) {
+  char w1[MAXSTRLEN],*w2,*w3,*w4,*var;
+  double step, limit,varwert;
+  int ss,f=0,hpc=pc;
 
-   pc=pcode[pc-1].integer; 
+   pc=pcode[pc-1].integer; /*Hier sind wir beim FOR*/
    if(pc==-1) {xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
 
-   strcpy(w1,pcode[pc].ppointer->pointer);
-   wort_sep(w1,' ',TRUE,w2,w3);
+//printf("c_next: das for befindet sich bei pc=%d\n",pc);
+//printf("Argument dort ist: <%s>\n",pcode[pc].argument);
+
+
+   strcpy(w1,pcode[pc].argument);
+   wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
  
    /* Variable bestimmem */
-   if(searchchr(w2,'=')!=NULL) {
-    wort_sep(w2,'=',TRUE,var,w1);
+   if((var=searchchr(w2,'='))!=NULL) {
+     *var++=0;
+     var=w2;
    } else {printf("Syntax Error ! FOR %s\n",w2); batch=0;return;}
-   wort_sep(w3,' ',TRUE,w1,w2);
+   wort_sep_destroy(w3,' ',TRUE,&w4,&w2);
    
-   if(strcmp(w1,"TO")==0) ss=1; 
-   else if(strcmp(w1,"DOWNTO")==0) ss=-1; 
-   else {printf("Syntax Error ! FOR %s\n",w1); batch=0;return;}
+   if(strcmp(w4,"TO")==0) ss=1; 
+   else if(strcmp(w4,"DOWNTO")==0) ss=-1; 
+   else {printf("Syntax Error ! FOR %s\n",w4); batch=0;return;}
 
    /* Limit bestimmem  */
-   e=wort_sep(w2,' ',TRUE,w1,w3);
+   e=wort_sep_destroy(w2,' ',TRUE,&w4,&w3);
    if(e==0) {printf("Syntax Error ! FOR %s\n",w2); batch=0;return;}
    else {
-     limit=parser(w1);
-     if(e==1) step=(double)ss;
+     limit=parser(w4);
+     if(e==1) step=1;
      else {
        /* Step-Anweisung auswerten  */
-       wort_sep(w3,' ',TRUE,w1,w2);
-       if(strcmp(w1,"STEP")==0)
+       wort_sep_destroy(w3,' ',TRUE,&w4,&w2);
+       if(strcmp(w4,"STEP")==0)
          step=parser(w2);
-       else {printf("Syntax Error ! FOR %s\n",w1); batch=0;return;}
+       else {printf("Syntax Error ! FOR %s\n",w4); batch=0;return;}
      }
    }
-   zuweis(var,parser(var)+step);
-   ss=(int)((step>0)-(step<0));
+   step*=ss;
+   varwert=parser(var)+step;
+   zuweis(var,varwert);
+   if(step<0) ss=-1;
+   else ss=1;
+//   printf("step=%g ss=%d\n",step,ss);
    /* Schleifenende ueberpruefen    */
    if(ss>0) {
-     if(parser(var)>limit) f=TRUE;
+     if(varwert>limit) f=TRUE;
    } else {
-     if(parser(var)<limit) f=TRUE;
+     if(varwert<limit) f=TRUE;
    } 
    if(f)  pc=hpc;          /* Schleifenende, gehe hinter NEXT */
    else pc++;
 }
 void c_for(char *n) {
   /* erledigt nur die erste Zuweisung  */
-  char w1[strlen(n)+1],w2[strlen(n)+1],w3[strlen(n)+1];
-  int typ;
-  wort_sep(n,' ',TRUE,w1,w2);
-  if(searchchr(w1,'=')!=NULL) {
-    wort_sep(w1,'=',TRUE,w2,w3);
-    typ=vartype(w2);
-    if(typ & INTTYP) zuweisi(w2,parser(w3));
-    else zuweis(w2,parser(w3));
+  char *buf=strdup(n);
+  char *w1,*w2;
+
+  wort_sep_destroy(buf,' ',TRUE,&w1,&w2);
+  if((w2=searchchr(w1,'='))!=NULL) {
+    *w2++=0;
+    xzuweis(w1,w2);
   } else {printf("Syntax Error ! FOR %s\n",n); batch=0;}
+  free(buf);
 }
 void c_until(char *n) {
   if(parser(n)==0) {
@@ -1731,45 +1747,34 @@ void c_while(char *n) {
 }
 
 
-void c_wort_sep(char *n) {
-  do_wort_sep(n);
+void c_wort_sep(PARAMETER *plist,int e) {
+  STRING str1,str2;
+  str1.pointer=malloc(plist->integer+1);
+  str2.pointer=malloc(plist->integer+1);
+  
+  wort_sep2(plist[0].pointer,plist[1].pointer,plist[2].integer,str1.pointer,str2.pointer);
+  str1.len=strlen(str1.pointer);
+  str2.len=strlen(str2.pointer);
+  varcaststring_and_free(plist[3].typ,plist[3].pointer,str1);  
+  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
+  else free_string(&str2);
 }
 
-int do_wort_sep(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2),ergeb=-1;
-  if(e==2) {
-    char *quelle=s_parser(w1);
-    e=wort_sep(w2,',',TRUE,w1,w2);
-    if(e==2) {
-      char *deliminator=s_parser(w1);
-      e=wort_sep(w2,',',TRUE,w1,w2);
-      if(e==2) {
-        int flag=(int)parser(w1);
-	e=wort_sep(w2,',',TRUE,w1,w2);
-        if(e==2) {
-	  char *var1=indirekt2(w1);
-	  char *var2=indirekt2(w2);
-	  char *buffer1=malloc(strlen(quelle)+1);
-	  char *buffer2=malloc(strlen(quelle)+1);
-	  ergeb=wort_sep2(quelle,deliminator,flag,buffer1,buffer2);
-	  
-	  zuweiss(var1,buffer1);
-	  free(buffer1); free(var1);
-	  zuweiss(var2,buffer2);
-	  free(buffer2); free(var2);
-	  
-        } 
-      } 
-      free(deliminator);
-    } 
-    free(quelle);
-  } 
-  if(ergeb==-1) {
-    xberror(32,"WORT_SEP"); /* Syntax Error */
-    return(0);
-  } else return(ergeb);
+/* Bei split wollen wir den optionalen int parameter ans ende setzen.
+   ist aber noch nicht wegen kompatibilitaet.*/
+void c_split(PARAMETER *plist,int e) {
+  STRING str1,str2;
+  str1.pointer=malloc(plist->integer+1);
+  str2.pointer=malloc(plist->integer+1);
+  
+  wort_sep2(plist[0].pointer,plist[1].pointer,plist[2].integer,str1.pointer,str2.pointer);
+  str1.len=strlen(str1.pointer);
+  str2.len=strlen(str2.pointer);
+  varcaststring_and_free(plist[3].typ,plist[3].pointer,str1);  
+  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
+  else free_string(&str2);
 }
+
 void c_poke(PARAMETER *plist,int e) {
   char *adr=(char *)(plist[0].integer);
   *adr=(char)plist[1].integer;

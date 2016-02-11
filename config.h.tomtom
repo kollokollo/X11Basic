@@ -243,13 +243,13 @@
 #define PACKAGE_NAME "X11-Basic"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "X11-Basic 1.17"
+#define PACKAGE_STRING "X11-Basic 1.18"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "x11-basic"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.17"
+#define PACKAGE_VERSION "1.18"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
@@ -270,7 +270,7 @@
 /* #undef TM_IN_SYS_TIME */
 
 /* Version of actual implementation */
-#define VERSION "1.17"
+#define VERSION "1.18"
 
 /* Date of actual compilation */
 #define VERSION_DATE "Fri Jul 22 17:05:45 CEST 2011"

@@ -76,26 +76,20 @@ double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt)
   return(bxx);
 }
 double ltextlen (double s, int pflg, char *tt) {
-  int a,i,len,len2,charw=100,bxx=0;
-  
-  len=strlen(tt);
-  if(len>0) {
-    for(i=0;i<len;i++) {
-      a=(int)tt[i];
-      if(a=='ß') a=16;
-      else if(a=='Ä') a=17;
-      else if(a=='ä') a=18;
-      else if(a=='Ö') a=19;
-      else if(a=='ö') a=20;
-      else if(a=='Ü') a=21;
-      else if(a=='ü') a=22;
-      else a&=0x7f;
-      len2=strlen(font[a]);
-      if(len2>1) { 
-        if(pflg) charw=(int)font[a][0];
-      } 
-      bxx+=(charw+30);
-    }
+  int a,charw=100,bxx=0;
+  int i=strlen(tt);
+  while(--i>=0) {
+    a=(int)tt[i];
+    if(a=='ß') a=16;
+    else if(a=='Ä') a=17;
+    else if(a=='ä') a=18;
+    else if(a=='Ö') a=19;
+    else if(a=='ö') a=20;
+    else if(a=='Ü') a=21;
+    else if(a=='ü') a=22;
+    else a&=0x7f;
+    if(pflg && strlen(font[a])>1) charw=(int)font[a][0];
+    bxx+=(charw+30);
   }
   return(bxx*s);
 }

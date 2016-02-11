@@ -23,12 +23,12 @@ a$=system$("locate .bmp")
 while len(a$)
   wort_sep a$,chr$(10),0,t$,a$
   if exist(t$)
-  open "I",#1,t$
-  t$=input$(#1,lof(#1))
-  put 0,0,t$
-  close
-  vsync
-  pause 1
+    open "I",#1,t$
+    t$=input$(#1,lof(#1))
+    put 0,0,t$
+    close
+    vsync
+    pause 1
   endif
 wend
 

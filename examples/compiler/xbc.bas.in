@@ -7,6 +7,14 @@
 ' 04.2007: now can produce .b bytecode files
 ' 04.2011: now can produce real compiled files
 
+'* This file is part of X11BASIC, the basic interpreter for Unix/X
+'* ======================================================================
+'* X11BASIC is free software and comes with NO WARRANTY - read the file
+'* COPYING for details
+'*
+
+
+
 i=1
 compileonly=FALSE
 precomponly=FALSE
@@ -73,24 +81,24 @@ IF LEN(inputfile$)
     @compilevm
     if not compileonly
       @link
-    endif
-  else if typ$="bas"
-    if virtualm or bytecode
+    ENDIF
+  ELSE IF typ$="bas"
+    IF virtualm OR bytecode
       @dobytecode
-    endif  
-    if virtualm
+    ENDIF  
+    IF virtualm
       @compilevm
-    else
+    ELSE
       @compile
-    endif
-    if not compileonly
+    ENDIF
+    IF NOT compileonly
       @link
-    endif
-  else 
-    print f$+": file not recognized: File format not recognized"
-  endif
-else
-  print "xbc: No input files"
+    ENDIF
+  ELSE 
+    PRINT f$+": file not recognized: File format not recognized"
+  ENDIF
+ELSE
+  PRINT "xbc: No input files"
 ENDIF
 QUIT
 PROCEDURE intro
@@ -112,124 +120,131 @@ PROCEDURE using
   PRINT "  -win32                   produce Windows .exe file"
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
-procedure dobytecode
+PROCEDURE dobytecode
+  SYSTEM "xbbc -o "+rumpf$+".b"+" "+inputfile$
+RETURN
+PROCEDURE compilevm
   system "xbbc -o "+rumpf$+".b"+" "+inputfile$
-return
-procedure compilevm
-  system "xbbc -o "+rumpf$+".b"+" "+inputfile$
-  system "xb2c -o "+rumpf$+".c"+" "+rumpf$+".b"
+  if lflag
+    system "xb2c -l -o "+rumpf$+".c"+" "+rumpf$+".b"
+  else
+    system "xb2c -o "+rumpf$+".c"+" "+rumpf$+".b"
+  endif
   IF NOT precomponly
     if win32
       system "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
     else
-      system "@CC@ @copt@ -c "+rumpf$+".c"
+      if lflag
+        system "@CC@ @copt@ -DNOMAIN -c "+rumpf$+".c"
+      else
+        system "@CC@ @copt@ -c "+rumpf$+".c"
+      endif
     endif
     system "rm -f "+rumpf$+".c "+rumpf$+".b"
   ENDIF
-return
+RETURN
 
-procedure compile
-  open "O",#2,rumpf$+".c"
-  print #2,"/* PSEUDO-Code.c ("+f$+")"
-  print #2,"   X11-BAsic-Pseudo-Compiler Version @version@"
-  print #2,"   (c) Markus Hoffmann"
-  print #2,"*/"
-  print #2,"#include <stdio.h>"
-  print #2,"#include <stdlib.h>"
-  print #2,"#include <string.h>"
-  print #2,"extern int param_anzahl;"
-  print #2,"extern char **param_argumente;"
-  if lflag
-    randomize
-    rnr=random(10000)
-    print #2,"void programmlauf();"
-    print #2,"extern char **program;"
-    print #2,"extern int prglen;"
-    print #2,"char *routine_"+str$(rnr,4,4,1)+"[]={"
-  else
-    print #2,"void reset_input_mode(),x11basicStartup(),programmlauf();"
-    print #2,"const char version[]="+chr$(34)+"@version@"+chr$(34)+";"
-    print #2,"const char vdate[]="+chr$(34)+date$+" "+time$+" xxxx @version@"+chr$(34)+";"
-    print #2,"int programbufferlen=0;"
-    print #2,"char ifilename[]="+chr$(34)+f$+chr$(34)+";"
-    print #2,"char *programbuffer=NULL;"
-    print #2,"char *program[]={"
-  endif
-  open "I",#1,inputfile$
-  while not eof(#1)
-    lineinput #1,t$
-    t$=xtrim$(t$)
-    if len(t$)
-      if left$(t$)<>"'"
-        wort_sep t$," !",1,t$,b$
-        if left$(t$,6)="PRINT "
+PROCEDURE compile
+  OPEN "O",#2,rumpf$+".c"
+  PRINT #2,"/* PSEUDO-Code.c ("+f$+")"
+  PRINT #2,"   X11-BAsic-Pseudo-Compiler Version @version@"
+  PRINT #2,"   (c) Markus Hoffmann"
+  PRINT #2,"*/"
+  PRINT #2,"#include <stdio.h>"
+  PRINT #2,"#include <stdlib.h>"
+  PRINT #2,"#include <string.h>"
+  PRINT #2,"extern int param_anzahl;"
+  PRINT #2,"extern char **param_argumente;"
+  IF lflag
+    PRINT #2,"void programmlauf();"
+    PRINT #2,"extern char **program;"
+    PRINT #2,"extern int prglen;"
+    PRINT #2,"char *routine_"+rumpf$+"[]={"
+  ELSE
+    PRINT #2,"void reset_input_mode(),x11basicStartup(),programmlauf();"
+    PRINT #2,"const char version[]="+chr$(34)+"@version@"+chr$(34)+";"
+    PRINT #2,"const char vdate[]="+chr$(34)+date$+" "+time$+" xxxx @version@"+chr$(34)+";"
+    PRINT #2,"int verbose=0;"
+    PRINT #2,"int programbufferlen=0;"
+    PRINT #2,"char ifilename[]="+chr$(34)+f$+chr$(34)+";"
+    PRINT #2,"char *programbuffer=NULL;"
+    PRINT #2,"char *program[]={"
+  ENDIF
+  OPEN "I",#1,inputfile$
+  WHILE NOT EOF(#1)
+    LINEINPUT #1,t$
+    t$=XTRIM$(t$)
+    IF LEN(t$)
+      IF LEFT$(t$)<>"'"
+        WORT_SEP t$," !",1,t$,b$
+        IF LEFT$(t$,6)="PRINT "
           t$="? "+right$(t$,len(t$)-6)
-        else if left$(t$,6)="GOSUB "
+        ELSE IF LEFT$(t$,6)="GOSUB "
           t$="@"+right$(t$,len(t$)-6)
-        else if left$(t$,5)="VOID "
+        ELSE IF LEFT$(t$,5)="VOID "
           t$="~"+right$(t$,len(t$)-5)
-        endif
-        t$=replace$(t$,chr$(34),"##AN"+"F##")
-        t$=replace$(t$,"\","##BACKS"+"LASH##")
-        t$=replace$(t$,"##A"+"NF##","\042")
-        t$=replace$(t$,"##BACK"+"SLASH##","\\")
-        print #2,chr$(34)+t$+chr$(34)+","
+        ENDIF
+        t$=REPLACE$(t$,chr$(34),"##AN"+"F##")
+        t$=REPLACE$(t$,"\","##BACKS"+"LASH##")
+        t$=REPLACE$(t$,"##A"+"NF##","\042")
+        t$=REPLACE$(t$,"##BACK"+"SLASH##","\\")
+        PRINT #2,chr$(34)+t$+chr$(34)+","
       ENDIF
     ENDIF
   WEND
   CLOSE #1
   PRINT #2,"};"
-  if lflag
-    PRINT #2,"int routinelen_"+str$(rnr,4,4,1)+"=sizeof(routine_"+str$(rnr,4,4,1)+")/sizeof(char *);"
+  IF lflag
+    PRINT #2,"int routinelen_"+rumpf$+"=sizeof(routine_"+rumpf$+")/sizeof(char *);"
     PRINT #2,"typedef struct {int len; char *pointer;} STRING;"
     PRINT #2,"extern union {double f; STRING str;} returnvalue;"
-    PRINT #2,"double enter_"+str$(rnr,4,4,1)+"(char *n){"
+    PRINT #2,"double enter_"+rumpf$+"(char *n){"
     PRINT #2,"int oldprglen; char **oldprogram;"
     PRINT #2,"oldprglen=prglen; oldprogram=program;"
-    PRINT #2,"program=routine_"+str$(rnr,4,4,1)+";"
-    PRINT #2,"prglen=routinelen_"+str$(rnr,4,4,1)+";"
+    PRINT #2,"program=routine_"+rumpf$+";"
+    PRINT #2,"prglen=routinelen_"+rumpf$+";"
     PRINT #2,"init_program();c_run("");c_gosub(n);programmlauf();"
     PRINT #2,"program=oldprogram;prglen=oldprglen;"
     PRINT #2,"return(returnvalue.f);}"
-  else 
+  ELSE 
     PRINT #2,"int prglen=sizeof(program)/sizeof(char *);"
-    if win32
-      print #2,"#include <windows.h>"
+    IF win32
+      PRINT #2,"#include <windows.h>"
       print #2,"HINSTANCE hInstance;"
-    endif
-    print #2,"main(int anzahl, char *argumente[]){"
-    if win32
-      print #2,"hInstance=GetModuleHandle(NULL);"
-    endif
-    print #2,"x11basicStartup(); set_input_mode(1,0);" 
-    print #2,"atexit(reset_input_mode);"
-    print #2,"param_anzahl=anzahl;"
-    print #2,"param_argumente=argumente;"
-    print #2,"init_program(); c_run(""); programmlauf();}"
-  endif
+    ENDIF
+    PRINT #2,"main(int anzahl, char *argumente[]){"
+    IF win32
+      PRINT #2,"hInstance=GetModuleHandle(NULL);"
+    ENDIF
+    PRINT #2,"x11basicStartup(); set_input_mode(1,0);" 
+    PRINT #2,"atexit(reset_input_mode);"
+    PRINT #2,"param_anzahl=anzahl;"
+    PRINT #2,"param_argumente=argumente;"
+    PRINT #2,"init_program(); do_run(); programmlauf();}"
+  ENDIF
   CLOSE #2
   IF NOT precomponly
-    if win32
-      system "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
-    else
-      system "@CC@ @copt@ -c "+rumpf$+".c"
-    endif
-    system "rm -f "+rumpf$+".c"
+    IF win32
+      SYSTEM "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
+    ELSE
+      SYSTEM "@CC@ @copt@ -c "+rumpf$+".c"
+    ENDIF
+    SYSTEM "rm -f "+rumpf$+".c"
   ENDIF
 RETURN
 
 PROCEDURE link
   IF dyn
-    if win32
-      system "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o -L/usr/lib/ -lx11basic -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32"
-    else
-      system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @X_LIBS@ -lx11basic  @libs@"
-    endif
-  else
-    if win32
-      system "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.lib -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 "
-    else
-      system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.a @X_LIBS@ @libs@"
-    endif
+    IF win32
+      SYSTEM "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o -L/usr/lib/ -lx11basic -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32"
+    ELSE
+      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @X_LIBS@ -lx11basic  @libs@"
+    ENDIF
+  ELSE
+    IF win32
+      SYSTEM "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.lib -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 "
+    ELSE
+      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.a @X_LIBS@ @libs@"
+    ENDIF
   ENDIF
 RETURN

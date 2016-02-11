@@ -12,14 +12,6 @@
 #include "config.h"
 #include "options.h"
 
-
-#ifndef FALSE
-  #define FALSE    0
-  #define TRUE     (!FALSE)
-#endif
-#define PI       3.141592653589793
-#define E        2.718281828459
-
 #ifdef SMALL
   #define SAVE_RAM 1
 #endif

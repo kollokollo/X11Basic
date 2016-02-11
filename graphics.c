@@ -30,7 +30,8 @@ char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
 
 #endif
 
-int marker_typ=0,marker_size=1;
+unsigned char marker_typ;
+int marker_size=1;
 int boundary=-1;
 double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
 int ltextpflg=0;

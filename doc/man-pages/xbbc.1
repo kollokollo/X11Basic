@@ -1,4 +1,4 @@
-.TH XBBC 1 09-Apr-2011 "Version 1.17" "Linux Basic Compiler"
+.TH XBBC 1 09-Aug-2011 "Version 1.18" "X11-Basic bytecode compiler"
 .SH NAME
 xbbc (X11-Basic bytecode compiler) \- X11-Basic bytecode compiler 
 .SH SYNOPSIS
@@ -16,13 +16,11 @@ computers.
 can be used to make bytecode-binaries out of *.bas script-Files. These bytecode 
 files can be interpreted by the X11-Basic virtual machine (
 .I xbvm(1)
-) and they run about 4 to 10 times faster than the interpreted .bas files. Since 
+) and they run about 10 times faster than the interpreted .bas files. Since 
 .I xbbc
-is a real compiler (compared to the X11-Basic psydo-compiler (
-.I xbc
-)), some restrictions to the code apply.
+is a real compiler, some restrictions to the code apply.
 
-.B For a desciption of the X11-basic language and Usage of the interpreter see
+.B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
@@ -36,25 +34,17 @@ but you can specify alternate names with the -o option.
 .BI "\-o " file
 Place output in file \c
 .I file\c
-\&.  This applies regardless to whatever
-sort of output xbbc is producing.
-.Sp
-Since only one output file can be specified, it does not make sense to
-use `\|\c
-.B \-o\c
-\&\|' when compiling more than one input file, unless you are
-producing an executable file as output.
+\&.  
 .Sp
 If you do not specify `\|\c
 .B \-o\c
-\&\|', the default is to put an executable file
-in `\|\c
+\&\|', the default is to produce a file `\|\c
 .B b.b\c
  .
 .SS \--version
 shows version, program and other information and exits
 .SS -h --help
-print a short help
+print a short help.
 
 For detailed help and description of the implemented basic commands take a 
 look at the README file. 
@@ -64,8 +54,8 @@ look at the README file.
 .nf
 xbbc testme.bas
     produces a bytecode file b.b
-xbbc testme.bas -o testme 
-    produces a bytecode file testme
+xbbc testme.bas -o testme.b 
+    produces a bytecode file testme.b
 .fi
 
 You can find many sample programs in 
@@ -80,7 +70,7 @@ There is no way to recreate the source code from the bytecode.
 But still the bytecode is platform independant.
 
 .SH VERSION
-Page was created for V.1.14
+Page was created for V.1.18
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic bytecode compiler, you should

@@ -1,6 +1,6 @@
-.TH XBC 1 19-Apr-2011 "Version 1.17" "Linux Basic Compiler"
+.TH XBC 1 19-Aug-2011 "Version 1.18" "Linux Basic Compiler"
 .SH NAME
-xbc (X11-Basic compiler) \- X11-Basic pseudo compiler 
+xbc (X11-Basic compiler) \- X11-Basic compiler 
 .SH SYNOPSIS
 .B xbc
 .RI "[ " option " ] " <filename>
@@ -15,13 +15,13 @@ computers.
 .IR xbc
 can be used to make stand-alone-binaries out of *.bas script-Files.
 
-.B For a desciption of the X11-basic language and usage of the interpreter see
+.B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
 
 Xbc process input files
-through one or more of three stages: preprocessing, compilation,
+through one or more of three stages: preprocessing, compilation, translation 
 and linking.  Source filename suffixes identify the source
 language.
 
@@ -119,6 +119,10 @@ in `\|\c
 .I source\c
 .B \&.c\c
 .
+.SS \-virtualm
+this option tells the compiler to compile the code to bytecode and then translate it to C 
+source and finally compile it with gcc. The code produced is really fast. On UNIX this 
+option can always be used unless some compiler trouble occur. 
 .SS \--static
 this is the default. The X11-Basic library will be linked to the excecutable.
 .SS \--dynamic
@@ -153,20 +157,34 @@ xbc testme.bas -o testme --dynamic
 xbc testme.bas -c 
     produces testme.o
 xbc testme.bas -b
-    produces testme.c
+    produces testme.c or 11.c or b.b
+xbc testme.bas -virtualm -o b.out  --dynamic
+    produces b.out, which excecutes really fast!
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The pseudo compiler
-Actually this "compiler" is not
-a real compiler, since the source code is still interpreted on runtime. But the
+Actually xbc is only a real compiler, if used with the -virtualm option.
+The default behaviour is
+such, that the source code is still interpreted on runtime 
+(so to say, only a pseudo-compiler). But the
 source code is linked to the X11-Basic library so there results one 
 independant executable. Another advantage is that it is quite hard to extract a
 full running *.bas File from this binary since the code is compressd in a way. 
+Why is this the default? Well the compiler can pseudo-compile all BASIC 
+programs, which run in the interpreter. The real compiler has some restrictions 
+on the BASIC code, because it cannot compile every contructs (e.g. jumps/GOTO out 
+of a procedure). The compiler relies on gcc. The compiler for the MS WINDOWS 
+version behaves different (since no gcc is available): Here the BASIC program 
+is compiled into bytecode, which is packed together with a virtual machine into 
+an excecutable file. The bytecode is then interpreted on runtime, but anyway this
+is much faster than the interpreted code. Of course, you can always translate the 
+bytecode to a C source and crosscompile this for any platform.
+
 
 .SH VERSION
-Page was created for V.1.11
+Page was created for V.1.18
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic pseudo compiler, you should

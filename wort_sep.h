@@ -4,6 +4,7 @@
  * COPYING for details
  */
 int wort_sep (char *t,char c,int klamb ,char *w1, char *w2);
+int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2);
 int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2);
 int wort_sep_e(char *t,char c,int klamb ,char *w1, char *w2);
 int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2);
@@ -20,3 +21,5 @@ void *memmem(const void *buf,  size_t buflen,const void *pattern, size_t len);
 char *rmemmem(char *s1,int len1,char *s2,int len2);
 void xtrim(char *t,int f, char *w);
 void xtrim2(char *t,int f, char *w);
+int klammer_sep(char *t,char *w1, char *w2);
+int klammer_sep_destroy(char *t,char **w1, char **w2);

@@ -13,9 +13,11 @@
 #include <stdlib.h>
 
 #include "defs.h"
-#include "options.h"
-#include "vtypes.h"
-#include "globals.h"
+#include "x11basic.h"
+#include "variablen.h"
+#include "xbasic.h"
+
+int ccs_err;
 
 
 /* Falls mit Kontrollsystem  */
@@ -44,6 +46,8 @@ int pidanz=0;
 #include "errdef.h"
 #include "attrdef.h"
 #include "resourcebaseman.h"
+
+
 
 /* Kontrollsystemstuff */
 
@@ -312,41 +316,33 @@ ARRAY *csvget(char *n,int nn, int o) {
 }
 
 char *csgets(char *n) {
-  char *ergebnis,s[256];
 
-  int pid,j;
+  int pid;
 
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) {
     printf("ERROR in ccs_convert_parametername_id\n");
-    ergebnis=malloc(8);
-    strcpy(ergebnis,"<ERROR>");
     ccs_err=CCSERR;
-    return(ergebnis);
+    return(strdup("<ERROR>"));
   } else {
 
 /* switch appropriate to type */
 
     if ( IS_PID_STRING(pid) ) {
       int bytes;
+      char s[256];
       ccs_get_value( pid, s, &bytes, sizeof(s), NULL );
       if (CCSERR) {
         printf("ERROR in ccs_get_value: %s\n", ccs_get_error_message());
-	ergebnis=malloc(8);
-  	strcpy(ergebnis,"<ERROR>");
 	ccs_err=CCSERR;
-  	return(ergebnis);
+        return(strdup("<ERROR>"));
       }
-      ergebnis=malloc(strlen(s)+1);
-      strcpy(ergebnis,s);
       ccs_err=CCSERR;
-      return(ergebnis);
+      return(strdup(s));
     } else {
       xberror(47,n); /* Parameter hat falschen Typ */
-      ergebnis=malloc(8);
-      strcpy(ergebnis,"<ERROR>");
       ccs_err=CCSERR;
-      return(ergebnis);
+      return(strdup("<ERROR>"));
     }
   }
 }
@@ -425,7 +421,7 @@ void c_csvput(char *w) {
 
      /* Typ bestimmem. Ist es Array ? */
 
-    typ=type2(n);
+    typ=type(n)&(~CONSTTYP);
     if(typ & ARRAYTYP) {
       r=varrumpf(n);
       vnr=variable_exist(r,typ);
@@ -509,15 +505,15 @@ void c_csput(char *w) {
   free(test);
 /* switch appropriate to type */
 
-    if ( IS_PID_ANALOG(pid) && (type2(t) & (FLOATTYP|INTTYP)) ) {
+    if ( IS_PID_ANALOG(pid) && (type(t) & (FLOATTYP|INTTYP)) ) {
         f=(float)parser(t);
         ccs_put_value_secure( pid, 1, &f, &j );
 	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
-    } else if ( IS_PID_DIGITAL(pid) && (type2(t) & (FLOATTYP|INTTYP))  ) {
+    } else if ( IS_PID_DIGITAL(pid) && (type(t) & (FLOATTYP|INTTYP))  ) {
 	i=(int)parser(t);
 	ccs_put_value_secure( pid, 1, &i, &j );
 	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
-    } else if ( IS_PID_STRING(pid) && (type2(t) & STRINGTYP) ) {
+    } else if ( IS_PID_STRING(pid) && (type(t) & STRINGTYP) ) {
         test=s_parser(t);
         ccs_put_value_secure( pid, strlen(test), test, &j );
 	free(test);
@@ -548,7 +544,7 @@ void c_cssweep(char *w) {
   free(test);
 /* switch appropriate to type */
 
-    if ( IS_PID_ANALOG(pid) && (type2(t) & FLOATTYP) ) {
+    if ( IS_PID_ANALOG(pid) && (type(t) & FLOATTYP) ) {
         float end,deltatime;
 	int nsteps;
 	e=wort_sep(t,',',TRUE,n,t);
@@ -1244,13 +1240,13 @@ void c_tineput(char *w) {
       dout.dTag[0] = 0;
       dout.data.vptr = buf;
 
-      if(type2(t)&ARRAYTYP) {
+      if(type(t)&ARRAYTYP) {
         ARRAY abuffer=array_parser(t);
-	int l=anz_eintraege(abuffer);
+	int l=anz_eintraege(&abuffer);
 	int i;
 	void *ptr=(char *)abuffer.pointer+abuffer.dimension*INTSIZE;
 	l=min(l,dout.dArrayLength);
-        printf("Ist Vektor [%d]!!!\n",anz_eintraege(abuffer));
+        printf("Ist Vektor [%d]!!!\n",anz_eintraege(&abuffer));
 	if(abuffer.typ & (FLOATTYP|INTTYP)) {
 	  /* Tu was hier !!! */
 	  switch (LFMT(prpinfo.prpFormat)) {
@@ -1291,10 +1287,10 @@ void c_tineput(char *w) {
 	    break;  	
 	  default:
             printf("output format type %d is not numeric !\n",LFMT(prpinfo.prpFormat));
-	    free_array(abuffer);
+	    free_array(&abuffer);
             free(buf);return;
 	  }
-	} else if(type2(t) & STRINGTYP) {
+	} else if(type(t) & STRINGTYP) {
           switch (LFMT(prpinfo.prpFormat)) {
           case CF_BYTE:
           case CF_TEXT:
@@ -1309,15 +1305,15 @@ void c_tineput(char *w) {
           break;
           default:
             printf("output format type %d is not a Stringtype !\n",LFMT(prpinfo.prpFormat));
-            free(buf);free_array(abuffer); return;
+            free(buf);free_array(&abuffer); return;
           }
 
 	}
 	
-	free_array(abuffer);
+	free_array(&abuffer);
       } else {
         /* switch appropriate to type */
-        if(type2(t) & (FLOATTYP|INTTYP)) {
+        if(type(t) & (FLOATTYP|INTTYP)) {
           switch (LFMT(prpinfo.prpFormat)) {
           case CF_BYTE:
             *((char *)buf)=(char)parser(t); break;
@@ -1333,7 +1329,7 @@ void c_tineput(char *w) {
             printf("output format type %d is not a number !\n",LFMT(prpinfo.prpFormat));
             free(buf);return;
           }
-        } else if(type2(t) & STRINGTYP) {
+        } else if(type(t) & STRINGTYP) {
           STRING sss=string_parser(t);
 	  memcpy(buf,sss.pointer,min(sss.len,buflen));
 	  free(sss.pointer);
@@ -1402,7 +1398,7 @@ int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, s
         STRING a;
 	a.pointer=din->data.vptr;
 	a.len=din->dArrayLength;  /* wirklich ??? */
-	string_zuweis_by_vnr(vnr,a);	
+	string_zuweis(&variablenn[vnr],a);
       }
       else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0];
       else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
@@ -1457,7 +1453,7 @@ void c_tinebroadcast(char *n) {
   strcpy(v,n);
   p=wort_sep(v,',',TRUE,w,v);
   xtrim(w,TRUE,w);
-  typ=type2(w);
+  typ=type(w);
   if(typ & CONSTTYP) xberror(32,"TINEBROADCAST");  /* Syntax error */
   else {
     r=varrumpf(w);
@@ -1502,7 +1498,7 @@ void c_tinelisten(char *n) {
   strcpy(v,n);
   p=wort_sep(v,',',TRUE,w,v);
   xtrim(w,TRUE,w);
-  typ=type2(w);
+  typ=type(w);
   if(typ & CONSTTYP) xberror(32,"TINELISTEN");  /* Syntax error */
   else {
     r=varrumpf(w);
@@ -1565,7 +1561,7 @@ void c_tineexport(char *n) {
   p=wort_sep(v,',',TRUE,w,v);
   while(p) {
     xtrim(w,TRUE,w);
-    typ=type2(w);
+    typ=type(w);
     if(typ & CONSTTYP) xberror(32,"TINEEXPORT");  /* Syntax error */
     else {
       r=varrumpf(w);

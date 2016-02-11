@@ -7,6 +7,7 @@
 ' You can edit these parameters.
 
 ' Point size.  Think of this as a "zoom factor".  Must be at least 2.
+timersave=timer
 ps=3
 
 
@@ -97,7 +98,6 @@ px(mx)=0
 py(mx)=0
 mx=mx+1
 
-
 ' Main loop:
 
 mainloop:
@@ -177,7 +177,8 @@ showpage
 
 print "Segments drawn: "; sg
 print "Maximum depth: ";mh
-end
+print timer-timersave,"Secs."
+quit
 
 procedure drawline(xx1,yy1,xx2,yy2)
   color fg

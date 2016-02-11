@@ -66,7 +66,7 @@ char *simple_gets(char *prompt) {
   }
   set_input_mode_echo(0);
   /* Get a line from the user. */
-  printf(prompt);
+  fputs(prompt,stdout);
   fflush(stdout);
   line_read = fgets(buffer,MAXLINELEN,stdin);
   if(line_read==NULL) free(buffer);

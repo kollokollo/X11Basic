@@ -10,6 +10,7 @@ clearw
 clr x,y
 text 10,80,"barnsley"
 t=timer
+t0=t
 for n=1 to 500000
   r=rnd()
   if r<=0.01
@@ -34,5 +35,6 @@ for n=1 to 500000
     t=timer
   endif
 next n
+print "Total time: ";timer-t0;" Seconds."
 ~inp(-2)
 quit

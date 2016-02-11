@@ -1,40 +1,41 @@
 ' Utility to convert gui Files with Formulars or other Graphical user interface
 ' Objects to X11Basic executable programs
+'
+'* This file is part of X11BASIC, the basic interpreter for Unix/X
+'* ======================================================================
+'* X11BASIC is free software and comes with NO WARRANTY - read the file
+'* COPYING for details
+'*
 ' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.08.2003)
 '                                               27.01.2005
 '
-dim iz$(1000)
-dim fstr$(1000)
-dim fstrnam$(1000)
-anziz=0
+DIM iz$(1000)
+DIM fstr$(1000)
+DIM fstrnam$(1000)
+CLR anziz,anzstring,anztree,anzfreestring,anzobj
+CLR anztedinfo,anzdata,anzbitblk,anziconblk
 
-anzstring=0
-anztree=0
-anzfreestring=0
-anzobj=0
-clr anztedinfo,anzdata,anzbitblk,anziconblk
-
-inputfile$=param$(2)
+inputfile$=PARAM$(2)
 chw=8
 chh=16
 OPEN "I",#1,inputfile$
-while not eof(#1)
-  lineinput #1,t$
-  t$=trim$(t$)
-  if len(t$)
+WHILE NOT eof(#1)
+  LINEINPUT #1,t$
+  t$=TRIM$(t$)
+  if LEN(t$)
     iz$(anziz)=t$
-    inc anziz
-  endif
-wend
-close #1
+    INC anziz
+  ENDIF
+WEND
+CLOSE #1
 
-print "' gui2bas V.1.02   (c) Markus Hoffmann 2003-2005"
-print "' convertetd "+inputfile$+"  "+date$+" "+time$
-print "@init         ! initialization"
-print "@doit         ! execute forms"
-print "quit"
+PRINT "' gui2bas V.1.02   (c) Markus Hoffmann 2003-2005"
+PRINT "' convertetd "+inputfile$+"  "+DATE$+" "+TIME$
+PRINT "@init	     ! initialization"
+PRINT "@doit	     ! execute forms"
+PRINT "quit"
 
-while count<anziz
+WHILE count<anziz
   t$=iz$(count)
   inc count
   exit if t$="}"
@@ -78,10 +79,10 @@ if anzfreestring>0
     print "  freestring$("+str$(i)+")="+chr$(34)+fstr$(i)+chr$(34)
   next i
 endif
-print "RETURN"
+PRINT "RETURN"
 
 
-print "PROCEDURE doit"
+PRINT "PROCEDURE doit"
 if anztree>0
   for i=0 to anztree-1
     print "  @formular"+str$(i)
@@ -91,12 +92,11 @@ if anzfreestring>0
   for i=0 to anzfreestring-1
     print "  ~form_alert(1,freestring$("+str$(i)+"))"
   next i
-endif
-print "RETURN"
+ENDIF
+PRINT "RETURN"
+QUIT
 
-quit
 procedure dotree(n$)
-
   klammer=0
   spaces=1
   anzobj=0
@@ -250,29 +250,29 @@ function doit(par1,par2,countee)
     return ss+1
   endif
   return countee+1
-return
-function suchende(start,idx)
-local i,t$,k
-k=0
-i=start
-while i<anziz
-  t$=iz$(i)
-  if right$(t$)="{"
-    i=@doit(0,idx,i)
-    inc k
-  else if left$(t$)="}"
-    if k=0
-      return i
-    endif
-    dec k
-  else
-    i=@doit(0,idx,i)
-  endif
-wend
-return -1
-endfunc
+RETURN
+FUNCTION suchende(start,idx)
+  LOCAL i,t$,k
+  k=0
+  i=start
+  WHILE i<anziz
+    t$=iz$(i)
+    IF RIGHT$(t$)="{"
+      i=@doit(0,idx,i)
+      INC k
+    ELSE IF LEFT$(t$)="}"
+      IF k=0
+        RETURN i
+      ENDIF
+      DEC k
+    ELSE
+      i=@doit(0,idx,i)
+    ENDIF
+  WEND
+  RETURN -1
+ENDFUNC
 
-procedure doobj(idx,obnext,obhead,obtail,a$,b$)
+PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
   if upper$(a$)="FREESTR"
       text$=@getval$(b$,"STRING")
       if left$(text$)=chr$(34)
@@ -543,10 +543,10 @@ function dostate(t$)
       ret=ret or 64
     else if a$="DRAW3D"
       ret=ret or 128
-    else
-      print "Unknown state:",a$
-    endif
-    wort_sep t$,"+",1,a$,t$
-  wend
-  return ret
-endfunc
+    ELSE
+      PRINT "Unknown state:",a$
+    ENDIF
+    WORT_SEP t$,"+",1,a$,t$
+  WEND
+  RETURN ret
+ENDFUNC

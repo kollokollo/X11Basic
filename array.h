@@ -6,51 +6,49 @@
  * COPYING for details
  */
 
-#include "vtypes.h"
-
 extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten);
 extern double *backsub(double *, double *, double *, double *,int,int);
 
 ARRAY create_array(int , int ,int *);
+ARRAY create_int_array(int dimension, int *dimlist,int value);
+ARRAY create_float_array(int dimension, int *dimlist,double value);
+ARRAY create_string_array(int dimension, int *dimlist,STRING *value);
+
+
 ARRAY nullmatrix(int , int ,int *);
 ARRAY einheitsmatrix(int , int ,int *);
 ARRAY array_const(char *);
-ARRAY copy_var_array(int);
-ARRAY array_info(int);
-ARRAY double_array(ARRAY);
+ARRAY double_array(ARRAY *);
 ARRAY einheitsmatrix(int, int, int *);
 ARRAY nullmatrix(int, int, int *);
-ARRAY form_array(int, int, int *, char *);
 ARRAY mul_array(ARRAY, ARRAY);
 ARRAY trans_array(ARRAY);
 ARRAY inv_array(ARRAY);
-ARRAY convert_to_floatarray(ARRAY a);
-ARRAY convert_to_intarray(ARRAY a);
-
-void free_array(ARRAY arr);
-void convert_float_to_int_array(int vnr1, int vnr2);
-void convert_int_to_float_array(int vnr1, int vnr2);
-void copy_int_array(int vnr1, int vnr2);
-void copy_float_array(int vnr1, int vnr2);
-void copy_string_array(int vnr1, int vnr2);
-void fill_string_array(int vnr, STRING inh);
-void erase_string_array(int vnr);
+ARRAY convert_to_floatarray(ARRAY *a);
+ARRAY convert_to_intarray(ARRAY *a);
+ARRAY get_subarray(ARRAY *arr,int *indexliste);
 
 void array_add(ARRAY a1, ARRAY a2);
 void array_sub(ARRAY a1, ARRAY a2);
 void array_smul(ARRAY a1, double m);
 void feed_array_and_free(int, ARRAY);
+void free_array(ARRAY *arr);
 
-void fill_int_array(int, int);
-void fill_float_array(int, double);
-void array_zuweis_and_free(char *, ARRAY);
-void free_array(ARRAY);
-int anz_eintraege(ARRAY a);
-int do_dimension(int vnr);
+/* Operieren auf Variablen */
 
-char *arrptr(char *n);
+void fill_string_array (ARRAY *,STRING );
+void fill_int_array    (ARRAY *,int);
+void fill_float_array  (ARRAY *,double);
+int do_dimension       (VARIABLE *v);
+int anz_eintraege(ARRAY *a);
+
+char *arrptr(PARAMETER *,int);
 void *arrayvarptr(int vnr, char *n,int size);
 void *arrayvarptr2(int vnr, int *indexliste,int size);
 STRING array_to_string(ARRAY inhalt);
 ARRAY string_to_array(STRING in);
 int make_indexliste(int dim, char *pos, int *index);
+void make_indexliste_plist(int dim, PARAMETER *p, int *index);
+
+
+

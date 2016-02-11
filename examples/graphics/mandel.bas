@@ -2,8 +2,8 @@
 randomize
 bx=0
 by=0
-bw=256
-bh=256
+bw=256*2
+bh=256*2
 sizew ,bw,bh
 clearw
 dim col(256) 
@@ -32,7 +32,8 @@ do
       y=mousey
     endif
   endif
-  while field(x,y)
+  t0=timer
+  while field(x,y) and timer-t0<3
      x=random(bw)
      y=random(bh)
      inc count2
@@ -54,13 +55,18 @@ do
   if c>0
     color col(c)
     plot x,y
-    if (count2 mod 128)=0
+    if (count2 mod 128) or timer-t>3=0
       color col(0)
       pbox 0,0,70,20
       color col(255)
-      text 10,10,str$(int(100*count/bw/bh))+"  "+str$(count2-count)
+      text 10,10,str$(int(100*count/bw/bh))+"%  "+str$(count2-count)
       vsync
+      t=timer
     endif
   endif
   inc count
+  exit if int(100*count/bw/bh)=100
 loop
+print "Press any key..."
+~inp(-2)
+quit

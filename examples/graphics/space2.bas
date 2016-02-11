@@ -1,7 +1,7 @@
 ' This version of space.bas works only with X11-Basic V.1.16 and later
 '
 a&=6
-DIM pkx(200),pky(200),r&(200),v&(200)
+DIM pkx(200+1),pky(200+1),r&(200+1),v&(200+1)
 ARRAYFILL pkx(),320
 ARRAYFILL pky(),200
 FOR i&=0 TO 200

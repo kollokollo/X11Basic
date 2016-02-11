@@ -11,30 +11,29 @@
 #include <string.h>
 #include <math.h>
 
-#include "config.h"
 #include "defs.h"
-#include "globals.h"
-#include "vtypes.h"
+#include "x11basic.h"
+#include "variablen.h"
+#include "xbasic.h"
 #include "array.h"
 #include "afunctions.h"
-#include "xbasic.h"
 
 ARRAY f_smula(PARAMETER *plist, int e) {
   ARRAY ergeb;
-  ergeb.typ=plist[0].typ;
-  ergeb.dimension=plist[0].integer;
-  ergeb.pointer=plist[0].pointer;
-  ergeb=double_array(ergeb);
+  ergeb.typ=plist->typ;
+  ergeb.dimension=plist->integer;
+  ergeb.pointer=plist->pointer;
+  ergeb=double_array(&ergeb);
   array_smul(ergeb,plist[1].real);
   return(ergeb);
 }
 ARRAY f_nullmat(PARAMETER *plist, int e) {
     int dimlist[2]={plist[0].integer,plist[1].integer};
-    return(nullmatrix(FLOATARRAYTYP,e,dimlist));
+    return(nullmatrix(FLOATTYP,e,dimlist));
 }
 ARRAY f_einsmat(PARAMETER *plist, int e) {
     int dimlist[2]={plist[0].integer,plist[0].integer};
-    return(einheitsmatrix(FLOATARRAYTYP,2,dimlist));
+    return(einheitsmatrix(FLOATTYP,2,dimlist));
 }
 
 extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten);

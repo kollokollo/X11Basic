@@ -37,19 +37,19 @@ lauf$=replace$(system$("cat /proc/cpuinfo"),chr$(10)," | ")
 
 clr count
 do
-d$=time$
-
- for g=0 to len(d$)-1
-   @putchar(100+23*g,100,peek(varptr(d$)+g))
- next g
-@putstring2(10,270,mid$(lauf$,count,60),2)
+  d$=time$
+  for g=0 to len(d$)-1
+    @putchar(100+23*g,100,peek(varptr(d$)+g))
+  next g
+'print mid$(lauf$,count,60)
+  @putstring2(10,270,mid$(lauf$,count,60),2)
   inc count
   if count>len(lauf$)
     clr count
   endif
-pause 0.2
+  pause 0.2
 loop
-stop
+~inp(-2)
 quit
 
 procedure putstring(x,y,s$)

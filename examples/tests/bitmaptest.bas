@@ -98,24 +98,24 @@ f1$=f1$+"1S8)%F&7[5K4RN0aXRG^.?EE^B^L<*^HRJ\b?\%'6V6X1cIZ9E0=$D$$"
 
 t$=uncompress$(inline$(f1$))
 dim rev(256)
-for i=0 to 256
-a=0
-for j=0 to 7
-  if btst(i,j)
-    a=bset(a,7-j)
-  endif
-next j
-rev(i)=a
+for i=0 to 255
+  a=0
+  for j=0 to 7
+    if btst(i,j)
+      a=bset(a,7-j)
+    endif
+  next j
+  rev(i)=a
 next i
 for i=0 to len(t$)/4
-a=peek(varptr(t$)+i*4) and 255
-b=peek(varptr(t$)+i*4+1) and 255
-c=peek(varptr(t$)+i*4+2) and 255
-d=peek(varptr(t$)+i*4+3) and 255
-poke varptr(t$)+i*4,rev(a)
-poke varptr(t$)+i*4+1,rev(b)
-poke varptr(t$)+i*4+2,rev(c)
-poke varptr(t$)+i*4+3,rev(d)
+  a=peek(varptr(t$)+i*4) and 255
+  b=peek(varptr(t$)+i*4+1) and 255
+  c=peek(varptr(t$)+i*4+2) and 255
+  d=peek(varptr(t$)+i*4+3) and 255
+  poke varptr(t$)+i*4,rev(a)
+  poke varptr(t$)+i*4+1,rev(b)
+  poke varptr(t$)+i*4+2,rev(c)
+  poke varptr(t$)+i*4+3,rev(d)
 next i
 ttt:
 clearw

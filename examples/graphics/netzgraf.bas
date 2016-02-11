@@ -1,8 +1,8 @@
 cls                         
 sx=100
 sy=sx*42/60
-DIM x(sx,sy)
-DIM y(sx,sy)
+DIM x(sx+1,sy+1)
+DIM y(sx+1,sy+1)
 dx=12/sx
 dy=12/sy
 m=120
@@ -24,10 +24,12 @@ FOR i=0 TO sx
     z=m*SIN(i/2/pi)*SIN(j/2/pi)    
     x(i,j)=200+(i-j)*2*s
     y(i,j)=100+j*s-z
+    ' print i,j,x(i,j),y(i,j)
   NEXT j
-  PRINT AT(2,1);i''
+  PRINT i''chr$(13);
   flush
 NEXT i
+
 LINE 200,0,200,y(0,0)
 print "down"
 vsync
@@ -35,19 +37,21 @@ FOR i=sx DOWNTO 1
   FOR j=sy DOWNTO 1
     y(i-1,j-1)=MIN(y(i-1,j-1),y(i,j))
   NEXT j
-  PRINT AT(3,1);i''
+  PRINT i''chr$(13);
   flush
 NEXT i
 'FILL 1,21
+print "weiter"
 FOR i=0 TO sx-1
   FOR j=0 TO sy-1
     LINE x(i,j),y(i,j),x(i+1,j),y(i+1,j)
     LINE x(i,j),y(i,j),x(i,j+1),y(i,j+1)
   NEXT j
-  PRINT AT(4,1);i''
+  PRINT i''chr$(13);
   flush
   vsync
 NEXT i
+print "fertig"
 vsync
 alert 0,"Fertig",1,"OK",balert
 quit

@@ -16,12 +16,9 @@
 #else
 #include <sysexits.h>
 #endif
+#include "config.h"
 #include "defs.h"
 #include "x11basic.h"
-#include "file.h"
-#include "parser.h"
-#include "wort_sep.h"
-#include "kommandos.h"
 
 
 char *do_gets (char *);
@@ -35,6 +32,7 @@ char ifilename[100]="neu.bas";       /* Standartfile             */
 char ifilename[100]="new.bas";
 #endif
 int prglen=0;
+int verbose=0;
 int runfile,daemonf;
 int programbufferlen=0;
 char *programbuffer=NULL;
@@ -103,12 +101,16 @@ void kommandozeile(int anzahl, char *argumente[]) {
       if(count<anzahl-1 && *argumente[count+1]!='-') {
         strncpy(buffer,argumente[count+1],100);
         xtrim(buffer,TRUE,buffer);
-        c_help(buffer);
+        do_help(buffer);
       } else usage();
       quitflag=1;
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
       intro();
       daemonf=1;
+    } else if (strcmp(argumente[count],"-v")==FALSE) {
+      verbose++;
+    } else if (strcmp(argumente[count],"-q")==FALSE) {
+      verbose--;
     } else {
       if(!loadfile) {
         loadfile=TRUE;
@@ -116,7 +118,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
       }
     }
    }
-   if(quitflag) c_quit(NULL,0);
+   if(quitflag) quit_x11basic(0);
 }
 #ifdef WINDOWS
 
@@ -144,7 +146,7 @@ int main(int anzahl, char *argumente[]) {
     if(loadfile) {
       if(exist(ifilename)) {
         loadprg(ifilename);
-	if(runfile) c_run("");
+	if(runfile) do_run();
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }
@@ -155,7 +157,7 @@ int main(int anzahl, char *argumente[]) {
     echoflag=batch=0;
     if(daemonf) zw=simple_gets("");
     else zw=do_gets("> ");
-    if(zw==NULL) c_quit(NULL,0);
+    if(zw==NULL) quit_x11basic(0);
     else {
       strcpy(buffer,zw);
       kommando(buffer);

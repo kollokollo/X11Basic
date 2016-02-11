@@ -1,4 +1,4 @@
-.TH XB2C 1 09-Apr-2011 "Version 1.17" "Linux Basic to C Translator"
+.TH XB2C 1 09-Apr-2011 "Version 1.18" "X11-Basic to C Translator"
 .SH NAME
 xb2c (X11-Basic to C translator) \- X11-Basic to C translator 
 .SH SYNOPSIS
@@ -13,9 +13,11 @@ full graphical visualisation into the easy to learn basic language on modern
 computers.
 
 .IR xb2c
-can be used to convert *.bas script-Files into C sourcecode, which can be
+can be used to convert X11-Basic *.b bytecode binary files (produced with xbbc)
+into C sourcecode, which can be
 compiled with the gnu C compiler. The sources depend on the x11basic.a or 
-libx11basic.so libraries, which therefor should be linked.  The compiled 
+libx11basic.so libraries and on the header file xb2csol.h, which therefor 
+should be installed and linked.  The compiled 
 programs will be faster that the interpreted ones and even a bit faster that 
 the bytecode processed ones (see 
 .I xbbc(1)
@@ -23,16 +25,17 @@ the bytecode processed ones (see
 .I xbvm(1)
 . Since 
 .I xb2c
-is a real compiler (compared to the X11-Basic psydo-compiler (
+is part of the compilation process (invoked by
 .I xbc
-)), some restrictions to the code apply.
+), which need following steps: xbbc xb2c and gcc. 
 
-.B For a desciption of the X11-Basic language and Usage of the interpreter see
+.B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
 
-Xb2c processes one input file. The Suffix of the input file is usually .b (a bytecode file produced by
+Xb2c processes one input file. The Suffix of the input file is usually .b 
+(a bytecode file produced by
 .I xbbc(1)
 .
 The default output file name is 
@@ -46,17 +49,11 @@ Place output in file \c
 \&.  This applies regardless to whatever
 sort of output xb2c is producing.
 .Sp
-Since only one output file can be specified, it does not make sense to
-use `\|\c
-.B \-o\c
-\&\|' when compiling more than one input file, unless you are
-producing an executable file as output.
 .Sp
 If you do not specify `\|\c
 .B \-o\c
-\&\|', the default is to put an executable file
-in `\|\c
-.B b.b\c
+\&\|', the default is to put the output into the file `\|\c
+.B 11.c\c
  .
 .SS \--version
 shows version, program and other information and exits
@@ -64,30 +61,30 @@ shows version, program and other information and exits
 print a short help
 
 For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+look at the README file and the X11-Basic manual. 
 
 
 .SH EXAMPLES
 .nf
-xbbc testme.bas -o testme.o
+xbbc testme.bas -o testme.b
     produces a bytecode file testme.b
 xb2c testme.b -o testme.c
     produces a file testme.c
 gcc testme.c -o testme -lx11basic -ldl -lm -lcurses -lncurses -lasound -lreadline -lX11
-    produces an excecutable file testme
+    produces an excecutable file testme. However the same result can be optained by
+xbc -virtualm testme.bas -o testme
+    which does all the above steps.
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The basic to C translator
-Actually this compiler is really a
-translator. 
 This translator is not yet highly optimized.
 There is no way to recreate the .bas source code from the c file.. 
 But still the c file is platform independant.
 
 .SH VERSION
-This Page was created for V.1.17
+This Page was created for V.1.18
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic to C translator, you should
