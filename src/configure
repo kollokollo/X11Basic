@@ -523,7 +523,7 @@ else
 fi
 
 
-version="1.04"
+version="1.05"
 vdate=`date`
 
 cat > version.h  <<EOF

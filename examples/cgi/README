@@ -1,0 +1,9 @@
+Diese Beispiel-Scripten lassen sich als *.cgi Programme von einem
+Webserver (z.B. apache) aus aufrufen. Bei mir befinden sie sich z.B. 
+im Ordner /usr/local/httpd/cgi-bin/.
+Auf meiner Homepage http://cips02.physik.uni-bonn.de/~hoffmann/
+können die Scripte live erlebt und ausprobiert 
+werden.
+
+viel Spass damit
+M. Hoffmann 01'2001

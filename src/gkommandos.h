@@ -38,5 +38,5 @@ void c_movew(char *), c_openw(char *),c_pcircle(PARAMETER *,int);
 void c_pellipse(PARAMETER *,int), c_plot(PARAMETER *,int),c_sizew(char *),c_titlew(char *);
 void c_fileselect(PARAMETER *,int),c_xload(char *),c_xrun(char *);
 void c_savescreen(char *),c_savewindow(char *);
-void c_box(PARAMETER *,int),c_pbox(PARAMETER *,int),c_line(PARAMETER *,int);
+void c_box(PARAMETER *,int),c_rbox(PARAMETER *,int),c_prbox(PARAMETER *,int),c_pbox(PARAMETER *,int),c_line(PARAMETER *,int);
 void c_polyfill(char *),c_polyline(char *),c_polymark(char *);

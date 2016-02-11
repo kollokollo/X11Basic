@@ -1,9 +1,0 @@
-Ich habe mal ein nedit-Makropaket fuer Basic angefangen.
-Wer Spass daran hat ...
-
-einfach 
-
-nedit -import nedit.defs 
-
-aufrufen und dann mit save defaults abspeichern. 
-

@@ -1,0 +1,11 @@
+X11-Basic V.1.05
+
+This is a macro package for nedit.
+
+
+simply type
+
+nedit -import nedit.defs 
+
+and then save defaults. 
+

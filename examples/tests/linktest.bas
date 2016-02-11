@@ -13,5 +13,5 @@ while peek(r)>0
 wend
 print
 unlink #1
-~free(adr)
+free adr
 quit

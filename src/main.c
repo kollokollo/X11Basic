@@ -13,15 +13,13 @@
 #include <string.h>
 #include "version.h"
 #include "defs.h"
-
-#define FALSE 0
-#define TRUE (!FALSE)
+#include "options.h"
 
 void reset_input_mode();
 void x11basicStartup();
 void programmlauf();
 char *do_gets (char *); 
-void intro();
+
 void loadprg(char *);
 void kommando(char *);
 
@@ -35,30 +33,59 @@ extern int pc,sp,err,errcont,everyflag,batch,echo;
 
 const char version[]=VERSION;           /* Programmversion           */
 const char vdate[]=VERSION_DATE;
+extern const char libversion[];
+extern const char libvdate[];
 int loadfile=FALSE;
-char ifilename[100]="input.bas";       /* Standartfile             */
-
+#ifdef GERMAN
+char ifilename[100]="neu.bas";       /* Standartfile             */
+#else
+char ifilename[100]="new.bas";
+#endif
 int prglen=0;
 int runfile,daemonf;
 int programbufferlen=0;
 char *programbuffer=NULL;
 char *program[MAXPRGLEN];
 
+void intro(){
+  puts("***************************************************************");
+  printf("*               %s                 V. %s                *\n",xbasic_name, version);
+  puts("*                    by Markus Hoffmann 1997-2001 (c)         *");
+  puts("*                                                             *");
+#ifdef GERMAN
+  printf("* Programmversion vom     %s       *\n",vdate);
+  printf("* Library V. %s vom     %s       *\n",libversion,libvdate);
+#else
+  printf("* version date:           %s       *\n",vdate);
+  printf("* library V. %s date:   %s       *\n",libversion,libvdate);
+#endif
+  puts("***************************************************************"); 
+  puts("");
+}
+
 void usage(){
-  printf("\n Bedienungsanleitung: \n");
-  printf(" -------------------- \n\n");
-  printf("%s [-e -h -l] [<filename>] --- Basic-Programm ausfuehren  [%s]\n",xbasic_name,ifilename);
-  printf("\n"); 
-  printf("-l                  --- Programm nur laden \n");
-  printf("-e <kommando>       --- Basic Kommando ausfuehren \n");
-  printf("--eval <ausdruck>   --- Num. Ausdruck auswerten  \n");
-  printf("-h --help           --- Usage  \n");
-/*  printf("--help <topic>      --- Print help on topic \n");  */
-  printf("\n");
+#ifdef GERMAN
+  puts("\n  Bedienungsanleitung:\n --------------------- \n");
+  printf(" %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n",xbasic_name,ifilename);
+  puts("-l                  --- Programm nur laden");
+  puts("-e <kommando>       --- Basic Kommando ausführen");
+  puts("--eval <ausdruck>   --- Num. Ausdruck auswerten");
+  puts("-h --help           --- Diese Kurzhilfe");
+  puts("--help <Stichwort>  --- Hilfe zum Stichwort/Befehl\n");  
+#else
+  puts("\n Usage:\n ------ \n");
+  printf(" %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n",xbasic_name,ifilename);
+  puts("-l                  --- do not run the program (only load)");
+  puts("-e <command>        --- execute basic command");
+  puts("--eval <exp>        --- evaluate num. expression");
+  puts("-h --help           --- Usage");
+  puts("--help <topic>      --- Print help on topic\n");    
+#endif
 }
 
 void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
+  char buffer[100];
 
   /* Kommandozeile bearbeiten   */
   runfile=TRUE;
@@ -80,7 +107,11 @@ void kommandozeile(int anzahl, char *argumente[]) {
       quitflag=1;   
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();
-      usage();
+      if(count<anzahl-1 && *argumente[count+1]!='-') {
+        strncpy(buffer,argumente[count+1],100);
+        xtrim(buffer,TRUE,buffer);
+        c_help(buffer);
+      } else usage();
       quitflag=1;   
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
       intro();
@@ -95,6 +126,8 @@ void kommandozeile(int anzahl, char *argumente[]) {
    if(quitflag) c_quit("");
 }
 
+char *simple_gets(char *);
+
 main(int anzahl, char *argumente[]) {
   char buffer[MAXSTRLEN],*zw; 
  
@@ -107,7 +140,6 @@ main(int anzahl, char *argumente[]) {
   
   if(anzahl<2) {    /* Kommandomodus */
     intro();
-    usage();
     batch=0;
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */

@@ -6,13 +6,16 @@ echo off
 '
 '	PROGRAM datum1
 '	
-	if parm$<>""
-		in$=parm$
-	else	
-		print "Bitte das Datum eingeben und zwar in der Form:"
-		print "TT.MM.JJJJ : (z.B. ";date$;" )";
-		input "",in$
-	endif
+if parm$<>""
+  in$=parm$
+else	
+  print "Bitte das Datum eingeben und zwar in der Form:"
+  print "TT.MM.JJJJ : (z.B. ";date$;" )";
+  input "",in$
+  if in$=""
+    in$=date$
+  endif
+endif
 	tag=val(left$(in$,2))
 	xtag=val(left$(date$,2))
 	jahr=val(right$(in$,4))
@@ -79,8 +82,8 @@ echo off
 		else
 			print "war"'
 		endif
-	endif
-        print " ein "'wochentage$(wtag)'"."
+  endif
+        print " ein ";wochentage$(wtag);"."
 	
 	if wtag=5 and tag=13
                 
@@ -107,7 +110,7 @@ do
 	endif
 loop
 
-
+quit
 '
 '   ### und nun das fakultative ....
-	END
+END

@@ -6,15 +6,19 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-/* Some systems can't handle large BSS segments (e.g. Linux), so this may be set
- * in config.h
- */
-#ifndef SMALL
-#define SMALL 1
+/* Language setting:   english is the default   */
+/*#ifndef GERMAN
+  #define GERMAN
 #endif
+#undef GERMAN*/
+
 
 /* Kontrollsystemanbindung. Nur wichtig fuer Benutzer bei ELSA in Bonn /*
 /* sonst bitte abschalten */
+
+/*#ifndef CONTROL
+  #define CONTROL
+#endif */
 
 /*#undef CONTROL*/
 

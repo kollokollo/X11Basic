@@ -45,6 +45,7 @@ DO
 	circle neux,neuy,3
         exit if mousek>500
 	vsync
+        pause 0.001
 loop
 ' " ... und der Wurm verpuppte sich und ward niemehr gesehen..."
 quit

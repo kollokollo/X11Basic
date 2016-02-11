@@ -10,8 +10,8 @@
  
 #define FALSE    0
 #define TRUE     (!FALSE)
-#define PI       3.141592654
-#define E        2.718281828
+#define PI       3.141592653589793
+#define E        2.718281828459
 
 
 #define MAXSTRLEN   4096   /* in Bytes */
@@ -20,8 +20,8 @@
 #define MAXVARNAMLEN  64
 #define STACKSIZE    512
 #define ANZVARS     1024
-#define ANZLABELS   1000
-#define ANZPROCS    1000
+#define ANZLABELS   1024
+#define ANZPROCS    1024
 
 #define DEFAULTWINDOW 1
 
@@ -32,7 +32,7 @@
 #define min(a,b) ((a<b)?a:b)
 #define max(a,b) ((a>b)?a:b)
 #define sgn(x)   ((x<0)?-1:1)
-#define rad(x)   (3.141592654*x/180)
-#define deg(x)   (180*x/3.141592654)
+#define rad(x)   (PI*x/180)
+#define deg(x)   (180*x/PI)
 
 #endif

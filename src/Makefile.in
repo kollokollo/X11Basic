@@ -92,6 +92,7 @@ DIST2=$(DISTOBJS:.o=.c)
 
 
 DIR=X11Basic-@version@
+DIR2=X11Basic-src-@version@
 
 LINKFLAGS = -L/usr/lib/termcap
 
@@ -141,11 +142,14 @@ install2 : dyn lib
 	cp xbasic.dyn ${HOME}/bin/xbasic
 	cp libx11basic.so /usr/local/lib/
 	strip ${HOME}/bin/xbasic
-installroot : dyn lib 
+installroot : dyn lib x11basic.a
 	cp xbasic.dyn /bin/xbasic
 	cp libx11basic.so /usr/local/lib/
+	cp x11basic.a /usr/local/lib/
 	rm -f /usr/lib/libx11basic.so
+	rm -f /usr/lib/x11basic.a
 	ln -s /usr/local/lib/libx11basic.so /usr/lib/libx11basic.so
+	ln -s /usr/local/lib/x11basic.a /usr/lib/x11basic.a
 	strip /bin/xbasic
 	strip /usr/local/lib/libx11basic.so
 	(cd .. ; cp man-pages/x11basic.1 /usr/man/man1/x11basic.1)
@@ -154,13 +158,16 @@ clean :
 	rm -f xbasic xbasic.dyn xbasic.static *.o *.so a.out *.a
 
 distclean : clean
-	rm -f Makefile config.cache config.status
+	rm -f Makefile config.cache config.status config.log
 
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
 	(cd ..; tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
+rpm :	dist
+	cp /tmp/$(DIR).tar.gz /usr/src/packages/SOURCES/
+	rpm -ba --clean x11basic.spec
 
 depend : $(DEPSRC) 
 	cp Makefile Makefile.bak

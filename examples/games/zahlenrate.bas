@@ -8,6 +8,7 @@ PRINT "In möglichst wenigen Versuchen      "
 PRINT "eine Zahl zwischen 1 und 1000 zu erraten."
 print
 ' varload best.user.zahlenr$,best.vers.zahlenr,zahlenrdate$
+randomize
 do
 	print "Der Bisherig beste User ist ";
 

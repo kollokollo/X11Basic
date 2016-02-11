@@ -1,0 +1,304 @@
+#!/bin/xbasic
+' Macht aus mp3-Files in aktuellen Directory ein CD-Cover. 
+' (c) markus Hoffmann 1999
+'
+' Benoetigt fig2dev, mp3info
+'
+' Die Ausgabe ist ein File im Home-Direktory wahlweise *.fig zum Nachbearbeiten
+' mit xfig oder Postscript zum Drucken etc...
+'
+' Letzte Bearbeitung Dez. 2000
+'
+echo off
+
+figfilename$=""
+psfilename$=""
+version$="1.04"
+
+dim label$(500)
+dim titel$(500)
+dim autor$(500)
+dim m(500)
+dim s(500),aa(500)
+dim dat$(500)
+
+anzdat=0
+anzautor=0
+anzlabel=0
+anztitel=0
+gm=0
+gs=0
+various=val(param$(2))
+
+print "mp3-CD Cover (c) MH  V."+version$+"   Jan 2001"
+
+labels$=system$("mp3info -f '%m %s "+chr$(34)+"%a"+chr$(34)+" "+chr$(34)+"%l"+chr$(34)+" "+chr$(34)+"%t"+chr$(34)+"' ./*.mp3")
+
+wort_sep labels$,chr$(10),1,t$,labels$
+while len(t$)
+  wort_sep t$," ",1,m$,t$
+  wort_sep t$," ",1,s$,t$ 
+  wort_sep t$," ",1,a$,t$
+  wort_sep t$," ",1,l$,t$
+
+  m(anztitel)=val(m$)
+  s(anztitel)=val(s$)
+  t$=left$(t$,len(t$)-1)
+  t$=right$(t$,len(t$)-1)
+  titel$(anztitel)=t$
+  a$=left$(a$,len(a$)-1)
+  a$=right$(a$,len(a$)-1)
+  if various
+    t$=a$+": "+t$
+  endif
+  t$=left$(t$+" ...............................",31+4*various)
+  autor$(anzautor)=a$
+  add gm,val(m$)
+  add gs,val(s$)
+  s$=str$(s(anztitel),2,2,1)
+  @newautor(a$)
+
+  dat$(anztitel)=str$(anztitel+1,2,2)+". "+t$+" ("+m$+"'"+s$+")"
+  if anzautor>1 and various=0
+    dat$(anztitel)=dat$(anztitel)+" *"+str$(aa(anztitel)+1)
+  endif
+  inc anztitel
+  wort_sep labels$,chr$(10),1,t$,labels$
+wend
+while gs>60
+  sub gs,60
+  inc gm
+wend
+
+labels$=system$("mp3info -f '%l' ./*.mp3")
+wort_sep labels$,chr$(10),1,t$,labels$
+while len(t$)
+
+  f=0
+  for i=0 to anzlabel-1
+  if upper$(t$)=upper$(label$(i))
+    f=true
+  endif
+  next i
+  if f=0
+    label$(anzlabel)=t$
+    inc anzlabel
+  endif
+  wort_sep labels$,chr$(10),1,t$,labels$
+wend
+
+gesamtzeit=0
+if anzlabel=1
+  print "Label: "+label$(0)
+  print anztitel;" Stuecke."
+else
+  print anztitel;" Stuecke aus "+str$(anzlabel)+" Labels."
+  d$="Labels: "
+  for i=0 to anzlabel-1
+    d$=d$+chr$(34)+label$(i)+chr$(34)+" "
+    if len(d$)>=40
+      print d$
+      d$=""
+    endif
+  next i
+  if len(d$)
+    print d$
+  endif
+endif
+print
+if anzautor
+  if anzautor>1
+    d$="Autoren: "
+    for i=0 to anzautor-1
+      d$=d$+"*"+str$(i+1)+":"+autor$(i)+" "
+      if len(d$)>=40
+        print d$
+        d$=""
+      endif
+    next i
+    if len(d$)
+      print d$
+    endif
+  else
+    print "Autor: "+autor$(0)
+  endif
+endif
+if anztitel=0
+  print "Keine *.mp3 Files gefunden."
+  quit
+endif
+
+print "----------------------------------------------"
+for i=0 to anztitel-1
+  print dat$(i)
+next i
+print space$(35+4*various)+"========"
+print space$(21+4*various)+"Gesamtlänge:  ("+str$(gm)+"'"+str$(gs,2,2,1)+")"
+
+la$=label$(0)
+if len(la$)
+  for i=0 to len(la$)-1
+    if mid$(la$,i,1)=" "
+      la$=left$(la$,i-1)+"_"+right$(la$,len(la$)-i)
+    endif
+  next i
+endif
+
+t$=la$
+wort_sep t$,"/",0,a$,b$
+t$=a$+b$
+filename$=env$("HOME")+"/mp3Cover-"+t$
+figfilename$=filename$+".fig"
+psfilename$=filename$+".ps"
+print figfilename$
+
+open "O",#1,figfilename$
+print #1,"#FIG 3.2"
+print #1,"Portrait"
+print #1,"Center"
+print #1,"Metric"
+print #1,"A4"
+print #1,"100.00"
+print #1,"Single"
+print #1,"-2"
+print #1,"1200 2"
+
+@ps_dicke(1)
+@ps_font(14)
+@ps_color(0)
+@ps_tmode(0)
+@ps_box(10,10,120+10,120+10)
+@ps_box(10,140,150+10,118+140)
+@ps_color(0)
+@ps_dotline(10+7,140,7+10,118+140)
+@ps_dotline(10+143,140,143+10,118+140)
+@ps_groesse(14)
+@ps_angle(90)
+@ps_font(1)
+@ps_text(10+5,140+115,autor$(0)+": "+label$(0))
+@ps_angle(270)
+@ps_text(10+145,140+3,autor$(0)+": "+label$(0))
+@ps_angle(0)
+@ps_text(10+9,140+8,autor$(0)+": ")
+@ps_font(2)
+@ps_tmode(1)
+@ps_groesse(18)
+@ps_text(10+75,140+15,label$(0))
+@ps_font(14)
+@ps_groesse(14)
+@ps_tmode(0)
+abstand=5
+if anztitel>21
+  abstand=3
+  @ps_groesse(13)
+else if anztitel>15
+  abstand=4
+endif
+for i=0 to anztitel-1
+  @ps_text(23,165+abstand*i,dat$(i))
+next i
+@ps_text(23,165+abstand*i,space$(35+4*various)+"========")
+inc i
+@ps_text(23,165+abstand*i,space$(21+4*various)+"Gesamtlänge:  ("+str$(gm)+"'"+str$(gs,2,2,1)+")")
+
+
+@ps_tmode(1)
+@ps_groesse(32)
+@ps_font(2)
+@ps_text(10+60,10+60,label$(0))
+@ps_tmode(1)
+@ps_groesse(22)
+@ps_font(1)
+if various
+  @ps_text(10+60,10+100-8/2,"")
+else
+if anzautor
+  for i=0 to anzautor-1
+    @ps_text(10+60,10+100+i*8-anzautor*8/2,autor$(i))
+  next i
+endif
+endif
+@ps_font(10)
+@ps_tmode(0)
+@ps_groesse(8)
+@ps_text(80,140+116,"mp3Cover V."+version$+" (c) "+date$)
+close #1
+system "fig2dev -L ps -z A4 -c "+figfilename$+" "+psfilename$
+' system "rm "+figfilename$
+
+quit
+procedure newautor(a$)
+  local f,i
+  a$=trim$(a$)
+'  print str$(anzautor)+" Newautor: "+a$
+  f=0
+  if anzautor
+    for i=0 to anzautor-1
+      if upper$(autor$(i))=upper$(a$)
+        f=1
+        aa(anztitel)=i
+      endif
+    next i
+  endif
+  if f=0
+    aa(anztitel)=anzautor
+    autor$(anzautor)=a$
+    inc anzautor
+  endif
+return
+procedure ps_line(x1,y1,x2,y2)
+  @mmm
+  print #1,"2 1 0 "+str$(dicken)+" "+str$(colorn)+" 7 0 0 -1 0.000 0 0 -1 0 0 2"
+  print #1," "+str$(x1)+" "+str$(y1)+" "+str$(x2)+" "+str$(y2)
+return
+procedure ps_dotline(x1,y1,x2,y2)
+  @mmm
+  print #1,"2 1 2 "+str$(dicken)+" "+str$(colorn)+" 7 0 0 -1 3.000 0 0 -1 0 0 2"
+  print #1," "+str$(x1)+" "+str$(y1)+" "+str$(x2)+" "+str$(y2)
+return
+procedure ps_box(x1,y1,x2,y2)
+  @mmm
+  print #1,"2 1 0 "+str$(dicken)+" "+str$(colorn)+" 7 0 0 -1 0.000 0 0 -1 0 0 5"
+  print #1," "+str$(x1)+" "+str$(y1)+" "+str$(x2)+" "+str$(y1);
+  print #1," "+str$(x2)+" "+str$(y2)+" "+str$(x1)+" "+str$(y2);
+  print #1," "+str$(x1)+" "+str$(y1)
+return
+procedure ps_pbox(x1,y1,x2,y2)
+  @mmm
+  print #1,"2 1 0 "+str$(dicken)+" "+str$(colorn)+" 7 0 0 20 0.000 0 0 -1 0 0 5"
+  print #1," "+str$(x1)+" "+str$(y1)+" "+str$(x2)+" "+str$(y1);
+  print #1," "+str$(x2)+" "+str$(y2)+" "+str$(x1)+" "+str$(y2);
+  print #1," "+str$(x1)+" "+str$(y1)
+return
+procedure ps_text(x1,y1,t$)
+  @mmm  
+  print #1,"4 "+str$(tmoden)+" 0 100 0 "+str$(fontn)+" "+str$(groessen)+" "+str$(anglen,6,6)+" 4 165 4830 "+str$(x1)+" "+str$(y1)+" "+t$+"\001"
+return
+procedure mmm
+  mul x1,45
+  mul y1,45
+  mul x2,45
+  mul y2,45
+return
+
+procedure ps_color(c)
+  colorn=c
+return
+procedure ps_pattern(c)
+  patternn=c
+return
+procedure ps_dicke(c)
+  dicken=c
+return
+procedure ps_angle(c)
+  anglen=c/180*pi
+return
+procedure ps_groesse(c)
+  groessen=c
+return
+procedure ps_tmode(c)
+  tmoden=c
+return
+procedure ps_font(c)
+  fontn=c
+return

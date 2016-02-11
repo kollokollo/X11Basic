@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
 
 
@@ -20,14 +21,11 @@
 #define TRUE (!FALSE)
 
 
-char *lineinput( FILE *n, char *line)    /* liest eine ganze Zeile aus einem ASCII-File ein */
-{ char c; int i;
+char *lineinput( FILE *n, char *line) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
+  char c; int i=0;
  
-  i=0;
-  while((c=fgetc(n))!=EOF)
-    {
-      if(c=='\n')
-	{
+  while((c=fgetc(n))!=EOF) {
+      if(c=='\n') {
 	  line[i]='\0';
 	  return line;
 	}
@@ -51,20 +49,15 @@ char *input( FILE *n, char *line)    /* liest bis Komma oder Zeilenende einem AS
     return line;
 }
 
-long lof( FILE *n)
-{	long laenge,position;
+long lof( FILE *n) {	
+  long laenge,position;
 	
-	position=ftell(n);
-	if(fseek(n,0,2)==0){
-		laenge=ftell(n);
-		if(fseek(n,position,0)==0){
-			return(laenge);
-		} else {
-			return(-1);
-		}
-	} else {
-		return(-1);
-	}
+  position=ftell(n);
+  if(fseek(n,0,2)==0){
+    laenge=ftell(n);
+    if(fseek(n,position,0)==0)  return(laenge);
+  }
+  return(-1);
 }
 
 
@@ -74,27 +67,16 @@ int eof(FILE *n) {
   return c==EOF;
 }
 
-int bsave( char *name, char *adr, long len)
-{ int   fdis;
-
-
-	fdis=creat(name,0644);
-	if (fdis==-1) return(fdis);
-	
-	while(len>32000) {
-		write(fdis,adr,32000);
-		len-=32000; adr+=32000;
-	}
-	write(fdis,adr,len);
-	
-	
-	close(fdis);
-	return(0);
+int bsave( char *name, char *adr, long len) { 
+  int fdis=creat(name,0644);
+  if(fdis==-1) return(-1);
+  if(write(fdis,adr,len)==-1) io_error(errno,"write");
+  return(close(fdis));
 }
 
-long bload( char *name, char *adr, long len)
-{	FILE *fdis;
-	long gelesen=0;
+long bload( char *name, char *adr, long len) {	
+  FILE *fdis;
+  long gelesen=0;
 	
 	fdis=fopen(name,"r");
 	if (fdis==NULL) return(0);
@@ -113,7 +95,7 @@ int exist( char *name ) {
 #else
 int exist(char *filename) {
   struct stat fstats;
-  int retc = stat (filename, &fstats);
+  int retc=stat(filename, &fstats);
   if(retc==-1) return(FALSE);
   return(TRUE);
 }

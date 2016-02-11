@@ -291,7 +291,7 @@ ARRAY *csvget(char *n,int nn, int o) {
 	if (CCSERR) printf("ERROR in ccs_get_subvector: %s\n", ccs_get_error_message());
 	return(ergebnis);
     } else {
-	printf("Csget: Parameter hat falschen Typ %s\n",n);
+	error(46,n); /* Parameter hat falschen Typ */
 	return(ergebnis);
     }
   }
@@ -332,7 +332,7 @@ char *csgets(char *n) {
       ccs_err=CCSERR;
       return(ergebnis);
     } else {
-      printf("Csget: Parameter hat falschen Typ %s\n",n);
+      error(47,n); /* Parameter hat falschen Typ */
       ergebnis=malloc(8);
       strcpy(ergebnis,"<ERROR>");
       ccs_err=CCSERR;

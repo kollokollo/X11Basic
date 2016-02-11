@@ -9,9 +9,10 @@ color get_color(0,65535,0)
 for i=0 to 30
 circle 320,200,i*5
 next i
+text 10,10,"Mit der rechten Maustaste geht es weiter."
 fileselect "RSC-Laden","./*.rsc","",f$
 rsrc_load f$
-for i=0 to 32
+for i=0 to 12
   form_do i,b
   print b
 next i

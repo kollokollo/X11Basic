@@ -29,6 +29,7 @@
 
 #include "version.h"
 #include "defs.h"
+#include "options.h"
 #include "protos.h"
 #include "kommandos.h"
 #include "gkommandos.h"
@@ -127,6 +128,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "DUMP"     , c_dump ,0,1,{PL_STRING}},
 
  { P_ARGUMENT,   "ECHO"     , c_echo ,1,1,{PL_KEY}},
+ { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
  { P_PLISTE,   "ELIPSE"   , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ELSE,   "ELSE"     , bidnm  ,0,2},
@@ -150,6 +152,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
  { P_FOR,    "FOR"      , c_for,1,-1,{PL_KEY}},
  { P_ARGUMENT,    "FORM_DO"      , c_form_do,2,2},
+ { P_ARGUMENT,    "FREE"      , c_free,1,1,{PL_INT}},
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_KEY}},
 
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
@@ -157,6 +160,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "GOTO"     , c_goto,1,1,{PL_LABEL}},
  { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
 
+ { P_ARGUMENT,   "HELP"    , c_help,0,1,{PL_KEY}},
  { P_SIMPLE, "HOME"     , c_home,0,0},
 
  { P_IF,     "IF"       , c_if,1,-1,{PL_KEY}},
@@ -213,7 +217,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "POLYFILL" , c_polyfill,   3,7},
  { P_ARGUMENT,   "POLYLINE" , c_polyline,   3,6},
  { P_ARGUMENT,   "POLYMARK" , c_polymark,   3,6},
-
+ { P_PLISTE,     "PRBOX"    , c_prbox ,      4,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,  "PRINT"    , c_print,       0,-1},
  { P_PROC,   "PROCEDURE", c_end  ,      0,0},
  { P_IGNORE, "PROGRAM"  , c_nop  ,      0,0},
@@ -225,7 +229,8 @@ const COMMAND comms[]= {
 
  { P_SIMPLE, "QUIT"     , c_quit,       0,0},
 
- { P_IGNORE, "RANDOMIZE", c_nop  ,      0,0},
+ { P_PLISTE, "RANDOMIZE", c_randomize  ,      0,1,{PL_INT}},
+ { P_PLISTE,     "RBOX"      , c_rbox       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "READ"     , c_read,       1,-1},
  { P_ARGUMENT,   "RELSEEK"  , c_relseek,    2,2,{PL_FILENR,PL_INT}},
  { P_REM,    "REM"      , c_nop  ,      0,0},
@@ -238,6 +243,7 @@ const COMMAND comms[]= {
 
  { P_SIMPLE, "RUN"      , c_run,        0,0},
 
+ { P_ARGUMENT,   "SAVE"     , c_save,0,1,{PL_STRING}},
  { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1,{PL_STRING}},
  { P_ARGUMENT,   "SAVEWINDOW", c_savewindow,1,1,{PL_STRING}},
  { P_ARGUMENT,   "SCOPE"    , c_scope,      1,-1},
@@ -250,8 +256,11 @@ const COMMAND comms[]= {
  { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1,{PL_STRING}},
  { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,{PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,	"SGET" , c_sget,   1,1,{PL_STRING}},
+ { P_ARGUMENT,  "SHM_DETACH"      , c_detatch,1,1,{PL_INT}},
+ { P_ARGUMENT,  "SHM_FREE"      , c_shm_free,1,1,{PL_INT}},
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
  { P_ARGUMENT,	"SIZEW"    , c_sizew,      3,3,{PL_INT,PL_INT,PL_INT}},
+ { P_ARGUMENT,	"SPLIT" , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
  { P_ARGUMENT,	"SPUT"    , c_sput,      1,1,{PL_STRING}},
  { P_SIMPLE,	"STOP"     , c_stop,       0,0},
  { P_ARGUMENT,	"SUB"      , c_sub,        2,2,{PL_NVAR,PL_NUMBER}},
@@ -363,7 +372,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  pret[i].pointer=malloc(strlen(w1)+1);
 	  strcpy(pret[i].pointer,w1);
 	  pret[i].integer=strlen(w1);
-        } else printf("Unbekannter Parametertyp.\n");
+        } else puts("unknown parameter type.");
       } else pret[i].typ=PL_LEER;
       
       e=wort_sep(w2,',',TRUE,w1,w2);
@@ -391,6 +400,23 @@ void loadprg(char *filename) {
   mergeprg(filename);
 }
 
+extern char ifilename[];
+
+int saveprg(char *fname) {
+  char *buf=malloc(programbufferlen);
+  int i=0;
+  while(i<programbufferlen) {
+    if(programbuffer[i]==0 || programbuffer[i]=='\n') 
+      buf[i]='\n';
+    else   
+      buf[i]=programbuffer[i];
+    i++;
+  }
+  bsave(fname,buf,programbufferlen);
+
+  return(0);
+}
+
 int mergeprg(char *fname) {
   int i,len;
   char *pos;  
@@ -414,11 +440,15 @@ int mergeprg(char *fname) {
     }
     i++;
   }
-
-
   return(init_program());
 }
-
+void structure_warning(char *comment) {
+#ifdef GERMAN
+  printf("Warnung: Programmstruktur fehlerhaft bei %s.\n",comment);
+#else
+  printf("Warning: corrupt program structure ==> %s.\n",comment);
+#endif
+}
 int init_program() {
   char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,typ;
 
@@ -466,7 +496,7 @@ int init_program() {
         if(pos2 != NULL) {
           pos2[0]=0;pos2++;
           pos3=pos2+strlen(pos2)-1;
-          if(pos3[0]!=')') printf("Syntax error bei Parameterliste\n");
+          if(pos3[0]!=')') puts("Syntax error ==> Parameterliste");
           else pos3[0]=0;
         } else pos2=zeile+strlen(zeile);
         procs[anzprocs].name=malloc(strlen(buffer)+1);
@@ -535,16 +565,16 @@ int init_program() {
 	    /* Einige Befehle noch nachbearbeiten */
 	    if(strcmp(zeile,"LOOP")==0) { /*Zugehoeriges Do suchen */
 	      pcode[i].integer=suchep(i-1,-1,P_DO,P_LOOP,P_DO); 
-              if(pcode[i].integer==-1)  printf("Warnung: LOOP: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+              if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */ 
 	    } else  if(strcmp(zeile,"WEND")==0) { /*Zugehoeriges WHILE suchen */
               pcode[i].integer=suchep(i-1,-1,P_WHILE,P_WEND,P_WHILE); 
-              if(pcode[i].integer==-1)  printf("Warnung: WEND: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+              if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */ 
 	    } else  if(strcmp(zeile,"NEXT")==0) { /*Zugehoeriges FOR suchen */
               pcode[i].integer=suchep(i-1,-1,P_FOR,P_NEXT,P_FOR); 
-              if(pcode[i].integer==-1)  printf("Warnung: NEXT: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+              if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */ 
 	    } else  if(strcmp(zeile,"UNTIL")==0) { /*Zugehoeriges REPEAT suchen */
               pcode[i].integer=suchep(i-1,-1,P_REPEAT,P_UNTIL,P_REPEAT); 
-              if(pcode[i].integer==-1)  printf("Warnung: UNTIL: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+              if(pcode[i].integer==-1)  structure_warning(zeile); /*Programmstruktur fehlerhaft */ 
 	    }
 	    break;
 	  }
@@ -562,23 +592,23 @@ int init_program() {
     
   } 
 #ifdef DEBUG
-  printf("PASS 2:\n");
+  puts("PASS 2:");
 #endif
   /* Pass 2 */
   for(i=0; i<prglen;i++) {
   
     if((pcode[i].opcode&PM_SPECIAL)==P_ELSE) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1; 
-      if(pcode[i].integer==0)  printf("Warnung: ELSE: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+      if(pcode[i].integer==0)  structure_warning("ELSE"); /*Programmstruktur fehlerhaft */ 
     } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) { /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1; 
-      if(pcode[i].integer==0)  printf("Warnung: IF: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+      if(pcode[i].integer==0)  structure_warning("IF"); /*Programmstruktur fehlerhaft */ 
     } else if((pcode[i].opcode&PM_SPECIAL)==P_WHILE) { /* Suche WEND */
       pcode[i].integer=suchep(i+1,1,P_WEND,P_WHILE,P_WEND)+1; 
-      if(pcode[i].integer==0)  printf("Warnung: WHILE: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+      if(pcode[i].integer==0)  structure_warning("WHILE"); /*Programmstruktur fehlerhaft */ 
     } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) { /* Suche NEXT */
       pcode[i].integer=suchep(i+1,1,P_NEXT,P_FOR,P_NEXT)+1; 
-      if(pcode[i].integer==0)  printf("Warnung: FOR: Programmstruktur fehlerhaft.\n"); /*Programmstruktur fehlerhaft */ 
+      if(pcode[i].integer==0)  structure_warning("FOR"); /*Programmstruktur fehlerhaft */ 
     }
   }
   free(buffer);free(zeile); 
@@ -728,6 +758,51 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
   return(-1);
 }
 
+int do_using(char *dest,double num,char *format){
+  int a,p,p2,r,i,j; /* dummy */
+  int neg,ln=0,vorz=1;
+  const char *digits="01234567899";
+  
+  if (*format=='%') { /* c-style format */
+    sprintf(dest,format,num);
+  } else { /* basic-style format */
+   
+   /* Zaehle die Rauten vor dem Punkt */
+   a=r=p=0;
+   while(format[p] && format[p]!='.') {
+     if(format[p++]=='#') r++;
+   }
+   /* Zaehle die Rauten nach dem Punkt */
+   while(format[p]) {
+     if(format[p++]=='#') a++;
+   }
+  
+   j=a+r;
+   neg=(num<0);
+   num=fabs(num);
+   num+=0.5*pow(10,(double)-a);  /* zum Runden */
+   
+   for(i=0;i<strlen(format);i++) {
+     if(format[i]=='+') {*dest=(neg ? '-':'+'); vorz=0;}
+     else if(format[i]=='-') {*dest=(neg ? '-':' ');vorz=0;}
+     else if(format[i]=='#') {
+       j--;
+       p=(int)(num/pow(10,(double)--r));
+       p2=(int)(num/pow(10,(double)(r-1)));
+      /* printf("pow=%g\n",num/pow(10,(double)r));*/
+       num-=p*pow(10,(double)r);
+       if(p) *dest=digits[p];
+       else {
+         if(vorz&&p2) { *dest=(neg ? '-':' ');vorz=0;}
+	 else *dest=(ln?'0':' ');
+       }
+     } else *dest=format[i];
+     dest++;
+   }
+   *dest='\0';
+  }
+  return(0);
+}
 
 char *print_arg(char *ausdruck) {
   int e;
@@ -750,9 +825,11 @@ char *print_arg(char *ausdruck) {
       sprintf(ergebnis+strlen(ergebnis),"\033[%.3dC",(int)parser(a1+4));
     } else {
       if(strlen(a1)) {    
-      /*printf("TEST2: <%s> <%s> %d\n",a1,a2,e);*/
-        int typ=type2(a1);
-	if(typ & ARRAYTYP) {
+        int typ,ee;
+	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
+	typ=type2(a1);
+	
+	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
 	  if(typ & STRINGTYP) ;
 	  else ;
 	} else if(typ & STRINGTYP) {
@@ -761,9 +838,16 @@ char *print_arg(char *ausdruck) {
           strcat(ergebnis,a3); 
 	  free(a3);
         } else {
-	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
-	  sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
-        }
+	  if(ee==2) {
+	    char *a3=s_parser(w4);
+	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3)+32);
+	    do_using(ergebnis+strlen(ergebnis),parser(a1),a3);
+	    free(a3);
+	  } else {
+	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
+	    sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
+          }
+	}
       }
     }
     ergebnis=realloc(ergebnis,strlen(ergebnis)+1+1);
@@ -836,8 +920,13 @@ void kommando(char *cmd) {
 	if(e!=-1) free_pliste(e,plist);
       } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
       return;
-    }
-  } else  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);  
+    } 
+  } 
+#ifdef GERMAN
+  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);  
+#else
+  printf("Syntax error! unknown command <%s> <%s>\n",w1,w2);  
+#endif
 }
 
 
@@ -859,12 +948,9 @@ void programmlauf(){
       else if(pcode[opc].opcode&P_EVAL)  kommando(program[opc]);
       else if((pcode[opc].opcode&PM_TYP)==P_SIMPLE) {
         (comms[pcode[opc].opcode&PM_COMMS].routine)(NULL);      
-      } else if(pcode[opc].opcode&P_INVALID) {
-        printf("Zeile %d: Syntax nicht korrekt: %s\n",ipc,program[opc]);
-	batch=0;
-      }
+      } else if(pcode[opc].opcode&P_INVALID) error(32,program[opc]); /*Syntax nicht korrekt*/
       else if((pcode[opc].opcode&PM_COMMS)>=anzcomms) {
-        printf("Precompiler error...\n");
+        puts("Precompiler error...");
         kommando(program[opc]);
       } else {
         if(pcode[opc].opcode&P_ARGUMENT)

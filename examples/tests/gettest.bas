@@ -1,15 +1,15 @@
 f$="fish_24.xwd"
 ' fileselect "Image laden...","./*.xwd","",f$
 if len(f$)
-if exist(f$)
-open "I",#1,f$
-len=lof(#1)
-close #1
-t$=space$(len)
-bload f$,varptr(t$)
-print len(t$)
-put 0,0,t$
-endif
+  if exist(f$)
+    open "I",#1,f$
+    len=lof(#1)
+    close #1
+    t$=space$(len)
+    bload f$,varptr(t$)
+    print len(t$)
+    put 0,0,t$
+  endif
 endif
 schwarz=get_color(0,0,0)
 for i=0 to 10

@@ -232,9 +232,31 @@ void c_box(PARAMETER *plist,int e) {
   graphics(); 
   box(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
+#define RBOX_RADIUS 16
+void c_rbox(PARAMETER *plist,int e) {
+  graphics(); 
+  line(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[1].integer);
+  line(plist[2].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
+  line(plist[2].integer-RBOX_RADIUS,plist[3].integer,plist[0].integer+RBOX_RADIUS,plist[3].integer);
+  line(plist[0].integer,plist[3].integer-RBOX_RADIUS,plist[0].integer,plist[1].integer+RBOX_RADIUS);
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
+  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+}
 void c_pbox(PARAMETER *plist,int e) {
   graphics(); 
   pbox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
+}
+void c_prbox(PARAMETER *plist,int e) {
+  graphics(); 
+  pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
+  pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
+  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
+  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
+  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
+  XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
+
 }
 
 void c_dotodraw(char *n) {
@@ -879,7 +901,7 @@ void c_titlew(char *n) {
   if(winnr<MAXWINDOWS) {
     if (!XStringListToTextProperty(&n, 1, &win_name[winnr]))    printf("Couldn't set Name of Window.\n");
     XSetWMName(display[usewindow], win[usewindow], &win_name[usewindow]);
-  } else printf("Ungueltige Windownr. %d. Maximal %d \n",winnr,MAXWINDOWS);
+  } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
   free(v);free(t);
 }
 void c_clearw(char *n) {
@@ -963,9 +985,9 @@ void c_sizew(char *n) {
 	XFreePixmap(display[winnr],pix[winnr]);	
 	pix[winnr]=pixi;
 	XFlush(display[winnr]);
-    } else  printf("Window existiert nicht. \n");
-  } else if(winnr==0) printf("Rootwindow laesst sich nicht veraendern. \n");
-  else printf("Ungueltige Windownr. %d. Maximal %d \n",winnr,MAXWINDOWS);
+    } else  puts("Window existiert nicht.");
+  } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
+  else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
 }
 
 void c_movew(char *n) {
@@ -986,8 +1008,8 @@ void c_movew(char *n) {
         XMoveWindow(display[winnr], win[winnr], x, y);
       }
     }
-  } else if(winnr==0) printf("Rootwindow laesst sich nicht veraendern. \n");
-  else printf("Ungueltige Windownr. %d. Maximal %d \n",winnr,MAXWINDOWS);
+  } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
+  else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
 }
 
 
@@ -1237,11 +1259,11 @@ int rsrc_load(char *);
 
 void c_rsrc_load(char *n) {
   char *pname=s_parser(n);
-  if(rsrc_load(pname)) printf("Fehler bei RSRC_LOAD.\n");
+  if(rsrc_load(pname)) puts("Fehler bei RSRC_LOAD.");
   free(pname);
 }
 void c_rsrc_free(char *n) {
-  if(rsrc_free()) printf("Fehler bei RSRC_FREE.\n");
+  if(rsrc_free()) puts("Fehler bei RSRC_FREE.");
 }
 void c_form_do(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
@@ -1314,12 +1336,12 @@ void c_alert_do(char *n) {
 }
 
 void c_xload(char *n) {
-    char *name=fsel_input("Programm laden:","./*.bas","");
+    char *name=fsel_input("load program:","./*.bas","");
     if(strlen(name)) {
       if(exist(name)) {
         programbufferlen=0; 
         mergeprg(name);
-      } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",name);
+      } else printf("LOAD/MERGE: File %s not found!\n",name);
     }
     free(name);
 }

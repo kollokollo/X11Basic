@@ -302,6 +302,7 @@ PROCEDURE init
   DIM feld3(xspielfeld-1,yspielfeld-1)   ! Das ist ein buffer
   DIM i1$(4),i2$(4)
   arrayfill feld(),0
+  randomize
 RETURN
 FUNCTION anzsteine(s)
   LOCAL x,y,a

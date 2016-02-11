@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "defs.h"
+#include <time.h>
+#include <errno.h>
 #include "ptypes.h"
 #include "vtypes.h"
 #include "globals.h"
@@ -74,10 +76,23 @@ void c_goto(char *n) {
 
 
 void c_system(char *n) {
-    char *buffer;
-    buffer=s_parser(n);
+    char *buffer=s_parser(n);
     system(buffer);
     free(buffer);
+}
+void c_edit(char *n) {
+    char filename[strlen(ifilename)+8];
+    char buffer2[strlen(ifilename)+1];
+    char buffer[200];
+    
+    strcpy(buffer2,ifilename);
+    sprintf(filename,"%s.~~~",ifilename);
+    saveprg(filename);
+    sprintf(buffer,"$EDITOR %s",filename); system(buffer);
+    c_new("");  
+    strcpy(ifilename,buffer2);
+    mergeprg(filename);
+    sprintf(buffer,"rm -f %s",filename); system(buffer);
 }
 
 void c_after(char *n) {
@@ -282,6 +297,16 @@ void c_case(char *n) {  /* case und default */
     pc++;
 }
 
+void c_randomize(PARAMETER *plist, int e) {
+  unsigned int seed;
+  if(e) seed=plist[0].integer;
+  else {
+    seed=time(NULL);
+    if(seed==-1) io_error(errno,"RANDOMIZE");
+  }
+  srand(seed);
+}
+
 void c_list(char *n) {
   int i;
   for(i=0;i<prglen;i++) printf("%s\n",program[i]);
@@ -309,7 +334,7 @@ char *plist_zeile(P_CODE *code) {
       ergebnis[strlen(ergebnis)-1]=0;
     }
   } else if((code->opcode)&P_EVAL) strcpy(ergebnis,code->argument);
-  else strcpy(ergebnis,"???");
+  else sprintf(ergebnis,"=?=> %d",code->opcode);
   
   return(ergebnis);
 }
@@ -336,12 +361,30 @@ void c_plist(char *n) {
   }
 }
 
-void c_load(char *n) { programbufferlen=0;  c_merge(n); }
+void c_load(char *n) { 
+  programbufferlen=0;  
+  c_merge(n); 
+}
+void c_save(char *n) { 
+  if(programbufferlen) {
+    char *name=s_parser(n);
+    if(strlen(name)==0 || strlen(n)==0) {
+      strcpy(name,ifilename);
+    }
+    if(exist(name)) {
+      char buf[100];
+      sprintf(buf,"mv %s %s.bak",name,name);
+      system(buf);
+    }
+    saveprg(name);
+    free(name);
+  }
+}
 
 void c_merge(char *n){
   char *name=s_parser(n);
   if(exist(name)) {
-    &name; /* Scheint ein Bug zu sein ... */
+    if(programbufferlen==0) strcpy(ifilename,name);
     mergeprg(name);
   } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",name);
   free(name);
@@ -349,7 +392,8 @@ void c_merge(char *n){
 
 void c_new(char *n) {
   erase_all_variables();
-  batch=0;
+  batch=0;programbufferlen=0;prglen=0;
+  strcpy(ifilename,"new.bas");
 }
 void c_let(char *n) {  
     char v[strlen(n)+1],w[strlen(n)+1];
@@ -724,7 +768,7 @@ void c_addsubmuldiv(char *n,int z) {
   int e;
   
   e=wort_sep(n,',',TRUE,var,t);
-  if(e<2) error(56,"");  /* Zuwenig Parameter ! */
+  if(e<2) error(42,"");  /* Zuwenig Parameter ! */
   else {
     if(z==1)      zuweis(var,parser(var)+parser(t));
     else if(z==2) zuweis(var,parser(var)-parser(t));
@@ -738,7 +782,7 @@ void c_swap(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
   int e,vnr1,vnr2;
   e=wort_sep(n,',',TRUE,v,w);
-  if(e<2) error(56,"");  /* Zuwenig Parameter ! */
+  if(e<2) error(42,"");  /* Zuwenig Parameter ! */
   else {
      char *r1,*r2;
      int typ;
@@ -881,10 +925,67 @@ void c_dec(char *n) {
 }
 void c_cls(char *n) { printf("\033[2J\033[H");}
 void c_home(char *n) { printf("\033[H");}
-void c_version(char *n) { printf("XBASIC Version: %s vom %s \n",version,vdate);}
+void c_version(char *n) { printf("X11-BASIC Version: %s vom %s \n",version,vdate);}
 
+#include <fnmatch.h>
+void c_help(char *w) {
+  if(strlen(w)==0) {
+    printf("HELP [topic]\n");
+  } else {
+    int j,i;
+    for(i=0;i<anzcomms;i++) {
+      if(fnmatch(w,comms[i].name,FNM_NOESCAPE)==0) {
+        printf("%s ",comms[i].name);  
+        if(comms[i].pmin) {
+          for(j=0;j<comms[i].pmin;j++) {
+	    switch(comms[i].pliste[j]) {
+	      case PL_INT: printf("i%%"); break;
+	      case PL_FILENR: printf("#n"); break;
+	      case PL_STRING: printf("t$"); break;
+	      case PL_NUMBER: printf("num"); break;
+	      case PL_SVAR: printf("var$"); break;
+	      case PL_NVAR: printf("var"); break;
+	      case PL_KEY: printf("KEY"); break;
+	      default: printf("???");
+	    }
+	    if(j<comms[i].pmin-1) printf(",");
+	  }
+        }
+        if(comms[i].pmax>comms[i].pmin || comms[i].pmax==-1) printf("[,");
+        if(comms[i].pmax==-1) printf("...");
+        else {
+        for(j=comms[i].pmin;j<comms[i].pmax;j++) {
+	    switch(comms[i].pliste[j]) {
+	      case PL_INT: printf("i%%"); break;
+	      case PL_FILENR: printf("#n"); break;
+	      case PL_STRING: printf("t$"); break;
+	      case PL_NUMBER: printf("num"); break;
+	      case PL_SVAR: printf("var$"); break;
+	      case PL_NVAR: printf("var"); break;
+	      case PL_KEY: printf("KEY"); break;
+	      default: printf("???");
+	    }
+	    if(j<comms[i].pmax-1) printf(",");
+	  }
+        }
+        if(comms[i].pmax>comms[i].pmin || comms[i].pmax==-1) printf("]");
+        printf("\n");
+      }
+    }
+  }
+}
 void c_error(char *w) {
   error((char)parser(w),"");
+}
+void c_free(char *w) {
+  free((char *)(int)parser(w));
+}
+void c_detatch(char *w) {
+  int r=shm_detatch((int)parser(w));
+  if(r!=0) io_error(r,"DETATCH");
+}
+void c_shm_free(char *w) {
+  shm_free((char *)(int)parser(w));
 }
 void c_pause(char *w) {
   int dummy,i=0;

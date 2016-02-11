@@ -44,7 +44,7 @@ void dispval(int sid, int member);
 void changemode(int sid, char *mode);
 void shm_free(int);
 void change_shm_mode(int, char *);
-int shm_malloc(size_t,void *,key_t);
+int shm_malloc(size_t,key_t);
 int open_msg(key_t);
 
 
@@ -53,7 +53,7 @@ int open_msg(key_t key) {
   int msgqueue_id;
       /* Open the queue - create if necessary */
         if((msgqueue_id = msgget(key, IPC_CREAT|0660)) == -1) {
-                 error(-41,"open");    /* Message error.*/ 
+                 io_error(errno,"open_msg");    /* Message error.*/ 
                  return(-1);
         }
   return(msgqueue_id);
@@ -82,7 +82,7 @@ void send_message(int qid, struct mymsgbuf *qbuf, long type, char *text) {
         strcpy(qbuf->mtext, text);
         if((msgsnd(qid, (struct msgbuf *)qbuf,
                 strlen(qbuf->mtext)+1, 0)) ==-1) {
-               error(-41,"send");    /* Message konnte nicht versandt werden.*/ 
+               io_error(errno,"send_message");    /* Message konnte nicht versandt werden.*/ 
         }
 }
 
@@ -101,21 +101,16 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 }
 
 
-#ifdef 0
+#if 0
 
 
-void opensem(int *sid, key_t key)
-{
-        /* Open the semaphore set - do not create! */
-
-
-        if((*sid = semget(key, 0, 0666)) == -1)
-        {
+int opensem( key_t key) {   /* Open the semaphore set - do not create! */
+     int sid;
+        if((*sid = semget(key, 0, 0666)) == -1) {
                 printf("Semaphore set does not exist!\n");
-                exit(1);
+                
         }
-
-
+	return(sid);
 }
 
 
@@ -222,10 +217,8 @@ void unlocksem(int sid, int member)
 }
 
 
-void removesem(int sid)
-{
-        semctl(sid, 0, IPC_RMID, 0);
-        printf("Semaphore removed\n");
+void removesem(int sid){
+  semctl(sid, 0, IPC_RMID, 0);
 }
 
 
@@ -283,7 +276,7 @@ void changemode(int sid, char *mode)
         semctl(sid, 0, IPC_SET, semopts);
 }
 
-#endif
+
 
 void dispval(int sid, int member) {
         int semval;
@@ -291,8 +284,10 @@ void dispval(int sid, int member) {
         printf("semval for member %d is %d\n", member, semval);
 }
 
+#endif
 
-int shm_malloc(size_t segsize,void *segptr, key_t key) {
+
+int shm_malloc(size_t segsize, key_t key) {
   int   shmid,cntr,i;
 
         /* Open the shared memory segment - create if necessary */
@@ -300,28 +295,36 @@ int shm_malloc(size_t segsize,void *segptr, key_t key) {
  
                  /* Segment probably already exists - try as a client */
                  if((shmid = shmget(key, segsize, 0)) == -1) {
-                    error(-42,"create");    /* shm_malloc error.*/ 
+                     
+                    io_error(errno,"SHM_MALLOC");    /* shm_malloc error.*/ 
                          return(-1);
                  }
         }
         
-        /* Attach (map) the shared memory segment into the current process */
-  if((segptr = shmat(shmid, 0, 0)) == -1) {
-    error(-42,"map");    /* shm_malloc error.*/ 
-    return(-1);    
-  }
   return(shmid);
 }
-
-
-
-void shm_free(int shmid)
-{
-        shmctl(shmid, IPC_RMID, 0);
-       /* printf("Shared memory segment marked for deletion\n");*/
+int shm_attach(int shmid) {
+  int r;
+  
+ if((r=(int)shmat(shmid,0,0))==-1) {
+   io_error(errno,"SHM_ATTACH");    /* shm_malloc error.*/ 
+   return(-1);
+  }
+ return(r);
 }
 
+int shm_detatch(int shmaddr) {
+  int r;
+ if((r=(int)shmdt((void *)shmaddr))==-1) return(errno);
+ return(0);
+}
 
+void shm_free(int shmid){        /*  mark for deletion*/
+        int r=shmctl(shmid, IPC_RMID, 0);
+	if(r==-1) io_error(errno,"SHM_FREE");
+}
+
+#if 0
 void change_shm_mode(int shmid, char *mode) {
         struct shmid_ds myshmds;
 
@@ -336,3 +339,4 @@ void change_shm_mode(int shmid, char *mode) {
 /*        printf("New permissions are : %o\n", myshmds.shm_perm.mode);*/
 }
 
+#endif

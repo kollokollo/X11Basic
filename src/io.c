@@ -273,18 +273,18 @@ void c_open(char *n) {
         int sock;
 	struct sockaddr_in servername;
 	 
-        printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+    /* printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
         sock=socket(PF_INET, SOCK_STREAM,0);
 	if(sock<0) {
-	  printf("ERROR: socket\n");
+	  io_error(errno,"socket");
 	  dptr[number]=NULL;
 	} else {
 	  if(init_sockaddr(&servername,filename,port)<0) {
-	    printf("ERROR: init\n");
+	    io_error(errno,"init_sockadr");
 	    dptr[number]=NULL;
 	  } else { 
 	    if(0>connect(sock,(struct sockaddr *) &servername, sizeof(servername))) {
-              printf("ERROR: connect\n");
+              io_error(errno,"connect");
 	      dptr[number]=NULL;
 	    } else {
               dptr[number]=fdopen(sock,modus2);
@@ -293,23 +293,19 @@ void c_open(char *n) {
 	}
       } else if(special=='S') { /* serve */
         int sock;
-        printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+   /*  printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
         sock=make_socket(port);
 	if(sock<0) {
-	  printf("ERROR: make_socket\n");
+	  io_error(errno,"make_socket");
 	  dptr[number]=NULL;
 	} else {
 	  if(listen(sock,1)<0) {
-	    printf("ERROR: listen\n");
+	    io_error(errno,"listen");
 	    dptr[number]=NULL;
 	  } else { 
-	    
               dptr[number]=fdopen(sock,modus2);
-	    
 	  }
 	}
- 
-
       } else if(special=='A') { /* accept */
         int sock,sock2;
 	size_t size;	
@@ -322,7 +318,7 @@ void c_open(char *n) {
 	  size=sizeof(clientname);
 	  sock2=accept(sock,(struct sockaddr *) &clientname,&size);
 	  if(sock2<0) {
-	    printf("ERROR: accept\n");
+	    io_error(errno,"accept");
 	    dptr[number]=NULL;
 	  } else {
 #ifdef DEBUG	   
@@ -330,7 +326,6 @@ void c_open(char *n) {
 	      ntohs(clientname.sin_port),sock2);
 #endif
             dptr[number]=fdopen(sock2,modus2);
-	    
 	  }
 	} else printf("Socket #d nicht geoeffnet.\n",port); 
       } else dptr[number]=fopen(filename,modus2);
@@ -354,30 +349,78 @@ void c_link(PARAMETER *plist, int e) {
 }
 
 const struct {int sf; char xf; } table[] = {
-    { EACCES,  -36 }, /* Zugriff nicht m"oglich */
-    { ENOTDIR, -36 }, 
-    { ELOOP,   -36 }, 
-    { ENXIO,   -36 }, 
-    { ENOENT,  -33 }, /* File not found */
-    { EMFILE,  -35 }, /* Zu viele Dateien offen */
-    { ENFILE,  -12 }, /* Zur Zeit sind keine weiteren offenen Files möglich */
-    { EFBIG,   -13 }, /* File zu gross */
-    { EBADF,   -37 }, /* Ungültiges Handle */
-    { ENOTSOCK,-37 },
-    { EINVAL,  -37 },
-    { ETIMEDOUT,-2 }, /* Timeout */
-    { ECONNREFUSED, -48 }, /* Verbindungsaufbau verweigert */
-    { EISCONN, -47 }, /* Verbindung schon geöffnet */
-    { ENOTCONN,-45 }, /* keine Verbindung */
-    { EADDRINUSE,-44 },/* Besetzt, Verbindung nicht moeglich */
-    { EADDRNOTAVAIL,-43 },/* Verbindungsaufbau nicht moeglich */
-    { ENETUNREACH,-43 },
-    { ENOSPC,  -28 }, /* No Space left on device */
-    { EOPNOTSUPP,-32 }, /* Ungueltige Funktionsnummer */
-    { EPIPE,   -50 }, /* Verbindung wurde unterbrochen */
-    { ENOBUFS, -23 }, /* File Table overflow */
-    { EROFS,   -30 }, /* FILE SYSTEM SCHREIBGESCHUetzt */
-    { EIO,      -1 } /* Allgemeiner IO-Fehler */
+    { 0,   7 }, /* 0: No error status currently */
+    { EPERM,   -51 }, /* 1: Not super-user */
+    { ENOENT,  -33 }, /* 2: No such file or directory*/
+    { ESRCH,    -3 }, /* 3: No such process*/
+    { EINTR,   -53 }, /* 4: Interrupted system call*/
+    { EIO,      -1 }, /* 5: Allgemeiner IO-Fehler */
+    { ENXIO,   -36 }, /* 6: No such device or address */
+    { E2BIG,    -7 }, /* 7: Arg list too long */
+    { ENOEXEC, -66 }, /* 8: Exec format error */
+    { EBADF,   -37 }, /* 9: Bad file number*/
+    { ECHILD,  -55 }, /* 10: No children*/
+    { EAGAIN,  -72 }, /* 11: Try again*/
+    { ENOMEM,  -12 }, /* 12: Not enough core*/
+    { EACCES,  -13 }, /* 13: Permission denied*/
+    { EFAULT,  -57 }, /* 14: Bad address*/
+    { ENOTBLK, -58 }, /* 15: Block device required*/
+    { EBUSY,   -59 }, /* 16: Mount device busy*/
+    { EEXIST,  -17 }, /* 17: File exists*/
+    { EXDEV,   -18 }, /* 18: Cross-device link*/
+    { ENODEV,  -19 }, /* 19: No such device*/
+    { ENOTDIR, -20 }, /* 20: Not a directory*/
+    { EISDIR,  -21 }, /* 21: Is a directory*/
+    { EINVAL,  -22 }, /* 22: Invalid argument*/
+    { ENFILE,  -23 }, /* 23: File table overflow */
+    { EMFILE,  -24 }, /* 24: Too many open files */
+    { ENOTTY,  -25 }, /* 25: Not a typewriter */
+    { ETXTBSY, -26 }, /* 26: Text file busy */
+    { EFBIG,   -27 }, /* 27: File too large */
+    { ENOSPC,  -28 }, /* 28: No space left on device */
+    { ESPIPE,  -29 }, /* 29: Illegal seek */
+    { EROFS,   -30 }, /* 30: Read-Only File-System */
+    { EMLINK,  -31 }, /* 31: Too many links*/
+    { EPIPE,   -32 }, /* 32: Broken pipe*/
+    { EDOM,    -62 }, /* 33: Math arg out of domain of func*/
+    { ERANGE,  -63 }, /* 34: Math result not representable*/
+    { EDEADLK,      -69 }, /* 35: Resource deadlock would occur*/
+    { ENAMETOOLONG, -70 }, /* 36: File name too long */
+
+    { ENOSYS,       -38 }, /* 38: Function not implemented */
+    { ENOTEMPTY,    -39 }, /* 39: Directory not empty */
+    { ELOOP,        -71 }, /* 40: Too many symbolic links encountered */
+    { EWOULDBLOCK,  -41 }, /* 41: Operation would block */
+    { ENOMSG,       -42 }, /* 42: No message of desired type*/
+    { EIDRM,        -43 }, /* 43: Identifier removed*/
+
+    { ELNRNG,       -48 }, /* 48: Link number out of range*/
+
+    { EBADE,        -52 }, /* 52: Invalid exchange*/
+
+    { EXFULL,       -54 }, /* 54: Exchange full*/
+
+    { ENOSTR,       -60 }, /* 60: Device not a stream */
+    
+    { ENOTSOCK,     -88 }, /* 88: Socket operation on non-socket */
+
+    { EOPNOTSUPP,   -95 }, /* 95: Operation not supported on transport endpoint */
+
+    { EADDRINUSE,   -98 }, /* 98: Address already in use */
+    { EADDRNOTAVAIL,-99 }, /* 99: Cannot assign requested address */
+
+    { ENETDOWN,    -100 }, /* 100: Network is down */
+    { ENETUNREACH, -101 }, /* 101: Network is unreachable */
+    { ENETRESET,   -102 }, /* 102: Network dropped connection because of reset */
+    { ECONNABORTED,-103 }, /* 103: Software caused connection abort */
+    { ECONNRESET,  -104 }, /* 104: Connection reset by peer*/
+    { ENOBUFS,     -105 }, /* 105: No buffer space available */
+    { EISCONN,     -106 }, /* 106: Transport endpoint is already connected*/
+    { ENOTCONN,    -107 }, /* 107: Transport endpoint is not connected */
+
+    { ETIMEDOUT,   -110 }, /* 110: Connection timed out */
+    { ECONNREFUSED,-111 }  /* 111: Connection refused */
+
   };
 const int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
   
@@ -542,7 +585,7 @@ void c_flush(char *n) {
     if(filenr[i]) fff=dptr[i];      
     else {error(24,n);return;} /* File nicht geoeffnet */
   }
-  fflush(fff);
+  if(fflush(fff)) io_error(errno,"FLUSH");
 }
 
 void c_seek(char *n) {

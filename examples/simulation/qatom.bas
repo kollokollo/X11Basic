@@ -23,4 +23,5 @@ DO
   NEXT i
   exit if mousek>500
   vsync
+  pause 0.001
 LOOP

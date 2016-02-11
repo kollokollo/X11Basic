@@ -50,11 +50,8 @@ char *arrptr(char *n) {
   char *r=varrumpf(n);
   char *ergebnis=NULL;
   int vnr=variable_exist(r,typ);
-  if(vnr==-1) {
-    printf("ARRPTR: Variable nicht vorhanden.\n");
-  } else {
-    ergebnis=variablen[vnr].pointer;
-  }
+  if(vnr==-1) error(15,r); /* Feld nicht dimensioniert */
+  else ergebnis=variablen[vnr].pointer;
   return(ergebnis);
 }
 
@@ -345,7 +342,7 @@ void array_add(ARRAY *a1, ARRAY *a2) {
 	  strcat(pp1[j].pointer,pp2[j].pointer);
 	  pp1[j].len+=pp2[j].len; 
     }	
-  } else printf("Inkompatibler Array-Typ\n");
+  } else puts("Inkompatibler Array-Typ.");
 }
 void array_sub(ARRAY *a1, ARRAY *a2) {
   int anz=min(anz_eintraege(a1),anz_eintraege(a2)),j;
@@ -368,7 +365,7 @@ void array_sub(ARRAY *a1, ARRAY *a2) {
     double *pp2=(double *)(a2->pointer+a2->dimension*INTSIZE); 
     for(j=0;j<anz;j++) pp1[j]-=(int)pp2[j];
  
-  } else printf("Inkompatibler Array-Typ\n");
+  } else puts("Inkompatibler Array-Typ.");
 }
 void array_smul(ARRAY *a1, double m) {
   int anz=anz_eintraege(a1),j;
@@ -378,7 +375,7 @@ void array_smul(ARRAY *a1, double m) {
   } else if(a1->typ & INTTYP) {
     int *pp1=(int *)(a1->pointer+a1->dimension*INTSIZE); 
     for(j=0;j<anz;j++) pp1[j]=m*pp1[j];
-  } else printf("Inkompatibler Array-Typ\n");
+  } else puts("Inkompatibler Array-Typ.");
 }
 ARRAY *inv_array(ARRAY *a) {
   return(nullmatrix(a->typ,a->dimension,a->pointer));
@@ -391,21 +388,20 @@ ARRAY *mul_array(ARRAY *a1, ARRAY *a2) {
   ARRAY *ergebnis;
   int anz=anz_eintraege(a1),j;
   if(a1->dimension>2 || a1->dimension<1 || a2->dimension>2 || a2->dimension<1) {
-    printf("Arrays muessen ein oder zweidimensional sein: Multiplikation nicht moeglich\n");
+    puts("Arrays muessen ein oder zweidimensional sein: Multiplikation nicht moeglich.");
     ergebnis=nullmatrix(a1->typ,a1->dimension,a1->pointer);
   } else {
     if(a1->typ & FLOATTYP)  {
       double *pp1=(double *)(a1->pointer+a1->dimension*INTSIZE); 
-      printf(" Multiplikation noch nicht moeglich\n");
+      puts("Multiplikation noch nicht möglich.");
       ergebnis=nullmatrix(a1->typ,a1->dimension,a1->pointer);
       
     } else if(a1->typ & INTTYP) {
       int *pp1=(int *)(a1->pointer+a1->dimension*INTSIZE); 
-      printf(" Multiplikation noch nicht moeglich\n");
+      puts("Multiplikation noch nicht möglich.");
       ergebnis=nullmatrix(a1->typ,a1->dimension,a1->pointer);
-      
     } else {
-      printf("Inkompatibler Array-Typ: Multiplikation nicht moeglich\n");
+      puts("Inkompatibler Array-Typ: Multiplikation nicht möglich.");
       ergebnis=nullmatrix(a1->typ,a1->dimension,a1->pointer);
     }
   }
@@ -484,7 +480,7 @@ ARRAY *einheitsmatrix(int typ, int dimension, int *dimlist) {
       ppp[i].len=0;   /* Laenge */
       ppp[i].pointer=malloc(1);
     }
-    printf("Einheitsmatrix fuer Stringfelder nicht definiert !\n");
+    puts("Einheitsmatrix für Stringfelder nicht definiert !");
   }
   /* dimlist kopieren */
   for(j=0;j<dimension;j++) ((int *)(ergebnis->pointer))[j]=dimlist[j];
@@ -527,7 +523,7 @@ int zuweis(char *name, double wert) {
    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
    else {
 	pos2=strchr(pos,')');
-	if(pos2==NULL) printf("ARRAY-Zuweisung noch nicht moeglich\n");
+	if(pos2==NULL) puts("ARRAY-Zuweisung noch nicht möglich.");
 	else {
 	  double *varptr;
 	  char *s,*t;
@@ -584,7 +580,7 @@ void zuweisi(char *name, int wert) {
    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
    else {
 	pos2=strchr(pos,')');
-	if(pos2==NULL) printf("ARRAY-Zuweisung an dieser Stelle nicht moeglich\n");
+	if(pos2==NULL) puts("ARRAY-Zuweisung an dieser Stelle nicht möglich.");
 	else {
 	  int *varptr;
 	  char *s,*t;
@@ -720,7 +716,7 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 	       
      /* Dimensionierung uebertragen */
 
-  if(wert->dimension!=max(variablen[vnr].opcode-rdim,1)) printf("Dimensionen stimmen nicht !\n");
+  if(wert->dimension!=max(variablen[vnr].opcode-rdim,1)) puts("Dimensionen stimmen nicht!");
   
       /*Loop fuer die Komprimierung */
                
@@ -845,7 +841,7 @@ int zuweissbuf(char *name, char *inhalt,int len) {
     pos2=w+strlen(w)-1;
     pos[0]=0;
     pos++;
-    if(pos2[0]!=')') printf("Fehlende schliessende Klammer.\n");
+    if(pos2[0]!=')') puts("Fehlende schliessende Klammer.");
     else pos2[0]=0;
     w[strlen(w)-1]=0; /* $-Zeichen entfernen */
 
@@ -862,7 +858,7 @@ int zuweissbuf(char *name, char *inhalt,int len) {
       strcpy(ss,pos);
       
       i=wort_sep(ss,',',TRUE,ss,t);
-      if(i==0) printf("Arrayzuweisung an dieser Stelle nicht moeglich ! \n");
+      if(i==0) puts("Arrayzuweisung an dieser Stelle nicht möglich!");
 
       bbb=(int *)variablen[vnr].pointer;
 
@@ -974,7 +970,7 @@ void array_zuweis_and_free(char *name, ARRAY *inhalt) {
       }
       free(r); free(a);
     } else {
-      printf("Arrays haben nicht dengleichen typ !\n");
+      puts("Arrays haben nicht dengleichen typ!");
       printf("ztyp-typ=%d    \n",ztyp-typ);
       printf("ARRAY: Typ=%d    \n",inhalt->typ);
       printf("       dim=%d    \n",inhalt->dimension);

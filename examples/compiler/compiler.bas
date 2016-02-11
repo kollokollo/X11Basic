@@ -1,23 +1,29 @@
-' Psydo-Kompiler fuer X11-Basic
+' Pseudo-Kompiler fuer X11-Basic
 ' erzeugt allein lauffaehigen Code auf Wunsch auch statisch mit der
 ' X11-Basic-Library gelinkt
-' (c) Markus Hoffmann Apr. 2001
+' (c) Markus Hoffmann Apr. 2001 (letzte Bearbeitung: 10.8.2001)
 
 clearw
 gelb=get_color(65535,65535,0)
 color gelb
-text 10,15,"X11-Basic Compiler V.1.04 (c) Markus Hoffmann 2001"
-fileselect "Programm auswaehlen...","./*.bas","input.bas",f$
+text 10,15,"X11-Basic Compiler V.1.04b (c) Markus Hoffmann 2001"
+fileselect "Select source file...","./*.bas","input.bas",f$
 if len(f$)=0
   quit
 endif
 if not exist(f$)
-  ~form_alert(1,"[3][File existiert nicht!][ABBRUCH]")
+  ~form_alert(1,"[3][File not found!][CANCEL]")
   quit
 endif
+rumpf$=f$
+while len(rumpf$)
+  wort_sep rumpf$,"/",1,a$,rumpf$
+wend
+wort_sep a$,".bas",1,rumpf$,a$
+
 open "O",#2,"/tmp/psydo-code.c"
-print #2,"/* PSYDO-Code.C ("+f$+")" 
-print #2,"   X11-BAsic-Psydo-Compiler Version 1.04"
+print #2,"/* PSEUDO-Code.C ("+f$+")" 
+print #2,"   X11-BAsic-Pseudo-Compiler Version 1.04b"
 print #2,"   (c) Markus Hoffmann "
 print #2,"*/"
 print #2
@@ -32,6 +38,7 @@ print #2,"const char vdate[]="+chr$(34)+date$+" "+time$+" xxxx 1.04"+chr$(34)+";
 print #2,"int programbufferlen=0;"
 print #2,"extern int param_anzahl;"
 print #2,"extern char **param_argumente;"
+print #2,"char ifilename[]="+chr$(34)+f$+chr$(34)+";"
 
 print #2,"char *programbuffer=NULL;"
 print #2,"char *program[]={"
@@ -72,14 +79,19 @@ print #2,"  param_argumente=argumente;"
 print #2,"  init_program(); c_run(""); programmlauf();"
 print #2,"}"
 close #2
-a=form_alert(2,"[2][Shall I link the x11basic library| static or dynamic ?| ][static|dynamic]")
+system "cc -O2 -c /tmp/psydo-code.c"
+a=form_alert(2,"[2][Shall I link the x11basic library| static or dynamic ?| ][static|dynamic|CANCEL]")
 if a=2
-  system "cc -o a.out /tmp/psydo-code.c -L/usr/lib/termcap -lx11basic -lm -lX11 -lreadline -ldl -ltermcap"
-else
-  system "cc -O2 -c /tmp/psydo-code.c"
-  system "cc -L/usr/lib/termcap -o a.out psydo-code.o  /usr/local/lib/x11basic.a  -lm -lX11 -lreadline -ldl -ltermcap"
+  system "cc -o a.out psydo-code.o -L/usr/lib/termcap -L/usr/X11R6/lib -lx11basic -lm -lX11 -lreadline -ldl -ltermcap"
+  system "strip a.out"
+  @endname
+else if a=1
+  system "cc -L/usr/X11R6/lib -L/usr/lib/termcap -o a.out psydo-code.o  /usr/local/lib/x11basic.a  -lm -lX11 -lreadline -ldl -ltermcap"
+  system "strip a.out"
+  @endname
+else 
+
 endif
-system "strip a.out"
 system "rm -f /tmp/psydo-code.c"
 quit
 function ersetze$(era$,erb$,erc$)
@@ -91,3 +103,15 @@ function ersetze$(era$,erb$,erc$)
   wend
   return era$
 endfunction
+procedure endname
+  fileselect "Select executable output file...","./*",rumpf$,f$
+  if len(f$)
+    if exist(f$)
+      if form_alert(1,"[3][File already exist!][overwrite|CANCEL]")=1
+        system "mv a.out "+f$
+      endif
+    else
+      system "mv a.out "+f$
+    endif
+  endif
+return

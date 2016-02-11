@@ -9,6 +9,14 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+
+#define GEMFONT "-*-lucidatypewriter-medium-r-*14*-m-*"
+#define GEMFONTSMALL "-*-lucidatypewriter-medium-r-*10*-m-*"
+
+#define max(a,b) ((a>b)?a:b)
+#define min(a,b) ((a<b)?a:b)
+
+
 #define WORD short
 #define LONG unsigned int
 #define MAXWINDOWS 16

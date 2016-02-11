@@ -20,6 +20,7 @@
 #include <X11/XWDFile.h>
 
 #include "window.h"
+#include "options.h"
 
 
 /* globale Variablen */
@@ -64,7 +65,7 @@ int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned
   int nummer=0;
   while(winbesetzt[nummer] && nummer<MAXWINDOWS) nummer++;
   if(nummer>=MAXWINDOWS) {
-      printf("Keine weiteren Fenster möglich !\n");
+      printf("No more windows !\n");
       return(-2);
   }
   return(create_window2(nummer,title,info,x,y,w,h));
@@ -114,7 +115,7 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
   wm_hints[nummer].initial_state = NormalState;
   wm_hints[nummer].input = True;
   wm_hints[nummer].icon_pixmap = icon_pixmap[nummer];
-  class_hint[nummer].res_name = "X11BASIC";
+  class_hint[nummer].res_name = "X11-Basic";
   class_hint[nummer].res_class = "Graphics";  
   
     if (!XStringListToTextProperty(&wn, 1, &win_name) ||
@@ -227,7 +228,7 @@ void graphics(){
      if(usewindow==0) {
        fetch_rootwindow();
      } else {
-       create_window2(usewindow,"Grafik","X11BASIC",100,10,640,400);
+       create_window2(usewindow,"X11-Basic","X11-Basic",100,10,640,400);
        open_window(usewindow);
      }
   }
@@ -428,7 +429,7 @@ int get_color(int r, int g, int b) {
   pixcolor.green=g;
   pixcolor.blue=b;
   if(my_XAllocColor(display[usewindow], map, &pixcolor)==0) {
-    printf("Es konnte partout keine passende Farbe gefunden werden.\n");    
+    printf("could not switch to color.\n");    
   } 
   return(pixcolor.pixel);
 }
@@ -476,13 +477,6 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
-#define GEMFONT "-*-lucidatypewriter-medium-r-*14*-m-*"
-#define GEMFONTSMALL "-*-lucidatypewriter-medium-r-*10*-m-*"
-
-#define max(a,b) ((a>b)?a:b)
-#define min(a,b) ((a<b)?a:b)
-
-
 
 
 typedef struct {int x,y,w,h;char *t,*p;int shift,cp,maxlen;} ETEXT;
@@ -1632,8 +1626,7 @@ void draw_efeld(ETEXT *e){
 #define FT_LINK   0x20
 
 
-typedef struct fileinfo
-  {
+typedef struct fileinfo {
     char name[128];       /* The file name. */
     int typ;
   } FINFO;
@@ -1738,7 +1731,7 @@ int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {
       }
     }
     closedir(dp);
-  } else printf("Directory %s konnte nicht geoeffnet werden.\n",pfad);
+  } else printf("Could not open directory %s.\n",pfad);
   return(anzfiles);
 }
 void draw_mask(char *mask, RECT box){
@@ -1850,7 +1843,11 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
     buttons[0].state=buttons[1].state=buttons[2].state=buttons[3].state=(NORMAL);
    
     buttons[0].string="OK";
+#ifdef GERMAN
     buttons[1].string="ABBRUCH";
+#else
+    buttons[1].string="CANCEL";
+#endif
     buttons[2].string="HOME";
     buttons[3].string="<";
     buttons[4].string="^";
@@ -1913,13 +1910,20 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
     
  
      /* Text  */
+#ifdef GERMAN
+#define FS_TEXT_DIR "Pfad:"
+#define FS_TEXT_SEL "Auswahl:"
+#else
+#define FS_TEXT_DIR "Directory:"
+#define FS_TEXT_SEL "Selection:"
+#endif
 
     XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
        box.x+box.w/2-(strlen(btitel)*chw)/2,box.y+2*chh,btitel,strlen(btitel));
     XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-       box.x+chw*2,box.y+3*chh+4,"Directory:",strlen("Directory:"));
+       box.x+chw*2,box.y+3*chh+4,FS_TEXT_DIR,strlen(FS_TEXT_DIR));
     XDrawString(display[usewindow],pix[usewindow],gc[usewindow],
-       box.x+chw*32,box.y+6*chh,"Auswahl:",strlen("Auswahl:"));
+       box.x+chw*32,box.y+6*chh,FS_TEXT_SEL,strlen(FS_TEXT_SEL));
 
      /* Efelder */
 

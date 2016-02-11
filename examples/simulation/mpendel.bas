@@ -62,6 +62,7 @@ color schwarz
 t=TIMER
 v=1
 x=0
+defmouse 3
 DO
   MOUSE mx,fmy,k
   IF k=1*256
@@ -76,6 +77,7 @@ DO
   color schwarz
   dt=(TIMER-t)/gn
   LINE 0,5,dt*gn*500,5
+  plot @kx(x),@ky(x_)-20
   IF dt>0
     t=TIMER
     FOR i=1 TO gn
@@ -148,12 +150,13 @@ PROCEDURE m(x)
     xx(sc)=x
   ENDIF
   sc=(sc+1) MOD 2
-  s=TIMER
   vsync
+  pause 0.02-timer+s
+  s=TIMER
 RETURN
 
 function err(t)
-return 0.3*SIN(SQR(g/l)*t)
+return 0.3*SIN(0.5*SQR(g/l)*t)
 
 ' DEFFN err(t)=(MOUSEX-320)/100   ! Hier wird mit der Maus erregt ...
 ' DEFFN err(t)=0

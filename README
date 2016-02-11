@@ -1,1 +1,21 @@
-doc/x11basic.txt
+Name        : X11Basic                    
+Version     : 1.05                              Vendor: Markus Hoffmann
+Group       : Development/Languages             License: GPL
+Packager    : Markus Hoffmann <m.hoffmann@uni-bonn.de>
+URL         : http://www-cip.uni-bonn.de/~hoffmann/X11-Basic
+Summary     : A Basic Interpreter with X11-Graphics capabilities
+Description :
+
+X11-Basic implements the most common elements of the basic langugage. With
+X11-graphics. The structure of the language is similar to the old ATARI ST
+GFA-Basic. GFA-Basic programs should run with only few changes.
+
+This package includes the basic interpreter named xbasic. It can be used as a
+shell, can run basic-scripts. You can make excecutable  scripts p.ex.
+*.cgi-Scripts for handling web-input. A pseudo compiler is included which
+makes stand alone binaries out of the scripts. It compiles itself.
+
+You will find the compiler and many other sample programs in
+./doc/packages/X11Basic/examples.
+
+Please read the file ./doc/manual.txt for further information.

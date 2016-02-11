@@ -27,9 +27,13 @@ int f_btst(double v1, double v2) { return((((int)v1 & (1 <<((int)v2)))==0) ?  0 
 
 int f_instr(PARAMETER *,int);
 int f_rinstr(PARAMETER *,int);
+int f_glob(PARAMETER *,int);
 
 extern int f_symadr(char *);
 extern int f_exec(char *);
+extern int shm_malloc(int,int);
+extern int shm_attach(int);
+
 int f_int(double b) {return((int)b);}
 int f_fix(double b) {if(b>=0) return((int)b);
                       else return(-((int)(-b)));}
@@ -62,6 +66,11 @@ double f_csres(STRING n) { return(csres(n.pointer)); }
 double f_csget(STRING n) { return(csget(n.pointer)); }
 int f_cssize(STRING n) { return(cssize(n.pointer)); }
 int f_cspid(STRING n) { return(cspid(n.pointer)); }
+int f_malloc(int size) {return((int)malloc(size));}
+int f_realloc(int adr,int size) {return((int)realloc((char *)adr,size));}
+int f_peek(int adr) { return((int)(*(char *)adr));}
+int f_dpeek(int adr) { return((int)(*(short *)adr));}
+int f_lpeek(int adr) { return((int)(*(long *)adr));}
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
@@ -101,6 +110,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
+ { F_IQUICK|F_IRET,    "DPEEK"    , f_dpeek ,1,1     ,{PL_INT}},
 
  { F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "EXEC"       , f_exec ,1,2     ,{PL_NUMBER,PL_NUMBER}},
@@ -113,6 +123,8 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
  { F_SIMPLE|F_IRET,    "FORK"     , fork ,0,0     },
  { F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
+
+ { F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
  { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
@@ -131,21 +143,27 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOGB"      , logb  ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "LPEEK"    , f_lpeek ,1,1     ,{PL_INT}},
  { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
 
+ { F_IQUICK|F_IRET,    "MALLOC"    , f_malloc ,1,1     ,{PL_INT}},
  { F_DQUICK|F_DRET,    "MOD"       , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
  { F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
 
+ { F_IQUICK|F_IRET,    "PEEK"      , f_peek ,1,1     ,{PL_INT}},
  { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
  { F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
 
  { F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RANDOM"    , f_random ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "REALLOC"    , f_realloc ,2,2     ,{PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,  "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
 
  { F_DQUICK|F_IRET,    "SGN"       , f_sgn ,1,1     ,{PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "SHM_ATTACH"    , shm_attach ,1,1     ,{PL_INT}},
+ { F_IQUICK|F_IRET,    "SHM_MALLOC"    , shm_malloc ,2,2     ,{PL_INT,PL_INT}},
  { F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
@@ -207,6 +225,37 @@ STRING f_envs(STRING n) {
   } else {
     ergebnis.pointer=malloc(strlen(ttt)+1);
     strcpy(ergebnis.pointer,ttt);
+  }
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_systems(STRING n) {   
+  STRING ergebnis;
+  FILE *dptr=popen(n.pointer,"r");
+
+  if (dptr==NULL) {
+    io_error(errno,"popen");
+    ergebnis.pointer=malloc(38+n.len);
+    sprintf(ergebnis.pointer,"couldn't execute '%s'. errno=%d",n.pointer,errno);
+  } else {
+    int len=0;
+    int limit=1024;
+    char c;
+    ergebnis.pointer=NULL;
+    do {
+      ergebnis.pointer=realloc(ergebnis.pointer,limit);
+     /* printf("Bufferlaenge: %d Bytes.\n",limit); */
+      while(len<limit) {
+        c=fgetc(dptr);
+        if(c==EOF) {
+          ergebnis.pointer[len]='\0';
+          break;
+        }
+        ergebnis.pointer[len++]=c;
+      }
+      limit+=len;
+    } while(c!=EOF);
+    if(pclose(dptr)==-1) io_error(errno,"pclose");
   }
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
@@ -418,6 +467,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
  { F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
  { F_ARGUMENT,  "STRING$" , f_strings ,1,2   ,{PL_INT,PL_STRING}},
+ { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
  { F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
@@ -436,12 +486,12 @@ int vergleich(char *w1,char *w2) {
   int v;
   int e=type2(w1);
   if((e | INTTYP | FLOATTYP)!=(type2(w2) | INTTYP | FLOATTYP )) {
-    printf("Typen ungleich bei Vergleich..\n");
+    puts("Typen ungleich bei Vergleich!");
     printf("1: %d    2: %d \n",type2(w1),type2(w2));
     return(0);
   }
   if(e & ARRAYTYP) { 
-    printf("Arrays an dieser Stelle noch nicht moeglich.\n");
+    puts("Arrays an dieser Stelle noch nicht möglich.");
     return(0);
   }
   else if(e & STRINGTYP) { 
@@ -476,6 +526,16 @@ int f_rinstr(PARAMETER *plist,int e) {
     if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
     pos=rmemmem(plist[0].pointer,start-1,plist[1].pointer,plist[1].integer);
     if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
+  } return(0);
+}
+#include <fnmatch.h>
+int f_glob(PARAMETER *plist,int e) {
+  char *pos=NULL,*n;
+  int flags=FNM_NOESCAPE;
+  if(e>=2) {
+    if(e==3) flags^=plist[2].integer;
+    flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
+    if(flags==0) return(-1);
   } return(0);
 }
 
@@ -645,13 +705,7 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	  wort_sep(w2,',',TRUE,w2,w3);
 
 	  return((double)get_color((int)parser(w1),(int)parser(w2),(int)parser(w3)));
-	}else if(strcmp(s,"MALLOC")==0)  return((double)(int)malloc((int)parser(pos)));
-	else if(strcmp(s,"FREE")==0)  {free((char *)((int)parser(pos)));return((double)errno);}
-	else if(strcmp(s,"PEEK")==0)  return((double)(int)((char *)((int)parser(pos)))[0]);
-	else if(strcmp(s,"LPEEK")==0)  return((double)(int)((int *)((int)parser(pos)))[0]);
-	else if(strcmp(s,"DPEEK")==0)  return((double)(int)((short *)((int)parser(pos)))[0]);  
-
-
+	}
         else 
 	if(s[0]=='@') return(do_funktion(s+1,pos));
 	else {
@@ -680,8 +734,7 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	         else a=(pfuncs[i].routine)(plist,e);
 	         if(e!=-1) free_pliste(e,plist);
 	         return(a);
-	      } else if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
-                
+	      } else if(pfuncs[i].pmax==1 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {      
 	      	if(pfuncs[i].opcode&F_IRET) 
 		  return((double)((int (*)())pfuncs[i].routine)(parser(pos)));
 		else return((pfuncs[i].routine)(parser(pos)));
@@ -693,10 +746,22 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	         int e;
 		 double val1,val2;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
-		   printf("Falsche Anzahl Parameter");
+		   error(56,""); /* Falsche Anzahl Parameter */
 		   val1=parser(w1); val2=0;
-	         } else if(e==2)	{
+	         } else if(e==2) {
 	           val1=parser(w1); val2=parser(w2);
+	         }
+                if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(val1,val2));
+		else return((pfuncs[i].routine)(val1,val2));
+	      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
+	       	 char w1[strlen(pos)+1],w2[strlen(pos)+1];
+	         int e;
+		 int val1,val2;
+	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
+		   error(56,""); /* Falsche Anzahl Parameter */
+		   val1=(int)parser(w1); val2=0;
+	         } else if(e==2) {
+	           val1=(int)parser(w1); val2=(int)parser(w2);
 	         }
                 if(pfuncs[i].opcode&F_IRET) return((double)((int (*)())pfuncs[i].routine)(val1,val2));
 		else return((pfuncs[i].routine)(val1,val2));
@@ -726,8 +791,8 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
       /* Dann Systemvariablen und einfache Variablen */
       /* erst integer abfangen (xxx% oder xxx&), dann rest */
       if(strcmp(s,"STIMER")==0) { /* Sekunden-Timer */
-        time_t timec;
-        timec = time(&timec);
+        time_t timec=time(NULL);
+	if(timec==-1) io_error(errno,"TIMER");
         return((double)timec);
       } else if(strcmp(s,"CTIMER")==0) {
 	return((double)clock()/CLOCKS_PER_SEC);
@@ -957,7 +1022,7 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 		     
 		   } else indexe[k]=indexo[k];
 		 }
-		 if(jj!=0) printf("Rechnung geht nicht auf.\n");
+		 if(jj!=0) puts("Rechnung geht nicht auf.");
 		 /* Testen ob passt  */
 	         /*printf("j=%d : indexe[]=",j);*/
 		 anz2=0;
@@ -975,9 +1040,9 @@ ARRAY *array_parser(char *funktion) { /* Array-Parser  */
 	       }
 	     
 	     } else if((vnr=variable_exist(r,INTARRAYTYP))!=-1) {
-	       printf("Noch nicht moeglich...\n");
+	       puts("Noch nicht möglich...");
 	     }  else if((vnr=variable_exist(s,STRINGARRAYTYP))!=-1) {
-	      printf("Noch nicht moeglich...\n");
+	       puts("Noch nicht möglich...");
 	     } else {
 	       error(15,s);  /* Feld nicht dimensioniert  */
 	       e=1;
@@ -1087,7 +1152,7 @@ STRING string_parser(char *funktion) {
 	         int e;
 		 double val1,val2;
 	         if((e=wort_sep(pos,',',TRUE,w1,w2))==1) {
-		   printf("Falsche Anzahl Parameter");
+		   error(56,""); /* Falsche Anzahl Parameter */
 		   val1=parser(w1); val2=0;
 	         } else if(e==2)  val1=parser(w1); val2=parser(w2);
                  ergebnis=(psfuncs[i].routine)(val1,val2);
@@ -1118,7 +1183,7 @@ STRING string_parser(char *funktion) {
                t=malloc(strlen(pos)+1);
                strcpy(ss,pos);
                i=wort_sep(ss,',',TRUE,ss,t);
-               if(i==0) printf("Arrayverarbeitung an dieser Stelle nicht moeglich ! \n");
+               if(i==0) puts("Arrayverarbeitung an dieser Stelle nicht möglich!");
 
                bbb=(int *)variablen[vnr].pointer;
                /*printf("C: %d %s %s %s t: %s\n",vnr,v,pos,ss,t);*/
@@ -1271,7 +1336,7 @@ double do_funktion(char *name,char *argumente) {
 	  batch=min(oldbatch,batch);
 	  if(osp!=sp) {
 	    pc=stack[--sp]; /* wenn error innerhalb der func. */
-            printf("Fehler innerhalb FUNCTION. \n");
+            puts("Error within FUNCTION.");
 	  }
 	}
 	free(buffer);
@@ -1325,7 +1390,7 @@ STRING do_sfunktion(char *name,char *argumente) {
 	  batch=min(oldbatch,batch);
 	  if(osp!=sp) {
 	    pc=stack[--sp]; /* wenn error innerhalb der func. */
-            printf("Fehler innerhalb FUNCTION. \n");
+            puts("Error within FUNCTION.");
 	  }
 	}
 	free(buffer);

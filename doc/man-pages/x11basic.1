@@ -1,14 +1,20 @@
-.TH X11BASIC 1 19-Sep-2000 LOCAL "Linux User Tools"
+.TH X11BASIC 1 19-Sep-2000 LOCAL "Linux Basic Interpreter"
 .SH NAME
-xbasic \- Basic shell
+xbasic \- Basic interpreter and shell
 .SH SYNOPSIS
 .B xbasic
 [--eval <Ausdruck>] [-e <kommando>] [-l] [<filename>]
 
 .SH DESCRIPTION
-This program is a frontend for every cdripper and mp3-encoder program. It
-uses CDDB-functionality for converting audio-cds to mp3.
+This program is a script interpreter. It interpretes basic command-Files
 It can run in interactive and batch-mode.
+
+ Structured-BASIC-Interpreter with X11 graphic capabilities                          
+ - using the functionality of GFA-BASIC on AtariST     
+   with GEM/TOS (GFA-BASIC ported to UNIX-environment) 
+ - can be used as a shell
+ - can be used to write cgi-Scripts
+ - a psydocompiler can be used to make stand-alone-Binaries
 
 .SH OPTIONS
 .P
@@ -28,7 +34,8 @@ execute command
 shows version, program and other informations and exits
 
 .PP
-For detailed help take a look in the README file. Handling of interactive-
+For detailed help and description of the implemented basic commands take a 
+look at the README file. Handling of interactive-
 mode should be obviously.
 .PP
 
@@ -45,7 +52,7 @@ quit program
 
 xbasic testme.bas
 
-xbasic -e 'alert 1,"Hallo !",1," OK ",b'
+xbasic -e 'alert 1,"Hello world !",1," OK ",b'
 
 xbasic --eval 1+3-4*3
 
@@ -66,7 +73,7 @@ in der ersten Zeile des Scipts wird es als X11-Basic-Programm ausgefuehrt.
 
 
 .SH VERSION
-Page was created for V1.01
+Page was created for V.1.00-1.05
 .SH BUGS
 Still some bugs
 

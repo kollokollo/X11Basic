@@ -1,0 +1,274 @@
+#!/bin/xbasic
+' Macht aus mp3-Files in aktuellen Directory *.cdr-Files. 
+' und brennt Diese gleich weg.
+' (c) markus Hoffmann 1999
+'
+' Benoetigt werden:
+' mpg123, cdrdao (oder cdrecord), transfig und evtl. mp3cover
+' und natuerlich ein xbasic im /bin/-Verzeichnis
+'
+' Usage:
+' mp3CD oder xbasic mp3CD
+'
+echo off
+dim files$(100)
+dim label$(500)
+dim titel$(500)
+dim autor$(500)
+version$="1.02"
+workdir$="/work/tmp/"                       ! Verzeichnis fuer die *.cdr-Files
+options$="--driver generic-mmc:0x10 --swap"
+
+anzautor=0
+nocover=1
+nobrennen=0
+speed=val(param$(2))
+anzlabel=0
+anztitel=0
+pregap=2      ! Default Pregap in Sekunden zwischen den Stuecken
+
+speed=min(speed,12)
+if speed=0
+  speed=8
+endif
+
+catalog=0          
+diskid$="XY12345"
+if not exist(env$("HOME")+"/.mp3CD")
+  @usage
+endif
+
+print "Es wird mit "+str$(speed)+"facher Geschw. gebrannt."
+if exist(workdir$+"tocfile")
+  print "Es exisiert noch eine alte Zusammenstellung."
+  print "1 = QUIT, 2 = alte löschen, 3 = alte Brennen, 4 = Neuer Durchlauf, 5 = tocfile erzeugen"
+  input t
+  if t=1
+    print "ABBRUCH"
+    quit
+  else if t=2
+    system "rm -f "+workdir$+"Cover.txt"
+    system "rm -f "+workdir$+"*.cdr.swp"
+  else if t=3
+    goto brennen
+  else if t=4
+    ' nixtun
+  else if t=5
+    nocover=1
+    nobrennen=1
+  else 
+    quit
+  endif
+endif
+
+
+playlist$=system$("ls -l ./*.mp3")
+anzahl=0
+wort_sep playlist$,chr$(10),1,t$,playlist$
+while len(t$)
+  wort_sep t$," ./",TRUE,a$,t$
+  t$="./"+t$
+  files$(anzahl)=t$
+  inc anzahl
+  wort_sep playlist$,chr$(10),1,t$,playlist$
+wend
+
+print anzahl;" Stuecke gefunden ."
+
+if anzahl=0
+  print "Keine *.mp3 Files gefunden."
+  quit
+else if anzahl>1
+  print "Es werden "+str$(pregap)+" Sekunden Pause zwischen den Stücken gelassen."
+  print "Wieviel Sekunden? ["+str$(pregap)+"]",
+  input t$
+  if len(t$)
+    pregap=val(t$)
+  endif
+endif 
+print "Es werden "+str$(pregap)+" Sekunden Pause zwischen den Stücken gelassen."
+
+
+
+labels$=system$("mp3info -f '%m %s "+chr$(34)+"%a"+chr$(34)+" "+chr$(34)+"%l"+chr$(34)+" "+chr$(34)+"%t"+chr$(34)+"' ./*.mp3")
+
+wort_sep labels$,chr$(10),1,t$,labels$
+
+while len(t$)
+  wort_sep t$," ",1,m$,t$
+  wort_sep t$," ",1,s$,t$ 
+  wort_sep t$," ",1,a$,t$
+  wort_sep t$," ",1,l$,t$
+  a$=left$(a$,len(a$)-1)
+  a$=right$(a$,len(a$)-1)
+  l$=left$(l$,len(l$)-1)
+  l$=right$(l$,len(l$)-1)
+
+  t$=left$(t$,len(t$)-1)
+  t$=right$(t$,len(t$)-1)
+  titel$(anztitel)=t$
+  autor$(anztitel)=a$
+  label$(anztitel)=l$
+  inc anztitel
+  wort_sep labels$,chr$(10),1,t$,labels$
+wend
+
+if label$(0)==""
+  for i=anztitel-1 to 0 step -1
+    if label$(i)<>""
+      label$(0)=label$(i)
+    endif
+  next i
+endif
+
+system "mp3cover"
+if anzahl<>anztitel
+  print "Es sind nicht genug Titel vorhanden !"
+  quit
+endif
+if nocover=0
+  system "mp3cover > "+workdir$+"Cover.txt"
+endif
+if nobrennen=0
+  for i=0 to anzahl-1
+    @makeone(files$(i))
+  next i
+endif
+print "Label der Zusammenstellung: "+label$(0)
+
+@disk_id
+@tocfile
+
+brennen:
+if nobrennen=0
+' Brennen. evtl muss noch das device angepasst werden
+
+  print "Zusammenstellung jetzt auf CD schreiben..."
+
+# system "cdrecord -speed 4 -dev=0,0 -v -audio -pad -swab "+workdir$+"*.cdr.swp"
+  system "cdrdao write --device 0,0 "+options$+" --speed "+str$(speed)+" "+workdir$+"tocfile"
+endif
+print "fertig."
+quit
+procedure makeone(t$)
+  local a$
+  print "Stueck #"+str$(i,2,2)+":  "+t$
+  output$=workdir$+"Track"+str$(i+1,2,2,1)+".cdr.swp"
+  if not exist(output$)
+    system "nice mpg123 -v -s -r 44100 "+chr$(34)+t$+chr$(34)+" > "+output$
+  endif
+return
+procedure disk_id
+  ' erzeuge Diskid und Catalog-Nummer
+  if exist(env$("HOME")+"/.mp3CD")
+    open "I",#2,env$("HOME")+"/.mp3CD"
+      lineinput #2,t$
+      catalog=val(t$)+1
+    close #2
+  endif
+  open "O",#2,env$("HOME")+"/.mp3CD"
+    print #2,str$(catalog)
+  close #2
+  
+  t$=env$("HOST")
+  di=catalog
+  u=0
+  for i=0 to len(t$)-1
+    add u,peek(varptr(t$)+i)
+  next i
+  u=u mod 1000
+  add di,u*10
+  catalog=catalog+1000*1000*u
+  t$=env$("USER")
+  u=0
+  for i=0 to len(t$)-1
+    add u,peek(varptr(t$)+i)
+  next i
+  u=u mod 1000
+  add di,u*10
+  catalog=catalog+1000*u
+  print "CATALOGNR: "+str$(catalog,13,13,1)  
+  t$=env$("HOST")+"MC"
+  diskid$=upper$(left$(t$,2))+str$(di,5,5,1)
+  print "DISK-ID: "+diskid$
+return
+procedure tocfile
+  y$=right$(date$,2)
+  open "O",#1,workdir$+"tocfile"
+  print #1,"CD_DA"
+  print #1
+  print #1,"CATALOG "+chr$(34)+str$(catalog,13,13,1)+chr$(34)
+  print #1,"CD_TEXT {"
+  print #1,"  LANGUAGE_MAP {"
+  print #1,"    0 : EN"
+  print #1,"  }"
+  print #1,"  LANGUAGE 0 {"
+  print #1,"    TITLE "+chr$(34)+label$(0)+chr$(34)
+  print #1,"    PERFORMER "+chr$(34)+autor$(0)+chr$(34)
+  print #1,"    DISC_ID "+chr$(34)+diskid$+chr$(34)
+  print #1,"    UPC_EAN "+chr$(34)+""+chr$(34)
+  print #1,"    MESSAGE "+chr$(34)+"mp3CD Version "+version$+" ** "+date$+chr$(34)
+  print #1,"  }"
+  print #1,"}"
+
+  for i=0 to anzahl-1
+    print #1,"// Track "+str$(i+1)
+    print #1,"TRACK AUDIO"
+    print #1,"NO COPY"
+    print #1,"NO PRE_EMPHASIS"
+    print #1,"TWO_CHANNEL_AUDIO"
+    print #1,"ISRC "+chr$(34)+"DEXXX"+y$+str$(i,5,5,1)+chr$(34)
+    print #1,"CD_TEXT {"
+    print #1,"  LANGUAGE 0 {"
+    print #1,"    TITLE "+chr$(34)+titel$(i)+chr$(34)
+    print #1,"    PERFORMER "+chr$(34)+autor$(i)+chr$(34)
+    print #1,"    ISRC "+chr$(34)+"DE-XXX-"+y$+"-"+str$(i,5,5,1)+chr$(34)
+    t$=label$(i)+" ** "+files$(i)
+    u$=""
+    for j=0 to len(t$)-1
+      if peek(varptr(t$)+j)<32 or peek(varptr(t$)+j)=47 or peek(varptr(t$)+j)=46 or peek(varptr(t$)+j)=95
+        u$=u$+" "
+      else
+        u$=u$+chr$(peek(varptr(t$)+j))
+      endif
+    next j
+    u$=trim$(u$)
+    print #1,"    MESSAGE "+chr$(34)+u$+chr$(34)
+    print #1,"  }"
+    print #1,"}"
+    if pregap>0 and i>0
+      print #1,"SILENCE 0:"+str$(int(pregap))+":0" 
+      print #1,"START 0:"+str$(int(pregap))+":0"  
+    endif
+    output$=workdir$+"Track"+str$(i+1,2,2,1)+".cdr.swp"
+    print #1,"FILE "+chr$(34)+output$+chr$(34)+" 0"
+    print #1
+  next i
+  close #1
+return
+procedure usage
+  cls
+  print chr$(27)+"[7m  mp3CD      Version "+version$+"    (c) Markus Hoffmann 2000-2001  "+chr$(27)+"[m"
+  print 
+  print "Offenbar benutzen Sie dieses Programm zum ersten mal."
+  print "Beachten Sie bitte folgende Einstellungen:"
+  print "Der Brenner muss als SCSI-Device 0,0 angeprochen werden koennen."
+  print "Moeglicherweise kann darauf nur als User root zugegriffen werden."
+  print "Das Verzeichnis "+workdir$+" muss exisitieren. Hier wird 800 MBytes freier"
+  print "Platz benoetigt. Wenn dies Verzeichnis nicht existiert, legen Sie es bitte an"
+  print "Oder editieren Sie bitte das Programm mp3CD und passen die Einstellungen an."
+  print "Ferner werden benoetigt: /bin/xbasic, mpg123, cdrdao, mp3cover und transfig"
+  print "Das Programm legt ein File "+env$("HOME")+"/.mp3CD"+" an."
+  print "Das Programm kann mit einem Parameter aufgerufen werden:"
+  print "mp3CD [speed]"
+  print "Hierbei kann die Brenngeschwindigkeit angegeben werden. (DEFAULT: "+str$(speed)+")"
+  print "Sollte es mit cdrdao und dem Brenner schwierigkeiten geben, so muss der Aufruf von "
+  print "cdrdao angepasst werden. Hierzu bitte die variable options$ im Programm editieren."
+  print "Aktuell: "+options$
+  print "Der Aldibrenner benoetigt: --driver generic-mmc-raw:0x20 --swap"
+  print "Bitte Eingeben: 1=Programm fortfahren 0=Programm beenden ";
+  input t
+  if i<>1
+    quit
+  endif
+return

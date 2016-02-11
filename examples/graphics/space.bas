@@ -19,16 +19,16 @@ c&=0
 DO
   EXIT IF MOUSEK
   COLOR schwarz
-  circle pkx(c&),pky(c&),3
+  circle pkx(c&),pky(c&),v&(c&)
   COLOR weiss
   z0=360*r&(c&)/1000
   v1=v&(c&)*(SQR((pkx(c&)-320)^2+(pky(c&)-200)^2)+0.1)*0.01
   ADD pkx(c&),SIN(rad(z0))*v1
   ADD pky(c&),COS(rad(z0))*v1
-  circle pkx(c&),pky(c&),3
+  circle pkx(c&),pky(c&),v&(c&)
   IF pkx(c&)>639 OR pkx(c&)<0 OR pky(c&)>399 OR pky(c&)<0
     COLOR schwarz
-    circle pkx(c&),pky(c&),3
+    circle pkx(c&),pky(c&),v&(c&)
     r&(c&)=RANDOM(1000)
     pkx(c&)=320
     pky(c&)=200

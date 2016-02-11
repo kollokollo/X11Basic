@@ -1,5 +1,8 @@
-Release notes for version 1.01
+Release notes for version 1.05
 ===============================
-
-- POINT()
-
+- PRINT USING
+- SYSTEM$()
+- GLOB()
+- RBOX, PRBOX
+- EDIT, SAVE
+- new system errors

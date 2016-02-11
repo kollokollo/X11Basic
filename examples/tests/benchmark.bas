@@ -1,10 +1,8 @@
-echo off
-
 count=0
 cc=0
-goto iii
 print "Benchmarktest:"
 print
+goto iii
 t=ctimer
 for i=0 to 10000
   gosub test

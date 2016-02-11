@@ -1,10 +1,10 @@
 rem "sieve.bas" , a prime number sieve benchmark
 t=timer
 tc=ctimer
-dim f(30000)
+s=40000
+dim f(s+1)
 arrayfill f(),1
 
-s=29999
 clr c
 for i=2 to s
   if f(i)

@@ -28,7 +28,7 @@ betrag=sqrt(n1^2+n2^2+n3^2)
 n1=n1/betrag
 n2=n2/betrag
 n3=n3/betrag
-alpha=25*pi/180
+alpha=20*pi/180
 inc i
 if n3<x3
   color get_color(65535,65535,65535)
@@ -50,6 +50,7 @@ else
 
 endif
   vsync
+  pause 0.001
    color get_color(0,0,0)
  
   pbox 0,0,bw,bh
