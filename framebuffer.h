@@ -7,6 +7,8 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+#ifndef __framebuffer__
+#define __framebuffer__
 
 //#define TS_DEVICE_NAME "/dev/ts"
 #define FB_DEVICENAME "/dev/fb0"
@@ -208,3 +210,4 @@ void FB_hide_sprite(int x,int y);
 void fill2Poly(unsigned short color,int *point, int num);
 void FB_bmp2pixel(char *s,unsigned short *d,int w, int h, unsigned short color);
 void FB_bmp2mask(char *s,unsigned char *d,int w, int h);
+#endif

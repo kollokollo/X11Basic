@@ -116,6 +116,9 @@
 /* Simple Direct Media GFX */
 #undef HAVE_SDL_GFX
 
+/* Advanced Sound System present */
+#undef HAVE_ALSA
+
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
 

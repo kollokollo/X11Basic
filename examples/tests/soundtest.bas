@@ -6,10 +6,10 @@ do
   read f
   exit if f=-1
   read p
-  sound f
+  sound 1,f
   pause p/1000
 loop 
-sound 0
+sound 1,0
 quit
 
 data 100,100

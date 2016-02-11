@@ -14,8 +14,32 @@
 
 /*#define SAVE_RAM*/
 
-/* Kontrollsystemanbindung. Nur wichtig fuer Benutzer bei ELSA in Bonn /*
+/* Kontrollsystemanbindung. Nur wichtig fuer Benutzer bei ELSA in Bonn */
 /* und DESY in Hamburg. sonst bitte abschalten */
+
+#define USE_X11
+
+#ifdef WINDOWS
+  #undef HAVE_READLINE
+  #define X_DISPLAY_MISSING
+  #define USE_SDL
+#endif
+
+
+#if defined FRAMEBUFFER
+  #define X_DISPLAY_MISSING
+#endif
+
+#ifdef NOGRAPHICS
+  #undef HAVE_SDL
+  #undef USE_SDL
+  #undef FRAMEBUFFER
+  #define X_DISPLAY_MISSING
+#endif
+
+#if defined USE_SDL
+  #undef USE_X11
+#endif
 
 #ifndef WINDOWS
 #  ifndef CONTROL
@@ -30,37 +54,29 @@
 //#  define DOOCS
 #endif
 
-#ifdef WINDOWS
-  #undef HAVE_READLINE
-  #define X_DISPLAY_MISSING
-  #define WINDOWS_NATIVE
+#ifndef HAVE_SDL 
+  #undef USE_SDL
+#endif
+#ifndef HAVE_SDL_GFX 
+  #undef USE_SDL
 #endif
 
 
-/* If you do not want to have the graphics ... */
+/* If you want to compile a versin of X11-basic which uses the SDL library
+   also on unix systems, you can uncomment following line. This is useful 
+   to have a version which is more compatible with the WINDOWS version of
+   X11-Basic.*/
 
-// #define NOGRAPHICS
 
-
-#if defined HAVE_SDL && defined HAVE_SDL_GFX
-  #ifndef NOGRAPHICS
-    #ifdef WINDOWS
-    #define USE_SDL
-    #undef WINDOWS_NATIVE
-    #endif
-  #endif
+#ifdef X_DISPLAY_MISSING
+  #undef USE_X11
 #endif
 
-//    #define USE_SDL
-
-#ifndef X_DISPLAY_MISSING
+#ifdef HAVE_ALSA
   #ifndef USE_SDL
-    #ifndef NOGRAPHICS
-      #define USE_X11
-    #endif
+    #define USE_ALSA
   #endif
 #endif
-
 
 
 

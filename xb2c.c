@@ -11,477 +11,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <ctype.h>
 #include <string.h>
+#ifdef WINDOWS
+#define EX_CANTCREAT	73	/* can't create (user) output file */
+#define EX_NOINPUT	66	/* cannot open input */
+#define EX_OK 0
+#else
+#include <sysexits.h>
+#endif
 
-#include "config.h"
-#include "defs.h"
 #include "globals.h"
-#include "protos.h"
-#include "functions.h"
+#include "x11basic.h"
 #include "ptypes.h"
+#include "wort_sep.h"
+#include "xbasic.h"
+#include "file.h"
+#include "bytecode.h"
 //#include "xb2c.h"
 
 
-char ifilename[100]="new.bas";       /* Standard inputfile  */
-char ofilename[100]="11.c";       /* Standard outputfile     */
+char ifilename[128]="b.b";       /* Standard inputfile  */
+char ofilename[128]="11.c";       /* Standard outputfile     */
 int loadfile=FALSE;
-int verbose=1;
+int verbose=0;
 
-extern int databufferlen;
-extern char *databuffer;
+
+BYTECODE_HEADER *bytecode;
+
+BYTECODE_SYMBOL *symtab;
+char *strings;
+unsigned char *datasec;
+
+FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
-
-extern void reset_input_mode(),x11basicStartup();
-extern int param_anzahl;
-extern char **param_argumente;
-int programbufferlen=0;
-char *programbuffer=NULL;
-const char version[]="dummy"; /* Version Number. Put some useful information here */
-const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
-extern const char libversion[];
-extern const char libvdate[];
-char *program[MAXPRGLEN];
 int prglen=0;
+const char version[]="1.17";        /* Programmversion*/
+const char vdate[]="2011-08-16";
+char *programbuffer=NULL;
+char *program[MAXPRGLEN];
+int programbufferlen=0;
 
 extern void memdump(unsigned char *,int);
 
-int find_comm(char *); 
-
-/* Bestimmt den Typ eines Ausdrucks */
-
-int type3(char *ausdruck) {
-  char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
-  char *pos;
-  int typ=0;
-
-  wort_sep(ausdruck,'+',TRUE,w1,w2);
-  if(strlen(w1)==0) return(type3(w2));  /* war Vorzeichen */
-  if(w1[0]=='[') {
-    pos=searchchr(w1+1,']');
-    if(pos!=NULL) *pos=0;
-    pos=searchchr(w1+1,',');
-    if(pos!=NULL) *pos=0;
-    pos=searchchr(w1+1,' ');
-    if(pos!=NULL) *pos=0;
-    return(ARRAYTYP|CONSTTYP|type3(w1+1));
-  }
-  if(w1[0]=='"') return(STRINGTYP|CONSTTYP);
-  if(w1[0]=='&') return(INDIRECTTYP);
-  if(w1[0]=='(' && w1[strlen(w1)-1]==')') {
-    char ttt[strlen(ausdruck)+1];
-    strcpy(ttt,ausdruck);
-    ttt[strlen(ttt)-1]=0;
-    return(type3(ttt+1));
-  }
-  pos=searchchr(w1+1,'(');
-  if(pos!=NULL) {
-    if(pos[1]==')') typ=(typ | ARRAYTYP);
-    else {   /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
-      char *ppp=pos+1;
-      int i=0,flag=0,sflag=0,count=0;
-      while(ppp[i]!=0 && !(ppp[i]==')' && flag==0 && sflag==0)) {
-        if(ppp[i]=='(') flag++;
-	if(ppp[i]==')') flag--;
-	if(ppp[i]=='"') sflag=(!sflag);
-	
-	if(ppp[i]==':' && flag==0 && sflag==0) count++;
-	
-        i++;
-      }
-      if(count) typ=(typ | ARRAYTYP);
-    }
-    if((pos-1)[0]=='$') typ=(typ | STRINGTYP);
-    else if((pos-1)[0]=='%') typ=(typ | INTTYP);
-    else typ=(typ | FLOATTYP);
-    return(typ);
-  } else {
-    if(w1[strlen(w1)-1]=='$') return(STRINGTYP);
-    else if(w1[strlen(w1)-1]=='%') return(INTTYP);
-    else if(w1[0]=='0' && w1[1]=='X') return(INTTYP|CONSTTYP);
-    else {
-      int i,f=0,g=0;
-      pos=searchchr(w1+1,' ');
-      if(pos!=NULL) *pos=0;
-      if(w1[0]==0) return(NOTYP);
-      for(i=0;i<strlen(w1);i++) f|=(strchr("-.1234567890E",w1[i])==NULL);      
-      for(i=0;i<strlen(w1);i++) g|=(strchr("1234567890",w1[i])==NULL);
-      if(!f && !g) return(INTTYP|CONSTTYP);
-      return(FLOATTYP|(f?0:CONSTTYP));
-    }  
-  }
-}
-
-
-#if 0
-
-int expression_parser(char *funktion){  /* Rekursiver Parser */
-  char *pos,*pos2;
-  char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
-  int a,b,i,e,l,vnr;
-
-  static int bcerror;
-
-  /* Erst der Komma-Operator */
-  
-  if(searchchr2(funktion,',')!=NULL){
-    if(wort_sep(funktion,',',TRUE,w1,w2)>1) {
-      expression_parser(w1);
-      printf(",");
-      expression_parser(w2);return;
-    }
-  }
-
-  /* Logische Operatoren AND OR NOT ... */
-  xtrim(funktion,TRUE,s);  /* Leerzeichen vorne und hinten entfernen, Grossbuchstaben */
-  if(strlen(s)==0) {return(bcerror);}
-  if(searchchr2_multi(funktion,"&|")!=NULL) {
-    if(wort_sepr2(s,"&&",TRUE,w1,w2)>1) {expression_parser(w1);printf(" && ");expression_parser(w2);return(bcerror);}
-    if(wort_sepr2(s,"||",TRUE,w1,w2)>1) {
-      expression_parser(w1);
-      printf(" || ");
-      expression_parser(w2);
-      return(bcerror);}    
-  }
-
-  if(searchchr2(funktion,' ')!=NULL) {
-    if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  {expression_parser(w1);printf(" & ");expression_parser(w2);return(bcerror);}    /* von rechts !!  */
-    if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   {expression_parser(w1);printf(" | ");expression_parser(w2);return(bcerror);}
-    if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) {printf("~(");expression_parser(w1);printf(" & ");expression_parser(w2);printf(")");return(bcerror);}
-    if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  {printf("~(");expression_parser(w1);printf(" | ");expression_parser(w2);printf(")");return(bcerror);}
-    if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  {expression_parser(w1);printf(" ^ ");expression_parser(w2);return(bcerror);}
-    if(wort_sepr2(s," EOR ",TRUE,w1,w2)>1)  {expression_parser(w1);printf(" ^ ");expression_parser(w2);return(bcerror);}  
-    if(wort_sepr2(s," EQV ",TRUE,w1,w2)>1)  {printf("~(");expression_parser(w1);printf(" ^ ");expression_parser(w2);printf(")");return(bcerror);}
-    if(wort_sepr2(s," IMP ",TRUE,w1,w2)>1)  {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_XOR;bcpc.pointer[bcpc.len++]=BC_NOT;bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_OR;return(bcerror);}
-    if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_MOD;return(bcerror);}
-    if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1) {expression_parser(w1);printf(" / ");expression_parser(w2);return(bcerror);}
-    if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {
-      if(strlen(w1)==0) {bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_NOT;return;}    /* von rechts !!  */
-      /* Ansonsten ist NOT Teil eines Variablennamens */
-    }
-  }
-
-  /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
-  if(searchchr2_multi(s,"<=>")!=NULL) {
-    if(wort_sep2(s,"==",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_EQUAL;return(bcerror);}
-    if(wort_sep2(s,"<>",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_EQUAL;bcpc.pointer[bcpc.len++]=BC_NOT;return(bcerror);}
-    if(wort_sep2(s,"><",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_EQUAL;bcpc.pointer[bcpc.len++]=BC_NOT;return(bcerror);}
-    if(wort_sep2(s,"<=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_GREATER;bcpc.pointer[bcpc.len++]=BC_NOT;return(bcerror);}
-    if(wort_sep2(s,">=",TRUE,w1,w2)>1) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_LESS;bcpc.pointer[bcpc.len++]=BC_NOT;return(bcerror);}
-    if(wort_sep(s,'=',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_EQUAL;return(bcerror);}
-    if(wort_sep(s,'<',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_LESS;return(bcerror);}
-    if(wort_sep(s,'>',TRUE,w1,w2)>1)   {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_GREATER;return(bcerror);}
-  }
-  /* Addition/Subtraktion/Vorzeichen  */
-  if(searchchr2_multi(s,"+-")!=NULL) {
-    if(wort_sep_e(s,'+',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {expression_parser(w1);printf("+");expression_parser(w2);return(bcerror);}
-      else {expression_parser(w2);return(bcerror);}   /* war Vorzeichen + */
-    }
-    if(wort_sepr_e(s,'-',TRUE,w1,w2)>1) {       /* von rechts !!  */
-      if(strlen(w1)) {expression_parser(w1);printf("-");expression_parser(w2);return(bcerror);}
-      else {printf("-");expression_parser(w2);return(bcerror);}   /* war Vorzeichen - */
-    }
-  }
-  if(searchchr2_multi(s,"*/^")!=NULL) {
-    if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_MUL;return(bcerror);}
-      else {
-        printf("Pointer noch nicht integriert! %s\n",w2);   /* war pointer - */
-        return(bcerror);
-      }
-    }
-    if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_DIV;return(bcerror);}
-      else { xberror(51,w2); return(bcerror); }/* "Parser: Syntax error?! "  */
-    }
-    if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {bc_parser(w1);bc_parser(w2);bcpc.pointer[bcpc.len++]=BC_POW;return(bcerror);}    /* von rechts !!  */
-      else { xberror(51,w2); return(bcerror); } /* "Parser: Syntax error?! "  */
-    }
-  }
-  if(*s=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
-    s[strlen(s)-1]=0;
-    bc_parser(s+1);
-    return(bcerror);
-  } 
-  /* SystemFunktionen Subroutinen und Arrays */
-  pos=searchchr(s, '(');
-  if(pos!=NULL) {
-    pos2=s+strlen(s)-1;
-    *pos++=0;
-    if(*pos2!=')') {
-      printf("Closing bracket is missing!\n");
-      xberror(51,w2); /* "Parser: Syntax error?! "  */
-      return(bcerror);
-    }
-    /* $-Funktionen und $-Felder   */
-    *pos2=0;
-    /* Benutzerdef. Funktionen */
-    if(*s=='@') {
-      int pc2;
-      /* Anzahl Parameter ermitteln */
-      bc_parser(pos);
-      /* Funktionsnr finden */
-      pc2=procnr(s+1,2);
-      if(pc2==-1) { 
-        xberror(44,s+1); /* Funktion  nicht definiert */
-        return(bcerror);
-      }
-      bcpc.pointer[bcpc.len++]=BC_PUSHUSERFUNC;        
-      memcpy(&bcpc.pointer[bcpc.len],&pc2,sizeof(int));
-      bcpc.len+=sizeof(int);
-      bcpc.pointer[bcpc.len++]=count_parameter(pos); 
-      return(bcerror);
-    }
-    if((i=find_func(s))!=-1) {
-      /* printf("Funktion %s gefunden. Nr. %d\n",pfuncs[i].name,i); */
-      /* Jetzt erst die Parameter auf den Stack packen */
-      
-      if((pfuncs[i].opcode&FM_TYP)==F_SIMPLE || pfuncs[i].pmax==0) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=0;
-        return(bcerror);
-      } else if((pfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHX;
-        bcpc.pointer[bcpc.len++]=strlen(pos);
-        memcpy(&bcpc.pointer[bcpc.len],pos,strlen(pos));
-	bcpc.len+=strlen(pos);
-        bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1;
-        return(bcerror);
-      } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {                
-        bc_parser(pos);
-		bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-		bcpc.pointer[bcpc.len++]=i;
-		bcpc.pointer[bcpc.len++]=count_parameter(pos); 
-	        return(bcerror);
-      } else if(pfuncs[i].pmax==1 && ((pfuncs[i].opcode&FM_TYP)==F_SQUICK || 
-                                      (pfuncs[i].opcode&FM_TYP)==F_IQUICK ||
-                                      (pfuncs[i].opcode&FM_TYP)==F_DQUICK
-                                     )) {
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1;
-        return(bcerror);
-      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_DQUICK) {
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=2;
-        return(bcerror);
-      } else if(pfuncs[i].pmax==2 && (pfuncs[i].opcode&FM_TYP)==F_IQUICK) {
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=2;
-        return(bcerror);
-      } else {
-        printf("Interner ERROR. Funktion nicht korrekt definiert. %s\n",s);
-	return(bcerror);
-      }
-    } else if((i=find_afunc(s))!=-1) {
-      if((pafuncs[i].opcode&FM_TYP)==F_SIMPLE || pafuncs[i].pmax==0) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHAFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=0;
-        return(bcerror);
-      } else if((pafuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHX;
-        bcpc.pointer[bcpc.len++]=strlen(pos);
-        memcpy(&bcpc.pointer[bcpc.len],pos,strlen(pos));
-	bcpc.len+=strlen(pos);
-        bcpc.pointer[bcpc.len++]=BC_PUSHAFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1;
-        return(bcerror);
-      } else if((pafuncs[i].opcode&FM_TYP)==F_PLISTE) {                
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHAFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=count_parameter(pos); 
-	return(bcerror);
-      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
-        bc_parser(pos);
- 	bcpc.pointer[bcpc.len++]=BC_PUSHAFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1; 
-	return(bcerror);
-      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_SQUICK) {
-        bc_parser(pos);
- 	bcpc.pointer[bcpc.len++]=BC_PUSHAFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1; 
-	return(bcerror);
-      }
-    } else if((i=find_sfunc(s))!=-1) {
-      if((psfuncs[i].opcode&FM_TYP)==F_SIMPLE || psfuncs[i].pmax==0) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHSFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=0;
-        return(bcerror);
-      } else if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
-        bcpc.pointer[bcpc.len++]=BC_PUSHX;
-        bcpc.pointer[bcpc.len++]=strlen(pos);
-        memcpy(&bcpc.pointer[bcpc.len],pos,strlen(pos));
-	bcpc.len+=strlen(pos);
-        bcpc.pointer[bcpc.len++]=BC_PUSHSFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1;
-        return(bcerror);
-      } else if((psfuncs[i].opcode&FM_TYP)==F_PLISTE) {                
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHSFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=count_parameter(pos); 
-	return(bcerror);
-      } else if(psfuncs[i].pmax==2 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHSFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=2; 
-        return(bcerror);
-      } else if(psfuncs[i].pmax==1 && ((psfuncs[i].opcode&FM_TYP)==F_SQUICK ||
-                                       (psfuncs[i].opcode&FM_TYP)==F_AQUICK ||
-                                       (psfuncs[i].opcode&FM_TYP)==F_IQUICK ||
-                                       (psfuncs[i].opcode&FM_TYP)==F_DQUICK
-				      )) {
-        bc_parser(pos);
-	bcpc.pointer[bcpc.len++]=BC_PUSHSFUNC;
-	bcpc.pointer[bcpc.len++]=i;
-	bcpc.pointer[bcpc.len++]=1; 
-        return(bcerror);
-      }
-    } else {
-       int anzp=count_parameter(pos);
-       bc_parser(pos);    
-       bcpc.pointer[bcpc.len++]=BC_PUSHX;
-       bcpc.pointer[bcpc.len++]=strlen(s);
-       memcpy(&bcpc.pointer[bcpc.len],s,strlen(s));
-       bcpc.len+=strlen(s);
-       bcpc.pointer[bcpc.len++]=BC_PUSHARRAYELEM;
-       bcpc.pointer[bcpc.len++]=anzp;
-  //     printf("ARRAY_%s(%s) %d parameter ",s,pos,count_parameter(pos));
-       return(bcerror);
-    }
-  } else {  /* Also keine Klammern */
-    /* Dann Systemvariablen und einfache Variablen */
-    /* Liste durchgehen */
-    char c=*s;
-    int i=0,a=anzsysvars-1,b,l=strlen(s);
-    for(b=0; b<l; c=s[++b]) {
-      while(c>(sysvars[i].name)[b] && i<a) i++;
-      while(c<(sysvars[a].name)[b] && a>i) a--;
-      if(i==a) break;
-    }
-  if(strcmp(s,sysvars[i].name)==0) {
-    /* Erstmal PI, TRUE und FALSE abfangen, das ist schneller */
-    
-    if(strcmp(s,"PI")==0) {
-      double d=PI;
-      bcpc.pointer[bcpc.len++]=BC_PUSHF;
-      memcpy(&bcpc.pointer[bcpc.len],&d,sizeof(double));
-      bcpc.len+=sizeof(double);
-    } else if(strcmp(s,"FALSE")==0) {
-      bc_push_integer(0);
-    } else if(strcmp(s,"TRUE")==0) {
-      bc_push_integer(-1);
-    } else {
-      /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/
-      bcpc.pointer[bcpc.len++]=BC_PUSHSYS;
-      memcpy(&bcpc.pointer[bcpc.len],&i,sizeof(int));
-      bcpc.len+=sizeof(int);
-    }
-    return(bcerror);
-  } 
-  /* Stringsysvars */
-  /* Liste durchgehen */
-  i=0;
-  c=*s;
-  a=anzsyssvars;
-  l=strlen(s);
-  for(b=0; b<l; c=s[++b]) {
-    while(c>(syssvars[i].name)[b] && i<a) i++;
-    while(c<(syssvars[a].name)[b] && a>i) a--;
-    if(i==a) break;
-  }
-  if(strcmp(s,syssvars[i].name)==0) {
-	    /*  printf("Sysvar %s gefunden. Nr. %d\n",syssvars[i].name,i);*/
-    bcpc.pointer[bcpc.len++]=BC_PUSHSSYS;
-    memcpy(&bcpc.pointer[bcpc.len],&i,sizeof(int));
-    bcpc.len+=sizeof(int);
-    return(bcerror);
-  }
-
-  /* Arraysysvars  */
-   
-  /* erst integer abfangen (xxx% oder xxx&), dann rest */
-  if(*s=='@')   {
-    int pc2;
-    /* Funktionsnr finden */
-    pc2=procnr(s+1,2);
-    if(pc2==-1) { 
-      xberror(44,s+1); /* Funktion  nicht definiert */
-      return(bcerror);
-    }
-    bcpc.pointer[bcpc.len++]=BC_PUSHUSERFUNC;        
-    memcpy(&bcpc.pointer[bcpc.len],&pc2,sizeof(int));
-    bcpc.len+=sizeof(int);
-    bcpc.pointer[bcpc.len++]=0;
-    return(bcerror);
-  }
-  
-#if 0
-// Geht so nicht. wir brauchen die Namen   
-  if((vnr=variable_exist(s,FLOATTYP))!=-1) {
-    bcpc.pointer[bcpc.len++]=BC_PUSHV;
-    memcpy(&bcpc.pointer[bcpc.len],&vnr,sizeof(int));
-    bcpc.len+=sizeof(int);
-    return(bcerror);
-  }
-  if(s[strlen(s)-1]=='%') {
-    s[strlen(s)-1]=0;
-    if((vnr=variable_exist(s,INTTYP))!=-1) {
-      bcpc.pointer[bcpc.len++]=BC_PUSHV;
-      memcpy(&bcpc.pointer[bcpc.len],&vnr,sizeof(int));
-      bcpc.len+=sizeof(int);
-      return(bcerror);
-    }
-  }
-  if(s[strlen(s)-1]=='$') {
-  }  
-#endif
-  
-  
-  /* Testen ob und was fuer eine Konstante das ist. */
-  e=type3(s);
-  if(e&CONSTTYP) { 
-    if (e&INTTYP) {
-      return(bcerror);
-    } else if (e&FLOATTYP) {  
-      double d;
-      return(bcerror);
-    } else if (e&STRINGTYP) {
-      return(bcerror);
-    }  
-  } else {
-    return(bcerror);
-  }  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
-  }
-  xberror(51,s); /* Syntax error */
-  bcerror=51;
-  return(bcerror);
-}
-
-#endif
-
 void intro(){
   puts("***************************************************************");
-  printf("*           X11-Basic bytecode compilter                    *\n");
-  puts("*                    by Markus Hoffmann 1997-2008 (c)         *");
+  printf("*           X11-Basic to C translator                      *\n");
+  puts("*                    by Markus Hoffmann 1997-2011 (c)         *");
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
   puts("***************************************************************");
   puts("");
@@ -489,8 +66,10 @@ void intro(){
 void usage(){
   puts("\n Usage:\n ------ \n");
   printf(" %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
-  printf("-o <outputfile>     --- put result in file [%s]\n",ofilename);
-  puts("-h --help           --- Usage");
+  printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
+  puts("-h --help\t--- Usage\n"
+       "-v\t\t--- be more verbose");
+
 }
 
 void kommandozeile(int anzahl, char *argumente[]) {
@@ -501,11 +80,13 @@ void kommandozeile(int anzahl, char *argumente[]) {
     if (strcmp(argumente[count],"-o")==FALSE) {
       strcpy(ofilename,argumente[++count]);
     } else if (strcmp(argumente[count],"-h")==FALSE) {
-      intro();
-      usage();
+      intro();usage();
     } else if (strcmp(argumente[count],"--help")==FALSE) {
-      intro();
-      usage();
+      intro();usage();
+    } else if (strcmp(argumente[count],"-v")==FALSE) {
+      verbose++;
+    } else if (strcmp(argumente[count],"-q")==FALSE) {
+      verbose--;
     } else {
       if(!loadfile) {
         loadfile=TRUE;
@@ -515,150 +96,441 @@ void kommandozeile(int anzahl, char *argumente[]) {
    }
 }
 
+int havesymbol(int adr,int typ) {
+  int i,c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+  for(i=0;i<c;i++) {
+    if(symtab[i].adr==adr && symtab[i].typ==typ) return(i);
+  }
+  return(-1);
+}
+int frishmemcpy(char *d,char *s,int n) {
+  int i,j=0;
+  for(i=0;i<n;i++) {
+    if(s[i]=='\"' || s[i]=='\\') {
+      d[j++]='\\';
+      d[j++]=s[i];  
+    } else if(!isprint(s[i])) {
+      sprintf(&d[j],"\\x%02x",s[i]);
+      j+=4;
+    } else d[j++]=s[i];
+  
+  }
+  return(j);  
+}
+void data_section() {
+  int i=0,c;
+  int count=0;
+  fprintf(optr,"/* compiled by xb2c. */\n\n");
+  if(bytecode->dataseglen) {
+    fprintf(optr,"const char datasec[%d]=\n",(int)bytecode->dataseglen);
+    fprintf(optr,"\"");
+    while(i<bytecode->dataseglen) {
+      if(havesymbol(i,STT_DATAPTR)>=0) {
+        fprintf(optr,"\"\n    \"");
+	count=0;
+      }
+      if(datasec[i]=='\"') {
+        fprintf(optr,"\\\"");
+	count+=2;
+       
+      } else if(isprint(datasec[i])) {
+        fprintf(optr,"%c",datasec[i]);
+	count++;
+      } else {
+        fprintf(optr,"\\x%02x",datasec[i]);
+        count+=4;
+      }
+      if(count>64) {
+        fprintf(optr,"\"\n    \"");
+	count=0;
+      }
+      i++;
+    }
+    fprintf(optr,"\";\n\n");
+    c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+    for(i=0;i<c;i++) {
+      if(symtab[i].typ==STT_DATAPTR) {
+        if(symtab[i].name)
+           fprintf(optr,"#define DTA_%s 0x%x\n",&strings[symtab[i].name],(unsigned int)symtab[i].adr);
+        else  fprintf(optr,"#define DTA_%x 0x%x\n",(unsigned int)symtab[i].adr,(unsigned int)symtab[i].adr);
+      }
+    }
 
+  }
+}
 
 void compile() {
-  int i,a,b;
-  printf("/* produced with xb2c \n\n");
-  printf("%d Zeilen.\n",prglen);
-  printf("%d Procedures.\n",anzprocs);
-  printf("%d Labels.\n",anzlabels);
-  printf("    */\n");
-  printf("databuffer=\"%s\";",databuffer);
-  printf("databufferlen=%d;",databufferlen);
-  printf("main() {\n");
-  for(i=0;i<prglen;i++) {
-    printf("%3d:$%08x %x_[%08xx%d](%d)%s \t |",i,0,pcode[i].etyp,pcode[i].opcode,pcode[i].integer,
-    pcode[i].panzahl,program[i]);
-/* Sonderbehandlungen fuer ... */
-    if((pcode[i].opcode&PM_COMMS)==find_comm("INC")) {
-        /* Variable */
-        printf("%s++;  /* INC */\n",pcode[i].argument);
-    } else if((pcode[i].opcode&PM_COMMS)==find_comm("DEC")) {
-        printf("%s--;  /* DEC */\n",pcode[i].argument);
-    }
-/* Jetzt behandlungen nach Pcode */
-    else if((pcode[i].opcode&PM_SPECIAL)==P_DATA) {
-      /*Erzeugt keinen Code...*/
-    }
-    else if((pcode[i].opcode&PM_COMMS)==find_comm("RESTORE")) {
-      if(strlen(pcode[i].argument)) {
-        int j;
-        j=labelnr(pcode[i].argument);
-        if(j==-1) xberror(20,pcode[i].argument);/* Label nicht gefunden */
-        else printf("datapointer=%d;  /*RESTORE %s */\n",(int)labels[j].datapointer,labels[j].name);
-      } else {
-        printf("datapointer=0;  /* RESTORE */\n");
+  char *buf;
+  char c;
+  int i,a,n,b;
+  short ss;
+  double d;
+  char *bcpc=(char *)bytecode+sizeof(BYTECODE_HEADER);
+  unsigned char cmd;
+  a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+  if(a>0) { 
+    for(i=0;i<a;i++) {
+      if(symtab[i].typ==STT_FUNC) {
+        if(symtab[i].name)
+           fprintf(optr,"void %s();\t/* $%x */\n",&strings[symtab[i].name],symtab[i].adr);
+        else  fprintf(optr,"void FUNC_%x();\t /* 0x%x */\n",symtab[i].adr,symtab[i].adr);
       }
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_EXITIF) {
-      printf("if(%s) break; /* EXIT IF %s */\n",pcode[i].argument,pcode[i].argument);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_IF) {
-      printf("if(%s) { /* IF %s */\n",pcode[i].argument,pcode[i].argument);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF) {
-      printf("} else if(%s) { /* ELSEIF %s */\n",pcode[i].argument,pcode[i].argument);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_GOSUB) {
-      printf("%s /* GOSUB */\n");
-      if(pcode[i].integer==-1) printf("Something is wrong.\n");
-      else {
-        char buf[strlen(pcode[i].argument)+1];
-	char *pos,*pos2;
-	int anzpar=0;
-        printf(" GOSUB %d:%d ",pcode[i].integer,procs[pcode[i].integer].zeile);
-        strcpy(buf,pcode[i].argument);
-        pos=searchchr(buf,'(');
-        if(pos!=NULL) {
-          pos[0]=0;pos++;
-          pos2=pos+strlen(pos)-1;
-          if(pos2[0]!=')') {
-	    puts("GOSUB: Syntax error bei Parameterliste");
-	    structure_warning("GOSUB"); /*Programmstruktur fehlerhaft */
-          } else {
-	    pos2[0]=0;
-	    anzpar=count_parameter(pos);
-//	    if(anzpar) bc_parser(pos);  /* Parameter auf den Stack */
-	  }
-        } else pos=buf+strlen(buf);
-      }
-    } else if((pcode[i].opcode&(PM_SPECIAL|P_NOCMD))==P_PROC) {
-      int e;
-      char w1[strlen(procs[pcode[i].integer].parameterliste)+1];
-      char w2[strlen(procs[pcode[i].integer].parameterliste)+1];
+    }
+  }
+  fprintf(optr,"\nmain(int anzahl, char *argumente[]) {\n"
+               "  MAIN_INIT;\n");
+  fprintf(optr,"databufferlen=%d;\n",bytecode->dataseglen);
+  if(bytecode->dataseglen) fprintf(optr,"databuffer=datasec;\n");
+  
+  i=0;
+  while((cmd=bcpc[i]) && i<bytecode->textseglen) {
+    if((b=havesymbol(i,STT_FUNC))>=0) {
+      fprintf(optr,"}\nvoid %s() {\n",&strings[symtab[b].name]);
+    } 
+    fprintf(optr,"/* %02x */",i);
 
-      printf(" PROC_%d %s ",pcode[i].integer,procs[pcode[i].integer].parameterliste);
-      e=count_parameter(procs[pcode[i].integer].parameterliste);
-      /* Wir muessen darauf vertrauen, dass die anzahl Parameter stimmt */
-      /* Jetzt von Liste von hinten aufloesen */
-      e=wort_sepr(procs[pcode[i].integer].parameterliste,',',TRUE,w1,w2);
-      while(e==2) {
-        printf("<%s>",w2);      
-      }  
-      if(e) {	
-        printf("<%s>",w1);   
-      }    
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_RETURN) {
-      printf(" RETURN %s ",pcode[i].argument);
-      if(pcode[i].argument && strlen(pcode[i].argument)) {
-     //   bc_parser(pcode[i].argument);
-      }      
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_WHILE) {
-      int j,f=0,o;
-    //  bc_parser(pcode[i].argument);
-      printf(" WHILE ");
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_UNTIL) {
-      int j,f=0,o;
-    //  bc_parser(pcode[i].argument);
-      printf(" UNTIL ");
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_FOR) {
-      char w1[strlen(pcode[i].argument)+1],w2[strlen(pcode[i].argument)+1];
-      wort_sep(pcode[i].argument,' ',TRUE,w1,w2);
-      wort_sep(w1,'=',TRUE,w1,w2);
-      printf(" FOR ");
-    //  bc_parser(w2);
-    } else if((pcode[i].opcode&PM_SPECIAL)==P_NEXT) {
-      printf("}\n /* NEXT */");
+    if((b=havesymbol(i,STT_LABEL))>=0) 
+      fprintf(optr,"%s:  ",&strings[symtab[b].name]);
+    else if((b=havesymbol(i,0))>=0) {
+      if(symtab[b].name)
+        fprintf(optr,"%s:  ",&strings[symtab[b].name]);
+      else fprintf(optr,"LBL_%x:  ",symtab[b].adr);
+    } else fprintf(optr,"    ");
+    i++;
+     switch(cmd) {
+    case BC_NOOP:
+      fprintf(optr,"NOOP;\n");
+      break;
+    case BC_JSR:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      a-=sizeof(BYTECODE_HEADER);
+      if((b=havesymbol(a,STT_FUNC))>=0) {
+        fprintf(optr,"%s();",&strings[symtab[b].name]);
+        fprintf(optr,"\t/* JSR(0x%x);*/\n",a);
+      } else fprintf(optr,"JSR(0x%x);\n",a);
+      break;
+    case BC_JMP:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      a-=sizeof(BYTECODE_HEADER);
+      if((b=havesymbol(a,STT_LABEL))>=0) 
+        fprintf(optr,"goto %s;\t/* JMP(0x%x); */\n",&strings[symtab[b].name],a);
+      else if((b=havesymbol(a,0))>=0) 
+        fprintf(optr,"goto LBL_%x;\t/* JMP(0x%x); */\n",a,a);
+      else fprintf(optr,"JMP(0x%x);\n",a);
+      break;
+    case BC_JEQ:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      a-=sizeof(BYTECODE_HEADER);
+      if((b=havesymbol(a,STT_LABEL))>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto %s\t/* JEQ(0x%x); */\n",&strings[symtab[b].name],a);
+      else if((b=havesymbol(a,0))>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* JEQ(0x%x); */\n",a,a);
+      else fprintf(optr,"JEQ(0x%x);\n",a);
+      break;
+    case BC_BRA:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+     if(b=havesymbol(i+ss,STT_LABEL)>=0) 
+        fprintf(optr,"goto %s;\t/*BRA(%d); $%x */\n",&strings[symtab[b].name],ss,i+ss);
+      else if((b=havesymbol(i+ss,0))>=0) 
+        fprintf(optr,"goto LBL_%x;\t/* BRA(%d); */\n",i+ss,ss);
+      else fprintf(optr,"BRA(%d);\t/* $%x */\n",ss,i+ss); 
+      break;
+    case BC_BEQ:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if(b=havesymbol(i+ss,STT_LABEL)>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto %s;\t/*BEQ(%d); $%x */\n",&strings[symtab[b].name],ss,i+ss);
+      else if((b=havesymbol(i+ss,0))>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* BEQ(%d); */\n",i+ss,ss);
+      else fprintf(optr,"BEQ(%d);\t/* $%x */\n",ss,i+ss); 
+      break;
+    case BC_BSR:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      if((b=havesymbol(i+ss,STT_FUNC))>=0) {
+        fprintf(optr,"%s();",&strings[symtab[b].name]);
+        fprintf(optr,"\t/* BSR(%d); $%x */\n",ss,i+ss);
+      } else fprintf(optr,"BSR(%d);\n",ss);
+      break;
+    case BC_RTS:
+      fprintf(optr,"return;\n");
+      break;
+    case BC_BRAs:
+      c=bcpc[i++];
+      if(b=havesymbol(i+c,STT_LABEL)>=0) 
+        fprintf(optr,"goto %s;\t/*BRA_s(%d); $%x */\n",&strings[symtab[b].name],c,i+c);
+      else if((b=havesymbol(i+c,0))>=0) 
+        fprintf(optr,"goto LBL_%x;\t/* BRA_s(%d); */\n",i+c,c);
+      else fprintf(optr,"BRA_s(%d);\t/* $%x */\n",c,i+c); 
+      break;
+    case BC_BEQs:
+      c=bcpc[i++];
+      if(b=havesymbol(i+c,STT_LABEL)>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto %s;\t/*BEQ_s(%d); $%x */\n",&strings[symtab[b].name],c,i+c);
+      else if((b=havesymbol(i+c,0))>=0) 
+        fprintf(optr,"if((--opstack)->integer==0) goto LBL_%x;\t/* BEQ_s(%d); */\n",i+c,c);
+      else fprintf(optr,"BEQ_s(%d);\t/* $%x */\n",c,i+c); 
+      break;
+    case BC_PUSHF:
+      memcpy(&d,&bcpc[i],sizeof(double));i+=sizeof(double);
+      fprintf(optr,"PUSHF(%g);\n",d);
+      break;
+    case BC_PUSHI:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"PUSHI(%d);\n",a);
+      break;
+    case BC_PUSHW:
+      memcpy(&ss,&bcpc[i],sizeof(short));i+=sizeof(short);
+      fprintf(optr,"PUSHW(%d);\n",ss);
+      break;
+    case BC_PUSHB:
+      fprintf(optr,"PUSHB(%d);\n",bcpc[i++]);
+      break;
+    case BC_PUSHLEER:
+      fprintf(optr,"PUSHLEER;\n");
+      break;
+    case BC_PUSH0:
+      fprintf(optr,"PUSH0;\n");
+      break;
+    case BC_PUSH1:
+      fprintf(optr,"PUSH1;\n");
+      break;
+    case BC_PUSH2:
+      fprintf(optr,"PUSH2;\n");
+      break;
+    case BC_PUSHM1:
+      fprintf(optr,"PUSHM1;\n");
+      break;
+    case BC_PUSHS:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      buf=malloc(2*a+1);
+      b=frishmemcpy(buf,&bcpc[i],a);
+      buf[b]=0;
+      fprintf(optr,"PUSHS(\"%s\"); /*len=%d*/\n",buf,a);
+      i+=a;
+      free(buf);
+      break;
+    case BC_PUSHFUNC:
+      a=bcpc[i++]&0xff;
+      n=bcpc[i++]&0xff;
+      fprintf(optr,"PUSHFUNC(%d,%d); /* %s */\n",a,n,pfuncs[a].name);
+      break;
+    case BC_PUSHSFUNC:
+      a=bcpc[i++]&0xff;
+      n=bcpc[i++]&0xff;
+      fprintf(optr,"PUSHSFUNC(%d,%d); /* %s */\n",a,n,psfuncs[a].name);
+      break;
+    case BC_PUSHCOMM:
+      a=bcpc[i++]&0xff;
+      n=bcpc[i++]&0xff;
+      fprintf(optr,"PUSHCOMM(%d,%d); /* %s */\n",a,n,comms[a].name);
+      break;
+    case BC_PUSHSYS:
+      a=bcpc[i++];
+      fprintf(optr,"PUSHSYS(%d); /* %s */\n",a,sysvars[a].name);
+      break;
+    case BC_PUSHSSYS:
+      a=bcpc[i++];
+      fprintf(optr,"PUSHSSYS(%d); /* %s */\n",a,syssvars[a].name);
+      break;
+    case BC_PUSHASYS:
+      a=bcpc[i++];
+      fprintf(optr,"PUSHASYS(%d); /* %s */\n",a,"??");
+      break;
+    case BC_PUSHX:
+      a=bcpc[i++];
+      buf=malloc(a*2+1);
+      b=frishmemcpy(buf,&bcpc[i],a);
+      buf[b]=0;
+      fprintf(optr,"PUSHX(\"%s\"); /*len=%d*/\n",buf,a);
+      i+=a;
+      free(buf);
+      break;
+    case BC_COMMENT:
+      a=bcpc[i++];
+      fprintf(optr,"/* %s (%d)*/\n",&bcpc[i],a);
+      i+=a;
+      break;
+    case BC_ADD:
+      fprintf(optr,"ADD;\n");
+      break;
+    case BC_ADDi:
+      fprintf(optr,"ADDi;\n");
+      break;
+    case BC_ADDf:
+      fprintf(optr,"ADDf;\n");
+      break;
+    case BC_ADDs:
+      fprintf(optr,"ADDs;\n");
+      break;
+    case BC_OR:
+      fprintf(optr,"OR;\n");
+      break;
+    case BC_XOR:
+      fprintf(optr,"XOR;\n");
+      break;
+    case BC_SUB:
+      fprintf(optr,"SUB;\n");
+      break;
+    case BC_SUBi:
+      fprintf(optr,"SUBi;\n");
+      break;
+    case BC_SUBf:
+      fprintf(optr,"SUBf;\n");
+      break;
+    case BC_MUL:
+      fprintf(optr,"MUL;\n");
+      break;
+    case BC_MULi:
+      fprintf(optr,"MULi;\n");
+      break;
+    case BC_MULf:
+      fprintf(optr,"MULf;\n");
+      break;
+    case BC_DIV:
+      fprintf(optr,"DIV;\n");
+      break;
+    case BC_POW:
+      fprintf(optr,"POW;\n");
+      break;
+    case BC_AND:
+      fprintf(optr,"AND;\n");
+      break;
+    case BC_EQUAL:
+      fprintf(optr,"EQUAL;\n");
+      break;
+    case BC_GREATER:
+      fprintf(optr,"GREATER;\n");
+      break;
+    case BC_LESS:
+      fprintf(optr,"LESS;\n");
+      break;
+    case BC_DUP:
+      fprintf(optr,"DUP;\n");
+      break;
+    case BC_EXCH:
+      fprintf(optr,"EXCH;\n");
+      break;
+    case BC_CLEAR:
+      fprintf(optr,"CLEAR;\n");
+      break;
+    case BC_COUNT:
+      fprintf(optr,"COUNT;\n");
+      break;
+    case BC_NEG:
+      fprintf(optr,"NEG;\n");
+      break;
+    case BC_NOT:
+      fprintf(optr,"NOT;\n");
+      break;
+    case BC_X2I:
+      fprintf(optr,"X2I;\n");
+      break;
+    case BC_X2F:
+      fprintf(optr,"X2F;\n");
+      break;
+    case BC_MOD:
+      fprintf(optr,"MOD;\n");
+      break;
+    case BC_POP:
+      fprintf(optr,"POP;\n");
+      break;
+    case BC_ZUWEIS:
+      fprintf(optr,"ZUWEIS;\n");
+      break;
+    case BC_PUSHVV:
+      fprintf(optr,"PUSHVV;\n");
+      break;
+    case BC_ZUWEISINDEX:
+      a=bcpc[i++]&0xff;
+      fprintf(optr,"ZUWEISINDEX(%d);\n",a);
+      break;
+    case BC_PUSHV:
+      fprintf(optr,"PUSHV;\n");
+      break;
+    case BC_PUSHARRAYELEM:      
+      a=bcpc[i++]&0xff;
+      fprintf(optr,"PUSHARRAYELEM(%d);\n",a);
+      break;
+    case BC_RESTORE:
+      memcpy(&a,&bcpc[i],sizeof(int));i+=sizeof(int);
+      fprintf(optr,"RESTORE(0x%x);",a);
+      if((b=havesymbol(a,STT_DATAPTR))>=0) fprintf(optr,"\t/* %s */\n",&strings[symtab[b].name]);
+      else fprintf(optr,"\n");
+      break;
+    case BC_EVAL:
+      fprintf(optr,"EVAL;\n");
+      break;
+    default:
+      printf("VM: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
+      memdump((unsigned char *)&(bcpc[i]),16);
     }
-    else if(pcode[i].opcode&P_INVALID) xberror(32,program[i]); /*Syntax nicht korrekt*/
-    else if(pcode[i].opcode&P_EVAL)  /*bc_kommando(i) */;
-    else if((pcode[i].opcode&PM_COMMS)>=anzcomms) {
-      puts("Precompiler error...");
-      //bc_kommando(i);
-    } else if((pcode[i].opcode&PM_TYP)==P_SIMPLE) {
-        printf(" SIMPLE_COMM ");
-      } else {
-      if((pcode[i].opcode&PM_TYP)==P_ARGUMENT) {
-        printf(" ARGUMENT_COMM ");
-      }
-      else if((pcode[i].opcode&PM_TYP)==P_PLISTE) {
-        printf(" PLISTE(%d) ",pcode[i].panzahl);
-        if(pcode[i].panzahl) /*bc_parser(pcode[i].argument)*/;  /* Parameter auf den Stack packen */
-      }
-      else /*bc_kommando(i)*/;
+  }
+  fprintf(optr,"}\n");
+}
+
+int loadbcprg(char *filename) {  
+  int len,i,c;
+  char *p;
+  FILE *dptr;
+  dptr=fopen(filename,"r"); len=lof(dptr); fclose(dptr);
+  p=malloc(len);
+  bload(filename,p,len);
+  if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
+    bytecode=(BYTECODE_HEADER *)p;
+    fprintf(optr,"/* X11-Basic-Code-VM.c (%s)\n",filename);
+    fprintf(optr,"   X11-BAsic-Compiler Version 1.17\n"
+                 "   (c) Markus Hoffmann 2002-2011\n"
+                 "*/\n");
+    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    if(bytecode->version!=BC_VERSION) {
+      printf("WARNING: This Bytecode was compiled for a different version of"
+      "X11-Basic.\n ");
     }
-    
-    if(pcode[i].opcode&P_PREFETCH) {
-     // bc_jumpto(i,pcode[i].integer,0);
+    fprintf(optr,"/*\nBytecode: %s (%d Bytes)\n",filename,len);
+    fprintf(optr,"txt:  $%08x %d\n",sizeof(BYTECODE_HEADER),bytecode->textseglen);
+    fprintf(optr,"data: $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen,bytecode->dataseglen);
+    datasec=(unsigned char *)&p[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
+    fprintf(optr,"bss:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen,bytecode->bssseglen);
+    fprintf(optr,"str:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen,bytecode->stringseglen);
+    fprintf(optr,"sym:  $%08x %d\n",sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen+bytecode->stringseglen,bytecode->symbolseglen);
+    strings=&p[sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen];
+    fprintf(optr,"Strings: %s\n",strings);
+    symtab=(BYTECODE_SYMBOL *)(p+sizeof(BYTECODE_HEADER)+bytecode->textseglen+bytecode->dataseglen+bytecode->stringseglen);
+    c=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
+    fprintf(optr,"%d symbols.\n",c);
+    for(i=0;i<c;i++) {
+      if(verbose) fprintf(optr,"%d : $%08x %s\n",i,symtab[i].adr,&strings[symtab[i].name]);
     }
-     printf("\n");
-  }  
-  printf("Info:\n");
+    fprintf(optr,"    */\n");
+    fprintf(optr,"#include <x11basic/xb2csol.h>\n");
+    return(0);
+  } else {
+    printf("VM: ERROR, file format not recognized.\n");
+    return(-1);
+  }
 }
 
 
-
-
-
-main(int anzahl, char *argumente[]) {
+int main(int anzahl, char *argumente[]) {
   /* Initialize data segment buffer */
   if(anzahl<2) {    /* Kommandomodus */
-    intro();
-    batch=0;
+    intro();usage();
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
-        loadprg(ifilename);
-	compile();
-      } else printf("ERROR: %s not found !\n",ifilename);
-    }
+          /* file oeffnen */
+	optr=fopen(ofilename,"w");
+        
+        if(loadbcprg(ifilename)==0) {
+          data_section();
+	  compile();
+	}
+	fclose(optr);
+      } else {
+        printf("ERROR: %s not found !\n",ifilename);
+        exit(EX_NOINPUT);
+      }
+    } else exit(EX_NOINPUT);
   }
+  return(EX_OK);
 }

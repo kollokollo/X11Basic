@@ -16,17 +16,37 @@
 #include <string.h>
 #include "defs.h"
 #include "globals.h"
-#include "protos.h"
+#include "x11basic.h"
 #include "graphics.h"
+#include "xbasic.h"
+#include "kommandos.h"
 #include "gkommandos.h"
-#include "window.h"
 #include "aes.h"
+#include "window.h"
 #include "bitmap.h"
+#include "file.h"
+#include "array.h"
+#include "parser.h"
+#include "wort_sep.h"
+#include "variablen.h"
+#include "io.h"
 
-#include "graphics.h"
 
 
 #ifndef NOGRAPHICS
+
+#ifdef FRAMEBUFFER
+#include "bitmaps/bombe.bmp"
+#include "bitmaps/bombe_mask.bmp"
+#endif
+
+/*
+  Philosophie bei den Windows: 
+  Nr 0  ist rootwindow bei X11 und fullscreen bei SDL
+  Nr 1-16 normale Fenster
+
+
+*/
 
 
 void c_rootwindow(char *n){
@@ -52,7 +72,8 @@ void c_plot(PARAMETER *plist,int e) {
 }
 
 void c_savescreen(PARAMETER *plist,int e) {
-    int d,b,x,y,w,h,len,i;
+    int x,y,len,i;
+    unsigned int b,d,w,h;
     char *data;
     if(e) {
 #ifdef USE_X11
@@ -89,12 +110,14 @@ void c_savescreen(PARAMETER *plist,int e) {
     free(data);
 #endif
 #ifdef USE_SDL
+  /* bei SDL ist SAVESCREEN dasselbe wie SAVEWINDOW*/
   SDL_SaveBMP(display[usewindow], plist[0].pointer);
 #endif
   }
 }
 void c_savewindow(PARAMETER *plist,int e) {
-  int d,b,x,y,w,h,len,i;
+  int x,y,len,i;
+  unsigned int b,d,w,h;
   char *data;
   if(e) {
 #ifdef USE_X11
@@ -134,7 +157,8 @@ void c_savewindow(PARAMETER *plist,int e) {
   }
 }
 void c_get(PARAMETER *plist,int e) {
-  int d,b,bx,by,bw,bh,len,i;
+  int bx,by,len,i;
+  unsigned int b,d,bw,bh;
   char *data;
 
 #ifdef USE_X11
@@ -265,7 +289,8 @@ void c_put_bitmap(PARAMETER *plist,int e) {
 }
 
 void c_sget(char *n) {
-  int d,b,x,y,w,h,len,i;
+  int x,y,len,i;
+  unsigned int w,h,d,b;
   char *data;
 #ifdef USE_X11
   XImage *Image;
@@ -304,7 +329,8 @@ void c_sget(char *n) {
 
 void c_getgeometry(PARAMETER *plist,int e) {
   int winnr=DEFAULTWINDOW;
-  int d,b,x,y,w,h;
+  int x,y;
+  unsigned int d,b,w,h;
 #ifdef USE_X11
   Window root;
 #endif
@@ -356,7 +382,8 @@ void c_getgeometry(PARAMETER *plist,int e) {
 }
 
 void c_getscreensize(PARAMETER *plist,int e) {
-  int d,b,x,y,w,h;
+  int x,y;
+  unsigned int d,b,w,h;
 #ifdef USE_X11
     Window root;
 #endif
@@ -430,7 +457,7 @@ void c_line(PARAMETER *plist,int e) {
 }
 void c_box(PARAMETER *plist,int e) {
   graphics(); 
-  box(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
+  mybox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
 #define RBOX_RADIUS 16
 void c_rbox(PARAMETER *plist,int e) {
@@ -782,7 +809,7 @@ void do_polygon(int doit,char *n) {
 	  }
 	} else if(marker_typ==4) {
 	  for(i=0;i<anz;i++) {
-	    box(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
+	    mybox(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
 	  }
 	} else if(marker_typ==5) {
 	  for(i=0;i<anz;i++) {
@@ -953,7 +980,8 @@ void c_mouse(PARAMETER *plist,int e) {
   if(e>=3 && plist[2].typ!=PL_LEER) 
     varcastint(plist[2].integer,plist[2].pointer,(global_mousek|(global_mouses<<8)));
 #else
-   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+   int root_x_return, root_y_return,win_x_return, win_y_return;
+   unsigned int mask_return;
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
@@ -1459,7 +1487,8 @@ void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
   } else printf("Ungültige Windownr. %d. Max: %d\n",winnr,MAXWINDOWS);
 }
 void c_clearw(PARAMETER *plist,int e) {
-  int winnr=usewindow,x,y,w,h,b,d;
+  int winnr=usewindow,x,y;
+  unsigned int w,h,b,d;
   if(e) winnr=max(0,plist[0].integer);
   if(winnr<MAXWINDOWS) {
     graphics();
@@ -1549,10 +1578,13 @@ void c_fullw(PARAMETER *plist,int e) {
     if(winbesetzt[winnr]) {
 #ifdef USE_X11
       Window root;
-      int ox,oy,ow,oh,ob,d;
+      int ox,oy;
+      unsigned int ow,oh,ob;
+      unsigned int d;
       graphics();
       do_movew(winnr,0,0);
-      XGetGeometry(display[winnr],RootWindow(display[winnr],DefaultScreen(display[winnr])),&root,&ox,&oy,&ow,&oh,&ob,&d);
+      XGetGeometry(display[winnr],RootWindow(display[winnr],
+        DefaultScreen(display[winnr])),&root,&ox,&oy,&ow,&oh,&ob,&d);
       do_sizew(winnr,ow,oh);
 #endif
 #ifdef USE_SDL
@@ -1655,20 +1687,20 @@ FB_show_mouse();
     graphics();
     if(form==2) {
       mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                biene_bits,biene_width,biene_height);
+                (char *)biene_bits,biene_width,biene_height);
       mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                biene_mask_bits,biene_mask_width,biene_mask_height);
+                (char *)biene_mask_bits,biene_mask_width,biene_mask_height);
     } else if(form==3) {
       hotx=0;hoty=0;
       mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                zeigehand_bits,zeigehand_width,zeigehand_height);
+                (char *)zeigehand_bits,zeigehand_width,zeigehand_height);
       mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                zeigehand_mask_bits,zeigehand_mask_width,zeigehand_mask_height);
+                (char *)zeigehand_mask_bits,zeigehand_mask_width,zeigehand_mask_height);
     } else if(form==4) {
       mausp=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                hand_bits,hand_width,hand_height);
+                (char *)hand_bits,hand_width,hand_height);
       mausm=XCreateBitmapFromData(display[usewindow],win[usewindow],
-                hand_mask_bits,hand_mask_width,hand_mask_height);
+                (char *)hand_mask_bits,hand_mask_width,hand_mask_height);
 
     }
     f.pixel=1;b.pixel=0;
@@ -1744,7 +1776,6 @@ FB_show_mouse();
 void g_outs(STRING t);
 void g_out(char a) {
   static int lin=0,col=0;
-  extern int chh,chw;
   extern ARECT sbox;
   int bbb;
   switch(a) {
@@ -1787,13 +1818,12 @@ void g_outs(STRING t) {
 
 void c_text(PARAMETER *plist,int e) {
   graphics();
-  DrawString(plist[0].integer,plist[1].integer,plist[2].pointer,plist[2].integer);
+  draw_string(plist[0].integer,plist[1].integer,plist[2].pointer,plist[2].integer);
 }
 
 void c_gprint(char *n) {
   char v[strlen(n)+1];
   char c;
-  int i;
   strcpy(v,n);
 
   if(strlen(v)) {  

@@ -6,7 +6,7 @@ rot=get_color(65535,32000,32000)
 schwarz=get_color(0,0,0)
 color weiss
 pbox 0,0,640,400
-color schwarz
+color schwarz,weiss
 text 10,300,"DEFFILL-Test with X11-Basic (c) Markus Hoffmann"
 for j=0 to 5
   for i=0 to 7

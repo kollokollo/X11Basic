@@ -35,7 +35,8 @@
 
   */
 #include <string.h>
-  
+#include <ctype.h> 
+
 int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0;
 
@@ -89,7 +90,7 @@ int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2)    {
 
 /* Spezielle Abwandlung zum erkennen von Exponentialformat */
 
-int is_operator(char c) {
+static int is_operator(char c) {
   return(!(strchr("|&~!*/+-<>^ =",c)==NULL));
 }
 
@@ -164,7 +165,7 @@ int wort_sepr_e(char *t,char c,int klamb ,char *w1, char *w2)    {
 
 int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
   register int i;
-  int f=0, klam=0, j=0;
+  int f=0, klam=0;
   
   if(!*t) return(*w1=*w2=0);
  
@@ -233,7 +234,7 @@ int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
   register int i;
-  int f=0, klam=0, j=0;
+  int f=0, klam=0;
 
 
   if(!*t)  return(*w1=*w2=0);  /* hier gibts nix zu trennen */
@@ -404,4 +405,37 @@ void xtrim(char *t,int f, char *w ) {
     if(u && !b) b=1;
     if(*t) t++;
   } *w=0;
+}
+
+/*Dasselbe, aber entferne auch blanks nach ,;+- und vor ,; */
+
+
+void xtrim2(char *t,int f, char *w ) {
+  register int a=0,u=0,b=0,z=0,z2=0;
+  const char solo[]=",;+-*/^'(~@<>=";
+  const char solo2[]=";*/^')<>=";
+#if 0
+char *w2=w;
+printf("XTRIM2 <%s> --> ",t);
+#endif
+
+  while(*t) {
+    while(*t && (!isspace(*t) || a)) {
+      if(*t=='"') a=!a;
+      u=1; 
+      z2=(strchr(solo2,*t)!=NULL);
+      if(z2 && b) b=0;
+      if(b) {*w++=' '; b=0;}
+      z=(strchr(solo,*t)!=NULL);
+      if(f && !a) *w++=toupper(*t++); 
+      else *w++=*t++;
+    }
+    if(u && !b) b=1;
+    if(b && z) b=0;
+    if(*t) t++;
+  } 
+  *w=0;
+#if 0
+  printf(" <%s> \n",w2);
+#endif
 }

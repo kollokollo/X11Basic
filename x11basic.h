@@ -1,5 +1,5 @@
 
-/* PROTOS.H (c) Markus Hoffmann  */
+/* x11basic.h (c) Markus Hoffmann  */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -7,7 +7,26 @@
  * COPYING for details
  */
 
-/* Prototypen */
+/* Prototypen  fuer die Libx11basic.s	   */
+const char *error_text(unsigned char errnr, char *bem);
+void xberror(char errnr, char *bem);
+void reset_input_mode();
+void x11basicStartup();
+
+void kommando(char *);   /* This is for single command execution: */
+void loadprg(char *);
+void programmlauf();
+
+/* Global Variables*/
+
+extern int databufferlen;
+extern char *databuffer;
+extern const char libversion[];
+extern const char libvdate[];
+extern int param_anzahl;
+extern char **param_argumente;
+extern const char xbasic_name[];
+extern int pc,sp,err,errcont,everyflag,batch,echoflag;
 
 /* Hilfsfunktionen */
 
@@ -19,63 +38,29 @@ int count_parameter(char *);
 
 void break_handler( int);
 void doocssig_handler( int);
-void memdump(unsigned char *, int);
+
 void fatal_error_handler( int);
 void timer_handler( int);
 double ltext(int, int, double, double, double , int, char *);
-int make_pliste(int,int,short *,char *,PARAMETER **);
-void free_pliste(int,PARAMETER *);
-void free_parameter(PARAMETER);
-int wort_sep (char *,char ,int ,char *, char *);
-int wort_sepr(char *,char ,int ,char *, char *);
-int wort_sep2(char *,char *,int ,char *, char *);
-int wort_sepr2(char *,char *,int ,char *, char *);
-char *searchchr2(char *,char);
-char *searchchr2_multi(char *,char *);
-char *rmemmem(char *,int,char *,int);
-int xtrim(char *,int, char *);
-char *error_text(char , char *);
 char *do_gets (char *); 
 char *simple_gets(char *);
-void erase_string_array(int);
 double floatarrayinhalt(int, char*);
 double varfloatarrayinhalt(int, int *);
 int varintarrayinhalt(int, int *);
-STRING varstringarrayinhalt(int, int *);
 char *indirekt2(char *);
-STRING print_arg(char *);
-STRING do_using(double,STRING);
 void local_vars_loeschen(int);
 void clear_parameters();
 void clear_labelliste();
 void clear_procliste();
 char *varrumpf(char *);
-STRING f_inputs(char *);
-STRING f_lineinputs(PARAMETER *,int);
 int f_freefile();
-STRING vs_error();
-char *float_to_string(char *);
-STRING hexoct_to_string(char,PARAMETER *,int);
 char *bin_to_string(char *);
 void set_input_mode(int,int);
 void set_input_mode_echo(int);
 void reset_input_mode();
 char *terminalname();
-int inp8(PARAMETER *,int),inpf(PARAMETER *,int),inp16(PARAMETER *,int),inp32(PARAMETER *,int);
-int type2(char *),do_wort_sep(char *);
 int kbhit();
 
-/* parser */
-
-
-int init_parser();
-double parser(char *);
-char *s_parser(char *);
-STRING string_parser(char *);
-ARRAY array_parser(char *);
-ARRAY array_const(char *);
-
-int buchstabe(char);
 
 double ltextlen (double, int, char *); 
 void cs_init();
@@ -83,26 +68,7 @@ void cs_exit();
 double csget(char *);
 char *csgets(char *);
 double do_funktion(char *,char *);
-STRING do_sfunktion(char *,char *);
 
-/*Variablen */
-
-int zuweissbyindex(int,int *,STRING);
-int zuweisibyindex(int,int *,int);
-int zuweisbyindex(int,int *,double);
-
-
-
-void string_zuweis_by_vnr(int, STRING);
-void c_dolocal(char *, char *);
-void xzuweis(char *, char *);
-int xzuweissbuf(char *, char *,int);
-void varcastint(int,void *,int);
-void varcastfloat(int,void *,double);
-void *varptr(char *);
-
-char *argument(char *);
-char *varrumpf(char *);
 
 void do_menu_draw();
 int  do_menu_select();
@@ -117,17 +83,8 @@ void programmlauf();
 void set_font(char *);
 void set_graphmode(int);
 
-char *rsearchchr(char *, char);
-char *rsearchchr2(char *,char,char *);
-char *searchchr(char *, char);
-
-STRING create_string(char *); 
-
 /* Kontrollsystem */
 
-ARRAY csvget(char *,int,int);
-ARRAY tinevget(char *,int,int);
-ARRAY tinehistory(char *,int,int);
 int cssize(char *);
 int cstyp(char *);
 int cspid(char *);
@@ -178,6 +135,9 @@ double doocstimestamp(char *);
 int doocstyp(char *);
 int doocssize(char *);
 #endif
+
+/* API for The virtual machine */
+
 
 
 

@@ -11,7 +11,7 @@
         ###############################################################
   
  
- 		    		  VERSION 1.16
+ 		    		  VERSION 1.17
 
  		       (C) 1997-2011 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
@@ -24,7 +24,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Mo 4. Apr 19:42:40 CEST 2011
+          Last change to this file:  Sa 30. Jul 12:49:43 CEST 2011
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -259,8 +259,8 @@ About this document
 SuSE-Linux and RedHat                                                        
                                                                              
    If you got a Redhat-Package (RPM) e.g. the File                           
-   X11Basic-1.16-4.i386.rpm, then you can install this package (beeing       
-   root) with rpm -i X11Basic-1.16-4.i386.rpm.                               
+   X11Basic-1.17-1.i386.rpm, then you can install this package (beeing       
+   root) with rpm -i X11Basic-1.17-1.i386.rpm.                               
                                                                              
    This is a very convienient way at least for the Linux distributions       
    SuSE and RedHat of installing the interpreter and its documentation,      
@@ -292,9 +292,9 @@ Debian based distributions
   As with Ubuntu linux the popularity of debian based linux distributions  has
   dramatically increases in the recent past. 
   Therefor X11-Basic also comes in packages called (e.g.) 
-  x11basic_1.16-1_i386.deb. Usually you can very easili install the file from 
+  x11basic_1.17-1_i386.deb. Usually you can very easili install the file from 
   a File-Browser with simply double clicking on it. Also a
-  dpkg -i x11basic_1.16-1_i386.deb  will do. 
+  dpkg -i x11basic_1.17-1_i386.deb  will do. 
   The file system structure should be similar to what is  described in the 
   previous chapter (explaining the RedHat packages), so you should expect to 
   find the same files at the same place.
@@ -309,7 +309,7 @@ Other linux distributions
   know) there exist no packages for any other system.
                                                                              
    For all other systems you will have to get the source-package             
-   X11Basic-1.16.tar.gz and compile the sources (which is very easy, by      
+   X11Basic-1.17.tar.gz and compile the sources (which is very easy, by      
    the way). This should work for all linux distributions, and probably      
    with little modifications also for HPUX, for DEC/alpha and FreeBSD and    
    maybe others.                                                             
@@ -324,11 +324,11 @@ Other linux distributions
                                                                              
    These will suffice to get you started.                                                               
                                                                              
-   Unpack X11Basic-1.16.tar.gz with                                          
+   Unpack X11Basic-1.17.tar.gz with                                          
                                                                              
- tar xzf X11Basic-1.16.tar.gz                                                
+ tar xzf X11Basic-1.17.tar.gz                                                
                                                                              
-   go into the X11Basic-1.16 directory and do a                              
+   go into the X11Basic-1.17 directory and do a                              
                                                                              
    ./configure
    make
@@ -5520,6 +5520,25 @@ DESCRIPTION:
 	
 SEE ALSO: CLOSE, OPEN, FORK()
 ##############################################################################
+Command:  PLAYSOUND
+Syntax:   PLAYSOUND channel,s$
+
+DESCRIPTION:
+
+        PLAYSOUND plays a WAV sample on the sound card.  
+	s$ must contain the data from a sound file. (WAV format).
+	The saple is then played once on the channel c. If c is -1 a free 
+	channel is selected. There are 16 channels. (currently this only works 
+	in the MS WINDOWS or SDL version.)
+	
+EXAMPLE:
+        OPEN "I",#1,"sound.wav"
+	t$=INPUT$(#1,LOF(#1))
+	CLOSE #1
+	PLAYSOUND ,t$
+
+SEE ALSO: SOUND
+##############################################################################
 Command:  PLIST 
 Syntax:   PLIST
 
@@ -6223,8 +6242,20 @@ Syntax:  SETFONT t$
 
 DESCRIPTION:
 	
-	Loads and sets a X11 Font. t$ may be the fontname or any valid
-	Font pattern.
+	Loads and sets a Font. t$ may be 
+	"SMALL" or "5x7" for a small font
+	"MEDIUM or "8x8 for a medium sized font
+	"BIG" or "8x16" for a big font.
+	With X11, the  fontname may be any valid Font name or pattern.
+
+EXAMPLE:
+	SETFONT "BIG"
+	TEXT 100,100,"Hi, this is a big font"
+	SETFONT "5x7"
+	TEXT 100,150,"The small variant"
+	SETFONT "-*-lucidatypewriter-medium-r-*-*-10-*-*-*-m-*-*-*"
+	TEXT 100,200,"This may work on a UNIX system."
+
 	
 SEE ALSO: TEXT
 ##############################################################################
@@ -6351,22 +6382,28 @@ DESCRIPTION:
 ##############################################################################
 
 Command: SOUND
-Syntax:  SOUND <frequency>
+Syntax:  SOUND <channel>,<frequency>[,volume[,duration]]
 
 DESCRIPTION:
 	SOUND sounds the internal speaker with frequency [Hz]. If frequency=0
-	shut up speaker. 
+	shut up speaker. 16 channels are supported, which can be set with a 
+	sound or a sample (via PLAYSOUND). If channel is -1, a free channel is 
+	used. Volume can be 0 (off) to 1 (maximum). The duration is counted in 
+	milliseconds. Currently only sin waves are supported. (maybe later we 
+	implement also a WAVE command for more settings.)  
 
 COMMENT:	
-	The internal speaker is accessed via a console device. 
-	The sound does not work unter xterm.
+	On systems without ALSA sound the internal speaker is used. The 
+	internal speaker has only one channel. The internal speaker is 
+	accessed via a console device and need privileges. 
+	The sound currently does not work under UNIX.
 
 EXAMPLE:
-	SOUND 500
+	SOUND 1,500
 	PAUSE 0.1
-	SOUND 0
+	SOUND 1,0
 
-SEE ALSO:  PAUSE
+SEE ALSO:  PAUSE, PLAYSOUND
  
 ##############################################################################
 Variable:  SP
@@ -6833,6 +6870,29 @@ EXAMPLE:
 	
 ##############################################################################
 
+Command:  WAVE
+Syntax:   WAVE chan,par,par,par
+DESCRIPTION:
+
+       Set some parameters of the SOUND synthesizer for channel c. Like 
+       waveform, generator type enveloppe etc... Thease parameters can be 
+       set for each on the 16 channels individually. 
+       Tone Generators:
+       0 - silence
+       1 - sin wave
+       2 - triangular wave
+       3 - Square wave
+       4 - white noise 
+       
+       !!! This command is new in V.1.17 and need to be improved !!!
+
+SEE ALSO:    SOUND
+EXAMPLE:
+	SOUND 1,500
+	WAVE 1,1
+	
+##############################################################################
+
 Command:  WHILE
 Syntax:   WHILE <num-expression>
 DESCRIPTION:
@@ -7087,7 +7147,10 @@ Things left to do:
 - Optimize a bit more
 - The WIndows-Version needs more work
 - Fix the bugs
+- work on the sound system
+- work on the SDL-Graphics implementation (fill styles etc...)
 - documentation needs more work
+- find someone who can port it to apple mac/ipad/iphone
 (etc. etc.)
 
 BUGS:	- Integer-Artmetrik sehr(!) unvollständig
@@ -7266,19 +7329,32 @@ Version 1.14 (Apr 2007)
 - new SPAWN command (does still not work as wanted)
 - created doocsxbasic modification to use the FLASH control system at DESY
 
-Version 1.15 (Feb 2008)
-~~~~~~~~~~~~~~~~~~~~~~~~
+
+Release notes for Version 1.15 (Feb 2008)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - New command: PIPE
 - New commands: GET_SCREENSIZE, GET_GEOMETRY
 - Implemented BMP file format (for PUT)
 - produced a framebuffer-graphics version of X11-basic
 
-Release notes for Version 1.16 (Dez 2010)
+
+Release notes for Version 1.16 (Feb 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Bugfix in SORT (Feb 2010)
 - new function word$() June 2010
 - Improved DATA/RESTORE handling Dez 2010
-- Improved bytecode/xbvm
+- Improved xbbc/bytecode/xbvm
+- Fixed memory leak accuring in varptr()
+- added xbbc and xbvm to windows distribution
+- started xb2c project
+- new psydocompiler for MS-WINDOWS, can produce standalone .exe files 
+- Bug fixed: LINEINPUT and LINEINPUT$() now can read arbitrary long lines
+- fixed bug with PBOX: now 2nd coordinate is inside the filled area.
+- new commands WATCH/(UNWATCH)/FILEEVENT$
+- fixed bug with bitmaps (PUT)
+- added support for bitmaps with transparency/alpha channel
+- fixed bug in DEFFILL
+- fixed bug in objc_draw()
 
 --------------------------------------------------------------------------------
 *Acknowlegements

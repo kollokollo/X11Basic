@@ -4,43 +4,45 @@
 ' demonstrieren. Hier kann man zur Syntax etc. lernen
 ' Letzte Bearbeitung 09.03.2002  Markus Hoffmann
 ' Letzte Bearbeitung 18.01.2008  Markus Hoffmann
+' Letzte Bearbeitung 27.07.2011  Markus Hoffmann
 '
+
+' define some colors
+
 gelb=get_color(65535,65535,0)
 rot=get_color(65535,0,0)
 weiss=get_color(65535,65535,65535)
 schwarz=get_color(0,35535,25535)
 
-bw=640
+bw=640 ! The default with and height of the window
 bh=400
 
-setfont "*Courier*12*"
-sizew ,bw,bh
+setfont "*Courier-bold-r-*12*"
+sizew ,bw,bh   ! Set the window size
 color schwarz
-get_geometry 1,bx,by,bw,bh
+get_geometry 1,bx,by,bw,bh   ! Ask what size we really got
 pbox bx,by,bw,bh
 vsync
-color rot
+color rot,schwarz
 TEXT 10,10,"Analoguhr mit X11-BASIC von Markus Hoffmann"
-setfont "*Courier*18*"
 
 '
 ' PRINT AT(5,24);"Bitte Mittelpunkt der Uhr angeben (Maus)."
 '
 x=bx+bw/2
 y=by+bh/2
-xr=bh
+r=min(bh,bw)/2.2
 color weiss
-CIRCLE x,y,xr-x+5
+CIRCLE x,y,r+5
 '
 ' ***** Radien fr Zeiger usw. berechnen.
 '
 vsync
 
-r=xr-x
 bs=r/50
 bm=r/20
 t=r/12
-r1=r
+r1=r-5
 r2=r*0.914
 r3=r*0.857
 r4=r*0.84
@@ -88,14 +90,14 @@ ti=STIMER
 do
   IF STIMER>ti
     ti=STIMER
-    color schwarz 
-    pbox 10,bh-30,130,bh
     @s_ekunde
     color gelb
+    setfont "*Courier*18*"
     text 20,bh-10,time$
     text 10,bh-30,date$
     vsync
     pause 1-timer+stimer-0.05
+    setfont "*Courier-*-r-*18*"
   ENDIF
 loop
 '
@@ -161,6 +163,7 @@ RETURN
 PROCEDURE u_hr_zeichnen_1
   DEFLINE ,1
   DEFTEXT 1,0,0,t
+  graphmode 2
   w=-15
   REPEAT
     INC w
@@ -178,6 +181,7 @@ PROCEDURE u_hr_zeichnen_1
       LINE x5a,y5a,x5,y5
     ENDIF
   UNTIL w=45
+  graphmode 1
 RETURN
 PROCEDURE u_hr_zeichnen_2
   DEFLINE ,bs

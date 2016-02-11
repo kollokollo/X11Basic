@@ -6,16 +6,21 @@
  * COPYING for details
  */
 
-#include <stdio.h>
+#define _GNU_SOURCE
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include "defs.h"
 #include "ptypes.h"
-#include "vtypes.h"
-#include "protos.h"
 #include "gkommandos.h"
 #include "functions.h"
+#include "wort_sep.h"
+#include "variablen.h"
+#include "x11basic.h"
+#include "number.h"
+#include "decode.h"
 
 
 double f_nop(void *t) {return(0.0);}
@@ -42,14 +47,9 @@ int f_fix(double b) {if(b>=0) return((int)b);
                       else return(-((int)(-b)));}
 double f_pred(double b) {return(ceil(b-1));}
 
-int f_fak(int k) {
-  int i,s=1;
-  for(i=2;i<=k;i++) {s=s*i;}
-  return(s);
-}
 
 int f_combin(PARAMETER *plist,int e) {
-  int z=1,n=plist[0].integer,k=plist[1].integer,i;
+  int n=plist[0].integer,k=plist[1].integer,i;
   double zz=1;
   if(k>n || n<=0 || k<=0) return(0);
   if(k==n) return(1);
@@ -80,6 +80,7 @@ double f_round(PARAMETER *plist,int e) {
     int kommast=-plist[1].integer;
     return(round(plist[0].real/pow(10,kommast))*pow(10,kommast)); 
   }
+  return(0);
 }
 
 #define IGREG (15+31L*(10+12L*1582))
@@ -110,14 +111,6 @@ int f_julian(STRING n) { /* Julianischer Tag aus time$ */
   }
   return(jul);
 }
-int f_gray(int n) { /* Gray-Code-Konversion */
-  unsigned int i=1,a,d;
-  if(n>=0) return(n^(n>>1));
-  for(a=-n;;i<<=1) {
-    a^=(d=a>>i);
-    if(d<=1||i==16) return(a);
-  }
-}
 
 double f_min(PARAMETER *plist,int e) {
   if(e==1) return(plist[0].real);
@@ -145,43 +138,13 @@ double f_max(PARAMETER *plist,int e) {
 }
 
 
-
-/* 32 Bit Checksumme */
-
-
-unsigned long crc_table[256];  /* Table of CRCs of all 8-bit messages. */
-int crc_table_computed = 0;    /* Flag: has the table been computed? Initially false. */
-
-void make_crc_table(void){    /* Make the table for a fast CRC. */
-  unsigned long c;
-  int n, k;
-  
-  for(n=0;n<256;n++) {
-    c=(unsigned long)n;
-    for(k=0;k<8;k++) {
-      if(c&1) c=0xedb88320L^(c>>1);
-      else c=c>>1;
-    }
-    crc_table[n]=c;
-  }
-  crc_table_computed=1;
-}
-
-unsigned long update_crc(unsigned long crc, unsigned char *buf, int len) {
-  unsigned long c=crc^0xffffffffL;
-  int n;
-
-  if(!crc_table_computed) make_crc_table();
-  for(n=0;n<len;n++) c=crc_table[(c^buf[n])&0xff]^(c>>8);
-  return c^0xffffffffL;
-}
-
 int f_crc(PARAMETER *plist,int e) { 
   if(e==1)  return(update_crc(0L, plist[0].pointer, plist[0].integer));
   if(e>=1)  return(update_crc(plist[1].integer, plist[0].pointer, plist[0].integer));
+  return(0);
 }
 
-STRING f_errs(int n) { return(create_string(error_text((char)n,NULL))); }
+STRING f_errs(int n) { return(create_string((char *)error_text((char)n,NULL))); }
 
 STRING f_lowers(STRING n) {   
   int i=0;
@@ -350,7 +313,7 @@ STRING f_juldates(int n) {
   jahr-=4715;
   if(mon>2) --(jahr);
   if(jahr<=0) --(jahr);
-  sprintf(ergebnis.pointer,"%02d.%02d.%04d",day,mon,jahr);
+  sprintf(ergebnis.pointer,"%02d.%02d.%04d",(int)day,(int)mon,(int)jahr);
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
@@ -528,24 +491,6 @@ STRING f_mtfds(STRING n) {  /* Move To Front Decoding*/
   return(ergebnis);
 }
 
-/**************** Burrows-Wheeler Transformation ***************/
-
- /* Hilfsfunktionen fuer Burrows-Wheeler transform*/
-
-unsigned char *rotlexcmp_buf = NULL;
-int rottexcmp_bufsize = 0;
-
-int rotlexcmp(const void *l, const void *r) {
-  int li=*(const int*)l,ri=*(const int*)r,ac=rottexcmp_bufsize;
-  while(rotlexcmp_buf[li]==rotlexcmp_buf[ri]) {
-        if(++li==rottexcmp_bufsize) li=0;
-        if(++ri==rottexcmp_bufsize) ri=0;
-        if(!--ac) return 0;
-  }
-  if(rotlexcmp_buf[li]>rotlexcmp_buf[ri]) return 1;
-  else return -1;
-}
-
 
 
 STRING f_bwtes(STRING n) {  /* Burrows-Wheeler transform*/
@@ -554,7 +499,7 @@ STRING f_bwtes(STRING n) {  /* Burrows-Wheeler transform*/
   int i;
   ergebnis.pointer=malloc(n.len+1+sizeof(int));
   for(i=0;i<n.len;i++) indices[i]=i;
-  rotlexcmp_buf=n.pointer;
+  rotlexcmp_buf=(unsigned char *)n.pointer;
   rottexcmp_bufsize=n.len;
   qsort(indices,n.len,sizeof(int),rotlexcmp);
   for(i=0;i<n.len;i++)
@@ -607,14 +552,16 @@ STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
   ergebnis.len=size;
   return(ergebnis);
 }
-#ifdef USE_BLOWFISH
-#include "blowfish.h"
-#endif
+
+
+
 STRING f_encrypts(PARAMETER *plist,int e) {
   STRING ergebnis;
   int len=plist[0].integer>>3;
+#ifdef USE_BLOWFISH 
   int i;  
   unsigned long *L,*R;
+#endif
   if(plist[0].integer&7) len++;
   len<<=3;
   ergebnis.pointer=malloc(len+1);
@@ -641,8 +588,10 @@ STRING f_encrypts(PARAMETER *plist,int e) {
 STRING f_decrypts(PARAMETER *plist,int e) {
   STRING ergebnis;
   int len=plist[0].integer>>3;
+#ifdef USE_BLOWFISH
   int i;  
   unsigned long *L,*R;
+#endif
   if(plist[0].integer&7) len++;
   len<<=3;
   ergebnis.pointer=malloc(len+1);

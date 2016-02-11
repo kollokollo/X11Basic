@@ -1,29 +1,33 @@
 #
-# spec file for package X11Basic (Version 1.16), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.17), by Markus Hoffmann
 #
 # Copyright  (c)  Markus Hoffmann 1997-2011
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
-
-Summary: A Basic Interpreter with X11-Graphics capabilities
-Vendor: Markus Hoffmann
-Name: X11Basic
-Version: 1.16
+Name: x11basic
+Version: 1.17
 Release: 2
-Copyright: GPL
+License: GPL
 Group: Development/Languages
-Source: http://x11-basic.sourceforge.net/X11Basic-1.16.tar.gz
+Summary: A Basic Interpreter with X11-Graphics capabilities
+Source: http://x11-basic.sourceforge.net/X11Basic-%{version}.tar.gz
 URL: http://x11-basic.sourceforge.net/
-Packager: Markus Hoffmann <kollo@users.sourceforge.net>
-BuildRequires:	XFree86-devel
+BuildRequires:	autoconf
+BuildRequires:	libX11-devel
 BuildRequires:	readline
+BuildRoot: %{_tmppath}/%{name}-buildroot
+Vendor: Markus Hoffmann <kollo@users.sourceforge.net>
+
+# Reste des alten Spec-files
+
+Packager: Markus Hoffmann <kollo@users.sourceforge.net>
+
 BuildRequires:	readline-devel
 BuildRequires:	X11Basic
 
 Requires:	readline
 
-BuildRoot: /var/tmp/%{name}-buildroot
 
 %description
 
@@ -40,63 +44,60 @@ Also an ANSI-Basic-to-X11-Basic-converter (bas2x11basic) is included.
 
 You will find the compiler sourcecode and some other sample programs in
 /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs
-can be found in X11-Basic-examples-1.16.zip, which you can download from the
+can be found in X11-Basic-examples-1.17.zip, which you can download from the
 homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version
 of the manual can be found there.
 
-Authors:
---------
-    Markus Hoffmann <kollo@users.sourceforge.net>
-
 %prep
-%setup -q
+%setup -q -n X11Basic-%{version}
 
 %build
-(cd ./src ; ./configure )
+#cd ./src
+./configure
+make
+test -e mathematics.c || ln -s mathemat_dummy.c mathematics.c
+make xbasic x11basic.a xbvm xbbc
+touch xbc
+touch bas2x11basic
+
 %install
-(cd ./src ; make xbasic x11basic.a xbvm bytecode xbc bas2x11basic)
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-mkdir $RPM_BUILD_ROOT/usr/bin
-mkdir $RPM_BUILD_ROOT/usr/lib
-install -s -m 755 src/xbasic.dyn $RPM_BUILD_ROOT/usr/bin/xbasic
-install -m 755 src/x11basic.a $RPM_BUILD_ROOT/usr/lib/x11basic.a
-install -s -m 755 src/libx11basic.so $RPM_BUILD_ROOT/usr/lib/libx11basic.so
-install -s -m 755 src/xbc $RPM_BUILD_ROOT/usr/bin/xbc
-install -s -m 755 src/xbvm $RPM_BUILD_ROOT/usr/bin/xbvm
-install -s -m 755 src/bytecode $RPM_BUILD_ROOT/usr/bin/xbbc
-install -s -m 755 src/bas2x11basic $RPM_BUILD_ROOT/usr/bin/bas2x11basic
-install -m 644 doc/man-pages/x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbasic.1
-install -m 644 doc/man-pages/x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/x11basic.1
-install -m 644 doc/man-pages/xbc.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbc.1
-install -m 644 doc/man-pages/xbbc.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbbc.1
-install -m 644 doc/man-pages/xbvm.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbvm.1
-install -m 644 doc/man-pages/bas2x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/bas2x11basic.1
+
+install -Dm 755 x11basic.a $RPM_BUILD_ROOT%{_libdir}/x11basic.a
+install -Dm 644 doc/man-pages/x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/x11basic.1
+install -Dm 644 doc/man-pages/x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbasic.1
+install -Dm 644 doc/man-pages/xbc.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbc.1
+install -Dm 644 doc/man-pages/xbbc.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbbc.1
+install -Dm 644 doc/man-pages/xbvm.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbvm.1
+install -Dm 644 doc/man-pages/bas2x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/bas2x11basic.1
+install -Dm 755 libx11basic.so $RPM_BUILD_ROOT%{_libdir}/libx11basic.so
+install -Dm 755 xbasic $RPM_BUILD_ROOT%{_bindir}/x11basic
+install -Dm 755 xbbc $RPM_BUILD_ROOT%{_bindir}/xbbc
+install -Dm 755 xbvm $RPM_BUILD_ROOT%{_bindir}/xbvm
+install -Dm 755 xbc $RPM_BUILD_ROOT%{_bindir}/xbc
+install -Dm 755 bas2x11basic $RPM_BUILD_ROOT%{_bindir}/bas2x11basic
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post
+x11basic %{_docdir}/%{name}-%{version}/examples/compiler/xbc.bas --dynamic -o %{_bindir}/xbc
+xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -o bas2x11basic
+
 %files
 %defattr(-,root,root)
-%doc README COPYING INSTALL ACKNOWLEGEMENTS AUTHORS RELEASE_NOTES
+%doc README COPYING INSTALL doc/ACKNOWLEGEMENTS AUTHORS RELEASE_NOTES
 %doc doc/X11-Basic-manual.txt doc/editors
 %doc examples
-%doc %{_mandir}/man1/xbasic.1.gz
-%doc %{_mandir}/man1/x11basic.1.gz
-%doc %{_mandir}/man1/xbc.1.gz
-%doc %{_mandir}/man1/xbbc.1.gz
-%doc %{_mandir}/man1/xbvm.1.gz
-%doc %{_mandir}/man1/bas2x11basic.1.gz
-
-/usr/bin/xbasic
-/usr/bin/xbc
-/usr/bin/xbbc
-/usr/bin/xbvm
-/usr/bin/bas2x11basic
-/usr/lib/libx11basic.so
-/usr/lib/x11basic.a
+%{_mandir}/man1/*.1.gz
+%{_bindir}/*
+%{_libdir}/*
 
 %changelog
+* Fri May 13 2011 Markus Hoffmann <kollo@users.sourceforge.net> - 1.16
+- adapted for Version 1.16
+* Fri Mar 25 2011 Huaren Zhong <huaren.zhong@gmail.com> - 1.14
+- Rebuild for Fedora
 * Tue Apr 07 2007 Markus Hoffmann <kollo@users.sourceforge.net>
   New release (1.14)
 * Tue Mar 17 2007 Markus Hoffmann <kollo@users.sourceforge.net>
@@ -111,7 +112,5 @@ rm -rf $RPM_BUILD_ROOT
   included xbc
 * Tue Mar 07 2002 Markus Hoffmann <m.hoffmann@uni-bonn.de>
   included manual
-* Tue Jan 01 2002 Markus Hoffmann <m.hoffmann@uni-bonn.de>
-  2nd release
 * Tue Aug 28 2001 Markus Hoffmann <m.hoffmann@uni-bonn.de>
   1st release

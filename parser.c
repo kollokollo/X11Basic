@@ -5,28 +5,36 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <math.h> 
+#include <sys/time.h>
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <string.h>
+ 
 #include "config.h"
 #include "defs.h"
 #include "globals.h"
-#include "ptypes.h"
-#include "vtypes.h"
-#include "protos.h"
+#include "variablen.h"
+#include "xbasic.h"
+#include "x11basic.h"
 #include "array.h"
 #include "functions.h"
 #include "afunctions.h"
 #include "sfunctions.h"
+#include "kommandos.h"
 #include "file.h"
 #include "parser.h"
 #include "io.h"
+#include "wort_sep.h"
+#include "graphics.h"
+#include "aes.h"
+#include "window.h"
+#include "number.h"
 
 extern int shm_malloc(int,int);
 extern int shm_attach(int);
@@ -63,7 +71,7 @@ int f_device(STRING n) { return(stat_device(n.pointer)); }
 int f_inode(STRING n)  { return(stat_inode(n.pointer)); }
 int f_mode(STRING n)   { return(stat_mode(n.pointer)); }
 
-double f_val(STRING n) { return((double)atof(n.pointer)); }
+double f_val(STRING n) { return(myatof(n.pointer)); }
 double f_ltextlen(STRING n) { return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
 
 char *arrptr(char *);
@@ -123,6 +131,7 @@ int f_listselect(PARAMETER *plist,int e) {
     a.typ=plist[1].typ;
     return(lsel_input(plist[0].pointer,(STRING *)(a.pointer+a.dimension*INTSIZE),anz_eintraege(a),sel));
   }
+  return(0);
 }
 #endif
 
@@ -311,180 +320,6 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 };
 const int anzpfuncs=sizeof(pfuncs)/sizeof(FUNCTION);
 
-
-//  This code performs an order-0 adaptive arithmetic decoding
-//  function on an input file/stream, and sends the result to an
-//  output file or stream.
-//
-//  This program contains the source code from the 1987 CACM
-//  article by Witten, Neal, and Cleary.  I have taken the
-//  source modules and combined them into this single file for
-//  ease of distribution and compilation.  Other than that,
-//  the code is essentially unchanged.
-
-int char_to_index[No_of_chars];         /* To index from character          */
-unsigned char index_to_char[No_of_symbols+1]; /* To character from index    */
-
-code_value value;        /* Currently-seen code value                */
-code_value low, high;    /* Ends of current code region              */
-int freq[No_of_symbols+1];      /* Symbol frequencies                       */
-int cum_freq[No_of_symbols+1];  /* Cumulative symbol frequencies            */
-int buffer;                     /* Bits waiting to be input                 */
-int bits_to_go;                 /* Number of bits still in buffer           */
-int garbage_bits;               /* Number of bits past end-of-file          */
-long bits_to_follow;            /* Number of opposite bits to output after  */
-
-
-unsigned char *put_pointer;
-int put_size;
-
-inline int input_bit() {
-  int t;
-    if (bits_to_go==0) {                        /* Read the next byte if no */
-        if(put_size>0) {
-          buffer = *put_pointer&0xff;                   /* bits are left in buffer. */
-          put_pointer++;
-          put_size--;
-        } else {
-	  buffer=0;
-            garbage_bits += 1;                      /* Return arbitrary bits*/
-            if (garbage_bits>Code_value_bits-2) {   /* after eof, but check */
-                printf("ARID: Bad input!\n"); /* for too many such.   */
-
-            }
-        }
-        bits_to_go = 8;
-    }
-    t = buffer&1;                               /* Return the next bit from */
-    buffer >>= 1;                               /* the bottom of the byte.  */
-    bits_to_go--;
-    return t;
-}
-inline void output_bit(int bit){
-  buffer>>=1;
-  if (bit) buffer |= 0x80;
-    bits_to_go--;
-    if (bits_to_go==0) {
-        *put_pointer=buffer;
-	put_pointer++;
-        put_size++;
-        bits_to_go = 8;
-    }
-}
-void bit_plus_follow( int bit ){
-  output_bit(bit);                            /* Output the bit.          */
-    while (bits_to_follow>0) {
-        output_bit(!bit);                       /* Output bits_to_follow    */
-        bits_to_follow -= 1;                    /* opposite bits. Set       */
-    }                                           /* bits_to_follow to zero.  */
-}
-
-void encode_symbol(int symbol,int cum_freq[] )
-{   long range;                 /* Size of the current code region          */
-    range = (long)(high-low)+1;
-    high = low +                                /* Narrow the code region   */
-      (range*cum_freq[symbol-1])/cum_freq[0]-1; /* to that allotted to this */
-    low = low +                                 /* symbol.                  */
-      (range*cum_freq[symbol])/cum_freq[0];
-    for (;;) {                                  /* Loop to output bits.     */
-        if (high<Half) {
-            bit_plus_follow(0);                 /* Output 0 if in low half. */
-        }
-        else if (low>=Half) {                   /* Output 1 if in high half.*/
-            bit_plus_follow(1);
-            low -= Half;
-            high -= Half;                       /* Subtract offset to top.  */
-        }
-        else if (low>=First_qtr                 /* Output an opposite bit   */
-              && high<Third_qtr) {              /* later if in middle half. */
-            bits_to_follow += 1;
-            low -= First_qtr;                   /* Subtract offset to middle*/
-            high -= First_qtr;
-        }
-        else break;                             /* Otherwise exit loop.     */
-        low = 2*low;
-        high = 2*high+1;                        /* Scale up code range.     */
-    }
-}
-
-int decode_symbol( int cum_freq[] )
-{   long range;                 /* Size of current code region              */
-    int cum;                    /* Cumulative frequency calculated          */
-    int symbol;                 /* Symbol decoded                           */
-    range = (long)(high-low)+1;
-    cum = (int)                                 /* Find cum freq for value. */
-      ((((long)(value-low)+1)*cum_freq[0]-1)/range);
-    for (symbol = 1; cum_freq[symbol]>cum; symbol++) ; /* Then find symbol. */
-    high = low +                                /* Narrow the code region   */
-      (range*cum_freq[symbol-1])/cum_freq[0]-1; /* to that allotted to this */
-    low = low +                                 /* symbol.                  */
-      (range*cum_freq[symbol])/cum_freq[0];
-    for (;;) {                                  /* Loop to get rid of bits. */
-        if (high<Half) {
-            /* nothing */                       /* Expand low half.         */
-        }
-        else if (low>=Half) {                   /* Expand high half.        */
-            value -= Half;
-            low -= Half;                        /* Subtract offset to top.  */
-            high -= Half;
-        }
-        else if (low>=First_qtr                 /* Expand middle half.      */
-              && high<Third_qtr) {
-            value -= First_qtr;
-            low -= First_qtr;                   /* Subtract offset to middle*/
-            high -= First_qtr;
-        }
-        else break;                             /* Otherwise exit loop.     */
-        low = 2*low;
-        high = 2*high+1;                        /* Scale up code range.     */
-        value = 2*value+input_bit();            /* Move in next input bit.  */
-    }
-    return symbol;
-}
-
-
-void start_model(){
-  int i;
-    for(i=0;i<No_of_chars;i++) {           /* Set up tables that       */
-        char_to_index[i]=i+1;                 /* translate between symbol */
-        index_to_char[i+1]=(unsigned char)i; /* indexes and characters.  */
-    }
-    for (i=0;i<=No_of_symbols;i++) {        /* Set up initial frequency */
-        freq[i]=1;                            /* counts to be one for all */
-        cum_freq[i]=No_of_symbols-i;          /* symbols.                 */
-    }
-    *freq=0;                                /* Freq[0] must not be the  */
-}                                               /* same as freq[1].         */
-
-void update_model(int symbol){
-  int i;                      /* New index for symbol                     */
-    if (cum_freq[0]==Max_frequency) {           /* See if frequency counts  */
-        int cum;                                /* are at their maximum.    */
-        cum = 0;
-        for (i = No_of_symbols; i>=0; i--) {    /* If so, halve all the     */
-            freq[i] = (freq[i]+1)/2;            /* counts (keeping them     */
-            cum_freq[i] = cum;                  /* non-zero).               */
-            cum += freq[i];
-        }
-    }
-    for (i = symbol; freq[i]==freq[i-1]; i--) ; /* Find symbol's new index. */
-    if (i<symbol) {
-        int ch_i, ch_symbol;
-        ch_i = index_to_char[i];                /* Update the translation   */
-        ch_symbol = index_to_char[symbol];      /* tables if the symbol has */
-        index_to_char[i] = (unsigned char) ch_symbol; /* moved.             */
-        index_to_char[symbol] = (unsigned char) ch_i;
-        char_to_index[ch_i] = symbol;
-        char_to_index[ch_symbol] = i;
-    }
-    freq[i] += 1;                               /* Increment the frequency  */
-    while (i>0) {                               /* count for the symbol and */
-        i -= 1;                                 /* update the cumulative    */
-        cum_freq[i] += 1;                       /* frequencies.             */
-    }
-}
-
-
 /* Systemvariablen vom typ String */
 
 int v_false() {return(0);}
@@ -496,6 +331,7 @@ int v_ccsaplid() {return(aplid);}
 #endif
 int v_sp() {return(sp);}
 int v_pc() {return(pc);}
+
 double v_timer() {
 #ifdef WINDOWS
 #if 0
@@ -504,15 +340,13 @@ double v_timer() {
        return((double)clock()/CLOCKS_PER_SEC);
 #endif
 #else
-        struct timespec t;
-	struct {
-               int  tz_minuteswest; /* minutes W of Greenwich */
-               int  tz_dsttime;     /* type of dst correction */
-       } tz;
+        struct timeval t;
+        struct timezone tz;
 	gettimeofday(&t,&tz);
-	return((double)t.tv_sec+(double)t.tv_nsec/1000000);
+	return((double)t.tv_sec+(double)t.tv_usec/1000000);
 #endif
 }
+
 int v_stimer() {   /* Sekunden-Timer */
   time_t timec=time(NULL);
   if(timec==-1) io_error(errno,"TIMER");
@@ -697,7 +531,7 @@ int f_instr(PARAMETER *plist,int e) {
   } return(0);
 }
 int f_rinstr(PARAMETER *plist,int e) {
-  char *pos=NULL,*n;
+  char *pos=NULL;
   int start;
   if(e>=2) {
     start=plist[0].integer;
@@ -712,7 +546,6 @@ int f_rinstr(PARAMETER *plist,int e) {
   #include "Windows.extension/fnmatch.h"
 #endif
 int f_glob(PARAMETER *plist,int e) {
-  char *pos=NULL,*n;
   int flags=FNM_NOESCAPE;
   if(e>=2) {
     if(e==3) flags^=plist[2].integer;
@@ -729,9 +562,9 @@ int f_form_center(PARAMETER *plist,int e) {
   int x,y,w,h;
   graphics();
   gem_init();
-  if(e==1) return(form_center(plist[0].integer,&x,&y,&w,&h));
+  if(e==1) return(form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h));
   else if(e==5) {
-    e=form_center(plist[0].integer,&x,&y,&w,&h);
+    e=form_center((OBJECT *)plist[0].integer,&x,&y,&w,&h);
     if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
     if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
     if(plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
@@ -752,20 +585,20 @@ int f_form_do(PARAMETER *plist,int e) {
   if(e==1) {
     graphics();
     gem_init();
-    return(form_do((char *)plist[0].integer));
+    return(form_do((OBJECT *)plist[0].integer));
   } else return(-1);
 }
 int f_objc_draw(PARAMETER *plist,int e) {
   if(e==5) {
     graphics();
     gem_init();
-    return(objc_draw((char *)plist[0].integer,plist[1].integer
+    return(objc_draw((OBJECT *)plist[0].integer,plist[1].integer
     ,plist[2].integer,plist[3].integer,plist[4].integer));
   } else return(-1);
 }
 int f_objc_find(PARAMETER *plist,int e) {
   if(e==3) {
-    return(objc_find((char *)plist[0].integer,plist[1].integer
+    return(objc_find((OBJECT *)plist[0].integer,plist[1].integer
     ,plist[2].integer));
   } else return(-1);
 }
@@ -778,7 +611,7 @@ int f_objc_offset(PARAMETER *plist,int e) {
     if(plist[3].integer&FLOATTYP) y=(int)*((double *)plist[3].pointer);
     else if(plist[3].integer&INTTYP) y=*((int *)plist[3].pointer);
     else xberror(58,""); /* Variable hat falschen Typ */
-    e=objc_offset((char *)plist[0].integer,plist[1].integer,&x,&y);
+    e=objc_offset((OBJECT *)plist[0].integer,plist[1].integer,&x,&y);
     if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)x;
     else if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=x;
      if(plist[3].integer&FLOATTYP) *((double *)plist[3].pointer)=(double)y;
@@ -801,10 +634,13 @@ int f_rsrc_gaddr(PARAMETER *plist,int e) {
   } return(-1);
 }
 #endif
+
+
+
 double parser(char *funktion){  /* Rekursiver num. Parser */
   char *pos,*pos2;
   char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
-  int e,vnr;
+  int vnr;
 
   /* printf("Parser: <%s>\n");*/
 
@@ -1003,7 +839,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
         s[strlen(s)-1]=0;
         if((vnr=variable_exist(s,INTTYP))!=-1) return((double)variablen[vnr].opcode);
         return(0);
-      } else return(atof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
+      } else return(myatof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
     }
   }
   xberror(51,s); /* Syntax error */
@@ -1190,7 +1026,7 @@ ARRAY array_parser(char *funktion) { /* Array-Parser  */
 	   } else {
 	     if((vnr=variable_exist(r,FLOATARRAYTYP))!=-1) {
 	       char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	       int i,e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
+	       int e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
 	       int indexe[variablen[vnr].opcode];
 	       int indexo[variablen[vnr].opcode];
 	       int indexa[variablen[vnr].opcode];
@@ -1298,7 +1134,7 @@ STRING string_parser(char *funktion) {
     free(t.pointer);free(u.pointer);
     return(ergebnis);
   } else {
-    char *pos,*pos2,*inhalt;
+    char *pos,*pos2;
     int vnr;
 
   //  printf("s-parser: <%s>\n",funktion);
@@ -1420,12 +1256,12 @@ STRING string_parser(char *funktion) {
 
 
 double do_funktion(char *name,char *argumente) {
- char *buffer,*pos,*pos2,*pos3;
-    int pc2;
+  char *buffer,*pos;
+  int pc2;
 
-    buffer=malloc(strlen(name)+1);
-    strcpy(buffer,name);
-    pos=argumente;
+  buffer=malloc(strlen(name)+1);
+  strcpy(buffer,name);
+  pos=argumente;
 
     pc2=procnr(buffer,2);
     if(pc2==-1)   xberror(44,buffer); /* Funktion  nicht definiert */
@@ -1447,10 +1283,9 @@ double do_funktion(char *name,char *argumente) {
 	free(buffer);
 	return(returnvalue.f);
       }
-
-    free(buffer);
-    return(0.0);
- }
+  free(buffer);
+  return(0.0);
+}
 
  /* loese die Parameterliste auf und weise die Werte auf die neuen lokalen
     Variablen zu */

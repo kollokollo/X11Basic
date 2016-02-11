@@ -28,9 +28,12 @@
   #include <fnmatch.h>
 #endif
 
+#include "aes.h"
 #include "window.h"
 #include "bitmap.h"
 
+
+void memdump(unsigned char *adr,int l);
 
 /*-------------------------------------------------------------------*/
 /*               Routine zum Abspeichern von X-Image                 */
@@ -40,7 +43,7 @@
 
 
 /* swap some long ints.  (n is number of BYTES, not number of longs) */
-swapdws (char *bp, unsigned n) {
+static void swapdws (char *bp, unsigned n) {
   register char c;
   register char *ep = bp + n;
   register char *sp;
@@ -116,7 +119,7 @@ char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
 
 int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) {
   unsigned short *ptr1  = (unsigned short*)fbp;
-  int r,g,b,a,i,j,w,h,offset,d,ib,ic=0;
+  int r=0,g=0,b=0,a,i,j,w,h,offset,d,ib=0,ic=0;
   int usealpha=0;
   unsigned int compression,ncol;
   char *buf2,*buf3;
@@ -128,7 +131,7 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
 
   if(header->bfType!=BF_TYPE) {
     printf("Put-Image: Error: wrong bitmap format!\n");
-    memdump(data,64);
+    memdump((unsigned char *)data,64);
     return(-1);
   }
   /* diese komische Akrobatik muss wohl sein (jedenfalls fuer den ARM-linux compiler */
@@ -144,7 +147,7 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
     printf("biBitCount-data    =%d %d  \n",(int)(&(iheader->biBitCount))-(int)data,iheader->biBitCount);
     printf("biCompression-data =%d %d  \n",(int)(&(iheader->biCompression))-(int)data,iheader->biCompression);
     printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
-    memdump(data,64);
+    memdump((unsigned char *)data,64);
     return(-1);
   }
 #if DEBUG
@@ -256,7 +259,6 @@ int bmp2bitmap(char *data,char *fbp,int x, int bw,int bh,int depth, char *mask) 
 }
 void bitmap_scale(char *oadr,int depth,int ow,int oh,char *adr,int w,int h) {
   int rl=depth/8;
-  char *ptr1,*ptr2;
   int x,y;
   int sx,sy;
   if(depth==1) {
@@ -320,10 +322,10 @@ XImage *xwdtoximage(char *data,Visual *visual, int depth, XImage **XMask, int tr
 #endif
     int dd,w,o,h,bpl,ncol;
     
-    BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
+ //   BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
     BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
     ncol=iheader->biClrUsed;
-    RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
+ //   RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
     w=iheader->biWidth;
     h=iheader->biHeight;
     dd=iheader->biBitCount;

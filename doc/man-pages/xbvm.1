@@ -1,4 +1,4 @@
-.TH XBVM 1 09-Apr-2007 "Version 1.14" "Linux Basic Compiler"
+.TH XBVM 1 09-Apr-2011 "Version 1.17" "Linux Basic Compiler"
 .SH NAME
 xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter 
 .SH SYNOPSIS
@@ -7,9 +7,9 @@ xbvm (X11-Basic virtual machine) \- X11-Basic bytecode interpreter
 
 .SH DESCRIPTION
 
-X11-Basic is a comprehensive non-standard Basic interpreter with full X 
-capability that integrates fratures like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on moden 
+X11-Basic is a dialect of the BASIC programming language with graphics
+capability that integrates features like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on modern 
 computers.
 
 .IR xbvm
@@ -18,7 +18,7 @@ can be used to execute bytecode-binaries which where compiled with
  . These bytecode 
 files run about 4 to 10 times faster than the interpreted .bas files. 
 
-.B For a desciption of the X11-basic language and Usage of the interpreter see
+.B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
@@ -48,13 +48,13 @@ xbbc -q testme.b
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The virtual machine
-Actually this interpreter is a stack machine. The bytecode is very compact and similar
+Actually this interpreter is a stack machine. The bytecode is very compact 
+and similar
 to machine code. It would not be a big step to compile it to assembler.  
 This interpreter is highly optimized, so that the gain in 
 excecution speed is immense. Especially complex formulas are 
 speed up by a factor 10.
 There is no way to recreate the source code from the bytecode. 
-But still the bytecode is platform independant.
 
 .SH VERSION
 Page was created for V.1.14
@@ -79,7 +79,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2007 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public
@@ -93,4 +93,4 @@ warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
 PURPOSE.   See  the  GNU  General  Public License for more
 details.
 .SH SEE ALSO
-xbasic(1), xbbc(1), xbc(1)
+xbasic(1), xbbc(1), xbc(1), xb2c(1)

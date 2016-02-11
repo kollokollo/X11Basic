@@ -16,18 +16,18 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#include "defs.h"
-#include "vtypes.h"
-#include "graphics.h"
-
-
 #ifdef WINDOWS
   #include "Windows.extension/fnmatch.h"
 #else
   #include <fnmatch.h>
 #endif
 
-#include "aes.h"
+#include "defs.h"
+#include "graphics.h"
+#include "variablen.h"
+#include "file.h"
+
+#include "wort_sep.h"
 #include "window.h"
 
 
@@ -44,6 +44,8 @@ char iname[MAXWINDOWS][80];
   HANDLE tsync=INVALID_HANDLE_VALUE; /* handle for win thread event */
 #endif
 
+static int create_window2(int nummer,char *title, char* info,int x,int y,unsigned int w,unsigned int h);
+static int fetch_rootwindow();
 
 int create_window(char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
   int nummer=0;
@@ -200,13 +202,25 @@ static DWORD winthread(PWORD par) { /* procedure for WIN95-thread */
 }
 #endif  // Windows native
 
+#ifdef USE_SDL
+static int init_sdl() {
+  static int done=0;
+  if(done) return(0);
+  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
+  atexit(SDL_Quit);
+  /* Enable Unicode translation */
+  SDL_EnableUNICODE( 1 );
 
+  done=1;
+  return(0);
+}
+#endif
 
-int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned int y,unsigned int w,unsigned int h) {
+static int create_window2(int nummer,char *title, char* info,int x,int y,unsigned int w,unsigned int h) {
 
   int screen_num;              /* Ein Server kann mehrere Bildschirme haben */
   unsigned long border=4,foreground,background;
-  int i,d,b;
+  unsigned int d,b;
 #ifdef WINDOWS
     static class_reg=0;
 #endif
@@ -270,7 +284,7 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
 #endif
 
 #ifdef USE_SDL
-    if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
+    init_sdl();
     if(!(display[nummer]=SDL_SetVideoMode(WINDOW_DEFAULT_W, 
        WINDOW_DEFAULT_H, 32,
     // SDL_FULLSCREEN |
@@ -279,10 +293,7 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
       SDL_Quit();
       return(-1);
     }
-    atexit(SDL_Quit);
     SDL_WM_SetCaption(title,info);
-    /* Enable Unicode translation */
-    SDL_EnableUNICODE( 1 );
 #endif
 #ifdef USE_X11
   XGCValues gc_val;            /* */
@@ -478,30 +489,28 @@ void handle_window(int winnr) {
 }
 
 
-void graphics(){
+void graphics() {
 #ifdef DEBUG
   printf("graphics:\n");
 #endif
-  if(winbesetzt[usewindow]) {handle_window(usewindow);return;}
+  if(winbesetzt[usewindow]) handle_window(usewindow);
   else {
-     if(usewindow==0) {
-       fetch_rootwindow();
-     } else {
+     if(usewindow==0) fetch_rootwindow();
+     else {
        create_window2(usewindow,"X11-Basic","X11-Basic",100,10,WINDOW_DEFAULT_W,WINDOW_DEFAULT_H);
        open_window(usewindow);
      }
   }
 }
 
+/* fetch_rootwindow() ersetzt create_window2 und open_window fuer das Root-Fenster 
+bzw. Fenster Nr 0 (fullscreen) */
 
-int fetch_rootwindow() {
-#ifndef WINDOWS
-#ifndef USE_VGA
-#ifndef FRAMEBUFFER
-#ifndef USE_SDL
+static int fetch_rootwindow() {
+#ifdef USE_X11
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
-  unsigned long foreground,background;
-  int i,x,y,w,h,b,d;
+  int x,y;
+  unsigned int w,h,b,d;
   XGCValues gc_val;            /* */
   Window root;
 
@@ -532,8 +541,21 @@ int fetch_rootwindow() {
   gc[0] = XCreateGC(display[0], win[0], 0, &gc_val);
   winbesetzt[0]=1;
 #endif
+#ifdef USE_SDL
+    init_sdl();
+    if(!(display[0]=SDL_SetVideoMode(WINDOW_DEFAULT_W, 
+       WINDOW_DEFAULT_H, 32,
+       SDL_FULLSCREEN |
+       SDL_HWSURFACE|SDL_SRCALPHA))) {
+      printf("cannot open SDL surface \n");
+      SDL_Quit();
+      return(-1);
+    }
+    winbesetzt[0]=1;
 #endif
-#endif
+#if defined WINDOWS_NATIVE || defined FRAMEBUFFER
+  create_window2(0,"X11-Basic","X11-Basic",100,10,WINDOW_DEFAULT_W,WINDOW_DEFAULT_H);
+  open_window(0);
 #endif
   return(0);
 }
@@ -552,12 +574,14 @@ void activate() {
 
 #endif
 #ifdef USE_SDL
+ // if(display[usewindow]->flags & SDL_DOUBLEBUF) 
   SDL_Flip(display[usewindow]); 
 #endif
 #ifdef USE_X11
    Window root;
    XGCValues gc_val;
-   int ox,oy,ow,oh,ob,d;
+   int ox,oy;
+   unsigned int ow,oh,ob,d;
    int of;
    graphics();
    XGetGeometry(display[usewindow],win[usewindow],&root,&ox,&oy,&ow,&oh,&ob,&d);
@@ -580,6 +604,23 @@ void activate() {
 /* AES-Nachbildungen (c) Markus Hoffmann     */
 
 
+void *memrevcpy(char *dest, const char *src, size_t n) {
+  unsigned char a,b;
+  int i;
+  while(n--) {
+    a=src[n];
+    b=0;
+    for(i=0;i<8;i++) {
+      b<<=1;
+      b|=(a&1);
+      a>>=1;
+    }   
+    dest[n]=b;
+  }
+  return(dest);
+}
+
+
 void put_bitmap(char *adr,int x,int y,int w, int h) {
 #ifdef USE_X11
   Pixmap bitpix;
@@ -593,15 +634,16 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
   SDL_Surface *data;
   SDL_Surface *image;
   int bpl=(w+1)>>3;
-  data=SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 1, 0,0,0,0);
-  memcpy(data->pixels,adr,bpl*h);
+  data=SDL_CreateRGBSurface(SDL_SWSURFACE,w,h,1, 0,0,0,0);
+  memrevcpy(data->pixels,adr,bpl*h);
+  data->pitch=bpl;
   image=SDL_DisplayFormat(data);
   SDL_FreeSurface(data);
   SDL_Rect a={0,0,image->w,image->h};
-  SDL_Rect b={x,y,0,0};
+  SDL_Rect b={x,y,image->w,image->h};
+//  printf("putbitmap: %dx%d %d %d\n",image->w,image->h,bpl,image->pitch);
   SDL_BlitSurface(image, &a,display[usewindow], &b);
   SDL_FreeSurface(image);
-
 #endif
 }
 
@@ -662,7 +704,6 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     memcpy(spix[sgccount],&ppix,sizeof(Pixmap));
 #endif
 #ifdef USE_SDL
-  printf("Save bg: %d %d %d %d\n",a.x,a.y,a.w,a.h);
   spix[sgccount]=SDL_CreateRGBSurface(SDL_SWSURFACE,a.w,a.h,32,0,0,0,0);
   SDL_BlitSurface(display[usewindow], &a,spix[sgccount], &b);
 #endif
@@ -678,7 +719,6 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
     activate();
 #endif
 #ifdef USE_SDL
-//  printf("restore bg: %d %d %d %d b %d %d %d %d\n",a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h);
     SDL_BlitSurface(spix[sgccount], &b,display[usewindow], &a);
     SDL_FreeSurface(spix[sgccount]);
     activate();
@@ -700,6 +740,7 @@ int form_dial( int fo_diflag, int x1,int y1, int w1, int h1, int x2, int y2, int
   default:
     return(-1);
   }
+  return(0);
 }
 
 
@@ -712,16 +753,12 @@ int form_do(OBJECT *tree) {
 #endif
 #if defined FRAMEBUFFER || defined USE_X11|| defined USE_SDL
   XEvent event;
-#ifdef USE_X11
-  XGCValues gc_val;
-#endif
 #endif
 #ifdef USE_SDL
   int e;
 #endif
   int exitf=0,bpress=0;
   int sbut,edob=-1,idx;
-  int x,y,w,h;
 #ifdef DEBUG
   printf("**form_do:\n");
 #endif
@@ -1093,62 +1130,11 @@ int form_do(OBJECT *tree) {
   return(sbut);
 }
 
-int rsrc_load(char *filename) {
-  FILE *dptr;
-  char *test;
-  OBJECT *tree;
-  int i,len;
-  if(exist(filename)) {
-    dptr=fopen(filename,"r");
-    if(dptr==NULL) return(-1);
-    len=lof(dptr);
-    rsrc=malloc(len);
-    if(fread(rsrc,1,len,dptr)==len) {
-      WSWAP((char *)((int)rsrc));
-      if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
-        if(rsrc->rsh_vrsn==0) {
-        for(i=1;i<HDR_LENGTH/2;i++) {
-          WSWAP((char *)((int)rsrc+2*i));
-        }
-        }
-#if DEBUG
-       printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
-       printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
-       printf("%d Trees and %d FRSTRs \n",rsrc->rsh_ntree,rsrc->rsh_nstring);
-
-       printf("OBJC:    %08x  (%d)\n",rsrc->rsh_object,rsrc->rsh_nobs);
-       printf("TEDINFO: %08x  (%d)\n",rsrc->rsh_tedinfo,rsrc->rsh_nted);
-       printf("ICONBLK: %08x  (%d)\n",rsrc->rsh_iconblk,rsrc->rsh_nib);
-       printf("BITBLK:  %08x  (%d)\n",rsrc->rsh_bitblk,rsrc->rsh_nbb);
-
-#endif	
-      if(rsrc->rsh_rssize==len || 1) {
-
-
-        fix_trindex();
-        fix_frstrindex();
-	fix_objc();
-	fix_tedinfo();
-	fix_bitblk();
-	fix_iconblk();
-	
-       	fclose(dptr);
-        return(0);
-      } else printf("Invalid rsc-Filestructure\n");
-      } else printf("Unsupported rsc-Version %d\n",rsrc->rsh_vrsn);
-    }
-    fclose(dptr);
-    free(rsrc);
-    rsrc=NULL;
-    return(-1);
-  }
-  else return(-1);
-}
-
 
 int do_menu_select() {
-  int nr,i,j,textx,sel=-1;
-  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  int nr,i,textx,sel=-1;
+  int root_x_return, root_y_return,win_x_return, win_y_return;
+  unsigned int mask_return;
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
@@ -1158,26 +1144,27 @@ int do_menu_select() {
   win_y_return=global_mousey;
   mask_return=global_mousek;
 #endif
-#if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
+#if defined USE_X11 || defined FRAMEBUFFER
   XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
 #endif
+#ifdef USE_SDL
+  mask_return=SDL_BUTTON(SDL_GetMouseState(&win_x_return,&win_y_return))&0xffff;
+#endif
   for(i=0;i<menuanztitle-1;i++) {
-   if(menutitleflag[i]) sel=i;
+    if(menutitleflag[i]) sel=i;
+//    printf("%d : %03x\n",i,menutitleflag[i]);
   }
 
-
-  /* Maus in der Titelleiste ? */
-  if(win_y_return<=sbox.y+chh && win_y_return>=0) {
+  if(win_y_return<=sbox.y+chh && win_y_return>=0) { /* Maus in der Titelleiste ? */
   /* Maus auf gueltigem Titel ? */
     textx=chw;nr=-1;
     for(i=0;i<menuanztitle-1;i++) {
       if(win_x_return>textx && win_x_return<textx+chw*(menutitleslen[i]+2)) nr=i;
       textx+=chw*(menutitleslen[i]+2);
     }
-
-   if(nr>-1) {
+    if(nr>-1) {
      /* Wenn titel noch nicht selektiert, dann */
       if((menutitleflag[nr] & SELECTED)==0) {
         /* unselektiere alle Titel */
@@ -1186,13 +1173,12 @@ int do_menu_select() {
          do_menu_close();
         /* selektiere Titel */
          menutitleflag[nr]|=SELECTED;
+	 sel=nr;
          do_menu_draw();
         /* oeffne schublade */
          do_menu_open(nr);
       }
-
-   }
-
+    }
   }
 
   /* Schublade geoeffnet ? */
@@ -1251,6 +1237,9 @@ HDC schubladedc;
 #ifdef USE_X11
 Pixmap schubladepix;
 #endif
+#ifdef USE_SDL
+SDL_Surface *schubladepix;
+#endif
 int schubladeff=0;
 int schubladenr;
 int schubladex,schubladey,schubladew,schubladeh;
@@ -1279,6 +1268,12 @@ void do_menu_open(int nr) {
 #ifdef USE_X11
   schubladepix=XCreatePixmap(display[usewindow],win[usewindow],schubladew,schubladeh,depth);
   XCopyArea(display[usewindow], pix[usewindow],schubladepix,gc[usewindow],schubladex,schubladey,schubladew,schubladeh,0,0);
+#endif
+#ifdef USE_SDL
+  SDL_Rect a={schubladex,schubladey,schubladew,schubladeh};
+  SDL_Rect b={0,0,schubladew,schubladeh};
+  schubladepix=SDL_CreateRGBSurface(SDL_SWSURFACE,a.w,a.h,32,0,0,0,0);
+  SDL_BlitSurface(display[usewindow], &a,schubladepix, &b);
 #endif
   schubladeff=1;
   schubladenr=nr;
@@ -1320,11 +1315,17 @@ void do_menu_close() {
     ,schubladex,schubladey);
     XFreePixmap(display[usewindow],schubladepix);
 #endif
+#ifdef USE_SDL
+  SDL_Rect a={schubladex,schubladey,schubladew,schubladeh};
+  SDL_Rect b={0,0,schubladew,schubladeh};
+    SDL_BlitSurface(schubladepix, &b,display[usewindow], &a);
+    SDL_FreeSurface(schubladepix);
+#endif
     schubladeff=0;
   }
 }
 void do_menu_draw() {
-  int i,j,textx;
+  int i,textx;
   graphics();
   gem_init();
 
@@ -1417,7 +1418,6 @@ int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {
   DIR *dp;
   struct dirent *ep;
   int anzfiles=0;
-  struct stat dstat;
   char filename[128];
 #ifdef DEBUG
   printf("Read_dir: %s/%s\n",pfad,mask);
@@ -1475,10 +1475,10 @@ void make_scaler(OBJECT *objects,int anzfiles,int showstart){
 }
 
 char *fsel_input(char *titel, char *pfad, char *sel) {
-  char btitel[128],mask[128],dpfad[128],buffer[128];
+  char btitel[128],mask[128],dpfad[128];
   char feld1[128],feld2[128];
   char *ergebnis;
-  int i,j,k;
+  int i,k;
   int sbut=-1;
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
@@ -1499,7 +1499,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   {(LONG)feld1,(LONG)"__________________________________________________",(LONG)"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
   {(LONG)feld2,(LONG)"____________________",(LONG)"XXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
   };
-  int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
+ // int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[18+2*ANZSHOW]={
 /* 0*/  {-1,1,14,G_BOX, NONE, OUTLINED, 0x00021100, 0,0,54,23},
 #ifdef FRAMEBUFFER
@@ -1591,9 +1591,6 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   }
   objects[18+2*ANZSHOW-1].ob_next=17;
   objects[objccount-1].ob_flags|=LASTOB;
-#ifdef DEBUG
-  printf("**next: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
-#endif
   graphics();
   gem_init();
   for(i=0;i<objccount;i++){
@@ -1602,10 +1599,6 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
     objects[i].ob_width*=chw;
     objects[i].ob_height*=chh;
   }
-#ifdef DEBUG
-  printf("**3fsel_input:\n");
-#endif
-
 
   wort_sepr(pfad,'/',0,dpfad, mask);
   anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
@@ -1614,14 +1607,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
   strcpy(feld1,pfad);
   strcpy(feld2,sel);
 
-  for(i=0;i<anzfiles;i++) {
-    if(strcmp(filenamen[i].name,feld2)==0) {
-      filenamensel[i]=1;
-    } else {
-      filenamensel[i]=0;
-    }
+  for(i=0;i<anzfiles;i++) filenamensel[i]=(strcmp(filenamen[i].name,feld2)==0);
 
-  }
 
   tedinfo[2].te_junk1=strlen(pfad);
   tedinfo[3].te_junk1=strlen(sel);
@@ -1685,7 +1672,7 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
       sprintf(buf,"[1][%d Bytes in %d Files.][ OK ]",dir_bytes(filenamen,anzfiles),anzfiles);
       form_alert(1,buf);objects[sbut].ob_state=NORMAL;
     } else if(sbut==10) {    /* MASK */
-      wort_sepr(tedinfo[2].te_ptext,'/',0,dpfad, mask);
+      wort_sepr((char *)tedinfo[2].te_ptext,'/',0,dpfad, mask);
       anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
       sort_dir(filenamen,anzfiles);
       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
@@ -1742,7 +1729,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
       }
       #endif
     } else if(sbut==16) {    /* ScalerSchieber */
-      int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;
+      int ex=0,root_x_return,root_y_return,win_x_return,win_y_return;
+      unsigned int mask_return;
       int ssold=showstart;
       int sssold=showstart;
       #ifdef USE_X11
@@ -1866,10 +1854,10 @@ void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
 /* List-Select */
 
 int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
-  char btitel[128],mask[128],buffer[128];
-  char feld2[128],xfeld1[50],findmsk[50];
+  char btitel[128],mask[128];
+  char findmsk[50];
   int ergebnis;
-  int i,j,k;
+  int i,k;
   int sbut=-1;
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
@@ -1881,7 +1869,7 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
   {(LONG)mask,(LONG)"",(LONG)"",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
   {(LONG)findmsk,(LONG)"________________________",(LONG)"XXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
   };
-  int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
+ // int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[15+2*ANZSHOW]={
 /* 0*/  {-1,1, 6,G_BOX, NONE, OUTLINED, 0x00021100, 0,0,40,21},
 /* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,(LONG)"OK", 10,19,9,1},
@@ -1986,7 +1974,6 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
     objc_draw(objects,0,-1,0,0);
     sbut=form_do(objects);
     if(sbut==LISTSELECT_BACK) {    /* < */
-      char buf[128];
 //      tedinfo[2].te_junk1=strlen(feld1);
 //      tedinfo[2].te_junk2=0;
       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
@@ -2057,7 +2044,8 @@ int lsel_input(char *titel, STRING *strs,int anzfiles,int sel) {
       }
       #endif
     } else if(sbut==LISTSELECT_SCALER) {    /* ScalerSchieber */
-      int ex=0,root_x_return,root_y_return,win_x_return,win_y_return,mask_return;
+      int ex=0,root_x_return,root_y_return,win_x_return,win_y_return;
+      unsigned int mask_return;
       int ssold=showstart;
       int sssold=showstart;
       #if defined USE_X11 || defined FRAMEBUFFER
@@ -2130,7 +2118,8 @@ void do_sizew(int winnr,int w,int h) {
 #ifdef USE_X11
         Pixmap pixi;
 	Window root;
-	int ox,oy,ow,oh,ob,d;
+	int ox,oy;
+	unsigned int ow,oh,ob,d;
 	
 	XGetGeometry(display[winnr],win[winnr],&root,&ox,&oy,&ow,&oh,&ob,&d);
 	pixi=XCreatePixmap(display[winnr], win[winnr], w, h, d);
@@ -2141,11 +2130,11 @@ void do_sizew(int winnr,int w,int h) {
 	XFlush(display[winnr]);
 #endif
 #ifdef USE_SDL
+  Uint32 flags;
+  flags=display[winnr]->flags;
   SDL_FreeSurface(display[winnr]);
   if(!(display[winnr]=SDL_SetVideoMode(w, 
-       h, 32,
-    // SDL_FULLSCREEN |
-       SDL_HWSURFACE))) {
+       h, 32, flags))) {
       printf("cannot open SDL surface \n");
       SDL_Quit();
       return;
@@ -2154,10 +2143,12 @@ void do_sizew(int winnr,int w,int h) {
 #endif
 }
 void do_movew(int winnr,int x,int y) {
-#ifdef USE_X11
+  if(winnr) {
+    #ifdef USE_X11
       XMoveWindow(display[winnr], win[winnr], x, y);
-#endif
-#ifdef WINDOWS_NATIVE
+    #endif
+    #ifdef WINDOWS_NATIVE
       MoveWindow(win_hwnd[winnr], x, y,640,400,1);
-#endif  
+    #endif  
+  }
 }

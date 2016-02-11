@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
+
 
 #include "file.h"
 
@@ -23,6 +25,8 @@
 #define FALSE 0
 #define TRUE (!FALSE)
 #endif
+
+void io_error(int,char *);
 
 char *lineinput( FILE *n, char *line) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
   int c; int i=0;

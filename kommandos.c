@@ -15,6 +15,9 @@
 #include <signal.h>
 #ifdef WINDOWS
 #define EX_OK 0
+#include <windows.h>
+#include <io.h>
+
 #else
 #include <sysexits.h>
 #endif
@@ -25,23 +28,30 @@
 #include "ptypes.h"
 #include "vtypes.h"
 #include "globals.h"
-#include "protos.h"
 #include "options.h"
 #include "kommandos.h"
 #include "array.h"
+#include "variablen.h"
+#include "sound.h"
+#include "xbasic.h"
+#include "parser.h"
+#include "wort_sep.h"
+#include "io.h"
+#include "file.h"
+#include "graphics.h"
+#include "aes.h"
+#include "window.h"
+#include "mathematics.h"
+#include "gkommandos.h"
+#include "sysVstuff.h"
 
-#ifdef WINDOWS
-#include <windows.h>
-#include <string.h>
-#include <io.h>
-#endif
 
 
 /*****************************************/
 /* Kommandos zur Programmablaufkontrolle */
 
 void c_gosub(char *n) {
-    char *buffer,*pos,*pos2,*pos3;
+    char *buffer,*pos,*pos2;
     int pc2;
    
     buffer=indirekt2(n);
@@ -78,7 +88,7 @@ void c_gosub(char *n) {
    das waere aehnlich wie EXPORT ....
    */
 void c_spawn(char *n) {
-  char *buffer,*pos,*pos2,*pos3;
+  char *buffer,*pos,*pos2;
   int pc2;
   
   buffer=indirekt2(n);
@@ -197,10 +207,10 @@ void c_every(char *n) {
 }
 
 
-c_dodim(char *w) {
-  char *pos,*pos2,*v,*s,*t,*u,*ppp;
+void c_dodim(char *w) {
+  char *pos,*pos2,*v,*s,*t,*ppp;
  
-  int *ooo,i,ndim=0,a=1,vnr,typ;
+  int i,ndim=0,a=1,vnr,typ;
   char **qqq;
  
   v=malloc(strlen(w)+1);
@@ -277,6 +287,10 @@ c_dodim(char *w) {
   }
   free(v);
 }
+static void do_restore(int offset) {
+  datapointer=offset;
+ // printf("DO RESTORE %d\n",offset);
+}
 
 void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
   pc=sp=0;
@@ -299,10 +313,6 @@ void c_restore(PARAMETER *plist,int e) {
   } else do_restore(0);
 }
 
-void do_restore(int offset) {
-  datapointer=offset;
- // printf("DO RESTORE %d\n",offset);
-}
 char *get_next_data_entry() {
   char *ptr,*ptr2;
   char *ergebnis=NULL;
@@ -407,7 +417,7 @@ char *plist_zeile(P_CODE *code) {
       }
       ergebnis[strlen(ergebnis)-1]=0;
     }
-  } else sprintf(ergebnis,"=?=> %d",code->opcode);
+  } else sprintf(ergebnis,"=?=> %d",(int)code->opcode);
   if(code->etyp==PE_COMMENT) {
     strcat(ergebnis," !");
     strcat(ergebnis,(char *)code->extra);
@@ -428,7 +438,7 @@ int plist_printzeile(P_CODE *code, int level) {
 void c_plist(char *n) {
   int i,f=0;
   for(i=0;i<prglen;i++) { 
-    printf("%4d: $%06x |",i,pcode[i]);
+    printf("%4d: $%06x |",i,(unsigned int)pcode[i].opcode);
   #if DEBUG
     printf(" (%5d) |",ptimes[i]);
   #endif
@@ -460,7 +470,7 @@ void c_merge(PARAMETER *plist, int e){
   if(exist(plist[0].pointer)) {
     if(programbufferlen==0) strcpy(ifilename,plist[0].pointer);
     mergeprg(plist[0].pointer);
-  } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",plist[0].pointer);
+  } else printf("LOAD/MERGE: Datei %s nicht gefunden !\n",(char *)plist[0].pointer);
 }
 
 void c_new(char *n) {
@@ -554,16 +564,16 @@ void c_fit_linear(char *n) {
 	   ndata=(int)parser(w1); 
 	   if(vnrx!=-1 && vnry!=-1) {
              if(mtw==2 && vnre!=-1 && vnre2!=-1) {
-	       linear_fit_exy(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
-		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,
-		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE,
-		   variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE
-		   ,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit_exy((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
+		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,
+		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE),
+		   (double *)(variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE),
+		   &a,&b,&siga,&sigb,&chi2,&q); 
 
 	     } else {
-	       linear_fit(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
-		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,(mtw)?(
-		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
+		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,(mtw)?(
+		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
              }
 	   }
 	   break; 
@@ -659,7 +669,7 @@ Todo:
 
 void c_sort(char *n) {  
   char w1[strlen(n)+1],w2[strlen(n)+1];                  
-  int e,typ,typi,scip=0,i=0,size;  
+  int e,typ,typi,scip=0,i=0;
   int vnrx=-1,vnry=-1,ndata=0; 
   char *r;
  // printf("c_sort\n");
@@ -778,16 +788,16 @@ void c_fit(char *n) {
 	 case 6: {   /* Ausdruck, der Angibt, welche Parameter zu fitten sind */  	 
 	   if(vnrx!=-1 && vnry!=-1) {
              if(mtw==2 && vnre!=-1 && vnre2!=-1) {
-	       linear_fit_exy(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
-		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,
-		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE,
-		   variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE
-		   ,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit_exy((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
+		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,
+		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE),
+		   (double *)(variablen[vnre2].pointer+variablen[vnre2].opcode*INTSIZE),
+		   &a,&b,&siga,&sigb,&chi2,&q); 
 
 	     } else {
-	       linear_fit(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE,
-		   variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE,ndata,(vnre!=-1)?(
-		   variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
+	       linear_fit((double *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE),
+		   (double *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE),ndata,(vnre!=-1)?(
+		   (double *)(variablen[vnre].pointer+variablen[vnre].opcode*INTSIZE)):NULL,mtw,&a,&b,&siga,&sigb,&chi2,&q); 
              }
 	   }
 	   break; 
@@ -903,7 +913,7 @@ void c_arrayfill(char *n) {
   } else xberror(32,"ARRAYFILL"); /* Syntax error */
 }
 void c_memdump(PARAMETER *plist,int e) {
-  memdump((char *)plist[0].integer,plist[1].integer);
+  memdump((unsigned char *)plist[0].integer,plist[1].integer);
 }
 void c_dump(PARAMETER *plist,int e) {
   int i;
@@ -998,7 +1008,7 @@ void c_dump(PARAMETER *plist,int e) {
   if(kkk=='C' || kkk=='K'|| kkk=='c'|| kkk=='k') {
     int j;
     for(i=0;i<anzcomms;i++) {
-      printf("%3d: [%08x] %s ",i,comms[i].opcode,comms[i].name);  
+      printf("%3d: [%08x] %s ",i,(unsigned int)comms[i].opcode,comms[i].name);  
       if(comms[i].pmin) {
         for(j=0;j<comms[i].pmin;j++) {
 	  switch(comms[i].pliste[j]) {
@@ -1038,7 +1048,7 @@ void c_dump(PARAMETER *plist,int e) {
   if(kkk=='F' || kkk=='f') {
     int j;
     for(i=0;i<anzpfuncs;i++) {
-      printf("%3d: [%08x] %s(",i,pfuncs[i].opcode,pfuncs[i].name);  
+      printf("%3d: [%08x] %s(",i,(unsigned int) pfuncs[i].opcode,pfuncs[i].name);  
       if(pfuncs[i].pmin) {
         for(j=0;j<pfuncs[i].pmin;j++) {
 	  switch(pfuncs[i].pliste[j]) {
@@ -1154,7 +1164,7 @@ void c_on(char *n) {
     } else { /* on n goto ...  */
       if(mode<2) printf("Unbekannter Befehl: ON <%s> <%s>\n",w1,w2);
       else {
-        int i,gi=max(0,(int)parser(w1));
+        int gi=max(0,(int)parser(w1));
 	if(gi) {
 	  while(gi) { e=wort_sep(w3,',',TRUE,w2,w3); gi--;}
 	  if(e) {
@@ -1243,11 +1253,9 @@ void c_erase(char *n) {
   }
 }
 
-c_doerase(char *w){
- char *pos,*pos2,*v,*u,*ppp;
- 
- int *ooo,i,vnr,typ;
- char **qqq;
+void c_doerase(char *w){
+ char *pos,*pos2,*v;
+ int vnr,typ;
  
   v=malloc(strlen(w)+1);
   strcpy(v,w); 
@@ -1394,7 +1402,7 @@ void c_help(char *w) {
 	      case PL_NVAR: printf("var"); break;
 	      case PL_KEY: printf("KEY"); break;
 	      case PL_FARRAY: printf("a()"); break;
-	      case PL_IARRAY: printf("h%()"); break;
+	      case PL_IARRAY: printf("h%%()"); break;
 	      case PL_SARRAY: printf("f$()"); break;
 	      case PL_LABEL: printf("<label>"); break;
 	      case PL_PROC: printf("<procedure>"); break;
@@ -1417,7 +1425,7 @@ void c_help(char *w) {
 	      case PL_NVAR: printf("var"); break;
 	      case PL_KEY: printf("KEY"); break;
 	      case PL_FARRAY: printf("a()"); break;
-	      case PL_IARRAY: printf("h%()"); break;
+	      case PL_IARRAY: printf("h%%()"); break;
 	      case PL_SARRAY: printf("f$()"); break;
 	      case PL_LABEL: printf("<label>"); break;
 	      case PL_PROC: printf("<procedure>"); break;
@@ -1474,7 +1482,7 @@ void c_detatch(PARAMETER *plist,int e) {
   if(r!=0) io_error(r,"DETATCH");
 }
 void c_shm_free(PARAMETER *plist,int e) {
-  shm_free((char *)plist[0].integer);
+  shm_free(plist[0].integer);
 }
 void c_pause(PARAMETER *plist,int e) {
 #ifdef WINDOWS
@@ -1516,7 +1524,7 @@ void c_clr(char *n){
   free(v);free(w);
 }
 
-c_doclr(char *v) {
+void c_doclr(char *v) {
   char *r,*pos;
   int vnr,typ; 
  
@@ -1572,7 +1580,7 @@ void c_exit(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   
   wort_sep(n,' ',TRUE,w1,w2);
-  if(strcmp(w1,"")==0) c_return; 
+  if(strcmp(w1,"")==0) c_return(""); 
   else if(strcmp(w1,"IF")==0) {
     if(parser(w2)==-1) c_break("");
   } else  printf("Unbekannter Befehl: EXIT <%s> <%s>\n",w1,w2);
@@ -1634,7 +1642,7 @@ void c_select(char *n) {
     
      if(i==prglen) { xberror(36,"SELECT"); /*Programmstruktur fehlerhaft */return;}
      pc=i;
-     if(pcode[i].opcode&PM_SPECIAL==P_CASE) {
+     if((pcode[i].opcode&PM_SPECIAL)==P_CASE) {
        xtrim(program[pc],TRUE,w1);
        wort_sep(w1,' ',TRUE,w2,w3);
        wert2=parser(w3);
@@ -1775,5 +1783,51 @@ void c_lpoke(PARAMETER *plist,int e) {
   *adr=(long)plist[1].integer;
 }
 
-void c_sound(PARAMETER *plist,int e) { speaker(plist[0].integer); }
+/* SOUND channel,frequency [Hz],volume (0-1),duration (s)*/
+
+void c_sound(PARAMETER *plist,int e) { 
+  int duration=0;
+  int c=-1;
+  double frequency=-1;
+  double volume=-1;
+  if(plist[0].typ!=PL_LEER) c=plist[0].integer;
+  if(e>=2 && plist[1].typ!=PL_LEER) frequency=plist[1].real;
+  if(e>=3 && plist[2].typ!=PL_LEER) volume=plist[2].real;
+  if(e>=4) duration=(int)(plist[3].real*1000);
+  sound_activate();
+  do_sound(c,frequency,volume,duration);
+}
+
+/* PLAYSOUND channel,data$[,pitch,volume] */
+
+void c_playsound(PARAMETER *plist,int e) { 
+  int pitch=0x100,volume=0xffff;
+  int c=-1;
+  sound_activate();
+  if(plist[0].typ!=PL_LEER) c=plist[0].integer;
+  if(e>=3) pitch= (int)(plist[2].real*0x100);
+  if(e>=4) volume= (int)(plist[3].real*0xffff);
+  do_playsound(c,plist[1].pointer,plist[1].integer,pitch,volume,0);
+}
+/* WAVE channel,...*/
+
+void c_wave(PARAMETER *plist,int e) { 
+  int c=-1;
+  int form=-1;
+  double attack=-1;
+  double decay=-1;
+  double sustain=-1;
+  double release=-1;
+  
+  if(plist[0].typ!=PL_LEER) c=plist[0].integer;
+  if(e>=2 && plist[1].typ!=PL_LEER) form=plist[1].integer;
+  if(e>=3 && plist[2].typ!=PL_LEER) attack=plist[2].real;
+  if(e>=4 && plist[3].typ!=PL_LEER) decay=plist[3].real;
+  if(e>=5 && plist[4].typ!=PL_LEER) sustain=plist[4].real;
+  if(e>=6 && plist[5].typ!=PL_LEER) release=plist[5].real;
+  sound_activate();
+  do_wave(c,form,attack,decay,sustain,release);
+}
+
+
 void c_eval(PARAMETER *plist,int e) { kommando(plist[0].pointer); }

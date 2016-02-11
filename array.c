@@ -12,15 +12,19 @@
 #include <math.h>
 #include "defs.h"
 #include "xbasic.h"
+#include "globals.h"
+#include "wort_sep.h"
+#include "ptypes.h"
+#include "vtypes.h"
 #include "array.h"
-#include "protos.h"
+#include "parser.h"
+#include "variablen.h"
 
 
 /******************** Array variable by name routines **************************/
 void array_zuweis_and_free(char *name, ARRAY inhalt) {
   int typ,vnr;
   char *r=varrumpf(name),*a=argument(name);
-  char *nam;
   int ztyp=vartype(name);
   
   vnr=variable_exist(r,inhalt.typ | ARRAYTYP);
@@ -280,7 +284,8 @@ ARRAY double_array(ARRAY a) {
 }
 ARRAY einheitsmatrix(int typ, int dimension, int *dimlist) {
   ARRAY ergebnis=nullmatrix(typ,dimension,dimlist);
-  int anz=anz_eintraege(ergebnis),i,a=0,j;
+ // int anz=anz_eintraege(ergebnis);
+  int i,a=0,j;
   int q=dimlist[0];
   for(j=0;j<dimension;j++) {if(q>dimlist[j]) q=dimlist[j];}
   
@@ -396,7 +401,8 @@ ARRAY array_const(char *s) {
       if(ergebnis.typ & INTTYP) ((int *)(ergebnis.pointer+ergebnis.dimension*INTSIZE))[j]=(int)parser(t2);
       else if(ergebnis.typ & FLOATTYP) ((double *)(ergebnis.pointer+ergebnis.dimension*INTSIZE))[j]=parser(t2);
       else {
-        STRING *varptr,sss;
+        STRING *varptr;
+	STRING sss;
         varptr=(STRING *)(ergebnis.pointer+ergebnis.dimension*INTSIZE);
 	sss=string_parser(t2);
           varptr[j].len=sss.len;
@@ -754,10 +760,7 @@ int do_dimension(int vnr) {  /* liefert Anzahl der Elemente in einem ARRAY */
   } else return(1);
 }
 
-void *arrayvarptr(int vnr, char *n,int size) {
-  char s[strlen(n)+1],t[strlen(n)+1];
-  int ndim=0,a=0,i;
-  
+void *arrayvarptr(int vnr, char *n,int size) {  
   if(vnr!=-1)  {
     int dim=variablen[vnr].opcode;
     int indexliste[dim];

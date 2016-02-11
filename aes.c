@@ -14,14 +14,15 @@
 #include <string.h>
 #include "defs.h"
 #include "graphics.h"
-#include "window.h"
 #include "aes.h"
+#include "file.h"
+#include "window.h"
 
 
 #ifndef NOGRAPHICS
 RSHDR *rsrc=NULL;    /* Adresse der Recource im Speicher */
 
-int chw=4,chh=8,baseline=7,depth=8;
+unsigned int chw=4,chh=8,baseline=7,depth=8;
 int gem_colors[16];
 const AESRGBCOLOR gem_colordefs[]={
 {65535,65535,65535},  /* WHITE */
@@ -52,7 +53,7 @@ void gem_init() {
 #ifdef USE_X11
   Window root;
 #endif
-  int border;
+  unsigned int border;
   /* Screendimensionen bestimmem */
 #ifdef FRAMEBUFFER
   FB_get_geometry(&sbox.x,&sbox.y,&sbox.w,&sbox.h,&border,&depth);
@@ -92,7 +93,7 @@ void gem_init() {
 
 #ifdef USE_SDL
 #include "spat-a-fnt.c"
-#include "5x7.c"
+#include "5x7-rev.c"
 #endif
 void load_GEMFONT(int n) {
 #ifdef WINDOWS_NATIVE
@@ -135,7 +136,7 @@ void load_GEMFONT(int n) {
     chw=5;
     chh=7;
     baseline=chh-0;
-    gfxPrimitivesSetFont(asciiTable,7,5); 	
+    gfxPrimitivesSetFont(asciiTable,chw,chh); 	
   }
 #endif
 }
@@ -184,13 +185,17 @@ int form_alert2(int dbut,char *n, char *tval) {
   char **ein=bzeilen;
   int i=0,j=strlen(n),k=0,l=0;
   TEDINFO tedinfo[32];
+  char tmplt[32*80];
+  char valid[32*80];
+  int tmpltptr=0,validptr=0;
   OBJECT objects[64]={{-1,1,1,G_BOX, 0, OUTLINED, 0x00021100, 0,0,100,100}};
   int objccount=1;
   int x,y,w,h;
 #ifdef DEBUG
   printf("**form_alert:\n");
 #endif
-
+memset(tmplt,'_',32*80);
+memset(valid,'X',32*80);
   while(i<j) {
     if(n[i]=='[') {
       pos=&n[i+1];
@@ -274,10 +279,13 @@ int form_alert2(int dbut,char *n, char *tval) {
         for(j=0;j<strlen((char *)objects[objccount-1].ob_spec);j++) {
 	  if(((char *)(objects[objccount-1].ob_spec))[j]==27) {
             ((char *)(objects[objccount-1].ob_spec))[j]=0;
+	//  printf("Textfeld gefunden. OB=%d vorne=<%s>\n",objccount,objects[objccount-1].ob_spec);
+	    
 	    objects[objccount].ob_x=textx+chh+chw*j+chw;
             objects[objccount].ob_y=(1+i)*chh;
             objects[objccount-1].ob_width=chw*(strlen((char *)objects[objccount-1].ob_spec));
             objects[objccount].ob_width=chw*(strlen(bzeilen[i]+j+1));
+	   // printf("default=<%s>\n",bzeilen[i]+j+1);
             objects[objccount].ob_height=chh;
             objects[objccount].ob_spec=(LONG)&tedinfo[anztedinfo];
             objects[objccount].ob_head=-1;
@@ -288,11 +296,15 @@ int form_alert2(int dbut,char *n, char *tval) {
             objects[objccount].ob_state=NORMAL;
 	    tedinfo[anztedinfo].te_ptext=(LONG)(bzeilen[i]+j+1);
 	    buffer[anzbuffer]=malloc(strlen((char *)tedinfo[anztedinfo].te_ptext)+1);
-	    tedinfo[anztedinfo].te_ptmplt=(LONG)(buffer[anzbuffer++]);
-	    tedinfo[anztedinfo].te_pvalid=(LONG)(bzeilen[i]+j+1);
+	    tedinfo[anztedinfo].te_ptmplt=(LONG)&tmplt[tmpltptr];
+	    tmpltptr+=strlen(bzeilen[i]+j+1)+1;
+	    tmplt[tmpltptr-1]=0;
+	    tedinfo[anztedinfo].te_pvalid=(LONG)&valid[validptr];
+	    validptr+=strlen(bzeilen[i]+j+1)+1;
+	    valid[validptr-1]=0;
 	    tedinfo[anztedinfo].te_font=FONT_IBM;
 	    tedinfo[anztedinfo].te_just=TE_LEFT;
-	    tedinfo[anztedinfo].te_junk1=strlen((char *)tedinfo[anztedinfo].te_ptext);
+	    tedinfo[anztedinfo].te_junk1=strlen(bzeilen[i]+j+1);
 	    tedinfo[anztedinfo].te_junk2=0;
 	    tedinfo[anztedinfo].te_color=0x1100;
 	    tedinfo[anztedinfo].te_thickness=1;
@@ -349,6 +361,7 @@ int form_alert2(int dbut,char *n, char *tval) {
 	  tval[strlen(tval)]=13;
 	}
       }
+    //  printf("tval=<%s>\n",tval);
     }
     while(anzbuffer) {
       free(buffer[--anzbuffer]);
@@ -458,13 +471,13 @@ WORD invert_color(WORD color) {
   }
 }
 
-int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
+void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   signed char randdicke=0;
   char zeichen,opaque=0;
   int fillcolor=BLACK,pattern=8;
   int bgcolor=WHITE;
   int textcolor=BLACK,textmode,framecolor=BLACK;
-  int i,drawbg=1,drawtext=1;
+  int i,drawbg=1;
   int obx=tree[idx].ob_x+rootx;
   int oby=tree[idx].ob_y+rooty;
   int obw=tree[idx].ob_width;
@@ -596,7 +609,7 @@ if (drawbg) {
     char *text;
     char chr[2];
     TEDINFO *ted;
-    int x,y,i,flen;
+    int x,y,flen;
   case G_STRING:
   case G_TITLE:
     text=(char *)((int)tree[idx].ob_spec);
@@ -746,6 +759,7 @@ int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
     }
     if(idx==stop) return(1);
   }
+  return(0);
 }
 
 
@@ -943,6 +957,60 @@ void fix_iconblk() {
   }
 }
 
+int rsrc_load(char *filename) {
+  FILE *dptr;
+  int i,len;
+  if(exist(filename)) {
+    dptr=fopen(filename,"r");
+    if(dptr==NULL) return(-1);
+    len=lof(dptr);
+    rsrc=malloc(len);
+    if(fread(rsrc,1,len,dptr)==len) {
+      WSWAP((char *)((int)rsrc));
+      if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
+        if(rsrc->rsh_vrsn==0) {
+        for(i=1;i<HDR_LENGTH/2;i++) {
+          WSWAP((char *)((int)rsrc+2*i));
+        }
+        }
+#if DEBUG
+       printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
+       printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
+       printf("%d Trees and %d FRSTRs \n",rsrc->rsh_ntree,rsrc->rsh_nstring);
+
+       printf("OBJC:    %08x  (%d)\n",rsrc->rsh_object,rsrc->rsh_nobs);
+       printf("TEDINFO: %08x  (%d)\n",rsrc->rsh_tedinfo,rsrc->rsh_nted);
+       printf("ICONBLK: %08x  (%d)\n",rsrc->rsh_iconblk,rsrc->rsh_nib);
+       printf("BITBLK:  %08x  (%d)\n",rsrc->rsh_bitblk,rsrc->rsh_nbb);
+
+#endif	
+      if(rsrc->rsh_rssize==len || 1) {
+
+
+        fix_trindex();
+        fix_frstrindex();
+	fix_objc();
+	fix_tedinfo();
+	fix_bitblk();
+	fix_iconblk();
+	
+       	fclose(dptr);
+        return(0);
+      } else printf("Invalid rsc-Filestructure\n");
+      } else printf("Unsupported rsc-Version %d\n",rsrc->rsh_vrsn);
+    }
+    fclose(dptr);
+    free(rsrc);
+    rsrc=NULL;
+    return(-1);
+  }
+  else return(-1);
+}
+
+
+
+
+
 
 void objc_add(OBJECT *tree,int p,int c) {
   if(tree[p].ob_tail<0) {
@@ -1008,7 +1076,6 @@ int objc_offset(OBJECT *tree,int object,int *x,int *y) {
 /*     objc_find                  */
 
 int objc_find(OBJECT *tree,int x,int y) {
-  int i=0;
   int sbut=-1;
   int idx=0;
   int stop=-1;
@@ -1050,7 +1117,7 @@ int rootob(OBJECT *tree,int onr) {
     if(tree[idx].ob_tail==sbut) return(idx);
   }
 }
-int relobxy(OBJECT *tree,int ndx,int *x, int *y){
+void relobxy(OBJECT *tree,int ndx,int *x, int *y){
   *x=tree[ndx].ob_x;
   *y=tree[ndx].ob_y;
   while((ndx=rootob(tree,ndx))>=0){
@@ -1121,4 +1188,10 @@ int form_center(OBJECT *tree, int *x, int *y, int *w, int *h) {
   *h=tree->ob_height;
   return(0);
 }
+
+
+
+
+
+
 #endif

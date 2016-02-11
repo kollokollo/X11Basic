@@ -13,11 +13,12 @@ BINDIR=@bindir@
 DATADIR=@datadir@
 LIBDIR=@libdir@
 MANDIR=@mandir@
+INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-# Register variables (-ffixed-reg)
-REGS= @regs@
+# Register variables (-ffixed-reg) -Wall
+REGS= @regs@ -fPIC
 
 # Optimization and debugging options
 OPT=@copt@
@@ -42,7 +43,7 @@ WINCC=i586-mingw32msvc-gcc
 
 # Cross-Compiler fuer ARM-Linux-Excecutable
 
-ARMCC=arm-linux-gcc
+ARMCC=arm-linux-gcc $(REGS)
 
 # Preprocessor
 CPP=@CPP@
@@ -53,14 +54,19 @@ CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
-	sysVstuff.o aes.o graphics.o
+	sysVstuff.o aes.o graphics.o sound.o number.o decode.o
 
 # Object group for framebuffer variant
 
 OBJS1=  xbasic.o file.o ccs.o io.o parser.o variablen.o array.o\
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
-	kommandos.o do_gets.o errortxt.o \
-	sysVstuff.o aes.o
+	kommandos.o do_gets.o errortxt.o number.o decode.o \
+	sysVstuff.o aes.o  sound.o
+
+# Sources for libx11basic
+
+LIBCSRC=$(OBJS:.o=.c) mathematics.c 
+LIBCSRCFB=$(OBJS:.o=.c) framebuffer.c mathematics.c spat-a-fnt.c 5x7.c
 
 DISTOBJS=$(OBJS) main.o mathemat_dummy.o
 LIBOBJS= $(OBJS) mathematics.o
@@ -68,22 +74,55 @@ EXTRAOBJS= virtual-machine.o bytecode.o xbbc.o xbvm.o xb2c.o framebuffer.o spat-
 WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
 AOBJS=   main.o $(LIBOBJS)
 BOBJS=   main.o blowfish.o $(LIBOBJS)
-CSRC=    $(DISTOBJS:.o=.c) fdata.c $(EXTRAOBJS:.o=.c)
+CSRC=    $(DISTOBJS:.o=.c) fdata.c 5x7-rev.c $(EXTRAOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 DEPSRC=  $(CSRC) 
 
 # Headerfiles which should be added to the distribution
 
 HSRC=  aes.h array.h bitmap.h defs.h file.h functions.h gkommandos.h globals.h kommandos.h \
-       options.h protos.h xbasic.h window.h vtypes.h ptypes.h bytecode.h \
-       framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h
+       options.h xbasic.h window.h vtypes.h ptypes.h bytecode.h number.h \
+       framebuffer.h parser.h io.h afunctions.h sfunctions.h graphics.h \
+       sound.h wort_sep.h variablen.h mathematics.h sysVstuff.h x11basic.h \
+       decode.h xb2csol.h
 
+EXAMPLES=examples2/calculation/randomminmax.bas \
+        examples2/calculation/sieve.bas \
+        examples2/calculation/sqr.bas \
+        examples/compiler/bas2x11basic.bas \
+        examples/compiler/gui2bas.bas \
+        examples/graphics/*.bas \
+        examples/tests/*.bas \
+        examples2/3D-graphics/*.bas \
+        examples2/console/console_clock.bas \
+        examples2/console/g*.bas \
+        examples2/console/l*.bas \
+        examples2/console/m*.bas \
+        examples2/console/t*.bas \
+        examples2/fragments/* \
+        examples2/games/*.bas \
+        examples2/gui/*.bas \
+        examples2/gui/*.gui \
+        examples2/misc/zahlen.bas \
+        examples2/RELEASE-NOTES \
+        examples2/simulation/3*.bas \
+        examples2/simulation/bif*.bas \
+        examples2/simulation/d*.bas \
+        examples2/simulation/k*.bas \
+        examples2/simulation/l*.bas \
+        examples2/simulation/m*.bas \
+        examples2/simulation/rot.bas \
+        examples2/utils/d*.bas \
+        examples2/utils/h*.bas \
+        examples2/utils/mondp*.bas \
+        examples2/utils/sonnen*.bas \
+        examples2/utils/o*.bas
 
-DIST= README INSTALL COPYING doc/man-pages/*.1 ACKNOWLEGEMENTS \
+DIST= README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
       doc/editors/*  $(HSRC) $(CSRC) \
-      config.h.in Makefile.in configure config.guess configure.in \
-        x11basic.spec \
+      config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
+        x11basic.spec x11basic.pov 5x7-rev.c \
         bitmaps/* \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
@@ -94,9 +133,9 @@ DIST= README INSTALL COPYING doc/man-pages/*.1 ACKNOWLEGEMENTS \
 	examples/tests/* \
 	examples/graphics/* 
 
-BINDIST=README INSTALL COPYING doc/man-pages/*.1 ACKNOWLEGEMENTS \
+BINDIST=README INSTALL COPYING doc/man-pages/*.1 doc/ACKNOWLEGEMENTS \
       AUTHORS doc/HISTORY RELEASE_NOTES doc/X11-Basic-manual.txt \
-      doc/editors/* xbasic xbc bas2x11basic xbvm \
+      doc/editors/* xbasic xbc bas2x11basic xbvm x11basic.h \
       examples/compiler/xbc.bas.in \
       examples/compiler/inline.bas \
       examples/compiler/bas2x11basic.bas \
@@ -118,6 +157,7 @@ DIST2=$(DISTOBJS:.o=.c)
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 DIR3=X11Basic-bin-@version@
+DIR33=$(DIR)-bin
 TINEDIR=tinexbasic-@version@
 TINEDIST=$(DIST) doc/tine-xbasic.html examples2/DESY/*
 DOOCSDIR=doocsxbasic-@version@
@@ -128,6 +168,9 @@ LINKFLAGS =
 WINLINKFLAGS = -L./Windows.extension/lib 
 
 LIBS =  @libs@ @xtra@
+LIBS1 =  @libs@
+LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
+
 CONSOLELIBS= @libs@ @xtra@
 
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
@@ -139,6 +182,9 @@ all :    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic
 configure : configure.in
 	autoconf
 Makefile : Makefile.in
+	./configure --prefix=/usr
+
+config.h: config.h.in
 	./configure --prefix=/usr
  
 #.c.o:
@@ -181,7 +227,7 @@ xbc : xbasic libx11basic.so
 # Make the bytecode compiler xbbc
 
 xbbc : bytecode.h bytecode.o virtual-machine.o xbbc.c
-	gcc -o $@ xbbc.c bytecode.o virtual-machine.o -L . -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses	
+	gcc -o $@ xbbc.c bytecode.o virtual-machine.o -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
 	strip $@
 xbbcstatic : xbbc.c bytecode.h bytecode.o virtual-machine.o x11basic.a
 	gcc -o xbbc xbbc.c bytecode.o virtual-machine.o x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses		
@@ -189,7 +235,7 @@ xbbcstatic : xbbc.c bytecode.h bytecode.o virtual-machine.o x11basic.a
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c virtual-machine.o 
-	gcc -o $@ xbvm.c virtual-machine.o -L . -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses		
+	gcc -o $@ xbvm.c virtual-machine.o -L .$(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
 	strip $@
 xbvmstatic : bytecode.h xbvm.c virtual-machine.o bytecode.h x11basic.a
 	gcc -o xbvm xbvm.c virtual-machine.o  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline -lcurses -lncurses	
@@ -257,12 +303,12 @@ xbasic.blow : $(BOBJS)
 blow : 	xbasic.blow
 
 
-# Make a version of X11-basic which uses the framebuffer (and touchscreen) device
-# instead of X11-graphics
+# Make a version of X11-Basic which uses the framebuffer (and touchscreen) device
+# instead of X11-Graphics. This way, the interpreter (and all basic programs) can run without the X-Server
 
 fb: xbasic.framebuffer
-xbasic.framebuffer : framebuffer.c gkommandos.c window.c 5x7.o spat-a-fnt.o $(OBJS1) main.o mathematics.o
-	$(CC) $(OPT) -DFRAMEBUFFER framebuffer.c gkommandos.c window.c 5x7.o spat-a-fnt.o main.o mathematics.o $(OBJS1) $(LINKFLAGS) -o $@ $(LIBS) 
+xbasic.framebuffer : main.c $(LIBCSRCFB)
+	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@  main.c   $(LIBCSRCFB) $(LINKFLAGS)  $(LIBS1) 
 	strip $@
 
 # Make a version of X11-basic which is statically linked to libx11basic and 
@@ -275,8 +321,8 @@ static : xbasic.static
 
 # Make a version of X11-basic which uses the SDL library for graphics 
 
-xbasic.sdl : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) -lSDL -lSDL_gfx
+xbasic.sdl : main.c $(LIBCSRC)
+	$(CC) -DUSE_SDL $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRC) $(LIBS) -lSDL -lSDL_gfx
 	strip $@
 
 sdl : xbasic.sdl	
@@ -289,6 +335,76 @@ xbasic.staticreadline : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a\
 		/usr/lib/libreadline.a -ldl -lm -lncurses -lX11  $(XLIBS)
 	strip $@
+
+
+config.h: configure
+
+###############################################################
+# Make a version of X11-Basic, which runs on the TomTom devices
+
+x11basic.a.tomtom : $(LIBCSRCFB)
+	rm -f config.h
+	ln -s config.h.tomtom config.h
+	rm -f *.o
+	$(ARMCC) -ITomTom.extension/ -DFRAMEBUFFER $(OPT)  -c $(LIBCSRCFB)  
+	arm-linux-ar -ru $@ $(OBJS) framebuffer.o mathematics.o spat-a-fnt.o 5x7.o
+	rm -f *.o config.h
+
+libx11basic.so.$(LIBNO).tomtom : $(LIBCSRCFB)
+	rm -f config.h
+	ln -s config.h.tomtom config.h
+	$(ARMCC) -ITomTom.extension/ -fPIC -DFRAMEBUFFER $(OPT) -shared -Wl,-soname,libx11basic.so.$(LIBNO) -o $@ $(LIBCSRCFB)
+	arm-linux-strip $@
+	rm -f config.h
+
+xbasic.tomtom :  main.c x11basic.a.tomtom
+	rm -f config.h
+	ln -s config.h.tomtom config.h
+	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c x11basic.a.tomtom $(LIBS2)  
+	arm-linux-strip $@
+	rm -f config.h
+
+xbvm.tomtom : bytecode.h xbvm.c virtual-machine.c x11basic.a.tomtom
+	rm -f config.h
+	ln -s config.h.tomtom config.h
+	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ xbvm.c virtual-machine.c x11basic.a.tomtom $(LIBS2)  
+	arm-linux-strip $@
+	rm -f config.h
+
+xbbc.tomtom : xbbc.c bytecode.h bytecode.c virtual-machine.c x11basic.a.tomtom
+	rm -f config.h
+	ln -s config.h.tomtom config.h
+	$(ARMCC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@  xbbc.c bytecode.c virtual-machine.c x11basic.a.tomtom $(LIBS2) 
+	rm -f config.h
+
+
+# This gives the TomTom Distribution
+
+$(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp TomTom.extension/x11basic-demo TomTom.extension/X11-Basic.cap Makefile ../doc/RELEASE_NOTES
+	rm -rf /tmp/$(DIR33)
+	mkdir /tmp/$(DIR33)
+	mkdir /tmp/$(DIR33)/bin
+	mkdir /tmp/$(DIR33)/X11-Basic
+	mkdir /tmp/$(DIR33)/X11-Basic/examples
+	mkdir /tmp/$(DIR33)/SDKRegistry
+	rsync -a README /tmp/$(DIR33)/
+	cp ../doc/README /tmp/$(DIR33)/X11-Basic/
+	cp ../doc/RELEASE_NOTES /tmp/$(DIR33)/X11-Basic/
+	(cd ..; tar cf - $(EXAMPLES))|(cd /tmp/$(DIR33)/X11-Basic; tar xpf -)
+	rsync -a xbasic.tomtom /tmp/$(DIR33)/bin/xbasic
+	rsync -a xbvm.tomtom /tmp/$(DIR33)/bin/xbvm
+#	rsync -a xbbc.tomtom /tmp/$(DIR33)/bin/xbbc
+	rsync -a TomTom.extension/x11basic-demo /tmp/$(DIR33)/X11-Basic/xbasic-demo
+	rsync -a TomTom.extension/x11basic.bmp /tmp/$(DIR33)/SDKRegistry/
+	rsync -a TomTom.extension/X11-Basic.cap /tmp/$(DIR33)/SDKRegistry/
+	rsync -a /home/hoffmann/c/TTconsole/src/utility/lib/terminfo /tmp/$(DIR33)/lib/
+	rsync -a /home/hoffmann/c/TTconsole/src/utility/lib/libncurses.so.5 /tmp/$(DIR33)/lib/
+#	rsync -a /home/hoffmann/c/TTconsole/src/utility/bin/libreadline.so.4 /tmp/$(DIR33)/lib/
+	rsync -a /home/hoffmann/c/TTconsole/src/utility/lib/termcap /tmp/$(DIR33)/lib/
+	(cd /tmp ; zip -r $(DIR33).zip $(DIR33))
+	mv /tmp/$(DIR33).zip .
+
+TomTom: $(DIR33).zip
 
 
 tinexbasic.rs : $(OBJS) $(AOBJS) 
@@ -366,14 +482,15 @@ myzip : xbc
 
 # make the X11-Basic to C translator
 xb2c :  xb2c.c
-	gcc -o $@ xb2c.c  -L . -lx11basic -lm -L /usr/X11/lib/ -lX11 -lreadline	
+	gcc -o $@ xb2c.c  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
 	strip $@
 xb2cstatic : xb2c.c x11basic.a
 	gcc -o xb2c xb2c.c  x11basic.a -lm -L /usr/X11/lib/ -lX11 -lreadline	
 
+x11basic.tga: x11basic.pov
+	povray +I$< +O$@ +FT +W160 +H200 +V -D +X
 
-
-install : xbasic libx11basic.so x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+install : xbasic libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
 	install -s -m 755 xbasic $(BINDIR)/
 	install -m 755 libx11basic.so.$(LIBNO) $(LIBDIR)/
 	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
@@ -386,6 +503,9 @@ install : xbasic libx11basic.so x11basic.a xbvm xbbc xbc xb2c bas2x11basic
 	install -s -m 755 xbvm $(BINDIR)/
 	install -s -m 755 xbbc $(BINDIR)/
 	install -s -m 755 bas2x11basic $(BINDIR)/
+	install -d $(INCDIR)
+	install -m 644 x11basic.h $(INCDIR)/
+	install -m 644 xb2csol.h $(INCDIR)/
 	install doc/man-pages/xbc.1 $(MANDIR)/man1/
 	install doc/man-pages/xbbc.1 $(MANDIR)/man1/
 	install doc/man-pages/xbvm.1 $(MANDIR)/man1/
@@ -404,17 +524,22 @@ uninstall :
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1 $(MANDIR)/man1/xbbc.1 $(MANDIR)/man1/xbvm.1
 	rm -f $(MANDIR)/man1/bas2x11basic.1
 	rm -f $(MANDIR)/man1/xb2c.1
+	rm -f $(INCDIR)/x11basic.h
+	rm -f $(INCDIR)/xb2csol.h
+	rmdir $(INCDIR)
 clean :
-	rm -f *.o a.out b.b xbc-win.b Makefile.bak \
+	rm -f *.o a.out b.b xbc-win.b Makefile.bak x11basic.a \
 	backup-*.tgz
 
 distclean : clean
-	rm -f Makefile config.cache config.status config.log xbasic xbc xbvm \
-	X11-Basic-examples-@version@.zip xbbc xb2c xbasic.static \
+	rm -f Makefile config.cache config.status config.log config.h 11.c xbasic xbc xbvm \
+	X11-Basic-examples-@version@.zip xbasic.sdl xbasic.framebuffer xbbc \
+	xb2c xbasic.static X11-Basic-examples-$(LIBNO).zip \
 	tinexbasic doocsxbasic xbasic.exe xbbc.exe xbc.exe xbvm.exe xbasic.dyn xbasic.staticreadline \
-	myzip myunzip bas2x11basic libx11basic.so* x11basic.lib x11basic.a
+	myzip myunzip bas2x11basic libx11basic.so* x11basic.lib x11basic.a xbvm.tomtom xbbc.tomtom xbasic.tomtom
 	rm -rf autom4te.cache
 
+$(DIR).tar.gz : dist
 dist :	$(DIST2)
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
@@ -434,9 +559,9 @@ doocsdist : $(DIST2)
 	(cd ..; tar cf - $(DOOCSDIST))|(cd /tmp/$(DOOCSDIR); tar xpf -)
 	(cd /tmp; tar cf - $(DOOCSDIR)|gzip -9 > $(DOOCSDIR).tar.gz)
 rpm :	$(DIR).tar.gz x11basic.spec
-	cp $(DIR).tar.gz /usr/src/packages/SOURCES/
-#	rpm -ba --clean x11basic.spec
-	rpmbuild -ba --clean x11basic.spec
+	cp $(DIR).tar.gz $(HOME)/rpmbuild/SOURCES/
+#	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
+	rpmbuild -ba  --clean --nodeps x11basic.spec
 deb :	$(BINDIST)
 	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ --arch i386 \
 	--maintainer kollo@users.sourceforge.net --requires libreadline5 --backup \

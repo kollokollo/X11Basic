@@ -14,10 +14,10 @@
 #include "config.h"
 #include "defs.h"
 #include "globals.h"
-#include "protos.h"
 #include "vtypes.h"
 #include "array.h"
 #include "afunctions.h"
+#include "xbasic.h"
 
 ARRAY f_smula(PARAMETER *plist, int e) {
   ARRAY ergeb;
@@ -41,10 +41,8 @@ extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten
 extern double *backsub(double *, double *, double *, double *,int,int);
 
 double *makeSVD(double *v1,double *m1,int anzzeilen, int anzspalten) {
-  int i,j;
+  int i,elim=0,fsing=0;
   double maxsing=0;
-  int elim=0;
-  int fsing=0;
   double *ergebnis;
 
   double *u = malloc(sizeof(double)*anzzeilen*anzspalten);
@@ -83,7 +81,7 @@ double *makeSVD(double *v1,double *m1,int anzzeilen, int anzspalten) {
   return(ergebnis);
 }
 
-makeSVD2(double *v1,double *m1,int anzzeilen, int anzspalten, double *ergeb) {
+void makeSVD2(double *v1,double *m1,int anzzeilen, int anzspalten, double *ergeb) {
   double *x;
   x=makeSVD(v1,m1,anzzeilen,anzspalten);
   memcpy(ergeb,x,sizeof(double)*anzspalten);

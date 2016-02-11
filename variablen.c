@@ -11,11 +11,14 @@
 #include <string.h>
 #include <math.h>
 #include "defs.h"
+#include "x11basic.h"
+#include "xbasic.h"
 #include "ptypes.h"
-#include "vtypes.h"
-#include "protos.h"
+#include "variablen.h"
 #include "globals.h"
 #include "array.h"
+#include "wort_sep.h"
+#include "parser.h"
 
 
 /* Variablen-Verwaltung   */
@@ -149,11 +152,7 @@ void local_vars_loeschen(int p) {
   }
 }
 
-
-
-
-
-void free_pliste(int anz,PARAMETER *pret){
+void free_pliste(int anz,PARAMETER *pret) {
   int i;
   for(i=0;i<anz;i++)  free_parameter(pret[i]);
   free(pret);
@@ -162,7 +161,7 @@ void free_pliste(int anz,PARAMETER *pret){
 void free_parameter(PARAMETER p) {
  /* printf("Free_parameter: %d\n",p.typ); */
   if(p.typ==PL_STRING) free(p.pointer);
-  else if(p.typ==PL_KEY) free(p.pointer);
+  else if(p.typ==PL_KEY)  free(p.pointer); 
   else if(p.typ&PL_ARRAY) {
     ARRAY a;
     a.typ=p.typ;
@@ -171,7 +170,7 @@ void free_parameter(PARAMETER p) {
     free_array(a);
   }  
 }
-void free_string(STRING str) {  free(str.pointer); } 
+inline void free_string(STRING str) {  free(str.pointer); } 
 
 int variable_exist_type(char *name ){
   int typ=vartype(name);
@@ -248,12 +247,10 @@ int zuweissbyindex(int vnr,int *indexliste,STRING wert) {
 int zuweis(char *name, double wert) {
   /* Zuweisungen fuer Float-Variablen und Felder    */
 
-  int i,s=0,vnr=-1,a=0,ndim;
+  int i,vnr=-1,a=0,ndim;
   if(strchr(name,'(')!=NULL) {
    char *pos, *pos2;
    
-   int j;
-
    pos=strchr(name,'(');
    pos[0]=0;pos++;
    vnr=variable_exist(name,FLOATARRAYTYP);
@@ -306,12 +303,11 @@ int zuweis(char *name, double wert) {
   /* Zuweisungen fuer Int-Variablen und Felder-Eintraege    */
 
 void zuweisi(char *name, int wert) {
-  int i,s=0,vnr=-1,a=0,ndim;
+  int i,vnr=-1,a=0,ndim;
   char *r=varrumpf(name);
 
   if(strchr(name,'(')!=NULL) {
     char *pos, *pos2;
-    int j;
    
     pos=strchr(name,'(');
     *pos=0;pos++;
@@ -410,7 +406,7 @@ int neue_array_variable_and_free(char *name, ARRAY wert, int sp) {
 }
 void feed_subarray_and_free(int vnr,char *pos, ARRAY wert) { 
   char w1[strlen(pos)+1],w2[strlen(pos)+1];
-  int i,e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
+  int e,rdim=0,ndim=0,anz=1,anz2=1,j,k;
   int indexe[variablen[vnr].opcode];
   int indexo[variablen[vnr].opcode];
   int indexa[variablen[vnr].opcode];   
@@ -508,8 +504,8 @@ int zuweissbuf(char *name, char *inhalt,int len) {
 }
 
 int zuweis_string(char *name, STRING inhalt) {
-  int i,s=0;
-  char *ss,*t,*v,*pos,*pos2,*w;
+  int i;
+  char *ss,*t,*pos,*pos2,*w;
   
   w=malloc(strlen(name)+1);
   strcpy(w,name);
@@ -607,7 +603,6 @@ void xzuweis(char *name, char *inhalt) {
 
 
 void c_dolocal(char *name, char *inhalt) {
-  char *buffer3;
   char *buffer1=indirekt2(name);
   
  /*  printf("Do_local: %s=%s\n",buffer1,inhalt); */
@@ -754,6 +749,7 @@ int typlaenge(int typ) {
   else if(typ & FLOATTYP) return(sizeof(double));
   else if(typ & STRINGTYP) return(sizeof(STRING));
   else if(typ & ARRAYTYP) return(sizeof(ARRAY));
+  return(0);
 }
 
 

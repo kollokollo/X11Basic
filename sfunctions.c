@@ -17,12 +17,14 @@
 #include "config.h"
 #include "defs.h"
 #include "globals.h"
-#include "vtypes.h"
-#include "protos.h"
+#include "x11basic.h"
 #include "sfunctions.h"
+#include "variablen.h"
 #include "parser.h"
+#include "io.h"
+#include "wort_sep.h"
 
-char *inkey();
+#include "decode.h"
 
 STRING vs_error() {return(create_string("<ERROR>"));}
 
@@ -32,7 +34,7 @@ STRING f_aries(STRING n) {  /* order-0 adaptive arithmetic encoding */
   int i;
   int size=n.len;
   ergebnis.pointer=malloc(size+1);
-  put_pointer=ergebnis.pointer;
+  put_pointer=(unsigned char *)ergebnis.pointer;
   put_size=0;
 
   start_model();
@@ -66,7 +68,7 @@ STRING f_arids(STRING n) {  /* order-0 adaptive arithmetic decoding */
   STRING ergebnis;
   int j=0,i;
   int size=n.len;
-  put_pointer=n.pointer;
+  put_pointer=(unsigned char *)n.pointer;
   put_size=n.len;
   ergebnis.pointer=malloc(size+1);
 

@@ -51,6 +51,12 @@
 
 
 #define round(a) ((int)(a+0.5))
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #define min(a,b) ((a<b)?a:b)
 #define max(a,b) ((a>b)?a:b)
 #define sgn(x)   ((x<0)?-1:1)

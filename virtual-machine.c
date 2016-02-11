@@ -13,23 +13,35 @@
 #include "config.h"
 #include "defs.h"
 #include "globals.h"
-#include "protos.h"
+#include "x11basic.h"
+#include "xbasic.h"
 #include "functions.h"
 #include "ptypes.h"
 #include "bytecode.h"
+#include "variablen.h"
+#include "array.h"
+#include "io.h"
 
 extern int verbose;
 extern int datapointer;
 
-int bc_not(PARAMETER *sp) {    /* Logisches NOT, INPUT: [float|int] RET: int */
-  if(verbose) printf("bc_not ");
-  if(sp[-1].typ==PL_INT)          sp[-1].integer=~sp[-1].integer;
+int bc_x2i(PARAMETER *sp) {    /* cast to integer */
+  if(sp[-1].typ==PL_INT) return(0);
   else if(sp[-1].typ==PL_FLOAT) {
-    sp[-1].integer=~((int)sp[-1].real);
-    sp[-1].typ=PL_INT;
-  } else puts("ERROR: incompatible types for NOT.");
+    sp[-1].integer=(int)sp[-1].real;
+    sp[-1].typ=PL_INT;  
+  } else printf("X2I: something is wrong.\n");
   return(0);
 }
+int bc_x2f(PARAMETER *sp) {    /* cast to integer */
+  if(sp[-1].typ==PL_FLOAT) return(0);
+  else if(sp[-1].typ==PL_INT) {
+    sp[-1].real=(double)sp[-1].integer;
+    sp[-1].typ=PL_FLOAT;  
+  } else printf("X2F: something is wrong.\n");
+  return(0);
+}
+
 int bc_add(PARAMETER *sp) {    /* binaer addition */
   if(verbose) printf("bc_add ");
   sp--;
@@ -105,6 +117,7 @@ int bc_pow(PARAMETER *sp) {    /* binaer addition */
     sp[-1].typ=PL_FLOAT;
   return(-1);
 }
+#if 0
 int bc_div(PARAMETER *sp) {    /* binaer addition */
   if(verbose) printf("bc_div ");
   sp--;
@@ -122,6 +135,7 @@ int bc_div(PARAMETER *sp) {    /* binaer addition */
   }
   return(-1);
 }
+#endif
 int bc_mod(PARAMETER *sp) {    /* binaer addition */
   if(verbose) printf("bc_mod ");
   sp--;
@@ -141,40 +155,16 @@ int bc_mod(PARAMETER *sp) {    /* binaer addition */
   }
   return(-1);
 }
-int bc_and(PARAMETER *sp) {    /* binaer and */
-  if(verbose) printf("bc_and ");
-  sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer&=sp[0].integer;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) {
-    sp[-1].integer=((int)sp[-1].real & (int)sp[0].real);
-    sp[-1].typ=PL_INT;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT) {
-    sp[-1].integer=((int)sp[-1].real & sp[0].integer);
-    sp[-1].typ=PL_INT;
-  } else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) sp[-1].integer&=(int)sp[0].real;
-  else {
-    puts("ERROR: incompatible types for AND.");
-    free_parameter(sp[0]);
-  }
-  return(-1);
+
+#if 0
+int bc_zero(PARAMETER *sp) { /* Test if zero */
+  if(sp[-1].typ==PL_INT) return(sp[-1].integer==0);
+  else if(sp[-1].typ==PL_FLOAT) return(sp[-1].real==0.0);
+  else puts("ERROR: incompatible types for ZERO.");
+  return(0);
 }
-int bc_or(PARAMETER *sp) {    /* binaer and */
-  if(verbose) printf("bc_or ");
-  sp--;
-  if(sp[-1].typ==PL_INT && sp[0].typ==PL_INT)          sp[-1].integer|=sp[0].integer;
-  else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_FLOAT) {
-    sp[-1].integer=((int)sp[-1].real | (int)sp[0].real);
-    sp[-1].typ=PL_INT;
-  } else if(sp[-1].typ==PL_FLOAT && sp[0].typ==PL_INT) {
-    sp[-1].integer=((int)sp[-1].real | sp[0].integer);
-    sp[-1].typ=PL_INT;
-  } else if(sp[-1].typ==PL_INT && sp[0].typ==PL_FLOAT) sp[-1].integer|=(int)sp[0].real;
-  else {
-    puts("ERROR: incompatible types for OR.");
-    free_parameter(sp[0]);
-  }
-  return(-1);
-}
+#endif
+
 int bc_equal(PARAMETER *sp) {    /* binaer and */
   if(verbose) printf("bc_equal ");
   sp--;
@@ -283,7 +273,13 @@ printf("#####Sysvar ARRAY: %s not implemented\n",sysvars[n].name);
 }
 int bc_dup(PARAMETER *sp) {    /*  */
   if(verbose) printf("bc_dup ");
-  sp[0]=sp[-1];   /* Achtung, der pointerinhalt muss kopiert werden !*/
+  sp[0]=sp[-1];   
+  if(sp->typ==PL_KEY || sp->typ==PL_STRING) {
+    sp[0].pointer=malloc(sp[0].integer+1);
+    memcpy(sp[0].pointer,sp[-1].pointer,sp[0].integer+1);
+  } else if(sp->typ==PL_ARRAY) {
+    printf("WARNING: Pointerinhalt muesste hier dupliziert werden !\n");    
+  }
   return(1);
 }
 int bc_exch(PARAMETER *sp) {    /*  */
@@ -317,11 +313,11 @@ void cast_to_int(PARAMETER *sp) {
 int bc_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   if(verbose) printf("bc_%s(%d) ",psfuncs[i].name,anzarg);
   if(anzarg<psfuncs[i].pmin) {
-    xberror(42,psfuncs[i].name); /* Zu wenig Parameter  */
+    xberror(42,(char *)psfuncs[i].name); /* Zu wenig Parameter  */
     return 1-anzarg;
   }
   if(anzarg>psfuncs[i].pmax && !(psfuncs[i].pmax==-1)) {
-    xberror(45,psfuncs[i].name); /* Zu viele Parameter  */
+    xberror(45,(char *)psfuncs[i].name); /* Zu viele Parameter  */
     return 1-anzarg;
   } 
   sp-=anzarg;
@@ -388,7 +384,7 @@ int bc_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
       a.len=sp[0].integer;
       a.pointer=sp[0].pointer;
     } else 
-      xberror(47,pfuncs[i].name); /*  Parameter %s falsch, kein String */
+      xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
     
     STRING s=(psfuncs[i].routine)(a);
     free_parameter(sp[0]);
@@ -398,7 +394,7 @@ int bc_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   }
   if((psfuncs[i].opcode&FM_TYP)==F_IQUICK) {
-    int a;
+    int a=0;
     if(sp[0].typ==PL_INT)        a=sp[0].integer;
     else if(sp[0].typ==PL_FLOAT) a=(int)sp[0].real;
     else {
@@ -574,6 +570,7 @@ int bc_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
     return -anzarg;
   }  
 #endif
+
   if(comms[i].opcode&P_IGNORE) return -anzarg;
   if((comms[i].opcode&PM_TYP)==P_ARGUMENT) {
     char *w2;
@@ -663,14 +660,15 @@ int bc_pushvv(PARAMETER *sp) {    /*  */
 int bc_zuweis(PARAMETER *sp) {    /*  */
   char *key,*buf;
   int typ;
-  if(sp[-1].typ=PL_KEY) {
-    key=malloc(sp[-1].integer+1);
-    memcpy(key,sp[-1].pointer,sp[-1].integer);
-    key[sp[-1].integer]=0;
+  if(sp[-1].typ==PL_KEY) {
+    int len=sp[-1].integer;
+    key=malloc(len+1);
+    memcpy(key,sp[-1].pointer,len);
+    key[len]=0;
     if(verbose) printf("bc_zuweis_%s\n",key);
     buf=indirekt2(key);
     free(key);
-    free_parameter(sp[-1]);
+    free(sp[-1].pointer); /* free parameter */
     typ=vartype(buf);
     if(typ & ARRAYTYP) {
       ARRAY a;
@@ -687,7 +685,7 @@ int bc_zuweis(PARAMETER *sp) {    /*  */
         a.len=sp[-2].integer;
         a.pointer=sp[-2].pointer;
         zuweis_string(buf,a);
-        free_parameter(sp[-2]);
+        free(sp[-2].pointer); /* free parameter */
       } else printf("ERROR: Typen ungleich... %d %d\n",typ,sp[-2].typ);
     } else if(typ & INTTYP) {
       cast_to_int(&sp[-2]);
@@ -698,9 +696,8 @@ int bc_zuweis(PARAMETER *sp) {    /*  */
     }
     free(buf);    
     return(-2);
-  } else {
-    printf("ERROR: something is wrong with bytecode.\n");
-  }
+  } 
+  printf("ERROR: something is wrong with bytecode.\n");
   free_parameter(sp[-1]);
   return(-1);  
 }
@@ -830,13 +827,14 @@ int bc_pushv(PARAMETER *sp) {    /*  */
   char *key,*buf;
   int typ,vnr;
   if(sp[-1].typ==PL_KEY) {
-    key=malloc(sp[-1].integer+1);
-    memcpy(key,sp[-1].pointer,sp[-1].integer);
-    key[sp[-1].integer]=0;
+    int len=sp[-1].integer;
+    key=malloc(len+1);
+    memcpy(key,sp[-1].pointer,len);
+    key[len]=0;
     if(verbose) printf("bc_var_%s ",key);
     buf=indirekt2(key);
     free(key);
-    free_parameter(sp[-1]);
+    free(sp[-1].pointer);
     typ=vartype(buf);
     if(typ & ARRAYTYP) {
       printf("XBVM: Array an dieser Stelle noch nicht implementiert.\n");
@@ -870,23 +868,16 @@ int bc_pushv(PARAMETER *sp) {    /*  */
     }
      free(buf);     
     return(0);
-  } else {
-    printf("ERROR: something is wrong with bytecode.\n");
-    free_parameter(sp[-1]);
-    return(-1);
   }
+  printf("ERROR: something is wrong with bytecode.\n");
+  free_parameter(sp[-1]);
+  return(-1);
 }
 int bc_eval(PARAMETER *sp) {    /*  */
-  char *key;
-  int typ;
-  if(sp[-1].typ=PL_STRING) {
-    key=malloc(sp[-1].integer+1);
-    memcpy(key,sp[-1].pointer,sp[-1].integer);
-    key[sp[-1].integer]=0;
-    free_parameter(sp[-1]);
-    if(verbose) printf("bc_eval_<%s>\n",key);
-    kommando(key);
-    free(key);
+  if(sp[-1].typ==PL_STRING) {
+    if(verbose) printf("bc_eval_<%s>\n",sp[-1].pointer);
+    kommando(sp[-1].pointer);
+    free(sp[-1].pointer);
   } else {
     printf("ERROR: something is wrong with bytecode, no string.\n");
     free_parameter(sp[-1]);
@@ -914,7 +905,7 @@ void dump_stack(PARAMETER *p, int n) {
 PARAMETER *virtual_machine(STRING bcpc, int *npar) {
   PARAMETER *opstack=malloc(BC_STACKLEN*sizeof(PARAMETER));
   PARAMETER *osp=opstack;
-  char cmd;
+  unsigned char cmd;
   int i=0,j;
   int a,n;
   short ss;
@@ -927,97 +918,70 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
     case BC_NOOP:
       break;
     case BC_JSR:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       if(verbose) printf("bc_jsr_%d\n",a);
-      i+=sizeof(int);
       stack[sp++]=i;
       i=a;
       break;
     case BC_JMP:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       if(verbose) printf("bc_jmp_%d\n",a);
-      i+=sizeof(int);
       i=a;
       break;
     case BC_JEQ:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       if(verbose) printf("bc_jeq_%d ",a);
-      i+=sizeof(int);
-      opstack--;
-      if(opstack->typ==PL_INT) {
-        if(opstack->integer==0) i=a;
-      } else if(opstack->typ==PL_FLOAT) {
-        if(opstack->real==0) i=a;
-      } else {
-        printf("ERROR: JEQ\n");
-        free_parameter(*opstack);
-      }
-      if(verbose) {if(i==a) printf("\n");}
+      if((--opstack)->integer==0) i=a;
       break;
     case BC_BRA:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));
+      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
       if(verbose) printf("bc_bra_%d \n",ss);
-      i+=ss-1;
+      i+=ss;
+      break;
+    case BC_BEQ:
+      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      if(verbose) printf("bc_beq_%d ",ss);
+      if((--opstack)->integer==0) i+=ss;
       break;
     case BC_BSR:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));
+      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
       if(verbose) printf("bc_bsr_%d \n",ss);
       stack[sp++]=i;
-      i+=ss-1;
+      i+=ss;
       break;
     case BC_RTS:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));
       if(verbose) printf("bc_rts \n");
       i=stack[--sp];
       break;
-    case BC_BEQ:
-      memcpy(&ss,&bcpc.pointer[i],sizeof(short));
-      i+=sizeof(short);
-      if(verbose) printf("bc_beq_%d ",ss);
-      opstack--;
-      if(opstack->typ==PL_INT) {
-        if(opstack->integer==0) i+=ss-1-sizeof(short);
-      } else if(opstack->typ==PL_FLOAT) {
-        if(opstack->real==0) i+=ss-1-sizeof(short);
-      } else {
-        printf("ERROR: BEQ\n");
-        free_parameter(*opstack);
-      }
-      if(verbose) {printf("\n");}
-      break;
     case BC_BRAs:
       if(verbose) printf("bc_bra.s_%d \n",bcpc.pointer[i]); 
-      i+=bcpc.pointer[i++]-2;
+      i+=(bcpc.pointer[i++]);
       break;
     case BC_BEQs:
       ss=bcpc.pointer[i++];
       if(verbose) printf("bc_beqs_%d ",ss);
-      opstack--;
-      if(opstack->typ==PL_INT) {
-        if(opstack->integer==0) i+=ss-2;
-      } else if(opstack->typ==PL_FLOAT) {
-        if(opstack->real==0) i+=ss-2;
-      } else {
-        printf("ERROR: BEQs\n");
-        free_parameter(*opstack);
-      }
-      if(verbose) {printf("%d\n",i);}
+      if((--opstack)->integer==0) i+=ss;
       break;
     case BC_PUSHF:
-      memcpy(&d,&bcpc.pointer[i],sizeof(double));
-      i+=sizeof(double);
+      memcpy(&d,&bcpc.pointer[i],sizeof(double));i+=sizeof(double);
       opstack->real=d;
       opstack->typ=PL_FLOAT;
       opstack++;
       if(verbose) printf("%g ",d);
       break;
     case BC_PUSHI:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
-      i+=sizeof(int);
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       opstack->integer=a;
       opstack->typ=PL_INT;
       opstack++;
       if(verbose) printf("%d ",a);
+      break;
+    case BC_PUSHW:
+      memcpy(&ss,&bcpc.pointer[i],sizeof(short));i+=sizeof(short);
+      opstack->integer=ss;
+      opstack->typ=PL_INT;
+      opstack++;
+      if(verbose) printf("%d ",ss);
       break;
     case BC_PUSHB:
       opstack->integer=bcpc.pointer[i++];
@@ -1055,8 +1019,7 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       if(verbose) printf("-1 ");
       break;
     case BC_PUSHS:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
-      i+=sizeof(int);
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       opstack->integer=a;
       opstack->typ=PL_STRING;
       opstack->pointer=malloc(a+1);
@@ -1083,18 +1046,15 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       if(verbose) printf("SP=%d\n",((int)opstack-(int)osp)/sizeof(PARAMETER));  
       break;
     case BC_PUSHSYS:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
-      i+=sizeof(int);
+      a=bcpc.pointer[i++]&0xff;
       opstack+=bc_sysvar(opstack,a);
       break;
     case BC_PUSHSSYS:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
-      i+=sizeof(int);
+      a=bcpc.pointer[i++]&0xff;
       opstack+=bc_ssysvar(opstack,a);
       break;
     case BC_PUSHASYS:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
-      i+=sizeof(int);
+      a=bcpc.pointer[i++]&0xff;
       opstack+=bc_asysvar(opstack,a);
       break;
     case BC_PUSHX:
@@ -1121,23 +1081,58 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
     case BC_ADD:
       opstack+=bc_add(opstack);
       break;
+    case BC_ADDi:
+      opstack--;(opstack-1)->integer+=opstack->integer;
+      break;
+    case BC_ADDf:
+      opstack--;(opstack-1)->real+=opstack->real;
+      break;
+    case BC_ADDs:
+      opstack--; 
+      {
+        int l=(opstack-1)->integer;
+	char *p=(opstack-1)->pointer;
+        (opstack-1)->integer+=opstack->integer;
+        (opstack-1)->pointer=malloc((opstack-1)->integer+1);
+        memcpy((opstack-1)->pointer,p,l);free(p);
+        memcpy((opstack-1)->pointer+l,opstack->pointer,opstack->integer+1);
+      }
+      free(opstack->pointer);
+      break;
     case BC_OR:
-      opstack+=bc_or(opstack);
+      opstack--;
+      (opstack-1)->integer=(opstack-1)->integer | opstack->integer;
+      break;
+    case BC_XOR:
+      opstack--;
+      (opstack-1)->integer=(opstack-1)->integer ^ opstack->integer;
       break;
     case BC_SUB:
       opstack+=bc_sub(opstack);
       break;
+    case BC_SUBi:
+      opstack--;(opstack-1)->integer-=opstack->integer;
+      break;
+    case BC_SUBf:
+      opstack--;(opstack-1)->real-=opstack->real;
+      break;
     case BC_MUL:
       opstack+=bc_mul(opstack);
       break;
+    case BC_MULi:
+      opstack--;(opstack-1)->integer*=opstack->integer;
+      break;
+    case BC_MULf:
+      opstack--;(opstack-1)->real*=opstack->real;
+      break;
     case BC_DIV:
-      opstack+=bc_div(opstack);
+      opstack--;(opstack-1)->real/=opstack->real;
       break;
     case BC_POW:
       opstack+=bc_pow(opstack);
       break;
     case BC_AND:
-      opstack+=bc_and(opstack);
+      (opstack-1)->integer=(opstack-1)->integer & (opstack-2)->integer;
       break;
     case BC_EQUAL:
       opstack+=bc_equal(opstack);
@@ -1170,10 +1165,16 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       if(verbose) printf("bc_count_%d ",a);
       break;
     case BC_NEG:
-      opstack+=bc_neg(opstack);
+      bc_neg(opstack);
       break;
     case BC_NOT:
-      opstack+=bc_not(opstack);
+      (opstack-1)->integer=~(opstack-1)->integer;
+      break;
+    case BC_X2I:
+      bc_x2i(opstack);
+      break;
+    case BC_X2F:
+      bc_x2f(opstack);
       break;
     case BC_MOD:
       opstack+=bc_mod(opstack);
@@ -1200,18 +1201,17 @@ PARAMETER *virtual_machine(STRING bcpc, int *npar) {
       opstack+=bc_pusharrayelem(opstack,a);
       break;
     case BC_RESTORE:
-      memcpy(&a,&bcpc.pointer[i],sizeof(int));
+      memcpy(&a,&bcpc.pointer[i],sizeof(int));i+=sizeof(int);
       if(verbose) printf("bc_restore_%d\n",a);
-      i+=sizeof(int);
       datapointer=a;
       break;
     case BC_EVAL:
-      if(verbose) printf("bc_eval ",a);
+      if(verbose) printf("bc_eval-%d ",a);
       opstack+=bc_eval(opstack);
       break;
     default:
       printf("VM: BC_ILLEGAL instruction %2x at %d\n",(int)cmd,i);
-      memdump(&(bcpc.pointer[i]),16);
+      memdump((unsigned char *)&(bcpc.pointer[i]),16);
       *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  
       return(osp);
     }

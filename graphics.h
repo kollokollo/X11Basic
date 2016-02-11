@@ -6,6 +6,7 @@
  * COPYING for details
  */
 
+#include "options.h"
 #ifdef FRAMEBUFFER
 #include "framebuffer.h"
 #endif
@@ -24,12 +25,30 @@
 #ifdef USE_SDL
 extern unsigned int fcolor,bcolor;
 extern SDL_Surface *display[];
-
+extern const unsigned char spat_a816[];
+extern const unsigned char asciiTable[];
 #endif
 #ifdef WINDOWS_NATIVE
   extern HANDLE keyevent,buttonevent,motionevent;
   #define XSetLineAttributes(a,b,c,d,e,f) ; 
 #endif
+
+
+
+/* Orginal VDI Graphmodi */
+
+#define GRAPHMD_REPLACE 1
+#define GRAPHMD_TRANS   2
+#define GRAPHMD_XOR     3
+#define GRAPHMD_ERASE   4
+
+
+/* X Font definitions */
+
+#define FONTBIG   "-*-fixed-*-r-normal-*-16-*-iso8859-*"
+#define FONT8x8   "-*-lucidatypewriter-medium-r-*-*-12-*-*-*-m-*-*-*"
+#define FONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
+
 
 
 #ifdef WINDOWS_NATIVE
@@ -118,19 +137,19 @@ extern SDL_Surface *display[];
 
 extern int marker_typ,marker_size;
 extern int boundary;
-extern int baseline,chh,chw;
+extern unsigned int baseline,chh,chw;
 extern double ltextwinkel,ltextxfaktor,ltextyfaktor;
 extern int ltextpflg;
 
 void line(int x1,int y1,int x2,int y2);
-void box(int x1,int y1,int x2, int y2);
+void mybox(int x1,int y1,int x2, int y2);
 void pbox(int x1,int y1,int x2, int y2);
+void draw_string(int x, int y, char *text,int len);
 int get_point(int x, int y);
 int get_fcolor();
 int get_bcolor();
 void set_graphmode(int n);
 void set_font(char *name);
-int get_graphmode();
 void set_fill(int c);
 void ffill(int,int,int,int);
 int mousex();

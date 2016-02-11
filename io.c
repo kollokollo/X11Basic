@@ -13,25 +13,32 @@
 #include <stdlib.h>
 
 #include <errno.h>
+#include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
 
-#ifndef WINDOWS
+
 #ifdef __hpux
 #define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
 #define CRTS_IFLOW      0x00020000      /* RTS flow control of input */
 #define CRTSCTS         (CRTS_IFLOW|CCTS_OFLOW) /* RTS/CTS flow control */
 #include <sys/termios.h>
-#else
-#include <termios.h>
 #endif
+
+#ifdef WINDOWS
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#endif
+
+#ifndef WINDOWS
+#include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #ifdef HAVE_SYS_KD_H
 #include <sys/kd.h>
 #endif
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <netinet/in.h>
@@ -57,8 +64,14 @@
 #include "file.h"
 #include "defs.h"
 #include "globals.h"
-#include "protos.h"
+#include "xbasic.h"
+#include "x11basic.h"
+#include "wort_sep.h"
+#include "parser.h"
+#include "array.h"
+#include "variablen.h"
 #include "io.h"
+#include "sfunctions.h"
 
 #ifdef WINDOWS
 #undef HAVE_INOTIFY_INIT
@@ -67,6 +80,10 @@
 #include <sys/inotify.h>
 #endif
 
+static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port);
+static int make_socket(unsigned short int port);
+static FILE *get_fileptr(int n);
+static int make_UDP_socket(unsigned short int port);
 
 /* Get the number of rows and columns for this screen. */
 void getrowcols(int *rows, int *cols) {
@@ -95,7 +112,7 @@ void getrowcols(int *rows, int *cols) {
 /*******************************/
 /* Ein- und Ausgaberoutinen    */
 
-FILE *get_fileptr(int n) {
+static FILE *get_fileptr(int n) {
   if(n==-1) return(stderr);  
   else if(n==-2) return(stdin);  
   else if(n==-4) return(stdout);  
@@ -287,12 +304,10 @@ STRING f_inputs(char *n) {
 void c_lineinput(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   char *u,*text;
-  char inbuf[MAXSTRLEN];
   int e;
   FILE *fff=stdin;
   if(n[0]=='#') {
     char *buffer=malloc(strlen(n)+1);
-    int i;
     
     wort_sep(n,',',TRUE,buffer,s);
     fff=get_fileptr(get_number(buffer));
@@ -340,7 +355,7 @@ int get_number(char *w) {
 
 /* Internetroutinen */
 
-int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port) {
+static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port) {
   struct hostent *hostinfo;
   name->sin_family=AF_INET;
   name->sin_port=htons(port);
@@ -355,8 +370,6 @@ int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short 
 
 void c_connect(PARAMETER *plist,int e) {
   struct sockaddr_in host_address;
-  int host_address_size;
-  unsigned char *address_holder;
   int sock;
   FILE *fff=get_fileptr(plist[0].integer);
   if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
@@ -367,7 +380,7 @@ void c_connect(PARAMETER *plist,int e) {
       io_error(errno,"connect");    
   }
 }
-int make_socket(unsigned short int port) {
+static int make_socket(unsigned short int port) {
   int sock;
   struct sockaddr_in name;
   sock=socket(PF_INET, SOCK_STREAM,0);
@@ -378,7 +391,7 @@ int make_socket(unsigned short int port) {
   if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
   return(sock);
 }
-int make_UDP_socket(unsigned short int port) {
+static int make_UDP_socket(unsigned short int port) {
   int sock;
   struct sockaddr_in name;
 
@@ -403,7 +416,7 @@ int make_UDP_socket(unsigned short int port) {
 
 void c_open(PARAMETER *plist, int e) {
   char modus,special=0;
-  int number=1,port=0,i=0;
+  int number=1,port=0;
   char *filename=plist[2].pointer;
   char *modus2="r";
   int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
@@ -518,7 +531,7 @@ void c_open(PARAMETER *plist, int e) {
 #endif
           dptr[number]=fdopen(sock2,modus2);
 	}
-      } else printf("Socket #d nicht geoeffnet.\n",port); 
+      } else printf("Socket %d nicht geoeffnet.\n",port); 
     } else if(special=='U') { /* UDP datagramms */
       int sock;
 #ifdef DEBUG
@@ -701,7 +714,6 @@ void c_send(PARAMETER *plist, int e) {
     sock=fileno(fff);
     if(e>=4) {
       struct sockaddr_in host_address;
-      int host_address_size;
 
       memset((void*)&host_address,0,sizeof(host_address));
       host_address.sin_family=AF_INET;
@@ -721,7 +733,7 @@ void c_receive(PARAMETER *plist, int e) {
   FILE *fff;
   char buffer[1500];
 	 struct	sockaddr_in	host_address;
-	 int	host_address_size;
+	 socklen_t 	host_address_size;
 	 unsigned	char	*address_holder;
 
   if(e>=2) {
@@ -747,7 +759,7 @@ address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
   }
 }
 
-const struct {int sf; char xf; } ioemaptable[] = {
+static const struct {int sf; char xf; } ioemaptable[] = {
     { 0,   7 }, /* 0: No error status currently */
     { EPERM,   -51 }, /* 1: Not super-user */
     { ENOENT,  -33 }, /* 2: No such file or directory*/
@@ -839,7 +851,7 @@ const struct {int sf; char xf; } ioemaptable[] = {
     { ECONNREFUSED,-111 }  /* 111: Connection refused */
 #endif  
   };
-const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
+static const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
   
 void io_error(int n, char *s) {
   int i;
@@ -1127,8 +1139,7 @@ void c_out(char *n) {
   int e=wort_sep(n,',',TRUE,v,w);
   if(e>1) {
     int i=get_number(v);
-    int typ,vnr,j,a=1;
-    char *r;
+    int typ,j,a=1;
     FILE *fff=get_fileptr(i);
 
     if(fff!=NULL) {
@@ -1411,7 +1422,7 @@ int f_ioctl(PARAMETER *plist,int e) {
   if(e>=2) {
     int sock;
     fff=get_fileptr(plist[0].integer);
-    if(fff==NULL) {xberror(24,"");return;} /* File nicht geoeffnet */    
+    if(fff==NULL) {xberror(24,"");return(-1);} /* File nicht geoeffnet */    
     sock=fileno(fff);
 #ifndef WINDOWS
     if (e==2) ret=ioctl(sock,plist[1].integer);

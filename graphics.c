@@ -13,8 +13,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
+
 #include "graphics.h"
 
+#include "aes.h"
 #include "window.h"
 
 
@@ -34,10 +36,6 @@ double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
 int ltextpflg=0;
 
 
-#ifdef FRAMEBUFFER
-#include "bitmaps/bombe.bmp"
-#include "bitmaps/bombe_mask.bmp"
-#endif
 
 #ifdef USE_X11
 #include "bitmaps/bombe_gross.bmp"
@@ -56,11 +54,14 @@ void line(int x1,int y1,int x2,int y2) {
   DrawLine(x1,y1,x2,y2);
 #endif
 }
-void box(int x1,int y1,int x2, int y2) {
-  DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
-}
+
 void pbox(int x1,int y1,int x2, int y2) {
   FillRectangle(min(x1,x2),min(y1,y2),abs(x2-x1)+1,abs(y2-y1)+1); 
+}
+
+
+void mybox(int x1,int y1,int x2, int y2) {
+  DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
 }
 int get_point(int x, int y) {
     int d,r;
@@ -113,6 +114,10 @@ int get_bcolor() {
   return(bcolor);
 #endif
 }
+
+
+int global_graphmode=1;
+
 void set_graphmode(int n) { 
 /*            n=1 copy src
               n=2 src xor dest
@@ -122,13 +127,15 @@ void set_graphmode(int n) {
               n<0 uebergibt -n an X-Server
  */  
 
+  global_graphmode=n;
+
 #ifdef USE_X11
   XGCValues gc_val;  
   switch (n) {
-    case 1:gc_val.function=GXcopy;       break;
-    case 2:gc_val.function=GXxor;        break;
-    case 3:gc_val.function=GXinvert;     break;
-    case 4:gc_val.function=GXand;        break;
+    case GRAPHMD_REPLACE:gc_val.function=GXcopy;       break;
+    case GRAPHMD_TRANS:gc_val.function=GXxor;        break;
+    case GRAPHMD_XOR:gc_val.function=GXinvert;     break;
+    case GRAPHMD_ERASE:gc_val.function=GXand;        break;
     case 5:gc_val.function=GXequiv;      break;
     case 6:gc_val.function=GXandInverted;break;
     case 7:gc_val.function=GXor;         break;
@@ -142,10 +149,10 @@ void set_graphmode(int n) {
 #endif
 #ifdef FRAMEBUFFER
   switch (n) {
-    case 1:FB_set_alpha(255);break;
-    case 2:break;
-    case 3:break;
-    case 4:FB_set_alpha(127);break;
+    case GRAPHMD_REPLACE:FB_set_alpha(255);break;
+    case GRAPHMD_TRANS:break;
+    case GRAPHMD_XOR:break;
+    case GRAPHMD_ERASE:FB_set_alpha(127);break;
     case 5:break;
     default:
     if(n>=0) FB_set_alpha(n);
@@ -154,38 +161,86 @@ void set_graphmode(int n) {
   } 
 #endif
 }
+
+/* NAME="BIG"
+        "SMALL"
+	"8x16"
+	"8x8"
+	"5x7"
+
+*/
+
 void set_font(char *name) {
 #ifdef USE_X11
    XGCValues gc_val;  
    XFontStruct *fs;
-   fs=XLoadQueryFont(display[usewindow], name);
+   if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) fs=XLoadQueryFont(display[usewindow], FONTSMALL);
+   else if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) fs=XLoadQueryFont(display[usewindow], FONTBIG);
+   else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) fs=XLoadQueryFont(display[usewindow], FONT8x8);
+   else fs=XLoadQueryFont(display[usewindow], name);
    if(fs!=NULL)  {
      gc_val.font=fs->fid;
      XChangeGC(display[usewindow], gc[usewindow],  GCFont, &gc_val);
    }
 #endif
+#ifdef FRAMEBUFFER
+  if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
+    chw=8;
+    chh=16;
+    baseline=chh-2;   
+  } else {
+    chw=CharWidth;
+    chh=CharHeight;
+    baseline=chh-0;
+  }
+#endif
+#ifdef USE_SDL
+  if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
+    chw=8;
+    chh=16;
+    baseline=chh-2; 
+    gfxPrimitivesSetFont(spat_a816,chw,chh); 	
+  } else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) {
+    chw=8;
+    chh=8;
+    baseline=chh-0;
+    gfxPrimitivesSetFont(NULL,chw,chh); 	
+  } else if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) {
+    chw=5;
+    chh=7;
+    baseline=chh-0;
+    gfxPrimitivesSetFont(asciiTable,chw,chh); 	
+  }
+#endif
 }
 
-int get_graphmode() {
+
+void draw_string(int x, int y, char *text,int len) {
 #ifdef WINDOWS_NATIVE
-  return(0);
-#endif
-#ifdef USE_X11
-  XGCValues gc_val;  
-  XGetGCValues(display[usewindow], gc[usewindow],  GCFunction, &gc_val);
-  return(gc_val.function);
+  TextOut(bitcon[usewindow],x,(y-baseline),text,len);
 #endif
 #ifdef FRAMEBUFFER
-  if(screen.alpha==255) return(0);
-  if(screen.alpha==127) return(4);
-  return(screen.alpha);
+  FB_DrawString(x,y-chh+2,text,len);
+#endif
+#ifdef USE_X11
+ if(global_graphmode==GRAPHMD_REPLACE) XDrawImageString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+ else XDrawString(display[usewindow],pix[usewindow],gc[usewindow],x,y,text,len);
+#endif
+#ifdef USE_SDL
+  char s[len+1];
+  memcpy(s,text,len);
+  s[len]=0;
+  stringColor(display[usewindow],x,y-chh+4,s,fcolor);
 #endif
 }
+
+
+
 void set_fill(int c) {
 #ifdef USE_X11
 #include "bitmaps/fill.xbm"
   static Pixmap fill_pattern;
-  static fill_alloc=0;
+  static int fill_alloc=0;
     if(fill_alloc) XFreePixmap(display[usewindow],fill_pattern);
     fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
                 fill_bits+c*fill_width*fill_width/8,fill_width,fill_width);
@@ -198,7 +253,8 @@ int mousex() {
 #ifdef WINDOWS_NATIVE
   return(global_mousex);
 #endif
-  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  int root_x_return, root_y_return,win_x_return, win_y_return;
+  unsigned int mask_return;
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
@@ -214,7 +270,8 @@ int mousey() {
 #ifdef WINDOWS_NATIVE
   return(global_mousey);
 #endif
-    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+    int root_x_return, root_y_return,win_x_return, win_y_return;
+    unsigned int mask_return;
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
@@ -231,7 +288,8 @@ int mousek() {
 #ifdef WINDOWS_NATIVE
   return(global_mousek);
 #endif
-   int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+   int root_x_return, root_y_return,win_x_return, win_y_return;
+   unsigned int mask_return;
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
@@ -248,7 +306,8 @@ int mouses() {
 #ifdef WINDOWS_NATIVE
   return(global_mouses);
 #endif
-  int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
+  int root_x_return, root_y_return,win_x_return, win_y_return;
+  unsigned int mask_return;
 #ifdef USE_X11
    Window root_return,child_return;
    graphics();
@@ -282,7 +341,8 @@ unsigned int get_color(int r, int g, int b) {
 #endif
 #ifdef USE_SDL
   return((unsigned int)SDL_MapRGB(display[usewindow]->format, r>>8, g>>8, b>>8)<<8 |0xff);
-#else
+#endif
+#ifdef USE_X11
   Colormap map;
   XColor pixcolor;
 
@@ -351,12 +411,6 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 #define SCAN_WHILE  1
 #define FF_FILLED   (!0)
 
-typedef struct {
-	int	x;
-	int	y;
-	int	w;
-	int	h;
-} ARECT;
 
 extern ARECT sbox;
 
@@ -578,7 +632,7 @@ void fetch_icon_pixmap(int nummer) {
   char t[10];
   sprintf(t,"%2d",nummer);
   icon_pixmap[nummer]=XCreateBitmapFromData(display[nummer],win[nummer],
-    bombe_gross_bits,bombe_gross_width,bombe_gross_height);
+   (char *)bombe_gross_bits,bombe_gross_width,bombe_gross_height);
   gc = XCreateGC(display[nummer], icon_pixmap[nummer], 0, &gc_val);
   XSetForeground(display[nummer], gc, 0);
   XDrawString(display[nummer],icon_pixmap[nummer],gc,9,24,t,strlen(t));

@@ -11,6 +11,9 @@
   #include <process.h>
 #endif
 
+#include "aes.h"
+
+
 #define WINDOW_DEFAULT_W 640
 #define WINDOW_DEFAULT_H 400
 #ifdef SAVE_RAM
@@ -26,8 +29,11 @@ int create_window(char *, char *,unsigned int,unsigned int,unsigned int,unsigned
 void open_window( int);
 void close_window(int);
 int rsrc_load(char *);
-
-
+void put_bitmap(char *adr,int x,int y,int w, int h);
+int form_dial(int fo_diflag, int x1,int y1,int w1,int h1,int x2,int y2,int w2,int h2);
+void graphics();
+void activate();
+int form_do(OBJECT *tree);
 
 #ifdef USE_X11
 void handle_event(int, XEvent *);

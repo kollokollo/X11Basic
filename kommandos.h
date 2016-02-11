@@ -60,6 +60,7 @@ void c_on(char *);
 void c_onbreak(char *);
 void c_pause    (PARAMETER *,int);
 void c_pipe     (PARAMETER *,int);
+void c_playsound (PARAMETER *,int);
 void c_poke     (PARAMETER *,int);
 void c_print    (char *);
 void c_quit     (PARAMETER *,int);
@@ -83,6 +84,7 @@ void c_tron     ();
 void c_unget    (char *);
 void c_version  (char *);
 void c_void     (char *);
+void c_wave    (PARAMETER *,int);
 void c_while    (char *);
 void c_wort_sep (char *);
 
@@ -101,7 +103,8 @@ void c_run(char *),c_list(PARAMETER *,int),c_plist(char *),c_out(char *);
 
 void c_close(char *),c_lineinput(char *);
 void c_dolocal(char *,char *);
-
+void c_doerase(char *w);
+void c_doclr(char *v);
 void c_link(PARAMETER *,int);
 void c_randomize(PARAMETER *,int);
 void c_unmap(PARAMETER *,int);
@@ -111,3 +114,4 @@ void c_onmenu(char *),c_case(char *),c_select(char *),c_endselect(char *);
 void c_onerror(char *);
 void c_let(char *);
 void c_restore(PARAMETER *,int);
+int do_wort_sep(char *n);

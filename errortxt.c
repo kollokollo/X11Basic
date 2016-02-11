@@ -5,6 +5,7 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+#include "config.h"
 #include "options.h"
 #include <stdio.h>
 
@@ -199,7 +200,7 @@ const char *errortxt[] = {
 /*  a*/  "Error 97",
 /*  98*/  "Error 98",
 /*  99*/  "Error 99",
-/* 100*/  "X11-BASIC Version 1.16  Copyright (c) 1997-2010 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2011 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",

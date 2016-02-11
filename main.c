@@ -17,26 +17,17 @@
 #include <sysexits.h>
 #endif
 #include "defs.h"
-#include "ptypes.h"
+#include "x11basic.h"
+#include "file.h"
 #include "parser.h"
+#include "wort_sep.h"
+#include "kommandos.h"
 
-void reset_input_mode();
-void x11basicStartup();
-void programmlauf();
+
 char *do_gets (char *);
-
-void loadprg(char *);
-void kommando(char *);
-
-extern int param_anzahl;
-extern char **param_argumente;
-extern const char xbasic_name[];
-extern int pc,sp,err,errcont,everyflag,batch,echoflag;
 
 const char version[]=VERSION;        /* Programmversion          */
 const char vdate[]=VERSION_DATE;
-extern const char libversion[];
-extern const char libvdate[];
 int loadfile=FALSE;
 #ifdef GERMAN
 char ifilename[100]="neu.bas";       /* Standartfile             */
@@ -52,7 +43,7 @@ char *program[MAXPRGLEN];
 void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2010 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2011 (c) *\n"
          "*                                                        *\n"
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"
@@ -125,7 +116,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
       }
     }
    }
-   if(quitflag) c_quit("",0);
+   if(quitflag) c_quit(NULL,0);
 }
 #ifdef WINDOWS
 
@@ -164,7 +155,7 @@ int main(int anzahl, char *argumente[]) {
     echoflag=batch=0;
     if(daemonf) zw=simple_gets("");
     else zw=do_gets("> ");
-    if(zw==NULL) c_quit("",0);
+    if(zw==NULL) c_quit(NULL,0);
     else {
       strcpy(buffer,zw);
       kommando(buffer);

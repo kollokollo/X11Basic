@@ -7,7 +7,7 @@
  */
  
 #ifdef WINDOWS
-#define FD_SETSIZE 4096
+//#define FD_SETSIZE 4096
 #define EINPROGRESS   WSAEINPROGRESS
 #define EWOULDBLOCK   WSAEWOULDBLOCK
 #define gettimeofday(a,b) QueryPerformanceCounter(a)
@@ -18,16 +18,15 @@
 #define ioctlsocket(a,b,c) ioctl(a,b,c)
 #endif
 
- 
+char *do_gets (char *prompt);
+int kbhit();
+
 void io_error(int,char *);
 
 void getrowcols(int *rows, int *cols);
-FILE *get_fileptr(int n);
+
 STRING longlineinput(FILE *n);
 int get_number(char *w);
-int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port);
-int make_socket(unsigned short int port);
-int make_UDP_socket(unsigned short int port);
 int inp8(PARAMETER *plist,int e);
 int inpf(PARAMETER *plist,int e);
 int inp16(PARAMETER *plist,int e);

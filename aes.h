@@ -5,6 +5,8 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+#ifndef __aes__
+#define __aes__
 
 #define GEMFONT      "-*-fixed-*-r-normal-*-16-*-iso8859-*"
 #define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
@@ -51,6 +53,19 @@
 #define SHADOWED 0x20
 #define WHITEBAK 0x40
 #define DRAW3D 0x80
+
+
+  #undef BLACK
+  #undef WHITE
+  #undef RED
+  #undef GREEN
+  #undef BLUE     
+  #undef YELLOW   
+  #undef MAGENTA  
+
+
+
+
 						/* Object colors	*/
 #define WHITE 0
 #define BLACK 1
@@ -122,8 +137,8 @@
 typedef struct {
 	int	x;
 	int	y;
-	int	w;
-	int	h;
+	unsigned int	w;
+	unsigned int	h;
 } ARECT;
 
 
@@ -319,7 +334,7 @@ typedef struct { unsigned short r,g,b;} AESRGBCOLOR;
 /* Prototypes */
 
 extern RSHDR *rsrc;
-extern int chw,chh,baseline,depth;
+extern unsigned int chw,chh,baseline,depth;
 extern int gem_colors[];
 extern ARECT sbox;
 
@@ -329,6 +344,8 @@ void gem_init();
 void load_GEMFONT(int n);
 void box_center(ARECT *b);
 int form_alert(int dbut,char *n);
+int form_alert2(int dbut,char *n, char *tval);
+
 int form_center(OBJECT *tree, int *x, int *y, int *w, int *h);
 
 int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr);
@@ -340,6 +357,11 @@ int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty);
 
 int objc_offset(OBJECT *tree,int object,int *x,int *y);
 int objc_find(OBJECT *tree,int x,int y);
+int finded(OBJECT *tree,int start, int r);
+void draw_edcursor(OBJECT *tree,int ndx);
+int rootob(OBJECT *tree,int onr);
+void WSWAP(char *adr);
+void relobxy(OBJECT *tree,int ndx,int *x, int *y);
+int rsrc_load(char *filename);
 
-
-
+#endif

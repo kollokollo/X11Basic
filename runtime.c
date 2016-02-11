@@ -14,7 +14,7 @@
 #include <string.h>
 #include <signal.h>
 #include "ptypes.h"
-#include "protos.h"
+#include "x11basic.h"
 #include "globals.h"
 #include "options.h"
 

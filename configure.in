@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.16], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.17], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -131,6 +131,12 @@ AC_CHECK_LIB([m], [log1p], AC_DEFINE(HAVE_LOG1P,1,[log1p in Mathlib]))
 AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
 # `-lncurses':
 AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses")
+
+# `-lasound':
+AC_CHECK_LIB([asound], [snd_pcm_recover], [
+libs="$libs -lasound"
+AC_DEFINE(HAVE_ALSA,1,[snd_pcm_recover in asound])
+],,[$libs])
 
 # `-lreadline':
 AC_CHECK_LIB([readline], [readline], [

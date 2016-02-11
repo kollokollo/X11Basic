@@ -16,7 +16,7 @@
 #include "options.h"
 #include "vtypes.h"
 #include "globals.h"
-#include "protos.h"
+
 
 /* Falls mit Kontrollsystem  */
 

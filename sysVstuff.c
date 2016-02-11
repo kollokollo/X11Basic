@@ -36,6 +36,7 @@
 #define MAX_SEND_SIZE 80
 #define SEM_RESOURCE_MAX         1        /* Initial value of all semaphores */
 
+void io_error(int,char *);
 
 #if 0
 struct mymsgbuf {
@@ -279,20 +280,17 @@ void dispval(int sid, int member) {
 
 
 int shm_malloc(size_t segsize, key_t key) {
-  int   shmid,cntr,i;
-
-        /* Open the shared memory segment - create if necessary */
+  int   shmid;
+  /* Open the shared memory segment - create if necessary */
 #ifndef WINDOWS
 #ifndef __CYGWIN__
-        if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
- 
-                 /* Segment probably already exists - try as a client */
-                 if((shmid = shmget(key, segsize, 0)) == -1) {
-                     
-                    io_error(errno,"SHM_MALLOC");    /* shm_malloc error.*/ 
-                         return(-1);
-                 }
-        }
+  if((shmid = shmget(key, segsize, IPC_CREAT|IPC_EXCL|0666)) == -1)  {
+    /* Segment probably already exists - try as a client */
+    if((shmid=shmget(key,segsize,0))==-1) {
+      io_error(errno,"SHM_MALLOC");    /* shm_malloc error.*/ 
+      return(-1);
+    }
+  }
 #endif       
 #endif 
   return(shmid);

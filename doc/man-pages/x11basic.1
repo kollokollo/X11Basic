@@ -1,4 +1,4 @@
-.TH X11BASIC 1 10-Aug-2004 "Version 1.10" "Linux Basic Interpreter"
+.TH X11BASIC 1 10-Aug-2011 "Version 1.17" "Basic Interpreter"
 .SH NAME
 xbasic (X11-Basic) \- Basic interpreter and shell
 .SH SYNOPSIS
@@ -7,16 +7,21 @@ xbasic (X11-Basic) \- Basic interpreter and shell
 
 .SH DESCRIPTION
 
-X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+X11-Basic is a dialect of the BASIC programming language with graphics
 capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on moden 
+full graphical visualisation into the easy to learn basic language on modern 
 computers.
+
+On UNIX and linux systems, the X11 graphics engine can be used as
+well as the SDL library, the framebuffer devices or no graphics at all. The
+MS WINDOWS version supports only SDL (or no graphics at all). On LINUX systems
+the ALSA sound engine can be used. 
 
 The syntax is most similar to the old GFA-Basic ATARI ST
 implementation. Old GFA-programs should run with only few changes. Also 
 DOS/QBASIC programmers will feel comfortable.
 
-Old ANSI-Basic programs (with line numbers) can be converted to X11-Basic 
+Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic 
 with the 
 .I bas2x11basic 
 program (see the man page 
@@ -24,11 +29,11 @@ program (see the man page
 ).
 
 .IR xbasic 
-is a script interpreter. It interpretes basic command-Files.
-It can run in interactive and batch-mode.
+is the script interpreter. It interpretes basic command-Files.
+It can run in interactive mode and batch mode.
 A psydocompiler can be used to make stand-alone-binaries.
 
-The X11-Basic environment contains a library of GEM GUI functions.  This makes
+The X11-Basic environment contains a library of GUI functions.  This makes
 writing GUI programs in X11-Basic faster and easier than programming with
 native GUI tools.
 
@@ -73,7 +78,7 @@ Readline offers editing capabilities while the user is
 entering the line. By default, the line editing commands
 are similar to those of emacs. 
  
-.B To quit program
+.B To quit the program
 simply enter 
 .IR quit
 or press 
@@ -119,8 +124,8 @@ stand-alone binaries out of Basic source code. Actually this "compiler" is not
 a real compiler, since the source code is still interpreted on runtime. But the
 source code is linked to the X11-Basic library so there results one 
 independant executable. Another advantage is that it is quite hard to extract a
-full running *.bas File from this binary since the code is compressd in a way. 
-You will find the compiler in 
+full running *.bas file from this binary since the code is compressd in a way. 
+You will find the compiler souce code in 
 .I /usr/share/doc/packages/X11Basic/examples/compiler/xbc.bas. See
 .I xbc(1).
 Yes, the compiler compiles itself. 
@@ -129,10 +134,8 @@ Just make sure you have built the shared library
 and the library for static linking before.
 .SH The X11-Basic Language
 .SS Variables
-At the moment, X11-Basic only recognizes 2 kind of vars; Strings and Doubles.
-.nf
-!!! The integers are not yet fully implemented. So please
-!!! do not use them at the moment.
+X11-Basic recognizes three types of variables; floating point numbers, integer
+numbers and charackter strings. Also arrays of each of these types are used.
 .fi
 
 Variable names and commands are case insensitive. Names of variables are
@@ -140,6 +143,13 @@ limited of a number of characters or digits specified in defs.h (default 64)
 and have to begin with a character. Each name is bound to only one kind of
 variable; A$ is a whole different variable(value) than A which is different
 from A(1,1) or A$(1,1).
+
+.B Integer Variables
+
+Integer Variables are denoted by a % at the end of their names. Integer
+variables can hold only (32 bit) integer numbers. The calculation can be done
+faster and no rounding errors can occur. 
+
 
 .B String variables
 
@@ -206,18 +216,15 @@ DATE$         current date
 .SS Conditions
 
 Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
-Those definitions are defined in defs.h and could be changed, but that
-is not recommended. Because BASIC doesn't have a seperate boolean operators for
-conditions and expressions, using an boolean operator (AND,OR,XOR,NOT) may give
-spurious results. When on each site a value of an 0 or -1 is used, it's assumed
-as an condition, if it's not, it considered an expression. Problems could
-occure if you use boolean operators with negative numbers, but that is also
-unrecommended because the outcome of such an expression is highly platform
-depended.
+As a consequence, boolean operators like AND, OR, XOR etc. are applied as a
+bitwise operation. This way they an be used in expressions as well as in
+conditions.
 
-.SS Numbers
+.SS Numbers and Constants
 
-Numbers may preceed 0x to represent hex values.
+Number constants may preceed 0x to represent hex values. String constants are
+maked with pairs of "". Array constants have following format: 
+[ , , ; , , ; , , ].
 
 .SS Operators
 
@@ -372,7 +379,7 @@ SEEK #n,d               -- Place filepointer on new absolute position d
 SELECT                  -- SELECT statement
 SETENV t$=a$            -- Sets environmentvar t$ using value a$
 SORT a(),n[,b()]        -- Sort array
-SOUND f                 -- sound the internal speaker (frequency f [Hz])
+SOUND channel,freq      -- produce a sound (frequency f [Hz])
 SWAP
 SYSTEM t$               -- excecute shell with command t$
 TROFF                   -- Trace mode off
@@ -695,8 +702,8 @@ ENDFUNCTION
 .fi
 
 .SH VERSION
-Page was created for V.1.10
-.SH BUG REPORTS       
+Page was created for V.1.17
+.SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should
 report it. But first, you should make sure that it really is
@@ -717,7 +724,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2004 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2011 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public
@@ -731,4 +738,4 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE. See the GNU General Public License for more
 details.
 .SH SEE ALSO
-tcsh(1), sh(1), readline(3), xbc(1), bas211basic(1)
+tcsh(1), sh(1), readline(3), xbc(1), bas211basic(1), xb2c(1), xbbc(1), xbvm(1)

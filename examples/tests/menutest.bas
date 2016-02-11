@@ -8,17 +8,6 @@ NEXT i
 oh=0
 field$(i)=""
 print i
-DATA "INFO","  Menutest"
-DATA "---------------"
-DATA "- Access.1","- Access.2","- Access.3","- Access.4","- Access.5"
-DATA "- Access.6",""
-DATA "FILE","  new","  open ...","  save","  save as ...","--------------"
-DATA "  print","--------------","  Quit",""
-DATA "EDIT","  cut","  copy","  paste","----------","  help1","  helper"
-DATA "  assist",""
-DATA "HELP","  online help","--------------","  edifac","  editor","  edilink"
-DATA "  edouard",""
-DATA "***"
 
 grau=get_color(32000,32000,32000)
 color grau
@@ -32,6 +21,17 @@ DO
   MENU 
 LOOP
 quit
+DATA "INFO","  Menutest"
+DATA "---------------"
+DATA "- Access.1","- Access.2","- Access.3","- Access.4","- Access.5"
+DATA "- Access.6",""
+DATA "FILE","  new","  open ...","  save","  save as ...","--------------"
+DATA "  print","--------------","  Quit",""
+DATA "EDIT","  cut","  copy","  paste","----------","  help1","  helper"
+DATA "  assist",""
+DATA "HELP","  online help","--------------","  edifac","  editor","  edilink"
+DATA "  edouard",""
+DATA "***"
 
 PROCEDURE menuaction(k)
   local b

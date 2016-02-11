@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sysexits.h>
+#include <math.h>
 
 #include <errno.h>
 #include <string.h>
@@ -30,9 +31,11 @@
 #include "defs.h"
 #include "window.h"
 #include "framebuffer.h"
+#include "bitmap.h"
 
 extern struct fb_var_screeninfo vinfo;
 extern struct fb_fix_screeninfo finfo;
+
 
 int fbfd = -1;
 struct fb_var_screeninfo vinfo;
@@ -293,7 +296,6 @@ void FB_DrawLine(int x0, int y0, int x1, int y1,unsigned short color) {
     }
   }
 }
-#include <math.h>
 #define HYPOT(x,y) sqrt((double)(x)*(double)(x)+(double)(y)*(double)(y)) 
 
 void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short color) {
@@ -720,7 +722,8 @@ void Fb_BlitText816(int x, int y, unsigned short aColor, unsigned short aBackCol
   }
 }
 
-extern int ltextpflg,chh;
+extern int ltextpflg;
+extern unsigned int chh;
 
 void FB_DrawString(int x, int y, char *t,int len) {
   if(len>0) {
@@ -803,7 +806,8 @@ char *FB_get_image(int x, int y, int w,int h, int *len) {
 }
 void FB_put_image(char *data,int x, int y) {
   if(x<screen.clip_x||y<screen.clip_y||x>screen.width||y>screen.height) return;
-  bmp2bitmap(data,screen.pixels+y*screen.scanline,x,screen.width,screen.height-y,16);
+  bmp2bitmap(data,screen.pixels+y*screen.scanline,
+             x,screen.width,screen.height-y,16,NULL);
 }
 
 

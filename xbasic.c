@@ -14,9 +14,9 @@
 
 
 
-                       VERSION 1.16
+                       VERSION 1.17
 
-            (C) 1997-2008 by Markus Hoffmann
+            (C) 1997-2011 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -46,13 +46,18 @@
 
 #include "config.h"
 #include "defs.h"
-#include "options.h"
+#include "xbasic.h"
 #include "ptypes.h"
-#include "protos.h"
 #include "kommandos.h"
 #include "gkommandos.h"
 #include "globals.h"
 #include "io.h"
+#include "file.h"
+#include "array.h"
+#include "wort_sep.h"
+#include "parser.h"
+#include "variablen.h"
+#include "x11basic.h"
 
 
 const char libversion[]=VERSION;           /* Programmversion           */
@@ -317,6 +322,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "PELLIPSE" , c_pellipse,   4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
  { P_PLISTE,     "PIPE" , c_pipe,   2,2,{PL_FILENR,PL_FILENR}},
+ { P_PLISTE,     "PLAYSOUND",     c_playsound, 2,4,{PL_INT,PL_STRING,PL_NUMBER,PL_NUMBER}},
  { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PLOT"     , c_plot,       2,2,{PL_INT,PL_INT}},
@@ -335,7 +341,7 @@ const COMMAND comms[]= {
   { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALL,PL_NUMBER}},
  */
 #ifndef NOGRAPHICS
- { P_PLISTE,   "PUT"  , c_put,      3,4,{PL_INT,PL_INT,PL_STRING,PL_INT}},
+ { P_PLISTE,   "PUT"  , c_put,      3,4,{PL_INT,PL_INT,PL_STRING,PL_NUMBER}},
 #endif
  { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,-1},
 #ifndef NOGRAPHICS
@@ -389,7 +395,7 @@ const COMMAND comms[]= {
  { P_PLISTE,	"SIZEW"    , c_sizew,      3,3,{PL_FILENR,PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,    "SORT",     c_sort,        1,3,{PL_ARRAYVAR,PL_INT,PL_IARRAYVAR}},
- { P_PLISTE,    "SOUND",     c_sound,        1,1,{PL_INT}},
+ { P_PLISTE,    "SOUND",     c_sound,        2,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 
  { P_GOSUB,     "SPAWN"    , c_spawn,1,1,{PL_PROC}},
  { P_ARGUMENT,	"SPLIT"    , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
@@ -435,6 +441,7 @@ const COMMAND comms[]= {
  { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
 #endif
  { P_PLISTE,     "WATCH"     , c_watch,1,1,{PL_STRING}},
+ { P_PLISTE,    "WAVE",     c_wave,        2,6,{PL_INT,PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
 
  { P_WEND,	"WEND"     , bidnm,       0,0},
  { P_WHILE,	"WHILE"    , c_while,      1,1,{PL_CONDITION}},
@@ -458,7 +465,6 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
   char w1[strlen(n)+1],w2[strlen(n)+1];
   PARAMETER *pret;
   int i=0,e=wort_sep(n,',',TRUE,w1,w2);
-  int typ;
   if(pmax==-1) {
     pret=malloc(sizeof(PARAMETER)*12); /* nicht ganz sauber ... */
     pmax=12;
@@ -625,7 +631,7 @@ int mergeprg(char *fname) {
       programbuffer[i]=0;
       program[prglen++]=pos;
       pos=programbuffer+i+1;
-    } else if(programbuffer[i]==9) programbuffer[i]==' '; /* TABs entfernen*/
+    } else if(programbuffer[i]==9) programbuffer[i]=' '; /* TABs entfernen*/
     i++;
   }
   return(init_program());
@@ -708,7 +714,7 @@ int count_parameter(char *n) {
 }
 
 int init_program() {
-  char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  
+  char *pos2,*pos3,*buffer=NULL,*zeile=NULL;  
   int i,typ;
 
   clear_labelliste();
@@ -731,7 +737,7 @@ int init_program() {
     pcode[i].integer=-1;
 
     wort_sep2(zeile," !",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
-    xtrim(zeile,TRUE,zeile);
+    xtrim2(zeile,TRUE,zeile);
     if(strlen(buffer)) {
       pcode[i].etyp=PE_COMMENT;
       pcode[i].extra=malloc(strlen(buffer)+1);
@@ -776,7 +782,7 @@ int init_program() {
    //   printf("databuffer now contains %d Bytes.\n",databufferlen);
    //   printf("databuffer=<%s>\n",databuffer);
     } else {
-      typ=(strcmp(zeile,"PROCEDURE")==0 | 2*(strcmp(zeile,"FUNCTION")==0));
+      typ=((strcmp(zeile,"PROCEDURE")==0) | (2*(strcmp(zeile,"FUNCTION")==0)));
       if(typ) {
 #ifdef DEBUG
         printf("procedure or function found in line %d.\n",i);
@@ -814,7 +820,7 @@ int init_program() {
 	  strcat(pcode[i].argument," ");
 	  strcat(pcode[i].argument,buffer);
 	
-	 /* printf("Warnung: Zeile %d Unbek. Befehl: <%s>\n",i,zeile);*/
+	 /* printf("Warnung: Zeile %d Unbek. Befehl: <%s>\n",i,zeile); */
 	} else {
 	    pcode[i].opcode=comms[j].opcode|j;
 	    if(comms[j].pmax==0 || (pcode[i].opcode&PM_TYP)==P_SIMPLE) {
@@ -1107,12 +1113,10 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
 
 void kommando(char *cmd) {
   char buffer[strlen(cmd)+1],w1[strlen(cmd)+1],w2[strlen(cmd)+1],zeile[strlen(cmd)+1];
-  char *pos;
   int i,a,b;
 
-  xtrim(cmd,TRUE,zeile);
-  wort_sep2(zeile," !",TRUE,zeile,buffer);
-  xtrim(zeile,TRUE,zeile);
+  wort_sep2(cmd," !",TRUE,zeile,buffer);
+  xtrim2(zeile,TRUE,zeile);
   if(wort_sep(zeile,' ',TRUE,w1,w2)==0) return;  /* Leerzeile */
   if(w1[0]=='\'')                       return;  /* Kommentar */
   if(w1[strlen(w1)-1]==':')             return;  /* nixtun, label */

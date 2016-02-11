@@ -159,7 +159,7 @@ void loadbcprg(char *filename) {
 
 char *code_init(char *adr) {
   /* Ueberpruefe ob ein gueltiger Header dabei ist und setze databuffer */
-  if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)) {
+  if(adr[0]==BC_BRAs && adr[1]==sizeof(BYTECODE_HEADER)-2) {
     clear_parameters();
     programbufferlen=prglen=pc=sp=0;
     if(verbose) printf("Bytecode header found (V.%x)\n",

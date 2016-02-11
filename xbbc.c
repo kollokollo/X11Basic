@@ -19,21 +19,36 @@
 #else
 #include <sysexits.h>
 #endif
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "config.h"
 #include "defs.h"
 #include "globals.h"
-#include "protos.h"
+#include "x11basic.h"
 #include "functions.h"
 #include "ptypes.h"
+#include "io.h"
+#include "file.h"
 
 #include "bytecode.h"
 
 
-char ifilename[100]="new.bas";       /* Standard inputfile  */
-char ofilename[100]="b.b";       /* Standard outputfile     */
-int verbose=1;
+char ifilename[128]="new.bas";   /* Standard inputfile  */
+char ofilename[128]="b.b";       /* Standard outputfile     */
+int verbose=0;
 int loadfile=FALSE;
+int dostrip=0;                   /* dont write symbol tables */
+
 STRING bcpc;
+
+STRING strings;     /* Holds comments and sybol names */
+
+BYTECODE_SYMBOL *symtab;
+int anzsymbols;
+
 int donops=0;
 int docomments=0;
 
@@ -43,8 +58,8 @@ extern int param_anzahl;
 extern char **param_argumente;
 int programbufferlen=0;
 char *programbuffer=NULL;
-const char version[]="dummy"; /* Version Number. Put some useful information here */
-const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
+const char version[]="1.17"; /* Version Number. Put some useful information here */
+const char vdate[]="2011-08-16";   /* Creation date.  Put some useful information here */
 extern const char libversion[];
 extern const char libvdate[];
 char *program[MAXPRGLEN];
@@ -57,20 +72,34 @@ int save_bytecode(char *name,char *adr,int len,char *dadr,int dlen) {
   if(fdis==-1) return(-1);
   
   h.BRAs=BC_BRAs;
-  h.offs=sizeof(BYTECODE_HEADER);
+  h.offs=sizeof(BYTECODE_HEADER)-2;
   h.textseglen=len;
   h.dataseglen=dlen;
   h.bssseglen=0;
-  h.symbolseglen=0;
+  if(dostrip) {h.symbolseglen=0;h.stringseglen=0;}
+  else {
+    h.symbolseglen=anzsymbols*sizeof(BYTECODE_SYMBOL);
+    h.stringseglen=strings.len;
+  }
   h.version=BC_VERSION;
+
+  if(verbose) {
+    printf("Info:\n");
+    printf("  Size of   Text-Segment: %d\n",h.textseglen);
+    printf("  Size of   Data-Segment: %d\n",h.dataseglen);
+    printf("  Size of String-Segment: %d\n",h.stringseglen);
+    printf("  Size of Symbol-Segment: %d (%d symbols)\n",h.symbolseglen,anzsymbols);
+  }
 
   if(write(fdis,&h,sizeof(BYTECODE_HEADER))==-1) io_error(errno,"write");
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
   if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");
+  if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write");
+  if(write(fdis,symtab,h.symbolseglen)==-1) io_error(errno,"write");
   return(close(fdis));
 }
 
-int doit(char *ausdruck) {
+void doit(char *ausdruck) {
   PARAMETER *p;
   int n;
   bcpc.len=0;
@@ -92,10 +121,12 @@ void intro(){
 }
 void usage(){
   printf("Usage: %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
-  printf("-o <outputfile>     --- put result in file [%s]\n",ofilename);
-  puts("-h --help           --- Usage");
-  puts("-c                  --- compile in also comments");
-  puts("-n                  --- compile in also nop's");
+  printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
+  puts("-h --help\t--- Usage\n"
+       "-c\t\t--- also compile in comments\n"
+       "-n\t\t--- also compile in nop's\n"
+       "-s\t\t--- strip symbols\n"
+       "-v\t\t--- be more verbose");
 }
 
 
@@ -115,6 +146,8 @@ void kommandozeile(int anzahl, char *argumente[]) {
       donops=!donops;
     } else if (strcmp(argumente[count],"-c")==FALSE) {
       docomments=!docomments;
+    } else if (strcmp(argumente[count],"-s")==FALSE) {
+      dostrip=!dostrip;
     } else if (strcmp(argumente[count],"-v")==FALSE) {
       verbose++;
     } else if (strcmp(argumente[count],"-q")==FALSE) {
@@ -133,10 +166,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
 
 #define MAX_CODE 256000
 
-main(int anzahl, char *argumente[]) {
+int main(int anzahl, char *argumente[]) {
   /* Initialize data segment buffer */
   if(anzahl<2) {    /* Kommandomodus */
-    intro();
+    intro();usage();
   } else {
     bcpc.pointer=malloc(MAX_CODE);
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
