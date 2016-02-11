@@ -1,10 +1,5 @@
-Release notes for version 1.09
+Release notes for version 1.10
 ===============================
-- ANSI-Basic to X11-Basic converter included
-- New example programs
-- updated man-page and documentation
-- new SOUND command
-- modified serial line support
-- modified the configure procedure
-- some modifications for portability
-- will now compile on FreeBSD and CYGWIN
+- new REPLACE$() function 
+- improved speed by factor 2
+- bug fixed in ROUND() function

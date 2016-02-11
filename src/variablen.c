@@ -56,7 +56,6 @@ char *arrptr(char *n) {
 }
 
 void *arrayvarptr(int vnr, char *n,int size) {
-  
   char s[strlen(n)+1],t[strlen(n)+1];
   int ndim=0,a=0,i;
   
@@ -494,13 +493,13 @@ int variable_exist_type( char *name ){
   while(strchr("$%()",w1[strlen(w1)-1])!=NULL && strlen(w1)) w1[strlen(w1)-1]=0;
   return(variable_exist(w1,typ));
 }
-
+/* Diese Routine sollte geschwindigkeitsoptimiert sein ! */
 int variable_exist(char *name, int typ) {
-  int i,vnr=-1,ltyp=0;
+  int i,vnr=-1,ltyp=-1;
   for(i=0;i<anzvariablen;i++){
-    if(variablen[i].typ==typ){
+    if(variablen[i].typ==typ && variablen[i].local>ltyp){
       if(strcmp(name,variablen[i].name)==0) {
-        if(variablen[i].local>=ltyp) {vnr=i;ltyp=variablen[i].local;}	
+        vnr=i;ltyp=variablen[i].local;	
       }
     }
   }
@@ -529,7 +528,7 @@ int zuweis(char *name, double wert) {
 	  int *bbb;
 	  int idxn;
 	  
-	  pos2[0]=0;
+	  *pos2=0;
 #if DEBUG
 	   printf("Zugriff auf Element: %s \n",pos); 
 #endif
@@ -564,22 +563,22 @@ int zuweis(char *name, double wert) {
   }
   return(0);
 }
-void zuweisi(char *name, int wert) {
+
   /* Zuweisungen fuer Int-Variablen und Felder-Eintraege    */
 
+void zuweisi(char *name, int wert) {
   int i,s=0,vnr=-1,a=0,ndim;
   char *r=varrumpf(name);
 
   if(strchr(name,'(')!=NULL) {
-   char *pos, *pos2;
+    char *pos, *pos2;
+    int j;
    
-   int j;
-   
-   pos=strchr(name,'(');
-   pos[0]=0;pos++;
-   vnr=variable_exist(r,INTARRAYTYP);
-   if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
-   else {
+    pos=strchr(name,'(');
+    *pos=0;pos++;
+    vnr=variable_exist(r,INTARRAYTYP);
+    if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
+    else {
 	pos2=searchchr2(pos,')');
 	if(pos2==NULL) puts("ARRAY-Zuweisung an dieser Stelle nicht möglich.");
 	else {
@@ -588,7 +587,7 @@ void zuweisi(char *name, int wert) {
 	  int *bbb;
 	  int idxn;
 	  
-	  pos2[0]=0;
+	  *pos2=0;
 	  /* printf("Zugriff auf Element: %s \n",pos); */
 	  varptr=(int *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	  /* Index- Liste aufloesen  */
@@ -608,15 +607,13 @@ void zuweisi(char *name, int wert) {
           /* printf("Speicherstelle: %d \n",a);*/
           varptr[a]=wert;
         }
-
-   }
+    }
   } else {
   /* ist variable schon vorhanden ? */
-
     if((i=variable_exist(r,INTTYP))!=-1)  variablen[i].opcode=wert;
     else {
-       if(neue_int_variable(r,wert,0)==-1) 
-         printf("Zu viele Variablen ! max. %d\n",ANZVARS);
+      if(neue_int_variable(r,wert,0)==-1) 
+        printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
   }
   free(r);
@@ -700,15 +697,13 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
   e=wort_sep(pos,',',TRUE,w1,w2);
   while(e) {
     indexa[ndim]=anz;
-    if(w1[0]!=':' && w1[0]!=0) {
+    if(*w1!=':' && *w1!=0) {
       indexo[ndim]=(int)parser(w1);
-      
       rdim++;
     } else {
       anz=anz*(((int *)variablen[vnr].pointer)[ndim]);
     /*  printf("dim(vnr)=%d, dim(wert)=%d\n",((int *)variablen[vnr].pointer)[ndim],((int *)wert->pointer)[rdim]);
       do_gets("");*/
-    
       indexo[ndim]=-1;
     }	 
     ndim++;
@@ -734,15 +729,15 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 		 /* Testen ob passt  */
 	         
 		 anz2=0;
-	         for(k=0;k<variablen[vnr].opcode;k++) {
-		   
+	         for(k=0;k<variablen[vnr].opcode;k++) 
 		   anz2=anz2*((int *)variablen[vnr].pointer)[k]+indexe[k];
-	 	 }
+	 	 
 		 
 		 
 		 
 		 if(jj!=0) {
-		   printf("%d: Rechnung geht nicht auf. <%s>\n",jj,pos);
+		   printf("INTERNAL ERROR: %d: Rechnung geht nicht auf. <%s>\n",jj,pos);
+#ifdef DEBUG
 		   printf("anz=%d\n",anz);
 		   printf("--anz2=%d\n",anz2);
 		   printf("ARRAY wert: dim=%d (",wert->dimension);
@@ -761,6 +756,7 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexa[i]);
 		   puts("]");
 		   do_gets("Press RETURN");
+#endif
 		 }
 		   
 		 
@@ -969,18 +965,16 @@ int zuweis_string(char *name, STRING inhalt) {
 	 }
 	 free(ss);free(t);
       }
-
   } else { /* Kein Feld */
-  
     w[strlen(name)-1]=0;
   
   /* ist variable schon vorhanden ? */
  
     if((i=variable_exist(w,STRINGTYP))!=-1) {
-	  variablen[i].opcode=inhalt.len;
-	  variablen[i].pointer=realloc(variablen[i].pointer,inhalt.len);
-	  memcpy(variablen[i].pointer,inhalt.pointer,inhalt.len);
-    }   else { 
+      variablen[i].opcode=inhalt.len;
+      variablen[i].pointer=realloc(variablen[i].pointer,inhalt.len);
+      memcpy(variablen[i].pointer,inhalt.pointer,inhalt.len);
+    } else { 
       if(neue_string_variable(w,inhalt,0)==-1) 
       printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
@@ -992,7 +986,6 @@ int zuweis_string(char *name, STRING inhalt) {
 
 
 void xzuweis(char *name, char *inhalt) {
-
   char *buffer1, *buffer2;
   int typ;
   
@@ -1021,8 +1014,7 @@ void array_zuweis_and_free(char *name, ARRAY *inhalt) {
   ztyp=type2(name);
  
   typ=inhalt->typ;
-  if(ztyp!=typ) {
-    
+  if(ztyp!=typ) {    
     if((ztyp & FLOATTYP) && (typ & INTTYP)) {
       char *r=varrumpf(name);
       char *a=argument(name);
@@ -1041,25 +1033,23 @@ void array_zuweis_and_free(char *name, ARRAY *inhalt) {
       char *r=varrumpf(name);char *a=argument(name);
       int vnr=variable_exist(r,inhalt->typ | ARRAYTYP);
       if(vnr==-1) {
-        if(a[0]==0) neue_array_variable_and_free(r,convert_to_intarray(inhalt), 0);
+        if(*a==0) neue_array_variable_and_free(r,convert_to_intarray(inhalt), 0);
         else error(15,name); /* Feld nicht dimensioniert */
         free_array(inhalt);
       } else {
-        if(a[0]==0) feed_array_and_free(vnr,convert_to_intarray(inhalt));
+        if(*a==0) feed_array_and_free(vnr,convert_to_intarray(inhalt));
 	else feed_subarray_and_free(vnr,a,convert_to_intarray(inhalt));
 	free_array(inhalt);
       }
       free(r); free(a);
     } else {
-      puts("Arrays haben nicht dengleichen typ!");
-      printf("ztyp-typ=%d    \n",ztyp-typ);
-      printf("ARRAY: Typ=%d    \n",inhalt->typ);
-      printf("       dim=%d    \n",inhalt->dimension);
-      printf("       ptr=%d    \n",inhalt->pointer);
+      puts("ERROR: Arrays haben nicht dengleichen Typ!");
+      printf("ztyp-typ=%d\n",ztyp-typ);
+      printf("ARRAY: Typ=%d\n",inhalt->typ);
+      printf("       dim=%d\n",inhalt->dimension);
+      printf("       ptr=%d\n",inhalt->pointer);
     }
-    
   } else {
-    
     char *r=varrumpf(name);char *a=argument(name);
     int vnr=variable_exist(r,inhalt->typ | ARRAYTYP);
     

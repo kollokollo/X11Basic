@@ -62,6 +62,31 @@ int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
     return(2);
   }
 }
+/* Dasselbe fuer eine Liste von n Zeichen */
+int wort_sep_multi(char *t,char *c, int klamb ,char *w1, char *w2)    {
+  int f=0, klam=0;
+
+  if(!(*t)) return(*w1=*w2=0);
+
+  while(*t && ((strchr(c,*t)==NULL) || f || klam>0)) {
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    *w1++=*t++;
+  }
+  if(!(*t)) {
+    *w2=*w1=0;
+    return(1);
+  } else {
+    *w1=0;
+    strcpy(w2,++t);
+    return(2);
+  }
+}
+
+
+
+
 /* Spezielle Abwandlung zum erkennen von Exponentialformat */
 
 int is_operator(char c) {
@@ -290,11 +315,23 @@ char *searchchr2(char *buf, char c) { /*( Auch Klammerungen beruecksichtigen ! *
     if(*buf=='"') f= !f;
     else if(*buf=='('  && !f) klam++;
     if(*buf==c && !f && !(klam>0)) return(buf);
-    else if(*buf==')'  && !f) klam--;
+    if(*buf==')'  && !f) klam--;
     buf++;
   }
   return(NULL);
 }
+char *searchchr2_multi(char *buf, char *c) { 
+ int f=0,klam=0;
+  while(*buf!=0) {
+    if(*buf=='"') f= !f;
+    else if(*buf=='('  && !f) klam++;
+    if((strchr(c,*buf)!=NULL) && !f && !(klam>0)) return(buf);
+    if(*buf==')'  && !f) klam--;
+    buf++;
+  }
+  return(NULL);
+}
+
 char *rsearchchr(char *buf, char c) {
  char *pos;
  int f=0;

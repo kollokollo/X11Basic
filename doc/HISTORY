@@ -105,12 +105,18 @@ Version 1.09 (June 2003)
 - ANSI-Basic to X11-Basic converter included
 - New example programs
 - updated man-page and documentation
-- SOUND command
+- new SOUND command
 - EVAL, EVAL()
 - modified serial line support
 - modified the configure procedure
 - some modifications for portability
-- new REPLACE$() function  pre V.1.10
+- will now compile on FreeBSD and CYGWIN
+
+Version 1.10 (Feb 2004)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- new REPLACE$() function 
+- improved speed 
+- bug fixed in ROUND() function
 
 
 --------------------------------------------------------------------------------

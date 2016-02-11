@@ -119,6 +119,19 @@ int f_cvl(STRING n) {  return((int)(*((long *)n.pointer))); }
 double f_cvd(STRING n) {  return((double)(*((double *)n.pointer))); }
 double f_cvf(STRING n) {  return((double)(*((float *)n.pointer))); }
 double f_eval(STRING n) {return(parser(n.pointer));}
+
+double f_add(double v1, double v2) {return(v1+v2);}
+double f_sub(double v1, double v2) {return(v1-v2);}
+double f_mul(double v1, double v2) {return(v1*v2);}
+double f_div(double v1, double v2) {return(v1/v2);}
+double f_round(PARAMETER *plist,int e) {
+  if(e==1) return(round(plist[0].real));
+  if(e>=2){
+    int kommast=-plist[1].integer;
+    return(round(plist[0].real/pow(10,kommast))*pow(10,kommast)); 
+  }
+}
+
 int f_len(STRING n) { return(n.len); }
 int f_exist(STRING n) {   return(-exist(n.pointer)); }
 double f_val(STRING n) { return((double)atof(n.pointer)); }
@@ -180,6 +193,45 @@ int f_realloc(int adr,int size) {return((int)realloc((char *)adr,size));}
 int f_peek(int adr) { return((int)(*(char *)adr));}
 int f_dpeek(int adr) { return((int)(*(short *)adr));}
 int f_lpeek(int adr) { return((int)(*(long *)adr));}
+int f_lof(PARAMETER *plist,int e) {
+  if(filenr[plist[0].integer]) return(lof(dptr[plist[0].integer]));
+  else { error(24,""); return(0);} /* File nicht geoeffnet */
+}
+int f_loc(PARAMETER *plist,int e) {
+  if(filenr[plist[0].integer]) return(ftell(dptr[plist[0].integer]));
+  else { error(24,""); return(0);} /* File nicht geoeffnet */
+}
+int f_eof(PARAMETER *plist,int e) {
+  if(plist[0].integer==-2) return((myeof(stdin))?-1:0);
+  else if(filenr[plist[0].integer]) {
+    fflush(dptr[plist[0].integer]);
+    return(myeof(dptr[plist[0].integer])?-1:0);
+  } else { error(24,""); return(0);} /* File nicht geoeffnet */
+}
+double f_min(PARAMETER *plist,int e) {
+  if(e==1) return(plist[0].real);
+  else if(e==2) return(min(plist[0].real,plist[1].real));
+  else {
+    int i=e-1;
+    double ret=plist[i].real;
+    while((--i)>=0) {
+      ret=min(ret,plist[i].real);
+    }
+    return(ret);
+  }
+}
+double f_max(PARAMETER *plist,int e) {
+  if(e==1) return(plist[0].real);
+  else if(e==2) return(max(plist[0].real,plist[1].real));
+  else {
+    int i=e-1;
+    double ret=plist[i].real;
+    while((--i)>=0) {
+      ret=max(ret,plist[i].real);
+    }
+    return(ret);
+  }
+}
 
 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
@@ -190,6 +242,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 #ifndef WINDOWS
  { F_DQUICK|F_DRET,    "ACOSH"      , acosh ,1,1     ,{PL_NUMBER}},
 #endif
+ { F_DQUICK|F_DRET,    "ADD"     , f_add ,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "ARRPTR"    , arrptr ,1,1     ,{PL_ARRAY}},
  { F_SQUICK|F_IRET,    "ASC"       , f_asc ,1,1   ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "ASIN"      , asin ,1,1     ,{PL_NUMBER}},
@@ -231,7 +284,10 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
- { F_IQUICK|F_IRET,    "DPEEK"    , f_dpeek ,1,1     ,{PL_INT}},
+ { F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+ { F_IQUICK|F_IRET,    "DPEEK"     , f_dpeek ,1,1     ,{PL_INT}},
+
+ { F_PLISTE|F_IRET,    "EOF"       , f_eof ,1,1     ,{PL_FILENR}},
 
  { F_SQUICK|F_DRET,  "EVAL"      , f_eval ,1,1      ,{PL_STRING}},
  { F_IQUICK|F_IRET,    "EVEN"       , f_even ,1,1     ,{PL_NUMBER}},
@@ -239,6 +295,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,    "EXIST"      , f_exist ,1,1     ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "EXP"       , exp ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "EXPM1"     , expm1 ,1,1     ,{PL_NUMBER}},
+
  { F_IQUICK|F_IRET,    "FACT"       , f_fak ,1,1     ,{PL_INT}},
  { F_DQUICK|F_IRET,    "FIX"       , f_fix ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
@@ -274,6 +331,10 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_SQUICK|F_IRET,    "LEN"       , f_len ,1,1   ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "LN"        , log ,1,1     ,{PL_NUMBER}},
+
+ { F_PLISTE|F_IRET,    "LOC"       , f_loc ,1,1     ,{PL_FILENR}},
+ { F_PLISTE|F_IRET,    "LOF"       , f_lof ,1,1     ,{PL_FILENR}},
+
  { F_DQUICK|F_DRET,    "LOG"       , log ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG10"     , log10 ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "LOG1P"     , log1p ,1,1     ,{PL_NUMBER}},
@@ -282,7 +343,10 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_DRET,    "LTEXTLEN"  , f_ltextlen ,1,1   ,{PL_STRING}},
 
  { F_IQUICK|F_IRET,    "MALLOC"    , f_malloc ,1,1     ,{PL_INT}},
- { F_DQUICK|F_DRET,    "MOD"       , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "OBJC_DRAW", f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "OBJC_FIND", f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
@@ -299,8 +363,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RANDOM"    , f_random ,1,1     ,{PL_NUMBER}},
  { F_IQUICK|F_IRET,    "REALLOC"    , f_realloc ,2,2     ,{PL_INT,PL_INT}},
- { F_PLISTE|F_IRET,  "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
+ { F_PLISTE|F_IRET,    "RINSTR"    , f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,1,1     ,{PL_NUMBER}},
+ { F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_NUMBER,PL_INT}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "RSRC_GADDR", f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
 #endif
@@ -313,6 +378,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
+ { F_DQUICK|F_DRET,    "SUB"     , f_sub ,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_DQUICK|F_IRET,    "SUCC"      , f_succ ,1,1     ,{PL_NUMBER}},
  { F_ARGUMENT|F_IRET,  "SYM_ADR"   , f_symadr ,2,2     ,{PL_FILENR,PL_STRING}},
 
@@ -379,8 +445,55 @@ STRING f_envs(STRING n) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
-
-
+#ifdef CONTROL
+STRING f_csgets(STRING n) {   
+  STRING ergebnis;
+  ergebnis.pointer=csgets(n.pointer);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_csunits(STRING n) {   
+  STRING ergebnis;
+  ergebnis.pointer=csunit(n.pointer);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_cspnames(int n) {   
+  STRING ergebnis;
+  ergebnis.pointer=cspname(n);
+  ergebnis.len=strlen(ergebnis.pointer);  
+  return(ergebnis);
+}
+#endif
+#ifdef TINE
+STRING f_tinegets(STRING n) {   
+  STRING ergebnis;
+  ergebnis=tinegets(n.pointer);
+  return(ergebnis);
+}
+STRING f_tineunits(STRING n) {   
+  STRING ergebnis;
+  ergebnis.pointer=tineunit(n.pointer);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_tineinfos(STRING n) {   
+  STRING ergebnis;
+  ergebnis.pointer=tineinfo(n.pointer);
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
+STRING f_tinequerys(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  if(e>=2) {
+    ergebnis=tinequery(plist[0].pointer,plist[1].integer);
+  } else {
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+  }
+  return(ergebnis);
+}
+#endif
 STRING f_terminalnames(char *n) {   
   STRING ergebnis;
   int i=get_number(n);  
@@ -815,6 +928,11 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,  "BIN$"    , f_bins ,1,2   ,{PL_INT,PL_INT}},
 
  { F_IQUICK,    "CHR$"    , f_chrs ,1,1   ,{PL_NUMBER}},
+#ifdef CONTROL
+ { F_SQUICK,    "CSGET$"    , f_csgets ,1,1   ,{PL_STRING}},
+ { F_IQUICK,    "CSPNAME$"  , f_cspnames ,1,1   ,{PL_INT}},
+ { F_SQUICK,    "CSUNIT$"   , f_csunits ,1,1   ,{PL_STRING}},
+#endif
 
  { F_SQUICK,    "ENV$"    , f_envs ,1,1   ,{PL_STRING}},
  { F_IQUICK,    "ERR$"    , f_errs ,1,1   ,{PL_NUMBER}},
@@ -844,6 +962,12 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,  "STRING$" , f_strings ,2,2   ,{PL_INT,PL_STRING}},
  { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "TERMINALNAME$"    , f_terminalnames ,1,1 ,{PL_FILENR}},
+#ifdef TINE
+ { F_SQUICK,    "TINEGET$"    , f_tinegets ,1,1   ,{PL_STRING}},
+ { F_SQUICK,    "TINEINFO$"   , f_tineinfos ,1,1   ,{PL_STRING}},
+ { F_PLISTE,    "TINEQUERY$"  , f_tinequerys ,2,2   ,{PL_STRING,PL_INT}},
+ { F_SQUICK,    "TINEUNIT$"   , f_tineunits ,1,1   ,{PL_STRING}},
+#endif
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
  { F_SQUICK,    "UCASE$"    , f_uppers ,1,1   ,{PL_STRING}},
@@ -867,7 +991,7 @@ int vergleich(char *w1,char *w2) {
   if((e | INTTYP | FLOATTYP)!=(type2(w2) | INTTYP | FLOATTYP )) {
     puts("Typen ungleich bei Vergleich!");
     printf("1: %d    2: %d \n",type2(w1),type2(w2));
-    return(0);
+    return(-1);
   }
   if(e & ARRAYTYP) { 
     puts("Arrays an dieser Stelle noch nicht möglich.");
@@ -976,16 +1100,19 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
   char s[strlen(funktion)+1],w1[strlen(funktion)+1],w2[strlen(funktion)+1];
   int e,vnr;
 
-  strcpy(s,funktion);
-  xtrim(s,TRUE,s);  /* Leerzeichen vorne und hinten entfernen */
-
   /* printf("Parser: <%s>\n");*/
-  /* Dann Logische Operatoren AND OR NOT ... */ 
 
+  /* Logische Operatoren AND OR NOT ... */
+   
+  if(searchchr2_multi(funktion,"&|")!=NULL) {
+    if(wort_sepr2(s,"&&",TRUE,w1,w2)>1)     return((double)((int)parser(w1) & (int)parser(w2)));    
+    if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
+  }
+  xtrim(funktion,TRUE,s);  /* Leerzeichen vorne und hinten entfernen, Grossbuchstaben */
+ 
+if(searchchr2(funktion,' ')!=NULL) {
   if(wort_sepr2(s," AND ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) & (int)parser(w2)));    /* von rechts !!  */
-  if(wort_sepr2(s,"&&",TRUE,w1,w2)>1)     return((double)((int)parser(w1) & (int)parser(w2)));    
   if(wort_sepr2(s," OR ",TRUE,w1,w2)>1)   return((double)((int)parser(w1) | (int)parser(w2)));    
-  if(wort_sepr2(s,"||",TRUE,w1,w2)>1)     return((double)((int)parser(w1) | (int)parser(w2)));    
   if(wort_sepr2(s," NAND ",TRUE,w1,w2)>1) return((double)~((int)parser(w1) & (int)parser(w2)));    
   if(wort_sepr2(s," NOR ",TRUE,w1,w2)>1)  return((double)~((int)parser(w1) | (int)parser(w2)));    
   if(wort_sepr2(s," XOR ",TRUE,w1,w2)>1)  return((double)((int)parser(w1) ^ (int)parser(w2)));	 
@@ -1004,45 +1131,53 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
   if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {        
     if(strlen(w1)==0) return((double)(~(int)parser(w2)));    /* von rechts !!  */
     /* Ansonsten ist NOT Teil eines Variablennamens */
-  }
-  if(wort_sep2(s,"==",TRUE,w1,w2)>1) { /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
-    if(vergleich(w1,w2)==0) return(-1); else return(0);
-  } else if(wort_sep2(s,"<>",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)!=0) return(-1); else return(0);
-  } else if(wort_sep2(s,"><",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)!=0) return(-1);  else return(0);
-  } else if(wort_sep2(s,"<=",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)<=0) return(-1);  else return(0);
-  } else if(wort_sep2(s,">=",TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)>=0) return(-1);  else return(0);
-  } else if(wort_sep(s,'=',TRUE,w1,w2)>1) {
-    if(vergleich(w1,w2)==0) return(-1);  else return(0);
-  } else if(wort_sep(s,'<',TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)<0)  return(-1);  else return(0);
-  } else if(wort_sep(s,'>',TRUE,w1,w2)>1) { 
-    if(vergleich(w1,w2)>0)  return(-1);  else return(0);
-  } 
-  if(wort_sep_e(s,'+',TRUE,w1,w2)>1) {           /* Addition/Subtraktion/Vorzeichen  */
+  }  
+}
+
+  /* Erst Vergleichsoperatoren mit Wahrheitwert abfangen (lowlevel < Addition)  */
+if(searchchr2_multi(s,"<=>")!=NULL) {
+  if(wort_sep2(s,"==",TRUE,w1,w2)>1)      return(vergleich(w1,w2)?0:-1);
+  if(wort_sep2(s,"<>",TRUE,w1,w2)>1) return(vergleich(w1,w2)?-1:0);
+  if(wort_sep2(s,"><",TRUE,w1,w2)>1) return(vergleich(w1,w2)?-1:0);
+  if(wort_sep2(s,"<=",TRUE,w1,w2)>1) return((vergleich(w1,w2)<=0)?-1:0);
+  if(wort_sep2(s,">=",TRUE,w1,w2)>1) return((vergleich(w1,w2)>=0)?-1:0);
+  if(wort_sep(s,'=',TRUE,w1,w2)>1)   return(vergleich(w1,w2)?0:-1); 
+  if(wort_sep(s,'<',TRUE,w1,w2)>1)   return((vergleich(w1,w2)<0)?-1:0);
+  if(wort_sep(s,'>',TRUE,w1,w2)>1)   return((vergleich(w1,w2)>0)?-1:0);
+}
+ /* Addition/Subtraktion/Vorzeichen  */
+if(searchchr2_multi(s,"+-")!=NULL) {
+  if(wort_sep_e(s,'+',TRUE,w1,w2)>1) {
     if(strlen(w1)) return(parser(w1)+parser(w2)); 
     else return(parser(w2));   /* war Vorzeichen + */
-  } else if(wort_sepr_e(s,'-',TRUE,w1,w2)>1) {       /* von rechts !!  */    
+  }
+  if(wort_sepr_e(s,'-',TRUE,w1,w2)>1) {       /* von rechts !!  */    
     if(strlen(w1)) return(parser(w1)-parser(w2));    
     else return(-parser(w2));   /* war Vorzeichen - */
-  } else if(wort_sepr(s,'*',TRUE,w1,w2)>1) {           
+  } 
+}
+if(searchchr2_multi(s,"*/^")!=NULL) {
+  if(wort_sepr(s,'*',TRUE,w1,w2)>1) {           
     if(strlen(w1)) return(parser(w1)*parser(w2));    
-    else printf("Pointer noch nicht integriert! %s\n",w2);   /* war pointer - */
-  } else if(wort_sepr(s,'/',TRUE,w1,w2)>1) {        
+    else {
+      printf("Pointer noch nicht integriert! %s\n",w2);   /* war pointer - */
+      return(0);
+    }
+  } 
+  if(wort_sepr(s,'/',TRUE,w1,w2)>1) {        
     if(strlen(w1)) {
       double nenner;
       nenner=parser(w2); 
       if(nenner!=0.0) return(parser(w1)/nenner);    /* von rechts !!  */
       else { error(0,w2); return(0);  } /* Division durch 0 */
     } else { error(51,w2); return(0); }/* "Parser: Syntax error?! "  */
-  } else if(wort_sepr(s,'^',TRUE,w1,w2)>1) {           
+  } 
+  if(wort_sepr(s,'^',TRUE,w1,w2)>1) {           
     if(strlen(w1)) return(pow(parser(w1),parser(w2)));    /* von rechts !!  */
     else { error(51,w2); return(0); } /* "Parser: Syntax error?! "  */
   } 
-  if(s[0]=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
+}  
+  if(*s=='(' && s[strlen(s)-1]==')')  { /* Ueberfluessige Klammern entfernen */
     s[strlen(s)-1]=0;
     return(parser(s+1));
     /* SystemFunktionen Subroutinen und Arrays */
@@ -1050,76 +1185,18 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
     pos=searchchr(s, '(');
     if(pos!=NULL) {
       pos2=s+strlen(s)-1;
-      pos[0]=0;
-      pos++;
+      *pos++=0;
     
-      if(pos2[0]!=')') error(51,w2); /* "Parser: Syntax error?! "  */
+      if(*pos2!=')') error(51,w2); /* "Parser: Syntax error?! "  */
       else {                         /* $-Funktionen und $-Felder   */
-        pos2[0]=0;
+        *pos2=0;
 
-        /* Funktionen, die double zurueckliefern */
-
-        if(strcmp(s,"LOF")==0)  {
-	  int i=get_number(pos);
-	  if(filenr[i]) return((double)lof(dptr[i]));
-	  else { error(24,""); return(0);} /* File nicht geoeffnet */
-        }else if(strcmp(s,"LOC")==0)  {
-	  int i=get_number(pos);
-	  if(filenr[i]) return((double)ftell(dptr[i]));
-	  else { error(24,""); return(0); } /* File nicht geoeffnet */
-	}else if(strcmp(s,"EOF")==0)  {
-	  int i=get_number(pos);
-	  if(i==-2) return((double)((myeof(stdin)) ? -1 : 0));
-	  else if(filenr[i]) {
-	    fflush(dptr[i]);
-	    return((double)((myeof(dptr[i])) ? -1 : 0));
-	} else { error(24,""); return(0); } /* File nicht geoeffnet */	
-	} else if(strcmp(s,"MIN")==0)  {
-	  int e;
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(min(parser(w1),parser(w2)));
-	}else if(strcmp(s,"MAX")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(max(parser(w1),parser(w2)));
-	}else if(strcmp(s,"ADD")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(parser(w1)+parser(w2));
-	}else if(strcmp(s,"SUB")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(parser(w1)-parser(w2));
-	 }else if(strcmp(s,"MUL")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(parser(w1)*parser(w2));
-	 }else if(strcmp(s,"DIV")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(parser(w1));
-	  else if(e==2)	  return(parser(w1)/parser(w2));
-	 }
-	 else if(strcmp(s,"ROUND")==0)  {
-	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
-	  int e;
-	  if((e=wort_sep(pos,',',TRUE,w1,w2))==1) return(round(parser(w1)));
-	  else if(e==2)	{
-	    int kommast=-(int)parser(w2);
-	    return(round(parser(w1)/pow(10,kommast))*pow(10,kommast)); 
-	  }
-        } else if(s[0]=='@') return(do_funktion(s+1,pos));
+        /* Benutzerdef. Funktionen */
+        if(*s=='@') return(do_funktion(s+1,pos));
 	else {
 	  /* Liste durchgehen */
-	  int i=0,oa,a=anzpfuncs,b;
-          for(b=0; b<strlen(s); b++) {
+	  int i=0,oa,a=anzpfuncs,b,l=strlen(s);
+          for(b=0; b<l; b++) {
             while(s[b]>(pfuncs[i].name)[b] && i<a) i++;
             oa=a;a=i;
             while(s[b]<(pfuncs[a].name)[b]+1 && a<oa) a++;
@@ -1197,33 +1274,33 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	  } else { error(15,s); return(0); }  /* Feld nicht dimensioniert  */
         }
       }
-    } else {
+    } else {  /* Also keine Klammern */
       /* Dann Systemvariablen und einfache Variablen */
-      /* erst integer abfangen (xxx% oder xxx&), dann rest */
 
 	  /* Liste durchgehen */
-	  int i=0,oa,a=anzsysvars,b;
-          for(b=0; b<strlen(s); b++) {
-            while(s[b]>(sysvars[i].name)[b] && i<a) i++;
+	  char c=*s;
+	  int i=0,oa,a=anzsysvars,b,l=strlen(s);
+          for(b=0; b<l; c=s[++b]) {
+            while(c>(sysvars[i].name)[b] && i<a) i++;
             oa=a;a=i;
-            while(s[b]<(sysvars[a].name)[b]+1 && a<oa) a++;
+            while(c<(sysvars[a].name)[b]+1 && a<oa) a++;
             if(i==a) break;
           }
 
           if(i<anzsysvars && strcmp(s,sysvars[i].name)==0) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/ 
 	   if((sysvars[i].opcode)==PL_INT) return((double)((int (*)())sysvars[i].routine)());
-	   else if((sysvars[i].opcode)==PL_FLOAT) return((sysvars[i].routine)());
-           }
+	   if((sysvars[i].opcode)==PL_FLOAT) return((sysvars[i].routine)());
+          }
+      /* erst integer abfangen (xxx% oder xxx&), dann rest */
 
-      if(s[0]=='@')               return(do_funktion(s+1,""));
-      else if((vnr=variable_exist(s,FLOATTYP))!=-1) return(variablen[vnr].zahl);
-      else if(s[strlen(s)-1]=='%') {
+      if(*s=='@')                              return(do_funktion(s+1,""));
+      if((vnr=variable_exist(s,FLOATTYP))!=-1) return(variablen[vnr].zahl);
+      if(s[strlen(s)-1]=='%') {
         s[strlen(s)-1]=0;
-      
         if((vnr=variable_exist(s,INTTYP))!=-1) return((double)variablen[vnr].opcode);
-        else return(0);   
-     } else return(atof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
+        return(0);   
+      } else return(atof(s));  /* Jetzt nur noch Zahlen (hex, oct etc ...)*/
     }
   }
   error(51,s); /* Syntax error */
@@ -1508,82 +1585,37 @@ STRING string_parser(char *funktion) {
 /* Rekursiv und so, dass dynamische Speicherverwaltung ! */
 /* Trenne ersten Token ab, und uebergebe rest derselben Routine */
 
-  char *pos,*pos2,*inhalt;
   STRING ergebnis;
-  STRING t,u;
-  int e,vnr;
   char v[strlen(funktion)+1],w[strlen(funktion)+1];
 
   /*printf("S-Parser: <%s>\n",funktion);*/
-  e=wort_sep(funktion,'+',TRUE,v,w);
-  if(e==2) {
-    t=string_parser(v);
-    u=string_parser(w);
+  if(wort_sep(funktion,'+',TRUE,v,w)>1) {
+    STRING t=string_parser(v);
+    STRING u=string_parser(w);
     ergebnis.pointer=malloc(t.len+u.len+1);
     memcpy(ergebnis.pointer,t.pointer,t.len);
     memcpy(ergebnis.pointer+t.len,u.pointer,u.len+1);
     ergebnis.len=u.len+t.len;
     free(t.pointer);free(u.pointer); 
+    return(ergebnis);
   } else {
+    char *pos,*pos2,*inhalt;
+    int vnr;
+    
     /*printf("s-parser: <%s>\n",funktion);*/
     strcpy(v,funktion);
     pos=searchchr(v, '(');
     if(pos!=NULL) {
       pos2=v+strlen(v)-1;
-      pos[0]=0;
-      pos++;
+      *pos++=0;
 
-      if(pos2[0]!=')') {
+      if(*pos2!=')') {
         error(51,v); /* "Parser: Syntax error?! "  */
         ergebnis=vs_error();
       } else {                         /* $-Funktionen und $-Felder   */
-        pos2[0]=0;
-       
-        if(strcmp(v,"CSGET$")==0) { 
-	  STRING test;
-          test=string_parser(pos);
-	  ergebnis.pointer=csgets(test.pointer);
-          free(test.pointer);
-	  ergebnis.len=strlen(ergebnis.pointer);
-#ifdef TINE
-        } else if(strcmp(v,"TINEGET$")==0) { 
-	  char *test;
-          test=s_parser(pos);
-	  ergebnis=tinegets(test);
-          free(test);
-        } else if(strcmp(v,"TINEQUERY$")==0) { 
-	  char *test,dummy[512],dummy2[512];
-	  int tim;
-          e=wort_sep(pos,',',TRUE,dummy,dummy2); 
-          test=s_parser(dummy);
-	  tim=(int)parser(dummy2);
-	  ergebnis=tinequery(test,tim);
-          free(test);
-        } else if(strcmp(v,"TINEUNIT$")==0) { 
-	  char *test;
-          test=s_parser(pos);
-	  ergebnis.pointer=tineunit(test);
-          free(test);
-	  ergebnis.len=strlen(ergebnis.pointer);
-        } else if(strcmp(v,"TINEINFO$")==0) { 
-	  char *test;
-          test=s_parser(pos);
-	  ergebnis.pointer=tineinfo(test);
-          free(test);
-	  ergebnis.len=strlen(ergebnis.pointer);
-#endif
-#ifdef CONTROL
-        } else if(strcmp(v,"CSUNIT$")==0) { 
-	  char *test;
-          test=s_parser(pos);
-	  ergebnis.pointer=csunit(test);
-          free(test);
-	  ergebnis.len=strlen(ergebnis.pointer);
-        } else if(strcmp(v,"CSPNAME$")==0) { 
-	  ergebnis.pointer=cspname((int)parser(pos));
-    	  ergebnis.len=strlen(ergebnis.pointer);  
-#endif
-        } else if(v[0]=='@')     /* Funktion oder Array   */
+        *pos2=0;
+       	
+	if(*v=='@')     /* Funktion oder Array   */
  	  ergebnis=do_sfunktion(v+1,pos);	  
         else {  /* Liste durchgehen */
 
@@ -1632,7 +1664,6 @@ STRING string_parser(char *funktion) {
              if((vnr=variable_exist(v,STRINGARRAYTYP))==-1) {
 	       error(15,v);         /*Feld nicht definiert*/
 	       ergebnis.pointer=malloc(1);
-	       ergebnis.pointer[0]=0;
 	       ergebnis.len=0;
              } else {
 	       char *ss,*t;
@@ -1664,7 +1695,6 @@ STRING string_parser(char *funktion) {
               if(ndim!=variablen[vnr].opcode) {
 	         error(18,"");  /* Falsche Anzahl Indizies */
 		 ergebnis.pointer=malloc(1);
-	         ergebnis.pointer[0]=0;
 		 ergebnis.len=0;
               } else {
           
@@ -1682,12 +1712,12 @@ STRING string_parser(char *funktion) {
       }
     } else {
       pos2=v+strlen(v)-1;
-      if(v[0]=='"' && pos2[0]=='"') {  /* Konstante  */
+      if(*v=='"' && *pos2=='"') {  /* Konstante  */
         ergebnis.pointer=malloc(strlen(v)-2+1);
         ergebnis.len=strlen(v)-2;
-        pos2[0]=0;
+        *pos2=0;
         memcpy(ergebnis.pointer,v+1,strlen(v)-2+1);
-      } else if(pos2[0]!='$') {
+      } else if(*pos2!='$') {
         error(51,v); /* "Parser: Syntax error?! "  */
         ergebnis=vs_error();
       } else {                      /* einfache Variablen und Systemvariablen */
@@ -1703,10 +1733,9 @@ STRING string_parser(char *funktion) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",syssvars[i].name,i);*/ 
 	  return((syssvars[i].routine)());
         }
-        pos2[0]=0;
+        *pos2=0;
         if((vnr=variable_exist(v,STRINGTYP))==-1) {
           ergebnis.pointer=malloc(1);
-	  ergebnis.pointer[0]=0;
 	  ergebnis.len=0;
         } else {
           ergebnis.pointer=malloc(variablen[vnr].opcode+1);
@@ -1788,36 +1817,34 @@ double do_funktion(char *name,char *argumente) {
  }
  
 int do_parameterliste(char *pos, char *pos2) {
-        char w3[strlen(pos)+1],w4[strlen(pos)+1];
-	char w5[strlen(pos2)+1],w6[strlen(pos2)+1];
-        int e1,e2;
-       /* printf("GOSUB: <%s> <%s>\n",pos,pos2);*/
-	e1=wort_sep(pos,',',TRUE,w3,w4);
-	e2=wort_sep(pos2,',',TRUE,w5,w6);
-	sp++;  /* Uebergabeparameter sind lokal ! */
-	while(e1 && e2) {
-	/*  printf("ZU: %s=%s\n",w3,w5); */
-          c_dolocal(w5,w3);
-	  e1=wort_sep(w4,',',TRUE,w3,w4);
-	  e2=wort_sep(w6,',',TRUE,w5,w6);
-	}
-	sp--;
-        return((e1!=e2) ? 1 : 0);
+  char w3[strlen(pos)+1],w4[strlen(pos)+1];
+  char w5[strlen(pos2)+1],w6[strlen(pos2)+1];
+  int e1,e2;
+ /* printf("GOSUB: <%s> <%s>\n",pos,pos2);*/
+  e1=wort_sep(pos,',',TRUE,w3,w4);
+  e2=wort_sep(pos2,',',TRUE,w5,w6);
+  sp++;  /* Uebergabeparameter sind lokal ! */
+  while(e1 && e2) {
+  /*  printf("ZU: %s=%s\n",w3,w5); */
+    c_dolocal(w5,w3);
+    e1=wort_sep(w4,',',TRUE,w3,w4);
+    e2=wort_sep(w6,',',TRUE,w5,w6);
+  }
+  sp--;
+  return((e1!=e2) ? 1 : 0);
 }
  
  
 STRING do_sfunktion(char *name,char *argumente) {
- char *buffer,*pos,*pos2,*pos3;
- STRING ergebnis;
- int pc2; 
+  char *buffer,*pos;
+  STRING ergebnis;
+  int pc2; 
     
-    buffer=malloc(strlen(name)+1);
-    strcpy(buffer,name);
-    pos=argumente;
-    
-    pc2=procnr(buffer,2);
-    if(pc2==-1)   error(44,buffer); /* Funktion  nicht definiert */
-    else {       
+  buffer=malloc(strlen(name)+1);
+  strcpy(buffer,name);
+  pos=argumente;  
+  pc2=procnr(buffer,2);
+  if(pc2!=-1) {       
 	if(do_parameterliste(pos,procs[pc2].parameterliste)) error(42,buffer); /* Zu wenig Parameter */
 	else {     
 	  int oldbatch,osp=sp;
@@ -1833,13 +1860,12 @@ STRING do_sfunktion(char *name,char *argumente) {
             puts("Error within FUNCTION.");
 	  }
 	}
-	free(buffer);
-	return(returnvalue.str);
-      }
-    error(44,buffer); /* Funktion  nicht definiert */
     free(buffer);
-    ergebnis.pointer=malloc(1);
-    *ergebnis.pointer=0;
-    ergebnis.len=0;
-    return(ergebnis);  
+    return(returnvalue.str);
+  }
+  error(44,buffer); /* Funktion  nicht definiert */
+  free(buffer);
+  ergebnis.pointer=malloc(1);
+  ergebnis.len=0;
+  return(ergebnis);  
 }

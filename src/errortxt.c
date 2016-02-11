@@ -186,7 +186,7 @@ const char *errortxt[] = {
 /*  a*/  "Error 97",
 /*  98*/  "Error 98",
 /*  99*/  "Error 99",
-/* 100*/  "X11BASIC Version 1.09  Copyright (c)1998-2003 Markus Hoffmann",
+/* 100*/  "X11BASIC Version 1.10  Copyright (c)1998-2004 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",

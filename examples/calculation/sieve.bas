@@ -1,7 +1,17 @@
 ' "sieve.bas" , a prime number sieve benchmark
-t=timer
+
+
+@sieve(50000)
+
+
+
+quit
+
+
+
+procedure sieve(s)
+local i
 tc=ctimer
-s=40000
 dim f(s+1)
 arrayfill f(),1
 clr c
@@ -17,9 +27,8 @@ for i=2 to s
     inc c
    endif
 next i
-print
-print c;" primes found in ";
-t=timer-t
+ print
+print c;" primes up to ";s;" found. ";
 tc=ctimer-tc
-print t;" seconds (";tc;" s CPU )"
-quit
+print "CPU time: ";tc;" s"
+return

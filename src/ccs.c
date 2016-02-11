@@ -18,13 +18,14 @@
 /* Falls mit Kontrollsystem  */
 
 #define MAXPIDS 250
+#ifdef CONTROL
 int notify_handler(int , int , int );
 int pids[MAXPIDS];
 int isubs[MAXPIDS];
 int pidanz=0;
+#endif
 
 #ifndef WINDOWS
-
 #ifdef CONTROL
 
 #include "ccsdef.h"
@@ -58,7 +59,7 @@ void cs_exit() {
 }
 #endif
 #endif
-
+#ifdef CONTROL
 int notify_handler(int pid, int overflow, int entries) {
   int i,pc2,flag=0;
   for(i=0;i<pidanz;i++) {
@@ -83,7 +84,7 @@ int notify_handler(int pid, int overflow, int entries) {
 
 
 int cssize(char *n) {
-#ifdef CONTROL
+
   int pid;
   ROUTE route;
   ccs_convert_parametername_id(n, &pid );
@@ -97,13 +98,11 @@ int cssize(char *n) {
     else return(route.size);
   }
   ccs_err=CCSERR;
-#endif
   return(0);
 }
 
 int cstyp(char *n) {
-   int typ=0;
-#ifdef CONTROL
+  int typ=0;
   int pid;
   ROUTE route;
   ccs_convert_parametername_id(n, &pid );
@@ -122,33 +121,29 @@ int cstyp(char *n) {
     }
   }
   ccs_err=CCSERR;
-#endif
+
   return(typ);
 }
 
 int cspid(char *n) {
   int pid;
-#ifdef CONTROL
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) printf("ERROR in ccs_convert_parametername_id\n");
   ccs_err=CCSERR;
-#endif
   return(pid);
 }
 
+
 char *cspname(int pid) {
   char *pname=malloc(80);
-#ifdef CONTROL
   ccs_convert_id_parametername( pid, pname );
   if (CCSERR) printf("ERROR in ccs_convert_id_parametername (%s) !\n", ccs_get_error_message());
   ccs_err=CCSERR;
-#endif
   return(pname);
 }
 
 char *csunit(char *n) {
   char *unit=malloc(32);
-#ifdef CONTROL
   int pid;
   union {int i;float f;double d;} min, max;
   ccs_convert_parametername_id(n, &pid );
@@ -158,13 +153,12 @@ char *csunit(char *n) {
     if (CCSERR) printf("ERROR in ccs_resource_read_parameter_minmax (%s) !\n", ccs_get_error_message());
   }
   ccs_err=CCSERR;
-#endif
   return(unit);
 }
 
 
 double csget(char *n) {
-#ifdef CONTROL
+
   int pid,j;
   float data;
   int i;
@@ -185,12 +179,11 @@ double csget(char *n) {
       else return((double)i);
     } else 	printf("Csget: Parameter hat falschen Typ %s\n",n);
   }
-#endif
   return(0.0);
 }
 
 double csmin(char *n) {
-#ifdef CONTROL
+
   int pid;
   char unit[32];
   union {int i;float f;double d; char *s;} min,max;
@@ -206,11 +199,11 @@ double csmin(char *n) {
     else if ( IS_PID_DIGITAL(pid) ) return((double)min.i);
     else 	printf("Csget: Parameter hat falschen Typ %s\n",n);
   }
-#endif
+
   return(0.0);
 }
 double csmax(char *n) {
-#ifdef CONTROL
+
   int pid;
   char unit[32];
   union {int i;float f;double d; char *s;} min,max;
@@ -226,11 +219,11 @@ double csmax(char *n) {
     else if ( IS_PID_DIGITAL(pid) ) return((double)max.i);
     else 	printf("Csget: Parameter hat falschen Typ %s\n",n);
   }
-#endif
+
   return(0.0);
 }
 double csres(char *n) {
-#ifdef CONTROL
+
   int pid;
   union {int i;float f;double d; char *s;} res;
   
@@ -246,13 +239,11 @@ double csres(char *n) {
     else if ( IS_PID_DIGITAL(pid) ) return((double)res.i);
     else 	printf("Csget: Parameter hat falschen Typ %s\n",n);
   }
-#endif
   return(0.0);
 }
 
 
 ARRAY *csvget(char *n,int nn, int o) {
-#ifdef CONTROL
   int pid,j;
   ROUTE route;
   ARRAY *ergebnis=malloc(sizeof(ARRAY));
@@ -302,15 +293,11 @@ ARRAY *csvget(char *n,int nn, int o) {
 	return(ergebnis);
     }
   }
-#else
-  return(nullmatrix(FLOATTYP,1,&nn));
-#endif
 }
-
 
 char *csgets(char *n) {
   char *ergebnis,s[256];
-#ifdef CONTROL
+
   int pid,j;
 
   ccs_convert_parametername_id(n, &pid );
@@ -346,14 +333,7 @@ char *csgets(char *n) {
       return(ergebnis);
     }
   }
-#else
-  ergebnis=malloc(8);
-  strcpy(ergebnis,"<ERROR>");
-  return(ergebnis);
-#endif
 }
-
-#ifdef CONTROL
 void c_cssetcallback(char *n) {
   int i,flag,newpid,pc2;
   char w1[strlen(n)+1],w2[strlen(n)+1];

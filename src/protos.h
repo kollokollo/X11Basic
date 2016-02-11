@@ -24,6 +24,7 @@ int wort_sepr(char *,char ,int ,char *, char *);
 int wort_sep2(char *,char *,int ,char *, char *);
 int wort_sepr2(char *,char *,int ,char *, char *);
 char *searchchr2(char *,char);
+char *searchchr2_multi(char *,char *);
 char *rmemmem(char *,int,char *,int);
 int xtrim(char *,int, char *);
 char *error_text(char , char *);

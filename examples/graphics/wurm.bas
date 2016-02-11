@@ -7,6 +7,7 @@ ykreis(1)=24/2
 ri=0
 schwanz=1
 c=1
+pt=0.1
 sizew ,320,200
 schwarz=get_color(0,0,0)
 clearw 
@@ -43,7 +44,14 @@ DO
 	circle neux,neuy,3
         exit if mousek>500
 	vsync
-        pause 0.001
+        pause pt
+	if timer-t>0.025
+	  pt=pt/1.1
+	endif
+	if timer-t<0.021
+	  pt=pt*1.1+0.001
+	endif
+        t=timer
 loop
 ' " ... und der Wurm verpuppte sich und ward niemehr gesehen..."
 quit

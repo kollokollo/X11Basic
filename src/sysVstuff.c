@@ -16,7 +16,9 @@
 
 #ifndef WINDOWS
 #include <sys/ipc.h>
+#if 0
 #include <sys/msg.h>
+#endif
 #include <sys/sem.h>
 #include <sys/shm.h>
 #else

@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.09
+                       VERSION 1.10
 
-            (C) 1997-2003 by Markus Hoffmann
+            (C) 1997-2004 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.09                              Vendor: Markus Hoffmann
+Version     : 1.10                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
@@ -35,7 +35,7 @@ converter (bas2x11basic) is now included.
 
 You will find the compiler sourcecode and some other sample programs in 
 /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-can be found in X11-Basic-examples-1.09.zip, which you can download from the 
+can be found in X11-Basic-examples-1.10.zip, which you can download from the 
 homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
 of the manual can be found there.
 

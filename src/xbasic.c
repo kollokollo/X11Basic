@@ -14,14 +14,15 @@
     
     
     
-                       VERSION 1.09
+                       VERSION 1.10
 
-            (C) 1997-2003 by Markus Hoffmann
+            (C) 1997-2004 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
    
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
  **  letzte Bearbeitung: Feb. 2003   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: Feb. 2004   von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -397,8 +398,10 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
   PARAMETER *pret;
   int i=0,e=wort_sep(n,',',TRUE,w1,w2);
   int typ;
-  if(pmax==-1) pret=malloc(sizeof(PARAMETER)*12);
-  else pret=malloc(sizeof(PARAMETER)*pmax);
+  if(pmax==-1) {
+    pret=malloc(sizeof(PARAMETER)*12); /* nicht ganz sauber ... */
+    pmax=12;
+  } else pret=malloc(sizeof(PARAMETER)*pmax);
   *pr=pret;
   while(e && i<pmax) {
     pret[i].pointer=NULL; /* Default is NULL */

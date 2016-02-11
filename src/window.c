@@ -545,10 +545,7 @@ void activate() {
 
 
 /* swap some long ints.  (n is number of BYTES, not number of longs) */
-swapdws (bp, n)
-  register char *bp;
-  register unsigned n;
-{
+swapdws (char *bp, unsigned n) {
   register char c;
   register char *ep = bp + n;
   register char *sp;
@@ -613,7 +610,7 @@ char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
         color[i].pad   = (CARD8)0;
       }
     }
-    if (*(char *) &swaptest)    swapdws(data, sizeof(XWDFileHeader));
+    if (*(char *) &swaptest)    swapdws((char *)data, sizeof(XWDFileHeader));
     return((char *)data);
 }
 XImage *xwdtoximage(char *data,Visual *visual) {
@@ -1228,23 +1225,15 @@ if(pattern) {
     printf("Unbekanntes Objekt #%d\n",tree[idx].ob_type);
   }
   
-  
-
 /* Rand zeichnen */
-if(randdicke) {
-  SetForeground(gem_colors[framecolor]);
-  if(randdicke>0) {
-    for(i=0;i<randdicke;i++) {  
-      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
+  if(randdicke) {
+    SetForeground(gem_colors[framecolor]);
+    if(randdicke>0) {
+      for(i=0;i<randdicke;i++) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);    
+    } else if(randdicke<0) {
+      for(i=0;i>randdicke;i--) DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
     }
-  } else if(randdicke<0) {
-    for(i=0;i>randdicke;i--) {
-      DrawRectangle(obx+i,oby+i,obw-2*i,obh-2*i);
-    }
-  }
-}
-
-  
+  }  
   if(tree[idx].ob_state & CROSSED) { 
     SetForeground(gem_colors[RED]);
     DrawLine(obx,oby,obx+obw,oby+obh); 
@@ -1255,7 +1244,6 @@ if(randdicke) {
 
 int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
   int idx=start;
-  /*printf("objc_draw: von %d bis %d\n",start,stop);*/
 #ifdef DEBUG
   printf("**objc_draw: von %d bis %d\n",start,stop);
 #endif
@@ -1264,9 +1252,7 @@ int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
   if(idx==stop) return(1);
   if(tree[idx].ob_head!=-1) {
     if(!(tree[idx].ob_flags & HIDETREE)) {
-      
       objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty);
-      
     }
   }
   while(tree[idx].ob_next!=-1) {
@@ -1274,16 +1260,14 @@ int objc_draw( OBJECT *tree,int start, int stop,int rootx,int rooty) {
     draw_object(tree,idx,rootx,rooty);
     if(tree[idx].ob_flags & LASTOB) return(1);
     if(tree[idx].ob_head!=-1) {
-      if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty );
-      
+      if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty );      
     }
     if(idx==stop) return(1);
   }  
 }
 
 
-int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr) {
-  
+int rsrc_gaddr(int re_gtype, unsigned int re_gindex, char **re_gaddr) { 
   if(re_gtype==R_TREE) {
     char **ptreebase;
     if(re_gindex>=rsrc->rsh_ntree) return(0);
@@ -1333,50 +1317,47 @@ void fix_objc() {
   OBJECT *base;
   int anzahl;
 
-	base = (OBJECT *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_object);
-	anzahl=rsrc->rsh_nobs;
-
-	if(anzahl) {
-	for(i =0; i < anzahl; i++) {
-          if(rsrc->rsh_vrsn==0) {
-	  for(j=0;j<sizeof(OBJECT)/2;j++) {
-            WSWAP((char *)((int)&base[i]+2*j));
-          }
-	  LSWAP((short *)&(base[i].ob_spec));
-          }
-	  if(!(base[i].ob_type==G_BOX || base[i].ob_type==G_BOXCHAR|| 
+  base = (OBJECT *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_object);
+  anzahl=rsrc->rsh_nobs;
+  if(anzahl) {
+    for(i =0; i < anzahl; i++) {
+      if(rsrc->rsh_vrsn==0) {
+	for(j=0;j<sizeof(OBJECT)/2;j++) {
+          WSWAP((char *)((int)&base[i]+2*j));
+        }
+        LSWAP((short *)&(base[i].ob_spec));
+      }
+      if(!(base[i].ob_type==G_BOX || base[i].ob_type==G_BOXCHAR|| 
 	      base[i].ob_type==G_IBOX || base[i].ob_type==G_ALERTTYP))
 	    base[i].ob_spec+=(LONG)rsrc;	
 	  
-	  base[i].ob_x=     LOBYTE(base[i].ob_x)*chw+     HIBYTE(base[i].ob_x);
-	  base[i].ob_y=     LOBYTE(base[i].ob_y)*chh+     HIBYTE(base[i].ob_y);
-	  base[i].ob_width= LOBYTE(base[i].ob_width)*chw+ HIBYTE(base[i].ob_width);
-	  base[i].ob_height=LOBYTE(base[i].ob_height)*chh+HIBYTE(base[i].ob_height);
-	  
-	}
+      base[i].ob_x=     LOBYTE(base[i].ob_x)*chw+     HIBYTE(base[i].ob_x);
+      base[i].ob_y=     LOBYTE(base[i].ob_y)*chh+     HIBYTE(base[i].ob_y);
+      base[i].ob_width= LOBYTE(base[i].ob_width)*chw+ HIBYTE(base[i].ob_width);
+      base[i].ob_height=LOBYTE(base[i].ob_height)*chh+HIBYTE(base[i].ob_height);  
+    }
   }
 }
 void fix_tedinfo() {
   int i,j;
   TEDINFO *base;
   int anzahl;
-	base = (TEDINFO *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_tedinfo);
-	anzahl=rsrc->rsh_nted;
-	
-	if(anzahl) {
-	for(i =0; i < anzahl; i++) {
-	  if(rsrc->rsh_vrsn==0) {
-	    for(j=0;j<sizeof(TEDINFO)/2;j++) {
-              WSWAP((char *)((int)&base[i]+2*j));
-            }
-	    LSWAP((short *)&(base[i].te_ptext));
-	    LSWAP((short *)&(base[i].te_ptmplt));
-	    LSWAP((short *)&(base[i].te_pvalid));
-	  }
-	  base[i].te_ptext+=(LONG)rsrc;	  
-	  base[i].te_ptmplt+=(LONG)rsrc;	  
-	  base[i].te_pvalid+=(LONG)rsrc;	  
-	}
+  base = (TEDINFO *)((unsigned int)rsrc+(unsigned int)rsrc->rsh_tedinfo);
+  anzahl=rsrc->rsh_nted;
+    if(anzahl) {
+      for(i =0; i < anzahl; i++) {
+	if(rsrc->rsh_vrsn==0) {
+	  for(j=0;j<sizeof(TEDINFO)/2;j++) {
+            WSWAP((char *)((int)&base[i]+2*j));
+          }
+          LSWAP((short *)&(base[i].te_ptext));
+          LSWAP((short *)&(base[i].te_ptmplt));
+          LSWAP((short *)&(base[i].te_pvalid));
+        }
+      base[i].te_ptext+=(LONG)rsrc;	  
+      base[i].te_ptmplt+=(LONG)rsrc;	  
+      base[i].te_pvalid+=(LONG)rsrc;	  
+    }
   }
 }
 void fix_bitblk() {
@@ -1438,9 +1419,7 @@ void fix_iconblk() {
 	  }
 	  *(LONG *)&base[i].ib_pmask+=(LONG)rsrc;
 	  *(LONG *)&base[i].ib_pdata+=(LONG)rsrc;
-	  
 	  *(LONG *)&base[i].ib_ptext+=(LONG)rsrc;
-
 #if DEBUG
 	  printf("Icon #%d name %s  ",i,*(LONG *)&base[i].ib_ptext); 
 	  printf("w=%d h=%d x=%d y=%d c=<%c>\n",base[i].ib_wicon,base[i].ib_hicon,
@@ -1994,35 +1973,30 @@ int do_menu_select() {
 	  menuflags[menutitlesp[schubladenr]+nr]|=SELECTED;
           do_menu_edraw();
         }
-   
-    /* Taste Gedrueckt ? */
-    if(mask_return && !(menuflags[menutitlesp[schubladenr]+nr] & DISABLED)) {
-      /* Menus schliessen, Titel deselektieren und mit nr zurueck */
-      for(i=0;i<menuanztitle-1;i++) {
-        menutitleflag[i]=0;
+        /* Taste Gedrueckt ? */
+        if(mask_return && !(menuflags[menutitlesp[schubladenr]+nr] & DISABLED)) {
+          /* Menus schliessen, Titel deselektieren und mit nr zurueck */
+          for(i=0;i<menuanztitle-1;i++) {
+            menutitleflag[i]=0;
+          }
+          for(i=0;i<menutitlelen[schubladenr];i++) {
+            menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
+          } 
+          do_menu_close();
+          do_menu_draw();
+          return(menutitlesp[schubladenr]+nr);
+        }
       }
-      for(i=0;i<menutitlelen[schubladenr];i++) {
-        menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
-      } 
-      do_menu_close();
-      do_menu_draw();
-      return(menutitlesp[schubladenr]+nr);
-    }
-    }
     } else {
     /* Unselektiere alles  */
       for(i=0;i<menutitlelen[schubladenr];i++) {
         menuflags[menutitlesp[schubladenr]+i]&=~SELECTED;
       } 
-
-    
     }
   }
-  /* Tast Gedrueckt, dann schliesse Menu deselektiere Titel */
+  /* Taste Gedrueckt, dann schliesse Menu deselektiere Titel */
   if(sel>-1 && mask_return) {
-    for(i=0;i<menuanztitle-1;i++) {
-      menutitleflag[i]=0;
-    }
+    for(i=0;i<menuanztitle-1;i++) menutitleflag[i]=0;
     do_menu_close();
     do_menu_draw();
   }
@@ -2037,20 +2011,21 @@ Pixmap schubladepix;
 int schubladeff=0;
 int schubladenr;
 int schubladex,schubladey,schubladew,schubladeh;
+
 void do_menu_open(int nr) {
   int i,textx;
   if(schubladeff) do_menu_close();    
   textx=chw;
-    for(i=0;i<nr;i++) {  
-      textx+=chw*(menutitleslen[i]+2);
-    }
-    schubladex=sbox.x+textx-2;
-    schubladey=sbox.y+chh+1;
-    schubladew=10;
-    for(i=0;i<menutitlelen[nr];i++) {
-      schubladew=max(schubladew,menuentryslen[menutitlesp[nr]+i]*chw);
-    } 
-    schubladeh=chh*menutitlelen[nr]+2;
+  for(i=0;i<nr;i++) {  
+    textx+=chw*(menutitleslen[i]+2);
+  }
+  schubladex=sbox.x+textx-2;
+  schubladey=sbox.y+chh+1;
+  schubladew=10;
+  for(i=0;i<menutitlelen[nr];i++) {
+    schubladew=max(schubladew,menuentryslen[menutitlesp[nr]+i]*chw);
+  } 
+  schubladeh=chh*menutitlelen[nr]+2;
      /* Hintergrund retten  */ 
 #ifdef WINDOWS
   schubladedc=CreateCompatibleDC(bitcon[usewindow]);
@@ -2130,7 +2105,7 @@ void do_menu_draw() {
 
 
 /* Fileselector-Routine. Dem GEM nachempfunden.
-(c) markus Hoffmann   1998               */
+(c) Markus Hoffmann   1998               */
 
 
 
@@ -2143,7 +2118,7 @@ typedef struct fileinfo {
     char name[128];       /* The file name. */
     int typ;
     struct stat dstat;
-  } FINFO;
+} FINFO;
 #define ANZSHOW 13
 #define FWW 34
 
@@ -2197,7 +2172,7 @@ int compare_dirs(FINFO *a,FINFO *b) {
 }
 
 void sort_dir(FINFO *fileinfos,int anz) {
-  qsort(fileinfos,anz,sizeof(FINFO),compare_dirs);
+  qsort((void *)fileinfos,anz,sizeof(FINFO),compare_dirs);
 }
 #define MAXANZFILES 512
 int read_dir(FINFO *fileinfos,int maxentries,char *pfad,char *mask) {
@@ -2556,8 +2531,8 @@ char *fsel_input(char *titel, char *pfad, char *sel) {
 	  tedinfo[3].te_junk2=0;
         }
       }       
-    } else {
 #if DEBUG
+    } else {
       printf("BUTTON: %d\n",sbut);
 #endif
     }
