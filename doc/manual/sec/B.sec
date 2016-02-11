@@ -1,0 +1,311 @@
+##############################################################################
+
+Function:   BCHG()
+Syntax:     b%=BCHG(x%,bit%)
+DESCRIPTION:
+
+	Changes the bit% bit of x% from 0 to 1 or from 1 to 0.
+	
+
+EXAMPLE: 
+
+  PRINT BCHG(1,2)     ! result: 5
+  PRINT BCHG(5,2)     ! result: 1
+
+SEE ALSO: BSET(), BCLR()
+
+*##############################################################################
+
+Function:   BCLR()
+Syntax:     b%=BCLR(x%,bit%)
+DESCRIPTION:
+
+	BCLR sets the bit%-th bit of x% to zero.
+
+EXAMPLE: 
+
+  PRINT BCLR(7,1)     ! result: 5
+
+SEE ALSO: BSET(), BCHG()
+
+##############################################################################
+
+Command:    BEEP, BELL
+Syntax:     BEEP
+	    BELL
+DESCRIPTION:
+	
+	Sounds the speaker of your terminal. This command is not a
+	sound-interface, so you can neither vary the length or the height of
+	the sound (technically, it just prints chr$(7)). BELL is exactly the
+	same as BEEP.
+
+SEE ALSO: SOUND
+##############################################################################
+
+Command:    BGET
+Syntax:     BGET #n,adr%,len%
+	    
+DESCRIPTION:
+	
+	Reads len% bytes from a data channel into an area of memory 
+	starting at address adr%.
+
+        Unlike with BLOAD, several different areas of memory can be
+        read from a file.
+
+EXAMPLE:
+
+  OPEN "I",#1,"test.rsc"
+  header$=SPACE$(32)
+  BGET #1,VARPTR(header$),32
+  CLOSE #1
+  
+SEE ALSO: BLOAD, BPUT
+
+##############################################################################
+
+Function:   BIN$()
+Syntax:     a$=BIN$(<num-expression>[,len%])
+DESCRIPTION:
+
+	The bin$()-takes a numeric argument and converts it into a string of
+	binary digits (i.e. '0' and '1'). The minimal length of the output, 
+	the minimal number of digits, can be specified by the optional second 
+	argument. If the specified length is bigger than needed, the string
+	is filled with leading zeros. 
+	If you need binary representations with sign, use RADIX$() instead.
+
+EXAMPLE: 
+        PRINT BIN$(64,8),BIN$(-2000)
+	Result: 01000000      11111111111111111111100000110000
+
+SEE ALSO:  HEX$(), OCT$(), RADIX$()
+##############################################################################
+
+Command:   BLOAD
+Syntax:    BLOAD filename$,adr% 
+
+DESCRIPTION:
+
+	BLOAD reads the specified file into memory at address adr%. The memory
+	adr% is pointing to should be allocated before. You should check if
+	the file exists prior to using this function. This command is meant to
+	be used for loading binary data. To load a text file, use OPEN and 
+	INPUT # to remain compatible with other BASIC implementations.
+
+EXAMPLE:
+  IF EXIST("test.dat")
+    adr%=MALLOC(SIZE("test.dat"))
+    BLOAD "test.dat",adr%
+  ENDIF
+
+SEE ALSO: MALLOC(), BGET, INPUT, INPUT$(), BSAVE
+##############################################################################
+Command:   BMOVE
+Syntax:    BMOVE scr%,dst%,len%
+
+DESCRIPTION:
+
+	Fast movement of memory blocks.
+
+	scr% is the address at which the block to be moved begins. 
+	dst% is the address to which the block is to moved. 
+	len% is the length of the block in bytes.
+
+EXAMPLE:
+  a=1
+  b=2
+  BMOVE VARPTR(a),VARPTR(b),8  ! same as b=a
+
+SEE ALSO: PEEK(), POKE, BLOAD, BSAVE
+##############################################################################
+
+Command:   BOUNDARY
+Syntax:    BOUNDARY flag%
+
+DESCRIPTION:
+
+	Switch off (or on) borders  on filled shapes (PBOX, PCIRCLE ..). 
+	If flag% is zero - no border will be drawn.
+
+EXAMPLE:
+  BOUNDARY FALSE
+
+SEE ALSO: PBOX, PCIRCLE
+##############################################################################
+
+Command:   BOX
+Syntax:    BOX x,y,x2,y2
+
+DESCRIPTION:
+
+	Draws a rectangle with corners at (x,y) and (x2,y2). The screen 
+	coordinates start in the upper left corner. X increases to the right 
+	and y down to the bottom of the screen or window.
+
+EXAMPLE:
+  COLOR COLOR_RGB(1,1,0)
+  BOX 20,20,620,380
+
+SEE ALSO: PBOX, GET_GEOMETRY
+##############################################################################
+
+Command:   BPUT
+Syntax:    BPUT #n,adr%,len%
+
+DESCRIPTION:
+
+	Writes len% bytes from an area of memory starting at adr% out to a
+	data channel #n.
+
+EXAMPLE: 
+  OPEN "O",#1,"test.dat"
+  BPUT #1,VARPTR(t$),LEN(t$)
+  CLOSE #1
+
+SEE ALSO: BGET
+
+##############################################################################
+
+Command:    BREAK
+Syntax:     BREAK
+DESCRIPTION:
+
+	BREAK transfers control immediately outside the enclosing loop or
+	select statement. This is the preferred way of leaving such a
+	statement (rather than goto).
+
+EXAMPLE:
+  DO
+    INC i
+    IF i>5
+      PRINT "i is big enough."
+      BREAK
+    ENDIF
+  LOOP
+
+SEE ALSO:  EXIT IF
+
+##############################################################################
+
+Command:    BSAVE
+Syntax:     BSAVE filename$,adr%,len%
+
+DESCRIPTION:
+
+	Save len% bytes in memory from address adr% to a file named filename$.
+	If filename does not exist, it will be created. If it does exist, 
+	the old content will be overwritten.
+	This command is meant be be used for saving binary data obtained
+        via BLOAD. To save  text  files,  use  OPEN  and  PRINT  #  to  remain
+        compatible with other BASIC implementations.
+
+EXAMPLE:
+  BSAVE "content-t.dat",VARPTR(t$),LEN(t$)
+
+SEE ALSO: BLOAD, BPUT
+##############################################################################
+
+Function: BSET()
+Syntax:   b%=BSET(x%,bit%)
+
+DESCRIPTION:
+
+	BSET sets the bit%-th bit of x% to 1.
+
+EXAMPLE:
+  PRINT BSET(0,2)    ! result: 4
+
+SEE ALSO: BCHG(), BCLR(), BTST()
+##############################################################################
+
+Function: BTST()
+Syntax:   <bool-result>=BTST(x%,bit%)
+
+DESCRIPTION:
+
+	BTST results in -1 (TRUE) if bit bit% of x% is set.
+
+EXAMPLE:
+  PRINT BTST(4,2)    ! result: -1
+	
+SEE ALSO: BCHG(), BCLR(), BSET()
+##############################################################################
+
+Function: BWTD$()
+Syntax:   b$=BWTD$(a$)
+
+DESCRIPTION:
+
+	BWTD$() performs the inverse Burrows-Wheeler transform on the 
+	string a$.  
+
+	The Burrows-Wheeler transform (BWT) is an algorithm used in data 
+	compression techniques. It was invented by Michael Burrows and 
+	David Wheeler.
+	
+	BWTD$() can restore the original content of a string which has been
+	coded with BWTE$() before.
+EXAMPLE: 
+        t$="Hello, this is the Burrows Wheeler transformation!"
+        b$=bwte$(t$)  ! encode it
+        print b$
+        c$=bwtd$(b$)  ! decode it
+        print c$
+	
+	Result:
+	esss,rno ! rmhheHlstWtth eelroalifretoruwiin  a Bo
+	Hello, this is the Burrows Wheeler transformation!
+	
+SEE ALSO: BWTE$()
+##############################################################################
+
+Function: BWTE$()
+Syntax:   b$=BWTE$(a$)
+
+DESCRIPTION:
+
+	BWTE$() performs a Burrows-Wheeler transform on the string a$.
+	  
+	The Burrows-Wheeler transform (BWT) is an algorithm used in data 
+	compression techniques such as bzip2. It was invented by Michael 
+	Burrows and David Wheeler.
+
+	When a character string is transformed by the BWT, none of its 
+	characters change. It just rearranges the order of the characters. 
+	If the original string had several substrings that occurred often, 
+	then the transformed string will have several places where a single 
+	character is repeated multiple times in a row. This is useful for 
+	compression, since it tends to be easy to compress a string that has 
+	runs of repeated characters by techniques such as run-length encoding.
+
+EXAMPLE: 
+
+        t$="Hello, this is the Burrows Wheeler transformation!"
+        b$=bwte$(t$)  ! encode it
+        print b$
+        c$=bwtd$(b$)  ! decode it
+        print c$
+	
+	Result:
+	esss,rno ! rmhheHlstWtth eelroalifretoruwiin  a Bo
+	Hello, this is the Burrows Wheeler transformation!
+
+SEE ALSO: BWTD$()
+
+##############################################################################
+
+Function: BYTE()
+Syntax:   <num>=BYTE(<num-expression>)
+
+DESCRIPTION:
+
+	Returns lower 8 bits of argument. (same as a=b AND 255)
+
+EXAMPLE: 
+  PRINT BYTE(-200)    ! Result: 56
+
+SEE ALSO: CARD(), WORD(), SWAP()
+
+##############################################################################

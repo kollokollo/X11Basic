@@ -1,0 +1,132 @@
+##############################################################################
+Operator:   NAND
+Syntax:     <num-expression1> NAND <num-expression2>
+DESCRIPTION:
+
+	The result of the NAND operator is true, if not both operands are true, 
+	and false otherwise.
+	Is the same as NOT (a AND b).
+	 
+	Returns -1 for true, 0 for false.
+
+	Also used to combine bits in binary number operations. 
+	E.g. (1 NAND -1) returns -2. 
+
+EXAMPLES:
+
+PRINT 3=3 NAND 4<2	 Result:  -1 (true)
+PRINT 3>2 NAND 5>3	 Result:   0 (false)
+
+PRINT (1 NAND -3)       Result:   -2
+
+SEE ALSO:   NOR, AND, NOT
+##############################################################################
+
+Command:  NEW
+Syntax:   NEW
+
+DESCRIPTION:
+
+	NEW erases the program and all variables in memory (and stops execution 
+	of program.)
+
+SEE ALSO: CLEAR
+
+##############################################################################
+
+Command:  NEXT
+Syntax:   NEXT [<variable>]
+
+DESCRIPTION:
+
+	NEXT terminates a FOR loop. FOR loops must be
+        nested  correctly:  The variable name after NEXT is for looks only and
+        can not be used to select a FOR statement.  Each  NEXT  jumps  to  the
+        matching  FOR statement regardless if and what <variable> is specified
+        after NEXT.
+	
+SEE ALSO: FOR
+
+EXAMPLE:
+        FOR n=1 TO 2
+            FOR m=10 to 11
+                PRINT "n=";n,"m=";m
+            NEXT m
+        NEXT n
+
+##############################################################################
+Function:  NEXTPRIME()
+Syntax:    p&=NEXTPRIME(x&)
+
+DESCRIPTION:
+
+	Returns the smallest prime number bigger than x.
+
+EXAMPLE:
+        PRINT NEXTPRIME(200)      ! Result: 211
+        PRINT NEXTPRIME(200000000000000000000) ! Result: 200000000000000000089
+
+SEE ALSO: GCD()
+##############################################################################
+
+Command:  NOP, NOOP
+Syntax:   NOP
+	  NOOP
+
+DESCRIPTION:
+
+	No Operation: do nothing.
+
+##############################################################################
+
+Operator:   NOR
+Syntax:     <num-expression1> NOR <num-expression2>
+DESCRIPTION:
+
+	The result of the NOR operator is true, if both operands are zero, 
+	and false otherwise.
+	Used to determine if both of the conditions are false. 
+	Is the same as NOT (a OR b).
+	 
+	Returns -1 for true, 0 for false.
+
+	Also used to combine bits in binary number operations. 
+	E.g. (1 NOR -8) returns 6. 
+
+EXAMPLES:
+
+PRINT 3=3 NOR 4<2	 Result:   0 (false)
+PRINT 3>3 NOR 5<3	 Result:  -1 (true)
+
+PRINT (4 NOR -128)       Result:   123
+
+SEE ALSO:   NAND, OR, NOT, XOR
+##############################################################################
+
+Command:  NOROOTWINDOW
+Syntax:   NOROOTWINDOW
+
+DESCRIPTION:
+
+	Switches back to normal graphic output (normally into a window), if
+	it was switched to ROOTWINDOW before.
+
+SEE ALSO: ROOTWINDOW
+##############################################################################
+
+Operator:   NOT
+Syntax:     NOT <num-expression>
+DESCRIPTION:
+
+	The result of the NOT operator is true, if the following expression 
+	if false, and false if the expression is true. 
+	Used to produce the opposite/negation of a logical expression. 
+	 
+	Returns -1 for true, 0 for false.
+
+	Also used to invert bits in binary number operations. 
+	E.g. (NOT -8) returns 7. 
+
+
+SEE ALSO:   AND, OR, NAND, NOR
+##############################################################################

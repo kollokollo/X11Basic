@@ -1,0 +1,197 @@
+##############################################################################
+
+Command:  WATCH
+Syntax:   WATCH filename$
+DESCRIPTION:
+
+       WATCH can be used to monitor individual files, or to monitor 
+       directories. When a directory is monitored, FILEEVENT$ will 
+       return events for the directory itself, and for files inside the 
+       directory.
+       Note that WATCH is not available on every operating system.
+
+EXAMPLE:
+	WATCH "/tmp"
+	DO
+	  a$=FILEEVENT$
+	  IF LEN(a$)
+	    PRINT a$
+	  ENDIF
+	LOOP
+
+SEE ALSO:    FILEEVENT$	
+##############################################################################
+
+Command:  WAVE
+Syntax:   WAVE c%,form%[,attack,decay,sustain,release]
+
+DESCRIPTION:
+
+       WAVE controls the internal sound synthesizer. You can specify a 
+       waveform generator and an envelope for each of the 16 sound channels.
+	
+       Set the given parameters for channel c%. There are 16 
+       sound channels which are mixed together, so c% may be between 0 and 15. 
+
+       If c% is omitted or -1, the parameters are set for all channels.
+
+       form% specifies the tone generator for the specified channel:
+
+       Tone Generators:
+       0 - silence (default for channels 1-15)
+       1 - sin wave (default for channel 0)
+       2 - square wave
+       3 - triangular wave
+       4 - sawtooth wave
+       5 - white noise 
+       
+       The envelope of the tones are specified using 4 parameters 
+       attack,decay,sustain and release. 
+       attack, decay and release values are specified in seconds.
+       sustain level values are between 0 and 1.
+              
+       * "Attack time" is the time taken for initial run-up of level 
+         from nil to peak, beginning when the SOUND command is executed.
+       * "Decay time" is the time taken for the subsequent run down from the 
+         attack level to the designated sustain level, after the attack part of
+	 the envelope is over.
+       * "Sustain level" is the level during the main sequence of the sound's 
+         duration, until duration time is reached (e.g. 0.8).
+       * "Release time" is the time taken for the level to decay from the 
+         sustain level to zero after the duration time is over.
+
+	If you want a permanent tone, set attack to 0, sustain to 1 and 
+	decay as well as release to any value.
+
+	The WAVE commands allow to simulate real instruments, e.g. strings,
+	trumpet or piano. A realistic sound can only be achieved by also using
+	higher harmonics. To simulate this, you will have to use more than one
+	channel and play them simultaneously.
+
+       
+	Volume, frequency and duration for the specified sound channel are set 
+	by the SOUND command.
+
+SEE ALSO:    SOUND, PLAYSOUND
+EXAMPLE:
+	WAVE 1,1,0,,1     ! set sine wave, no attack
+	SOUND 1,500,1     ! play a permanent tone on channel 1
+	
+##############################################################################
+
+Command:  WHILE
+Syntax:   WHILE <num-expression>
+DESCRIPTION:
+
+	WHILE initiates a WHILE...WEND loop. The loop  ends with WEND 
+	and execution reiterates while the WHILE <num-expression> is not
+	FALSE (not null). Unlike a REPEAT...UNTIL loop, the loop body 
+	is not necessarily executed at least once. 
+
+SEE ALSO:    WEND, DO
+EXAMPLE:
+       WHILE NOT EOF(#1)
+           LINEINPUT #1,a$
+       WEND  
+	
+##############################################################################
+
+Command:  WEND
+Syntax:   WEND
+DESCRIPTION:
+
+	WEND terminates a WHILE...WEND loop.
+
+SEE ALSO: WHILE, DO
+EXAMPLE:
+       WHILE NOT EOF(#1)
+           LINEINPUT #1,a$
+       WEND  
+
+##############################################################################
+
+Variable: WIN32?
+Syntax:   <boolean-result>=WIN32? 
+
+DESCRIPTION:
+
+	Returns TRUE (-1) If the program is running under MS WINDOWS (32 bit).
+
+EXAMPLE: 
+
+IF WIN32?
+  a$=FSFIRST$("C:\","*.dat")
+ELSE
+  a$=FSFIRST$("/tmp","*.dat")
+ENDIF
+
+SEE ALSO: UNIX?, TT?, ANDROID?
+#############################################################################
+
+Function: WORD()
+Syntax: a=WORD(b)
+
+DESCRIPTION:
+
+	Returns lower 16 bits of b and expands sign. B is always treated as 
+	an integer.
+
+SEE ALSO: BYTE(), CARD(), SWAP()
+
+#############################################################################
+
+Function: WORD$()
+Syntax: a$=WORD$(b$,n[,delimiter$])
+DESCRIPTION:
+
+	Returns the n'th word of b$. Words are separated by space or 
+	by the first character of delimiter$. 
+
+EXAMPLE:
+	a$=WORD$("Hello, this is a string.",3)
+	b$=WORD$("Hello, this is a string.",2,",")
+ 
+SEE ALSO: SPLIT, WORT_SEP()
+
+#############################################################################
+Command:  WORT_SEP
+Syntax:   WORT_SEP t$,d$,mode,a$,b$ 
+
+DESCRIPTION:
+
+	Splits up string t$ into two parts a$ and b$ concerning a delimiter 
+	string d$. So that t$=a$+d$+b$.
+	
+	mode can be: 0   --   default
+		     1   --   do not search parts of t$ which are in brackets.
+
+	Quoted parts of the string are not split up.
+
+EXAMPLE:
+	WORT_SEP "Hello, this is a string."," ",0,a$,b$
+
+COMMENT: 
+	This command should not be used anymore. Please use SPLIT instead.
+
+SEE ALSO: SPLIT, WORT_SEP()
+#############################################################################
+Function:  WORT_SEP()
+Syntax:    <num-result>=WORT_SEP(t$,d$,mode,a$,b$) 
+
+DESCRIPTION:
+
+	Splits up string t$ into two parts a$ and b$ concerning a delimiter 
+	string d$. So that t$=a$+d$+b$. 
+	
+	mode can be: 0   --   default
+		     1   --   do not search parts of t$ which are in brackets.
+
+	Quoted parts of the string are not split up.
+
+	The return value can be:
+		2  -- The string has been split up.
+		1  -- The string did not contain d$, a$=t$, b$=""
+		0  -- The string was empty. a$="",b$=""
+
+SEE ALSO: SPLIT
+#############################################################################

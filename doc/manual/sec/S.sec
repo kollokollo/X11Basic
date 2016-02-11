@@ -1,0 +1,1151 @@
+##############################################################################
+Command: SAVE
+Syntax:  SAVE [a$]
+
+DESCRIPTION:
+
+	SAVE writes the BASIC-program into a file with the name a$. If no 
+	filename is specified the program will be saved to the file which was
+	loaded before.    
+EXAMPLE:
+
+  SAVE "new.bas"
+
+SEE ALSO: LOAD
+
+##############################################################################
+Command: SAVESCREEN
+Syntax:  SAVESCREEN t$
+
+DESCRIPTION:
+	
+	Saves the whole Graphic-screen (desktop) into a file with name t$.
+	The graphics format is XWD (X Window Dump image data) on UNIX 
+	systems and BMP (device independent bitmap image) else. 
+
+EXAMPLE:
+
+  SAVESCREEN "fullscreen.bmp"
+	
+SEE ALSO: SAVEWINDOW
+##############################################################################
+Command: SAVEWINDOW
+Syntax:  SAVEWINDOW t$
+
+DESCRIPTION:
+	
+	Saves the actual X11-Basic Graphic-Window into a file with name t$.
+	The graphics format is XWD (X Window Dump image data) on UNIX 
+	systems and BMP (device independent bitmap image) else. 
+
+EXAMPLE:
+
+  SAVEWINDOW "window.bmp"
+
+SEE ALSO: SAVESCREEN, SGET
+
+##############################################################################
+
+Command: SCOPE
+Syntax:  SCOPE a(),typ,yscale,yoffset
+         SCOPE y(),x(),typ,yscale,yoffset,xscale,xoffset
+
+DESCRIPTION:
+	
+	SCOPE performs an extended polyline on one or two dimensional data.
+	Drawing and scaling is done very fast. It is possible to plot a
+	million points and lines at once.
+	
+	The variable typ specifies the type of plot:
+	
+	0 -- draw a polyline
+	1 -- draw points (without lines)
+	2 -- draw impulses 
+	
+	With xscale, yscale, xoffset and yoffset you can specify a scaling 
+	function to the data.  
+	
+EXAMPLE:
+ 
+  l=2^10
+  DIM a(l)
+  SIZEW ,l,400
+  CLEARW
+  FOR i=0 TO l-1
+    a(i)=200/100*@si(3*i/512*2*pi)+i/100*sin(20*i/512*2*pi)
+  NEXT i
+  COLOR COLOR_RGB(1,0.5,0)
+  SCOPE a(),1,-10,300  ! Plot the original function
+  FFT a()              ! Do a Fourier transformation
+  ' Normalize
+  FOR i=0 TO l-1
+    a(i)=a(i)/SQRT(l)
+  NEXT i  
+  SHOWPAGE
+  PAUSE 1
+  FOR i=4 TO 86
+    a(i)=0
+  NEXT i
+  FOR i=l-1 DOWNTO l-86
+    a(i)=0
+  NEXT i
+  FFT a(),-1
+  COLOR COLOR_RGB(0,1/2,1)
+  SCOPE a(),0,-10/SQRT(l),300  ! Plot the modified function
+  SHOWPAGE
+  END
+  DEFFN si(x)=x mod pi
+
+
+SEE ALSO: LINE, POLYLINE
+##############################################################################
+Command: SCREEN
+Syntax:  SCREEN n
+
+DESCRIPTION:
+	This commands select the Screen-Resolution in SVGA-Mode. It is only
+	available in the SVGA-Version of X11-Basic and has no effect on the
+	X11-version, the Android or WINDOWS-Version.
+	
+	Following Screen modes are supported:
+	 n   	Mode
+	======================================
+	 0   	TEXT-Mode, no graphics
+	 1      320x 200  16 colors
+	 2      640x 200  16 colors
+	 3      640x 350  16 colors
+	 4      640x 480  16 colors
+	 5      320x 200 256 colors
+	 6      320x 240 256 colors
+	 7      320x 400 256 colors
+	 8      360x 480 256 colors
+	 9      640x 480     monochrome
+	10      640x 480 256 colors
+	11      800x 600 256 colors
+	12     1024x 768 256 colors
+
+	13     1280x1024 256 colors
+
+	14      320x200 15Bit colors
+	15      320x200 16Bit colors
+	16      320x200 24Bit colors
+
+	17      640x480 15Bit colors
+	18      640x480 16Bit colors
+	19      640x480 24Bit colors
+
+	20      800x600 15Bit colors
+	21      800x600 16Bit colors
+	22      800x600 24Bit colors
+
+	23	1024x768 15Bit colors
+	24	1024x768 16Bit colors
+	25	1024x768 24Bit colors
+
+	26	1280x1024 15Bit colors
+	27	1280x1024 16Bit colors
+	28	1280x1024 24Bit colors
+
+	29	 800x 600 16 colors
+	30	1024x 768 16 colors
+	31	1280x1024 16 colors
+
+	32	720x 348 monochrome  Hercules emulation mode 
+	33-37	32-bit per pixel modes.
+	38-74	additional resolutions         
+	
+SEE ALSO: VGA-Version of X11-Basic
+##############################################################################
+Command: SEEK
+Syntax:  SEEK #n[,d]
+
+DESCRIPTION:
+	
+	Place file pointer of channel n on new absolute position d (Default on
+	position 0 which is the beginning of the file.)
+
+SEE ALSO: RELSEEK, LOC(), EOF(), LOF()
+##############################################################################
+
+Command:    SELECT
+Syntax:     SELECT <expression>
+
+DESCRIPTION:
+
+	Divides a program up into different blocks depending on the result of
+	the expression. Only the integer part of the result of the expression 
+	is used to compare with the values given by CASE statements. Program
+	flow branches to the  block of code, given by the CASE statement which
+	matches the value of expression. If no CASE block matches, it branches
+	to the DEFAULT block. If no DEFAULT block is given and none of the
+	CASE blocks match, the program resumes after the ENDSELECT. Also
+	after the CASE block is finished, the program resumes after the
+	ENDSELECT. You must not use GOTO out of the SELECT--ENDSELECT block. 
+	(although in the interpreter this works, the compiler will not compile
+	it correctly.) 
+	You can leave the block any time with BREAK.
+
+COMMENT:
+
+	The statement after SELECT will be evaluated/calculated only once,
+	then compared to all the values given by the CASE statements, one by
+	one in the order given. If the first matches, the others will not be
+	evaluated anymore. The DEFAULT section will always match, if no other
+	match before was found. BREAK can be used, but there is no way to
+	CONTINUE with the SELECT after one (CASE) BLOCK was entered.
+	
+	Code between SELECT and the first CASE or DEFAULT statement will 
+	be dead code and should be avoided.
+	
+	If you need to compare floating point (real) numbers, you must use a
+	IF -- ELSE IF -- ELSE construct.
+
+
+EXAMPLE:
+
+i=5
+SELECT i
+  CASE 1
+    PRINT 1
+  CASE 2,3,4
+    PRINT "its 2,3, or 4"
+  CASE 5
+    PRINT 5
+  DEFAULT
+    PRINT "default"
+ENDSELECT
+
+SEE ALSO: CASE, DEFAULT, ENDSELECT, BREAK, IF
+##############################################################################
+Command: SEND
+Syntax:  SEND #n,msg$[,adr%,port%]
+
+
+DESCRIPTION:
+	
+       SEND is used to transmit a message via fast UDP datagrams to  another
+       socket which may be on another host. Or, send is used to send a data
+       packet to a previously opened USB device. Send with only two 
+       parameters may be used only when the socket is in a connected state
+       (see CONNECT), otherwise the destination address and the port has to
+       be specified.
+
+       The address of the target is given by adr%, which usually contains a 
+       IP4 address (e.g. cvl(chr$(127)+chr$(0)+chr$(0)+chr$(1)) which
+       corresponds to 127.0.0.1). msg$ can be an arbitrary message with any
+       data in it. The length of the  message  must not exceed 1500 Bytes.  If 
+       the  message is too long to pass atomically through the underlying
+       protocol, an error occurs, and the message is not transmitted.
+
+       No indication of failure to deliver is implicit in a send.
+
+       When the message does not fit into the send buffer of the socket, send
+       blocks. The OUT?() function may be used to determine when it is
+       possible to send more data.
+
+EXAMPLE:
+
+  port=5555
+  server$="localhost"   ! if the receiver runs on the same computer
+  OPEN "UU",#1,"sender",port+1
+  CONNECT #1,server$,port
+  i=0
+  DO
+    @sendmessage(i,"The time is: "+date$+" "+time$+" "+str$(i))
+    WHILE INP?(#1)
+      t$=@getmessage$()
+      IF LEN(t$)
+        a=CVI(LEFT$(t$,2))
+        PRINT "received: ";a;" ";right$(t$,len(t$)-2)
+      ENDIF
+    WEND
+    INC i
+    PAUSE 1
+  LOOP
+  CLOSE #1
+  END
+  PROCEDURE sendmessage(id,m$)
+    PRINT "sending packet #";id
+    SEND #1,mki$(id)+m$
+  RETURN
+  FUNCTION getmessage$()
+    LOCAL t$,adr
+    RECEIVE #1,t$,adr
+    pid=CVI(MID$(t$,1,2))
+    IF pid=0
+      @sendACK(pid,adr)
+    ENDIF
+    RETURN t$
+  ENDFUNCTION
+  PROCEDURE sendACK(pid,adr)
+    @sendmessage(6,CHR$(pid),adr)
+  RETURN
+
+SEE ALSO: OPEN, CLOSE, CONNECT, RECEIVE, OUT?()
+##############################################################################
+
+Command:  SENSOR
+Syntax:   SENSOR ON
+          SENSOR OFF
+
+DESCRIPTION:
+
+	Switches the sensor phalanx on or off.
+	Sensors can be accelerometer, temperature, pressure, light, humidity, 
+	gyroscope, etc... 
+	They need to be switched on, before you can use them. If you do not 
+	use them anymore, you should switch them off to save battery.
+
+SEE ALSO: GPS, SENSOR?, SENSOR()
+
+##############################################################################
+
+Variable:  SENSOR?
+Syntax:   a=SENSOR?
+
+DESCRIPTION:
+
+	This system variable is 0 if no sensors are available on this hardware
+	platform, otherwise the number of usable sensors is returned. Sensors
+	can be accelerometer, temperature, pressure, light, humidity, 
+	gyroscope, etc... 
+
+SEE ALSO: GPS, SENSOR, SENSOR()
+
+##############################################################################
+Function: SENSOR()
+Syntax:   a=SENSOR(n)
+
+DESCRIPTION:
+
+	Readout the n-th value of the sensor-phalanx. Usually
+	n=0  --> Temperature
+	  1  --> Ambient light 
+	  3  --> Proximity
+	  4,5,6  --> Orientation x,y,z
+	  7,8,9  --> Gyroscope   x,y,z
+	  10,11,12  --> Magnetic field x,y,z
+	  13,14,15  --> Accelerometer x,y,z
+
+SEE ALSO: GPS, SENSOR, SENSOR?, ANDROID?
+
+##############################################################################
+
+Command: SETENV
+Syntax:  SETENV t$,a$
+
+DESCRIPTION:
+
+	Sets the environment variable t$ of the operating system to the value 
+	given by a$. The environment variables are not persistent after a 
+	reboot or restart of X11-Basic.
+	
+	(This command is not yet implemented)
+	
+EXAMPLE:
+	SETENV "LASTLAUNCHED",DATE$+" "+time$
+
+SEE ALSO: ENV$()
+	
+##############################################################################
+
+Command: SETFONT
+Syntax:  SETFONT t$
+
+DESCRIPTION:
+	
+	Loads and sets a font for graphical text commands. 
+	t$ may be 
+	"SMALL" or "5x7"   for a small font
+	"MEDIUM or "8x8    for a medium sized font
+	"BIG" or "8x16"    for a big font.
+	"LARGE" or "16x32" for an even bigger font.
+	"HUGE" or "24x48"  for an even bigger font.
+	"GIANT" or "32x64" for a gigantic font size.
+
+	With UNIX and the X-WINDOW system, the font name may be any valid
+	font name or pattern. On other platforms true-type font filenames can
+	be used. This way, also proportional fonts can be  used.
+
+EXAMPLE:
+	SETFONT "BIG"
+	TEXT 100,100,"Hi, this is a big font"
+	SETFONT "5x7"
+	TEXT 100,150,"The small variant"
+	SETFONT "-*-lucidatypewriter-medium-r-*-*-10-*-*-*-m-*-*-*"
+	TEXT 100,200,"This may work on a UNIX system."
+	SETFONT "C:\Arial.ttf"
+	TEXT 100,200,"This may work on some other platform."
+	
+SEE ALSO: TEXT
+
+##############################################################################
+
+Command: SETMOUSE 
+Syntax:  SETMOUSE x,y[,k[,m]]
+
+DESCRIPTION:
+
+	The SETMOUSE command permits the positioning of the mouse cursor under
+	program control. The optional parameter k can simulate the mouse
+	button being pressed or released. The optional parameter m specifies
+	if the coordinates are relative to the windows origin (m=0, default)
+	or relative to the mouses current position (m=1).
+
+EXAMPLE:
+
+ROOTWINDOW
+i=0
+REPEAT
+  SETMOUSE 2,i,,1  ! Move relative by 2 in x and by i in y
+  SHOWPAGE
+  PAUSE 0.04
+  INC i
+UNTIL MOUSEY>800
+
+
+SEE ALSO: MOUSE
+##############################################################################
+
+Command: SGET
+Syntax:  SGET screen$
+
+DESCRIPTION:
+
+	SGET stores the content of the graphics window or screen in screen$.
+	The data format is BMP (in case you want to write this into a file).
+
+EXAMPLE:
+
+  CLEARW           ! clear the screen, otherwise sometimes there is garbage left
+  FOR i=1 TO 64
+    FOR j=1 TO 40
+      COLOR COLOR_RGB(i/64,j/40,SQRT(1-(i/64)^2-(j/40)^2))
+      CIRCLE i*10,j*10,3    ! draw something
+    NEXT j
+  NEXT i
+  CIRCLE 100,100,30
+  SHOWPAGE
+
+  SGET screen$
+  BSAVE "screen.bmp",VARPTR(screen$),LEN(screen$)
+
+SEE ALSO: SPUT, SAVEWINDOW, GET, PUT
+##############################################################################
+
+Function: SGN()
+Syntax:   a=SGN(b)
+
+DESCRIPTION:
+
+	SGN returns the sign of a number b. It may be
+	-1 if b is negative
+	 0 if b equals 0
+	 1 if b is positive.
+
+SEE ALSO: ABS()
+#############################################################################
+Command: SHELL
+Syntax:  SHELL file$[,argument$,...]
+
+DESCRIPTION:
+
+	This command executes an executable program which name and path is 
+	given in file$. The text console/terminal will be connected to the
+	running program. Optional string arguments can be specified. The 
+	difference to SYSTEM (which executes a shell command) is, that with
+	SHELL you execute the file and not a command. 
+
+EXAMPLE:
+	SHELL "/usr/bin/sh"  ! starts the sh shell interactively
+
+SEE ALSO: SYSTEM
+
+##############################################################################
+
+Function: SHL()
+Syntax:   i%=SHL(j%,n%)
+
+DESCRIPTION:
+
+	Returns the bit pattern in j% shifted left by n% bits.
+
+EXAMPLE: 
+	PRINT SHL(8,2)     Result: 32
+
+SEE ALSO: SHR()
+##############################################################################
+
+Function: SHM_ATTACH()
+Syntax:   adr=SHM_ATTACH(id)
+
+DESCRIPTION:
+
+	SHM_ATTACH() attaches the shared memory segment identified by id (see
+	SHM_MALLOC()) to the programs address space. The address is returned.
+	
+	You can also attach shared memory segments, which are originally 
+	created by another process, but you must know the id, and the 
+	process must have read and write permission for the segment.
+	
+
+SEE ALSO: SHM_MALLOC(), SHM_DETACH, SHM_FREE  
+##############################################################################
+Command:  SHM_DETACH
+Syntax:   SHM_DETACH adr
+
+DESCRIPTION:
+
+	SHM_DETACH detaches the shared memory segment located at the 
+	address specified  by adr  from the address space of the program.  The
+        to-be-detached segment must be currently attached with adr equal to
+        the value returned by the attaching SHM_ATTACH() call.
+	
+
+SEE ALSO: SHM_MALLOC(), SHM_ATTACH()
+##############################################################################
+Command:  SHM_FREE
+Syntax:   SHM_FREE id
+
+DESCRIPTION:
+
+	Mark the shared memory segment identified by id to be destroyed. The
+	segment will only actually be destroyed after the last process
+	detaches it. You can only free a shared memory segment, if you are
+	the owner, means, you must have created it with SHM_MALLOC().
+
+SEE ALSO: SHM_MALLOC()
+
+##############################################################################
+
+Function: SHM_MALLOC()
+Syntax:   id=SHM_MALLOC(size,key)
+
+DESCRIPTION:
+
+	SHM_MALLOC() returns the identifier of the shared memory segment 
+	associated with key.  A new shared memory segment, with size 
+	equal to the value of size rounded up to a multiple of the operating 
+	system internal page size, is created if no shared memory segment 
+	corresponding to key exists.
+ 
+	Open the shared memory segment - create if necessary.
+	
+	Return value is the id of the shared memory segment. The id can be
+	used by different processes to attach and access the segment (read
+	and write).  In case of an error, -1 is returned.
+
+SEE ALSO: SHM_FREE, SHM_ATTACH()
+##############################################################################
+
+Command:  SHOWM
+Syntax:   SHOWM
+
+DESCRIPTION:
+
+	Show the mouse cursor (make it visible).
+
+SEE ALSO: HIDEM
+##############################################################################
+
+Command:  SHOWPAGE
+Syntax:   SHOWPAGE
+
+DESCRIPTION:
+
+	SHOWPAGE refreshes the graphic output. Usually the drawing to the 
+	graphic output window or screen is not visible until SHOWPAGE is 
+	performed. (Only on TomTom devices this command has no effect, because
+	all graphics drawn is immediately visible).
+
+SEE ALSO: VSYNC
+##############################################################################
+
+Function: SHR()
+Syntax:   i%=SHR(j%,n%)
+
+DESCRIPTION:
+
+	Returns the bit pattern in j% shifted right by n% bits.
+
+EXAMPLE: 
+	PRINT SHR(8,2)     Result: 2
+
+SEE ALSO: SHL(), ROR(), ROL()
+##############################################################################
+
+Function: SIN()
+Syntax:   <num-result>=SIN(<num-expression>)
+
+DESCRIPTION:
+
+	Returns the sinus of the expression in radians.
+
+EXAMPLE: 
+	PRINT SIN(PI/2)     Result: 1
+
+SEE ALSO: COS(), TAN(), ACOS()
+
+##############################################################################
+
+Function: SINH()
+Syntax:   <num-result>=SINH(<num-expression>)
+
+DESCRIPTION:
+
+	Returns the sinus hyperbolicus of the expression in radians.
+
+SEE ALSO: SIN(), ASINH()
+##############################################################################
+
+Function: SIZE()
+Syntax:   l%=SIZE(file$)
+
+DESCRIPTION:
+
+	Returns the size of a file given by its filename (including path).
+	
+SEE ALSO: LOF()
+##############################################################################
+Command:  SIZEW
+Syntax:   SIZEW nr,w,h
+
+DESCRIPTION:
+
+	Resizes the graphic window #nr with width w and height h.
+
+SEE ALSO: OPENW, MOVEW
+##############################################################################
+
+Function: SOLVE()
+Syntax:   x()=SOLVE(m(),d())
+
+DESCRIPTION:
+	
+	Solves a set of linear equations of the form M()*x()=d().  M() has to
+	be a 2 dimensional array (a matrix) not necessarily a square matrix.
+	d() must be a 1 dimensional array (a vector) with exactly as many
+	elements as lines of M(). x() will be a 1 dimensional array (a vector)
+	with exactly as many elements as rows of M(). Internally a singular
+	value  decomposition is used to solve the equation. If the linear
+	equation  system does not have an exact solution, the returned vector
+	is the one which minimizes (least square) |M*x-d|.
+
+EXAMPLE:
+	r=3
+	c=5
+	DIM a(r,c),b(r)
+	ARRAYFILL a(),0
+	a(0,0)=1
+	a(0,2)=1
+	a(1,1)=10
+	a(2,2)=100
+	b(0)=4
+	b(1)=2
+	b(2)=300
+	PRINT "solve:"
+	FOR i=0 TO r-1
+	    PRINT i;": (";
+	    FOR j=0 TO c-1
+	      PRINT a(i,j);
+	      IF j<c-1 
+	        PRINT ", ";
+	      ENDIF
+	    NEXT j
+	    PRINT ")(x)=(";b(i);")"
+	NEXT i
+	PRINT
+	er()=SOLVE(a(),b())
+	PRINT "solution:"
+	FOR i=0 TO c-1
+	  PRINT "(x";i;")=(";er(i);")"
+	NEXT i
+
+COMMENT:
+	This function is only available, if X11-Basic was compiled and linked 
+	together with the LAPACK library. (currently only on linux).
+
+SEE ALSO: INV(), DET()
+
+##############################################################################
+
+Command: SORT
+Syntax:  SORT array()[,n%[,idx%()]]
+         SORT array%()[,n%[,idx%()]]
+         SORT array$()[,n%[,idx%()]]
+
+DESCRIPTION:
+
+	SORT sorts the one-dimensional array array(), array%() or array$(). 
+	Numeric arrays and string arrays can be sorted. If n% is given, only
+	the first n% values are sorted. If idx%() is given, this (numerical)
+	array will also be sorted corresponding to the first one. This is
+	useful for creating an index table. SORT uses the canonical ASCII
+	coding for sorting strings. If you want a string array sorted by a 
+	different alphabet or being sorted case insensitive, you can 
+	implement such sorting functions with the index tables.
+
+EXAMPLE:
+
+  DIM test$(100)
+  CLR anzdata
+  DO
+    READ a$
+    EXIT IF a$="*"
+    test$(anzdata)=a$
+    INC anzdata
+  LOOP 
+  SORT test$(),anzdata    ! normal sort according to ASCII
+  @asort(test$(),anzdata) ! special alphabet sort
+  @usort(test$(),anzdata) ! sort ignoring the case of characters
+  PRINT "Result of SORT:"
+  FOR x=0 TO anzdata-1
+    PRINT test$(x)
+  NEXT x
+  END
+
+'
+' Sort case insensitive
+'
+PROCEDURE usort(VAR s$(),anz%)
+  LOCAL k%,t$(),i%(),t2$()
+  t$()=s$()
+  DIM i%(anz%)            ! create index table
+  FOR k%=0 TO anz%-1
+    i%(k%)=k%
+    t$(k%)=UPPER$(t$(k%))
+  NEXT k%
+  SORT t$(),anz%,i%()     ! Sort with index table
+  DIM t2$(DIM?(s$()))
+  FOR k%=0  TO anz%-1
+    t2$(k%)=s$(i%(k%))  
+  NEXT k%
+  s$()=t2$()
+RETURN
+'
+' Sort with a custom alphabet
+'
+PROCEDURE asort(VAR s$(),anz%)
+  LOCAL k%,alphabet$,j%,t$(),i%(),t2$()
+  t$()=s$()
+  alphabet$="0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+  DIM i%(anz%)           ! create index table
+  FOR k%=0 TO anz%-1
+    i%(k%)=k%
+    FOR j%=0 TO LEN(t$(k%))-1
+      POKE VARPTR(t$(k%))+j%,INSTR(alphabet$,MID$(t$(k%),j%+1))
+    NEXT j%
+  NEXT k%
+  SORT t$(),anz%,i%()     ! Sort with index table
+  DIM t2$(DIM?(s$()))
+  FOR k%=0  TO anz%-1
+    t2$(k%)=s$(i%(k%))  
+  NEXT k%
+  s$()=t2$()
+RETURN
+
+SEE ALSO: DIM
+##############################################################################
+
+Command: SOUND
+Syntax:  SOUND <channel>,<frequency>[,volume[,duration]]
+
+DESCRIPTION:
+	SOUND sets a tone for the sound generator for channel c%.
+	There are 16 sound channels which are mixed together, so c may be 
+	between 0 and 15.
+	If c is omitted or -1, a free channel (which is quiet at that time) 
+	will be used.
+	
+	The tone has frequency [Hz], volume [0-1] and a duration [s]. 
+	If frequency=0
+	(or volume=0) the channel will be switched off. If duration is 
+	omitted or -1 a permanent sound will be played (infinite duration, 
+	until it is cleared by the next SOUND command to that channel). 
+
+	Each of the 16 channels also support sound samples,
+	which can be set via PLAYSOUND. Volume can be 0 (off) to 1 (maximum). 
+	The duration is counted in seconds. 
+	The parameters of the sound synthesizer of this channel can be 
+	set with WAVE (envelope and wave form). Also noise can be set 
+	for a channel.
+
+COMMENT:
+	On systems without ALSA/PCM sound the internal speaker is used.
+	The  internal speaker has only one channel (and produces sort of a
+	square  wave). The internal speaker is  accessed via a console device and
+	needs privileges. Except for on ANDROID devices, the sound currently 
+	does not work under UNIX/LINUX. 
+
+EXAMPLE:
+        WAVE 1,1,0.05,0.1,0.5,0.1    ! set the instrument parameters
+        DO
+          MOUSEEVENT                 ! wait for mouseclick
+          SOUND 1,2*MOUSEX+50,1,0.3  ! play a nice sound
+        LOOP
+	' Also this is possible:
+	SOUND 1,500    ! SOUND ON
+	PAUSE 0.1
+	SOUND 1,0      ! SOUND OFF
+
+SEE ALSO:  WAVE, PAUSE, PLAYSOUND
+ 
+##############################################################################
+Variable:  SP
+Syntax     i%=SP
+
+DESCRIPTION:
+
+	The variable SP represents the internal X11-Basic stack pointer. Do
+	not name any other variable SP (or PC) since no value can be assigned
+	to it.
+
+SEE ALSO: PC	
+
+##############################################################################
+
+Function:  SPACE$()
+Syntax:    t$=SPACE$(n)
+
+DESCRIPTION:
+
+	Returns a string containing n spaces.
+	
+SEE ALSO:  STRING$()	
+##############################################################################
+
+Command: SPAWN
+Syntax:  SPAWN procedure
+
+DESCRIPTION:
+	
+	Spawns a new thread using the given procedure as an entry point. This
+	entry point can be considered the "main" function of that  thread of
+	execution. The new thread will run in parallel to the main thread and
+	can access the same memory (unlike a process which was forked with
+	fork()).
+
+	This command is not fully implemented and at the moment messes up the 
+	program execution stack of the interpreter since all internal control
+	structures are accessed by two threads. Anyway, in a natively compiled
+	program this can work as expected.
+
+
+EXAMPLE:
+
+SEE ALSO:  FORK() 
+
+##############################################################################
+
+Command:  SPEAK
+Syntax:   SPEAK t$[,pitch,rate,locale$]
+
+DESCRIPTION:
+	Reads text t$ loud. (It uses Text-to-speech synthesis if it is 
+	available). You can adjust a factor for pitch (<1 male, >1 female) 
+	and rate (<1 slow, >1 fast). 
+
+	The locale can be: 
+	"de" for German  pronunciation,
+	"en" for English pronunciation,
+	"us" for English pronunciation,
+	"fr" for French  pronunciation,
+	"es" for Spanish pronunciation,
+	"it" for Italian pronunciation.
+	
+COMMENT:	
+	This command is implemented in the Android version of X11-Basic only. 
+	Not all locales might be installed. If a locale is missing, you will 
+	be asked to install it.  
+
+EXAMPLE:
+	SPEAK "" ! The first SPEAK command initializes the text-to-speech engine
+	SPEAK "Are you hungry?"
+	SPEAK "Ich glaube nicht.",1,1,"de"
+		
+SEE ALSO: PLAYSOUND, WAVE
+
+##############################################################################
+
+Command:  SPLIT
+Syntax:   SPLIT t$,d$,mode%,a$[,b$]
+
+DESCRIPTION:
+
+	Splits up string t$ into two parts a$ and b$ concerning a delimiter 
+	string d$. So that t$=a$+d$+b$.
+	
+	mode can be: 0 -- default
+		     1 -- do not search in parts of t$ which are in brackets.
+
+	Quoted parts of the string are not split up.
+
+EXAMPLE:
+	SPLIT "Hello, this is a string."," ",0,a$,b$
+
+	
+SEE ALSO: WORT_SEP, WORD$()
+
+##############################################################################
+
+Command:  SPUT
+Syntax:   SPUT screen$
+
+DESCRIPTION:
+	Map a screen bitmap, which was stored in screen$ (and saved with
+	SGET) back to the screen.
+
+EXAMPLE:
+
+  CLEARW           ! clear the screen, otherwise sometimes there is garbage left
+  FOR i=1 TO 64
+    FOR j=1 TO 40
+      COLOR COLOR_RGB(i/64,j/40,SQRT(1-(i/64)^2-(j/40)^2))
+      CIRCLE i*10,j*10,3    ! draw something
+    NEXT j
+  NEXT i
+  CIRCLE 100,100,30
+  SHOWPAGE
+
+  SGET b$     ! get the whole screen bitmap and save it in b$
+  CLEARW
+  SHOWPAGE    ! screen is now blank
+  PRINT "now reput the screen"
+  PAUSE 1
+  SPUT b$     ! put back the saved screen content
+  SHOWPAGE
+
+SEE ALSO: SGET, PUT_BITMAP
+
+##############################################################################
+Function: SQR(), SQRT()
+Syntax:   <num-result> = SQR(<num-expression>)
+	  <num-result> = SQRT(<num-expression>)
+DESCRIPTION:
+
+	SQR() and SQRT() return the square root of its argument. 
+	The function can also be used on complex numbers, then returning
+	a complex result. You can always force the function return the complex
+	sqare root (given a real argument) by using: SQRT(a+0i).
+
+EXAMPLES:
+
+PRINT SQR(25)      ! Result: 5
+PRINT SQRT(-1+0i)  ! Result: (0+1i)
+
+PRINT "Calculate square root of a number."
+INPUT "Number=",z
+r124=1
+105:
+r123=r124
+r124=(r123^2+z)/(2*r123)
+IF ABS(r124-r123)-0.00001>0
+  PRINT r124
+  GOTO 105
+ENDIF
+PRINT "Result of this algorithm:"'r124
+PRINT "Compare with: sqrt(";z;")=";SQRT(z)
+PRINT "Deviation:"'ABS(SQRT(z)-r124)
+
+SEE ALSO: Operator  ^ 
+##############################################################################
+Function:  SRAND()
+Syntax:    VOID SRAND(b)
+
+DESCRIPTION:
+
+       The SRAND() function sets its argument as the seed  for  a
+       new  sequence  of pseudo-random integers to be returned by
+       RAND(), RANDOM() or RND().  These sequences are repeatable 
+       by calling SRAND()
+       with the same seed value.
+
+SEE ALSO: RANDOMIZE, RANDOM(), RND(), RAND()
+##############################################################################
+
+Variable:  STIMER
+Syntax:    <int-result>=STIMER
+
+DESCRIPTION:
+
+	STIMER returns the integer part of TIMER. So the resolution is 1
+	second and the value fits in 32 bit integers. (And it is a bit faster
+	than TIMER).
+
+SEE ALSO: TIMER, CTIMER
+
+##############################################################################
+
+Command: STOP
+Syntax:  STOP
+DESCRIPTION:
+
+	STOP halts program  execution and sets the interpreter to interactive
+	mode. The  execution can be continued with the CONT command.  
+
+SEE ALSO:  CONT, END, QUIT
+
+##############################################################################
+Function:  STR$()
+Syntax:    t$=STR$(a[,b,c])
+
+DESCRIPTION:
+
+        STR$() converts a number into a string of length b
+        with c significant digits. If b or c are omitted, the string
+	will contain as much digits as the number requires.
+
+SEE ALSO: VAL(), PRINT USING
+##############################################################################
+Function:  STRING$()
+Syntax:    a$=STRING$(i%,b$)
+
+DESCRIPTION:
+
+       The STRING$() function returns a string consisting of i% copies 
+       of b$.
+
+SEE ALSO: SPACE$()
+##############################################################################
+
+Command:   SUB
+Syntax:    SUB a,b
+           SUB a%,b%
+           SUB a#,b#
+           SUB a&,b&
+
+DESCRIPTION:
+
+	Decrease the value of the variable a by the result of b.
+
+EXAMPLE:
+a=0.5
+SUB a,5
+Result: -4.5
+
+SEE ALSO: ADD, MUL, DIV
+*#############################################################################
+Function: SUB()
+Syntax:   c=SUB(a,b)
+          c%=SUB(a%,b%)
+          c#=SUB(a#,b#)
+          c&=SUB(a&,b&)
+
+DESCRIPTION:
+
+	Returns the result of a minus b.
+
+SEE ALSO: SUB, ADD()
+##############################################################################
+Function: SUCC()
+Syntax:   a=SUCC(b)
+
+DESCRIPTION:
+
+	Determines the next higher integer number.
+
+SEE ALSO: PRED()
+##############################################################################
+
+Command:   SWAP
+Syntax:    SWAP a,b
+           SWAP a%,b%
+           SWAP a$,b$
+           SWAP a(),b()
+
+DESCRIPTION:
+	Exchanges the values of the variables a and b. A and b can be of 
+	any type, but the types of a and b must be equal. SWAP a(0),b would
+	also be possible.
+
+EXAMPLE: 
+
+a=4
+b=5
+SWAP a,b
+print a      ! Result: 5
+
+SEE ALSO: LET, Operator: =
+*############################################################################
+
+Function: SWAP()
+Syntax:   a%=SWAP(b%)
+
+DESCRIPTION:
+
+	Swaps High and Low words of b and returns the result. b is always 
+	treated as a 32 bit unsigned integer.
+
+EXAMPLE:
+
+   PRINT HEX$(SWAP(5))    ! Result: 0000000050000
+
+SEE ALSO: BYTE(), CARD(), WORD()
+
+#############################################################################
+
+Function:   SYM_ADR()
+Syntax:     adr=SYM_ADR(#n,sym_name$)
+
+DESCRIPTION:
+
+	SYM_ADR() resolves the address of a symbol name of a given shared
+	object  library which has been linked before.
+
+EXAMPLE:
+
+t$="/usr/lib/libreadline.so"    !  If the readline shared object file
+IF EXIST(t$)                    !  exist, 
+  LINK #1,t$                    !  link it, resolve the symbol "readline"
+  DUMP "#"                      !  and execute that subroutine with 
+  promt$=">>>"                  !  one string parameter.
+  adr=EXEC(SYM_ADR(#1,"readline"),L:VARPTR(promt$))
+  r=adr
+  WHILE PEEK(r)>0               ! Print the result
+    PRINT CHR$(PEEK(r));
+    INC r
+  wend 
+  PRINT
+  UNLINK #1			! Unlink the dynamic lib
+  FREE adr
+ENDIF
+
+
+SEE ALSO: LINK, UNLINK
+
+#############################################################################
+Command: SYSTEM
+Syntax:  SYSTEM <string-expression>
+
+DESCRIPTION:
+
+	Passes a command to the shell. Executes the shell command. 
+	SYSTEM provides a way to use alle commands like rm, rmdir, mkdir etc. 
+	which are not implemented in X11-Basic, but which are available from 
+	a command shell. (This is usually sh or busybox on UNIX/LINUX/ANDROID 
+	and TomTom systems and DOS on MS WINDOWS).
+
+EXAMPLE:
+	SYSTEM "mkdir folder"
+
+SEE ALSO: SYSTEM$()	
+
+*############################################################################
+
+Function: SYSTEM$()
+Syntax:   <string-result>=SYSTEM$(<string-expression>)
+
+DESCRIPTION:
+
+	Passes a command to the shell. Executes shell command.
+	The function returns a string containing the stdout of the
+	command executed. 
+
+EXAMPLE:
+
+d$=SYSTEM$("ls")
+PRINT d$
+
+SEE ALSO: SYSTEM
+##############################################################################
+

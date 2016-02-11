@@ -1,0 +1,1881 @@
+
+\chapter{Programming in X11-Basic}
+
+This chapter describes all you need to know to write your own programs
+in X11-Basic.
+
+\section{The dialect of X11-BASIC}
+
+The programming language BASIC has been around since the 1960s. BASIC is an
+acronym and it stands for {\em Beginners All Purpose Symbolic Instruction
+Code}. BASIC was originally designed to be a programming language that is easy
+to use for a wide range of projects by anyone.
+X11-Basic is a dialect of this but it is not a BASIC in its original form. It is
+more a mix of classic BASIC with structured languages like PASCAL and Modula-2.
+The Syntax of X11-Basic is oriented to the famous GFA-BASIC which was
+developed for the ATARI ST in 1985. GFA BASIC (as of version 3.5, the most
+popular one) was, by the standards of its time, a very modern programming
+language. Like X11-Basic, it does without line numbers and has a
+reasonable range of structured programming commands.
+
+X11-Basic has a lot of features which make the language different from the
+original (ANSI-Basic) intention. As with GFA-Basic these modifications help
+developing programs with having a more structured look and which make use of
+the more modern graphical user interfaces available on computers since the mid
+1980's:
+\begin{itemize} 
+\item One command or declaration per line for better readability,
+\item use of subroutines (procedures) and functions with local variables and 
+      parameter passing by value or by reference,
+\item data statements and arrays,
+\item powerful loop and program flow constructs,
+\item file and socket operations,
+\item complex number mathematics,
+\item operations for handling arbitrary/infinite precision numbers, 
+\item commands to directly access the operation system shell,  
+\item commands for using graphics in multiple windows,
+\item a port of the AES (the graphical user interface 
+from the ATARI ST), allowing for easy use of graphics in your program, 
+\item  commands for direct memory manipulation, allowing you to access the 
+computer almost as with machine language, 
+\item possibility to merge source code for libraries and reuse,  
+\item inline data compression and encryption (disabled in US-versions), 
+\item Unicode (UTF-8) support, 
+\item powerful mathematics (including matrix/equation solving and fast Fourier 
+transformations), and 
+\item a compiler is available.
+\end{itemize}
+
+\section*{Interpreter and Compiler}
+
+X11-Basic programs (or scripts) are interpreted by default. This means the
+so-called interpreter takes each line of your code and looks what to do with it.
+The compiler does it differently, it will take your code once, translate it into
+bytecode or machine code resulting in a more speedy program execution as the
+step for command look-up does not appear anymore. The compiled program just can
+be executed out of the box. On the other hand, the advantage of an interpreter
+is that you can directly test and run your program without running a compiler
+first. This is helpful while developing but of course a compiler is available
+as well allowing you to produce rather fast machine code from your X11-Basic
+program, once testing has been finished.
+
+\section{Getting started}
+
+To write a first X11-Basic program you will need an editor, where you can type
+in the source code. The X11-Basic package does not include an editor, but many
+so-called text editors are readily available nearly everywhere and by chance
+they are already installed on your system. You can use {\it Notapad2} on MS
+WINDOWS systems, {\it pico, nano, vi, emacs, nedit, gedit} and many more on
+UNIX and Linux systems, {\it pico} on the TomTom device, {\it Ted} or {\it 920
+text editor} on Android. This is just a small list of possibilities here. 
+
+Open such an editor, and you can start programming.
+
+\section{Your first X11-Basic program}
+
+We assume, that you have opened a console window (a shell) on linux or WINDOWS. 
+The Android version is a bit different. 
+
+Open your favorite editor and type the following line of code into the editor. 
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "Hello X11-Basic!"
+\end{verbatim}
+\end{mdframed}
+
+Now save the file as "hello.bas" and run the interpreter with 
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+xbasic hello.bas
+\end{verbatim}
+\end{mdframed}
+
+X11-Basic should not complain. If it does, check carefully for typing mistakes.
+The Program now should print out your hello message at the console or in the 
+console window the interpreter was started from. It will not return to the 
+shell, but just prompt for additional commands. Now type
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+> quit
+\end{verbatim}
+\end{mdframed}
+and you return to the shell. 
+
+Of course you can include the quit command in your hello.bas:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "Hello X11-Basic!"
+QUIT
+\end{verbatim}
+\end{mdframed}
+Now the program always returns to the shell prompt when done. 
+
+Now lets compile it:
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+xbbc hello.bas -o hello.b
+\end{verbatim}
+\end{mdframed}
+will produce a bytecode binary \verb|hello.b|.
+
+You can run this:
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+xbvm hello.b 
+\end{verbatim}
+\end{mdframed}
+will give you the same output "Hello X11-Basic!".
+
+Real compilation will need two more steps:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+xb2c hello.b -o hello.c 
+\end{verbatim}
+\end{mdframed}
+
+produced a translated C-sourcefile \verb|hello.c|.
+
+If you have the {\it gnu C compiler} available you can compile it to an 
+independent executable program called hello with:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+gcc hello.c -o hello -lm -lX11 -lx11basic -lasound -lreadline
+\end{verbatim}
+\end{mdframed}
+
+There you go. Your program can now directly be started with 
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+./hello
+\end{verbatim}
+\end{mdframed}
+
+\section{Program structure}
+
+If you want to write more sophisticated programs than the Hello-example, you
+should understand the general structure of a X11-Basic program.
+
+A X11-Basic program consist of a main program block and subroutines. The
+main program block is the shell of the program and is the section between
+the first line and the keyword END (or QUIT). The code in the main block drives 
+the logic of your program. In a simple program this is all that is needed. In
+larger and more complex programs, putting all your code in the main block
+makes the program hard to read and understand. Subroutines let you divide
+your program in manageable sections, each performing its own specific, but
+limited, tasks.
+
+\section{General Syntax}
+
+The syntax of a typical X11-Basic line is 
+\begin{verbatim}
+COMMAND parameters
+\end{verbatim}
+parameters usually consists of a list of comma separated expressions. 
+Another type of X11-Basic lines are variable assignments
+\begin{verbatim}
+variable=expression
+\end{verbatim}
+variables typically have a name and can have different types. The result of the
+expression will be stored under that name for further reference. 
+Each line of X11-Basic code can contain exactly one command or one assignment 
+(or a comment).
+
+Here is a typical piece of X11-Basic code:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  LOCAL l,ll,content$,g$,gg$,comp
+  CLR comp
+  IF EXIST(f$)
+    OPEN "I",#1,f$
+    ll=LOF(#1)
+    content$=INPUT$(#1,ll)
+    CLOSE #1
+  ENDIF
+  ' and so on
+\end{verbatim}
+\end{mdframed}
+
+\subsection*{Appending lines}
+
+With many editors a limitation on the maximal line length applies (e.g. 4096
+characters/line\footnote{Note, that in X11-Basic itself there is no limitation
+on the line lengths.}). In X11-Basic a single command may in very rare cases
+consist of more than 4096 characters (e.g. by assigning an array constant to an
+array). Therefor a possibility of splitting lines into two (or more) has been
+implemented. If the last character of a line is a \verb|'\'| (it must be really
+the last character of the line and may not be followed by a space character!),
+the following line will be appended to this line by replacing the \verb|'\'|
+and the following newline character by spaces.\\ {\bf Example:} 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "Hello,"; \
+ " that's it" 
+\end{verbatim}
+\end{mdframed}
+ will be treated as:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim} 
+PRINT "Hello,";" that's it" 
+\end{verbatim}
+\end{mdframed}
+
+Please note: The \verb|'\'| character must be placed at a position within the
+command where a space would be allowed, too.
+
+\subsection*{Comments}
+
+A comment can be inserted into your program code with the REM command or the
+abbreviation \verb|'|. Also the \verb|'#'| as a first character of the program
+line reserves the rest of the line for a comment. Anything behind the REM will
+be ignored by X11-Basic.
+
+If you want to place comments at the end of a line, they have to be
+prefaced with \verb|'!'|.\\
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+' This is a demonstration of comments
+DO    ! endless loop
+LOOP  ! with nothing inside
+\end{verbatim}
+\end{mdframed}
+Note: These end of line comments can not be used after DATA (and REM).
+
+\section{The very BASIC commands: PRINT, INPUT, IF and GOTO}
+
+The {\bf PRINT}-command is used to put text on the text screen. Text screen
+means your terminal (under UNIX) or the console window (under Windows). PRINT
+is used to generate basic output, e.g. text, strings, numbers, e.g. the result
+of a calculation. Some basic formatting is possible.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+PRINT "The result of 1+1 is: ";1+1
+\end{verbatim}
+\end{mdframed}
+
+With the {\bf INPUT} command you let the user input data, p.ex. numbers or text.
+The data can be entered on the text screen/console window. Together with 
+PRINT this allows already to implement a very simple user interface. 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+INPUT "Please enter your name: ",name$
+PRINT "Hello ";name$
+\end{verbatim}
+\end{mdframed}
+
+The {\bf IF} command let the program do different things depending on the result
+of a calculation. Therefor the code is grouped into a block which should only be
+executed if the result of the expression after IF is TRUE (this means, not
+zero). The block starts with the IF command and ends with an ENDIF command. 
+If the result of the expression after IF is not TRUE, means it is FALSE 
+(or zero), the program will be continued after the ENDIF and the lines of 
+code between the IF and the ENDIF are not run.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+INPUT "Please enter a number: ";a
+IF a=13
+  PRINT "Oh, you obviously like the thirteen!"
+ENDIF
+PRINT "Thank you for the ";a;"."
+\end{verbatim}
+\end{mdframed}
+
+With {\bf GOTO} you can branch to a different part of your program. 
+GOTO, despite its bad reputation ([goto considered harmful]), has still its 
+good uses. Since no line numbers are used, you must use a label to define 
+lines where the GOTO command can jump to.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+again:
+INPUT "Please enter a number, but not the 13: ";a
+IF a=13
+  PRINT "Oh, you obviously like the thirteen!"
+  PRINT "But, please enter a different number."
+  GOTO again
+ENDIF
+PRINT "Thank you for the ";a;"."
+\end{verbatim}
+\end{mdframed}
+
+Besides these four very basic commands (which exist in every BASIC dialect)
+X11-Basic has many more features which make life easier and your programs more
+user friendly.
+
+\section{Variables}
+
+Variables in BASIC programming are analogous to variables in mathematics. 
+Variable identifiers (names) consist of alphanumeric strings. These identifiers are 
+used to refer to values in computer memory.
+In the X11-Basic program, a variable name is one way to bind a variable to a 
+memory location; the corresponding value is stored as a data object in that 
+location so that the object can be accessed and manipulated later via the 
+variable's name.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+a=1     ! Assigns a 1 to a variable named a
+b=a+1   ! The variable a can be referred to, to make a calculation
+PRINT "The variable b contains now a ";b
+\end{verbatim}
+\end{mdframed}
+
+Variable names can be very long if you like and also can contain digits and an
+underscore, with the exception, that the first letter of the variable name must
+not be a digit.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+my_very_long_variable_name=1.23456
+PRINT my_very_long_variable_name
+\end{verbatim}
+\end{mdframed}
+
+You can refer to a variable by giving its name in the place you want the value
+of the variable to be used. X11-Basic will automatically know where to store the
+data and how to deal with it.
+
+It is also important to tell X11-Basic what sort of data you want to store. You
+can have variables that store only numbers but also variables that deal with a
+character or a whole string, a line of text for example. The following line of
+X11-Basic code will create a variable called age for you and assign it the value
+of 18.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+age=18
+\end{verbatim}
+\end{mdframed}
+But if you want to store a text, the variable needs to be capable to 
+hold characters instead of numbers. Therefore, in that case you mark the 
+variable with a \$ to tell that it should store text, not numbers:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+name$="Robert"
+\end{verbatim}
+\end{mdframed}
+Text constants, by the way, need to be enclosed with "", to tell X11-Basic that 
+the text should not be interpreted as program code, but just be treated as any
+text.
+
+The assignment is done with the '=' operator. The '=' operator is also used in 
+expressions, e.g. after an IF command. But there it is not used as an assignment 
+operator but instead there it is treated as a comparison operator. In X11-Basic
+both operators are '='. The interpreter distinguishes between them just by
+context.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+\begin{verbatim}
+x=(a=3)
+\end{verbatim}
+\end{mdframed}
+Here the first = is an assignment and the second is the comparison operator.
+x will be assigned a -1 (TRUE) if a is 3 and a 0 (FALSE) else. The brackets are 
+not necessary here they just help reading this expression. Confused? Well, you 
+eventually will get used to it.
+
+Last to say, such an assignment will overwrite any old data that has been stored
+before in that variable. As long as you don't assign a value to a variable, it
+will hold a default value, 0 in most cases.
+
+\subsection{The scope of a Variable}
+
+X11-Basic uses two scopes for variables: global (which is the default) and 
+local. 
+
+Global variables can be modified from anywhere within the program, and
+any part of the program may depend on it. Unless otherwise declared with LOCAL, 
+all X11-Basic variables are global by default and this need not be explicitly 
+declared.
+
+But there is one downside of global variables: The use of global variables
+makes software harder to read and understand. Since any code anywhere in the
+program can change the value of the variable at any time, understanding the use
+of the variable may entail understanding a large portion of the program. They
+can lead to problems of naming because a global variable makes a name dangerous
+to use for any other local scope variable. Also recursive programming is
+nearly impossible with only global variables, last but not least, the usage of
+procedures and functions becomes much more clear, if you are able to encapsulate
+all internal variables of that function and you do not bother outside of the 
+functions scope if you accidentally use one of these internal variables
+somewhere else in the code, possibly altering the functions behavior.
+
+Because of all this, X11-Basic also provides local variables, which live only
+within a certain function or procedure and their context.
+
+Local variables need to be declared with the command LOCAL inside the function
+od procedure where they belong to. Outside this specific procedure or function 
+they simply do not exist, or if a global variable of the same name exists, they 
+refer to different contents.
+
+\subsection{Data types}
+
+Now, lets come back to the type of a variable. How can one see what kind of
+content a variable can store? How does X11-Basic know? By the way the name of
+the variable has been written. To distinguish between different ways of data
+types X11-Basic appends a special typing sign as a suffix to the variable name
+to distinguish between several ways to store data in variables. 
+
+The X11-Basic interpreter uses 64-bit floating point variables, 32-bit integer
+variables, character strings and arrays of these variables of arbitrary
+dimension. A declaration of the variables and of their type is not necessary
+(except for arrays $\rightarrow$ \verb|DIM|), because the interpreter recognizes
+the type of the variable from the suffix: 32bit integer variables have the
+suffix \%, arbitrary precision integer variables have a \&,   complex variables
+a \#,  character strings a \$, arrays a (). Variables without suffix are treated
+as real 64bit floating point variables. Pointers are integers,  function calls
+are marked by @. Logical expressions are also of type integer. It is important
+that variables with a special suffix are different from those (even if the rest
+of the name is identical) without.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Examples:}
+\begin{verbatim}
+x=10.3        ! this is a number variable (64bit floating point)
+x$="Hello"    ! this is a different character string variable
+x%=5          ! this is a (32bit) integer variable, still different
+x&=79523612688076834923316 ! this is a big integer variable, still different
+x#=3+4i       ! this is a complex number variable, 
+@x            ! this refers to a function or procedure called x
+x()=[1,2,3,4] ! This beast refers to an array.
+\end{verbatim}
+\end{mdframed}
+
+\subsection{Variable naming}
+
+You can use all letters and numbers for your variable names. Spaces are not
+allowed but underscores inside the variable name. The variable name can be of
+any length. X11-Basic limits you only in the following ways: a variable may not
+begin with a number or an underscore, only with letters. Avoid to name your
+variables like X11-Basic commands. It will work but it can cause troubles. As a
+rule, never try to assign values to X11-Basic system variables (like 
+\verb|TRUE|, \verb|FALSE|, \verb|TIMER|, \verb|PC|, \verb|TERMINALNAME$|). The
+values indeed will be assigned, but you never can use the assigned values, since
+always the internal values will be used.
+
+Valid variable names look like the following: 
+\begin{verbatim}
+x, auto%, lives%, bonus1%, x_1, city_name$, debit, z#   . 
+\end{verbatim}
+
+Invalid variable names look like this and X11-Basic
+will complain: 
+\begin{verbatim}
+_blank, 1x, ?value%, 5s$, 1i, #u. 
+\end{verbatim}
+Always remember: begin your variable names with a letter from A-Z and you are on
+the safe side!
+
+Variable names and commands are case insensitive. Each name is bound to only
+one kind of variable; \verb|A$| is a whole different variable(value) than
+\verb|A| which is different from \verb|A%| or \verb|A$(1,1)|.
+
+Space between commands will be ignored, but note that no space is allowed 
+between the name of a variable or command and the '(' of its parameter list. 
+So, \verb|ASC("A")| is good, \verb|ASC(     "A"     )| also,
+but \verb|ASC ("A")| isn't.
+
+\subsubsection*{Examples:}
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXX\=\kill\\
+integer variables: \>   \verb|i%=25| \\
+		\>	\verb|my_adr%=VARPTR(b$)| \\
+		\>	\verb|b%=MALLOC(100000)| \\
+big integer variables: \>   \verb|i&=79523612688076834923316| \\
+		\>	\verb|a&=FACT(100)| \\
+float variables:  \>    \verb|a=1.2443e17| \\
+		\>    \verb|b=@f(x)| \\
+complex variables:  \>  \verb|a#=1.2443e17+1.2i| \\
+		\>    \verb|b#=CONJ(a#)| \\
+		
+character strings:\>    \verb|t$="Hello everybody !"| \\
+fields and arrays:\>    \verb|i%(),a(),t$(), [1,3,5;7,6,2]| \\
+ \end{tabbing}
+
+\subsection{Numbers}
+
+X11-Basic normally uses integer numbers (32 Bit) which range from -2147483648 to
+2147483647, and floating point numbers, which  are 64Bit IEEE 754 standard
+values. These 64bit floating point numbers have a  mantissa of of 52 bits and an
+exponent of 11 bits and a sign bit. These numbers can represent 15 to 16
+significant digits and powers of 1e-308 to 1e308. Complex numbers consist of two
+64bit floating point values. 
+
+X11-Basic currently also support infinite precision integer numbers. These
+numbers are stored in a variable size portion of memory, so that an arbitrary
+number of digits can be stored. However, calculation with big interges is slow
+and only a  few built-in functions can be used on them.
+
+Number (constants) can be preceded by a sign, + or -, and are written as a
+string of numeric digits with or without a decimal point and can also have a
+positive or negative exponent as a power of 10 multiplier e.g. 
+
+\begin{verbatim}
+ -253 	67.3 	0.25 	-127.42E-3 	-1.3E7 	1
+\end{verbatim}
+
+The imaginary part of complex number constants are market with a trailling "i", e.g.
+
+\begin{verbatim}
+ -2i 	1i 	0.25+3i     -127.42E-3i
+\end{verbatim}
+Note: A single "i" is always treated as a real variable name. 
+If you want the imaginary unit, please always use "1i".
+
+Integer numbers, with no decimal fraction or exponent, can also be in either 
+hexadecimal or binary. Hexadecimal numbers should be preceded by \$ (or 0x) and 
+binary numbers preceded by \%, e.g. 
+
+\begin{verbatim}
+%101010     -$FFE0    0xA0127BD     -%10001001     %00011010
+\end{verbatim}
+
+\subsection{Strings}
+
+String variables can contain sequences of characters (bytes) of arbitrary 
+length. There is no length limit for a string other than the virtual memory of
+the machine. Strings generally contain ASCII text, but can hold arbitrary byte
+sequences, even characters that have the ASCII code zero. In other words a
+string is a collection of bytes of certain length. You can treat strings as
+arbitrary length of binary data if you need. Strings are automatically
+elastic, meaning they automatically resize to contain whatever number of bytes
+are put into them. When a string resizes, its location in memory may change, as
+when a longer string is assigned and there is insufficient
+ room after the string
+to store the extra bytes.
+
+String variables are distinguished by the \$ suffix.
+
+String constants are enclosed with pairs of \verb|""| (double quote). 
+
+A wealth of intrinsics and functions are provided to support efficient string
+processing and manipulating. 
+
+There is a way to include special characters into string constants. 
+The usual way in BASIC is to split the string into sub strings and concatenate 
+the parts during run time, like in the code fragment:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:}
+{\footnotesize
+\begin{verbatim}
+st$="This is a special string, containing a bell character at the end"+CHR$(7)
+\end{verbatim}
+}
+\end{mdframed}
+
+By the way, the double quote character can be added with \verb|CHR$(34)|.
+
+\subsection{Arrays}
+
+Arrays are memory locations that store many values of the same type at the same
+time. While normal variables store a single value at a time, an array variable
+can store many values. The values are accessed via the name of the variable and
+the appropriate indexes. The index or indexes follow the name of the variable
+between ( and ). 
+
+There is no limit on the number of indexes (the dimension). You can use as 
+many as you like.
+Also there is no limit on the index values other than the index values have to
+be positive integer and that memory may limit the array sizes.
+
+X11-Basic arrays can contain variables of any data type, including strings. All
+arrays, even multi-dimensional arrays, can be re-dimensioned without altering
+the contents. A special feature of X11-Basic is the implicit dimensioning of
+arrays and the existence of array constants. You may define an array by using
+the DIM command. You might also define the array by an assignment like
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+DIM b(10)
+a()=b() 
+\end{verbatim}
+\end{mdframed}
+if b() already has been DIMed or by 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+a()=[1,2,3,4;6,7,8,9]
+\end{verbatim}
+\end{mdframed}
+assigning an array constant. (In this example a 2 dimensional array will be
+created and the rows are separated by ';'.)
+
+\subsection{Arbitrary precision numbers}
+
+X11-Basic also support infinite or arbitrary precision numbers with a sprecial
+data type. Arbitrary-precision arithmetic, also called bignum arithmetic, 
+multiple precision arithmetic, or sometimes infinite-precision arithmetic, 
+indicates that calculations are performed on numbers whose digits of precision 
+are limited only by the available memory of the computer. 
+This contrasts with the faster fixed-precision arithmetic, normally used.
+
+Infinite precision math is slow, and not all functions are available
+for this data type. Arbitrary precision is used in applications where the 
+speed of arithmetic is not a limiting factor, or where precise results with 
+very large numbers are required.
+
+The data type with the suffix \& supports (big) integers only. It is up to the 
+user (and straight forward) to write routines for handling rational numbers 
+(using two big interges, numerator and denominator), and corresponding routines for
+adding, subtracting, multiplication and division of thouse fractions. Multiple precision 
+Irrational numbers using a floiting point representation are (currently) not 
+supported. If somebody needs this, please let me know.
+
+Supported operators (for big integers) are + - * / = <> < > MOD DIV ABS() SQRT() 
+NEXTPRIME() FACT() PRIMORIAL() FIB()  LUCNUM() RANDOM() ADD() SUB() MUL() DIV() MOD() 
+POWM() ROOT() GDC() LCM() INVERT()  MIN() MAX(). 
+Also STR\$(), BIN\$(), OCT\$() and HEX\$() work with big integers.
+
+The advantage is, that you can handle big integer numbers without loosing 
+precision, as it is useful for cryptography and number theory.
+
+Also rounding errors can be avoided by using infinite-precision rational number
+arithmetic (which is not implemented by X11-Basic itself, but which could be realized using pairs of
+big integers.)
+
+Variables of either type may be used and mixed in expressions. They will be converted 
+to big integer or from big integer to float or 32bit integers when needed. One should j
+ust be aware of the eventual loss of precision.
+
+Here is an example how to use big number arithmetrics in X11-Basic to factorize a big
+number into its prime factors:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+ {\bf Example:}
+\begin{verbatim}
+' Factorize (big) Integer numers into prime factors.
+' with X11-Basic  >= V.1.23 
+'
+DIM smallprimes&(1000000)
+CLR anzprimes
+smallprimes&(0)=2
+INC anzprimes
+
+INPUT "Enter a (big) number: ",a&
+PRINT "Calculating primes up to ";lim&;". Please wait..."
+lim&=SQRT(a&)   ! Limit up to which the primes are searchd
+FOR i=1 TO DIM?(smallprimes&())-1
+  b&=NEXTPRIME(smallprimes&(i-1))
+  EXIT IF b&>lim&
+  smallprimes&(i)=b&
+NEXT i
+anzprimes=i
+PRINT "calculated ";anzprimes;" primes up to: ";b&
+
+PRINT "Factorization:"
+PRINT a&;"=";
+FOR i=0 TO anzprimes-1
+  WHILE (a& MOD smallprimes&(i))=0
+    PRINT smallprimes&(i);"*";
+    FLUSH
+    a&=(a& DIV smallprimes&(i))
+    lim&=SQRT(a&)
+  WEND
+  EXIT IF smallprimes&(i)>lim&
+NEXT i
+IF nextprime(a&-1)=a& or a&=1
+  PRINT a&
+ELSE
+  ' The number is too big and we cannot be sure that this is a prime
+  PRINT "----incomplete test -----";a&
+ENDIF
+END
+\end{verbatim}\end{mdframed}
+
+Note that the list of small primes could also be generated by a sieve. The method  used
+is based on prime number tests (using the function \verb|NEXTPRIME()|) and may be not
+optimal.
+
+\section{Arithmetics and Calculations}
+
+X11-Basic handles numbers and arithmetic: You may calculate trigonometric
+functions like \verb|SIN()| or \verb|ATAN()|, or logarithms (with \verb|LOG()|).
+Bitwise operations, like \verb|AND| or \verb|OR| are available as well as
+\verb|MIN()| and \verb|MAX()| (calculate the minimum or maximum of its argument)
+or \verb|MOD| or \verb|INT()| (reminder of a division or integer part or a
+number). Many other statements give a complete set of math functions. 
+
+Most of these functions can work on different input data types. E.g. you can use the 
+\verb|SQRT()| function also on complex numbers, thus returning a complex result. 
+
+\subsection{Expressions and Conditions}
+No difference makes the difference.
+\begin{description}
+\item[Expressions] are needed to calculate values. The simplest expression is a
+numerical or string constant. More complex expressions may contain constants,
+variables, operators, function calls and possibly parentheses. The expression
+format used by X11-Basic is identical with that of many other BASIC packages:
+The operators have precedence of the usual order and you can alter the order of
+operator evaluation using parentheses. Here is an example numeric expression
+following after a PRINT statement:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT (x-1)*10+SIN(x)
+\end{verbatim}
+\end{mdframed}
+\item[Conditions] and expressions are treated the same in X11-Basic. Because
+X11-BASIC doesn't have separate Boolean operators for conditions and 
+expressions, the operators (AND, OR, XOR, NOT) actually operate on binary
+values. Therefore a TRUE is -1, which means, that every bit is one. So the
+operators will operate on each of these bits. Such: a condition is considered
+TRUE if the expression is not FALSE (means the result must be a value other than
+zero).
+\end{description}
+
+\subsection{Operators}
+
+X11-Basic provides operators for numerical expressions, character strings and
+arrays of either type and any dimension.
+
+\subsection*{Numerical Operators}
+
+Numerical operators are roughly categorized in following categories:
+\begin{itemize}
+\item arithmetical operators:  \verb|^ * / + -| 
+\item comparison operators:  \verb|= <> < > <= >=| 
+\item logical operators:     \verb|NOT AND OR XOR ...|
+\end{itemize}
+
+X11-Basic recognizes the following operators, in order of falling precedence 
+(the precedence of BASIC operators affects the order of expression evaluation):
+\begin{center}
+\begin{longtable}{|r|l|l|}
+\hline
+{\bf Order}&{\bf Operator}  &  {\bf Description} \\
+\hline
+1&\verb|( )|&  parenthetical expression\\
+2&\verb|^|&    exponent/power	       \\
+3&$-$	  &    sign (negation)         \\
+3&$+$	  &    sign		       \\
+4&NOT	  &    bitwise not	       \\
+5&$/$	  &    divide 	               \\
+5&*	  &    multiply 	       \\
+5&DIV     &    integer division        \\
+5&MOD	  &    modulus (rest of division)     \\
+6&+	  &    add			      \\
+6&-	  &    subtract 		      \\
+7&$<<$	  &    bitwise shift to the left  (*) \\
+7&$>>$	  &    bitwise shift to the right (*) \\
+8&=	  &    logical "equals" 	      \\
+8&<>	  &    logical "not equal"	      \\
+8&<	  &    logical "less than"	      \\
+8&>	  &    logical "greater than"	      \\
+8&<=	  &    logical "less than or equal"   \\
+8&>=	  &    logical "greater than or equal"\\
+9&AND	  &    bitwise and		      \\
+9&NAND	  &    bitwise not and		      \\
+10&OR	  &    bitwise or		      \\
+10&NOR	  &    bitwise not or		      \\
+10&XOR	  &    bitwise exclusive or	      \\
+10&IMP	  &    implies  		      \\
+10&EQV	  &    equivalence		      \\
+11& =	  &    assignment \\ 
+\hline
+\end{longtable}
+\end{center}
+(*) = not implemented
+
+\begin{description}
+\item[Addition and subtraction operators] are both binary and unary operators.
+In their unary form they are used out of the precedence orders. Unary operators
+are always applied first, unless parentheses drive different calculation order.
+\item[The power operator] \verb|a^b| calculates the b-th power of a. The actual
+implementation of the power operator always uses the \verb|pow()| function, which always
+treats all operants as real numbers. Under some circumstances it might be more
+optimal to use \verb|a*a| instead of \verb|a^2|.
+\item[The multiplication operator] multiplies the operands. If any of the
+operands is an array then the result will be an array.
+\item[The division operator] divides the first operand with the second. If the
+second operand is zero then an error will occur.
+\item[The integer division operator] divides the first operand with the second.
+The calculation is performed using integer numbers and the result is truncated
+towards zero. 
+\item[Bit-wise and logical NOT] This unary operator calculates the logical 
+negate (the complement) of the operand. The calculation is done on integer numbers, thus the 
+operand is converted to an integer value. The operator inverts each bit of the 
+operand.
+\item[Logical operators (AND, OR, XOR)] These operators can be used for both
+logical and bit-wise operations. X11-Basic does not have a separate type for
+logical values. The logical TRUE is represented as integer value -1 (all bits
+set to 1) and the logical FALSE is 0. The operators AND, OR and XOR perform the
+calculation on integer values. If any of the operands is not integer it is
+converted to integer value before the operation takes place. The operations are
+performed on each bit of the operands. 
+\end{description}
+
+
+\subsection*{Operators for Character Strings}
+There are a few operations which can directly be done to character strings 
+or string variables, using operators.
+\begin{description}
+\item[plus operator, conjunction] The plus '+' operator used on strings, links 
+two strings together. 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:} 
+ \begin{verbatim}
+ a$="X11"
+ b$="-"
+ c$="BASIC"
+ d$=a$+b$+c$
+ \end{verbatim}\end{mdframed}
+ results in a string \verb|"X11-BASIC"|.
+\item[comparison operators, <, <=, =, =>, >, <>] comparison functions belong to
+numerical (Boolean) functions because the result is a number, although they
+can be used with strings.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\bf Example:} 
+ \begin{verbatim}
+ IF a$="X11"
+   ...
+ ENDIF
+ result=(a$<>"Hello")
+ \end{verbatim}\end{mdframed}
+\item[code evaluation operator, \&] the eval operator evaluates command or
+expression which is given by the String. Example see below.
+\end{description}
+
+\paragraph{Rules for comparison of strings:}
+\begin{enumerate}
+\item	Two strings are equal if all the characters inside are identical
+	(also spaces and punctuation marks).\\
+ {\bf Example:}\\
+	\verb|" 123 v fdh.-," = " 123 v fdh.-,"|
+
+\item The comparison of strings with the greater and smaller operator 
+works character by character until one
+of them is smaller or one of the strings ends first, this is the smaller
+one.\\
+ {\bf Examples:}\\
+\begin{verbatim}
+"X11">"X11"     result:  0
+"X11"<"x11"     result: -1
+"123"<"abc"     result: -1
+"123">"1234"    result:  0
+\end{verbatim}
+\end{enumerate}
+
+\paragraph{The Evaluation Operator \&:}
+The \&-operator followed by a string evaluates it for program code.\\
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+ {\bf Example:}
+\begin{verbatim}
+REM generate ten times the command 'print a$'
+CLR i
+a$="print a$"
+label1:
+INC i
+IF i>10 
+  b$="label2"
+ELSE
+  b$="label1"
+ENDIF
+&a$
+GOTO &b$
+label2:
+END
+\end{verbatim}\end{mdframed}
+To program like this can produce a really unreadable code.
+
+
+\subsection{String processing}
+
+X11-Basic has the usual functions to extract parts from a string: 
+\verb|LEFT$()|, \verb|MID$()| and \verb|RIGHT$()|. 
+
+If you want to split a string into tokens you should use the command
+\verb|SPLIT| or the function \verb|WORD$()| .
+
+There is quite a bunch of other string-processing functions like 
+\verb|UPPER$()| (converting to upper case), \verb|INSTR()| (finding one
+string within the other), \verb|CHR$()| (converting an ASCII-code into a
+character), \verb|GLOB()| (testing a string against a pattern) and more. 
+
+
+\subsection{Arrays}
+Arrays are special variables which consist of many values (of the same type).
+There can be floating point arrays, integer arrays, string arrays, and arrays 
+of arrays. The memory for an array need to be declared before it can be used. 
+This can be done with the \verb|DIM| statement or by direcly assigning a value 
+to the array.
+
+\subsection*{Array constants}
+
+The common way to assign data to a whole array is to put the input
+figures into list into square brackets (which forms an array constant) and
+assign this to an array variable like:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+a()=[1,2,3;4,5,6]
+\end{verbatim}
+\end{mdframed}
+A comma is used to separate columns elements, and semicolon is used to 
+separate rows. So [1, 2, 3] is a row vector, and [1; 2; 3] is a column vector.
+
+Now that you know how to define a simple array, you should know how to access 
+its elements. Accessing the content of an array is done through the 
+operator (), with the index inside the parenthesis; the indexing of the first 
+element is 0:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+b=a(0)
+a(1)=5
+\end{verbatim}
+\end{mdframed}
+
+Accessing an element outside the bounds will result in an error: 
+"Field index too large."
+
+To access a single matrix element, you can use the (i,j) subscript, where i is
+the index in the row, and j in the column:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+b=a(1,2)
+a(3,4)=3
+\end{verbatim}
+\end{mdframed}
+
+It is also possible to access blocks of matrices using the colon (:) operator. 
+This operator is like a wildcard; it tells X11-Basic that you want all elements 
+of a given dimension or with indexes between two given values. For example, 
+say you want to access the entire first row of matrix a above, but not the 
+second row. Then you can write:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+b()=a(1,:)
+\end{verbatim}
+\end{mdframed}
+
+Now say you only want the first two elements in the first row. To do this, use
+the following syntax:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+b()=a(1,1:2)
+\end{verbatim}
+\end{mdframed}
+
+It is also possible to use arrays of any higher dimension.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+DIM a(10,10,10,10,10)
+b=a(2,5,4,2,7)
+\end{verbatim}
+\end{mdframed}
+
+
+\subsection*{Array operators}
+
+Arrays are not only good for storing information in tables, but one can apply
+operations on arrays. You can for example use the classic arithmetic operations
++ and - on any array in X11-Basic: this results in the vector addition and
+subtraction as defined in classic vector vectors spaces, which is simply the
+addition and subtraction elements wise.
+
+\begin{center}
+\begin{longtable}{|c|l|}
+\hline
+{\bf Array Operator} & {\bf Description} \\
+\hline
++ & Vector/Matrix addition element by element \\
+- & Vector/Matrix subtraction element by element \\
+* & Array/Matrix multiplication \\
+: & Subarray (a block) \\
+=,<> & comparison  element by element \\
+<,>,<=,>= & comparison using a norm \\
+\hline
+\end{longtable}
+\end{center}
+
+
+Array functions and operators act on entire arrays. Some return a list, which
+can then either be used as a value for another array function, or assigned into
+an array variable.
+
+Array comparisons compare the array contents element-by-element, using the
+default comparison function for the element data type (=,>,<). In
+multidimensional arrays the elements are visited in row-major order (last
+subscript varies most rapidly). If the contents of two arrays are equal but the
+dimensionality is different, the first difference in the dimensionality
+information determines the sort order. 
+
+\section{Procedures and Functions}
+
+In X11-Basic there are two types of subroutines: procedures and functions.
+The main difference between the two is that a function returns a single
+value and can be used in expressions, while a procedure never returns a
+value. A procedure or function must appear after the main program block.
+Therefore, the structure of an X11-Basic program is as follows:
+
+\begin{verbatim}
+Main program block
+END
+Procedures and Functions
+\end{verbatim}
+
+
+\begin{description}
+\item[Procedures] are blocks of code that can be called from elsewhere in a
+	program. These subroutines can take arguments but return no results. They
+	can access all variables available but also may have local variables
+	(--> \verb|LOCAL|).
+
+\item[Functions] are blocks of code that can be called from elsewhere within 
+	an expression (e.g \verb|a=3*@myfunction(b)|). Variables are global
+	unless declared local. For local variables changes outside a function
+	have no effect within the function except as explicitly specified
+	within the function. Functions arguments can be variables and arrays
+	of any data types. Functions can return variables of any data type. By
+	default, arguments are passed by value. 
+\end{description}
+
+\subsection{Procedures}
+
+A procedure starts with the keyword \verb|PROCEDURE| followed by the procedure
+name and the parameters being passed to the procedure. All procedures must
+end with the keyword \verb|RETURN|. Procedures use the following format:
+
+\begin{verbatim}
+PROCEDURE ProcName(parameters)
+  LOCAL vars
+  procedure logic
+RETURN
+\end{verbatim}
+
+The parameters of the subroutine are placed between parenthesis behind the
+subroutine name and must be in the same order as the procedure call from
+the main program. All variables used within the subroutine should be
+declared local using the \verb|LOCAL| statement. The rest of the procedure
+determines the task the subroutine must perform.
+
+A procedure can be called in two ways: by using the keyword  \verb|GOSUB| or
+\verb|@|. For instance, the procedure \verb|progress|(), which shows a progress
+bar on the text console given the total amount \verb|a| and the  fraction
+\verb|b|, can be  called the following ways:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+GOSUB progress(100,i)
+@progress(100,i)
+
+PROCEDURE progress(a,b)
+  LOCAL t$
+  IF verbose
+    PRINT chr$(13);"[";string$(b/a*32,"-");">";
+    PRINT string$((1.03-b/a)*32,"-");"| ";str$(int(b/a*100),3,3);"% ]";
+    FLUSH
+  ENDIF
+RETURN
+\end{verbatim}
+\end{mdframed}
+
+
+\subsection{Functions}
+
+A function starts with a \verb|FUNCTION| header followed by a function name,
+and ends with the keyword \verb|ENDFUNCTION|. The function is either a numeric
+or a string function. A numeric function defaults to the floating point data
+type and needs no postfix. A string function returns a string and the function
+name ends with a \verb|$| postfix. A function must contain at least one
+\verb|RETURN| statement to return the function value. Functions use this
+format:
+
+\begin{verbatim}
+FUNCTION FuncName[$](parameters)
+  LOCAL vars
+  function logic
+  RETURN value[$]
+ENDFUNCTION
+\end{verbatim}
+
+The type of the return value must match the function type. A string function
+must return a string and a numeric function a numeric value. 
+The function returns to the
+caller when the \verb|RETURN| statement is executed. The \verb|ENDFUNCTION|
+statement only indicates the end of the function declaration and will cause an
+error if the program tries to execute this statement.
+
+A function is called by preceding the function name with \verb|@|. As an
+example, the string function \verb|Copy$()| is called as follows:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+Right$=@Copy$("X11-Basic",4)
+\end{verbatim}
+\end{mdframed}
+where the function \verb|Copy$()| might be defined as:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FUNCTION Copy$(a$,p)
+  LOCAL b$
+  b$=MID$(a$,p)
+  RETURN b$
+ENDFUNC
+\end{verbatim}
+\end{mdframed}
+
+Of course you are as well free to define 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FUNCTION Copy$(a$,p)
+  RETURN MID$(a$,p)
+ENDFUNC
+\end{verbatim}
+\end{mdframed}
+instead.
+
+An alternative for \verb|FUNCTION| is the \verb|DEFFN| statement, which 
+defines a one line function.
+The function \verb|Copy$()| used in the example above, might be used in a
+\verb|DEFFN| statement as well:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+DEFFN Copy$(a$,p)=MID$(a$,p)
+\end{verbatim}
+\end{mdframed}
+
+In contrast with procedures and functions, \verb|DEFFN| functions may be placed
+within a procedure or function body, although it doesn't use the local variables
+of the subroutine. There is another difference between \verb|DEFFN| and
+FUNCTION: The compiler will use the \verb|DEFFN| expression as an inline
+expression and will not produce a function with a symbol name. This is a bit
+faster, but produces longer code.
+
+\subsection{Parameters and local variables}
+
+Any X11-Basic variable type can be passed to a procedure or function. 
+By default all parameters are passed "'by value"'. Though parameters can also be
+passed "'by reference"' by using the \verb|VAR| statement.
+
+The keyword \verb|VAR| precedes the list of variables that are being passed as
+call by reference parameters. These variables should always be listed at
+the end of the parameter list in the procedure or function heading. The
+difference between the two is that a call by value parameter gets a copy of
+the passed value and a call by reference does not. A \verb|VAR| variable
+references the same variable that is passed to the subroutine. The original
+variable will change when a subroutine modifies the corresponding \verb|VAR|
+variable. In fact, both variable names reference the same piece of memory
+that contains the variable value. 
+
+Internally, X11-Basic maintains a list of all variables. Each entry in the
+list points to a memory location that contains the variable value. A call
+by reference variable points to the same location as the passed variable.
+Therefore, constants or expressions can not be passed to a \verb|VAR| variable.
+
+All though a (copy of an) Array can be passed to a subroutine by value, the
+functions cannot return arrays\footnote{This may be possible in future versions
+of X11-Basic}.
+
+If a function needs to return information in form of an array, the return array 
+sould be passed as a \verb|VAR| parameter in the parameter list. The return 
+values can then be assigned to it inside the function. 
+
+The following example shows a simple
+function, which searches a name in a given string array:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+idx%=@SearchName("Jack",Name$())
+
+FUNCTION SearchName(n$,VAR n$())
+  LOCAL idx
+  CLR idx
+  WHILE idx<DIM?(n$()) AND n$(idx)<>n$
+    INC idx
+  WEND
+  RETURN idx
+ENDFUNC
+\end{verbatim}
+\end{mdframed}
+
+The locally used array \verb|n$()| references the global array \verb|Name$()|.
+The array \verb|n$()| is only valid within the procedure, where it points to
+the descriptor of the \verb|Name$()| array. 
+
+You could as well declare the FUNCTION like 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FUNCTION SearchName(n$,n$())
+\end{verbatim}
+\end{mdframed}
+
+Then a local copy of the whole array Name\$() would be used inside 
+the function, any changes to n\$() would have no effect on the original array 
+Name\$(). But win case you wanted to make changes to the array, like in following example:
+ 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+idx%=@EliminateName("Jack",Name$())
+
+FUNCTION EliminateName(n$,VAR n$())
+  LOCAL i
+  FOR i=0 TO DIM?(n$())
+    IF n$=n$(i)
+      n$(i)="deleted."
+    ENDIF
+  NEXT i
+  RETURN i
+ENDFUNC
+\end{verbatim}
+\end{mdframed}
+you need to use VAR.
+
+The \verb|LOCAL| statement lists the variables only known to a procedure or
+function. Subroutine parameters are local variables as well.  When a
+subroutine calls another subroutine the local variables of the calling routine
+are known in the called routine as if they were global variables. 
+
+Several local variables separated by commas may be listed after the
+\verb|LOCAL| statement. Multiple \verb|LOCAL| lines are allowed. 
+
+
+%\subsection{The address of a procedure}
+%
+%Some external linked shared libraries require an address of a function that can
+%be called from within the shared library (or other objects of code, which can
+%be linked to the X11-Basic interpreter or compiled executable, if it is
+%compiled (callback functions). X11-Basic provides the \verb|_CB()=| command to
+%generate a pointer to the entry point of a procedure\footnote{Not yet
+%implemented to X11-Basic}.
+%
+%The syntax of _CB()= is as follows:
+%
+%_CB(n)= ProcName( [par list])
+%ProcName is the place holder for an X11-BASIC procedure name, from which the
+%entry point is to be determined. The parameter list specifies the number
+%and size of the parameters (W for a 16 bit parameter and L for a 32-bit
+%parameter.). Note, that the parameter list specifies the type of the
+%variables, not the variables itself. X11-BASIC can store up to 16 (0 to 15)
+%pointers to a procedure simultaneously.
+%
+%The following sample code shows how the address of the X11-BASIC procedure
+%EnumFonts() is generated:
+%
+%_CB(1) = EnumFonts(l,l,w,l)
+%PROCEDURE EnumFonts(plf%,ptm%,ftyp&,ldat%)
+%RETURN
+%X11-BASIC keeps the pointers to procedures in an internal table with 16
+%entries. The _CB()= command generates and stores the address of the
+%specified procedure. To read the table, you use the X11-BASIC function
+%_CB(). _CB() is used to retrieve the address of the function previously
+%generated with the command _CB()=. For instance, the address of the
+%EnumFonts() procedure can be retrieved with:
+%
+%lpProc%=_CB(1)
+%A memory address is always of the type long and contains a selector and
+%offset value. The offset value of a starting address of a procedure is
+%always zero.
+
+
+
+\section{Simple Input/Output}
+
+There are many ways in X11-Basic to take data by the user and display  other
+data. This can be done by taking data from the keyboard, the mouse,  a
+microphone, etc. and by displaying data to the text console, the  graphics
+window, the speaker, etc. Also reading and writing to files and internet
+connections can be done. 
+
+The most basic input and output from and to the user is by using the text 
+console, the so-called standard input and standard output. This is done in 
+X11-Basic like in all BASIC dialects with the basic commands PRINT and INPUT. 
+
+\subsection{Printing data to the console}
+
+You actually already know a X11-Basic command to write data on screen. This
+command is \verb|PRINT|. It is very versatile and you can extend it in various
+ways.
+
+The syntax of PRINT is simple: 
+\begin{verbatim}
+PRINT <data>
+\end{verbatim}
+where \verb|<data>| is whatever sort of data you want to print on screen. That
+can be variables, numbers, the result of a calculation, a string or a mix of
+them all. You can even add special commands and functions to your \verb|PRINT|
+statement for screen control such as cursor positioning and formatting of the
+data. A few examples for the \verb|PRINT| command can be found here:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT 10+5
+PRINT x%
+PRINT 10;20;30
+PRINT 10,20,30
+PRINT "Hello!"
+PRINT 10.123 USING "+##.###"
+PRINT "y= ";y
+PRINT "x=";x;" y=";y;" z=";z
+PRINT "Your name is ";nam$
+PRINT AT(5,5);"AT() is one of my favorites"
+PRINT CHR$(27);"[2J This is a cleared console..."
+\end{verbatim}
+\end{mdframed}
+
+These are the most simple variations of the \verb|PRINT| command. They can of 
+course be more complicated and all features can be combined.
+
+Now why do you write \verb|PRINT "y =";y| instead of \verb|PRINT "y =",y|? 
+Using \verb|;| will add the following data directly behind your text without
+altering the cursor position while the \verb|,| will advance the cursor to the
+next vertical tabular position. You can use that to align your data in tables
+on screen. In short, if you want to write data directly to some sort of prompt
+or behind some text, use the \verb|;| notation. Put a \verb|;| as the last data
+on your \verb|PRINT| statement to let the cursor stay on the current line. You
+can use this to prevent a scrolling on the last line of the screen or if you
+simply want to split writing of prompt and data into two lines of code.
+Technically speaking giving the \verb|;| last will suppress a carriage return.
+
+
+\subsection{Screen control}
+
+Now that you know how to write your data on screen, you will also want to know
+how to handle screen output in detail. How do I leave a line of text blank
+might you ask? Write simply \verb|PRINT| without any data behind to output a
+blank line on screen. Try this 3 lines program:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "Hello!"
+PRINT
+PRINT "This is the first example for screen control!"
+\end{verbatim}
+\end{mdframed}
+
+As you see it prints the greeting and the other line with an empty line
+between. 
+
+A very important thing is how to clear the screen. For obvious reasons, you'll
+sometimes prepare a screen layout that requires you not to have other text or
+old data on screen. You'll simply clear the screen with the following command.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLS
+\end{verbatim}
+\end{mdframed}
+
+A neat thing is to write on screen exactly on a position where you want and not
+following the listed flow of ordinary \verb|PRINT| statements. You can use the
+\verb|AT()| statement. This special addition for \verb|PRINT| allows you to
+position the cursor freely on screen so you can write your data where you want.
+Let's try the following example program:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLS
+PRINT AT(1,1);"Top left"
+PRINT AT(5,13);"Middle line, text indented 5 chars"
+PRINT AT(20,25);"bottom line";
+\end{verbatim}
+\end{mdframed}
+
+The syntax for \verb|PRINT AT();| is \verb|PRINT AT(column, row);|, where row 1 is
+on top of the screen and column 1 on the left end. Column and row can be
+variables, expressions or simply a plain number. Valid \verb|PRINT AT()|
+commands are:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT AT(1,5);"Hello"
+PRINT AT(5+x%,10);"x"
+PRINT AT(4+8,y%);"y = "
+\end{verbatim}
+\end{mdframed}
+
+How many character positions you have depends on the current text console screen
+size. You have almost always at least 24 lines of text. 80 columns are standard.
+If you want to exactly know the number of rows and columns of the text screen,
+you can use the (system) variables \verb|ROWS| and \verb|COLS|.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+> PRINT ROWS,COLS
+24      80
+\end{verbatim}
+\end{mdframed}
+
+There are more commands you can use with \verb|PRINT| like \verb|SPC()| and
+\verb|TAB()|. Refer to the command reference on them.
+
+\subsection{Formatting output with PRINT USING}
+
+X11-BASIC normally prints numbers in a form convenient for most purposes. But on
+occasion you may prefer a more elaborate form. For example, you may want to
+print financial quantities with two decimal places (for cents) and, possibly,
+with commas inserted every three digits to the left of the decimal point. Or, 
+you want to print the numbers in scientific notation. 
+\verb|PRINT USING| provides a way to print numbers in this and almost any other
+form\footnote{There are also other built-in commands for formatting data on
+output. X11-Basic offers e.g. STR\$(). Please refer to the sections on
+functions for details on the syntax of STR\$().}.
+
+The generic syntax is 
+\begin{verbatim}
+PRINT <expression> USING "<format string>"
+\end{verbatim}. The
+result of the expression should be a number. The format string defines how you
+want your data to be formatted on screen. The format string may be a string
+variable, a quoted string, or a more general string expression.
+
+\verb|PRINT USING| also allows one to print strings centered or right-justified, as
+well as left justified.
+
+The function \verb|USING$()| duplicates the PRINT USING statement almost 
+exactly\footnote{only numbers can be formatted, no strings.} but returns the 
+result as a string rather than printing it on the screen. 
+
+Unlike \verb|STR$()|, where you can specify the length of the string, the
+number of significant digits of the number and a flag, where there leading zeroes
+should be used, \verb|USING$()| and \verb|PRINT USING| use a classic and
+BASIC-style formatter string for formatting numbers. The difference between
+\verb|USING$()| and \verb|PRINT USING| is just, that \verb|PRINT USING|
+immediately prints out the formatted number and \verb|USING$()| converters it
+into a string containing the formatted number, suitable for further processing.
+
+\subsubsection*{Formatting Numbers}
+
+The format string can contain any letters, but some have a special meaning. 
+All other characters are just taken as they are. The length of the format 
+string defines the length of the output field. Whatever is formatted, it 
+will exactly take as many characters as the length of the format string. 
+
+The most important special character in the format string is the symbol \#,
+which stands for a digit position to be filled with one digit from the number
+to be formatted. For example, compare the output resulting from two similar
+PRINT statements, the first a normal PRINT statement and the second employing
+USING.
+
+\begin{verbatim}
+x=   |PRINT x| PRINT x USING "###"
+-----+-------+--------------------
+1    | 1     |   1
+12   | 12    |  12
+123  | 123   | 123
+1234 | 1234  | ***
+-12  | -12   | -12
+\end{verbatim}
+
+Without USING, the number is printed left justified and occupying only as much 
+space as needed.
+With USING, the format string \verb|"###"| specifies a field length of exactly
+three characters. The number is printed right-justified in this field. If the
+field is not long enough to print the number properly, asterisks are printed
+instead. If all you need to do is to print integer numbers in a column but with
+right-justification, then the preceding example will suffice. Note that a 
+negative number will be printed with the sign occupying one of the digit fields.
+
+With printing financial quantities it is conventional that the decimal points 
+are aligned. Also, you may want to print two decimal places (for the cents) even
+when they are zero. The following
+ example shows how to do this. (In
+order to print negative numbers and have the sign at a fixed position, the 
+format string should start with a minus sign.)
+
+\begin{verbatim}
+x=    |PRINT x USING "-##.##"
+------+-----------------------
+1     |  1.00
+1.9   |  1.90
+-3.14 |- 3.14
+1.238 |  1.24
+123   |******
+0     |  0.00
+-123  |******
+\end{verbatim}
+
+Notice that in this example two decimal digits are always printed, even when
+they consist of zeroes. Also, the result is first rounded to two decimals. If
+the number is negative, the minus sign occupies the leading digit position or
+the position given by a - or + in the format string. If the number is too long
+to be printed properly (possibly because of a minus sign), asterisks are printed
+instead.
+
+Financial quantities are often printed with a leading dollar sign (\$), and 
+with commas forming three-digit groups to the left of the decimal point. The 
+following example shows how to do this with \verb|PRINT USING|.
+
+\begin{verbatim}
+x=         |PRINT x USING "$#,###,###.##"
+-----------+------------------------------
+0          |$        0.00
+1          |$        1.00
+1234       |$    1,234.00
+1234567.89 |$1,234,567.89
+1e6        |$1,000,000.00
+1e7        |10,000,000.00
+1e8        |*************
+\end{verbatim}
+
+The dollar sign is only printed if the space is not needed for a digit. It is
+always in the same position (first) in the field. The separating commas are
+printed only when needed.
+
+In case you want the dollar sign (\$) to float to the right, so that 
+it appears next to the number, avoiding all those blank spaces between the 
+dollar sign and the first digit in the preceding example. The following 
+example shows how to do this.
+
+\begin{verbatim}
+x=         |PRINT x USING "$$,$$$,$$#.##"
+-----------+----------------------------
+0          |        $0.00
+1          |        $1.00
+1234       |    $1,234.00
+1234567.89 |$1,234,567.89
+\end{verbatim}
+
+The format string can also allow leading zeroes to be printed, or to be 
+replaced by asterisks (*). You might find the latter useful if you are 
+preparing a check-writing program.
+
+\begin{verbatim}
+x=         |PRINT x USING "$0,000,000.##"
+-----------+------------------------------
+0          |$0,000,000.00
+1          |$0,000,001.00
+1234       |$0,001,234.00
+1234567.89 |$1,234,567.89
+
+x=         |PRINT x USING "$*,***,***.##"
+-----------+------------------------------
+0          |$********0.00
+1          |$********1.00
+1234       |$****1,234.00
+1234567.89 |$1,234,567.89
+
+x=         |PRINT x USING "*$$,$$$,$$#.##"
+-----------+------------------------------
+0          |*********$0.00
+1          |*********$1.00
+1234       |*****$1,234.00
+1234567.89 |*$1,234,567.89
+\end{verbatim}
+
+For compatibility reasons, a \% can be used instead of the 0's in the 
+format string, with one exception: The first character in the format 
+string must not be a \%\footnote{If the first character is a \% the 
+format string is interpreted as a C style printf format string (see below).}. 
+
+You can also format numbers using scientific notation. Because scientific 
+notation has two parts, the decimal-part and the exponent-part, the format 
+string must also have two parts. The decimal-part follows the rules already 
+illustrated. The exponent-part consists of from three to five carets (\^) that 
+should immediately follow the decimal-part. The following example shows how.
+
+\begin{verbatim}
+x=          |PRINT x USING "+#.#####^^^^"
+------------+-----------------------------
+0           |+0.00000e+00
+123.456     |+1.23456e+02
+-.001324379 |-1.32438e-03
+7e30        |+7.00000e+30
+0.5e100     |+5.00000e+99
+5e100       |************
+\end{verbatim}
+
+The leading plus sign (+) in the format string guarantees that the
+sign of the number will be printed, even when the number is positive. Notice
+that the last number cannot be formatted because the exponent part would
+have been 100, which requires an exponent field of five carets. Notice also that
+if there are more carets than needed for the exponent, leading zeroes are
+inserted. Finally, notice that trailing zeroes in the decimal part are printed.
+
+In addition to the format rules explained above, X11-Basic offers another but
+different set of format strings. If the first character of the format string 
+is a \% the format string is treated as a C style so-called printf-formatter.
+
+Here are some examples:
+
+\begin{verbatim}
+x=          |format$=     |PRINT x USING format$
+------------+------------------------------------
+0           | "%012g"     |000000000000
+123.456     | "%.1g"      |1e+02
+-.001624    | "%.1g"      |-0.002
+\end{verbatim}
+
+These formatting strings follow some standard which is normally not used in
+BASIC. The standard is well explained in Wikipedia: 
+\url{http://en.wikipedia.org/wiki/Printf_format_string#Format_placeholders}.
+
+\subsubsection*{Formatting Strings}
+
+Strings can also be formatted through \verb|PRINT USING| but not with the 
+function \verb|USING$()|, although there are fewer options for strings than 
+for numbers. Strings can be printed in the formatted field either 
+left justified, centered, or right-justified. 
+As with numbers, if the string is too long to fit, then asterisks are printed. 
+
+These examples should make it clear:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "|";"OK" USING "#####";"|"     ! result: | OK  |
+PRINT "|";"OK" USING ">####";"|"     ! result: |   OK|
+PRINT "|";"Hello" USING ">####";"|"  ! result: |Hello|
+PRINT "|";"Goodby" USING ">####";"|" ! result: |*****|
+\end{verbatim}
+\end{mdframed}
+
+If centering cannot be exact, the extra space is placed to the right. Actually
+any string can be used as a format string. Only the length of the string
+defines the length of the output field. Only the first character of the format
+string matters. If it is a < the string will be left justified, if it is a > it
+will be right-justified and centered in any other case. This is especially
+valuable for printing headers for a numeric table. The following example shows
+how you can format headers using the same format string we used earlier for
+numbers.
+
+\begin{verbatim}
+s$=                   |PRINT s$ USING "$#,###,###.##"
+----------------------+-------------------------------
+"Cash"                |                    Cash
+"Liabilities"         |                 Liabilities
+"Accounts Receivable" |                *************
+\end{verbatim}
+
+\subsection{Gathering User Input}
+
+You can make your program interactive and ask the user to enter data on runtime
+of your program.
+
+The command \verb|INPUT| allows the user to enter one line of data with the 
+keyboard on the text console. The data is interpreted and stored in one or more
+variables specified by the INPUT statement. If you specify a string variable,
+you can enter text while you can only enter numeric data if you use a numeric
+variable. A minus sign and optional decimal point are allowed for numeric input.
+Also numbers can be entered in scientific notation. Hexadecimal values are
+possible, too.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+INPUT "x= ",x
+INPUT "What is your name? ",your_name$
+\end{verbatim}
+\end{mdframed}
+
+This will prompt the user to enter a value for x which will be stored into a
+(floating point) variable x. You can then use this variable in your program as
+normal, doing calculations with it. Please note that your program will stop 
+until the RETURN key or the ENTER key has been pressed to terminate the input.
+
+You can read more than one variable with one \verb|INPUT| statement, just list
+your variables where you want your input to go to with separating commas.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "enter 3 values, separated with commas (eq 3,4,5):"
+INPUT x%,y%,z%
+\end{verbatim}
+\end{mdframed}
+
+The user has then to enter commas at the appropriate places to tell which
+input goes to which variable. To the example above the user would respond with
+5,6,7. 
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLS
+INPUT "Enter a value for x:",x
+PRINT "x = ";x
+INPUT "What is your name?",your_name$
+PRINT "Your name is ";your_name$;"."
+PRINT "Bye, ";your_name$;"!" 
+\end{verbatim}
+\end{mdframed}
+
+While entering strings you may have already noticed that X11-Basic will treat
+entering a comma again as a delimiter, effectively cutting your string at that
+comma. Use the command \verb|LINEINPUT| instead of \verb|INPUT| to read strings.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+LINEINPUT txt$
+\end{verbatim}
+\end{mdframed}
+
+You can now enter strings with a comma in and it will be saved to the string
+variable as well. You can read multiple strings with \verb|LINEINPUT| as well but the
+user has to press the RETURN key terminating each string to be entered.
+
+\section{Flow Control}
+
+This time you'll finally make your programs do things more then once without
+having to retype your code. The creation of so-called loops is essential for
+making complex programs work. The concept of looping and simple counting loops
+
+Before going further let me explain you the fundamental idea of looping. The
+idea is to make your program repeat a section of code for a defined amount of
+time. You may let X11-Basic count a variable for you and you can then use the
+value of that variable in an ongoing calculation. Or you can let X11-Basic loop
+a certain part of code until a special condition has been met. Take a look at
+the following sample program:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FOR i%=1 TO 5
+  PRINT i%
+NEXT i%
+\end{verbatim}
+\end{mdframed}
+
+This little example program loops 5 times and counts the variable i\% from 1 to
+5 and prints the current value to the screen. This sort of loop is called a
+FOR-NEXT-loop. You can use any numerical variable to count. Most often this
+sort of loop is used to do things a certain amount of time or to iterate over a
+list. The loop will repeat the code between the \verb|FOR| and its corresponding NEXT.
+Each time X11-Basic reaches the \verb|NEXT|, it will increment the count variable and
+will stop the loop if the maximum count has been reached.
+
+You can of course have another loop inside the current one. Just make sure not
+to use the same variable for counting or X11-Basic will do unpredictable things:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FOR i%=1 TO 5
+  FOR j%=1 TO 10
+    PRINT i%;" * ";j%;" = ";i%*j%
+  NEXT j%
+NEXT i%
+\end{verbatim}
+\end{mdframed}
+
+That sample program has one FOR-NEXT-loop in another and it calculates the
+product of the both counter variables creating some sort of multiplication
+table. Some rules and advice to keep in mind with FOR-NEXT-loops:
+
+\begin{enumerate}
+\item Always terminate an opened \verb|FOR| with a corresponding \verb|NEXT|.
+\item Always
+terminate FOR-loops in the correct order. If you write \verb|FOR i%=|\dots first and 
+\verb|FOR j%=|\dots next, make sure to terminate the inner loop first.
+\item You can count
+downwards with the word \verb|DOWNTO| instead of \verb|TO|.
+Try \verb|FOR i%=5 DOWNTO 1|. 
+\item You
+can count in steps not equal 1 with the keyword \verb|STEP|: 
+\verb|FOR i%=1 TO 10 STEP 2|
+That will increment i\% in steps of 2 until it reaches 10. 
+\item X11-Basic will
+check for correct loop termination while entering the code into the editor. 
+\item You can terminate the FOR-NEXT-loop with the \verb|EXIT IF| statement.
+\end{enumerate}
+
+\subsubsection{Conditions}
+
+A very fundamental idea in programming is to create and use conditionals. These
+will allow you to make decisions when certain conditions are met and let your
+program take an alternative code segment.
+
+Try to imagine that you count a special variable and want to do something else
+when the value of your counter is 5:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FOR i%=1 to 10
+  IF i%=5
+    PRINT "i% is now 5"
+  ELSE
+    PRINT "i% is not 5"
+  ENDIF
+NEXT i%
+\end{verbatim}
+\end{mdframed}
+
+This program loops 10 times and counts in the variable i\%.
+For each iteration of the loop it checks if i\% is 5 in the IF line. If that
+condition is true, i\% is 5, then it executes the program branch until the ELSE
+and omits the following part. If the condition is not true, X11-Basic will only
+execute the part behind the ELSE. Make sure to terminate each \verb|IF| conditional
+with an \verb|ENDIF| or X11-Basic will get lost and produce an error message. 
+
+You may leave out the \verb|ELSE| fork. X11-Basic will then do nothing if the 
+condition is not true.
+
+\subsection{Conditional and endless loops}
+
+
+Sometimes you don't know how far you need to count for a special operation. Or
+imagine a game. You don't want to let it run just for 10 frames but until the
+player sprite did collide or something like that. The first new loop will loop
+until a condition is fulfilled:
+
+\begin{verbatim}
+REPEAT
+...
+UNTIL <condition>
+\end{verbatim}
+
+This is a so-called REPEAT-UNTIL-loop. It loops at least once and checks for
+the condition after the loop contents have been executed by X11-Basic. Use it
+for things that need to be done at least once. You can emulate FOR-NEXT-loops
+with it if you want trickier counting:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+i%=1
+REPEAT
+  PRINT "i%=";i%
+  i%=i%+1
+UNTIL i%>5
+\end{verbatim}
+\end{mdframed}
+
+Surely you can test the condition before entering a loop. This is useful if you
+want to loop only when a certain condition is already true:
+
+\begin{verbatim}
+WHILE <condition>
+...
+WEND
+\end{verbatim}
+
+This is the so-called WHILE-WEND loop. It checks the condition first and it
+will not execute the loop body if the condition is not fulfilled. Sometimes you
+want to loop endless. X11-Basic has a special loop construct for this purpose
+although you can create never ending loops easily with the types above if you
+use a condition that will never get true. The never ending loop is called
+DO-loop. The 3 loops in the example are all equal in functionality and will
+loop endless.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+DO
+  PRINT "endless"
+LOOP
+
+i%=0
+REPEAT
+  PRINT "endless"
+UNTIL i%=1
+
+i%=0
+WHILE i%=0
+  PRINT "endless"
+WEND
+\end{verbatim}
+\end{mdframed}
+
+At this point it is important that you know you can terminate at your X11-Basic
+program at any point. This is useful if your program
+gets stuck in an endless loop which was not intended. Press CONTROL-c together 
+and X11-Basic will stop the program. Another CONTROL-c will quit the interpreter.
+
+Sometimes you will want to terminate a running loop at another point than the
+official loop beginning or loop end. Use the \verb|EXIT IF| statement in your loop for
+extra conditions. This will also terminate FOR-NEXT-loops if you wish to and it
+is the only way to terminate a DO-LOOP.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+i%=1
+DO
+  PRINT "i%=";i%
+  EXIT IF i%=5
+  i%=i%+1
+LOOP
+\end{verbatim}
+\end{mdframed}
+
+Please note that the \verb|EXIT IF| statement has no \verb|ENDIF| or the like.
+It just terminates the loop and continues your program behind the loop end.

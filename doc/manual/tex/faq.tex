@@ -1,0 +1,92 @@
+
+\chapter{Frequently asked Questions}
+
+\section*{How easy is it to hack into my programs?}
+
+Well, first of all: it is possible. The basic source files (.bas) are of course
+readable by any text editor and such modifiable. The bytecode compiled code (.b)
+is already harder to read and nearly impossible to convert back into source
+code. However, since X11-basic is open source, everybody who wants to can look
+into the sourcecode and can read all information necessary to decode the
+bytecode and also modify it. It's possible but a real big job to do. On the level
+of bytecode translated to C source also here someone could modify it. Once the
+bytecode is compiled into real machine language, the code is as safe from
+hackers as any other code is (means that there is nearly no way back). 
+
+Even if you incorporate the bytecode into the virtual machine, your program
+should be safe from snoopers, they might not even know your program is byte-code
+generated. You can also instruct the bytecode compiler not to attach any symbol
+table or extra debugging information.
+
+
+\section*{Do I need a license to distribute my programs?}
+
+No. You don't need a license to use X11-Basic (it's free), and you definitely
+don't need any license to distribute or sell your programs. The only agreement
+you have to worry about is that if you choose to use X11-Basic, you assume any
+and all consequences, direct or indirectly from the use of X11-Basic. Which
+means: don't blame me if it doesn't work as you think it should. X11-Basic can
+be used for any task, whether it's profit-seeking or otherwise. I do not want to
+know, and you don't pay me a cent. You don't even have to acknowledge that your
+program was created with X11-Basic (although this would be a nice gesture).
+You're allowed to bundle X11-Basic along with your program(s), as long as the
+user is well informed that it's not buying into X11-Basic, but rather, buying
+into your program. How is that done? By not even advertising that your
+distribution includes a copy of X11-Basic. However, if you want to distribute or
+modify X11-Basic itself, or if you want to incorporate parts of the X11-Basic 
+sourcecode, you will need to follow the GNU public license. 
+
+\section*{Recently asked question}
+
+\begin{verbatim}
+  Q: I downloaded the last update to x11-basic but I have a problem 
+     with the UTF-8 character set... I cannot use no more the 
+     ascii set the graphic part of it ...I made a small game that 
+     use them now it is not working no more...there's a way 
+     to fix this problem?
+  A: Yes, there is. All characters are still there, but you cannot 
+     access them with a simple CHR$(). One method is to 
+     copy the characters from a unicode table like this: 
+     [http://de.wikipedia.org/wiki/Unicodeblock\_Rahmenzeichnung Frames] 
+     with the mouse into the editor. 
+     You need to use a UTF-8 capable editor, e.g. pico, nano, gedit.
+     If this is not working for you, alternatively you can code the 
+     character yourself by the unicode number:
+\end{verbatim}
+
+  {\footnotesize\begin{verbatim}
+     FUNCTION utf8$(unicode%)
+       IF unicode%<0x80
+         RETURN CHR$(unicode%)
+       ELSE IF unicode%<0x2000
+         RETURN CHR$(0xc0+(unicode%/64 AND 0x1f))+CHR$(0x80+(unicode% AND 0x3f))
+       ELSE
+         RETURN CHR$(0xe0+(unicode%/64/64 AND 0xf))+CHR$(0x80+(unicode%/64 AND 0x3f))+CHR$(0x80+(unicode% AND 0x3f))  
+       ENDIF
+     ENDFUNCTION
+ \end{verbatim} }
+
+     So e.g. the charackter 0x250C can be coded with \verb|@utf8$(0x250C)|.
+
+
+\begin{verbatim}
+ Q: Is there a GUI-Designer for the graphical user unterface functions 
+    of X11Basic ?
+ A: Well, so far nobody has made a real efford to write a real graphical 
+    GUI\_designer. But the program gui2bas may help creating GUI forms. 
+    The input is a very siple ASCII-File (*.gui) which defines the interface. 
+    So far many GEM object types are supportet (and even Atart ST *.rsc-files 
+    may be converted to *.gui files with the rsc2gui program.) but support for 
+    listboxes, popup-menues and Tooltips may be included in future.
+\end{verbatim}
+
+
+\begin{verbatim}
+ Q: My old ANSI Basic Programs (with line-Numbers) produce lots of errors in 
+    the interpreter. How can I run classic (ANSI) Basic programs?
+ A: Classic Basic programs have to be converted before they can be run with 
+    X11-Basic. With the bas2x11basic converter program most of this convertion
+    will be done automatically. 
+\end{verbatim}
+
+

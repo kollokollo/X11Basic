@@ -1,0 +1,26 @@
+##############################################################################
+Function:   JULDATE$()
+Syntax:     d$=JULDATE$(a)
+
+DESCRIPTION:
+
+	Returns the date as string (see DATE$) given by the Julian day number 
+	a.
+	
+SEE ALSO: JULIAN(), DATE$
+##############################################################################
+Function:   JULIAN()
+Syntax:     a=JULIAN(date$)
+
+DESCRIPTION:
+
+	Returns the Julian date corresponding to the date given
+	as a string in standard format. The number which is returned is 
+	an integer number and has the unit days.
+
+EXAMPLE:
+
+  PRINT "Number of days since Sept. 11 2001: ";julian(date$)-julian("11.09.2001")
+	
+SEE ALSO: JULDATE$(), DATE$
+##############################################################################

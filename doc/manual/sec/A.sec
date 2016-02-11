@@ -1,0 +1,499 @@
+##############################################################################
+
+Function:   ABS()
+Syntax:     a=ABS(b)
+            a%=ABS(b%)
+            a=ABS(b#)
+            a&=ABS(b&)
+
+
+DESCRIPTION:
+
+	Returns the absolute value of an expression. The absolute value is the
+	value without regard to the sign (negative, zero or positive). The
+	result of ABS will always be a positive number or zero. The absolute
+	value of a complex number is a real positive number.
+
+EXAMPLE:   
+
+	PRINT ABS(-34.5),ABS(34)   !    Result: 34.5     34
+	PRINT ABS(4+3i)            !    Result: 5
+	
+SEE ALSO:  SGN()
+##############################################################################
+
+Command:   ABSOLUTE
+Syntax:    ABSOLUTE var,adr%
+DESCRIPTION:
+
+	ABSOLUTE assigns the address adr% to the variable var.
+	
+
+EXAMPLE:   
+	a=3
+	b=4
+	ABSOLUTE a,VARPTR(b)
+	PRINT a    ! Result: 4  Variables a and b are now identical.
+	
+SEE ALSO:  VAR
+##############################################################################
+
+Function:   ACOS()
+Syntax:     a=ACOS(b)
+DESCRIPTION:
+
+	The ACOS() is the arc cosine function, i.e. the inverse of the
+	COS() function.  It returns the angle (in radian), which, fed to 
+	the cosine function will produce the argument passed to the ACOS() 
+	function.
+
+EXAMPLE:   
+
+PRINT ACOS(0.5),ACOS(COS(PI))    ! Result: 1.047197551197  3.14159265359
+
+SEE ALSO:  COS(), ASIN()
+*##############################################################################
+
+Function:   ACOSH()
+Syntax:     a=ACOSH(b)
+DESCRIPTION:
+
+	The ACOSH() is the inverse hyperbolic cosine function, i.e. the inverse 
+	of the COSH() function. It returns the angle (in radian), 
+	which, fed to the hyperbolic cosine function will produce the
+	argument passed to the ACOSH() function.
+
+EXAMPLE:
+
+  PRINT ACOSH(2),ACOSH(COSH(0))  ! Result: 1.316957896925	0
+
+SEE ALSO:  COSH(), ASINH()
+##############################################################################
+Command:   ADD
+Syntax:    ADD a,<num-expression>
+           ADD a%,<num-expression>
+           ADD a#,<num-expression>
+           ADD a&,<num-expression>
+
+DESCRIPTION:
+
+	Increase the value of variable a by the result of <num-expression>.
+
+EXAMPLE:
+a=0.5
+ADD a,5
+PRINT a     !   Result: 5.5
+
+SEE ALSO: SUB, MUL, DIV, ADD()
+*##############################################################################
+Function:   ADD()
+Syntax:     c=ADD(a,b) 
+            c&=ADD(a&,b&)
+            c#=ADD(a#,b#)
+            c%=ADD(a%,b%)
+
+DESCRIPTION:
+
+	The function ADD() returns the sum of its arguments.
+
+EXAMPLE:
+a=0.5
+b=ADD(a,5)
+PRINT b       !  Result: 5.5
+
+SEE ALSO: SUB(), MUL(), DIV(), ADD
+##############################################################################
+
+Command:   AFTER
+Syntax:    AFTER <num-variable>, <procedure-name>
+	   
+DESCRIPTION:
+
+	Procedures can be called after the expiry of a set time. Time in
+	seconds. 
+
+COMMENT: 
+	The currecnt implementation uses the alarm mechanism of the kernel of 
+	the operating system. This means, only one procedure can be scheduled 
+	for trigger at the same time. 
+	Once scheduled, AFTER cannot be canceled anymore.  But you 
+	can overwrite it with following AFTER commands. If you use another
+	AFTER command before the previous one has triggered the procedure
+	the previous will not be triggered anymore.
+	
+	The procedure is excecuted exactly at the given time, interrupting the
+	currently running process, even in the middle of a command. 
+	This can lead to a mess in program stack, unpredictible crashes may be
+	caused. Using AFTER (and EVERY) is not safe! 
+	The interrupt procedure should not do complicated things. 
+	Maybe just assign a constant to a variable. 
+	
+	Maybe also good to know: A PAUSE command will be immediately ended, 
+	when the AFTER procedure is triggered. The procedure will still be 
+	triggered, even when the main program has already ended.
+
+EXAMPLE:
+
+PRINT "You have 10 seconds to enter your name: "
+AFTER 10,alarm
+INPUT name$
+END
+PROCEDURE alarm
+  PRINT "Time out !"
+  QUIT
+RETURN
+
+SEE ALSO: EVERY
+##############################################################################
+
+Command:   ALERT
+Syntax:    ALERT type%,message$,defaultbutton%,button$,click%[,text$]
+	   
+DESCRIPTION:
+
+	Creates and displays an alert box (with a message) 
+	and asks for user input. The message box can have one ore more
+	buttons which can be clicked by the user to exit the message box.
+	Also the user can enter text in several text input fields if
+	they have been specified. The number of the button clocked is 
+	returned in click% and the entered text in text$.
+
+type%            chooses type of alert symbol, 0=none, 1="!", 2="?", 3="stop"
+message$         Contains main text. 
+                 Lines are separated by the '|' symbol.
+		 Editable fields are started with a CHR$(27) followed by the 
+		 default text to be edited (until "|"). 
+button$          Contains text for the buttons (separated by '|').
+defaultbutton%   is the button to be highlighted (0=none,1,2,...) 
+		 to be selected by just pressing return.
+click%           This variable is set to the number of the button selected.
+text$   	 This is a string variable which holds any text-input
+		 the user made. It holds the contents of the editable fields 
+		 separated by a CHR$(13).
+
+COMMENT: 
+	The length of the text input fields is given by the length of the 
+	default text. If you want the user to be able to enter longer texts
+	than the default, the default can be extended by zero bytes (CHR$(0))
+	which are invisible to the user.
+
+
+EXAMPLES:
+
+ALERT 1,"Pick a|button",1,"Left|Right",a
+ALERT 0,"You pressed|Button"+STR$(a),0,"OK",a
+
+' Example of editable fields
+i=1
+name$="TEST01"+STRING$(4,CHR$(0))   ! maximum length 6+4=10
+posx$="N54°50'32.3"
+t$="Edit waypoint:||Name:   "+chr$(27)+name$+"|"
+t$=t$+"Position: "+chr$(27)+posx$+"|"
+ALERT 0,t$,1,"OK|UPDATE|DELETE|CANCEL",a,f$
+WHILE LEN(f$)
+  WORT_SEP f$,CHR$(13),0,a$,f$
+  PRINT "Field";i;": ",a$
+  INC i
+WEND
+
+SEE ALSO: FORM_ALERT(), WORT_SEP, CHR$()
+
+##############################################################################
+
+Operator:   AND
+Syntax:     <num-expression1> AND <num-expression2>
+DESCRIPTION:
+
+	Used to determine if BOTH conditions are true. If both expression1 AND
+	expression2 are true (non-zero), the result is true. Returns -1 for
+	true, 0 for false.
+
+	Also used to compare bits in binary number operations. 1 AND 1 return a
+	1, all other combinations of 0's and 1's produce 0. 
+
+EXAMPLES:
+
+Print 3=3 AND 4>2        Result:  -1 (true)
+Print 3>3 AND 5>3        Result:   0 (false)
+
+PRINT (30>20 AND 20<30)  Result:  -1 (true)
+PRINT (4 AND 255)        Result:   4
+
+SEE ALSO:   NAND, OR, NOT, XOR
+*##############################################################################
+
+Function:   AND()
+Syntax:     <num-result>=AND(<num-expression>,<num-expression2>)
+
+DESCRIPTION:
+
+	   Returns <num-expression> AND <num-expression2>
+
+EXAMPLE:
+
+PRINT AND(TIMER,0xff)  ! Result: 67
+
+SEE ALSO: OR(), AND
+
+##############################################################################
+
+Variable:   ANDROID?
+Syntax:     ANDROID?
+  	  
+DESCRIPTION:
+
+	This variable gives -1 (=TRUE) if the operating system is Android;
+	else the variable has a value of 0. With testing this variable the 
+	program can find out if it is running on an Android device.
+
+EXAMPLE:
+
+IF NOT ANDROID?
+  MOUSEEVENT
+  QUIT
+ELSE
+  END
+ENDIF
+	
+
+SEE ALSO: TRUE, FALSE, UNIX?, WIN32?
+##############################################################################
+
+Function:   ARG()
+Syntax:     a=ARG(z#)
+DESCRIPTION:
+
+	Returns the argument of a complex value z#. Any complex number
+	a# can be expressed as:
+	a#=ABS(a#)*EXP(1i*ARG(a#))
+
+        The argument is the phase angle of the complex number.
+	The return value is a real value in the range of [-PI,PI].
+
+EXAMPLE:   
+
+	PRINT DEG(ARG(4+4i))   !    Result: 45
+	
+SEE ALSO:  IMAG(),REAL(),ABS(),ATAN2(),DEG()
+##############################################################################
+
+Function:   ARID$()
+Syntax:     b$=ARID$(a$)
+DESCRIPTION:
+
+	The arid$()-takes a string argument and returns the order-0 adaptive 
+	arithmetic decoding of that string.
+	
+	Arithmetic coding is a form of entropy encoding used in lossless data 
+	compression. 
+
+EXAMPLE: 
+        t$="Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic."
+        b$=arie$(t$)  ! encode it
+        print "The string was compressed to ";round(len(b$)/len(t$)*1000)/10;"%"
+        c$=arid$(b$)  ! decode it
+        print c$
+ 	Result:
+	The string was compressed to 88.1%
+        Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic.
+
+SEE ALSO:  ARIE$()
+
+##############################################################################
+
+Function:   ARIE$()
+Syntax:     <string-result>=ARIE$(<string-expression>)
+DESCRIPTION:
+
+	The ARIE$() takes a string argument and returns the order-0 adaptive 
+	arithmetic encoding of that string. 
+
+	Frequently used characters will be stored with fewer bits and 
+	not-so-frequently occurring characters will be stored with more bits, 
+	resulting in fewer bits used in total.
+
+EXAMPLE: 
+        t$="Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic."
+        b$=ARIE$(t$)  ! encode it
+        print "The string was compressed to ";round(len(b$)/len(t$)*1000)/10;"%"
+        c$=arid$(b$)  ! decode it
+        print c$
+ 	Result:
+	The string was compressed to 88.1%
+        Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic.
+
+SEE ALSO:  ARID$()
+
+##############################################################################
+
+Command:     ARRAYCOPY
+Syntax:      ARRAYCOPY d(),s() 
+
+DESCRIPTION:
+
+	Copies the contents of array s() to d() (including dimensions).
+	This is the same as the statement:
+	\verb|d()=s()|.
+
+SEE ALSO: DIM
+*##############################################################################
+
+Command:     ARRAYFILL
+Syntax:      ARRAYFILL x(),n   
+             ARRAYFILL x$(),t$ 
+
+DESCRIPTION:
+
+	Assigns the value to all elements of an array or matrix. It can be used 
+	to give all array elements a defined value, e.g. just after dimensioning
+	the array where the contents are yet undefined.
+
+EXAMPLE:
+DIM a(100)
+ARRAYFILL a(),13
+PRINT a(22)       Result: 13
+
+SEE ALSO: DIM
+##############################################################################
+
+Function:   ARRPTR()
+Syntax:     adr%=ARRPTR(a())
+
+DESCRIPTION:
+
+	Finds the address of the descriptor of an array.
+
+EXAMPLE:
+
+DIM a(100,4)
+adr%=ARRPTR(a())
+PRINT "Array has dimension: ";LPEEK(adr%)
+PRINT "Array index list: ";
+FOR i%=0 TO LPEEK(adr%)
+  PRINT LPEEK(LPEEK(adr%+4)+4*i%);
+  IF i%<LPEEK(adr%)
+    PRINT ",";
+  ENDIF
+NEXT i%
+PRINT
+
+SEE ALSO: VARPTR(), UBOUND(), DIM?
+
+##############################################################################
+
+Function:   ASC()
+Syntax:     <num-result>=ASC(<string-expression>)
+DESCRIPTION:
+	
+	Returns the ASCII code value (a number between 0 and 255) of the first
+	character in a string. ASCII stands for American Standard Code for
+	Information Interchange. ASC returns 0 if the length of string is zero
+	or the ASCII code of the string is zero.
+
+EXAMPLE:       
+
+	PRINT ASC("A"), ASC("T")  ! Result: 65, 84
+	PRINT ASC("TEST")         ! Result: 84
+
+SEE ALSO:  CHR$(), CVI(), CVL(), CVS()
+##############################################################################
+
+Function:   ASIN()
+Syntax:     <num-result>=ASIN(<num-expression>)
+DESCRIPTION:
+	
+	The ASIN() is the arc sine function, i.e. the inverse of the
+	SIN() function. Or, more elaborate: It Returns the angle (in radian,
+	not degrees !), which, fed to the sine function will produce the
+	argument passed to the ASIN() function.
+
+EXAMPLE: 
+
+	PRINT 6*ASIN(0.5)     ! Result: 3.14159265359
+
+SEE ALSO:  ACOS(), SIN()
+*##############################################################################
+
+Function:   ASINH()
+Syntax:     <num-result>=ASINH(<num-expression>)
+
+DESCRIPTION:
+
+	The  ASINH() function  calculates  the inverse hyperbolic sine of x,
+	i.e. the inverse of the SINH() function. It returns the angle 
+	(in radian), which, fed to the hyperbolic sine function will produce 
+	the argument passed to the ASINH() function.
+
+SEE ALSO:  ACOSH(), SINH()
+
+##############################################################################
+Keyword:    AT()
+Syntax:     PRINT AT(y,x);[...]
+
+DESCRIPTION:
+
+	The AT statement takes two numeric arguments (e.g. AT(2,3)) and can be
+	used in combination with the PRINT or GPRINT command. 
+
+	The two numeric arguments of the AT function may range from 1 to the
+	width of your terminal minus 1, and from 0 to the height of your
+	terminal minus 1; if any argument exceeds these values, it will be
+	truncated accordingly. However, X11-Basic has no influence on the size
+	of your terminal (80x25 is a common, but not mandatory), the size of
+	your terminal and the maximum values acceptable within the AT statement
+	may vary. To get the size of your terminal you may use the
+	COLS and ROWS variables. To get the actual position of the text cursor
+	you may use the CRSCOL and CRSLIN variables.
+
+EXAMPLE:
+  PRINT AT(3,1);"   This is a Title   "
+  GPRINT AT(4,7);"Test"
+
+
+SEE ALSO: PRINT, GPRINT, TAB(), SPC(), COLS, ROWS, CRSLIN, CRSCOL, LOCATE
+##############################################################################
+Function:   ATN(), ATAN()
+Syntax:     <num-result>=ATN(<num-expression>)
+	    <num-result>=ATAN(<num-expression>)
+DESCRIPTION:
+	
+	ATN() and ATAN() both return the angle in radians, for the inverse 
+	tangent of the expression.
+
+EXAMPLE: 
+	PRINT 4*ATAN(1)     ! Result: 3.14159265359
+
+SEE ALSO:  ACOS(), ASIN(), ATAN2()
+*##############################################################################
+
+Function:   ATAN2()
+Syntax:     <num-result>=ATAN2(<num-expression>,<num-expression>)
+DESCRIPTION:
+
+	The ATAN() function has a second form which accepts two arguments:
+	ATAN2(a,b) which is (mostly) equivalently to ATAN(a/b) except for the
+	fact, that the two-argument-form returns an angle in the range 
+	-PI to PI, whereas the one-argument-form returns an angle in the 
+	range -PI/2 to PI/2.
+
+EXAMPLE: 
+	 PRINT DEG(ATAN2(0,-1))    ! Result: 180
+
+SEE ALSO:  ATAN()
+*##############################################################################
+
+Function:   ATANH()
+Syntax:     <num-result>=ATANH(<num-expression>)
+
+DESCRIPTION:
+
+	The  ATANH()  function  calculates  the inverse hyperbolic tangent of
+	x; that is the value whose hyperbolic tangent is  x. If the  absolute
+	value of x is greater than 1.0, ATANH() returns not-a-number (NaN).
+
+EXAMPLE: 
+	 PRINT DEG(ATANH(-0.5))     ! Result: -31.47292373095
+
+SEE ALSO:  ATAN()
+
+##############################################################################

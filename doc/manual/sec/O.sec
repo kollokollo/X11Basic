@@ -1,0 +1,280 @@
+##############################################################################
+Command:       OBJC_ADD
+Syntax:        OBJC_ADD tree,parent,child
+
+DESCRIPTION:
+
+	Adds  an object to a given tree and  pointers  between 
+        the existing objects and the new object are created.
+           tree   =  address of the object tree
+           parent =  object number of the parent object
+           child  =  object number of the child to be added.
+
+SEE ALSO: OBJC_DELETE
+##############################################################################
+Command:       OBJC_DELETE
+Syntax:        OBJC_DELETE tree,object
+
+DESCRIPTION:
+
+	An  object is deleted from an object tree by  removing  the 
+	pointers.  The object is still there and  can  be  restored by
+	repairing the pointers.
+
+        tree     address of the object tree
+        object   Object number of the object to delete.
+
+SEE ALSO: OBJC_ADD
+##############################################################################
+Function:      OBJC_DRAW()
+Syntax:        ret=objc_draw(tree,startob,depth,cx,cy,cw,ch)
+
+DESCRIPTION:
+
+	Draws any object or objects in an object tree.
+
+	Each OBJC_DRAW call defines a new clip rectangle, to which the drawing 
+        is limited for that call.
+
+        Returns 0 on error.
+        tree     address of the object tree
+        startob  number of the first object to be drawn
+        depth    Number of object levels to be drawn
+        cx,cy    coordinates  of top left corner  of  clipping 
+                 rectangle
+        cw,ch    width & height of clipping rectangle
+
+
+SEE ALSO:  OBJC_FIND()
+##############################################################################
+Function:      OBJC_FIND()
+Syntax:        idx=objc_find(tree,startob,depth,x,y)
+
+DESCRIPTION:
+
+	Finds an object under a specific screen coordinate. 
+	(These may be the mouse coordinates.)
+
+	The application supplies a pointer to the object tree, the index to
+	the start object to search from, the x- and y-coordinates of the 
+	mouse's position, as well as a parameter that tells OBJC_FIND how far 
+	downthe tree to search (depth).
+
+	This function returns the index of the found Object or -1 in case no 
+	object could be found.
+
+SEE ALSO:  OBJC_DRAW()
+##############################################################################
+Function:      OBJC_OFFSET()
+Syntax:        ret=objc_offset(tree,obj,x,y)
+
+DESCRIPTION:
+
+	Calculates  the  absolute screen  coordinates  of  the 
+        specified object in a specified tree.  
+        Returns 0 on error.
+        tree     address of the object tree
+        obj      object number 
+        x,y       returns  the  x,y  coordinates  to  these 
+                  variables.
+		  
+
+SEE ALSO: OBJC_FIND()
+##############################################################################
+Function:  OCT$()
+Syntax:    o$=OCT$(d%[,n%])
+
+DESCRIPTION:
+	Converts an integer value d% into a string containing its octal number
+	representation. The optional parameter n% specifies the minimal 
+	length of the output. If it is larger than needed, the string will
+	be filled with leading zeros.  
+	Negative numbers are converted to unsigned int before processing. 
+	If you need binary representations with sign, use RADIX$() instead.
+
+EXAMPLES:
+	PRINT OCT$(123)        Result:  173
+	PRINT OCT$(9,8)        Result:  00000011
+
+SEE ALSO: BIN$(), STR$(), HEX$(), RADIX$()
+##############################################################################
+Function:  ODD()
+Syntax:    a=ODD(number)
+DESCRIPTION:
+	Returns true (-1) if the number is odd, else false (0).
+
+SEE ALSO: EVEN()
+##############################################################################
+Command:  ON * GOSUB 
+Syntax:   ON a GOSUB proc1[,proc2,...]
+
+DESCRIPTION:
+
+	Calls a procedure out of the given list of procedures depending on 
+	the value of a. If a=1, the first procedure is used, if a=2 the
+	second,  and so on.
+
+SEE ALSO: GOSUB
+##############################################################################
+Command:  ON * GOTO 
+Syntax:   ON a GOTO label1[,label2,...]
+
+DESCRIPTION:
+
+	Branches to a label out of the given list depending on the value of
+	a. If a=1, the first label is used, if a=2 the second,  and so on.
+
+SEE ALSO: GOTO
+##############################################################################
+Command:      ON BREAK
+Syntax:       ON BREAK CONT
+              ON BREAK GOSUB <procedure>
+              ON BREAK GOTO <label>
+
+DESCRIPTION:
+
+       ON BREAK installs a subroutine that gets called when the BREAK
+       condition (normally CTRL-c) occurs. ON BREAK CONT causes the program to
+       continue in any case. ON BREAK GOTO jumps to a specified label. 
+
+SEE ALSO:  GOTO, ON ERROR
+##############################################################################
+
+Command:      ON ERROR
+Syntax:       ON ERROR CONT
+              ON ERROR GOSUB <procedure>
+              ON ERROR GOTO <label>
+
+DESCRIPTION:
+
+       ON ERROR installs an error handling subroutine that gets called when 
+       the next error occurs. Also one can branch to a label in case of an 
+       error. Program excecution can only be continued when RESUME can be
+       used, and when the error is not FATAL.
+
+       ON ERROR CONT will ignore any error and will not print error messages. 
+
+SEE ALSO:  GOSUB, ERROR, RESUME, FATAL
+##############################################################################
+
+Command:      OPEN
+Syntax:       OPEN mode$,#<device-number>,filename$[,port%]
+
+DESCRIPTION:
+
+	OPEN opens the specified file for reading  or writing  or both. The
+	<device-number> is the number you want to assign to the file
+	(functions that read from files or write to  files  expect to  be 
+	given this number). The device number must be between 0 and 99 in the
+	current implementation of X11-Basic. When you  close  a file,  the 
+	device  number  is  released  and  can  be  used  again in subsequent
+	OPEN statements.
+
+mode$	is a character string which indicates the way the file should be 
+	opened.
+	
+	The first character of that string may be "O", "I", "U" or "A". These
+	characters correspond to the mode for which the file is opened: "I" --
+	INPUT,   "O" --OUTPUT, "A" -- APPEND and "U" -- UNSPECIFIED/UPDATE/
+	READandWRITE. 
+
+	Open a file for INPUT if you want to read data from the file. If you
+	open a file for OUTPUT, you can write  to  the  file. However,  all 
+	data  that  was stored in the file (if the file already exists) is
+	lost. If you want to write new data to a file while keeping the 
+	existing  content,  open  the file for appending to it, using the
+	APPEND mode. When you open a file using the UPDATE ("U") keyword,  you
+	can both  read from the file and write to the file at arbitrary
+	positions. You can, for example, seek a position in the middle of 
+	the  file  and start appending new lines of text. All file modes but
+	INPUT create the file if it does not exist. OPEN "I" fails if the
+	file  does  not exist  (use the EXIST() function before OPEN to be
+	sure that the file exists).
+
+	The second character specifies the type of file which should be opened 
+	or created: 
+	""   default opens regular file
+	"U"  opens a datagram socket connection
+        "C"  opens a stream socket as client with connection
+        "S"  opens a stream socket as server
+        "A"  Socket accept connection
+        "X"  extra settings for a special device following: 
+        (e.g. speed and parity of transmission via serial ports)
+	"UX:baud,parity,bits,stopbits,flow"
+	"Y"  opens an USB connection. The filename specifies the vendor-ID and
+	     product-ID of the device to be opened.
+
+<port-nr> The portnr is used only by the OPEN "UC" and OPEN "UU" statement. 
+        It specifies the TCP/IP Port of connection (FTP, WWW, TELNET, MAIL etc.).
+
+
+EXAMPLES:
+	OPEN "I",#1,"data.dat"      ---- opens file "data.dat" for input
+	OPEN "UC",#1,"localhost",80 ---- opens port 80 of localhost for read and#
+					 write
+	OPEN "UX:9600,N,8,1,XON,CTS,DTR",#1,"/dev/ttyS1"  
+                 ---- open COM2 for input and output with 9600:8:N:1 with
+		      software flow control and hardware flow control and also 
+		      drop DTR line and raise it again.
+	OPEN "UY",#1,"0x1c1e:0x0101" --- opens USB device VID=0x1c1e, PID=0x101 
+	                                 for read and write.
+
+SEE ALSO: CLOSE, EXIST(), INPUT, LINEINPUT, PRINT, SEEK, LOF(), EOF(),
+          LOC(), BLOAD, LINK, FREEFILE(), CONNECT, IOCTL()
+
+##############################################################################
+Command:  OPENW
+Syntax:   OPENW n
+
+DESCRIPTION:
+
+	Opens a graphic window. There can be up to 16 graphic windows opened.
+	All graphic output goes to the window which was opened latest. OPENW
+	can be used to switch between multiple windows. Window 1 is opened
+	automatically on default when the first graphic command is executed
+	and no other window is already opened.  
+
+SEE ALSO : CLOSEW, MOVEW, SIZEW, TITLEW, ROOTWINDOW, USEWINDOW
+##############################################################################
+
+Operator:   OR
+Syntax:     <num-expression1> OR <num-expression2>
+DESCRIPTION:
+
+	Used to determine if at least ONE OF the conditions is true. If both 
+	expression1 AND expression2 are FALSE (zero), the result is FALSE. 
+	Returns -1 for true, 0 for false.
+
+	Also used to combine bits in binary number operations. 
+	E.g. (1 OR 8) returns 9. 
+
+EXAMPLES:
+
+Print 3=3 OR 4<2        Result:  -1 (true)
+Print 3>3 OR 5<3        Result:   0 (false)
+
+PRINT (30>20 OR 20<30)  Result:  -1 (true)
+PRINT (4 OR 128)        Result:   132
+
+SEE ALSO:   NAND, AND, NOT, NOR, XOR
+*##############################################################################
+
+Function:   OR()
+Syntax:     <num-result>=OR(<num-expression>,<num-expression2>)
+
+DESCRIPTION:
+
+	   Returns <num-expression> OR <num-expression2>
+
+SEE ALSO: AND(), OR, AND
+##############################################################################
+Command:  OUT
+Syntax:   OUT #n,a
+
+DESCRIPTION:
+
+	Writes a byte a to an open (output) channel or file #n.
+
+SEE ALSO: PRINT, INP()
+##############################################################################
+

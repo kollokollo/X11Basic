@@ -1,0 +1,310 @@
+##############################################################################
+
+Command:    IF
+Syntax:     IF <condition>   [...  ELSE [IF <expression> ...] ... ENDIF
+
+DESCRIPTION:
+
+	Divides a program up into different blocks depending
+        on how it relates to the 'condition'.
+
+SEE ALSO: ELSE, ENDIF
+
+##############################################################################
+
+Function:   IMAG()
+Syntax:     x=IMAG(z#)
+
+DESCRIPTION:
+
+	Returns the imaginary part of the complex number z#.  
+	
+
+EXAMPLE: 
+	PRINT IMAG(1-2i)     Result: -2
+
+SEE ALSO:  CONJ(), REAL()
+##############################################################################
+
+Operator:   IMP
+Syntax:     <num-result>=<num-expression> IMP <num-expression>
+
+DESCRIPTION:
+
+	The operator IMP (implication) corresponds to a logical  consequence.
+	The result is FALSE if a FALSE  expression follows a TRUE one. The
+	sequence of the argument is important.
+
+        Table:	      A  |  B  |  A IMP B
+             	    -----+-----+-----------
+ 		     -1  | -1  |   -1
+ 		     -1  |  0  |    0
+ 		      0  | -1  |   -1
+ 		      0  |  0  |   -1
+ 
+EXAMPLE:
+           PRINT BIN$((13 IMP 14) AND 15,4) 
+	   Result:  1110
+
+SEE ALSO: TRUE, FALSE, NOT, XOR, EQV
+##############################################################################
+
+Command:    INC
+Syntax:     INC <num-variable>
+DESCRIPTION:
+
+	INC  increments  a  (numeric)  variable.  This command   is  
+	considerably   faster  then  the  equivalent  statement "<variable> =
+	<variable> + 1".
+
+SEE ALSO:  ADD, DEC
+##############################################################################
+
+Command:    INFOW
+Syntax:     INFOW [<window-nr>],<string-expression>
+
+DESCRIPTION:
+
+	Links the (new) information string to the window with the
+        number. On UNIX this Information will be displayed in ICONIFIED
+	state of the window. 
+
+SEE ALSO:  TITLEW	   
+##############################################################################
+
+Variable:   INKEY$
+Syntax:     <string-result>=INKEY$
+
+DESCRIPTION:
+
+	Returns a string containing the ASCII characters of all keys which 
+	have been pressed on the keyboard.
+
+EXAMPLE: 
+	REPEAT			! Wait until a
+	UNTIL LEN(INKEY$)	! Key was pressed
+
+SEE ALSO:  INP(), KEYEVENT
+##############################################################################
+
+Function:   INLINE$()
+Syntax:     <string-result>=INLINE$(<string-expression>)
+
+DESCRIPTION:
+
+	6-bit ASCII to binary conversion.
+	This command basically does a RADIX conversion (from 64 to 256) on the
+	contents of the  string. This is intended to be used to include binary
+	data into the  source code of a basic program.
+	
+	The inverse coding (from binary to 6-bit ASCII) is done by the program 
+	inline.bas which comes with X11-Basic.
+
+EXAMPLE:
+        sym$=INLINE$("$$$$$$$$0$&Tc_>$QL&ZD3cccccK]UD<*%D$$$$$$$$$") ! Train
+	PUT_BITMAP sym$,92,92,16,16
+
+SEE ALSO:  PUT_BITMAP
+
+##############################################################################
+
+Function:   INP(), INP\%(), INP\&()
+Syntax:     <num-result>=INP(<channel-nr>) 
+     	    <num-result>=INP\&(<channel-nr>) 
+            <num-result>=INP\%(<channel-nr>) 
+
+DESCRIPTION:
+
+	Reads one byte from a file previously opened with OPEN (nr>0) or from
+	the standard files (-1=stderr, -2=stdin, -4=stdout). INP&() reads a word
+	(2 Bytes) and INP%() reads a long word (4 bytes).
+
+EXAMPLE:
+	~INP(-2)        ! Waits for a key being pressed
+	PRINT INP%(#1)  ! reads a long from a previously opened file
+	
+SEE ALSO: OUT, INPUT$()
+##############################################################################
+
+Function:   INP?()
+Syntax:     <boolean-result>=INP?(<channel-nr>) 
+
+DESCRIPTION:
+	Determine the input status of the device.
+	TRUE(-1) is device is ready (chars can be read) otherwise 
+	FALSE(0).
+
+SEE ALSO: INP()
+
+##############################################################################
+
+Command: INPUT
+Syntax:  INPUT [#<device-number>]|<prompt-expression>], <variable> [, ...]
+
+DESCRIPTION:
+
+	INPUT gets comma-delimited  input  from  the standard input or  from 
+	a  previously  opened  file as specified by <device-number> (use the
+	LINEINPUT function to  read  complete  lines from  a  file and BLOAD
+	to load complete files). Any input is assigned to the variable(s)
+	specified. If input  is  expected  from  a terminal screen or 
+	console window,  then 
+	<prompt-expression> is printed to the console window to request input
+	from the user.
+
+SEE ALSO:  LINEINPUT,  FORM INPUT AS, PRINT
+
+EXAMPLE:
+        INPUT #1,a$
+        INPUT "Enter your name:",a$
+
+##############################################################################
+
+Function:   INPUT$()
+Syntax:     <string-result>=INPUT$(#<nr>,<len>) 
+            <string-result>=INPUT$(<len>) 
+
+DESCRIPTION:
+
+	Reads <len> characters from the keyboard and assigns them 
+        to  a  string.  Optionally,  if  the device-number is 
+        specified,  the  characters are read in from  a  previously 
+        OPENed channel <nr>.
+
+SEE ALSO: INPUT, INP()
+##############################################################################
+
+Function:   INSTR()
+Syntax:     <num-result>=INSTR(<a$>,<b$>[,<n>]) 
+
+DESCRIPTION:
+
+	Searches to see if b$ is present in a$ and returns
+        its position.
+        <n> is a numeric expression indicating the position in a$
+        at which the search is to begin (default=1).  If <n> is not given 
+        the search begins at the first character of a$.
+        If b$ is found in a$ the start position is returned, otherwise 0.
+	
+SEE ALSO: RINSTR(), GLOB()
+
+##############################################################################
+
+Function:   INT()
+Syntax:     a%=INT(b) 
+DESCRIPTION:
+
+	INT() cuts off the fractional part of the number a. 
+	and returns an integer number. The integer number has only 32bit, 
+	so a should be in the range of -2147483648 to 2147483647.
+
+EXAMPLE:
+	PRINT INT(1.4), INT(-1.7)
+       	Result: 1, -1
+
+SEE ALSO:   CINT(), FRAC(), TRUNC(), ROUND(), FIX()
+##############################################################################
+Function:   INV()
+Syntax:     b()=INV(a()) 
+
+DESCRIPTION:
+	Calculate the inverse of a square matrix a(). The calculation is done 
+	using the singular value decomposition. If the matrix is singular the 
+	algorithm tells you how many singular values are zero or close to zero. 
+
+EXAMPLE:
+        a()=[3,7,3,0;0,2,-1,1;5,4,3,2;6,6,4,-1]
+	b()=INV(a())
+	PRINT DET(a())*DET(b())   ! Result: 1
+	PRINT DET(a()*b())        ! Result: 1
+
+SEE ALSO: SOLVE(),DET()
+
+##############################################################################
+Function:   INVERT()
+Syntax:     c&=INVERT(a&,b&) 
+
+DESCRIPTION:
+	Compute the inverse of a modulo b and return the result. 
+	If the inverse exists, the return value is non-zero and c& will 
+	satisfy 0 <= c& < b&. If an inverse doesn't exist the return value 
+	is zero.
+
+EXAMPLE:
+	PRINT INVERT(12,53)      ! result: 31
+
+SEE ALSO: DIV()
+
+##############################################################################
+
+Function:   IOCTL()
+Syntax:     <num-result> = IOCTL(#n,d%[,adr%]) 
+DESCRIPTION:
+
+       IOCTL() manipulates the underlying device parameters of special files.  
+       In particular, many operating characteristics of character
+       special files (e.g. terminals) may be controlled with ioctl requests.
+       The argument #n must refer to an open file, socket or device.
+
+       The second argument is a  device-dependent request code. The third
+       argument is either another integer value or a pointer to memory.  
+
+       An ioctl request has encoded in it whether the argument is an in 
+       parameter or out parameter, and the size of the argument adr% refers to 
+       in bytes.
+
+       Usually, on success zero is returned. A few ioctls use the return
+       value as an output parameter and return a non-negative value on success.
+       On error, -1 is returned.
+
+COMMENTS:
+	In case of open USB-Devices, following IOCTL requests are implemented:
+	0 -- USB Reset  e.g. ret%=IOCTL(#1,0)
+	1 -- get descriptor data structure. The data structure has a length of
+	     4148 bytes. 
+	     t$=SPACE$(4148)
+             ret%=IOCTL(#1,1,VARPTR(t$))
+	     Please see the example program usb.bas for details how
+	     to decode the information in this data structure.
+	2 -- Set configuration, e.g. ret%=IOCTL(#1,2,confnr%)
+	3 -- Claim Interface,   e.g. ret%=IOCTL(#1,3,intrfnr%)
+	4 -- control_msg,
+	     t$=MKL$(a%)+MKL$(b%)+MKL$(c%)+MKL$(d%)+MKL$(timeout%)+MKL$(len(data$))+data$ 
+	     ret%=IOCTL(#1,4,VARPTR(t$))
+	5 -- Set default blk_len,      e.g. ~IOCTL(#1,5,blk_len%)
+	6 -- Set default endpoint_in,  e.g. ~IOCTL(#1,6,ep_in%)
+	7 -- Set default endpoint_out, e.g. ~IOCTL(#1,7,ep_out%)
+       12 -- get filename+path
+             t$=SPACE$(4100)
+             l%=IOCTL(#1,12,VARPTR(t$))
+             devicefilenr$=LEFT$(t$,l%)
+       13 -- get manufacturer
+             t$=SPACE$(100)
+             l%=IOCTL(#1,13,VARPTR(t$))
+             manufacturer$=LEFT$(t$,l%)
+       14 -- get product name
+             t$=SPACE$(100)
+             l%=IOCTL(#1,14,VARPTR(t$))
+             product$=LEFT$(t$,l%)
+       15 -- get serial number
+             t$=SPACE$(100)
+             l%=IOCTL(#1,15,VARPTR(t$))
+             serialnr$=LEFT$(t$,l%)
+       16 -- get error string
+             t$=SPACE$(100)
+             l%=IOCTL(#1,16,VARPTR(t$))
+             error$=LEFT$(t$,l%)
+
+
+SEE ALSO:   OPEN, CLOSE
+EXAMPLE:
+        OPEN "U",#1,"/dev/console"
+        frequency=300
+        tone=1190000/frequency
+        KIOCSOUND=19247
+        PRINT ioctl(#1,KIOCSOUND,tone)  ! Sounds the speaker
+        CLOSE #1
+       	Result: 0
+
+##############################################################################
+

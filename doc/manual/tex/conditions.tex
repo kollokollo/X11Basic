@@ -1,0 +1,978 @@
+
+\section{Address Spaces}
+
+The full accessible Program memory can be accessed by \verb|PEEK|/\verb|POKE|, 
+\verb|LPEEK|/\verb|LPOKE|, \verb|DPEEK|/\verb|DPOKE|. Be careful. You can
+manipulate all symbols of the interpreter and or dynamically linked libraries
+and your program. Address spaces belonging to other programs which are not
+shared memory blocks can not be accessed. You will get a segmentation fault on
+trying this.
+
+\section{Graphics: Drawing and Painting}
+
+A graphics window will be automatically opened when the first graphic command
+appears in your program. Without using any graphic commands no X11-Server is
+needed at all and your programs also runs under a text console or as a daemon
+or as CGI scripts. But if you want to draw anything with e.g. \verb|LINE|,
+\verb|CIRCLE| or \verb|BOX|, control the MOUSE pointer, the keyboard or use
+the graphical user interface with e.g. \verb|ALERT| or \verb|MENU|, a graphic
+window will open with the default geometry \verb|640x400|. All graphic output
+can be done in full color which can be set with the \verb|GET_COLOR()| and the
+\verb|COLOR| statements. Moreover, there can be up to 16 different graphic
+windows opened at a time. Please note that all graphics is displayed after a
+\verb|SHOWPAGE| command only. This allows fast animations.
+
+To allow for animated bitmap graphics and icons, X11-Basic offers the commands
+\verb|GET| and \verb|PUT|, which retrieve rectangular regions from the
+graphics-window into a string or put back bitmap graphics data from the 
+string to the graphics screen or window. The file format used with 
+\verb|PUT| is a standard .BMP bitmap, so also externally created icons can be
+used. Transparency and alpha channels are supported.
+
+
+\section{Reading from and Writing to Files}
+
+Before you may read from or write to a file, you need to open it; once you are
+done, you should close it. Each open file is designated by a simple number,
+which might be stored within a variable and must be supplied to the \verb|PRINT| and
+\verb|INPUT| commands if you want to access the file. 
+
+If you need more control, you may consider reading and writing one byte at a
+time, using the multi-purpose commands \verb|INP()| and \verb|OUT|, or reading
+the whole file as a binary block with \verb|BLOAD|.
+
+\section{Internet connections, special files and sockets}
+
+X11-Basic allows to connect a program to another Program on a different (or
+the same) host computer via standard internet protocols or pipes. 
+
+Basically there are two methods of connections to other computers on a network: The TCP/IP Based connections 
+via streams and the implementation of a connectionless, unreliable datagram 
+packet service (UDP). 
+
+A method of passing data between two applications on the same computer is using Pipes.
+Pipes are special files which are created in the local filesystem. 
+
+\subsection{Local inter process communication: Pipes}
+A pipe is a unidirectional data channel that can be used for interprocess 
+communication. The UNIX kernel usually supports this mechanism. The pipe can
+be used to send information or data from one process to another. Here is a little
+example progam you can use to play with it:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\footnotesize
+\begin{verbatim}
+PIPE #1,#2
+a=FORK()
+IF a=0    ! Child instance
+  GPRINT "Hi, I am Child !",b
+  DO
+    SHOWPAGE
+    LINEINPUT #1,t$
+    GPRINT t$
+  LOOP
+  ' This instance never ends ...
+ELSE IF a=-1  
+  PRINT "ERROR, fork() failed !"
+  QUIT
+ELSE      ! parent instance
+  DO
+    DUMP
+    ALERT 1,"Hi, I am Parent. Child PID="+str$(a),1," OK | Kill Child ! ",b
+    DUMP
+    PRINt #2,SYSTEM$("date")
+    FLUSH #2
+    IF b=2
+      SYSTEM "kill "+str$(a)
+      ALERT 1,"Child PID="+str$(a)+" killed !",1," OK ",b
+      QUIT
+    ENDIF
+  LOOP
+ENDIF
+QUIT
+\end{verbatim} }
+\end{mdframed}
+Instad of with pipes, the interprocess communication can also be done using a
+shared memory segment.
+
+
+\subsection{World-Wide communication: Sockets}
+
+Most inter-process communication uses the client server model. These terms refer
+to the two processes which will be communicating with each other. One of the
+two processes, the client, connects to the other process, the server, typically
+to make a request for information. A good analogy is a person who makes a phone
+call to another person.
+
+Notice that the client needs to know of the existence of and the address of the
+server, but the server does not need to know the address of (or even the
+existence of) the client prior to the connection being established. Notice also
+that once a connection is established, both sides can send and receive
+information.
+
+When a socket is created, the program has to specify the address domain and the
+socket type. Two processes can communicate with each other only if their
+sockets are of the same type and in the same domain. There are two widely used
+address domains, the Unix domain, in which two processes which share a common
+file system communicate, and the Internet domain, in which two processes
+running on any two hosts on the Internet communicate. Each of these has its own
+address format.
+
+The address of a socket in the Unix domain is a character string which is
+basically an entry in the file system.
+
+The address of a socket in the Internet domain consists of the Internet address
+of the host machine (every computer on the Internet has a unique 32 bit
+address, often referred to as its IP address). In addition, each socket needs a
+port number on that host. Port numbers are 16 bit unsigned integers. The lower
+numbers are reserved in Unix for standard services. For example, the port
+number for the FTP server is 21. It is important that standard services be at
+the same port on all computers so that clients will know their addresses.
+However, port numbers above 2000 are generally available.
+
+
+\paragraph{Socket Types}
+
+
+There are two widely used socket types, stream sockets, and datagram sockets.
+Stream sockets treat communications as a continuous stream of characters, while
+datagram sockets have to read entire messages at once. Each uses its own
+communications protocol. Stream sockets use TCP (Transmission Control
+Protocol), which is a reliable, stream oriented protocol, and datagram sockets
+use UDP (Unix Datagram Protocol), which is unreliable and message oriented.
+
+
+
+\paragraph{TCP/IP}
+
+Transmission Control Protocol (TCP) provides a reliable byte-stream transfer
+service between two endpoints on an internet. TCP depends on IP to move packets
+around the network on its behalf. IP is inherently unreliable, so TCP protects
+against data loss, data corruption, packet reordering and data duplication by
+adding checksums and sequence numbers to transmitted data and, on the receiving
+side, sending back packets that acknowledge the receipt of data.
+
+Before sending data across the network, TCP establishes a connection with the
+destination via an exchange of management packets. The connection is destroyed,
+again via an exchange of management packets, when the application that was using
+TCP indicates that no more data will be transferred. 
+
+TCP has a multi-stage flow-control mechanism which continuously adjusts the
+sender's data rate in an attempt to achieve maximum data throughput while
+avoiding congestion and subsequent packet losses in the network. It also
+attempts to make the best use of network resources by packing as much data as
+possible into a single IP packet.
+
+The system calls for establishing a connection are somewhat different for the
+client and the server, but both involve the basic construct of a socket. A
+socket is one end of an inter-process communication channel. The two processes
+each establish their own socket.
+
+The steps involved in establishing a socket on the client side are as follows:
+
+\begin{enumerate}
+   \item Create a socket with the OPEN command providing a port number
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "US",#1,"client",5000
+\end{verbatim}\end{mdframed}
+   \item Connect the socket to the address of the server using the CONNECT command
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  CONNECT #1,"ptbtime1.ptb.de",13
+\end{verbatim}\end{mdframed}
+\item Instead of using Steps 1 and 2, you can alternatively use the combined
+ command:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "UC",#2,"ptbtime1.ptb.de",13
+\end{verbatim}\end{mdframed}
+   \item Send and receive data. There are a number of ways to do this, but the 
+   simplest is to use the PRINT, SEND, WRITE, READ, RECEIVE INPUT commands. 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  PRINT #2,"GET /index.html"
+  FLUSH #2
+  WHILE INP?(#2)
+    LINEINPUT #2,t$
+    PRINT "got: ";t$
+  WEND
+\end{verbatim}\end{mdframed}
+ \item close the connection with
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #1
+\end{verbatim}\end{mdframed}
+\end{enumerate}
+
+The steps involved in establishing a socket on the server side are as follows:
+
+\begin{enumerate}
+   \item Create a socket with the OPEN command and bind the socket to a port 
+   number on the host machine.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "US",#1,"server",5000
+\end{verbatim}\end{mdframed}
+   \item Listen for connections and
+   \item Accept a connection with this other OPEN command, which opens 
+   a connection to the connected client: 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "UA",#2,"",1
+\end{verbatim}\end{mdframed}
+   This call typically blocks until a client connects with the server.
+   \item Send and receive data on the accepted connection
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  PRINT #2,"Welcome to X11-Basic test-server ..."
+  FLUSH #2
+  DO
+    IF INP?(#2)
+      LINEINPUT #2,t$
+      PRINT "got: ";t$
+    ENDIF
+    EXIT IF t$="quit"
+  LOOP
+  PRINT #2,"goodbye..."
+  FLUSH #2
+\end{verbatim}\end{mdframed}
+ \item close the established connection with
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #2
+\end{verbatim}\end{mdframed} and listen to the next connection (folow step 3) or 
+ \item close the socket if not further needed.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #1
+\end{verbatim}\end{mdframed}
+\end{enumerate}
+
+\paragraph{UDP}
+ 
+User Datagram Protocol (UDP) provides an unreliable packetized data transfer
+service between endpoints on a network. 
+
+First, a socket has to be crated with the OPEN command:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "UU",#1,"sender",5556
+\end{verbatim}
+\end{mdframed}
+
+When a UDP socket is created, its local and remote addresses are
+unspecified. Datagrams can be sent immediately using SEND with a valid
+destination address and port as argument:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\footnotesize\linespread{0.8}\begin{verbatim}
+SEND #1,"This is my message",CVL(CHR$(131)+CHR$(195)+CHR$(15)+CHR$(200)),5000
+\end{verbatim}}
+\end{mdframed}
+   
+UDP uses the IPv4 address format, so a long integer has to be passed.
+
+When CONNECT is called on the socket the default destination address is set and
+datagrams can now be sent using SEND without specifying an destination address.
+It is still possible to send to other destinations by passing an address to
+SEND.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CONNECT #1,"localhost",5555
+SEND #1,"This is my message"
+\end{verbatim}
+\end{mdframed}
+
+All receive operations return only one packet.
+       
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+IF INP?(#1)
+  RECEIVE #1,t$,adr
+  PRINT "Received Message: ";t$;" from ";HEX$(adr)
+ENDIF
+\end{verbatim}
+\end{mdframed}
+
+INP?(\#n) Returns the size of the next pending datagram in bytes, or 0 when no
+datagram is pending.
+
+The Socket should be closed when the connection is not goint to be used any more:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLOSE #1
+\end{verbatim}
+\end{mdframed}
+
+UDP does not guarantee to actually deliver the data to the destination, nor does
+it guarantee that data packets will be delivered to the destination in the order
+in which they were sent by the source, nor does it guarantee that only one copy
+of the data will be delivered to the destination. UDP does guarantee data
+integrity, and it does this by adding a checksum to the data before
+transmission. 
+
+\section{Accessing USB devices}
+
+X11-Basic has a builtin USB interface, which allows X11-Basic programs to accedd USB-Devices, which are connected
+to the computer. The interface is on a near hardware level, so the driver for the specific hardware connected must be written in 
+X11-Basic. Hence, it is well possible to use dataloggers and USB-to-RS232 adapters with this methods. In pronciple every USB-Device 
+can be accessed, if the protocol for data transfers and data interpretation is known. 
+
+Please see the example program \verb|usb.bas| for an example, how to readout data from a \verb|VOLTCRAFT VDTL101-T| datalogger.
+
+USB support is work in progress and may not yet work on Android and WINDOWS. 
+
+USB-Devices are opened with the OPEN command. Instead of a filename, a combination if PID/VID is used. 
+Once opened, the commands CLOSE, IOCTL(), SEND and RECEIVE can be used on that device. 
+(PRINT and INPUT currently will not work).
+
+
+\section{Data within the program}
+
+You may store data within your program within DATA-statements; during execution
+you will probably want to READ it into variables or arrays. Also the assignment
+of constant to arrays may be used to store data in your program and last but not
+least the \verb|INLINE$()| function may be used to store huge binary data
+segments.
+
+The first example shows how to store conventional data (numbers and strings)
+within the sourcecode of a basic program:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+' example how to use the DATA statement
+
+RESTORE mydata
+READ name$,age,address$,code
+
+mydata:
+DATA "Bud Spencer",30,"Holywood Street",890754
+DATA "Hannelore Isendahl",15,"Max-Planck-Allee",813775
+\end{verbatim}
+\end{mdframed}
+
+The following example shows how to store arbitrary binary data, which 
+can be used e.g. to store the bitmapdata for a bitmap 
+(\includegraphics{biene.eps}). Or also for other resources like pictograms and
+any other bitmap or icon.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\footnotesize\linespread{0.8}
+\begin{verbatim}
+' output of inline.bas for X11-Basic 23.04.2002
+' demo 104 Bytes.
+demo$=""
+demo$=demo$+"5*II@V%M@[4D=*9V,)5I@[4D=*9V,(IR?*IR=6Y*A:]OA*IS?F\.&IAI?J\D8ZII"
+demo$=demo$+",*5M=;1I@V%P=;1I?F%OaJ]R=:\P,*5E?J\D>*)X,*9W,*AI>ZUE@+%X/F\R&JAV"
+demo$=demo$+"A;1W&HXR&DL$"
+a$=INLINE$(demo$)
+PRINT len(a$),a$
+
+' show a bitmap
+biene$="($$43$%*<(1G,=E5Z&MD%_DVW'b*%H-^,EQ6>VTL$$$$"
+
+CLEARW
+t$=INLINE$(biene$)
+COLOR GET_COLOR(65535,65535,65535)
+FOR i=0 TO 40
+  PUT_BITMAP t$,i*16,0,16,16
+NEXT i
+\end{verbatim}}
+\end{mdframed}
+
+For convenience, a program called \verb|inline.bas| shippes with X11-Basic. It does the
+conversion from and compression of any binary file to ready-to-use X11-Basic
+sourcecode.
+
+%\section{Encrypting and decrypting data}
+
+%Encryption is currently not compiled in.  
+
+\section{Dynamic-link libraries}
+
+A dynamic-link library (\verb|.so| ={\em shared object}) is a collection of
+functions (subroutines) that can be used by programs or by other \verb|.so|'s.
+A \verb|.so| function must be called, directly or indirectly, from a running
+application and can not be run as a separate task.
+
+Dynamic link libraries save memory space and reduce memory swapping. Memory is
+saved, because many applications can use a single \verb|.so| simultaneously,
+sharing a single copy of the \verb|.so| in memory. Another feature of 
+\verb|.so|'s is the ability to change the functions in a \verb|.so| without
+modifying the applications that use them, as long as the function's arguments
+and return values do not change. A disadvantage to using \verb|.so|'s is that
+an application depends on the existence of a separate \verb|.so| module. If the
+\verb|.so| is not found, the application is terminated.
+
+All documented functions from the shared objects of other software packages 
+can be used and invoked from within yout X11-Basic program. 
+
+X11-Basic will perform no check on the number and type of the API function
+parameters.
+
+\subsection{Using shared libraries and C functions}
+
+Before an application can use a function from a \verb|.so| (if you want to use
+your own functions written in C you have to compile them to a shared object
+file), it must load the \verb|.so| explicitly using the \verb|LINK| statement.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+LINK #n,"myfile.so"
+\end{verbatim}
+\end{mdframed}
+
+
+The process of loading a \verb|.so| explicitly is called run-time linking. 
+
+For instance, to use
+the \verb|binit()| function from the \verb|trackit.so| library, an 
+application must
+include following lines of code (supposing, you want to use your own shared 
+object made out of the c-code trackit.c):
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+IF NOT EXIST("./trackit.so")
+  SYSTEM "gcc -O3 -shared -o trackit.so trackit.c" 
+ENDIF
+LINK #11,"./trackit.so"
+~EXEC(SYM_ADR(#11,"binit"),L:n,L:200,L:VARPTR(x(0)),L:VARPTR(bins(0)))
+\end{verbatim}
+\end{mdframed}
+
+The file \verb|trackit.c| contains:
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+void binit(int n,int dn,double *x,double *data) {
+  int i,j;
+  int over=0,under=0;
+    for(i=0;i<n;i++) {
+      j=(int)((x[i]+PI)/2/PI*dn);
+      if(j<0) under++;
+      else if(j>=dn) over++;
+      else data[j]++;
+    }  
+}
+\end{verbatim}
+\end{mdframed}
+
+X11-Basic applications can load up to 99 shared object files simultaneously, 
+although the channel number space is shared with the open files.. 
+
+To do this, parameter n must specify a value between 1 an 99. X11-Basic maintains
+an internal table with 99 entries to store the handle of the loaded shared
+object modules. These handles are necessary to unload the \verb|.so| when the
+application is finished using them. 
+
+The \verb|.so|'s are unloaded by invoking the \verb|UNLINK| command:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}  
+UNLINK #11
+\end{verbatim}
+\end{mdframed}
+
+X11-Basic currently allows only a float (double) type for the return value. 
+This is currently a limitation for the use of the standard libraries. If you
+have written the library function yourself, you could bypass this limitation by
+passing pointers to variables.
+
+The following parameter types are possible:
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+L:  &  32-bits integers and pointers (long) (\%)   \\
+W:  &  16-bits signed (short)  \\ 
+B:  &  8-bits signed (char)  \\ 
+F:  &  8 byte float (double)  \\ 
+S:  &  4 byte float (float)  \\ 
+\hline
+\end{tabular}
+\end{center}
+
+
+The \verb|SYM_ADR| function determines the address of the function from its name. 
+The spelling of the function name must therefore be identical to the spelling
+of the function in the \verb|.so|. 
+
+When passing the address of the string, a null byte must be added to the
+end of the string. 
+
+
+\section{Memory management}
+
+Normally, X11-Basic takes care of most of the memory management for the
+programmer. When a variable, string or array is declared, X11-Basic
+allocates the required memory and releases it when the application is
+terminated. However, there may be situations when a programmer wants to
+allocate additional memory. 
+
+\subsection{Allocating memory}
+
+If an application needs to store small amounts of memory, it should use
+strings. 
+Strings are often used as a buffer for functions. 
+The address of the memory occupied by a string can be obtained by the 
+\verb|VARPTR()| function. Its length by the \verb|LEN()| function.
+
+
+To allocate memory from the global and system-wide program user space 
+memory pool you might use the function
+\verb|MALLOC()|. For instance, to allocate 2000 bytes, you might use:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ptr%=MALLOC(2000)
+\end{verbatim}
+\end{mdframed}
+
+A global memory block allocated with \verb|MALLOC| must be freed using the 
+\verb|FREE()|
+function. An application should always free all memory blocks before
+exiting. For instance:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FREE Ptr% 
+\end{verbatim}
+\end{mdframed}
+
+\section{Other features}
+\begin{itemize}
+  \item X11-Basic programs may start other programs with the commands 
+        \verb|SYSTEM| and \verb|SYSTEM$()|.
+  \item The \verb|ENV$()| function allows access to environment variables.
+  \item The current time or date can be retrieved with 
+        \verb|TIME$| and \verb|DATE$|.
+  \item The interpreter allows self modifying code. 
+  \item It is possible to link shared library objects and use the functions 
+        provided from within the X11-Basic program 
+\end{itemize}
+
+
+\chapter{Graphical User Interface}
+
+This chapter describes how to use the graphical user interface (GUI) built into
+X11-Basic.
+
+\section{ALERT and FILESELECT}
+
+Two most often used graphic functions are implemented as a full functional
+graphical user interface dialog: Message boxes and a file selector.
+Arbitrary dialogs can be created with the object and resource functions. 
+Also a pull down menu function is implemented.
+
+\begin{SCfigure}
+\includegraphics[width=0.5\textwidth]{alert1.eps}
+\caption{A message box.}
+\label{alert1}
+\end{SCfigure}
+
+Fig.~\ref{alert1} shows a typical messagebox. 
+The command which produces it is:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ALERT 3,"This file is write protected.|You can only read or \
+         delete it.",1,"OK|DELETE|CANCEL",sel
+\end{verbatim}
+\end{mdframed}
+
+ALERT boxes can also be used to manage simple input forms 
+like the one you can see in fig.~\ref{alert3}. 
+Here is a little example program:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLEARW 
+i=1
+name$="TEST01"
+posx$="N54°50'32.3"
+posy$="E007°50'32.3"
+t$="Edit waypoint:||Name:   "+CHR$(27)+name$+"|"
+t$=t$+"Breite: "+chr$(27)+posx$+"|"
+t$=t$+"Länge:  "+chr$(27)+posy$+"|"
+t$=t$+"Höhe:   "+chr$(27)+str$(alt,5,5)+"|"
+t$=t$+"Typ:    "+chr$(27)+hex$(styp,4,4)+"|" 
+ALERT 0,t$,1,"OK|UPDATE|LÖSCHEN|CANCEL",a,f$
+WHILE LEN(f$)
+  WORT_SEP f$,CHR$(13),0,a$,f$
+  PRINT "Feld";i;": ",a$
+  INC i
+WEND
+QUIT
+\end{verbatim}
+\end{mdframed}
+
+\begin{SCfigure}
+  \includegraphics[width=0.5\textwidth]{alert3.eps}
+  \caption{A simple input box.}
+  \label{alert3}
+\end{SCfigure}
+
+
+\begin{SCfigure}
+  \includegraphics[width=0.7\textwidth]{fileselect.eps}
+  \caption{The fileselecetor}
+  \label{filesel}
+\end{SCfigure}
+Fig.~\ref{filesel} shows the fileselector box. The command which produces it is:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FILESELECT "load program:","./*.bas","in.bas",f$
+\end{verbatim}
+\end{mdframed}
+
+The complete path and filename of the selected file will be returned in 
+\verb|f$|.
+
+
+\begin{SCfigure}
+  \includegraphics[width=0.3\textwidth]{menu.eps}
+  \caption{A pull down menu}
+  \label{filesel}
+\end{SCfigure}
+
+
+\section{Resources}
+
+X11-Basic resources consist of object trees, strings, and bitmaps used by a
+basic program. They encapsulate the user interface and make internationalization
+easier by placing all program strings in a single file. The data format of
+X11Basic resource is downwards compatible with the Atari-ST GEM implementation.
+
+\begin{figure}
+\begin{center}
+
+\includegraphics[width=0.48\textwidth]{form1.eps}
+\includegraphics[width=0.48\textwidth]{form2.eps}
+\includegraphics[width=0.48\textwidth]{form3.eps}
+\end{center}
+\caption{Examples of forms in X11-Basic}
+\label{form1}
+\end{figure}
+
+
+
+Resources are generally created using a Resource Construction
+Set (RCS) and saved to a \verb|.RSC| file which is loaded by 
+\verb|RSRC_LOAD()| at program initialization time.
+
+Resources may also be embedded as data structures in source code (the 
+utility programs \verb|rsc2gui.bas| and \verb|gui2bas.bas| convert \verb|.RSC| files to 
+source code). 
+Resources contain pointers and coordinates which must be fixed up
+before being used.
+\verb|RSRC_LOAD()| does this automatically, however if you use an embedded
+resource you must take care of this by yourself on each object in each object
+tree to convert the initial character coordinates of to screen coordinates.
+This allows resources designed on screens with different aspect ratios and
+system fonts to appear the same. 
+Once a resource is loaded use \verb|rsrc_gaddr()| to obtain pointers to
+individual object trees which can then be manipulated directly or with the 
+X11-Basic built-in functions. 
+
+\input{tex/gui-objects}
+
+
+\subsubsection{Dialogs}
+
+Dialog boxes are modal forms of user input. This means that no other
+interaction can occur between the user and applications until the
+requirements of the dialog have been met and it is exited. A normal
+dialog box consists of an object tree with a BOX
+as its root object and any number of other controls that accept user
+input. Both alert boxes and the file selector are examples of
+dialog boxes.
+
+The \verb|form_do()| function performs the simplest method of using a dialog box. Simply
+construct an OBJECT tree with at least one EXIT or TOUCHEXIT object and call
+\verb|form_do()|\footnote{Before you should display the dialog box using the
+{\tt objc\_draw()} function. Maybe you also want to center the dialog with 
+{\tt form\_center()} and save and redraw the background 
+with {\tt form\_dial()}.}. All interaction with the dialog like editable fields,
+radio buttons, and selectable objects will be maintained by the 
+X11-Basic library until the
+user strikes an EXIT or TOUCHEXIT object.
+
+
+\subsection{The gui file format}
+
+The *.gui file format, which is basically an ASCII representation of the ATARI
+ST resource files (*.rsc), can be converted to X11-Basic code, which then can
+handle message boxes and forms. The converter \verb|gui2bas(1)| does this job.
+For conversion of ATARI ST resource files to *.gui Files see \verb|rsc2gui(1)|.
+
+The *.gui file consists of Lines and Blocks which specify objects and their 
+hierarchical dependencies.
+The generic format of such an object is:
+
+\begin{verbatim}
+label: TYPE(variables) {
+ ... block ...
+}
+\end{verbatim}
+
+The label is optional and gives the object a name. Depending on TYPE of the
+object, one or more variables are given as a comma separated list in
+brackets. 
+
+Each object may start a block with '\{' at the end of the line. Inside this
+block there might be one or more objects given which then are considered as
+sub-objects of the one which opened the block. The block will be closed by a
+'\}' in a single line.
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!20]
+
+Example:
+
+{\footnotesize\linespread{0.8}
+\begin{verbatim}
+' Little selector box  (c) Markus Hoffmann    07.2003
+' convert this with gui2bas !
+' as an example for the use of the gui system
+' with X11-Basic
+
+BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0, STATE=OUTLINED+) {
+  BOXTEXT(X=2,Y=1,W=70,H=1, TEXT="Select option ...", FONT=3, JUST=2, COLOR=4513, BORDER=253, STATE=SHADOWED+)
+  BOX(X=2,Y=3,W=60,H=10, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0) {
+    FTEXT(X=1,Y=1,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="Line 1", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=2,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=4,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    BOX(X=2,Y=6,W=50,H=3, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=5, TEXTMODE=0) { 
+      BUTTON(X=2,Y=1,W=4,H=1, TEXT="ON",STATE=SELECTED, FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
+      BUTTON(X=8,Y=1,W=4,H=1, TEXT="OFF",FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
+    }
+  }
+  ok:	  BUTTON(X=65,Y=4,W=7,H=4, TEXT="OK", FLAGS=SELECTABLE+DEFAULT+EXIT)
+  cancel: BUTTON(X=65,Y=9,W=7,H=4, TEXT="CANCEL", FLAGS=SELECTABLE+EXIT+LASTOB+)
+}
+\end{verbatim}
+}
+\end{mdframed}
+
+\section{Menus}
+
+Most applications use a menu bar to allow the user to navigate through program
+options. In addition, future versions of X11-Basic will allow pop-up menus and
+drop-down list boxes (a special form of a pop-up menu). 
+
+Here is a simple example program, which demonstrates the handling of a drop
+down menu. 
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\footnotesize\linespread{0.8}
+\begin{verbatim}
+' Test-program for Drop-Down-Menus
+'
+DIM field$(50)
+FOR i=0 TO 50
+  READ field$(i)
+  EXIT IF field$(i)="***"
+NEXT i
+oh=0
+field$(i)=""
+DATA "INFO","  Menutest"
+DATA "---------------"
+DATA "- Access.1","- Access.2","- Access.3","- Access.4","- Access.5"
+DATA "- Access.6",""
+DATA "FILE","  new","  open ...","  save","  save as ...","--------------"
+DATA "  print","--------------","  Quit",""
+DATA "EDIT","  cut","  copy","  paste","----------","  help1","  helper"
+DATA "  assist",""
+DATA "HELP","  online help","--------------","  edifac","  editor","  edilink"
+DATA "  edouard",""
+DATA "***"
+
+grau=get_color(32000,32000,32000)
+color grau
+pbox 0,0,640,400
+MENUDEF field$(),menuaction
+DO 
+  pause 0.05
+  MENU 
+LOOP
+quit
+
+PROCEDURE menuaction(k)
+  local b
+  IF (field$(k)="  Quit") OR (field$(k)="  exit") 
+    quit
+  ELSE IF field$(k)="  online help"
+    oh=not oh
+    MENUSET k,4*abs(oh)
+  ELSE IF field$(k)="  Menutest" 
+    ~form_alert(1,"[0][---- Menutest ----||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
+  ELSE   
+    PRINT "MENU selected ";k;" contents: ";field$(k)
+    b=form_alert(1,"[1][--- Menutest ---||You selected item (No. "+str$(k)+"),| for which was no|function defined !][ OK |disable]")
+    if b=2
+      MENUSET k,8
+    endif
+  ENDIF
+RETURN
+\end{verbatim}
+}
+\end{mdframed}
+
+
+\chapter{WEB Programming}
+
+This chapter explains how you can use X11-Basic programs for WEB-interfacing.
+Especially via the use of so-called {\bf CGI-Scripts}.  
+
+\section{What is CGI?}
+
+CGI stands for {\em Common Gateway Interface} --- a term you don't really need to
+know. In short, CGI defines how web servers and web browsers handle information
+from HTML forms on web pages. This means instead of the WEB server sending
+static  web pages to the clients, it can invoke a program, typically called a
+cgi-script,  to generate the page on the time the request was received. These
+cgi-scripts take some action, and then send a results page back to the user's
+web browser. The results page might be different every time the program is run.
+
+And these programs can be X11-Basic programs.
+
+\subsection{Configuration}
+\begin{enumerate}
+\item {\bf All X11-Basic scripts must begin} with the following statement, on the first 
+line:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+#!/usr/bin/xbasic
+\end{verbatim}
+\end{mdframed}
+
+Because Unix does not map file suffixes to programs, there has to be a way to 
+tell Unix that this file is a X11-Basic program, and that it is to be executed
+by the X11-Basic interpreter \verb|xbasic|. This is seen before in shell
+scripts, in which the first line tells Unix to execute it with one of the shell
+programs. The xbasic executable, which will take this file, parse it, and
+execute it, is located in the directory /usr/bin. This may be different on some
+systems. If you are not sure where the xbasic executable is, type which xbasic
+on the command line, and it will return you the path.
+
+\item {\bf All scripts should be marked as executable by the system.}
+
+Executable files are types that contain instructions for the machine or an
+interpreter, such as xbasic, to execute. To mark a file as executable, you need
+to alter the file permissions on the script file. There are three basic
+permissions: read, write, and execute. There are also three levels of access:
+owner, group, and anyone. X11-Basic files should have their permissions changed so
+that you, the owner, has permission to read, write and execute your file, while
+others only have permission to read and execute your file. This is done with
+the following command:
+
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+chmod 755 filename.bas
+\end{verbatim}
+\end{mdframed}
+
+
+The number 755 is the file access mask. The first digit is your permission; it
+is 7 for full access. The user and anyone settings are 5 for read and execute.
+
+\item {\bf The very first print statement} in a X11-Basic cgi script that
+returns HTML should be:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+\end{verbatim}
+\end{mdframed}
+
+When your X11-Basic script is going to return an HTML file, you must have this
+as the very first print statement in order to tell the web server that this is
+an HTML file. There must be two end of line characters (CR+LF) (the additional
+\verb|chr$(13)|) in order for this to work. The flush statement ensures, that
+this statement is sent to the web-server. After that, you usually 
+\verb|print "<HTML><BODY>"| etc.
+
+\item {\bf End your program with \verb|quit|}
+
+Do not use \verb|END|. Otherwise the cgi-program will remain is the servers 
+memory as a zombie.
+
+\item {\bf Always use the POST method with HTML forms}
+
+There are 2 ways to get information from the client to the web server. The GET
+method takes all of the data from the forms and concatenates it onto the end of
+the URL. This information is then passed to the CGI program as an environment 
+variable (\verb|QUERY_STRING|). Because the GET method has the limitation of being 1024 characters
+long, it is best to use the POST method. This takes the data and sends it
+along with the request to the web server, without the user seeing the ugly
+strings in the URL. This information is passed to the CGI program through
+standard in, which the program can easily read from. To use the POST method,
+make sure that your HTML form tag has \verb|METHOD=POST| (no quotes).
+
+\item {\bf HTML forms must reference the cgi script to be executed.}
+
+In your FORM tag, there is an ACTION attribute. This is like the HREF attribute
+for a link. It should be the URL of the CGI program you want the form data sent
+to. Usually this is
+\verb|ACTION="/cgi-bin/filename.bas"|
+
+\item {\bf X11-Basic-cgi files usually go in the cgi-bin directory of your web server.}
+
+The web server has a "root" directory. This is the highest directory your HTML
+files can access. (You don't want clients to be able to snoop around your
+entire system, so the rest of the system is sealed off) in
+this directory, there is usually one called cgi-bin, where all the CGI programs
+go. Some web service providers give each user a cgi-local directory in their
+home directory where they can put their cgi scripts. If this is the case, use
+this one instead. 
+\end{enumerate}
+
+\input{tex/cgi-internals}
+
+\subsection{Example cgi-Script {\tt envtest.cgi}}
+
+Here is a simple sample cgi-script, which simply returns all the information 
+which it gets from the web server as a html page. 
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+{\footnotesize
+\begin{verbatim}
+
+#!/usr/bin/xbasic
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+PRINT "<html><head><TITLE>Test CGI</TITLE><head><body>"
+PRINT "<h1>Commandline:</h1>"
+i=0
+WHILE LEN(PARAM$(i))
+  PRINT STR$(i)+": "+PARAM$(i)+"<br>"
+  INC i
+WEND
+PRINT "<h1>Environment:</h1><pre>"
+FLUSH      ! flush the output before another program is executed !
+SYSTEM "env"
+PRINT "</pre><h1>Stdin:</h1><pre>"
+length=VAL(ENV$("CONTENT_LENGTH"))
+IF length
+  FOR i=0 TO length-1
+    t$=t$+CHR$(inp(-2))
+  NEXT i
+  PRINT t$
+ENDIF
+PRINT "</pre>"
+PRINT "<FORM METHOD=POST ACTION=/cgi-bin/envtest.cgi>"
+PRINT "Name: <INPUT NAME=name><BR>"
+PRINT "Email: <INPUT NAME=email><BR>"
+PRINT "<INPUT TYPE=submit VALUE="+CHR$(34)+"Test POST Method"+CHR$(34)+">"
+PRINT "</FORM>"
+PRINT "<hr><h6>(c) Markus Hoffmann cgi with X11-basic</h6></body></html>"
+FLUSH
+QUIT
+\end{verbatim}
+}\end{mdframed}
+

@@ -1,0 +1,407 @@
+##############################################################################
+
+Function: MALLOC()
+Syntax:   <int-result:adr>=MALLOC(<num-expression:size>)
+
+DESCRIPTION:
+
+	Allocates size bytes and returns a pointer to the allocated memory. 
+	The memory is not cleared.
+
+SEE ALSO: FREE(), MFREE(), REALLOC()
+##############################################################################
+Function: MAX()
+Syntax:   m=MAX(a,b[,c,...])
+          m=MAX(f())
+
+DESCRIPTION:
+
+	Returns the largest value out of the list of arguments or
+	the largest value of an array.
+
+SEE ALSO: MIN()	  
+##############################################################################
+Command:  MENU
+Syntax:   MENU
+
+DESCRIPTION:
+
+	Performs menu check and action.  
+	This  command  handles  EVENTs.   Prior  to  use,  the 
+           required  action should be specified with a MENUDEF 
+           command. For constant supervision of events, 
+           MENU is usually found in a loop.
+
+EXAMPLE:
+
+MENUDEF field$(),menuaction
+DO 
+  pause 0.05
+  MENU 
+LOOP
+PROCEDURE menuaction(k)
+   ...
+RETURN
+   
+SEE ALSO: MENUDEF
+##############################################################################
+Command:  MENUDEF
+Syntax:   MENUDEF array$(),<procname>
+
+DESCRIPTION:
+
+	This command reads text for menu-header from \verb|array$()|  the
+	string-array contains the text for menu-titles and menu-entries
+
+                    - end of row: empty string ""           
+                    - end of menu-text: empty string ""
+		    
+	\verb|<procname>|  The  procedure to which control will be passed on 
+		selection of a menu entry is determined. 
+
+	\verb|<procname>| is a procedure with one parameter which is the number
+		of the selected item to call when item was selected.
+
+EXAMPLE:
+
+field$()=["INFO","  Menutest  ","","FILE","  new","  open ...","  save","\
+save as ...","--------------","  print","--------------","  Quit","",""]
+MENUDEF field$(),menuaction
+DO 
+  pause 0.05
+  MENU 
+LOOP
+PROCEDURE menuaction(k)
+  PRINT "MENU selected ";k;" contents: ";field$(k)
+  IF field$(k)="  Quit"
+    QUIT
+  ENDIF  
+RETURN
+
+SEE ALSO: MENU, MENUSET, MENUKILL
+##############################################################################
+Command: MENUKILL                     
+Syntax:  MENUKILL
+
+DESCRIPTION:
+
+	Erases the menu, which prior has been defined with MENUDEF.
+
+SEE ALSO: MENUDEF	
+##############################################################################
+Command:  MENUSET
+Syntax:   MENUSET n,x
+
+DESCRIPTION:
+
+	Change appearance of menu-entry n with value x.
+	       
+                    x=0  ' '  normal, reset marker '^'      
+                    x=1  '^'  set marker                    
+                    x=2  '='  set menu-point non selectable 
+                    x=3  ' '  set menu-point selectable  
+		    x=4  check the menu entry  
+                         '-'  permanent non selectable     
+
+SEE ALSO: MENU			  
+##############################################################################
+
+Command:  MERGE 
+Syntax:   MERGE <filename>
+
+DESCRIPTION:
+
+	MERGE appends a BASIC program to the program currently  in  memory. 
+	Program  execution  is  not  interrupted. This command  typically  is 
+	used  to  append  often-used  subroutines   at run-time.
+
+SEE ALSO:    CHAIN, LOAD
+
+EXAMPLE:
+       MERGE "examples/mylibrary.bas"
+##############################################################################
+Command:  MFREE 
+Syntax:   MFREE adr%
+
+DESCRIPTION:
+
+	Frees a memory area which has been allocated with MALLOC() before.
+	The address must be the same as previously returned by MALLOC().
+
+SEE ALSO:    MALLOC()
+##############################################################################
+Function: MID$()
+Syntax:   m$=MID$(t$,x[,l])
+
+DESCRIPTION:
+
+	Returns l characters in a string from the position x of the string t$.
+	If x is larger than the length of t$, then an empty string is
+	returned. If l is omitted, then the function returns only one
+	character of the string from position x.
+
+SEE ALSO: LEFT$(), RIGHT$()	
+##############################################################################
+Function: MIN()
+Syntax:   m=MIN(a,b[,c,...])
+          m=MIN(f())
+
+DESCRIPTION:
+
+	Returns the smallest value out of the list of arguments or
+	the smallest value of an array.
+
+SEE ALSO: MAX()	  
+#############################################################################
+
+Command: MKDIR
+Syntax:  MKDIR <path-name>[,mode%]
+
+DESCRIPTION:
+
+	MKDIR attempts to create a directory named path-name.
+	The  argument  mode specifies the permissions to use.  
+	It is modified by the process's umask in the usual way:
+        the permissions of the created directory are 
+	(mode% AND NOT umask AND (7*64+7*8+7)).  
+	Other mode bits of the created directory depend on the 
+	operating system.
+
+EXAMPLE:
+	MKDIR "/tmp/myfolder"
+	
+	
+SEE ALSO: CHDIR, RMDIR
+##############################################################################
+
+Function: MKI$(), MKL$(), MKS$(), MKF$(), MKD$(), MKA$()
+Syntax:   <string-result>=MKI$(<num-expression>)
+          <string-result>=MKL$(<num-expression>)
+          <string-result>=MKS$(<num-expression>)
+          <string-result>=MKF$(<num-expression>)
+          <string-result>=MKD$(<num-expression>)
+          <string-result>=MKA$(<array-expression>)
+
+
+DESCRIPTION:
+
+	Transforms a number into a character string.    \\
+        MKI$ 16-bit number into a 2-byte string.        \\
+        MKL$ 32-bit number into a 4-byte string.        \\
+        MKS$ a number into a 4-byte float format.       \\
+        MKF$ same as MKS$().                            \\
+        MKD$ a number into a 8-byte double float format.
+        MKA$() transforms a whole Array into a string. 
+	It can be reversed with CVA().
+
+SEE ALSO: CVI(), CVF(), CVL(), CVA(), CVS(), CVD()
+
+##############################################################################
+
+Operator:  MOD 
+Syntax:    <num-result>=<num-expression:x> MOD <num-expression:y>
+
+DESCRIPTION:
+
+	Produces the remainder of the division of x by y.
+
+SEE ALSO:  DIV, MOD()
+
+*##############################################################################
+
+Function:  MOD() 
+Syntax:    <num-result>=MOD(<num-expression:x>,<num-expression:y>)
+
+DESCRIPTION:
+
+	Produces the remainder of the division of x by y.
+
+SEE ALSO:  DIV, MOD
+##############################################################################
+Command: MOTIONEVENT
+Syntax:  MOTIONEVENT x,y,xroot,yroot,s
+
+DESCRIPTION:
+
+	Waits until the mouse has been moved. (graphic window).
+	Returns new mouse coordinate (x,y) relative to window, 
+	mouse coordinate (xroot,yroot) relative to screen and
+	state of the Alt/Shift/Caps keys (s).
+	
+
+SEE ALSO: MOUSE, MOUSEX, MOUSEY, MOUSEK, MOUSEEVENT
+
+##############################################################################
+Command:  MOUSE
+Syntax:   MOUSE x,y,k
+
+DESCRIPTION:
+
+	Determines the mouse position (x,y) relative to the origin of the 
+	graphics window and the status of the mouse buttons (k) and the mouse 
+	wheel if present.
+           k=0 no buttons pressed \\
+           k=1 left button     \\
+           k=2 middle button   \\
+           k=4 right button   \\
+	   k=8 wheel up       \\
+	   k=16 wheel down    \\
+	or any combinations.
+	
+SEE ALSO: MOUSEX, MOUSEY, MOUSEK	
+##############################################################################
+Command:   MOUSEEVENT
+Syntax:    MOUSEEVENT x,[y,k,xroot,yroot,s]
+
+DESCRIPTION:
+
+	Waits until a mouse button is pressed (graphic window).
+	Returns the mouse coordinate (x,y) relative to the window, 
+	the mouse coordinate (xroot,yroot) relative to the screen, 
+	the mouse button (k) and state of the Alt/Shift/Caps keys (s).
+           k=0 no buttons pressed \\
+           k=1 left button     \\
+           k=2 middle button   \\
+           k=3 right button   \\
+	   k=4 wheel up       \\
+	   k=5 wheel down    \\
+	   
+	   s=0 normal   \\
+	   s=1 Shift    \\
+	   s=2 CapsLock \\
+	   s=4 Ctrl     \\
+	   s=8 Alt      \\
+	   s=16 NumLock           \\
+	   s=64 Windows-Key       \\
+	   s=128 AltGr  \\
+
+SEE ALSO: MOUSE, MOUSEX, MOUSEY, MOUSEK, KEYEVENT
+##############################################################################
+
+Variable:  MOUSEX, MOUSEY, MOUSEK, MOUSES 
+Syntax:    x%=MOUSEX
+           y%=MOUSEY
+           k%=MOUSEK
+           s%=MOUSES
+
+DESCRIPTION:
+
+	MOUSEX returns the current horizontal position of the 
+	mouse cursor, or of the last position of a touch on a touch screen.
+	MOUSEY holds the vertial position accordingly.
+	MOUSEK returns the current status of the mouse buttons:
+           MOUSEK=0 no buttons pressed \\
+           MOUSEK=1 left button     \\
+           MOUSEK=2 middle button   \\
+           MOUSEK=4 right button   \\
+	   MOUSEK=8 wheel up       \\
+	   MOUSEK=16 wheel down    \\
+	or any combinations.
+
+        MOUSES returns the current state (state when the touchscreen was last
+	touched) of the SHIFT/CAPSLOCK/CTRL keys.
+	MOUSES=0  no Keys           \\
+	MOUSES=1  Shift\\
+	MOUSES=2  CapsLock          \\
+	MOUSES=4  Control           \\
+	MOUSES=8  Alt               \\
+	MOUSES=16 NumLock           \\
+	MOUSES=64 Windows-Key       \\
+	MOUSES=128 AltGr       \\
+	or any combination.
+
+SEE ALSO:  MOUSE, SETMOUSE, MOUSEEVENT
+
+##############################################################################
+Command: MOVEW 
+Syntax:  MOVEW n,x,y
+
+DESCRIPTION:
+
+	Moves Window n to absolute screen position x,y
+
+SEE ALSO: OPENW, SIZEW, TITLEW
+
+##############################################################################
+Function: MSHRINK()
+Syntax:   a=MSHRINK(adr%,size%)
+
+DESCRIPTION:
+
+	Reduces  the  size  of  a  storage  area previously  allocated  with 
+	MALLOC.  adr%  specifies  the address of the area,
+	size% gives the required size.
+        Returns 0 if no error.
+	This command does nothing (and always returns 0) on Linux and windows
+	operating systems. It is implemented for compatibility reasons only.
+	If you really need to resize a memory area, use REALLOC().
+	
+	
+SEE ALSO: MALLOC(), REALLOC()
+
+##############################################################################
+Command: MSYNC 
+Syntax:  MSYNC adr,length
+
+DESCRIPTION:
+       MSYNC  flushes  changes  made  to  the in-core copy of a file that was 
+       mapped into memory using MAP back to disk.  
+       Without use of this call there is no guarantee that changes are written
+       back before UNMAP is called.  
+       To be more precise, the part of the file that corresponds to
+       the memory area starting at addr and having length length is updated.
+
+SEE ALSO: MAP, UNMAP
+##############################################################################
+Function: MTFD$() 
+Syntax:  b$=MTFD$(a$)
+
+DESCRIPTION:
+
+	This function performs a Move To Front decoding function on an
+        input string.
+        The MTF decoder keeps an array of 256 characters
+        in the order that they have appeared.  Each time the encoder
+        sends a number, the decoder uses it to look up a character in
+        the corresponding position of the array, and outputs it.  That
+        character is then moved up to position 0 in the array, and all
+        the in-between characters are moved down a spot.
+
+SEE ALSO: MTFE$()
+##############################################################################
+Function: MTFE$() 
+Syntax:  b$=MTFE$(a$)
+
+DESCRIPTION:
+
+	This function performs a Move To Front encoding function on an
+        input string.
+        An MTF encoder encodes each character using the
+        count of distinct previous characters seen since the characters
+        last appearance. This is implemented by keeping an array of
+        characters.  Each new input character is encoded with its
+        current position in the array.  The character is then moved to
+        position 0 in the array, and all the higher order characters
+        are moved down by one position to make room. 
+
+SEE ALSO: MTFD$()
+##############################################################################
+Command:  MUL 
+Syntax:   MUL <num-var>,<num-expression>
+
+DESCRIPTION:
+
+	Same as var=var*n but faster.
+
+SEE ALSO: ADD, SUB, MUL(), DIV
+*##############################################################################
+Function:  MUL()
+Syntax:    <num-result>=MUL(<num-expression>,<num-expression>)
+
+DESCRIPTION:
+
+	Returns product of two numbers.
+
+SEE ALSO: ADD(), SUB(), MUL, DIV()
+##############################################################################
+

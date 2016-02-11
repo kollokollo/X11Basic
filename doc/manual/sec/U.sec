@@ -1,0 +1,173 @@
+##############################################################################
+
+Function: UBOUND()
+Syntax:   n%=UBOUND(array()[,i%]) 
+
+DESCRIPTION:
+
+	The UBOUND function returns the largest subscript for the indicated 
+	dimension of an array plus one. This is the size of the i'th dimension.
+	i% specifies which dimension's upper bound to return. 
+	0 = first dimension, 1 = second dimension, and so on. 
+	Default is 0.
+
+SEE ALSO: DIM, DIM?(), ARRPTR()
+
+##############################################################################
+
+Function: UCASE$()
+Syntax:   <string-result>=UCASE$(<string-expression>) 
+
+DESCRIPTION:
+
+	Transforms all lower case letters of a string to upper
+	case. Any non letter characters are left unchanged.
+
+SEE ALSO: UPPER$(), LOWER$()
+
+##############################################################################
+
+Variable: UNCOMPRESS$()
+Syntax:   t$=UNCOMPRESS$(c$) 
+
+DESCRIPTION:
+
+	Un-compresses the content of a string which has been compressed with 
+	the COMPRESS$() function before.
+
+SEE ALSO: COMPRESS$()
+
+##############################################################################
+
+Variable: UNIX?
+Syntax:   <boolean-result>=UNIX? 
+
+DESCRIPTION:
+
+	Returns TRUE (-1) If the program is running under a UNIX environment.
+
+SEE ALSO: WIN32?, ANDROID?
+
+##############################################################################
+
+Function: UNIXTIME$(), UNIXDATE$()
+Syntax:   t$=UNIXTIME$(i)
+          d$=UNIXDATE$(i)
+
+DESCRIPTION:
+	
+	These functions return the date and time as a string which has the 
+	same format as DATE$ and TIME$ given by a TIMER value. Time and Date
+	returned are local times adjusted to summer and winter time and based
+	on CET. 
+
+EXAMPLE:
+	PRINT UNIXDATE$(1045390004.431), UNIXTIME$(1045390004.431)
+	Result:   16.02.2003   11:06:44
+
+SEE ALSO:   DATE$, TIME$, TIMER	 
+##############################################################################
+
+Command: UNLINK
+Syntax:  UNLINK #n 
+
+DESCRIPTION:
+
+	Un-links a shared object which has been linked before and
+	occupies file channel #n.
+
+SEE ALSO: LINK, CLOSE
+##############################################################################
+
+Command: UNMAP
+Syntax:  UNMAP adr%,len%
+
+DESCRIPTION:
+
+	Un-map files or devices out of memory.
+
+	The UNMAP command deletes the mappings for the specified address
+	range. Further PEEK() and POKEs to addresses within the old range will
+	produce an error (crash). The region is also automatically
+	unmapped when X11-Basic is terminated. On the other hand, closing
+	the file does not un-map the region.
+
+SEE ALSO: MAP
+
+##############################################################################
+
+Command:  UNTIL
+Syntax:   UNTIL <expression>
+
+DESCRIPTION:
+
+	UNTIL terminates a REPEAT...UNTIL loop.
+
+SEE ALSO:  REPEAT, DO
+
+EXAMPLE:
+       REPEAT
+           N=N+1
+       UNTIL (N=10)   
+
+##############################################################################
+
+Function: UPPER$()
+Syntax:   <string-result>=UPPER$(<string-expression>) 
+
+DESCRIPTION:
+
+	Transforms all lower case letters of a string to upper
+	case. Any non letter characters are left unchanged.
+
+SEE ALSO: UCASE$(), LOWER$()
+##############################################################################
+Command: USEWINDOW
+Syntax:  USEWINDOW #n
+
+DESCRIPTION:
+
+	Use the window n for all following graphic commands. 
+
+
+SEE ALSO: OPENW, ROOTWINDOW
+##############################################################################
+
+Function: USING$()
+Syntax:   <string-result>=USING$(a,format$) 
+
+DESCRIPTION:
+
+	The function USING$() returns a formatted string made out of a 
+	numeric value a. How the number is formatted can be set by a format$.
+	
+  # 	Denotes a numerical digit (leading spaces). \\
+  0 	Denotes a numerical digit (leading zeros). \\
+  * 	Denotes a numerical digit (leading asterisks). \\
+  $ 	Denotes a numerical digit (single leading Dollar). \\
+  ? 	Denotes a numerical digit (single leading EURO). \\
+^^^^ 	After # digits prints numerical value in exponential e+xx format. 
+        Use ^^^^^ for E+xxx values. The exponent is adjusted with significant 
+	digits left-justified.\\
+  . 	Period sets a number's decimal point position. Digits following 
+        determine rounded value accuracy.\\
+  + 	Plus sign denotes the position of the number's sign. + or - will be 
+        displayed.\\
+  - 	Minus sign (dash) placed before or after the number, displays only a 
+        negative value's sign.\\
+  _ 	Underscore preceding a format symbol prints those symbols as literal 
+        string characters.\\
+
+Note: Any string character not listed above will be printed as a literal text 
+character (useful to add commas or units).
+If the number cannot be expressed with the given format, a series of "*" will 
+be displayed.
+The returned string will always have exactly the same length than format$.
+USING$() rounds to the nearest printed digit.
+
+EXAMPLE:
+	PRINT USING$(1.23456,"+##.###^^^^")   ! Result: + 1.235e+00
+
+SEE ALSO: PRINT USING, STR$()
+
+##############################################################################

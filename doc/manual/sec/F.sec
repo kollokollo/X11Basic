@@ -1,0 +1,575 @@
+##############################################################################
+Function:    FACT()
+Syntax:      a&=FACT(n%)
+
+DESCRIPTION:
+
+	Calculates  the factorial (n!). The factorial of a non-negative
+	integer n, denoted by n!, is the product of all positive integers less
+	than or equal to n. The value of 0! is 1, according to the convention.
+
+
+EXAMPLE:
+	PRINT FACT(5)   ! Result: 120
+	PRINT FACT(10)  ! Same as 10*9*8*...*2*1
+	Result: 3628800
+	PRINT FACT(50) ! Same as 50*49*48*...*2*1
+	Result: 30414093201713378043612608166064768844377641568960512000000000000
+
+
+SEE ALSO: COMBIN(), VARIAT(), GAMMA()
+##############################################################################
+
+Variable:   FALSE 
+Syntax:     FALSE
+  	  
+DESCRIPTION:
+
+	Constant 0. This is simply another way of expressing the value of a
+	condition when it is false and is equal to zero.
+
+SEE ALSO: TRUE
+##############################################################################
+Command: FFT
+Syntax:  FFT a()[,flag%]
+  	  
+DESCRIPTION:
+
+	FFT calculates the discrete Fourier Transformation  of a real
+	periodic  sequence stored in the float array a(). If flag% is <>0 the
+	back transform  is calculated. The result replaces the contents of
+	a(). The method used is most efficient (=fast) when DIM?(a()) is a
+	product of small primes.
+
+	This transform is un-normalized since a call of FFT followed by a
+	call  of FFT ,-1 will multiply the input sequence by DIM?(a()).
+
+	The output consists of an array with the Fourier coefficients as 
+	follows:
+        For n=DIM?(a()) even and for i = 0,...,n-1
+	  a(i) = a(0)+(-1)^(i)*a(n-1)
+                 plus the sum from k=2 to k=n/2 of
+
+                   2*a(2*k-1)*cos((k-1)*i*2*pi/n)
+                  -2*a(2*k)*sin((k-1)*i*2*pi/n)
+
+        for n odd and for i = 0,...,n-1
+
+             a(i) = a(0) plus the sum from k=2 to k=(n+1)/2 of
+
+                  2*a(2*k-1)*cos((k-1)*i*2*pi/n)
+                 -2*a(2*k)*sin((k-1)*i*2*pi/n)
+
+COMMENT: 
+
+	Two succeeding FFT (or FFT ,-1) calculations are faster if they use
+	the same size of the array.
+
+EXAMPLE:
+
+  l=2^10   ! It is faster to use a power of two
+  DIM a(l)
+  FOR i=0 TO l-1
+    a(i)=200/100*@si(3*i/512*2*pi)+i/100*sin(20*i/512*2*pi)
+  NEXT i
+  SCOPE a(),1,-10,300  ! Draw the function
+  FFT a()              ! Do the Fourier transformation
+  ' Normalize
+  FOR i=0 TO l-1
+    a(i)=a(i)/SQRT(l)
+  NEXT i
+  ' Clear some of the frequencies
+  FOR i=4 TO 86
+    a(i)=0
+  NEXT i
+  FFT a(),-1           ! Do a back transformation
+  SCOPE a(),0,-10/SQRT(l),300  ! Draw the result (scaling=normalization)
+  
+  DEFFN si(x)=x mod pi
+
+SEE ALSO: FFT()
+*#############################################################################
+Function: FFT
+Syntax:  b()=FFT(a()[,flag%])
+  	  
+DESCRIPTION:
+
+	FFT calculates the discrete Fourier Transformation  of a real periodic 
+	sequence stored in the float array a(). If flag% is <>0 the back
+	transform  is calculated. Unlike the command FFT, FFT() returns an array
+	with the Fourier transform leaving the original array untouched.
+
+SEE ALSO: FFT()
+##############################################################################
+Function: FILEEVENT$
+Syntax:   t$=FILEEVENT$
+
+DESCRIPTION:
+
+       Returns a string with event information on watched files and directories.
+       If the string is empty, no events are pending. The events consist of 3 
+       characters followed by a blank and optionally followed by a filename. 
+       The first three characters have the following meaning:
+       1st: "d" means: the file is a directory
+       2nd: "X" created, "O" OPENed, "C" closed, "M" moved, "D" deleted
+       3rd: "r" read, "w" write, "a" attributes were changed
+
+       When  monitoring  a  directory,  the events  above can occur for files in
+       the directory,  in  which  case  the  name field  in  the  returned
+       string identifies the name of the file within the directory.
+
+SEE ALSO:    WATCH
+EXAMPLE:
+	WATCH "/tmp"
+	DO
+	  a$=FILEEVENT$
+	  IF LEN(a$)
+	    PRINT a$
+	  ENDIF
+	LOOP
+
+##############################################################################
+
+Command:  FILESELECT
+Syntax:   FILESELECT title$,<path$>,<default$>,selectedfile$
+  	  
+DESCRIPTION:
+
+	Opens a fileselect box.
+        title$   gives a short title to be placed in the fileselect box.
+		 Such as "Select a .DOC file to open...".
+
+	path$    if none specified  then  the  default path is assumed.
+                 The pathname should include a complete path specification 
+		 including a drive letter (except for UNIX file system), 
+		 colon, path, and filemask.
+	         The filemask may (and usually does) include wildcard 
+		 characters.
+
+	<default$>  contains the name of the file to appear  in  the 
+	   selection line. ("" for no default).
+
+	FILESELECT returns the selected filename (including path) in 
+	selectedfile$. If CANCEL is selected an empty string is returned.
+
+
+SEE ALSO: XLOAD, XRUN, FSEL_INPUT()
+EXAMPLE:
+	FILESELECT "LOAD File",".\*.dat","input.dat",file$
+###############################################################################
+Command:  FILL
+Syntax:   FILL x,y[,bc]
+  	  
+DESCRIPTION:
+
+	Fills a bordered area with a color commencing at
+	the co-ordinates 'x,y'. If a border color (bc) is specified, 
+	the fill stops at boundaries with this color. If no border color 
+	is given, the fill will stop at any other color than the one of 
+	the starting coordinate. 
+	The fill color can be chosen with the command COLOR.
+
+SEE ALSO: COLOR
+#############################################################################
+Command:  FIT
+Syntax:   FIT x(),y(),yerr???,???[,???,???,???,???,???,???]
+  	  
+DESCRIPTION:
+
+        Fits a user defined function to a set of data points, also using
+	errorbars in y.
+	TODO: The command needs to be described.
+
+SEE ALSO: FIT_LINEAR, FIT_POLY
+#############################################################################
+Command:  FIT_LINEAR
+Syntax:   FIT_LINEAR x(),y(),n%,a,b[,da,db,chi2,dy(),dx(),q]
+  	  
+DESCRIPTION:
+
+	FIT_LINEAR calculates a linear regression to fit a straight line
+	f(x)=a+b*x to the data x(),y(). n%=number of points. The fitted values
+	are stored in a and b. If specified, the uncertainty of a and b are
+	stored in da,db and chi2. Optional errors of the datapoints in x and
+	y can be given by dy(),dx(). In this case q has a meaning.
+
+EXAMPLE: 
+	n=400
+	DIM x(n),y(n)
+	FOR i=0 TO n-1
+	  x(i)=(i+RANDOM(10))/400
+	  y(i)=(1*i+GASDEV(1)*20+50-i/30*i/30+(400-MOUSEY))/400
+	NEXT i
+	FIT_LINEAR x(),y(),,a,b,da,db,chi
+	PRINT "chi2=";chi
+	da=da*SQRT(chi/(DIM?(x())-2))
+	db=db*SQRT(chi/(DIM?(x())-2))
+        PRINT a;"+/-";da
+        PRINT b;"+/-";db
+
+
+SEE ALSO: FIT, FIT_POLY
+###############################################################################
+Command:  FIT_POLY
+Syntax:   FIT_POLY x(),y(),dy(),n%,a(),m%
+  	  
+DESCRIPTION:
+
+	FIT_POLY fits a polynom of order m% to n% datapoints given by x() and
+	y(). If present, dy() specifies the errors in y. The polynomial
+	coefficients are returned in a() such that
+	f(x)=a(0)+a(1)*x+a(2)*x^2+...
+
+COMMENT:  
+	For higher orders m%>3 of the polynom, the range of x() must be 
+	small (in the order of 1) otherwise the algorithm can become  unstable
+	because of the high powers.
+
+	No information about the quality of the fit is returned.
+
+SEE ALSO: FIT, FIT_LINEAR, SOLVE
+##############################################################################
+
+Function:  FIX()
+Syntax:    a=FIX(x)
+  	  
+DESCRIPTION:
+
+	Returns the integer of x after it has been rounded. 
+	FIX is identical to the function TRUNC and complements
+	FRAC.
+
+SEE ALSO: INT(), TRUNC(), FRAC(), ROUND()
+##############################################################################
+
+Function:  FLOOR()
+Syntax:    <num-result>=FLOOR(<num-expression-x>)
+  	  
+DESCRIPTION:
+
+	Round x down to the nearest integer.
+
+SEE ALSO: INT(), FIX()
+##############################################################################
+
+Command:   FLUSH
+Syntax:    FLUSH [#<device-name>]
+  	  
+DESCRIPTION:
+
+	Flushes the output to the file or console. Usually a Line is printed
+	when the newline character is encountered. To enforce output of
+	everything which has been printed so far use FLUSH.
+
+SEE ALSO: PRINT
+
+##############################################################################
+
+Command: FOR 
+Syntax: FOR <variable>=<expression> TO <expression> [STEP <expression>]
+        FOR <variable>=<expression> DOWNTO <expression> [STEP <iexpression>]
+
+DESCRIPTION:
+
+	FOR initiates a FOR...NEXT loop with the specified <variable> 
+	initially set to <start-expression> and incrementing in
+	<increment> steps (default is 1). The statements between FOR and
+	NEXT are repeated until the variable value reaches or steps over 
+	<target-expression>. 
+
+SEE ALSO:  NEXT
+EXAMPLE:         
+	FOR n=2 TO 0 STEP -1
+          PRINT n,
+        NEXT n
+        RESULT: 2  1  0 
+
+##############################################################################
+
+Function:   FORK()
+Syntax:     <int-result>=FORK()
+
+DESCRIPTION:
+
+	FORK()  creates a child process of the running task (usually the 
+	X11-Basic interpreter with the Basic program) that differs from the 
+	parent process only in its PID and PPID, and  in  the  fact  that
+	resource  utilizations are set to 0.
+
+	On  success,  the  PID of the child process is returned in
+        the parent's thread of execution, and a 0 is  returned  in
+        the child's thread of execution.  On failure, a -1 will be
+        returned in the parent's context, no child process will be
+        created.
+
+EXAMPLE:
+	a=FORK()
+	IF a=-1
+	  PRINT "error"
+	  QUIT
+	ELSE IF a=0
+	  PRINT "I am child"
+	ELSE
+	  PRINT "I am parent. My child is PID=";a
+	ENDIF
+SEE ALSO: SPAWN
+##############################################################################
+
+Function:   FORM_ALERT()
+Syntax:     <num-result>=FORM_ALERT(<default-button>,<string$>)
+DESCRIPTION:
+
+	Creates an alert box.
+           button  = number of the default button (0= none).
+           string$ = string defining the message in the alert.  
+	   Note that the square brackets are part  of  the 
+           string:
+           "[i][Message][Buttons]"
+           where i = the required alert symbol - see ALERT.
+	FORM_ALERT returns the number of the selected Button.
+
+EXAMPLE:  
+	~FORM_ALERT(1,"[0][This is my message!][OK]")
+
+SEE ALSO: ALERT           
+##############################################################################
+Function:   FORM_CENTER()
+Syntax:     ~FORM_CENTER(tree%,x,y,w,h)
+
+DESCRIPTION:
+
+	Centers the object tree and returns its coordinates.
+           INPUT: tree%  - address of the object tree.
+           OUTPUTS:
+           x,y    coordinates of top left corner
+           w,h    form width and height.
+           The returned value can safely be ignored.
+
+
+EXAMPLE:
+
+PROCEDURE info
+  LOCAL adr%,x,y,w,h,ret%
+  adr%=RSRC_GADDR(0,2)
+  ~FORM_CENTER(adr%,x,y,w,h)
+  ~FORM_DIAL(0,x,y,w,h,x,y,w,h)
+  ~FORM_DIAL(1,x,y,w,h,x,y,w,h)
+  ~OBJC_DRAW(adr%,0,-1,0,0)
+  ret%=FORM_DO(adr%)
+  ~FORM_DIAL(2,x,y,w,h,x,y,w,h)
+  ~FORM_DIAL(3,x,y,w,h,x,y,w,h)
+  IF ret%=35
+    DPOKE adr%+ret%*24+10,0
+  ENDIF
+RETURN
+
+SEE ALSO: OBJC_DRAW()
+##############################################################################
+Function:   FORM_DIAL()
+Syntax:     ret%=FORM_DIAL(flag,x1,y1,w1,h1,x2,y2,w2,h2)
+
+DESCRIPTION:
+
+	Release (or reserve) a rectangular screen area and draw an 
+        expanding/shrinking rectangle.
+        Returns 0 if an error occurred.
+           flag=     function
+                0         reserve a display area.
+                1         draw expanding box.
+                2         draw shrinking box.
+                3         release reserved display area.
+           x1,y1  top left corner of rectangle at min size
+           w1,h1  width & height  "    "       "  "    "
+           x2,y2  top left corner of rectangle at max size
+           w2,h2  width & height   "    "      "  "    "
+EXAMPLE:
+
+PROCEDURE show_tabelle
+  LOCAL ox,oy
+  ox=(bx+bw-532)/2
+  oy=(by+bh-242)/2
+  ~FORM_DIAL(0,260,20,30,20,ox,oy,532,242)
+  ~FORM_DIAL(1,260,20,30,20,ox,oy,532,242)
+  @tabelle(ox,oy,532,242)
+  MOUSEEVENT
+  ~FORM_DIAL(2,260,20,30,20,ox,oy,532,242)
+  ~FORM_DIAL(3,260,20,30,20,ox,oy,532,242)
+RETURN
+
+
+SEE ALSO:   SGET, SPUT, GET, PUT, COPYAREA
+##############################################################################
+
+Function:   FORM_DO()
+Syntax:     ret%=FORM_DO(tree%[,obj%])
+
+DESCRIPTION:
+
+	FORM_DO() manages an object tree. It interacts with the user
+	until  an  object with EXIT or TOUCHEXIT status is clicked on.
+        Returns  the number of the object whose clicking or double 
+        clicking  caused the function to end.  If it was a double 
+        click, bit 15 will be set.
+           tree%      = address of the object tree.
+           obj%       = Number of the first editable field (if there is one). 
+
+EXAMPLE:
+
+PROCEDURE info
+  LOCAL adr%,x,y,w,h,ret%
+  adr%=RSRC_GADDR(0,2)
+  ~FORM_CENTER(adr%,x,y,w,h)
+  ~FORM_DIAL(0,x,y,w,h,x,y,w,h)
+  ~FORM_DIAL(1,x,y,w,h,x,y,w,h)
+  ~OBJC_DRAW(adr%,0,-1,0,0)
+  ret%=FORM_DO(adr%)
+  ~FORM_DIAL(2,x,y,w,h,x,y,w,h)
+  ~FORM_DIAL(3,x,y,w,h,x,y,w,h)
+  IF ret%=35
+    DPOKE adr%+ret%*24+10,0
+  ENDIF
+RETURN
+
+SEE ALSO: OBJC_DRAW()
+##############################################################################
+
+Function:   FRAC()
+Syntax:     a=FRAC(b)
+DESCRIPTION:
+
+	FRAC() returns the fractional part of  its argument.
+
+EXAMPLE:
+
+        PRINT FRAC(-1.234)
+        Result: -0.234
+
+SEE ALSO:   INT(), CINT(), TRUNC(), ROUND()
+##############################################################################
+
+Command:   FREE
+Syntax:    FREE adr%
+
+DESCRIPTION:
+
+	Frees a previously allocated memory block.
+
+SEE ALSO: MALLOC()
+##############################################################################
+Function: FREEFILE()
+Syntax:   a%=FREEFILE()
+
+DESCRIPTION:
+       	FREEFILE() returns the first free filenumber available or -1 on error.
+	the file numbers can be used together with other file functions like
+	OPEN, LINK etc...
+
+SEE ALSO: OPEN
+
+##############################################################################
+Function: FSFIRST$()
+Syntax:   a$=FSFIRST$(path$[,pattern$,attr$])
+
+DESCRIPTION:
+
+	FSFIRST$() searches for the first file in a filesystem of a given
+	path path$, given match pattern pattern$ and given attributes.
+	pattern$ can be a file name mask; default is "*".  
+	attr$ can be "d" for only list directories, 
+	             "a" also list hidden files, 
+		     "f" list regular files.  
+	The attributes can be combined. default is "df". If found, the
+	filename and attributes are returned in a$. When path$ is empty, an
+	empty string is returned. Otherwise the returned string consists of
+	two words. E.g. "- filename.dat". The  first word lists the
+	attributes, the second word is the filename. Attributes can be "d" is
+	a directory, "s" symbolic link, "-" a regular file.
+
+EXAMPLE:
+	a$=FSFIRST$("/tmp","*.dat")
+	WHILE LEN(a$)
+	  PRINT WORD$(a$,2)
+	  IF LEFT$(a$)="d"
+            PRINT "is a directory."
+ 	  ENDIF
+	  a$=FSNEXT$()
+	WEND
+
+SEE ALSO: FSNEXT$()
+
+##############################################################################
+Function: FSNEXT$()
+Syntax:   a$=FSNEXT$()
+
+DESCRIPTION:
+
+	FSNEXT$() searches for the next file in the filesystem specified by
+	FSFIRST$().
+
+	When no more files can be found, an empty string is returned.
+	Otherwise the returned string has the same meaning as the one returned
+	by FSFIRST(). 
+
+EXAMPLE:
+	a$=FSFIRST$("/tmp","*.dat")
+	WHILE LEN(a$)
+	  PRINT WORD$(a$,2)
+	  IF LEFT$(a$)="d"
+            PRINT "is a directory."
+ 	  ENDIF
+	  a$=FSNEXT$()
+	WEND
+
+SEE ALSO: FSFIRST$()
+##############################################################################
+Command:    FULLW
+Syntax:     FULLW [[#]n]
+
+DESCRIPTION:
+          Enlarges window 'n' to full screen size.
+          'n' is the window number.
+
+SEE ALSO: OPENW, CLOSEW, MOVEW, SIZEW, TOPW, BOTTOMW
+##############################################################################
+Command:    FUNCTION
+Syntax:     FUNCTION <name>[$][(<expression> [, ...])]
+
+DESCRIPTION:
+
+	FUNCTION starts a user-defined multi-line function that calculates and
+	returns a value from an optional list of parameters. The FUNCTION is
+	called by using the function name preceded by a @ in an expression. 
+	The  function return type can either be a numerical value or a string.
+	In the latter case, the function name must end  with  the "$" 
+	precision qualifier. (No Integer type functions with % are allowed.) 
+
+	A FUNCTION returns a result with the RETURN command inside the
+	function. In a function, RETURN can be used several times, with IF or
+	the like. A function cannot be terminated  without a RETURN command
+	being before the ENDFUNC command. In a function name ending with the $
+	character the function returns a string result.
+
+	All variables declared inside the FUNCTION block are global variables
+	unless you declare them as local with the LOCAL command. The FUNCTION
+	name may be followed  by  a  list  of  parameter variables 
+	representing  the values and variables in the calling line. Variables
+	in the calling line reach the FUNCTION "by-value" unless the VAR
+	keyword is used in the calling line. In that case, the variable is
+	passed "by-reference" to the FUNCTION so that the  FUNCTION  "gets"
+	the  variable  and not only its value. Variables passed "by-reference"
+	can be changed by the FUNCTION. The FUNCTION  block  is  terminated 
+	by  an  ENDFUNCTION statement which resumes execution of the calling
+	expression. Unlike a  PROCEDURE subroutine, a FUNCTION must return a
+	value.
+
+EXAMPLE:
+	FUNCTION theta(x,a)
+	  IF x>a
+	    RETURN 0
+	  ELSE
+	    RETURN a
+	  ENDIF
+	ENDFUNCTION
+
+SEE ALSO: ENDFUNCTION, RETURN, DEFFN, LOCAL, PROCEDURE
+##############################################################################

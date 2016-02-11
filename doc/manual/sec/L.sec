@@ -1,0 +1,319 @@
+##############################################################################
+Function:   LCM()
+Syntax:     c&=LCM(a&,b&)
+
+DESCRIPTION:
+
+       Returns the least common multiple of a and b. c is always positive, 
+       irrespective of the signs of a and b. c will be zero if either a or 
+       b is zero. 
+
+EXAMPLE:
+       PRINT LCM(12,18)     ! Result: 36
+
+SEE ALSO:   GCD()
+##############################################################################
+Function:   LEFT$()
+Syntax:     <string-result> = LEFT$(<string-expression> [,<characters>]) 
+DESCRIPTION:
+
+	LEFT$() returns the specified  number  of characters  from  its 
+	argument,  beginning  at  its left side. If the number of <characters>
+	is not specified then LEFT$() returns only  the leftmost character.
+
+EXAMPLE:
+       PRINT LEFT$("Hello",1)     ! Result: H
+
+SEE ALSO:   RIGHT$(), MID$()
+##############################################################################
+Function:   LEFTOF$()
+Syntax:     a$=LEFTOF$(t$,s$) 
+DESCRIPTION:
+
+	LEFTOF$() returns the left part of t$ at the position of the first 
+	occurrence of s$ in t$. 
+	If s$ is not contained in t$, the whole string t$ is returned.
+
+EXAMPLE:
+       PRINT LEFTOF$("Hello","ll")   !  Result: He
+SEE ALSO:   RIGHTOF$(), MID$()
+##############################################################################
+Function:   LEN()
+Syntax:     l=LEN(t$)
+
+DESCRIPTION:
+
+	Returns the length of a string.
+
+EXAMPLE:
+       PRINT LEN("Hello")  ! Result: 5
+##############################################################################
+Command:  LET 
+Syntax:   LET <variable> = <expression>
+	  
+DESCRIPTION:
+
+	LET  assigns  the  value  of  <expression>  to <variable>.  The 
+	interpreter  also supports implicit assignments, ie. the LET keyword
+	before  an  assignment  may  be  omitted.  This  works because  the 
+	first equal sign is regarded as assignment operator.
+EXAMPLE:
+       LET N=1
+
+##############################################################################
+##############################################################################
+Function:   LGAMMA()
+Syntax:     b=LGAMMA(a)
+
+DESCRIPTION:
+
+	The LGAMMA() function returns the natural logarithm of the absolute
+       	value  of  the  Gamma  function. LGAMMA(x)=ASB(LN(GAMMA(x)))
+	
+	If x is a NaN, a NaN is returned.
+	If x is 1 or 2, +0 is returned.
+
+	If x is positive infinity or negative infinity, positive infinity is
+       	returned.
+
+        If x is a non-positive integer, a pole error occurs, and the function
+	returns inf.
+
+       	If the result overflows, a range error occurs, and the function returns
+        inf with the correct mathematical sign.
+
+
+SEE ALSO: GAMMA(), SIN()
+##############################################################################
+Command:  LINE
+Syntax:   LINE <x1>,<y1>,<x2>,<y2>
+
+DESCRIPTION:
+
+	Draws a straight line from (x1,y1) to (x2,y2). The line thickness as well
+	as other drawing parameters can be set with DEFLINE and GRAPHMODE.
+
+SEE ALSO: DRAW, PLOT, DEFLINE
+##############################################################################
+Command:  LINEINPUT
+Syntax:   LINEINPUT [[#]<device-number>,] <string-variable>
+
+DESCRIPTION:
+
+	LINE INPUT reads an entire line from a standard input  or from a
+	previously opened file as specified by <device-number> (to load a 
+	complete  file,  use  BLOAD).  Unlike  the regular INPUT command,
+	LINEINPUT does not stop at delimiters (commas). 
+
+SEE ALSO: INPUT
+*#############################################################################
+Function:  LINEINPUT$()
+Syntax:   t$=LINEINPUT$([#1])
+
+DESCRIPTION:
+
+	LINEINPUT$() reads an entire line from a standard input  or from a
+	previously opened file as specified by <device-number> (to load a 
+	complete  file,  use  BLOAD).  Unlike  the regular INPUT command,
+	LINEINPUT$() does not stop at delimiters (commas). 
+
+SEE ALSO: INPUT$(),LINEINPUT
+##############################################################################
+Command:  LINK
+Syntax:   LINK #<device-nr>,<string-expression:name>
+
+DESCRIPTION:
+
+	LINK links a  shared object file/library (*.so in /var/lib) 
+	dynamically. It will from now on be addressed via the device-nr.
+
+	The addresses of he symbols of that library can be read with the
+	SYM_ADR() function.
+
+	If the Library is not used any more it can be unlinked with the UNLINK
+	command.
+	
+SEE ALSO:  UNLINK, SYM_ADR(), CALL
+##############################################################################
+Command:  LIST
+Syntax:   LIST [<line-number>[,<line-number>]
+
+DESCRIPTION:
+
+	LIST displays  the  source  code  or  a  code segment.  Note  that the
+	line number of the first line in a file is 0, that the second line is
+	line 1 etc.
+	
+EXAMPLE:
+       LIST
+       LIST 1,10
+       LIST 5  
+
+SEE ALSO: PLIST, PRG$()
+##############################################################################
+Function:  LISTSELECT()
+Syntax:   num=LISTSELECT(title$,list$())
+
+DESCRIPTION:
+	 listselect opens a graphical list-selector, which enables the user to 
+	 select one entry out of an array list$(). The index of the entry is 
+	 returned or -1 in case no item was selected. 
+	
+SEE ALSO: FILESELECT
+##############################################################################
+Command:  LOAD
+Syntax:   LOAD name$
+
+DESCRIPTION:
+
+	Loads a program into memory.
+
+EXAMPLE:
+	LOAD "testme.bas"
+SEE ALSO: XLOAD, MERGE, CHAIN
+##############################################################################
+Function:  LOC()
+Syntax:   <int-result>=LOC(#<device-nre>)
+
+DESCRIPTION:
+
+	Returns the location of the file pointer for the file with  the device
+	number.  The location is given in number of bytes from the start of 
+	the file.
+
+SEE ALSO: LOF()
+##############################################################################
+Command:  LOCAL
+Syntax:   LOCAL <var>[,<var>,...]
+
+DESCRIPTION:
+
+	Declares several variables to be a local variable. This command
+	is normally used inside PROCEDUREs and FUNCTIONs. 
+	LOCAL does not initialize the variables. If you need them to be 
+	initialized, use CLR after LOCAL.
+
+EXAMPLE:
+	LOCAL a,b$,s()
+##############################################################################
+Command:  LOCATE
+Syntax:   LOCATE <row>,<column>
+
+DESCRIPTION:
+
+	Positions the cursor to the specified location. The upper right
+	corner of the screen is located at 0,0.
+
+SEE ALSO: PRINT AT(), CRSLIN, CRSCOL
+##############################################################################
+Function:  LOF()
+Syntax:   <int-result>=LOF(#n)
+
+DESCRIPTION:
+
+	Returns the length of the file with device number n.
+
+SEE ALSO: LOC()
+##############################################################################
+Function:  LOG(), LOG10(), LN()
+Syntax:   <num-result>=LOG(<num-expression>)
+          <num-result>=LOG10(<num-expression>)
+          <num-result>=LN(<num-expression>)
+
+DESCRIPTION:
+
+	Returns  the natural logarithm (log, ln) or the logarithm
+        base 10 (log10).
+
+SEE ALSO: EXP()
+##############################################################################
+Function:  LOGB()
+Syntax:   <int-result>=LOGB(<num-expression>)
+
+DESCRIPTION:
+
+	Returns  the logarithm base 2 in integer values.
+
+SEE ALSO: LOG()
+##############################################################################
+Function: LOG1P()
+Syntax:   <num-result>=LOG1P(<num-expression>)
+
+DESCRIPTION:
+
+	Returns a value equivalent to log(1+x).  It
+        is computed in a way that is accurate even if the value of
+        x is near zero.
+
+SEE ALSO: LOG(),EXP(), LN()
+##############################################################################
+Command:  LOOP
+Syntax:   LOOP
+
+DESCRIPTION:
+
+	LOOP terminates a DO loop and can be used  as unqualified  loop
+	terminator (such a loop can only be aborted with the EXIT command).
+	Execution continues with  the DO line.
+EXAMPLE: 
+	DO
+	  PRINT TIME$
+	  PAUSE 1
+	LOOP
+	
+SEE ALSO: DO, EXIT IF, BREAK
+##############################################################################
+Function: LOWER$()
+Syntax:   <string-result>=LOWER$(<string-expression>) 
+
+DESCRIPTION:
+
+	Transforms all upper case letters of a string to lower
+        case. Any non-letter characters are left unchanged.
+
+EXAMPLE:
+	PRINT LOWER$("Oh my GOD!")   ! Result: oh my god!
+
+SEE ALSO: UPPER$()
+##############################################################################
+Function: LPEEK()
+Syntax:   <int-result>=LPEEK(<num-expression>)
+
+DESCRIPTION:
+
+	Reads a 4 byte integer from address.
+
+SEE ALSO: PEEK(), POKE 
+##############################################################################
+Command:  LPOKE
+Syntax:   LPOKE <adr>,<num-expression>
+
+DESCRIPTION:
+
+	Writes a 4 byte integer to address <adr>.
+
+SEE ALSO: DPOKE, POKE, PEEK()
+##############################################################################
+Command:  LTEXT
+Syntax:   LTEXT x,y,t$
+
+DESCRIPTION:
+
+	Draws a text at position x,y. The LTEXT command uses a 
+	linegraphic text, which allows the user to draw very large 
+	fonts and be independent of the system fonts. The font style can 
+	be influenced with the DEFLINE and the DEFTEXT command.
+
+SEE ALSO: DEFTEXT, TEXT, DEFLINE, LTEXTLEN()
+##############################################################################
+Function:  LTEXTLEN()
+Syntax:    w=LTEXTLEN(t$)
+
+DESCRIPTION:
+
+	Returns the with of the text t$ in pixels.
+	The font style can be influenced
+	with the DEFLINE and the DEFTEXT command.
+
+SEE ALSO: LTEXT
+##############################################################################

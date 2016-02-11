@@ -1,0 +1,543 @@
+
+\chapter{Compatibility}
+\label{compat}
+\section{General remarks}
+
+X11-Basic deviates in numerous aspects from ANSI BASIC. It in event is also
+different from GfA-Basic (Atari ST) all though it tries to be compatible and
+really looks similar:
+
+\subsection*{ELSE IF vs. ELSEIF}
+
+This interpreter uses the ELSE IF form of the "else if" statement with a space 
+between ELSE and IF. In contrast, ANSI BASIC uses ELSEIF and END IF. Other
+interpreters may also use the combination ELSEIF and END IF.
+
+
+\subsection*{Local variables}
+
+Local variables must be declared local in the procedure/function. Any other
+variables are treated as global.
+
+\subsection*{Call By-Value vs. By-Reference}
+
+Variables in a GOSUB statement as in \verb|GOSUB test(a)| are passed "by-value" to the
+PROCEDURE: the subroutine gets the value but can not change the variable from which the value
+came from. To pass the variable "by-reference", use the VAR keyword as in "GOSUB test(VAR 
+a)": the subroutine then not only gets the value but the variable itself and can change it
+(for more information, see the documentation of the GOSUB  statement). The same rules apply
+to FUNCTION: VAR in the parameter list of a function call allows a FUNCTION to get a variable
+parameter "by-reference". In contrast, traditional BASIC interpreters always pass variables
+in  parameter lists "by-reference". The problem with "by-reference" parameters is that you
+must be fully aware of what happens inside the subroutine: assignments to parameter variables
+inside the subroutine might change the values of variables in the calling line.
+
+
+\subsection*{Assignment operator}
+
+X11-BASIC does not have an assignment operator but overloads the equal sign to
+act as the assignment operator or as comparison operator depending on context:
+In a regular expression, all equal signs are considered to be the comparison
+operator, as in \verb|IF (a=2)|. However, in an "assignment-style" expression
+(as in \verb|LET a=1|), the first equal sign is considered to be the assignment
+operator. Here is an example which assigns the result of a comparison (TRUE or
+FALSE) to the variable <a> and thus shows both forms of usage of the equal sign:
+
+\begin{verbatim}
+a=(b=c)
+\end{verbatim}
+
+
+\subsection*{Assignments to modifiable l(eft)value}
+
+Some implementations of BASIC allow the use of functions on the left side of
+assignments as in \verb|MID$(a$,5,1)="a"|. X11-Basic does not support this
+syntax but requires a variable (a "modifiable lvalue") on the left side of such
+expressions.
+
+\subsection*{INT() function}
+
+In X11-Basic INT() gives probably different results for negative numbers and for numbers
+bigger than  2147483648. INT() is internally implemented as "cast to int" (has ever be like
+this, very fast, and also the compiler relies on this). This means, that the argument must
+not contain numbers which cannot be converted to 32bit integers. And also the fractional part
+of the floating point numbers is cut off (like TRUNC()) instead of rounded down (like on most
+other BASIC dialects). If you rely on a correct behaviour for negative numbers and for big
+numbers you probably want to use FLOOR() instead.
+
+\subsection*{DIM Statement}
+
+In X11-Basic the DIM statement probably behaves different compared to other  dialects of
+BASIC. DIM in X11-Basic will reserve space in memory for exacly the number of indexes
+specified.  Other BASIC dialect do reserve one more than specified. If you are surprised
+getting "Field index out of range" errors, this probably comes from accessing a field index
+which is not there. For example: DIM a(5) will reserve memory for exactly 5 values: a(0),
+a(1), a(2), a(3), and a(4). a(5) does not exist and therefor you will get an error if you try
+to access it. The way X11-Basic implemented it is more logical and similar to C and JAVA. But
+if you are used to thinking that an array starts with the first index 1 (instead of 0) you
+will probably be a little confused.
+
+\subsection*{LET Statement}
+
+Al though it is implemented into X11-Basic, there is no benefit in  using the
+LET statement. On contrary, using LET makes your program  slower than necessary.
+Just leave it out, do not use it. Assignments can be made without the LET
+statement.
+
+
+\subsection*{TOS/GEM implementation}
+
+Because Gfa-Basic on ATARI-ST makes much use of the built in GUI functions of
+the ATARI ST, which are not available on other operating systems, X11-Basic can
+only have limited compatibility. GEM style (and compatible) ALERT boxes, menus 
+and object trees are supported by X11-Basic and can be used in a similar way.
+Even ATARI ST *.rsc files can be loaded. But other functions like LINEA
+functions, the VDISYS, GEMSYS, BIOS, XBIOS and GEMDOS calls are not possible.
+Also many other commands are not implemented because the author thinks that they
+have no useful effect on UNIX platforms. Some might be included in a later
+version of X11-Basic (see the list below). Since many GfA-Basic programs make
+use of more or less of these functions, they will have to be modified before
+they can be run with X11-Basic.
+
+\subsection*{The INLINE statement}
+
+The INLINE statement is not supported, because the  source code of X11-Basic 
+programs is pure ASCII text. But an alternative has been implemented. (see
+\verb|INLINE$()|).
+
+\subsection*{Incompatible data types}
+
+X11-Basic uses the default datatype (without suffix) and the integer data type (
+Suffix \%). This is compatible with most of the BASIC dialects. However the
+complex data type (suffix \#) is not supported by most of the BASIC dialects and the 
+suffix \# is sometimes optionally used by regular float variables 
+(like in GFA-Basic).
+
+The suffix \& which is used for big integer variables could be confused with the 
+short int data type of X11-Basic which also uses this suffix. However, in 
+general these programs will run and give correct results. Using the 
+infinite precision routines is just slower.
+
+Short int and byte data types will not be used by X11-Basic. There used be 
+useful only on computers with short memory do save some RAM. 
+These times have passed, so that the statndard integer data type 
+(with the suffix \%) will do.
+
+The suffix $|$ will be reserved for future use, most likely for multiple
+precision floating point variables.
+
+
+\section{GFA-Basic compatibility}
+\label{gfacompat}
+
+Following GFA-Basic commands and functions are not supported and probably never
+will be. Most of them are obsolete on UNIX systems. When porting from GFA-Basic
+to X11-Basic, they have to be removed or replaced by an alternative routine:
+
+\paragraph{obsolete, because there is an alternative function in X11-Basic:}
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|==|\>		Comparison operator for approximately equal  --> =\\
+\verb|ARECT, ATEXT, HLINE|\>LINE-A functions--> \verb|LINE, BOX, TEXT|\\
+\verb|ACHAR, ACLIP, ALINE, APOLY TO|\> --> \verb|TEXT,CLIP,LINE,POLY|\\
+\verb|COSQ(),SINQ()|\>	quick cosine/sine using an internal table --> \verb|COS(),SIN()|\\
+\verb|DIR|\>		Lists the files on a disc.  --> \verb|SYSTEM "ls"|\\
+\verb|DRAW|\>	      Draws points and lines. --> \verb|PLOT, LINE|\\
+\verb|FILES|\>		Lists the files on a disk.  --> \verb|SYSTEM "ls -l"|\\
+\verb|FRE()|\>	        Returns the amount of memory free (in bytes). --> see below\\
+\verb|MAT CLR|\>        clears a matrix/makes a zero matrix --> \verb|ARRAYFILL, CLR, 0()|\\
+\verb|MAT DET|\>        calculates the determinat of a matrix --> \verb|DET()|\\
+\verb|MAT INV|\>        calculates the inverse of a matrix --> \verb|INV()|\\
+\verb|MAT ONE|\>        creates a unit matrix --> \verb|1()|\\
+\verb|MAT TRANS|\>      calculates the transverse of a matrix --> \verb|TRANS()|\\
+\verb|MSHRINK()|\>      Reduces the size of a storage area --> \verb|REALLOC()|\\
+\verb|NAME AS|\>        Renames an existing file. --> \verb|RENAME|\\
+\verb|QSORT|\>  	      Sorts  the elements of an array.  --> \verb|SORT|\\
+\verb|RC_COPY|\>   	Copies rectangular screen sections  (--> \verb|COPYAREA|)\\
+\verb|RESERVE|\>      	Increases or decreases the memory used by basic (obsolete)\\
+\verb|RND as a sysvar|\>  see \verb|RND()|\\
+\verb|ROL&(), ROL%()|\>  Rotates a bit pattern left. --> \verb|ROL()|\\
+\verb|ROR&(), ROR%()|\>  Rotates a bit pattern right. --> \verb|ROR()|\\
+\verb|SHEL_FIND()|\>    $\longrightarrow$ \verb|SYSTEM "find ..."|\\
+\verb|SHL&(), SHL%()|\>  Shifts a bit pattern left --> \verb|SHL()|\\
+\verb|SHR&(), SHR%()|\>  Shifts a bit pattern left --> \verb|SHR()|\\
+\verb|SYSTEM |\> 	obsolete  $\longrightarrow$ \verb|QUIT|\\
+\verb|SHEL_ENVRN()|\>	$\longrightarrow$ \verb|ENV$()|\\
+\verb|SHEL_READ |\> 	obsolete  $\longrightarrow$ \verb|PARAM$()|\\
+\verb|SSORT|\>        Sorts using the Shell-Metzner method. --> \verb|SORT|\\
+\verb|THEN|\>           keyword in If statements (obsolete)\\
+\end{tabbing}
+
+For some GFA-Basic commands you can construct replacement functions in 
+X11-Basic like:
+{\linespread{0.8}\footnotesize \begin{verbatim}
+' Get the free memory available (in Bytes)
+' n=0 physical memory
+' n=1 Swap space
+FUNCTION fre(n)
+  LOCAL a,t$,a$,unit$,s$
+  IF n=0
+    s$="MemFree:"
+  ELSE 
+    s$="SwapFree:"
+  ENDIF
+  a=FREEFILE()
+  OPEN "I",#a,"/proc/meminfo"
+  WHILE NOT EOF(#a)
+    LINEINPUT #a,t$
+    EXIT IF word$(t$,1)=s$
+  WEND
+  CLOSE #a
+  t$=TRIM$(t$)
+  a$=word$(t$,2)
+  unit$=word$(t$,3)
+  IF unit$="kB"
+    RETURN VAL(a$)*1024
+  ELSE
+    RETURN VAL(a$)
+  ENDIF
+ENDFUNCTION
+\end{verbatim}}
+or 
+{\linespread{0.8}\footnotesize \begin{verbatim}
+DEFFN ob_x(adr%,idx%)=DPEEK(adr%+24*idx%+16)
+DEFFN ob_y(adr%,idx%)=DPEEK(adr%+24*idx%+18)
+DEFFN ob_w(adr%,idx%)=DPEEK(adr%+24*idx%+20)
+DEFFN ob_h(adr%,idx%)=DPEEK(adr%+24*idx%+22)
+\end{verbatim}}
+
+\paragraph{obsolete, because TOS-Specific, and no similar function on other OSes exist:}
+
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|ADDRIN, ADDROUT|\> address of the AES Address Input/Output blocks\\
+\verb|APPL_EXIT()|\>	Declare program has finished\\
+\verb|APPL_INIT()|\>	Announce the program as an application.\\
+\verb|APPL_TPLAY()|\>	Plays back a record of user activities\\
+\verb|APPL_TRECORD()|\>	makes a record of user activities\\
+\verb|BIOS()|\>		call BIOS routines\\
+\verb|CONTRL|\>		Address of the VDI control table.\\
+\verb|FGETDTA()|\>	Returns the DTA (Disk Transfer Address).\\
+\verb|FSETDTA|\> 	Sets the address of the DTA\\
+\verb|GB, GCONTRL |\>    Address of the AES Parameter/control Block\\
+\verb|GDOS?|\>		Returns  TRUE  (-1)  if GDOS is  resident\\
+\verb|GEMDOS()|\>	call the GEMDOS routines.\\
+\verb|GEMSYS|\>		call the AES routine\\
+\verb|GINTIN, GINTOUT|\> Address of the AES Integer input/output block.\\
+\verb|HIMEM |\>         	address of the area of memory which is not allocated by interpreter\\
+\verb|INTIN, INTOUT|\>   Address of the VDI integer Input/output block.\\
+\verb|L~A |\>           	Returns base address of the LINE-A variables.\\
+\verb|MENU_REGISTER()|\> Give a desk accessory a name\\
+\verb|MONITOR|\>        	Calls a monitor resident in memory.\\
+\verb|SHEL_GET, SHEL_PUT|\>  	obsolete\\
+\verb|SHEL_WRITE|\>	obsolete\\
+\verb|VDIBASE, VDISYS|\> VDI  functions\\
+\verb|VQT_EXTENT|\>     	coordinates of a rectangle  which surround the text\\
+\verb|VQT_NAME()|\>     	VDI  function\\
+\verb|VSETCOLOR |\>     	TOS specific\\
+\verb|VST_LOAD_FONTS(), VST_UNLOAD_FONTS()|\\
+\verb|V_CLRWK(), V_CLSVWK(), V_CLSWK(), V_OPNVWK()|	\\
+\verb|V_OPNWK(), V_UPDWK()|\> VDI-GDOS functions\\
+\verb|V~H|\>	       	Returns the internal VDI handle\\
+\verb|W_HAND(#n) |\>    	Returns the GEM handle of the window\\
+\verb|W_INDEX()  |\>    	Returns the window number of the specified GEM handle.\\
+\verb|WORK_OUT() |\>    	Determines the values from OPEN\_WORKSTATION.\\
+\verb|XBIOS()|\>	       	call XBIOS system routines.\\
+
+\end{tabbing}
+
+\paragraph{Obsolete, because ATARI-ST-Hardware-Specific, and no similar function
+exists on UNIX or SDL platforms:}
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|CHDRIVE|\>	Sets the default disk drive --> \verb|CHDIR|\\
+\verb|DMACONTROL, DMASOUND|\>     Controls the DMA sound (see \verb|PLAYSOUND|)\\
+\verb|INPMID$|\>        	read data from the MIDI port\\
+\verb|LPENX, LPENY |\>   Returns the coordinates of a light pen.\\
+\verb|PADT(), PADX(), PADY()|\> Reads the paddle on the STE\\
+\verb|SDPOKE, SLPOKE, SPOKE|\>  Supervisor mode memory access\\
+
+\end{tabbing}
+
+\paragraph{Not supported because of other reasons:}
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|APPL_READ()|\>	read from the event buffer.\\
+\verb|APPL_WRITE()|\>	write to the event buffer.\\
+\verb|BASEPAGE|\>	address of the basepage\\
+\verb|BITBLT|\>		Raster copying command\\
+\verb|CFLOAT()|\>	Changes integer into a floating point number.\\
+\verb|DEFBIT, DEFBYT, DEFWRD, DEFFLT, DEFSTR |\>  \>      sets the variable  type\\
+\verb|DFREE()|\>		free space on a disc\\
+\verb|GETSIZE()|\>	return the number of Bytes required by a screen area\\
+\verb|HARDCOPY|\>       	Prints the screen          --> save screen\\
+\verb|INPAUX$|\>        	read data from the serial port\\
+\verb|KEYDEF |\>        	Assign a string to a Function Key.\\
+\verb|LLIST |\>         	Prints out the listing of the current program.\\
+\verb|LPOS()|\>         	column in which the printer head is located\\
+\verb|LPRINT|\>         	prints data on the printer.\\
+\verb|PSAVE |\>         	save with protection\\
+\verb|RCALL |\>    	Calls an assembler routine\\
+\verb|SCRP_READ(), SCRP_WRITE()|\>   communication between GEM programs.\\
+\verb|SETCOLOR i,r,g,b|\>  set rgb value of color cell (-->GET\_COLOR())\\
+\verb|SETTIME|\>		Sets the time and the date.\\
+\verb|WINDTAB|\>	       	Gives the address of the Window Parameter Table.\\
+\verb|WIND_CALC(), WIND_CLOSE(), WIND_CREATE(), WIND_DELETE(), WIND_FIND(),| \\
+\verb|WIND_GET(), WIND_OPEN(), | \\
+\verb|WIND_SET(), WIND_UPDATE()|\> \> GEM-Window-Function\\
+\end{tabbing}
+
+\subsubsection*{These GFA-Basic commands may be supported in a later version of 
+X11-Basic:}
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|APPL_FIND(fname$)|\> Returns the ID of the sought after application.\\
+\verb|BYTE{x}|\>		read the contents of the address x\\
+\verb|C:|\>	      Calls a C or assembler program with parameters as in C\\
+\verb|CARD{x}|\>	      Reads/writes a 2-byte unsigned integer\\
+\verb|CHAR{x}|\>	      Reads a string of bytes until a null byte is  encountered\\
+\verb|DEFLIST x|\>       Defines the program listing format.\\
+\verb|DEFNUM n|\>        Affects  output  of numbers by the PRINT  command\\
+\verb|DELETE x(i)|\>     Removes  the i-th element of array x.\\
+\verb|DO UNTIL |\>      extension\\
+\verb|DO WHILE |\>      extension\\
+\verb|DOUBLE{x}|\>       reads/writes  an  8-byte floating point  variable\\
+\verb|EVNT_BUTTON()|\>   Waits for one or more mouse clicks\\
+\verb|EVNT_DCLICK()|\>   Sets the speed for double-clicks of a mouse button.\\
+\verb|EVNT_KEYBD()|\>    Waits for  a key to be pressed and  returns  a  word\\
+\verb|EVNT_MESAG()|\>    Waits for the arrival of a message in the event buffer.\\
+\verb|EVNT_MOUSE()|\>    Waits for  the  mouse pointer to  be  located  inside \\
+\verb|EVNT_MULTI()|\>    Waits for the occurrence of selected  events.\\
+\verb|EVNT_TIMER() |\>   waits for a period  of  time\\
+\verb|FATAL|\>	      Returns the value 0 or -1 according to the type of error\\
+\verb|FIELD|\>	      Divides records into fields.\\
+\verb|FORM INPUT|\>      Enables the insertion of a character string\\
+\verb|FORM INPUT AS|\>   the current value of a\$ is displayed, and can be edited.\\
+\verb|FORM_BUTTON()|\>   Make inputs in a form possible using the mouse.\\
+\verb|FORM_ERROR()|\>    Displays the ALERT associated with the error numbered\\
+\verb|FORM_KEYBD()|\>    Allows a form to be edited via the keyboard.\\
+\verb|FSEL_INPUT()|\>    Calls the AES fileselect library\\
+\verb|GET #|\>	      Reads a record from a random access file.\\
+\verb|GRAF_DRAGBOX()|\>  a rectangle to be moved about the screen\\
+\verb|GRAF_GROWBOX()|\>  Draws an expanding rectangle.\\
+\verb|GRAF_HANDLE() |\>  supplies the size of a character from the system set\\
+\verb|GRAF_MKSTATE()|\>  supplies the current mouse  coordinates\\
+\verb|GRAF_MOUSE)   |\>  allows  the  mouse  shape  to  be  changed.\\
+\verb|GRAF_MOVEBOX()|\>  a moving rectangle with constant size\\
+\verb|GRAF_RUBBERBOX()|\> draws an outline of a rectangle\\
+\verb|GRAF_SHRINKBOX()|\> Draws an shrinking rectangle.\\
+\verb|GRAF_SLIDEBOX()|\>  moves one rectangular object within another\\
+\verb|GRAF_WATCHBOX()|\>  monitors  an object tree while a mouse button  is  pressed\\
+\verb|HTAB|\>	       Positions  the cursor to the  specified  column. \\  
+\verb|OUT?()|\>  output to device\\
+\verb|INSERT|\>	       Inserts  an  element  into  an  array.\\
+\verb|INT{x}|\>	       Reads/writes a 2 byte signed integer from/to address x.\\
+\verb|KEYGET n |\>        similar to INKEY\$  but wait\\
+\verb|KEYLOOK n |\>       similar to INKEY\$  but put back chars\\
+\verb|KEYTEST n |\>       similar to INKEY\$\\
+\verb|KEYPAD n  |\>       Sets  the  usage of the  numerical  keypad.\\
+\verb|KEYPRESS n|\>       This  simulates the pressing of a key.\\
+\verb|LONG{x}|\>	       Reads/writes a 4 byte integer from/to address x. Abbrev {}\\
+\verb|LOOP UNTIL condition|\>     extension\\
+\verb|LOOP WHILE condition|\>     extension\\
+\verb|LSET var=string|\>  Puts the 'string' in the string variable 'var' left justified\\
+\verb|MAT ADD a(),b()|\>\\
+\verb|MAT ADD a(),x|\>\\
+\verb|MAT CPY a([i,j])=b([k,l])[,h,w]|\>\\
+\verb|MAT INPUT #i,a()|\>\\
+\verb|MAT MUL|\>\\
+\verb|MAT MUL a(),x|\>\\
+\verb|MAT MUL x=a()*b()|\>\\
+\verb|MAT MUL x=a()*b()*c()|\>\\
+\verb|MAT NORM a(),{0/1}|\>\\
+\verb|MAT PRINT [#i]a[,g,n]|\>\\
+\verb|MAT QDET x=a([i,j])[,n]|\>\\
+\verb|MAT RANG x=a([i,j])[,n]|\>\\
+\verb|MAT READ a()|\>\\
+\verb|MAT SET a()=x|\>\\
+\verb|MAT SUB a(),b()|\>\\
+\verb|MAT SUB a(),x|\>\\
+\verb|MAT XCPY a([i,j])=b([k,l])[,h,w]|\>\\
+\verb|MAT BASE {0/1}|\>\\
+\verb|MENU(x)|\>	      Returns the information about an event in the variable \\
+\verb|MENU OFF|\>        Returns a menu title to 'normal' display.\\
+\verb|MENU_BAR()|\>      Displays/erases a menu bar (from a resource file)\\
+\verb|MENU_ICHECK()|\>   Deletes/displays a tick against a menu item.\\
+\verb|MENU_IENABLE()|\>  Enables/disables a menu entry.\\
+\verb|MENU_TEXT()|\>     Changes the text of a menu item.\\
+\verb|MENU_TNORMAL()|\>  Switches the menu title to normal/inverse video.\\
+\verb|MID$(a$,x[,y])=|\> (as a command/lvalue)\\
+\verb|MODE|\>	      representation of decimal point, date and files\\
+\verb|OBJC_CHANGE()|\>        Changes the status of an object.\\
+\verb|OBJC_EDIT()|\>	      Allows input and editing\\
+\verb|OBJC_ORDER()|\>	      re-positions an object within a tree.\\
+\verb|OB_ADR()|\>	      Gets the address of an individual object.\\
+\verb|OB_FLAGS()|\>	      Gets the status of the flags for an object.\\
+\verb|OB_H()|\> 	      Returns the height of an object\\
+\verb|OB_HEAD()|\>	      Points to the object's first child\\
+\verb|OB_NEXT()|\>	      Points to the following object on the same level\\
+\verb|OB_SPEC()|\>	      Returns the address of the data structure\\
+\verb|OB_STATE()|\>	      returns the status of an object\\
+\verb|OB_TAIL()|\>	      Points to the objects last child\\
+\verb|OB_TYPE()|\>	      Returns the type of object specified.\\
+\verb|OB_W()|\> 	      Returns the width of an object\\
+\verb|OB_X(), OB_Y()|\>       relative  coordinates  of  the   object\\
+\verb|ON BREAK|\>	      influence behavior of CTRL-C\\
+\verb|OPTION BASE|\>	      determine whether an  array  is  to contain a zero element\\
+\verb|RCALL|\>        Calls  an assembler routine\\
+\verb|RC_INTERSECT()|\>  Detects whether two rectangles overlap.\\
+\verb|RECALL|\>       Inputs n lines from a text file\\
+\verb|RECORD |\>	      Sets the number of the next record (GET\#, PUT\#)\\
+\verb|RSET a$=b$|\>   Moves a string expression, right justified to a string.\\
+\verb|RSRC_OBFIX()|\> converts the coordinates of an object\\
+\verb|RSRC_SADDR()|\> sets the address of an object.\\
+\verb|RUN <filename>|\>   see RUN\\
+\verb|SETDRAW|\>      see DRAW\\
+\verb|SINGLE{x}|\>    Reads/writes  a  4  byte floating point\\
+\verb|SPRITE|\> 	      Puts a sprite\\
+\verb|STORE|\>  	      Fast save of a string array as a text file.\\
+\verb|TRON# |\> 	      Tron to file\\
+\verb|TRON proc |\>    procedure is called  before  the execution of each command\\
+\verb|VTAB|\>         positions the cursor to the specified line number\\
+\verb|WRITE|\>  	      Stores data in a sequential file\\
+\verb|_DATA|\>	       	Specifies the position of the DATA pointer.\\
+\verb|STICK|\>		control the joystick (via SDL only)\\
+\end{tabbing}
+
+\subsubsection*{Following commands have a different meaning and/or syntax in X11-Basic:}
+
+
+\begin{center}\begin{tabular}{|ll|}
+\hline
+{\bf GFA-BASIC }        & {\bf X11-Basic}\\
+\hline
+\verb|SYSTEM|           & \verb|QUIT|\\
+\verb|LINE INPUT|       & \verb|LINEINPUT|\\
+\verb|SOUND|		& \verb|SOUND|\\
+\verb|WAVE|		& \verb|WAVE|\\
+\verb|VSYNC|            &  -\\
+\verb|ON MENU|		& \verb|MENU|\\
+\verb|ON MENU GOSUB ...|& \verb|MENUDEF|\\
+\verb|MENU a$()|        & \verb|MENUDEF|\\
+\verb|MENU OFF|         &  -\\
+\verb|MENU KILL|        & \verb|MENUKILL|\\
+\verb|MENU()|           &  -\\
+\verb|MONITOR|          & \verb|SYSTEM|\\
+\verb|EXEC|             & \verb|EXEC|\\
+\verb|RENAME AS|        & \verb|RENAME|\\
+\hline
+\end{tabular}\end{center}
+
+\subsubsection*{Compiler specifics}
+
+\begin{itemize}
+\item \verb|PRINT| statements will not compile correctly sometimes. Avoid to use functions and variables in print statements, which are not used anywhere else. 
+\item \verb|ON ERROR GOSUB| will not work correctly in compiled programs.
+\item \verb|ON ERROR GOTO| will not work correctly in compiled programs.
+\item \verb|ON BREAK GOSUB| will not work correctly in compiled programs.
+\item \verb|ON BREAK GOTO| will not work correctly in compiled programs.
+\end{itemize}
+
+\subsubsection*{Differences between UNIX, WINDOWS, TomTom and Android versions}
+
+\section{Ideas for future releases of X11-Basic}
+
+These are some ideas for new commands, which are not GFA-commands and 
+which might be implemented in X11-Basic in future:
+
+\begin{verbatim}
+
+ SPRINT var$;[USING...;]...  similar to sprintf() in C 
+ MAT_PRINT or PRINT a()
+
+========================
+implementation of mmap() in X11-Basic:
+
+open "I",#1,"myfile"
+adr%=map("I|O|U",#1,len,offset)
+
+
+msync adr%,len
+
+unmap adr%,len
+close #1
+
+       offset  should  be a multiple of the page size as returned
+       by getpagesize().
+
+"I"   --> PROT_READ MAP_PRIVATE
+"O"   --> PROT_WRITE MAP_SHARED
+"U"   --> PROT_READ PROT_WRITE MAP_SHARED
+
+"*L"  --> MAP_LOCKED
+
+=============================================
+
+modifiable lvalues:
+MID$()=
+CHAR{}=
+PRG$()=
+new command (for threads):
+
+EXSUB (instead of gosub) procedure
+
+alternative:
+FIRE procedure()
+or
+KICK procedure()
+
+SPAWN  ....
+
+it must be guaranteed that the program flow control and the access to 
+variables etc, is thread-safe. This might be difficult....
+
+
+=============================================
+USB support:  (not completely done, I need someone who uses this for testing...)
+
+OPEN "UU",#2,devicename%,vid,pid,class,endpoint
+SEND_CONTROL #2,t$
+SEND #2,t$
+RECEIVE #2,t$
+RECEIVE_BULK #2,t$
+EOF(#2)
+INP?(#2)
+CLOSE #2
+
+
+=============================================
+SQL support ???
+
+use the sqlite excecutable and SYSTEM$()
+
+=============================================
+arbitrary precision (floatingpoint) numbers
+** integers and floatingpoint/complex numbers
+a##=1.84902948755588584888888888888888834
+
+a|=
+
+
+we need new parsers, type guessing routine,
+all operations need to work, complex functions..... Casts...
+
+=============================================
+Support for the gcrypt library.
+-------encryption---------------
+
+LIBGCRYPT:
+    hash$=HASH$(data$[,typ%])
+    sdata$=SIGN$(data$,privkey$)
+    verify%=VERIFY$(sdata$,pubkey$)
+    cdata$=ENCRYPT$(data$,key$[,typ%])
+    data$=DECRYPT$(cdata$,key$[,typ%])
+
+    err=KEYGEN(typ%,pubkey$,privkey$)
+
+
+\end{verbatim}

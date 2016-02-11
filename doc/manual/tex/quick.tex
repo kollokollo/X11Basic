@@ -1,0 +1,769 @@
+\chapter{Quick reference}
+
+\section{Reserved variable names}
+
+There are some reserved variables. Some Keywords may not work as variable names
+as well. Although there is no checking done, parsing errors could  occur. Please
+try the command LET in such cases. In general, as long as an ending of a
+variable name is different from any command or keyword, it's usable as name.
+
+Reserved and system variables are:
+\begin{center}
+\begin{longtable}{llll}
+int& {\tt ANDROID?}	  & -1 on Android systems, else 0           & p.\pageref{ANDROIDf}\\
+int& {\tt COLS    }	  & number of columns of the text terminal  & p.\pageref{COLS}    \\
+int& {\tt CRSCOL  }	  & text cursor position: current column    & p.\pageref{CRSCOL}  \\
+int& {\tt CRSLIN  }	  & text cursor position: current line      & p.\pageref{CRSLIN}  \\
+flt& {\tt CTIMER  }	  & CPU system timer (seconds)              & p.\pageref{CTIMER}  \\
+int& {\tt ERR     }	  & number of the last error                & p.\pageref{ERR}\\
+int& {\tt FALSE   } 	  & constant: 0                             & p.\pageref{FALSE}\\
+int& {\tt GPS?    } 	  & TRUE if GPS is available, else 0        & p.\pageref{GPSf}\\
+flt& {\tt GPS\_ALT } 	  & Altitude in m received from GPS         & p.\pageref{GPSiALT}\\
+flt& {\tt GPS\_LAT } 	  & latitude in degrees received from GPS   & p.\pageref{GPSiLAT}\\
+flt& {\tt GPS\_LON } 	  & longitude in degrees received from GPS  & p.\pageref{GPSiLON}\\
+int& {\tt MOUSEK   } 	  & mouse button state                      & p.\pageref{MOUSEK}\\
+int& {\tt MOUSES   } 	  & state of the shift, alt, ctrl, caps keys & p.\pageref{MOUSES}\\
+int& {\tt MOUSEX   } 	  & x coordinate of mouse position          & p.\pageref{MOUSEX}\\
+int& {\tt MOUSEY   } 	  & y coordinate of mouse position          & p.\pageref{MOUSEY}\\
+int& {\tt PC       } 	  & program counter                         & p.\pageref{PC}\\
+flt& {\tt PI       } 	  & constant: 3.14159265359...              & p.\pageref{PI}\\
+int& {\tt ROWS     } 	  & number of rows of the text terminal     & p.\pageref{ROWS}\\
+int& {\tt SENSOR?  } 	  & TRUE if sensor phalanx is available     & p.\pageref{SENSORf}\\
+int& {\tt SP       } 	  & internal stack pointer                  & p.\pageref{SP}\\
+int& {\tt STIMER   } 	  & integer system timer                    & p.\pageref{STIMER}\\
+flt& {\tt TIMER    } 	  & Unix system timer, float                & p.\pageref{TIMER}\\ 
+int& {\tt TRUE     } 	  & constant: -1                            & p.\pageref{TRUE}\\
+int& {\tt UNIX?    } 	  & TRUE if OS is UNIX like (Linux, BSD)    & p.\pageref{UNIXf}\\
+int& {\tt WIN32?   } 	  & TRUE if OS is MS WINDOWS 32 bit         & p.\pageref{WIN32f}\\
+
+&{\tt DATE\$}	      &    current date                             & p.\pageref{DATES}\\
+&{\tt FILEEVENT\$ }   &    get events about files                   & p.\pageref{FILEEVENTS}\\
+&{\tt INKEY\$  }      &    content of the keyboard-buffer           & p.\pageref{INKEYS}\\
+&{\tt TERMINALNAME\$} &device name of the standard terminal         & p.\pageref{TERMINALNAMES}\\
+&{\tt TIME\$}	      &    current time                             & p.\pageref{TIMES}\\
+&{\tt TRACE\$}        &   current program code line                 & p.\pageref{TRACES}\\
+\end{longtable}
+\end{center}
+
+\section{Conditions}
+
+Conditions and expression are the same, \verb|FALSE| is defined as 0 and
+\verb|TRUE| as -1. As a consequence, Boolean operators like \verb|AND|, 
+\verb|OR|, \verb|XOR| etc. are applied as a bitwise operation. This way they can
+be used in expressions as well as in conditions.
+
+\section{Numbers and Constants}
+
+Number constants may precede 0x to represent hex values. String constants are
+marked with pairs of \verb|""|. Array constants have following format: 
+\verb|[ , , ; , , ; , , ]|.
+
+
+\section{Operators}
+Precedence is defined as follows (highest first):
+\begin{tabbing}
+XXXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\
+0. {\tt ()}      \>(brackets)\\
+1. {\tt \verb|^|}      \>(power) \\
+2. {\tt * /}     \>(multiplication, division) \\
+3. \verb|\| \> (modulo) \\
+4. \verb|- +|           \>    ()\\
+5. \verb|MOD DIV|        \>    (modulus, ...)\> p.\pageref{MOD},\pageref{DIV}\\
+6. \verb|< > = <> <= >=|  \>    (comparison operators)\\
+7. \verb|AND OR XOR NOT EQV IMP| \>(logical operators)\> p.\pageref{AND},\pageref{OR},
+\pageref{NOT},\pageref{EQV},\pageref{IMP}\\
+ \end{tabbing}
+
+\section{Abbreviations}
+
+In direct mode in the interpreter every command can be abbreviated as long as 
+the command parser can identify uniquely the command. So you may use 
+{\tt q} instead of {\tt QUIT}.
+
+In addition there are abbreviations which are actually alternate commands like:
+
+\begin{center}
+\begin{tabular}{|lll|}\hline
+\verb|'| &  REM & p.\pageref{REMbABBREVpbh}\\
+\verb|?| &     PRINT& p.\pageref{PRINT}\\
+\verb|@| &     GOSUB& p.\pageref{GOSUBbABBREVpba}\\
+\verb|~| &     VOID& p.\pageref{VOIDbABBREVpbt}\\
+\verb|!| &  comment at the end of a line & \\
+\verb|&| &     EVAL / indirect command& p.\pageref{EVAL}\\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Interpreter Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|CLEAR|        \> clear and remove all variables  \> p.\pageref{CLEAR}\\
+\verb|CONT|         \> continue (after STOP)           \> p.\pageref{CONTINUE}\\
+\verb|DUMP|	    \> lists all used variable names   \> p.\pageref{DUMP}\\
+{\tt DUMP "@"	   }\> list of functions and procedures\> p.\pageref{DUMP}\\
+{\tt DUMP ":"	   }\> list of all labels              \> p.\pageref{DUMP}\\
+{\tt DUMP "\#"	   }\> list of open files              \> p.\pageref{DUMP}\\
+{\tt DUMP "K"	   }\> list of implemented commands    \> p.\pageref{DUMP}\\
+{\tt DUMP "F"	   }\> list of internal functions      \> p.\pageref{DUMP}\\
+\verb|ECHO ON/OFF|  \> same as TRON * TROFF             \> p.\pageref{ECHO}\\
+\verb|EDIT|	    \> call default editor to edit program\> p.\pageref{EDIT}\\
+{\tt HELP <expr>   }\> prints short help on expr       \> p.\pageref{HELP}\\
+{\tt LIST [s,e]	   }\> List program code (from line s to e)\> p.\pageref{LIST}\\
+\verb|LOAD file$|   \> load program                     \> p.\pageref{LOAD}\\
+\verb|NEW|          \> clear all variables, erase program and stop\> p.\pageref{NEW}\\
+\verb|PLIST|	    \> formatted listing		  \> p.\pageref{PLIST}\\
+\verb|PROGRAM| options   \>set title and compiler options \> p.\pageref{PROGRAM}\\
+%{\tt PSAVE a\$	   }\> writes the reformatted BASIC-program into file a\$\> p.\pageref{PSAVE}\\
+\verb|QUIT|         \> quits the X11-BASIC-Interpreter \> p.\pageref{QUIT}\\
+\verb|REM| comment  \> remark in program                \> p.\pageref{REMbABBREVpbh}\\
+\verb|RUN|	    \> start program                    \> p.\pageref{RUN}\\
+\verb|STOP|         \> stop program            \> p.\pageref{STOP}\\
+\verb|SAVE [file$]| \> writes the BASIC-program into file\> p.\pageref{SAVE}\\
+\verb|TROFF|        \> Trace mode off                    \> p.\pageref{TROFF}\\
+\verb|TRON|         \> Trace mode on  (for debugging)    \> p.\pageref{TRON}\\
+\verb|VERSION| 	    \> shows X11-Basic version number and date\> p.\pageref{VERSION}\\
+\verb|XLOAD|	    \> select and load a program         \> p.\pageref{XLOAD}\\
+\verb|XRUN|	    \> select, load and run a program    \> p.\pageref{XRUN}\\
+ \end{tabbing}
+
+\section{Flow Control Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|AFTER n,procedure|\> execute procedure after n seconds  \> p.\pageref{AFTER}\\
+\verb|BREAK|           \> same as EXIT IF TRUE               \> p.\pageref{BREAK}\\
+\verb|CASE const|      \> SELECT * CASE * DEFAULT * ENDSELECT\> p.\pageref{CASE}\\
+{\tt CHAIN bas\$}\> executes another basic program           \> p.\pageref{CHAIN}\\
+\verb|CONTINUE | \> SELECT * CASE * CONTINUE * ENDSELECT     \> p.\pageref{CONTINUE}\\
+\verb|DEFAULT| 	 \> SELECT * CASE * DEFAULT * ENDSELECT      \> p.\pageref{DEFAULT}\\
+\verb|DEFFN |    \> define function macro.                   \> p.\pageref{DEFFN} \\
+{\tt DO * LOOP	}\> (endless) loop without condition         \> p.\pageref{DO}\\
+\verb|DOWNTO|    \> FOR ... DOWNTO                   \> p.\pageref{DOWNTO} \\
+{\tt ELSE		}\> see IF * ELSE * ENDIF            \> p.\pageref{ELSE}\\
+{\tt ELSE IF	}\> see IF * ELSE * ENDIF            \> p.\pageref{ELSEbIF}\\
+{\tt END		}\> program end, enter interactive mode\> p.\pageref{END}\\
+{\tt ENDFUNCTION	}\> FUNCTION * ENDFUNCTION           \> p.\pageref{ENDFUNCTION}\\
+{\tt ENDIF		}\> IF * ELSE * ENDIF                \> p.\pageref{ENDIF}\\
+{\tt ENDSELECT		}\> SELECT * CASE * DEFAULT * ENDSELECT\> p.\pageref{ENDSELECT}\\
+{\tt EVERY n,procedure	}\> invokes procedure every n seconds\> p.\pageref{EVERY}\\
+{\tt EXIT IF a		}\> exit loop if condition a is TRUE \> p.\pageref{EXITbIF}\\
+{\tt FOR * NEXT		}\> For Next loop                    \> p.\pageref{FOR}\\
+{\tt FUNCTION * ENDFUNC	}\> define function                  \> p.\pageref{FUNCTION}\\
+{\tt GOSUB proc(...) }   \> call subroutine                  \> p.\pageref{GOSUBbABBREVpba}\\
+{\tt GOTO label		}\>goto label                        \> p.\pageref{GOTO}\\
+{\tt IF * ELSE * ENDIF }\> conditional blocks      \> p.\pageref{IF}\\
+{\tt LOOP		}\> DO * LOOP                        \> p.\pageref{LOOP}\\
+{\tt NEXT		}\> FOR * NEXT                       \> p.\pageref{NEXT}\\
+{\tt ON BREAK GOSUB proc}\> define procedure on break\> p.\pageref{ONbBREAK}\\
+{\tt ON ERROR GOSUB proc}\> define procedure on error\> p.\pageref{ONbERROR}\\
+{\tt ON * GOSUB proc1,...}\>excecute subroutine depending on value\> p.\pageref{ONb*bGOSUB}\\
+{\tt ON * GOTO label1,...}\>branch to different labels depending on value\> p.\pageref{ONb*bGOTO}\\
+{\tt REPEAT  		}\>REPEAT * UNTIL\> p.\pageref{REPEAT}\\
+{\tt RESUME}             \> resume program after error\> p.\pageref{RESUME}\\
+{\tt RETURN  		}\>define the end of a PROCEDURE\> p.\pageref{RETURN}\\
+\verb|SELECT expr|      \> SELECT * CASE * DEFAULT * ENDSELECT\> p.\pageref{SELECT}\\
+{\tt UNTIL exp		}\>REPEAT * UNTIL\> p.\pageref{UNTIL}\\
+\verb|SPAWN procedure|      \> Spawn new thread\> p.\pageref{SPAWN}\\
+
+ \end{tabbing}
+
+\section{Console Input/Output Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+{\tt BEEP}\> Beep (on TTY/console)\> p.\pageref{BEEP}\\
+{\tt BELL}\> same as BEEP\> p.\pageref{BELL}\\
+{\tt CLS		}\> clear (text)screen \> p.\pageref{CLS}\\
+{\tt FLUSH 	}\> flush output\> p.\pageref{FLUSH}\\
+%{\tt FORM\_INPUT t\$	}\> input string with default value\> p.\pageref{FORMiINPUT}\\
+{\tt HOME		}\> textcursor home\> p.\pageref{HOME}\\
+{\tt INPUT "text";varlist }\> read values for variables\> p.\pageref{INPUT}\\
+{\tt LINEINPUT t\$}\> read entire line from channel/file/console\> p.\pageref{LINEINPUT}\\
+{\tt LOCATE row,column	}\> Place cursor on column and row\> p.\pageref{LOCATE}\\
+
+{\tt PRINT a;b\$	}\>console output\> p.\pageref{PRINT}\\
+{\tt PRINT AT(x,y);  	}\>locate textcursor at row y and column x\> p.\pageref{PRINTbAT}\\
+{\tt PRINT COLOR(x,y);  }\>change text color\> p.\pageref{PRINTbCOLOR}\\
+{\tt PRINT TAB(x);  	}\>locate textcursor at column x\> p.\pageref{PRINTbTABbANDbSPC}\\
+{\tt PRINT SPC(x);  	}\>move textcursor x columns\> p.\pageref{PRINTbTABbANDbSPC}\\
+{\tt PRINT a USING f\$	}\>print number with formatter\> p.\pageref{PRINTbUSING}\\
+{\tt PUTBACK a 	}\> put back a char to console\> p.\pageref{PUTBACK}\\
+
+ \end{tabbing}
+
+\section{File Input/Output Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+{\tt BGET \#f,a,n}\> read n bytes from file \#f to address a\> p.\pageref{BGET}\\
+{\tt BLOAD f\$,a[,l]	}\> reads entire file (given by name) to address a\> p.\pageref{BLOAD}\\
+{\tt BPUT \#f,a,n	}\> writes n bytes from address a to file/channel f\> p.\pageref{BPUT}\\
+{\tt BSAVE f\$,a,l	}\> saves l bytes in memory at address a to file f\$\> p.\pageref{BSAVE}\\
+\verb|CHDIR path$|       \> change current working directory\> p.\pageref{CHDIR}\\
+\verb|CHMOD file$,m|     \> change file permissions \> p.\pageref{CHMOD}\\
+{\tt CLOSE  [[\#]n]  }	\> close file, I/O channel or link\> p.\pageref{CLOSE}\\
+{\tt FLUSH [\#n]	}\> flush output\> p.\pageref{FLUSH}\\
+\verb|KILL file$|       \> delete a file \> p.\pageref{KILL}\\
+\verb|MAP|       \> maps a file into memory \> p.\pageref{MAP}\\
+\verb|UNMAP|       \> unmaps memory \> p.\pageref{UNMAP}\\
+\verb|MKDIR path$|       \> create a directory \> p.\pageref{MKDIR}\\
+{\tt OPEN m\$,\#n,file\$ }\>  open a file or socket for input and/or output\> p.\pageref{OPEN}\\
+{\tt OUT \#n,a		}\> out byte a to channel n\> p.\pageref{OUT}\\
+{\tt PRINT \#n;		}\>output to channel/file      \> p.\pageref{PRINT}\\
+{\tt PUTBACK [\#n,]a 	}\> put back a char to channel/file/console\> p.\pageref{PUTBACK}\\
+{\tt RELSEEK \#n,d	}\>Place filepointer on new relative position\> p.\pageref{RELSEEK}\\
+\verb|RENAME file$,dst$| \> rename and move a file     \> p.\pageref{RENAME}\\
+\verb|RMDIR path$|       \> remove an empty directory  \> p.\pageref{RMDIR}\\
+\verb|SEEK #n,d|	 \> place filepointer to absolute position\> p.\pageref{SEEK}\\
+\verb|TOUCH #n| 	 \> update timestamps of file  \> p.\pageref{TOUCH}\\
+\verb|WATCH file$|       \> monitor file changes       \> p.\pageref{WATCH}\\
+\end{tabbing}
+
+\section{Variable Manipulation Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+
+\verb|ABSOLUTE x,adr%|\> Assigns the address to the variable x.\> p.\pageref{ABSOLUTE}\\
+{\tt ARRAYCOPY dst(),src() }\> copies array including dimensioning\> p.\pageref{ARRAYCOPY}\\
+\verb|ARRAYFILL a(),b|\> fills array with value\> p.\pageref{ARRAYFILL}\\
+{\tt CLR a,b,c(),f\$ }	\> clear variables; same as \verb|a=0;b=0;c()=[];f$=""|\> p.\pageref{CLR}\\
+\verb|DEC var|          \> decrement variable; same as var=var-1\> p.\pageref{DEC} \\
+{\tt DIM		 }\>declare and create array\> p.\pageref{DIM} \\
+{\tt ERASE a()[,...]}\> erase arrays\> p.\pageref{ERASE} \\
+{\tt INC a  		}\> increments variable a\> p.\pageref{INC} \\
+{\tt LET a=b 		}\> enforces assignment\> p.\pageref{LET} \\
+{\tt LOCAL var[,...]}\> declare local variables in a procedure or function\> p.\pageref{LOCAL} \\	 
+{\tt SORT a(),n[,b()]	}\>Sort array\> p.\pageref{SORT} \\
+{\tt SWAP a,b}\>Swap variables\> p.\pageref{SWAP} \\
+{\tt VAR vars}\>declare arguments to be passed "by reference"\> p.\pageref{VAR} \\
+\end{tabbing}
+
+\section{Memory Manipulation Commands}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+
+\verb|ABSOLUTE x,adr%| \> Assigns the address to the variable x.\> p.\pageref{ABSOLUTE}\\
+{\tt BMOVE q,z,n	}\>	 copies a block of n bytes from address q to z\> p.\pageref{BMOVE}\\
+{\tt DPOKE adr,word  	}\> write short int word to adr\> p.\pageref{DPOKE}\\
+\verb|FREE adr%|          \> Frees a previously allocated memory block. \> p.\pageref{FREE}\\
+{\tt LPOKE adr,long  	}\> writes long int value to pointer adr\> p.\pageref{LPOKE}\\
+\verb|MFREE adr%|          \> Frees a previously allocated memory block. \> p.\pageref{MFREE}\\
+\verb|MSYNC adr%,l| \>  flushes  changes map memory back to disk \> p.\pageref{MSYNC}\\
+{\tt POKE adr,byte	}\>write byte to pointer adr\> p.\pageref{POKE}\\
+\verb|SHM_DETACH adr%|   \> detaches the shared memory segment \> p.\pageref{SHMiDETACH}\\
+\verb|SHM_FREE adr%|   \> frees the shared memory segment \> p.\pageref{SHMiFREE}\\
+\end{tabbing}
+
+
+\section{Math commands}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|ADD a,b| 		\> same as a=a+b but faster\> p.\pageref{ADD}\\
+\verb|DEC var| 		\> same as var=var-1 but faster\> p.\pageref{DEC}\\
+\verb|DIV a,b| 		\> same as a=a/b but faster\> p.\pageref{DIV}\\
+\verb|FFT a(),i|	\>fast fourier transformation on 1D array.\> p.\pageref{FFT}\\
+\verb|FIT x(),y()[,yerr()],n,func(x,a,b,c,...)| \> \\
+			\> fits function to data\> p.\pageref{FIT}\\
+\verb|FIT_LINEAR x(),y()[,[xerr(),]yerr()],n,a,b[,siga,sigb,chi2,q]|\> \\
+			\> linear regression with errors\> p.\pageref{FITiLINEAR}\\
+\verb|FIT_POLY x(),y(),dy(),n%,a(),m%|\> \\
+			\> fit a polynom to datapoints\> p.\pageref{FITiPOLY}\\
+\verb|INC var| 		\> same as var=var+1 but faster\> p.\pageref{INC}\\
+\verb|MUL a,b| 		\> same as a=a*b but faster\> p.\pageref{MUL}\\
+\verb|SORT a(),n[,b()]|	\> sorts n values of a() to incrementing order\> p.\pageref{SORT}\\
+\verb|SUB a,b|		\> same as a=a-b but faster\> p.\pageref{SUB}\\
+\end{tabbing}
+
+
+
+\section{Other Commands}
+\begin{tabbing}
+XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+
+{\tt CALL adr[,par,...]} \> see EXEC\> p.\pageref{CALL}\\
+\verb|CONNECT #n,t$[,i%]|\> connect a channel \> p.\pageref{CONNECT}\\
+{\tt DATA 1,"Hallo",...	}\> define constants\> p.\pageref{DATA}\\
+\verb|DELAY sec	|        \> same as PAUSE \> p.\pageref{DELAY}\\
+\verb|ERROR n|           \> execute error number n\> p.\pageref{ERROR}\\
+\verb|EVAL t$|\> execute X11-Basic command contained in t\$\> p.\pageref{EVAL}\\
+{\tt EXEC adr[,var,...]}\> call a C subroutine at pointer adr.\> p.\pageref{EXEC}\\
+\verb|GET_LOCATION ,,,,,,,|  \> returns the position of the device\> p.\pageref{GETiLOCATION}\\
+\verb|GPS ON/OFF|  \> turns GPS device on/off             \> p.\pageref{GPS}\\
+{\tt LINK \#n,t\$	}\> load shared object file t\$\> p.\pageref{LINK}\\
+{\tt UNLINK \#n	}\> unload shared object file\> p.\pageref{UNLINK}\\
+{\tt MERGE f\$		}\> Merges bas-file to actual program code\> p.\pageref{MERGE}\\
+
+\verb|NOP|               \> no operation do nothing\> p.\pageref{NOP}\\
+\verb|NOOP|              \> no operation do nothing\> p.\pageref{NOOP}\\
+
+{\tt PAUSE sec		}\>pauses sec seconds\> p.\pageref{PAUSE}\\
+\verb|PIPE #l,#k|  \>     links two file channels        \> p.\pageref{PIPE}\\
+\verb|PLAYSOUND c,s$|  \> plays a WAV sample  \> p.\pageref{PLAYSOUND}\\
+\verb|PLAYSOUNDFILE file$|  \> plays a sound file  \> p.\pageref{PLAYSOUNDFILE}\\
+{\tt PROCEDURE proc(p1,...)} \>PROCEDURE * RETURN\> p.\pageref{PROCEDURE}\\
+{\tt RANDOMIZE [seed]	}\>Sets seed for random generator\> p.\pageref{RANDOMIZE}\\
+{\tt READ var		}\>reads constant from DATA statement\> p.\pageref{READ}\\
+\verb|RECEIVE #n,t$|  \> receive a message from a socket \> p.\pageref{RECEIVE}\\
+{\tt RESTORE [label] 	}\>(re)sets pointer for READ-statement to label\> p.\pageref{RESTORE}\\
+{\tt RETURN expr	}\>return value from FUNCTION\> p.\pageref{RETURN}\\
+{\tt RSRC\_LOAD file\$}\>loads GEM rsc-File (ATARI ST)\> p.\pageref{RSRCiLOAD}\\
+{\tt RSRC\_FREE		}\>frees GEM rsc-File\> p.\pageref{RSRCiFREE}\\
+\verb|SEND #n,t$|  \> send a message to a socket \> p.\pageref{SEND}\\
+
+\verb|SENSOR ON/OFF|  \> turns SENSORs on/off             \> p.\pageref{SENSOR}\\
+
+{\tt SETENV t\$=a\$	}\>Sets environmentvar t\$ using value a\$\> p.\pageref{SETENV}\\
+\verb|SOUND freq|\>Sound the internal speaker\> p.\pageref{SOUND}\\
+{\tt SPLIT t\$,d\$,mode,a\$,b\$ }\>splits t\$ by deliminator d\$ into a\$ and b\$\> p.\pageref{SPLIT}\\
+{\tt SHELL t\$		}\>execute file as shell \> p.\pageref{SHELL}\\
+\verb|SPEAK t$|  \> Text to speach  \> p.\pageref{SPEAK}\\
+{\tt SYSTEM t\$		}\>execute shell with command t\$\> p.\pageref{SYSTEM}\\
+{\tt UNLINK \#n		}\>un-links shared object \#n\> p.\pageref{UNLINK}\\
+{\tt VOID a  		}\>calculates expression a and discard result\> p.\pageref{VOIDbABBREVpbt}\\
+\verb|WAVE c,f,|\> control the sound synthesizer\> p.\pageref{WAVE}\\
+
+{\tt WORT\_SEP }\>same as SPLIT \> p.\pageref{WORTiSEP}\\
+ \end{tabbing}
+ 
+\section{Graphic commands}
+\subsection{Drawing and painting}
+\begin{tabbing}
+XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|BOUNDARY f| 	\> switch borders on or off\> p.\pageref{BOUNDARY}\\
+\verb|BOX x1,y1,x2,y2| 	\> draw a frame\> p.\pageref{BOX}\\
+\verb|CIRCLE x,y,r,,|	\> draw a circle\> p.\pageref{CIRCLE}\\
+\verb|CLIP ,,,,,|  	\> clipping function\> p.\pageref{CLIP}\\
+\verb|COLOR f[,b]|	\> Set foreground color (and background color)\> p.\pageref{COLOR}\\
+\verb|COPYAREA ,,,,,|	\> copy a rectangular screen section \> p.\pageref{COPYAREA}\\
+\verb|CURVE ,,,,,,,|  	\> cubic Bezier-curve\> p.\pageref{CURVE}\\
+\verb|DEFFILL c,a,b|	\> set fill style and pattern\> p.\pageref{DEFFILL}\\
+\verb|DEFLINE a,b|	\> set line width and type\> p.\pageref{DEFLINE}\\
+\verb|DEFMARK c,a,g|	\> set color, size, type (POLYMARK)\> p.\pageref{DEFMARK}\\
+\verb|DEFMOUSE i|	\> set mouse cursor type\> p.\pageref{DEFMOUSE}\\
+\verb|DEFTEXT c,s,r,g |	\> set text properties for ltext\> p.\pageref{DEFTEXT}\\
+\verb|DRAW [[x1,y1] TO] x2,y2| \> draw line\> p.\pageref{DRAW}\\
+\verb|ELLIPSE x,y,a,b[,a1,a2]| \> draw an ellipse\> p.\pageref{ELLIPSE}\\
+\verb|FILL x,y|  	\> flood fill \> p.\pageref{FILL}\\
+\verb|GET x,y,w,h,g$|  	\>  store a portion of the screen bitmap in  g\$\> p.\pageref{GET}\\
+\verb|GPRINT|  		\>  like PRINT, but the output goes to the graphic window\> p.\pageref{GPRINT}\\
+
+\verb|GRAPHMODE mode|  	\>  set graphic-mode\> p.\pageref{GRAPHMODE}\\
+\verb|LINE x1,y1,x2,y2|	\> draw a line\> p.\pageref{LINE}\\
+\verb|LTEXT x,y,t$|	\>  Linegraphic-Text\> p.\pageref{LTEXT}\\
+\verb|PBOX  x1,y1,x2,y2|\>  draw filled box\> p.\pageref{PBOX}\\
+\verb|PCIRCLE x,y,r[,a1,a2]|	\> draw filled circle\> p.\pageref{PCIRCLE}\\
+\verb|PELLIPSE x,y,a,b[,a1,a2]|	\> draw filled ellipse\> p.\pageref{PELLIPSE}\\
+\verb|PLOT x,y|			\> draw point\> p.\pageref{PLOT}\\
+\verb|POLYLINE n,x(),y()|	\> draw polygon in (x(),y())\> p.\pageref{POLYLINE}\\
+\verb|POLYFILL n,x(),y()|	\> draw filled polygon\> p.\pageref{POLYFILL}\\
+\verb|POLYMARK n,x(),y()|	\> draw polygon points\> p.\pageref{POLYMARK}\\
+\verb|PRBOX x1,y1,x2,y2|	\> draw filled rounded box\> p.\pageref{PRBOX}\\
+\verb|PUT x,y,g$|		\> map graphic at position\> p.\pageref{PUT}\\
+\verb|PUT_BITMAP t$,i,i,i,i|	\> map bitmap\> p.\pageref{PUTiBITMAP}\\
+\verb|RBOX x1,y1,x2,y2|		\>draws a rounded box\> p.\pageref{RBOX}\\
+\verb|SCOPE a(),typ,ys,yo|      \>fast plot of data a()\> p.\pageref{SCOPE}\\
+\verb|SCOPE y(),x(),typ,ys,yo,xs,xo|\>fast 2D plot of data\> p.\pageref{SCOPE}\\
+\verb|SETFONT f$|               \>set bitmap font\> p.\pageref{SETFONT}\\
+\verb|SETMOUSE x,y|               \>set mouse cursor\> p.\pageref{SETMOUSE}\\
+\verb|SGET screen$|		\> capture graphic and store it in screen\$\> p.\pageref{SGET}\\
+\verb|SPUT screen$|		\> maps graphic to window/screen\> p.\pageref{SPUT}\\
+\verb|TEXT x,y,t$|		\> draw text (bitmap font)\> p.\pageref{TEXT}\\
+
+ \end{tabbing}
+\subsection{Screen/Window commands}
+\begin{tabbing}
+XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|CLEARW [#n]|  	\> clear graphic window\> p.\pageref{CLEARW}\\
+\verb|CLOSEW [#n]|  	\> close graphic window\> p.\pageref{CLOSEW}\\
+\verb|FULLW n| 		\>  make window fullscreen\> p.\pageref{FULLW}\\
+\verb|GET_GEOMETRY ,,,,|  \> returns the size of the window or screen\> p.\pageref{GETiGEOMETRY}\\
+\verb|GET_SCREENSIZE ,,,,|  \> returns the size of the screen\> p.\pageref{GETiSCREENSIZE}\\
+\verb|INFOW n,t$|	\> set window information\> p.\pageref{INFOW}\\
+\verb|MOVEW n,x,y|	\>  move window\> p.\pageref{MOVEW}\\
+\verb|OPENW n| 		\>  open window\> p.\pageref{OPENW}\\
+\verb|ROOTWINDOW|	\> draw on screen background\> p.\pageref{ROOTWINDOW}\\
+\verb|NOROOTWINDOW|	\> switch back to normal output\> p.\pageref{NOROOTWINDOW}\\
+\verb|SAVESCREEN file$|	\> save screen bitmap into a file\> p.\pageref{SAVESCREEN}\\
+\verb|SAVEWINDOW file$|	\> save window bitmap into a file\> p.\pageref{SAVEWINDOW}\\
+\verb|SCREEN n|		\> select Screen mode \> p.\pageref{SCREEN}\\
+\verb|SHOWPAGE|		\> perform pending graphic operations\> p.\pageref{SHOWPAGE}\\
+\verb|SIZEW n,w,h|	\> size window\> p.\pageref{SIZEW}\\
+\verb|TITLEW n,t$|	\> set window title\> p.\pageref{TITLEW}\\
+\verb|TOPW n| 		\>  move window to front\> p.\pageref{TOPW}\\
+\verb|USEWINDOW #n|	\> direct graphics output to window n\> p.\pageref{USEWINDOW}\\
+\verb|VSYNC|		\> same as SHOWPAGE\> p.\pageref{VSYNC}\\
+
+ \end{tabbing}
+ 
+\subsection{GUI/User input commands}
+\begin{tabbing}
+XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|ALERT a,b$,c,d$,var[,ret$]| \> Show Alert/Infobox and wait for user input\> p.\pageref{ALERT}\\
+%\verb||  	\>\> p.\pageref{}\\
+%\verb||  	\>\> p.\pageref{}\\
+%\verb||  	\>\> p.\pageref{}\\
+\verb|EVENT ,,,,,,,,|	 \> Waits until an event occurs\> p.\pageref{EVENT}\\
+\verb|FILESELECT tit$,path$,dflt$,f$|  \> display a fileselector-box\> p.\pageref{FILESELECT}\\
+\verb|HIDEM|  	         \> hide the mouse cursor\> p.\pageref{HIDEM}\\
+\verb|KEYEVENT a,b|	 \> Waits until key is pressed\> p.\pageref{KEYEVENT}\\
+\verb|LISTSELECT tit$,list$()|  \> display a selector-box\> p.\pageref{LISTSELECT}\\
+
+\verb|MENUDEF m$(),proc| \> read menu titles and items from m\$()\> p.\pageref{MENUDEF}\\
+\verb|MENUKILL|		 \> deletes menu\> p.\pageref{MENUKILL}\\
+\verb|MENUSET n,x|	 \> change menu-point \#n with value x\> p.\pageref{MENUSET}\\
+\verb|MENU STOP	|	 \> switch off the menu\> p.\pageref{MENUbSTOP}\\
+\verb|ONMENU | 		 \> execute the menu and\> p.\pageref{ONMENU}\\
+\verb|MENU|		 \> wait for menu-events\> p.\pageref{MENU}\\
+\verb|MOUSE x,y,k|	 \> gets position and state of mouse\> p.\pageref{MOUSE}\\
+\verb|MOUSEEVENT ,,,|	 \> wait for mouse event\> p.\pageref{MOUSEEVENT}\\
+\verb|MOTIONEVENT ,,,|	 \> wait for mouse movement\> p.\pageref{MOTIONEVENT}\\
+\verb|OBJC_ADD t%,o%,c%| \> add object to tree\> p.\pageref{OBJCiADD}\\
+\verb|OBJC_DELETE t%,o%| \> delete object from tree\> p.\pageref{OBJCiDELETE}\\
+\verb|RSRC_LOAD file$|   \> loads a GEM resource file\> p.\pageref{RSRCiLOAD}\\
+\verb|RSRC_FREE|         \> unloads a GEM resource \> p.\pageref{RSRCiFREE}\\
+\verb|SHOWM|  	         \> show the mouse cursor\> p.\pageref{SHOWM}\\
+\end{tabbing}
+
+\section{File Input/Output functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|d%=DEVICE(file$)|	\>returns the device id of a file \> p.\pageref{DEVICE}\\
+\verb|b=EOF(#n)|	\>TRUE if file pointer reached end of file\> p.\pageref{EOF}\\
+\verb|b=EXIST(fname$)| 	\>TRUE if file fname\$ exist\> p.\pageref{EXIST}\\
+\verb|a=FREEFILE()|	\>Returns first free filenumber or -1\> p.\pageref{FREEFILE}\\
+\verb|a$=FSFIRST$(path$,,)| \>searches for the first file in a filesystem\> p.\pageref{FSFIRSTS}\\
+\verb|a$=FSNEXT$()|  	\>searches for the next file\> p.\pageref{FSNEXTS}\\
+\verb|c=INP(#n)|	\>reads a byte  from channel/file.\> p.\pageref{INP}\\
+\verb|c=INP?(#n)|	\>number of bytes which can be read \> p.\pageref{INPf}\\
+\verb|a=INP&(#n)|	\>reads a word (2 Bytes) from channel/file.\> p.\pageref{INPu}\\
+\verb|i=INP%(#n)|	\>reads a long (4 Bytes) from channel/file.\> p.\pageref{INPi}\\
+\verb|t$=INPUT$(#n,num)|\>reads num bytes from file/channel n\> p.\pageref{INPUTS}\\
+\verb|ret=IOCTL(#n,d%,)|\>performs settings on channel/file.\> p.\pageref{IOCTL}\\
+\verb|t$=LINEINPUT$(#n)|\>reads a line from file/channel n\> p.\pageref{LINEINPUTS}\\
+\verb|p=LOC(#n)|	\>Returns value of file position indicator\> p.\pageref{LOC}\\
+\verb|l=LOF(#n)|	\>length of file\> p.\pageref{LOF}\\
+\verb|l%=SIZE(file$)|	\>returns the size of a file \> p.\pageref{SIZE}\\
+\verb|t$=TERMINALNAME$(#n)| \>	returns device name of terminal connected to \#n\> p.\pageref{TERMINALNAMES}\\
+\end{tabbing}
+
+\section{Variable/String Manipulation functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|adr%=ARRPTR(b())|  	\> pointer to array descriptors\> p.\pageref{ARRPTR}\\
+\verb|a=ASC(t$)|	\> ASCII code of first letter of string\> p.\pageref{ASC}\\
+\verb|b$=BIN$(a[,n])|  	\> convert to binary number\> p.\pageref{BINS}\\
+\verb|t$=CHR$(a)|	\> convert ASCII code to string\> p.\pageref{CHRS}\\
+\verb|a$=DECLOSE$(t$)| \> removes enclosing characters from string\> p.\pageref{DECLOSES}\\
+\verb|a=DIM?(a())|	\>  returns number of elements of array a()\> p.\pageref{DIMf}\\
+\verb|a$=ENCLOSE$(t$[,p$])| \> encloses a string\> p.\pageref{ENCLOSES}\\
+\verb|f=GLOB(a$,b$[,flags])|\>TRUE if a\$ matches pattern b\$\> p.\pageref{GLOB}\\
+\verb|t$=HEX$(a[,n])|  	\>a as hexadecimal number\> p.\pageref{HEXS}\\
+\verb|t$=INLINE$(a$)|  	\>6-bit ASCII to 8-bit binary conversion\> p.\pageref{INLINES}\\
+\verb|a=INSTR(s1$,s2$[,n])|\>tests if s2\$ is contained in s1\$\> p.\pageref{INSTR}\\
+\verb|a=TALLY(t$,s$)|\> returns the number of occurrences of s\$ in t\$\> p.\pageref{TALLY}\\
+\verb|b%=INT(a)|		\> convert to integer\> p.\pageref{INT}\\
+%\verb|u$=LCASE$(t$)| \>	     converts t\$ to lower case\> p.\pageref{LCASE}\\
+\verb|t$=LEFT$(a$[,n])|  	\>extracts n bytes from string a\$ from the left\> p.\pageref{LEFTS}\\
+\verb|t$=LEFTOF$(a$,b$)| \>  returns left part of a\$ split at b\$\> p.\pageref{LEFTOFS}\\
+\verb|l=LEN(t$)|	\>length of string\> p.\pageref{LEN}\\
+\verb|u$=LOWER$(t$)| \>	     converts t\$ to lower case\> p.\pageref{LOWERS}\\
+\verb|l=LTEXTLEN(t$)|	\>size of text\> p.\pageref{LTEXTLEN}\\
+\verb|m$=MID$(t$,s[,l])| \>extracts l bytes from string t\$ from position s \> p.\pageref{MIDS}\\
+\verb|t$=MKA$(a())| \>	convert a whole array into a string\> p.\pageref{MKAS}\\
+\verb|t$=MKI$(i)| \>	convert integer to 2-byte string\> p.\pageref{MKIS}\\
+\verb|t$=MKL$(i)| \>	convert integer to 4-byte string\> p.\pageref{MKLS}\\
+\verb|t$=MKF$(a)| \>	convert float to 4 byte string\> p.\pageref{MKFS}\\
+\verb|t$=MKD$(a)| \>	convert float to 8 byte string\> p.\pageref{MKDS}\\
+\verb|o$=OCT$(d,n)| \>     convert integer d to string with octal number\> p.\pageref{OCTS}\\
+\verb|t$=REPLACE$(a$,s$,r$)| \>  replace s\$ by r\$ in a\$\> p.\pageref{REPLACES}\\
+\verb|t$=REVERSE$(a$)| \>  Return the reverses of a string\> p.\pageref{REVERSES}\\
+\verb|t$=RIGHT$(a$[,n])| \>  returns right n characters of a\$\> p.\pageref{RIGHTS}\\
+\verb|t$=RIGHTOF$(a$,b$)| \>  returns right part of a\$ split at b\$\> p.\pageref{RIGHTOFS}\\
+\verb|a=RINSTR(s1$,s2$[,n])| \>  tests from right if s2\$ is contained in s1\$\> p.\pageref{RINSTR}\\
+\verb|t$=SPACE$(i)| \>	     returns string consisting of i spaces\> p.\pageref{SPACES}\\
+\verb|t$=STR$(a[,b,c])| \>convert number to string \> p.\pageref{STRS}\\
+\verb|t$=STRING$(i,w$)| \>   returns string consisting of i copies of w\$\> p.\pageref{STRINGS}\\
+\verb|u$=TRIM$(t$)| \>	     trim t\$ \> p.\pageref{TRIMS}\\
+\verb|u$=XTRIM$(t$)| \>	     trim t\$ \> p.\pageref{XTRIMS}\\
+\verb|u$=UCASE$(t$)| \>	     converts t\$ to upper case\> p.\pageref{UCASES}\\
+\verb|u$=UPPER$(t$)| \>	     converts t\$ to upper case\> p.\pageref{UPPERS}\\
+\verb|u$=USING$(a,f$)| \> formats a number \> p.\pageref{USINGS}\\
+\verb|a=VAL(t$)| \> converts String/ASCII to number\> p.\pageref{VAL}\\
+\verb|i=VAL?(t$)| \>returns number of chars which are part of a number\> p.\pageref{VALf}\\
+\verb|adr%=VARPTR(v)| \>returns pointer to variable\> p.\pageref{VARPTR}\\
+\verb|u$=WORD$(b$,n)| \>     returns n th word of b\$\> p.\pageref{WORDS}\\
+\verb|e=WORT_SEP(t$,d$,m,a$,b$)| \> splits t\$ into parts\> p.\pageref{WORT_SEP}\\
+\end{tabbing}
+
+\section{Data compression and coding functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|b$=ARID$(a$)|  	\> order-0 adaptive arithmetic decoding\> p.\pageref{ARIDS}\\
+\verb|b$=ARIE$(a$)|  	\> order-0 adaptive arithmetic encoding\> p.\pageref{ARIES}\\
+\verb|b$=BWTD$(a$)|  	\>inverse Burrows-Wheeler transform\> p.\pageref{BWTDS}\\
+\verb|b$=BWTE$(a$)|  	\>Burrows-Wheeler transform\> p.\pageref{BWTES}\\
+\verb|c$=COMPRESS$(a$)|  \>lossless compression on the string\> p.\pageref{COMPRESSS}\\
+\verb|c$=UNCOMPRESS$(a$)|  \>lossless uncompression on the string\> p.\pageref{UNCOMPRESSS}\\
+
+\verb|c%=CRC(t$[,oc])|  \>32 bit checksum\> p.\pageref{CRC}\\
+\verb|e$=ENCRYPT$(t$,key$)|  	\>encrypts a message\> p.\pageref{ENCRYPTS}\\
+\verb|t$=DECRYPT$(e$,key$)|  	\>decrypts a message\> p.\pageref{DECRYPTS}\\
+\verb|b$=MTFD$(a$)|  	\>Move To Front decoding\> p.\pageref{MTFDS}\\
+\verb|b$=MTFE$(a$)|  	\>Move To Front encoding\> p.\pageref{MTFES}\\
+%\verb||  	\>\> p.\pageref{}\\
+%\verb||  	\>\> p.\pageref{}\\
+\verb|b()=CVA(a$)|  	\> returns array reconstructed from the string\> p.\pageref{CVA}\\
+\verb|b%=CVI(a$)|	\> convert 2-byte string to integer\> p.\pageref{CVI}\\
+\verb|b%=CVL(a$)|	\> convert 4-byte string to integer\> p.\pageref{CVL}\\
+\verb|b=CVS(a$)|	\> convert 4-byte string to float\> p.\pageref{CVS}\\
+\verb|b=CVF(a$)|	\> convert 4-byte string to float\> p.\pageref{CVF}\\
+\verb|b=CVD(a$)|	\> convert 8-byte string to double\> p.\pageref{CVD}\\
+
+\verb|t$=INLINE$(a$)|  	\>6-bit ASCII to 8-bit binary conversion\> p.\pageref{INLINES}\\
+\verb|t$=REVERSE$(a$)| \>  return the reverses of a string\> p.\pageref{REVERSES}\\
+\verb|b$=RLD$(a$)|  	\> run length decoding\> p.\pageref{RLDS}\\
+\verb|b$=RLE$(a$)|  	\> run length encoding\> p.\pageref{RLES}\\
+
+
+\end{tabbing}
+
+\section{Memory Manipulation functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|adr%=ARRPTR(b())|  	\> pointer to array descriptors\> p.\pageref{ARRPTR}\\
+\verb|i%=DPEEK(adr%)|	\>  read word from pointer adr\> p.\pageref{DPEEK}\\
+\verb|b%=LPEEK(adr%)|  	\>reads long (4 Bytes) from address\> p.\pageref{LPEEK}\\
+\verb|adr%=MALLOC(n%)| \> allocates size bytes of memory \> p.\pageref{MALLOC}\\
+\verb|adr%=MSHRINK(adr%,n%)| \> reduces  the  size  of  a  storage  area \> p.\pageref{MSHRINK}\\
+\verb|d%=PEEK(a%)| \>	 reads Byte from address a\> p.\pageref{PEEK}\\
+\verb|adr%=REALLOC(oadr%,n%)| \> changes the size  of  a  storage  area \> p.\pageref{REALLOC}\\
+\verb|adr%=SHM_ATTACH(id)| \> attaches the shared memory segment \> p.\pageref{SHMiATTACH}\\
+\verb|id=SHM_MALLOC(size,key)| \> returns the identifier of the shared memory segment \> p.\pageref{SHMiMALLOC}\\
+\verb|adr%=SYM_ADR(#n,s$)| \>return pointer to symbol from shared object file\> p.\pageref{SYMiADR}\\
+\verb|adr%=VARPTR(v)| \>returns pointer to variable\> p.\pageref{VARPTR}\\
+\end{tabbing}
+
+\section{Logic functions}
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|c%=AND(a%,b%)|	\> same as c=(a AND b)\> p.\pageref{AND}\\
+\verb|c%=OR(a%,b%)|	\> same as c=(a OR b)\> p.\pageref{OR}\\
+\verb|c%=XOR(a%,b%)|	\> same as c=(a XOR b)\> p.\pageref{XOR}\\
+\verb|c%=EQV(a%,b%)|	\> same as c=(a EQV b)\> p.\pageref{EQV}\\
+\verb|c%=IMP(a%,b%)|	\> same as c=(a IMP b)\> p.\pageref{IMP}\\
+\verb|b%=BCHG(x%,bit%)|\> changes the bit of x from 0 to 1 or from 1 to 0\> p.\pageref{BCHG}\\
+\verb|b%=BCLR(x%,bit%)|\> sets the bit of x to zero.\> p.\pageref{BCLR}\\
+\verb|b%=BSET(x%,bit%)|\> sets the bit of x to 1.\> p.\pageref{BSET}\\
+\verb|b%=BTST(x%,bit%)|\> returns -1 if the bit of x is 1.\> p.\pageref{BTST}\\
+\verb|b%=BYTE(x%)|     \> same as b=x AND 255\> p.\pageref{BYTE}\\
+\verb|b%=CARD(x%)|     \> same as b=x AND 0xffff \> p.\pageref{CARD}\\
+\verb|b%=WORD(x%)|     \> same as b=x AND 0xffff \> p.\pageref{WORD}\\
+\verb|b%=EVEN(d)|	\> TRUE if d is an even number\> p.\pageref{EVEN}\\
+\verb|b%=ODD(d)|	\> TRUE if d is an odd number\> p.\pageref{ODD}\\
+\verb|b%=GRAY(a)|      \>Gray code. if a<0: inverse Gray code\> p.\pageref{GRAY}\\
+\verb|b%=SHL(a)|      \>Shift bits to left\> p.\pageref{SHL}\\
+\verb|b%=SHR(a)|      \>Shift bits to right\> p.\pageref{SHR}\\
+\verb|b%=SWAP(a)|      \>Swaps High and Low words of a \> p.\pageref{SWAP}\\
+\end{tabbing}
+
+\section{Math functions}
+
+  The math function library contains a comprehensive set of mathematics
+  functions, including:
+\begin{itemize}
+\item	trigonometric
+\item	arc-trigonometric
+\item	hyperbolic
+\item	arc-hyperbolic
+\item	logarithmic  ( base e and base 10 )
+\item	exponential  ( base e and base 10 )
+\item	miscellaneous  ( square root, power, etc. )
+\end{itemize}
+  Some math functions are defined on Vectors and Matrices.
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|b=ABS(a)|		\> absolute value $b=|a|$\> p.\pageref{ABS}\\
+\verb|c=ADD(a,b)|	\> add $c=a+b$\> p.\pageref{ADD}\\
+\verb|b=CBRT(a)|	\> cube root $b=\sqrt[3]{a}$\> p.\pageref{CBRT}\\
+\verb|a=CEIL(b)|	\> truncate number \> p.\pageref{CEIL}\\
+\verb|a=CINT(b)|	\> truncate number (note: differs from INT() !)\> p.\pageref{CINT}\\
+\verb|z=COMBIN(n,k)| \> number of combinations $z=\frac{n!}{(n-k)!\cdot k!}$\> p.\pageref{COMBIN}\\
+\verb|c=DIV(a,b)| \> divide $c=a/b$ \> p.\pageref{DIV}\\
+%\verb|| \>  \> p.\pageref{}\\
+\verb|b()=FFT(a()[,f%])| \> discrete Fourier Transformation  of a real array\> p.\pageref{FFT}\\
+\verb|a=FIX(b)|	\> round number to integer \> p.\pageref{FIX}\\
+\verb|a=FLOOR(b)|	\> round number down to integer \> p.\pageref{FLOOR}\\
+\verb|b=FRAC(a)|	\> fractional (non-integer) part of a \> p.\pageref{FRAC}\\
+\verb|y=GAMMA(x)|       \> gamma function $y=\Gamma(x)$ \> p.\pageref{GAMMA}\\
+\verb|y=LGAMMA(x)|       \> logarithm of gamma function $y=|\mathrm{ln}\Gamma(x)|$ \> p.\pageref{LGAMMA}\\
+\verb|a=HYPOT(x,y)|	\>returns $a=\sqrt{x^2+y^2}$ \> p.\pageref{HYPOT}\\
+\verb|b=INT(a)|		\> convert to integer \> p.\pageref{INT}\\
+\verb|b()=INV(a())|\> calculate inverse of a square matrix\> p.\pageref{INV} \\
+\verb|i=SGN(a)|		\> sign of a (-1,0,1) \> p.\pageref{SGN}\\
+\verb|b=SQR(a)|		\> square root $b=\sqrt{a}$\> p.\pageref{SQR}\\
+\verb|b=SQRT(a)|	\> square root $b=\sqrt{a}$\> p.\pageref{SQRT}\\
+\verb|b=TRUNC(a)|	\> truncate number \> p.\pageref{TRUNC}\\
+\verb|b=LN(a)| 		\> base e logarithm (natural log) \> p.\pageref{LN}\\
+\verb|b=LOG(a)|		\> base e logarithm (natural log) \> p.\pageref{LOG}\\
+\verb|b=LOG10(a)|	\> base 10 logarithm \> p.\pageref{LOG10}\\
+\verb|b=LOGB(x)|	\> base 2 logarithm \> p.\pageref{LOGB}\\
+\verb|b=LOG1P(x)|	\> $b=\mathrm{log}(1+x)$ accurate near zero\> p.\pageref{LOG1P}\\
+\verb|c=MOD(a,b)|	\> same as c=(a MOD b)\> p.\pageref{MOD}\\
+\verb|c=MUL(a,b)|	\> multiply $c=a\cdot b$\> p.\pageref{MUL}\\
+\verb|b=EXP(a)|		\> exponential function $b=e^x$ (e to the x) \> p.\pageref{EXP}\\
+\verb|b=EXPM1(a)|	\> exponential function minus 1 $b=e^x-1$  \> p.\pageref{EXPM1}\\
+\verb|b=FACT(a)|	\> factorial $b=a!$\> p.\pageref{FACT}\\
+\verb|a=PRED(x)|	\>  returns the preceding integer of x \> p.\pageref{PRED}\\
+\verb|a=SUCC(x)|	\>  returns the next higher integer \> p.\pageref{SUCC}\\
+\verb|b()=SOLVE(a(),x())|\> solve linear equation system\> p.\pageref{SOLVE} \\
+\verb|z=VARIAT(n,k)| \> number of permutations of n elements \> p.\pageref{VARIAT}\\
+\end{tabbing}
+
+\subsection{Angles}
+Angles are always radians, for both, arguments and return values.
+
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|b=RAD(a)|	\> convert degrees to radians\> p.\pageref{RAD} \\
+\verb|b=DEG(a)|	\> convert radians to degrees\> p.\pageref{DEG}\\
+\end{tabbing}
+
+\subsection{Trigonometric functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|b=SIN(a)|	\>     sine\> p.\pageref{SIN}\\
+\verb|b=COS(a)|	\>     cosine\> p.\pageref{COS}\\
+\verb|b=TAN(a)|	\>     tangent\> p.\pageref{TAN}\\
+%\verb|b=COT(a)|	\>     cotangent\> p.\pageref{COT}\\
+%\verb|b=SEC(a)|	\>     secant\> p.\pageref{SEC}\\
+%\verb|b=CSC(a)|	\>     cosecant\> p.\pageref{CSC}\\
+
+\verb|b=ASIN(a)|	\>arc-sine \> p.\pageref{ASIN}\\
+\verb|b=ACOS(a)|	\>arc-cosine \> p.\pageref{ACOS}\\
+\verb|b=ATAN(a)|	\>arc-tangent \> p.\pageref{ATAN}\\
+\verb|b=ATN(a)|	\>arc-tangent \> p.\pageref{ATN}\\
+\verb|b=ATAN2(a,c)|	\>extended arc-tangent \> p.\pageref{ATAN2}\\
+%\verb|b=ACOT(a)|	\>arc-cotangent \> p.\pageref{ACOT}\\
+%\verb|b=ASEC(a)|	\>arc-secant \> p.\pageref{ASEC}\\
+%\verb|b=ACSC(a)|	\>arc-cosecant \> p.\pageref{ACSC}\\
+
+\verb|b=SINH(a)|	\>hyperbolic sine \> p.\pageref{SINH}\\
+\verb|b=COSH(a)|	\>hyperbolic cosine\> p.\pageref{COSH}\\
+\verb|b=TANH(a)|	\>hyperbolic tangent\> p.\pageref{TANH}\\
+%\verb|b=COTH(a)	|	\>hyperbolic cotangent\> p.\pageref{COTH}\\
+%\verb|b=SECH(a)|	\>hyperbolic secant\> p.\pageref{SECH}\\
+%\verb|b=CSCH(a)|	\>hyperbolic cosecant\> p.\pageref{CSCH}\\
+
+\verb|b=ASINH(a)|	\>hyperbolic arc-sine\> p.\pageref{ASINH}\\
+\verb|b=ACOSH(a)|	\>hyperbolic arc-cosine\> p.\pageref{ACOSH}\\
+\verb|b=ATANH(a)|	\>hyperbolic arc-tangent\> p.\pageref{ATANH}\\
+%\verb|b=ACOTH(a)|	\>hyperbolic arc-cotangent\> p.\pageref{ACOTH}\\
+%\verb|b=ASECH(a)|	\>hyperbolic arc-secant\> p.\pageref{ASECH}\\
+%\verb|b=ACSCH(a)|	\>hyperbolic arc-cosecant\> p.\pageref{ACSCH}\\
+\end{tabbing}
+
+\subsection{Random numbers}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|a=GASDEV(dummy)| 	\> random number Gauss distribution \> p.\pageref{GASDEV}\\
+\verb|a=RAND(dummy)|	\> random integer number \> p.\pageref{RAND}\\
+\verb|a=RANDOM(n)|	\> random integer number between 0 and n \> p.\pageref{RANDOM}\\
+\verb|a=RND(dummy)|	\> random number between 0 and 1 \> p.\pageref{RND}\\
+\verb|a=SRAND(seed)|	\> same as RANDOMIZE \> p.\pageref{SRAND}\\
+
+\end{tabbing}
+
+
+\section{System functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|ret%=CALL(adr%[,par])|\> Calls a machine code or C subroutine \> p.\pageref{CALL}\\
+\verb|t$=ENV$(n$)|	\>  read value of environment variable n\$\> p.\pageref{ENVS}\\
+\verb|t$=ERR$(i)| \> error message\> p.\pageref{ERRS}\\
+\verb|ret=EXEC(adr[,var])|\>see command EXEC, returns int\> p.\pageref{EXEC}\\
+\verb|i%=FORK()| \> creates a child process \> p.\pageref{FORK}\\
+\verb|d$=JULDATE$(a)|  	\>date\$ by Julian day a\> p.\pageref{JULDATES}\\
+\verb|a=JULIAN(date$)| 	\>Julian day\> p.\pageref{JULIAN}\\
+\verb|a$=PARAM$(i)| \> i'th word from the commandline \> p.\pageref{PARAMS}\\
+\verb|t$=PRG$(i)| \> program line\> p.\pageref{PRGS}\\
+\verb|a=SENSOR(i)| \> get the value from the i th sensor \> p.\pageref{SENSOR}\\
+\verb|t$=SYSTEM$(n$)| \>execute shell with command n\$\> p.\pageref{SYSTEMS}\\
+\verb|t$=UNIXTIME$(i)| \>give time\$ from TIMER value\> p.\pageref{UNIXTIMES}\\
+\verb|d$=UNIXDATE$(i)| \>give date\$ from TIMER value\> p.\pageref{UNIXDATES}\\
+\end{tabbing}
+
+\section{Graphic functions}
+\begin{tabbing}
+XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|c=COLOR_RGB(r,g,b[,a])| \> allocate color by rgb(a) value\> p.\pageref{COLORiRGB}\\
+\verb|a=EVENT?(mask%)| \> returns TRUE if a graphics event is pending \> p.\pageref{EVENTf}\\
+%\verb|| \>  \> p.\pageref{}\\
+\verb|a=FORM_ALERT(n,t$)| \>	 message box with default button n\> p.\pageref{FORMiALERT}\\
+\verb|~FORM_CENTER(adr%,x,y,w,h)| \>centers the object tree on screen \> p.\pageref{FORMiCENTER}\\
+\verb|a=FORM_DIAL(,,,,,,,,)|   \> complex function for screen preparation\> p.\pageref{FORMiDIAL}\\
+\verb|a=FORM_DO(i)|            \> do dialog\> p.\pageref{FORMiDO}\\
+\verb|c=GET_COLOR(r,g,b)|      \> allocate color by rgb value\> p.\pageref{GETiCOLOR}\\
+\verb|d=OBJC_DRAW(,,,,)|       \> draw object tree\> p.\pageref{OBJCiDRAW}\\
+\verb|ob=OBJC_FIND(tree,x,y)|  \> return object number by coordinates\> p.\pageref{OBJCiFIND}\\
+\verb|a=OBJC_OFFSET(t%,o,x,y)| \> calculate absolute object coordinates\> p.\pageref{OBJCiOFFSET}\\
+\verb|c=POINT(x,y)|            \> returns color of pixel of graphic in window\> p.\pageref{POINT}\\
+\verb|c=PTST(x,y)|             \> returns color of pixel of graphic in window\> p.\pageref{PTST}\\
+\verb|a=RSRC_GADDR(typ,nr)|    \> get pointer to object tree\> p.\pageref{RSRCiGADDR}\\
+\end{tabbing}
+
+\section{Other functions}
+\begin{tabbing}
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+\verb|a=EVAL(t$)|        \> evaluate expression contained in t\$\> p.\pageref{EVAL}\\
+\verb|m=MAX(a,b,c,...)|  \> returns biggest value               \> p.\pageref{MAX}\\
+\verb|m=MAX(f())| 	 \> not implemented yet\\
+\verb|m=MIN(a,b,c,...)|  \>  returns smallest value             \> p.\pageref{MIN}\\
+\verb|m=MIN(array())|    \> not implemented yet\\
+\verb|m=MIN(function())| \> not implemented yet\\
+\end{tabbing}
+
+
+\section{Subroutines and Functions}
+\paragraph{Subroutines}
+are  blocks  of  code that can be called from
+elsewhere in the program.  Subroutines can  take  arguments
+but  return  no  results.  They  can  access all variables
+available but also may have local variables  (-->  LOCAL).
+Subroutines are defined with
+\begin{verbatim}
+       PROCEDURE name(argumentlist)
+         ...  many commands
+       RETURN
+\end{verbatim}
+
+\paragraph{Functions}
+are blocks of code that can be called from elsewhere 
+within an expression (e.g \verb|a=3*@myfunction(b)|).  Functions  can take
+arguments and must return a result.  Variables are global unless declared 
+local. For local variables changes outside a function have no effect within
+the function except as explicitly specified within the function. Functions 
+arguments can be variables and arrays of any types. Functions can return 
+variables of any type. By default, arguments are passed by value. Functions
+can be executed recursively. A function will be defined by:
+\begin{verbatim}
+       FUNCTION name(argumentlist)
+         .. many more calculations
+         RETURN returnvalue
+       ENDFUNCTION
+\end{verbatim}
+
+\section{Error Messages}
+
+X11-Basic can produce a number of internal errors, which are referred 
+to by a number (ERR) (see also ERROR).
+
+The meaning of this errors and their text expression is as follows:
+
+\begin{tabbing}
+\input{39_Errors.sec}
+\end{tabbing}

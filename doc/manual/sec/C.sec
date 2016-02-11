@@ -1,0 +1,730 @@
+#############################################################################
+Command: CALL
+Syntax:  CALL adr%[,<parameter-list>]
+
+DESCRIPTION:
+
+	Calls a machine code or C subroutine at address <adr> without return
+	value.
+	Optional parameters are passed on the stack. (like in C).
+	The default parameter-type is (4-Byte) integer.
+	If you want to specify other types, please use prefixes:
+	
+	D: -- double (8-Bytes)
+	F: -- float  (4-Bytes)
+	L: -- long int, pointer (4-Bytes)
+
+EXAMPLE:
+	DIM result(100)
+	LINK #1,"simlib.so"
+	adr%=SYM_ADR(#1,"CalcBeta")
+	CALL adr%,D:1.2,L:0,L:VARPTR(result(0))
+	UNLINK #1
+	
+SEE ALSO: CALL(), EXEC
+*##############################################################################
+
+Function: CALL()
+Syntax:   ret%=CALL(adr%[,<parameter-list>])
+
+DESCRIPTION:
+
+	Calls a machine code or C subroutine at address <adr%> and returns
+	an integer value ret%.
+	Optional parameters are passed on the stack. (like in C).
+	The default parameter-type is (4-Byte) integer.
+	If you want to specify other types, please use prefixes:
+	
+	D: -- double (8-Bytes)
+	F: -- float  (4-Bytes)
+	L: -- long int, pointer (4-Bytes)
+
+EXAMPLE:
+	DIM result(100)
+	LINK #1,"simlib.so"
+	adr%=SYM_ADR(#1,"CalcZeta")
+	ret%=CALL(adr%,D:1.2,L:0,L:VARPTR(result(0)))
+	UNLINK #1
+
+SEE ALSO: CALL, EXEC
+#############################################################################
+
+Function: CARD()
+Syntax:   a%=CARD(b%)
+
+DESCRIPTION:
+
+	Returns lower 16 bits of b%. (same as a%=b% AND (2^16-1))
+
+EXAMPLE: 
+  PRINT CARD(-200)     ! Result: 65336
+
+SEE ALSO: BYTE(), WORD(), SWAP()
+
+#############################################################################
+
+Keyword:  CASE
+Syntax:   CASE <num-expression>[,<num-expression>,...]
+
+DESCRIPTION:
+
+	CASE takes a list of expressions to be compared with the expression of
+	the corresponding SELECT statement. 
+
+EXAMPLE:
+
+i=5
+SELECT i
+  CASE 1
+    PRINT 1
+  CASE 2,3,4
+    PRINT "its 2,3, or 4"
+  CASE 5
+    PRINT 5
+  DEFAULT
+    PRINT "default"
+ENDSELECT
+
+SEE ALSO: SELECT, DEFAULT, ENDSELECT
+#############################################################################
+Function:  CBRT()
+Syntax:    a=CBRT(x)
+
+DESCRIPTION:
+
+       The  CBRT()  function  returns  the  cube root of x.  This
+       function cannot fail; every representable real value has a
+       representable real cube root.
+
+EXAMPLE: 
+  PRINT CBRT(8)     ! Result: 2
+
+SEE ALSO: SQRT()
+#############################################################################
+
+Function: CEIL()
+Syntax:   <num-result>=CEIL(<num-expression>)
+
+DESCRIPTION:
+
+	Ceiling function: return smallest integral value not less than
+	argument.
+
+EXAMPLE: 
+
+  PRINT CEIL(-1.5), CEIL(0.5)   ! result: -1  1
+
+SEE ALSO: INT()
+
+#############################################################################
+
+Command: CHAIN
+Syntax:  CHAIN <file-name>
+
+DESCRIPTION:
+
+	CHAIN loads and runs another BASIC  program.
+        Global variables  will  be available with their current
+        value to the new program, all other variables are erased. If you  want
+        to  append  another  program  to  the  current  program (as opposed to
+        erasing the current program and loading a new program), use the  MERGE
+        command instead.
+	
+SEE ALSO: LOAD, MERGE, RUN
+#############################################################################
+
+Command: CHDIR
+Syntax:  CHDIR <path-name>
+
+DESCRIPTION:
+
+	CHDIR changes the current working directory to the directory specified 
+	in path-name.
+	
+EXAMPLE:
+	CHDIR "/tmp"
+	
+	
+SEE ALSO: MKDIR, RMDIR, DIR$()
+#############################################################################
+
+Command: CHMOD
+Syntax:  CHMOD <file-name>, <mode>
+
+DESCRIPTION:
+
+	CHMOD changes the permissions of a file. The new file permissions are 
+	specified in mode, which is a bit mask created by ORing (or adding) 
+	together zero or more of the following:
+
+\begin{verbatim}	
+        -     1 execute/search by others ("search" applies for directories, 
+	    	  and means that entries within the directory can be accessed)
+	-     2 write by others
+	-     4 read by others
+	-     8 execute/search by group
+	- 0x010 write by group
+        - 0x020 read by group
+	- 0x040 execute/search by owner
+        - 0x080 write by owner
+	- 0x100 read by owner
+	- 0x200 sticky bit
+	- 0x400 set-group-ID
+	- 0x800 set-user-ID
+\end{verbatim}
+	
+	
+EXAMPLE:
+	CHMOD "/tmp/file",0x1e8
+	
+SEE ALSO: OPEN
+	
+#############################################################################
+
+Function:   CHR$()
+Syntax:     <string-result> = CHR$(<num-expression>)
+DESCRIPTION:
+
+	CHR$() returns the character associated with a given ASCII code.
+	If the argument is in the range of 0-255 it produces exactly one byte.
+	
+
+
+Character table
+
+\begin{verbatim}
+     032      048  0    064  @   080  P    096  `   112  p
+     033  !   049  1    065  A   081  Q    097  a   113  q
+     034  "   050  2    066  B   082  R    098  b   114  r
+     035  #   051  3    067  C   083  S    099  c   115  s
+     036  $   052  4    068  D   084  T    100  d   116  t
+     037  %   053  5    069  E   085  U    101  e   117  u
+     038  &   054  6    070  F   086  V    102  f   118  v
+     039  '   055  7    071  G   087  W    103  g   119  w
+     040  (   056  8    072  H   088  X    104  h   120  x
+     041  )   057  9    073  I   089  Y    105  i   121  y
+     042  *   058  :    074  J   090  Z    106  j   122  z
+     043  +   059  ;    075  K   091  [    107  k   123  {
+     044  ,   060  <    076  L   092  \    108  l   124  |
+     045  -   061  =    077  M   093  ]    109  m   125  }
+     046  .   062  >    078  N   094  ^    110  n   126  ~
+     047  /   063  ?    079  O   095  _    111  o   127
+\end{verbatim}
+
+ Control codes
+
+\begin{verbatim}
+     00 NUL	      08 BS   -- Backspace	  16 DLE
+     01 SOH	      09 HT   -- horizontal TAB   17 DC1  -- XON
+     02 STX	      10 LF   -- Newline	  18 DC2
+     03 ETX	      11 VT			  19 DC3  -- XOFF
+     04 EOT	      12 FF   -- Form feed	  20 DC4
+     05 ENQ	      13 CR   -- Carriage Return  21 NAK
+     06 ACK	      14 SO			  22 SYN
+     07 BEL  -- Bell  15 SI			  23 ETB
+ 
+     24 CAN	      32 SP  -- Space
+     25 EM	     127 DEL -- Delete
+     26 SUB
+     27 ESC28 FS
+     29 GS
+     30 RT
+     31 US
+\end{verbatim}
+    
+COMMENT:
+	You should avoid to pass an argument outside of the range 0-255 for
+	compatibility reasons.
+	Currently only the lowest 8 bits are taken, but in future the function 
+	could be extended to also produce unicode charackters 
+	(up to three bytes) taking the unicode values (0-0xffff).
+    
+    
+EXAMPLE:
+       PRINT CHR$(34);"Hello World !";CHR$(34)
+       Result: "Hello World !"
+
+SEE ALSO: ASC()
+##############################################################################
+Function:   CINT()
+Syntax:     <num-result>=CINT(<num-expression>) 
+DESCRIPTION:
+
+	CINT() returns the rounded absolute value of its argument prefixed
+	with the sign of its argument.
+
+EXAMPLE:
+	PRINT CINT(1.4), CINT(-1.7)
+       	Result: 2, -2
+
+SEE ALSO:   INT(), FRAC(), TRUNC(), ROUND()       
+#############################################################################
+Command: CIRCLE
+Syntax:  CIRCLE <x>,<y>,<r>[,<w1>,<w2>]
+
+DESCRIPTION:
+
+	Draw a circle with actual color (and fillpattern).
+	The x- and y-coordinates of the center and the radius of the circle 
+	are given in screen coordinates and pixels.
+	Optionally a starting angle <w1> and stop angle <w2> can be passed
+	to draw a circular arc. 
+
+EXAMPLE:
+        CIRCLE 100,100,50
+
+SEE ALSO:   ELLIPSE, COLOR, DEFFILL, PCIRCLE
+#############################################################################
+Command: CLEAR
+Syntax:  CLEAR 
+
+DESCRIPTION:
+
+	Clear all variables and arrays as if they were never used before.
+
+SEE ALSO:   NEW	 
+#############################################################################
+Command: CLEARW
+Syntax:  CLEARW [<num>]
+
+DESCRIPTION:
+
+	Clear graphic window. If a number is given, clear window with the
+	number given. The Window is filled with the background color, which 
+	can be specified by COLOR.
+
+EXAMPLE:
+  foreground=COLOR_RGB(1,1,1) ! white
+  background=COLOR_RGB(0,0,1) ! blue
+  COLOR foreground,background
+  CLEARW
+  SHOWPAGE
+
+SEE ALSO:   CLOSEW, COLOR
+#############################################################################
+Command: CLIP
+Syntax:  CLIP x,y,w,h[,ox,oy]
+
+DESCRIPTION:
+
+	This command provide the 'Clipping' function, ie. the 
+        limiting of graphic display within a specified  rectangular 
+        screen area.
+        The command CLIP defines the clipping rectangle starting at the upper 
+	left coordinates x,y and extends w pixels wide and h high.
+        The optional additional command parameters ox,oy make it possible to 
+	redefine the origin of the graphic display. 
+
+COMMENT:
+	This command is still buggy. Do not use it.
+
+EXAMPLE: 
+  CLIP 0,0,100,100,50,50
+  CIRCLE 0,0,55
+  SHOWPAGE
+
+SEE ALSO:  
+#############################################################################
+
+Command: CLOSE
+Syntax:  CLOSE [[#]n[,[#]<num-expression>,...]]
+
+DESCRIPTION:
+	
+	This statement is used to CLOSE one or more OPEN files or other
+	devices. The parameter expression indicates a device number or file
+	number. If no file or device numbers are declared all OPEN devices will
+	be closed.
+	
+COMMENT:
+	All files should be closed before leaving a program to insure that data
+	will not be lost or destroyed. If a program exit is through END or
+	QUIT, all files will be closed. If a program is stopped with the STOP
+	command, all open files remain open.
+
+EXAMPLE:
+        CLOSE #1,#2
+        CLOSE
+
+SEE ALSO:    OPEN, LINK       
+#############################################################################
+
+Command: CLOSEW
+Syntax:  CLOSEW [<num>]
+
+DESCRIPTION:
+
+	Close graphic window (make it disappear from the screen). If a number
+	is given, closes window with the number given. The Window will again be
+	opened, when the next graphic command is executed. This command has no 
+	effect on Android.
+
+SEE ALSO:   CLEARW
+#############################################################################
+
+Command: CLR
+Syntax:  CLR <var>[,<var>,...]
+
+DESCRIPTION:
+
+	Clear the variables given in the list.
+	Sets specified variables or arrays to 0 or "".
+
+EXAMPLE: 
+  CLR a,t$,i%,b()
+
+SEE ALSO: ARRAYFILL
+#############################################################################
+
+Command: CLS
+Syntax:  CLS
+
+DESCRIPTION:
+	Clear text screen and move cursor home (upper left corner).
+
+EXAMPLE: 
+  CLS
+  PRINT "This is now a title line on an empty text screen."
+
+SEE ALSO:   PRINT
+#############################################################################
+
+Command: COLOR
+Syntax:  COLOR <foreground-color>[,<background-color>]
+
+DESCRIPTION:
+
+	COLOR sets the foreground color (and optionally the background color) 
+	for graphic output into the graphic window. The color values are 
+	dependent of the color depth of the Screen. Usually the COLOR
+	statement is used together with the COLOR_RGB() function, so arbitrary
+	colors may be used.
+
+EXAMPLE:
+	yellow=COLOR_RGB(1,1,0)
+	blue=COLOR_RGB(0,0,1)
+	COLOR yellow,blue
+
+SEE ALSO: COLOR_RGB(), LINE
+
+##############################################################################
+
+Function:   COLOR_RGB()
+Syntax:     c%=COLOR_RGB(r,g,b[,a])
+
+DESCRIPTION:
+
+	COLOR_GRB() returns a color number for the specified color.
+	The rgb-values range from 0 (dark) to 1.0 (bright).
+	The returned number depends on the screen depth of the bitmap used.
+	For 8 bit a color cell is allocated or if there is no free cell, a
+	color is chosen which is most similar to the specified.
+	
+	The optional parameter a is the alpha value (0...1), which will be 
+	used if it is supported by the graphics system.
+	
+	The color numbers may be passed to the COLOR command.
+	
+EXAMPLE:   
+	yellow=COLOR_RGB(1,1,0)
+	COLOR yellow
+
+SEE ALSO:  COLOR
+##############################################################################
+
+Variable: COLS
+Syntax:   n%=COLS 
+
+DESCRIPTION:
+
+	Returns the number of colums of the text terminal (console).
+	
+EXAMPLE: 
+  PRINT COLS, ROWS     ! Result: 80      24
+
+SEE ALSO: ROWS, PRINT AT(), CRSCOL, CRSLIN
+##############################################################################
+Function:   COMBIN()
+Syntax:     <num-result>=COMBIN(<n>,<k>)
+
+DESCRIPTION:
+
+	   Calculates the number of combinations of <n> elements to  the 
+           <k>th class without repetitions. Defined as z=n!/((n-k)!*k!).
+EXAMPLE:
+  PRINT COMBIN(49,6)    ! result:  13983816
+
+SEE ALSO: FACT(), VARIAT()
+##############################################################################
+
+Function:   COMPRESS$()
+Syntax:     c$=COMPRESS$(a$)
+
+DESCRIPTION:
+
+           Performs a lossless compression on the string a$.
+	   The algorithm uses run length encoding in combination with 
+	   the Burrows-Wheeler transform. The result is a better compression 
+	   than p.ex. the algorithm used by gzip. At the moment the 
+	   COMPRESS$() function is identical to following combination:
+	   b$=ARIE$(RLE$(MTFE$(BWTE$(RLE$(a$)))))
+           
+SEE ALSO:  UNCOMPRESS$(), BWTE$(), RLE$(), MTFE$()
+##############################################################################
+
+Function:   CONJ()
+Syntax:     x#=CONJ(z#)
+
+DESCRIPTION:
+
+	Returns the complex conjugate value of z#.  
+	That is the value obtained by changing the sign of the imaginary part.
+
+EXAMPLE: 
+	PRINT CONJ(1-2i)     Result: (1+2i)
+
+SEE ALSO:  IMAG(), REAL()
+#############################################################################
+
+Command: CONNECT
+Syntax:  CONNECT #n,server$,port%
+
+DESCRIPTION:
+
+	Initiate a connection on a socket.
+
+	The file number #n must refer to a socket. If the socket is of type "U"
+	then the server$ address is the address to which packets are sent by
+	default, and the only address from which packets are received. If the
+	socket is of type "S","A","C", this call attempts to make a connection
+	to another socket. The other socket is specified by  server$, which is
+	an address in the communications space of the socket. 
+
+	Generally, connection-based protocol sockets may successfully connect
+	only once; connectionless protocol sockets may use connect multiple
+	times to change their association.
+
+SEE ALSO:   OPEN, CLOSE, SEND, RECEIVE       
+
+#############################################################################
+
+Command: CONTINUE
+Syntax:  CONT
+         CONTINUE
+
+DESCRIPTION:
+
+	This command has two different use cases. If used in direct mode, it
+	continues the execution of a program after interruption (e.g. with STOP).
+
+	If used inside a SELECT/ENDSELECT block, it branches to the line 
+	following the next CASE or DEFAULT directive. If no CASE or DEFAULT
+	statement is found, it branches to ENDSELECT.
+
+EXAMPLE:
+	INPUT a
+	SELECT a
+	CASE 1
+	  PRINT 1
+	  CONTINUE
+	CASE 2
+	  PRINT "1 or 2"
+	CASE 3
+	  PRINT 3
+	DEFAULT
+	  PRINT "default"
+	ENDSELECT
+
+
+SEE ALSO: STOP, SELECT, CASE, DEFAULT, BREAK
+##############################################################################
+Command: COPYAREA
+Syntax:  COPYAREA x,y,w,h,xd,yd
+
+DESCRIPTION:
+
+	 Copies a rectangular screen sections given by x,y,w,h to
+	 a destination at xd,yd.
+	 
+           x,y    top left corner of source rectangle
+           w,h    width & height  "   "        "
+           xd,yd    destination x and y coordinates
+
+	This command is very fast compared to the GET and PUT commands because 
+	the whole data transfer takes place on the X-client (this means on the
+	screen directly without datatransfer to the program).
+
+
+SEE ALSO: GET, PUT, GRAPHMODE
+##############################################################################
+
+Function:   COS()
+Syntax:     b=COS(x)
+	    z#=COS(x#)
+	
+
+DESCRIPTION:
+
+	Returns the Cosine of the expression in radians. Also returns the 
+	complex cosine of a complex expression.
+	The complex cosine function is defined as:
+
+           cos#(z) := (exp#(1i*z#)+exp#(-1i*z#))/2
+
+EXAMPLE: 
+	PRINT COS(0)        ! Result: 1
+	PRINT COS#(0+1i)    ! Result: 1.543080634815+0i
+
+SEE ALSO:  SIN(), ASIN()
+*##############################################################################
+
+Function:   COSH()
+Syntax:     b=COSH(x)
+	    z#=COSH(x#)
+
+DESCRIPTION:
+
+	The  cosh()  function  returns the hyperbolic cosine of x, which is
+	defined mathematically as (exp(x)+exp(-x))/2
+	Also returns the complex hyperbolic cosine of a complex 
+	number or expression.
+
+SEE ALSO:  COS(), ACOSH(), EXP()
+###############################################################################
+
+Function:   CRC()
+Syntax:     <num-result>=CRC(t$[,oc])
+
+DESCRIPTION:
+
+	 Calculates a 32 bit checksum on the given string. Optionally
+	 another checksum can be passed as oc.
+	 If oc is passed, the checksum will be updated with the 
+	 given string.
+
+SEE ALSO:  LEN()
+
+#############################################################################
+
+Variable: CRSCOL,  CRSLIN
+Syntax:   CRSCOL
+          CRSLIN
+
+DESCRIPTION:
+
+	Returns current cursor line and column.
+
+SEE ALSO:  PRINT AT()
+#############################################################################
+
+Variable: CTIMER
+Syntax:   CTIMER
+
+DESCRIPTION:
+
+	Returns CPU-Clock in seconds. This timer returns the amount of time
+	this application was running. It is most useful for benchmark 
+	applications on multi-tasking environments. 
+
+COMMENT: 
+	The UNIX standard allows for arbitrary values at the start of the 
+	program; subtract the value returned from a CTIMER at the start of 
+	the program to get maximum portability. 
+	It is also not guaranteed, that the values will not repeat itself. 
+	On a 32-bit system this function will return the same value 
+	approximately every 72 minutes.
+
+EXAMPLE:
+t=CTIMER
+FOR i=0 TO 100000
+  NOOP
+NEXT i
+ref=(CTIMER-t)/100000
+print "Ref=",str$(ref*1000,5,5);" ms"
+
+SEE ALSO: TIMER, STIMER
+#############################################################################
+
+Command: CURVE
+Syntax:  CURVE x0,y0,x1,y1,x2,y2,x3,y3
+
+DESCRIPTION:
+
+	The CURVE command draws a cubic Bezier-curve. The Bezier-curve starts
+	at x0,y0 and ends at x3,y3. The curve at x0,y0 is at a tangent with
+	a line from  x0,y0 to x1,y1; and at x3,y3 is at a tangent with a 
+	line between x3,y3 and x2,y2.
+     
+SEE ALSO:   LINE, POLYLINE
+
+##############################################################################
+
+Function:   CVA()
+Syntax:     <array-result>=CVA(<string-expression>)
+DESCRIPTION:
+
+	Returns array reconstructed from the string.
+	This function is the complement of MKA$().
+
+EXAMPLE: 
+	a()=CVA(t$)
+	
+SEE ALSO:  ASC(), CVF(), CVL(), MKA$()
+##############################################################################
+
+Function:   CVD()
+Syntax:     <num-result>=CVD(<string-expression>)
+DESCRIPTION:
+
+	Returns the binary double value of the first 8 characters of string.
+	This function is the complement of MKD$().
+
+SEE ALSO:  ASC(), CVF(), CVL(), MKD$()
+*##############################################################################
+
+Function:   CVF()
+Syntax:     <num-result>=CVF(<string-expression>)
+DESCRIPTION:
+
+	Returns the binary float value of the first 4 characters of a string.
+	This function is the complement of MKF$().
+
+SEE ALSO:  ASC(), CVD(), CVL(), MKF$()
+
+*##############################################################################
+
+Function:   CVI()
+Syntax:     <num-result>=CVI(<string-expression>)
+DESCRIPTION:
+
+	Returns the binary integer value of the first 2 characters of a string.
+	This function is the complement of MKI$(). Null string returns 0, 
+	For strings with only one byte length the ASCII value of that charackter 
+	will be returned.
+
+SEE ALSO:  ASC(), CVF(), CVL(), MKI$()
+
+*##############################################################################
+
+Function:   CVL()
+Syntax:     <num-result>=CVL(<string-expression>)
+DESCRIPTION:
+
+	Returns the binary long integer value of the first 4 characters of 
+	a string. This function is the complement of MKL$(). 
+	Null string returns 0.
+
+SEE ALSO:  ASC(), CVF(), CVI(), MKL$()
+
+*##############################################################################
+
+Function:   CVS()
+Syntax:     <num-result>=CVS(<string-expression>)
+DESCRIPTION:
+
+	Returns the binary float value of the first 4 characters of a string.
+	This function is the complement of MKS$().
+
+SEE ALSO:  CVF(), MKS$()
+
+##############################################################################

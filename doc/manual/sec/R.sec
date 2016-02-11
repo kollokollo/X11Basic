@@ -1,0 +1,577 @@
+##############################################################################
+Function:  RAD()
+Syntax:    r=RAD(x)
+
+DESCRIPTION:
+
+	Converts x from degrees to radians.
+
+EXAMPLE:
+        PRINT RAD(180)      ! Result: 3.14159265359
+
+SEE ALSO: DEG()
+##############################################################################
+Function:  RADIX$()
+Syntax:    a$=RADIX$(x%[,base%[,len%]])
+
+DESCRIPTION:
+
+	RADIX$() returns a string containing the representation of the integer
+	number x% in base base%. A minimal length of the string can be 
+	specified with len%. If len% is bigger then necessary, preceiding Zeros 
+	will be used to fill in. The base% can be between 2 and 62 inclusive. 
+	If base% is not specified it defaults to 62. The symbols used are
+	digits from 0 to 9 then capital letters A to Z and then lowercase 
+	letters a to z, followed by @ and $.
+
+EXAMPLE:
+        PRINT RADIX$(180,17)      ! Result: AA
+
+SEE ALSO: BIN$(), OCT$(), HEX$()
+##############################################################################
+Function:  RAND()
+Syntax:    r%=RAND(0)
+
+DESCRIPTION:
+
+	RAND() returns a pseudo-random integer number between 0 (inclusive)
+	and 2147483647. The sequence of pseudo-random numbers is
+	identical each time you start the interpreter unless the RANDOMIZE
+	statement is used prior to using RANDOM(): RANDOMIZE seeds the
+	pseudo-random number generator to get a new sequence of numbers from
+	RANDOM().
+
+SEE ALSO: RND(), RANDOMIZE, GASDEV
+
+EXAMPLE:
+  RANDOMIZE TIMER
+  FOR i=0 TO 10000
+    a=MAX(a,RAND(0))
+  NEXT i
+  PRINT a,HEX$(a)
+  
+SEE ALSO: RANDOM(), RND(), RANDOMIZE, GASDEV
+##############################################################################
+Function:  RANDOM()
+Syntax:    r%=RANDOM(maximum%)
+           r&=RANDOM(maximum&)
+           r=RANDOM(maximum)
+           r#=RANDOM(maximum#)
+ 
+DESCRIPTION:
+
+	RANDOM() returns a pseudo-random (integer) number between 0 (inclusive)
+	and maximum% (exclusive). The sequence of pseudo-random numbers is
+	identical each time you start the interpreter unless the RANDOMIZE
+	statement is used prior to using RANDOM(): RANDOMIZE seeds the
+	pseudo-random number generator to get a new sequence of numbers from
+	RANDOM(). If the argument is a floating point or complex expression, 
+	a random floatingpoint or complex number between 0 (inclusive)
+	and maximum (exclusive) is returned.
+
+EXAMPLE:
+        PRINT RANDOM(10)    !   Result: 8
+	PRINT RANDOM(10.1)  !   Result: 8.065922004714
+	PRINT RANDOM(1+2i)  !   (0.9116473579368+1.596880066952i)
+	PRINT RANDOM(10000000000000000000) ! Result: 7314076133279565627
+	
+SEE ALSO: RND(), RANDOMIZE, GASDEV
+##############################################################################
+
+Command: RANDOMIZE
+Syntax:  RANDOMIZE [<seed-expression>]
+
+DESCRIPTION:
+
+	RANDOMIZE seeds the pseudo-random number generator  to  get  a  new
+	sequence of numbers from RND(). Recommended argument to RANDOMIZE is a
+	"random" number to randomly  select  a sequence of pseudo-random
+	numbers. If RANDOMIZE is not used then the sequence  of  numbers 
+	returned  by  RND()  will  be identical each time the interpreter is
+	started. If no argument is given, the TIMER value will be used as a
+	seed.
+
+SEE ALSO: RND(), TIMER
+##############################################################################
+
+Command: RBOX
+Syntax:  RBOX x1,y1,x2,y2
+
+DESCRIPTION:
+
+	Draws a rectangle with rounded corners from the two diagonally
+	opposite corner points 'x1,y1' and 'x2,y2'
+
+SEE ALSO: BOX, PBOX, PRBOX
+
+#############################################################################
+
+Command: READ
+Syntax:  READ var[,var2, ...] 
+
+DESCRIPTION:
+
+	Reads constant values from a DATA command and assigns them to a
+	variable 'var'. Reading is taken from the last point a RESTORE was
+	done (if any).
+
+SEE ALSO: DATA, RESTORE
+##############################################################################
+
+Function:   REAL()
+Syntax:     x=REAL(z#)
+
+DESCRIPTION:
+
+	Returns the real part of the complex number z#.  
+	
+
+EXAMPLE: 
+	PRINT REAL(1-2i)     Result: 1
+
+SEE ALSO:  CONJ(), IMAG()
+#############################################################################
+Function: REALLOC
+Syntax:  adr_new%=REALLOC(adr%,newsize%) 
+
+DESCRIPTION:
+
+	The  realloc() function changes the size of the memory block 
+	pointed to by adr% to newsize% bytes.  The contents will be 
+	unchanged in the range from the start of the region up to the 
+	minimum of the old and new sizes.  If the new size is larger 
+	than the old size, the added memory will not be initialized.   
+	If  adr%  is 0,  then  the call is equivalent to MALLOC(newsize%), 
+	for all values of newsize; if newsize is equal to zero, and adr% is
+        not 0, then  the call is equivalent to FREE(adr%).  Unless adr% is
+        0, it must have been returned by an earlier call to MALLOC(),
+	or REALLOC().  If the area pointed to was moved, a FREE(adr%) is
+        done.
+
+SEE ALSO: MALLOC(), FREE
+
+##############################################################################
+Command: RECEIVE
+Syntax:  RECEIVE #n,t$[,a]
+
+DESCRIPTION:
+
+	RECEIVE is used to receive messages t$ from a socket or USB-device 
+	#n, which has been opened with OPEN before. If a is given, this
+	variable will take the host address of the sender (IPv4 32 bit
+	format).
+
+	
+SEE ALSO: OPEN, SEND
+	
+##############################################################################
+Command: RELSEEK
+Syntax:  RELSEEK [#]n,d	
+
+DESCRIPTION:
+
+	Place file pointer on new relative position d which means it moves 
+	the file pointer forward (d>0) or backwards (d<0) d bytes.
+
+SEE ALSO: SEEK, LOC(), LOF(), EOF()
+
+##############################################################################
+
+Command: REM      Abbrev. '
+Syntax:  REM This is a comment
+         ' This also is a comment
+DESCRIPTION:
+	This command reserves the entire line for a comment.
+
+COMMENT:
+
+	Note, that rem is an abbreviation for remark. 
+
+	Do use comments in your programs, the more the better. Yes, the
+	program  will become longer, but it's nice to be able to understand a
+	well-documented program that you've never seen before. Or one of your
+	own  masterpieces that you haven't looked at for a couple of years.
+	Don't worry about the speed of your program, the slowdown is only 
+	marginally. A comment after '!' has no influence on the speed of a
+	program at all, so you can use these everywhere.
+
+SEE ALSO:  ! 
+##############################################################################
+
+Command: RENAME
+Syntax:  RENAME oldpathfilename$,newpathfilename$
+        
+DESCRIPTION:
+	RENAME renames a file, moving it between directories if required.
+	If newpathfilename$ already exists it will be atomically replaced.
+	oldpathfilename$ can specify a directory. In this case, 
+	newpathfilename$ must either not exist, or it must specify an empty 
+	directory.
+
+EXAMPLE: 
+	RENAME "myfile.dat","/tmp/myfile.dat"
+
+SEE ALSO:  KILL, OPEN
+##############################################################################
+
+Command: REPEAT
+Syntax:  REPEAT ... UNTIL <expression>
+
+DESCRIPTION:
+
+	REPEAT initiates a REPEAT...UNTIL loop. The loop  ends  with  UNTIL 
+	and  execution  reiterates  until  the  UNTIL <expression> is not FALSE
+	(not null). The loop  body  is  executed  at least  once.
+
+SEE ALSO:  DO, LOOP, UNTIL, EXIT IF, BREAK, WHILE
+EXAMPLE:
+        REPEAT
+            INC n
+        UNTIL n=10
+##############################################################################
+
+Function:   REPLACE$()
+Syntax:     n$=REPLACE$(t$,s$,r$) 
+DESCRIPTION:
+
+	REPLACE$() returns string-expression where all search strings s$ have
+	been replaced by r$ in t$.
+
+SEE ALSO:   INSTR(), WORT_SEP
+EXAMPLE:
+       PRINT REPLACE$("Hello","l","w")
+       Result: Hewwo
+
+##############################################################################
+
+Command: RESTORE
+Syntax:  RESTORE [<label>]
+
+DESCRIPTION:
+
+	RESTORE sets the  position  DATA  is  read from  to the first DATA line
+	of the program (or to the first DATA line after <label> if RESTORE is
+	used with an argument).
+
+SEE ALSO: DATA, READ
+EXAMPLE:
+        READ  a, b, c
+        RESTORE
+        READ  a, b, c
+        DATA  1, 2, 3
+##############################################################################
+
+Command: RESUME
+Syntax:  RESUME
+         RESUME NEXT
+	 RESUME <label>
+
+DESCRIPTION:
+
+	 
+	The  RESUME command is especially meaningful with error  capture  (ON
+	ERROR GOSUB) where it allows a reaction to an error. Anyway, X11-Basic
+	allows the us of RESUME <label> everywhere in the program (instead of
+	GOTO <label>), and can be used to jump out of  a subroutine. If you
+	jump into another Subroutine, you must not reach its RETURN
+	statement. RESUME is a bad command and I dislike it very much.
+
+        RESUME repeats the erroneous command.  
+        RESUME NEXT resumes program execution after an incorrect command.
+        RESUME <label> branches to the <label>.
+        If a fatal error occurs only RESUME <label> is possible 
+
+COMMENT:
+	**** RESUME is still not working. If you use ON ERROR GOSUB to a
+	subroutine then RESUME NEXT is the default if the subroutine  reaches
+	a RETURN. If you want to resume somewhere else you can just GOTO out
+	of the subroutine. This is possible, but leaves the internal stack 
+	pointer incremented, so you should not do this too often during
+	run-time. Otherwise there will be a stack overflow after 200 events.
+
+	**** looks like this also happens with ON ERROR GOTO. 
+
+	*** In future versions of X11-Basic there might be a RESUME <label> 
+	command which properly resets the stack. If you want this to be
+	fixed,  please send me an email with your test program. 
+
+
+SEE ALSO: ON ERROR, GOTO, ERROR
+
+##############################################################################
+
+Command: RETURN
+Syntax:  RETURN 
+	 RETURN <expression>
+
+DESCRIPTION:
+
+	RETURN terminates a PROCEDURE reached via GOSUB and resumes execution
+	after the calling line. Note that code reached via ON ERROR GOSUB
+	should be terminated with a RESUME NEXT, not with RETURN.
+
+	RETURN <expression> states the result of the expression as a result of
+	a user defined function. This can not be used in PROCEDURES but in
+	FUNCTIONS. The expression must be of the type the function was. 
+
+SEE ALSO: PROCEDURE, FUNCTION, ENDFUNCTION, RESUME, GOSUB, @, ON ERROR
+EXAMPLE:
+        PROCEDURE testroutine
+            PRINT "Hello World !"
+        RETURN
+        FUNCTION givemefive
+            RETURN 5
+        ENDFUNCTION
+##############################################################################
+
+Function: REVERSE$()
+Syntax:  a$=REVERSE$(t$) 
+
+DESCRIPTION:
+
+        Return the reverses of a string. 
+
+EXAMPLE:
+	print reverse$("Markus Hoffmann")
+	Result: nnamffoH sukraM
+
+SEE ALSO:  UPPER$(), TRIM$()
+
+##############################################################################
+
+Function:   RIGHT$()
+Syntax:     a$=RIGHT$(t$[,number]) 
+DESCRIPTION:
+
+	RIGHT$() returns the specified number of characters from its string 
+	argument, beginning at its right side. If the number of characters is
+	not specified then RIGHT$() returns only the rightmost character.
+
+SEE ALSO:   LEFT$(), MID$()
+EXAMPLE:
+       PRINT RIGHT$("Hello",1)
+       Result: o
+##############################################################################
+
+Function:   RIGHTOF$()
+Syntax:     a$=RIGHTOF$(t$,s$) 
+DESCRIPTION:
+
+	RIGHTOF$() returns the right part of t$ at the position of the first 
+	occurrence of s$ in t$. 
+	If s$ is not contained in t$, an empty string is returned.
+
+SEE ALSO:   RIGHTOF$(), MID$()
+EXAMPLE:
+       PRINT RIGHTOF$("Hello","ll")
+       Result: o
+##############################################################################
+
+Function:  RINSTR()
+Syntax:    <int-result>=RINSTR(s1$,s2$[,n])  
+
+DESCRIPTION:
+
+	Operates in same way as INSTR except that search begins at the right
+	end of s1$.
+
+	If the string s2$ is not found in s1$, a 0 is returned. If found, the
+	start position of s2$ in s1$ is returned. 
+	
+	If n is specified, the comparison starts at at position n instead of
+	the end of the string s1$
+
+SEE ALSO: INSTR()
+##############################################################################
+
+Function:  RLD$()
+Syntax:    a$=RLD$(a$)  
+
+DESCRIPTION:
+
+	Does a run length decoding of string a$. This function reverses the 
+	run length encoding function RLE$() on a string.
+
+	In the input string, any two consecutive characters with the same
+	value flag a run. A byte following those two characters gives the
+	count of additional(!) repeat characters, which can be anything from 0
+	to 255.
+
+EXAMPLE:
+	PRINT RLD$("1233"+CHR$(8)+"456")
+	Result: 123333333333456
+	
+SEE ALSO: RLE$()
+
+##############################################################################
+
+Function:  RLE$()
+Syntax:    a$=RLE$(a$)  
+
+DESCRIPTION:
+
+	Does a run length encoding of string a$. 
+
+	In the output string, any two consecutive characters with the same
+	value flag a run. A byte following those two characters gives the
+	count of additional(!) repeat characters, which can be anything from 0
+	to 255. The resulting string might be shorter than the input string if
+	there are many equal characters following each other. In the worst
+	case the resulting string will be 50% longer.
+
+EXAMPLE: 
+	PRINT RLE$("123.....................................456")
+	Result: 123..#456
+
+SEE ALSO: RLD$()
+#############################################################################
+
+Command: RMDIR
+Syntax:  RMDIR <path-name>
+
+DESCRIPTION:
+
+	RMDIR deletes a directory, which must be empty.
+	
+	
+EXAMPLE:
+	RMDIR "old"
+	
+	
+SEE ALSO: MKDIR, CHDIR
+
+##############################################################################
+
+Function:  RND()
+Syntax:    r = RND([<dummy>])
+
+DESCRIPTION:
+
+	RND() returns a pseudo-random number between 0 (inclusive) and 1
+	(exclusive) with a uniform distribution. The sequence of pseudo-random
+	numbers is identical each time you start the interpreter unless the
+	RANDOMIZE statement is used prior to using RND(): RANDOMIZE seeds the
+	pseudo-random number generator to get a new sequence of numbers from
+	RND(). The optional dummy parameter is ignored. The granularity of
+	the random values depends on the operating system and is usually only
+	32 bits.
+
+SEE ALSO:  RANDOMIZE, GASDEV(), RANDOM()
+
+EXAMPLE:
+        PRINT RND(1)
+        Result: 0.3352227557149
+##############################################################################
+
+Function: ROL()
+Syntax:   i%=ROL(j%,n%[,b%])
+
+DESCRIPTION:
+
+	Returns the bit pattern in j% rotated left by n% bits. The optional 
+	field length b% defaults to 32.
+
+EXAMPLE: 
+	PRINT ROL(8,2)     !  Result: 32
+	PRINT ROL(8,2,4)   !  Result: 2
+
+SEE ALSO: SHL(), ROR()
+##############################################################################
+
+Command: ROOTWINDOW
+Syntax:  ROOTWINDOW
+
+DESCRIPTION:
+
+	Directs all following graphic output to the root window of the screen.
+	(root window = desktop background).
+
+COMMENT: 
+	The root window is usually the desktop background. Not in any case is
+	the root window really shown. On linux systems the GNOME desktop 
+	always overwrites the root window, so output of X11-Basic is not 
+	visible. Use another windowmanager like fvwm2 instead.
+
+
+SEE ALSO: USEWINDOW
+#############################################################################
+
+Function: ROOT()
+Syntax:   b&=ROOT(a&,n%)
+
+DESCRIPTION:
+
+	Returns the truncated integer part of the nth root of a. 
+
+SEE ALSO: SQRT()
+##############################################################################
+
+Function: ROR()
+Syntax:   i%=ROR(j%,n%[,b%])
+
+DESCRIPTION:
+
+	Returns the bit pattern in j% rotated right by n% bits. The optional 
+	field length b% defaults to 32.
+
+EXAMPLE: 
+	PRINT ROR(8,2)     !  Result: 2
+	PRINT ROR(8,2,3)   !  Result: 8
+	PRINT ROR(8,4,8)   !  Result: 128
+
+SEE ALSO: SHR(), ROL()
+#############################################################################
+
+Function: ROUND()
+Syntax:   b=ROUND(a[,n])
+
+DESCRIPTION:
+
+	Rounds off a value to n fractional digits. 
+	If n<0: round to digits in front of the decimal point.
+
+SEE ALSO: INT(), FIX(), FLOOR(), TRUNC()
+##############################################################################
+Variable: ROWS
+Syntax:   n%=ROWS
+
+DESCRIPTION:
+
+          Returns the number of rows of the text terminal (console).
+
+EXAMPLE: 
+  PRINT COLS, ROWS     ! Result: 80      24
+
+SEE ALSO: COLS, PRINT AT(), CRSCOL, CRSLIN
+##############################################################################
+Command: RSRC_FREE
+Syntax:  RSRC_FREE
+
+DESCRIPTION:
+
+	RSRC_FREE unloads the graphical resources loaded with RSRC_LOAD and
+	frees any memory assigned to it.
+
+SEE ALSO: RSRC_LOAD
+
+##############################################################################
+Command: RSRC_LOAD
+Syntax:  RSRC_LOAD filename$
+
+DESCRIPTION:
+
+	RSRC_LOAD loads a GEM resource file (*.rsc)-File (ATARI ST format)
+	into memory and prepares it to be used.
+
+SEE ALSO: RSRC_FREE, OBJ_DRAW(), FORM_DO()
+##############################################################################
+
+Command: RUN
+Syntax:  RUN
+
+DESCRIPTION:
+
+	starts program execution (RUN)
+
+SEE ALSO: STOP, CONT, LOAD
+##############################################################################

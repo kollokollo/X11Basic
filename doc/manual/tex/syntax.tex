@@ -1,0 +1,36 @@
+\chapter{Command Reference}
+
+This chapter is a command reference for quick lookup of short explanations of 
+all bult-in X11-Basic operators, variables, commands, and functions.
+
+\section{Syntax templates}
+
+This manual describes the syntax of BASIC commands and BASIC functions  in
+a generalized form. Here is an example:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=yellow!20]
+\begin{verbatim}
+PRINT [#<device-number>,] <expression> [<,>|<;> [...]]
+\end{verbatim}
+\end{mdframed}
+
+Those parts of the command that must appear literally in the  source  code
+(like PRINT in the example above) are all uppercase. Descriptions in angle
+brackets ("<>") are not meant to appear literally in the source  code  but
+are  descriptive  references to the element that is supposed to be used in
+the source code at this place, like a variable, a numeric expression  etc.
+Optional elements are listed inside square brackets ("[]").  They  may  be
+omitted  from  the  command  line.  Mutually  exclusive  alternatives  are
+separated by the "|" character. Exactly  one  of  these  alternatives must
+appear  in  the  command  line. Finally, repetitive syntax is indicated by
+three dots "...". Here are some BASIC command lines  that  all  match  the
+syntax template above:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT x
+PRINT #1,2*y
+PRINT "result = ";result
+\end{verbatim}
+\end{mdframed}
+

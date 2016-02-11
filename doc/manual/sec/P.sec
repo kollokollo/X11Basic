@@ -1,0 +1,606 @@
+##############################################################################
+Function:  PARAM$()
+Syntax:    p$=PARAM$(i%)
+
+DESCRIPTION:
+
+	Returns the i'th word from the commandline. Usually parameters are 
+	passed this way to a program. The PARAM$(0) usually is the name of the
+	program, which has been excecuted. If there are no more parameter 
+	words, an empty string will be returned.
+
+EXAMPLE:
+
+i=1
+WHILE LEN(param$(i))
+  IF LEFT$(param$(i))="-"
+    IF param$(i)="--help" OR param$(i)="-h"
+      @intro
+      @using
+    ELSE IF param$(i)="--version"
+      @intro
+      QUIT
+    ELSE IF param$(i)="-o"
+      INC i
+      IF LEN(param$(i))
+        outputfilename$=param$(i)
+      ENDIF
+    ENDIF
+  ELSE
+    inputfile$=param$(i)
+  ENDIF
+  INC i
+WEND
+
+##############################################################################
+Command:  PAUSE
+Syntax:   PAUSE <sec>
+
+DESCRIPTION:
+        
+        pauses <sec> seconds. 
+        The resolution of this command is microseconds (in theory). 
+
+##############################################################################
+Command:  PBOX
+Syntax:   PBOX  x1,y1,x2,y2 
+
+DESCRIPTION:
+
+        Draws a filled box with corners x1,y1 and x2,y2.
+        
+SEE ALSO: BOX, RBOX, DEFFILL, COLOR
+##############################################################################
+Variable: PC
+Syntax:   i%=PC 
+
+DESCRIPTION:
+
+	Returns the Program counter value. 
+	This is normally the line number of the line actually processed, or the
+	pointer into bytecode of the code actually processed.
+
+SEE ALSO: SP
+##############################################################################
+Command:  PCIRCLE        
+Syntax:   PCIRCLE x%,y%,r%[,a1,a2]
+
+DESCRIPTION:
+
+	Draws a filled circle (or sector) at center coordinates x,y with
+	radius r and optional starting angle a1 and ending angle a2 (in
+	radians).
+
+SEE ALSO: CIRCLE, DEFFILL, COLOR
+##############################################################################
+Function:  PEEK()
+Syntax:    <int-result>=PEEK(<address>)
+
+DESCRIPTION:
+
+	PEEK() reads a byte from an address in memory. The following example 
+	dumps a section of the internal memory near a string t$.
+
+EXAMPLE:
+
+t$="Hallo, this is a string..."
+i=varptr(t$)-2000
+DO
+  PRINT "$";HEX$(i,8,8)'
+  FOR iu=0 TO 15
+    PRINT HEX$(PEEK(i+iu) and 255,2,2)'
+  NEXT iu
+  PRINT '
+  FOR iu=0 TO 15
+    a=PEEK(i+iu)
+    IF a>31
+      PRINT CHR$(a);
+    ELSE 
+      PRINT ".";
+    ENDIF
+  NEXT iu
+  PRINT
+  ADD i,16
+LOOP
+
+SEE ALSO: POKE
+##############################################################################
+Command:  PELLIPSE
+Syntax:   PELLIPSE x,y,a,b[,a1,a2]
+
+DESCRIPTION:
+
+	Draws a filled ellipse (or or elliptic sector) at center coordinates 
+	x,y with radii a and b.
+
+SEE ALSO: PCIRCLE, ELLIPSE, DEFFILL, COLOR
+##############################################################################
+Variable: PI
+Syntax:   a=PI 
+
+DESCRIPTION:
+          Returns the value of PI. 
+	  The value of PI is 3.1415926535... etc.
+	
+
+SEE ALSO: SIN(), COS(), EXP()
+##############################################################################
+Command:  PIPE
+Syntax:   PIPE #n1,#n2
+
+DESCRIPTION:
+
+	PIPE links two file channels n1 and n2 together to form a pipe. n1 
+	is  for reading, n2 is for writing. Whatever you write to the pipe 
+	can be read from it at a different time. The content is buffered  in
+	the kernel. The mechanism is FIFI (0 first in first out).  The biggest
+	advantage is, that you can read and write to it from different
+	processes (created by FORK()). This allows  inter-process
+	communication.
+
+EXAMPLE:
+
+PIPE #1,#2
+PRINT #2,"Hello, get me out of the pipe..."
+FLUSH #2
+LINEINPUT #1,t$
+PRINT t$
+        
+SEE ALSO: CLOSE, OPEN, FORK()
+##############################################################################
+Command:  PLAYSOUND
+Syntax:   PLAYSOUND channel,s$
+
+DESCRIPTION:
+
+        PLAYSOUND plays a WAV sample on the sound card.  
+        s$ must contain the data from a sound file. (WAV format).
+        The saple is then played once on the channel c. If c is -1 a free 
+        channel is selected. There are 16 channels. (currently this only works 
+        in the MS WINDOWS or SDL version.)
+        
+EXAMPLE:
+        OPEN "I",#1,"sound.wav"
+        t$=INPUT$(#1,LOF(#1))
+        CLOSE #1
+        PLAYSOUND ,t$
+
+SEE ALSO: SOUND
+##############################################################################
+Command:  PLAYSOUNDFILE
+Syntax:   PLAYSOUNDFILE filename$
+
+DESCRIPTION:
+
+        PLAYSOUNDFILE play a soundfile of standard file formats like
+        WAV, OGG, MP3. The sound is played in the background. Any previously 
+        played sounds will be stopped if they have not been finished so far.
+        (currently this only works in the ANDROID version of X11-Basic.)
+        
+EXAMPLE:
+        PLAYSOUNDFILE "/mnt/sdcard/bas/explosion.ogg"
+
+SEE ALSO: SOUND, PLAYSOUND
+##############################################################################
+Command:  PLIST 
+Syntax:   PLIST
+
+DESCRIPTION:
+
+        Outputs a formatted listing of the actual program in memory.
+        Also the internal tokens are printed ans some internal 
+        Information. This is intended for internal use only.
+
+EXAMPLE:
+        
+> PLIST
+   0: $00001a |   0,0 |CLS
+   1: $000279 |   0,0 |PRINT
+   2: $000279 |   0,1 |PRINT " example how to use the ANSI color spec."
+   3: $000279 |   0,0 |PRINT
+   4: $000279 |   0,1 |PRINT "X 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0"
+   5: $310240 |  12,1 |FOR U=0 TO 3
+   6: $310240 |  11,1 |  FOR J=0 TO 7
+   7: $310240 |  10,1 |    FOR I=0 TO 7
+   8: $000279 |   0,1 |      PRINT AT(J+6,2*I+2+16*U);CHR$(27)+"["+STR$(U)+\
+                                    ";"+STR$(30+I)+";"+STR$(40+J)+"m *";
+   9: $320266 |   7,1 |    NEXT I
+  10: $320266 |   6,1 |  NEXT J
+  11: $320266 |   5,1 |NEXT U
+  12: $000279 |   0,0 |PRINT
+  13: $00047f |   0,0 |QUIT
+  14: $0008ff |   0,0 |=?=> 2303
+
+        
+SEE ALSO: LIST
+##############################################################################
+Command:  PLOT
+Syntax:   PLOT x,y
+
+DESCRIPTION:
+
+        Draws a point (single pixel) at screen coordinate x,y
+
+SEE ALSO: LINE, POINT(), COLOR
+##############################################################################
+Function:  PNGDECODE$()
+Syntax:    bmp$=PNGDECODE$(png$)
+
+DESCRIPTION:
+
+	Converts the content of png$ which should contain data of a 
+	Portable Network Graphics format into a bmp data format which then
+	can be pasted to the screen with PUT.
+
+EXAMPLE: 
+	  OPEN "I",#1,"image.png"
+          png$=INPUT$(#1,LOF(#1))
+	  CLOSE #1
+	  bmp$=PNGDECODE$(png$)
+          PUT 32,32,bmp$        ! display the image
+	  SHOWPAGE
+
+SEE ALSO: PUT, PNGENCODE$()
+##############################################################################
+Function:  PNGENCODE$()
+Syntax:    png$=PNGENCODE$(bmp$)
+
+DESCRIPTION:
+
+	Converts bitmap data in bmp$ into the Portable Network Graphics format.
+	The content of png$ can then be saved into a file with ending .png.
+
+EXAMPLE: 
+	   SGET screen$    ! save the graphics screen content in screen$
+	   png$=PNGENCODE$(screen$)
+	   BSAVE "screen.png",varptr(png$),len(png$)
+
+SEE ALSO: GET, SGET, BSAVE, PNGDECODE$()
+##############################################################################
+Function:  POINT()
+Syntax:    c=POINT(x,y)
+
+DESCRIPTION:
+
+        Returns the color of the graphic point x,y in the current window.
+        The color values are of the same format than those used by COLOR and
+        returned by GET_COLOR().
+
+SEE ALSO: PLOT, COLOR
+##############################################################################
+Command:  POKE
+Syntax:   POKE adr%,byte%         
+
+DESCRIPTION:
+
+        POKE writes a byte to address adr% of the program memory.
+
+SEE ALSO: PEEK(),DPOKE,LPOKE
+##############################################################################
+Command:  POLYFILL
+Syntax:   POLYFILL n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+	POLYFILL draws a filled polygon with n corners. The x,y  coordinates
+	for the corner points are given in arrays  x() and y(). The optional
+	parameters x_off,y_off will be added to each of these coordinates.
+
+        POLYFILL fills the polygon with the color and pattern previously 
+        defined by COLOR and DEFFILL.
+        
+SEE ALSO: COLOR, DEFFILL, POLYLINE, POLYMARK
+##############################################################################
+Command:  POLYLINE
+Syntax:   POLYLINE n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+	POLYLINE draws a polygon with n corners.  The x,y  coordinates for
+	the corner points are given in  arrays  x() and y(). The optional
+	parameters x_off,y_off will be added to each of these coordinates.
+
+        To draw a closed polygon, the first point hast to be equal to the 
+        last point.
+        
+
+SEE ALSO: LINE, DEFLINE, COLOR, POLYFILL, POLYMARK
+##############################################################################
+Command:  POLYMARK
+Syntax:   POLYMARK n,x(),y()[,x_off,y_off]       
+
+DESCRIPTION:
+
+	POLYMARK marks the corner points of an invisible polygon with n
+	corners. The x,y coordinates for the corner points are given in 
+	arrays x() and y(). The optional parameters x_off,y_off will be added
+	to each of these coordinates.
+
+        POLYMARK  marks the points with the shape defined by DEFMARK.
+
+SEE ALSO: COLOR, DEFLINE, POLYLINE, POLYFILL
+##############################################################################
+Function:  POWM()
+Syntax:    c&=POWM(base&,exp&,m&)
+
+DESCRIPTION:
+
+	Return (base raised to exp) modulo m.
+	c=base^exp mod m
+
+        A negative exp is supported if an inverse base^-1 mod m exists. 
+	
+SEE ALSO: INVERT()
+##############################################################################
+Command:  PRBOX
+Syntax:   PRBOX x1,y1,x2,y2
+
+DESCRIPTION:
+
+        Draws a filled box with rounded corners at x1,y1 and x2,y2.
+        
+SEE ALSO: BOX, PBOX, DEFFILL, COLOR
+##############################################################################
+Function:  PRED()
+Syntax:    i=PRED(x)
+
+DESCRIPTION:
+	PRED() returns the preceding integer of x.
+	It returns the biggest integer value that is less
+       	than x.
+	
+EXAMPLE: 
+	PRINT PRED(1.2345)   Result: 1 
+	PRINT PRED(0.6)      Result: 0 
+	PRINT PRED(-0.5)     Result: -1 
+	PRINT PRED(0)        Result: -1 
+	
+##############################################################################
+Function:  PRG$()
+Syntax:    t$=PRG$(i%)
+
+DESCRIPTION:
+        PRG$() returns the i'th BASIC program line (source code). It 
+	will of course only work in the interpreter.
+
+COMMENT: This does not work in compiled programs.
+
+SEE ALSO: TRON, TRACE, TRACE$, PC
+##############################################################################
+Command: PRINT 
+Syntax:  PRINT [[AT(),TAB(),SPC(),COLOR()]a$|b|const|USING|...{;',}]
+
+DESCRIPTION:
+
+	   The print-statement writes all its arguments to the screen 
+	   (standard output); after writing its last argument, print goes to
+	   the next line (as in PRINT "Hello ",a$," !"); to avoid this
+	   automatic newline, place a semicolon (;) after the last argument
+	   (as in PRINT "Please enter your Name:";). To insert a tabulator
+	   instead of the automatic newline append a colon (,), e.g. print
+	   "Please enter your Name:", . Note that print can be abbreviated
+	   with a single question mark (?). 
+	   
+	   The PRINT command has special functions, which modify the appearance 
+	   of the text and the position of the text on the screen. Namely 
+	   AT(), TAB(), SPC() and COLOR(). Also a powerful formatting is possible
+	   with PRINT USING.
+
+EXAMPLE: 
+	   PRINT "Hello ",a$," !"
+	   PRINT "Please enter your Name:";
+	   ? "A short form..."
+
+SEE ALSO:  PRINT AT(), PRINT COLOR(), PRINT TAB(), PRINT SPC(), PRINT USING
+*#############################################################################
+Command:   PRINT AT()
+Syntax:    PRINT AT(line,row)[;...]
+      
+DESCRIPTION:
+	   For interactive programs you might want to print output at specific
+	   screen locations. PRINT AT(lin,row) will place the text cursor at 
+	   row row line lin. The top left corner of the screen corresponds to the 
+	   position (1,1).  
+	   
+EXAMPLE: 
+   PRINT AT(4,7);"Test"
+   PRINT AT(3,1);"   This is a Title   "
+
+SEE ALSO: GPRINT, COLS, ROWS, CRSCOL, CRSLIN
+*#############################################################################
+Command:   PRINT TAB() SPC()
+Syntax:    PRINT TAB(x)[;...]
+	   PRINT SPC(x)[;...]
+
+DESCRIPTION:
+
+           TAB(x) and SPC(x) move the text cursor x positions to the right. 
+	   TAB starts at the beginning of the line, 
+	   SPC at current cursor position.
+	   So TAB is an absolute and SPC a relative movement. 
+
+
+EXAMPLE: 
+   PRINT "Hallo";TAB(30);"Test"
+   PRINT "Hallo";SPC(30);"Test"
+
+SEE ALSO: GPRINT, COLS, ROWS, CRSCOL, CRSLIN
+*#############################################################################
+Command:   PRINT COLOR()
+Syntax:    PRINT COLOR(s[,s2,...]) 
+
+DESCRIPTION:
+
+	Changes the foreground and background text color and also sets the
+	style attributes for the console text. 
+
+           The COLOR statement s can be of three types depending on their
+	   number range. Their meaning is:
+
+           Text Mode:           Text color:              Background color: \\
+
+           0  default setting   30  black                40  black \\
+           1  intensive         31  red                  41  red \\
+           2  dark              32  green                42  green \\
+                                33  yellow               43  yellow \\
+           4  underline         34  blue                 44  blue \\
+           5  blink             35  magenta              45  magenta \\
+                                36  cyan                 46  cyan \\
+           7  reverse           37  white                47  white \\
+	   
+	   You can pass one or more arguments to the COLOR() function to
+	   combine the attributes and colors.
+
+EXAMPLE:   
+	PRINT COLOR(32,2);"Hallo"
+
+SEE ALSO: COLOR()
+##############################################################################
+Command:   PRINT USING
+Syntax:    PRINT a$ USING format$ 
+
+DESCRIPTION:
+
+	   To control the way numbers are printed, use the PRINT USING
+	   statement: PRINT 12.34 USING "###.####" produces 12.3400. The
+	   format string ("###.####") consists of hashes (#) with one optional
+	   dot and it pictures the appearance of the number to print. 
+	   For all the details of this command please read the X11-Basic 
+	   user manual.
+EXAMPLE:   
+	PRINT 12.34 USING "###.####"
+
+SEE ALSO: STR$(), USING$()
+##############################################################################
+Command:   PROCEDURE
+Syntax:    PROCEDURE procname [(p1 [,p2] ... )]  * RETURN
+
+DESCRIPTION:
+
+	PROCEDURE starts a user-defined multi-line subroutine which can be
+	executed by the GOSUB command. Any number of parameters may be passed
+	to the PROCEDURE via the parameter list. The variables in that list
+	act like local variables inside the subroutine.
+
+	All variables declared inside the PROCEDURE block are global variables
+	unless you declare them as local with the LOCAL command. Variables in
+	the calling line reach the PROCEDURE "by-value" unless the VAR keyword
+	is used in the calling line. In that case, the variable is passed
+	"by-reference" to the PROCEDURE so that the PROCEDURE "gets" the 
+	variable and not only its value. Variables passed "by-reference" can
+	be changed by the PROCEDURE. The PROCEDURE block is terminated by the
+	RETURN statement which resumes execution of the calling expression.
+	Unlike a FUNCTION-subroutine, a PROCEDURE can not return a value.
+
+	Procedures are usually defined at the end of the program source code.
+	The program flow may not hit a procedure or function definition. In
+	this case it would produce an error 36 - error in program structure.
+	If you want them in the middle of the "main" part, use GOTOs to jump
+	over them.
+
+
+EXAMPLE:
+        PRINT "this is the main part of the program
+        GOTO a
+        PROCEDURE b
+          PRINT "this is inside the procedure..."
+        RETURN
+        a:
+        PRINT "go on"
+        GOSUB b
+        END
+
+SEE ALSO: GOSUB, RETURN, LOCAL, FUNCTION
+##############################################################################
+Command:   PROGRAM
+Syntax:    PROGRAM <title>
+
+DESCRIPTION:
+	This statement does nothing. it is ignored. It can be used to 
+	specify a title to the program. In future releases this statement
+	may be used to pass some options to the compiler.
+
+SEE ALSO: REM
+##############################################################################
+Function:  PTST()
+Syntax:    c=PTST(x,y)
+
+DESCRIPTION:
+
+        PTST returns the color of the graphic point x,y in the
+        current window.  It is the same as POINT().
+
+SEE ALSO: POINT(),PLOT
+##############################################################################
+Command: PUT
+Syntax:  PUT <x>,<y>,<var$>[,<scale>[,<transparency>[,xs,ys,w,h],angle]]
+
+DESCRIPTION:
+
+	Maps a graphic bitmap contained in var$ into the graphic window
+	at  coordinate x,y. The picture can be scaled by <scale> factor
+	(default: 1). The file or data format used in var$ is a BMP file
+	format. It can contain uncompressed bitmaps optionally with alpha
+	channel. 
+
+	If you want to paint only a portion of the image you can specify 
+	the coordinates, width and height of a rectangular area of the 
+	source image (after scaling).  
+
+	(*not implemented yet: a rotation angle and if transparency is
+	given and the picture has a color table,  this is interpreted as a
+	color index, which  will be treated as transparent. If an alpha
+	channel is present, this is used as a threshold for the alpha
+	value (0-255). Default is 32. If the coordinates xs,ys,w,h are
+	given, only a rectangular part of the image is mapped.) 
+
+	If you want to use .png files for your icons to be mapped with
+	PUT, first convert them with PNGDECODE$() to BMP. Also the alpha
+	channel can be preserved. The images also can be included into the
+	sourcecode of the program. See the tool inline.bas on how to make
+	inline data. 
+
+COMMENT: 
+        You must avoid to put the image or parts of the image outside of the
+        screen. Always make sure, that the image or the specified 
+	portion of the image fits on the screen.
+
+EXAMPLE:
+
+      OPEN "I",#1,"picture.bmp"
+      t$=INPUT$(#1,LOF(#1))
+      CLOSE #1
+      CLEARW 
+      PUT 0,0,t$,2               ! scaled by a factor of 2
+      PUT 100,100,t$,,,0,32,32,32  ! 32x32 portion of the image is put
+      SHOWPAGE
+
+SEE ALSO:  GET, PUT_BITMAP, PNGDECODE$()
+#############################################################################
+Command: PUTBACK
+Syntax:  PUTBACK [#n,]a
+
+DESCRIPTION:
+         Puts a character back into an input channel #n.
+
+SEE ALSO:  OUT
+#############################################################################
+
+Command: PUT_BITMAP
+Syntax:  PUT_BITMAP bitmp$,x,y,w,h
+
+DESCRIPTION:
+
+        Maps a monochrome bitmap contained in bitmp$ into the graphic
+        window  at coordinate x,y. The bitmap is stored in raw
+        format, so you must  specify the size of the bitmap with w
+        (width) and h (height) in pixels. The Bitmap is drawn with
+        the color set by COLOR and transparency if  set with
+        GRAPHMODE. You must avoid to put the bitmap or parts of it 
+	outside the screen. The bitmap data format is such that the 
+	least significant bit of each byte is drawn to the left. 
+	Each line must start on a new byte. So a 9x12 Bitmap stores 
+	in 24 Bytes.
+
+SEE ALSO:  PUT, COLOR, GRAPHMODE
+#############################################################################

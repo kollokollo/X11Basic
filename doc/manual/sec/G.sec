@@ -1,0 +1,369 @@
+#############################################################################
+
+Function: GAMMA()
+Syntax:   b=GAMMA(a)
+
+DESCRIPTION:
+	
+	The Gamma function is defined by
+
+           GAMMA(x) = integral from 0 to infinity of t^(x-1) e^-t dt
+
+       It is defined for every real number except  for  non-positive  integers.
+       For non-negative integral m one has
+
+           GAMMA(m+1) = m!
+
+       and, more generally, for all x:
+
+           GAMMA(x+1) = x * GAMMA(x)
+
+       Furthermore,  the  following  is  valid for all values of x outside the
+       poles:
+
+           Gamma(x) * Gamma(1 - x) = PI / sin(PI * x)
+
+EXAMPLE:
+    PRINT GAMMA(4)    ! Result: 6
+    PRINT GAMMA(0)    ! Result: inf
+
+SEE ALSO: SIN(), COS(), LGAMMA()
+
+#############################################################################
+
+Function: GASDEV()
+Syntax:   b=GASDEV(seed)
+
+DESCRIPTION:
+
+	Returns a random number which is Gauss distributed. The numbers range 
+	from minus infinity to infinity but values around 0 are much more 
+	likely. The argument is taken as a seed for the random generator.
+	
+SEE ALSO: RND()
+
+#############################################################################
+
+Function: GCD()
+Syntax:   c&=GCD(a&,b&)
+
+DESCRIPTION:
+
+	Returns the greatest common divisor of a and b. 
+	The result is always positive even if one or both input operands 
+	are negative. Except if both inputs are zero; then this function 
+	defines GCD(0,0)=0.
+	
+EXAMPLE: 
+	PRINT GCD(120,200000)   ! Result: 40
+	
+SEE ALSO: LCM()
+
+##############################################################################
+
+Command: GET
+Syntax : GET x,y,w,h,var$[,bcolor]
+
+DESCRIPTION:
+
+	GET puts a section of the graphic window or screen into a string 
+	variable (x,y,w,h define a rectangular portion of the screen).
+	The coordinates must not lay outside of the screen.
+	If the parameter bcolor is given, this color will be used as 
+	a transparency color to the bitmap. If no bcolor is given, no 
+	transparency will be created.
+	The stored graphic can be put back on the screen with PUT.
+
+COMMENT: 
+	The content of the string is bitmapdata. If saved into a file, the
+	File will be in a common file format (currently .BMP 32bit-RGBA).
+
+EXAMPLE: 
+    GET 100,100,20,20,t$
+    PUT 200,200,t$        ! Put that portion at a different position
+
+
+SEE ALSO:  PUT, COPY_AREA, SGET
+#############################################################################
+
+Function: GET_COLOR()
+Syntax:   <num-result>=GET_COLOR(<red-value>,<green-value>,<blue-value>)
+
+DESCRIPTION:
+
+	GET_COLOR() returns a color number for the specified color.
+	The rgb-values range from 0 (dark) to 65535 (bright).
+	The returned number depends on the screen depth.
+	For 8 bit a color cell is allocated or if there is no free cell, a
+	color is chosen which is most similar to the specified.
+	The color numbers may be passed to the COLOR command.
+	
+COMMENT: 
+	GET_COLOR does not support the rgba formt. Instead COLOR_RGB() should 
+	be used. 
+	
+EXAMPLE:   
+	yellow=GET_COLOR(65535,65535,0)
+	COLOR yellow
+	
+COMMENT: This function should not be used anymore. Use COLOR_RGB() instead.
+
+SEE ALSO:  COLOR, COLOR_RGB()
+#############################################################################
+
+Command: GET_GEOMETRY
+Syntax:  GET_GEPMETRY <winnr>,<varx%>,<vary%>,<varw%>,<varh%>
+
+DESCRIPTION:
+
+	GET_GEOMETRY returns the size of the window or screen.
+	The window needed to be opened before this command can be used.
+	A SHOWPAGE will make sure, that the screen or window is allocated.
+	
+COMMENT:
+	If this command is used on Android as one of the very first
+	commands, a PAUSE 0.04 before will make sure, that the screen of the 
+	App has settled before the dimensions are taken.
+	
+EXAMPLE:
+	SHOWPAGE
+	GET_GEOMETRY ,x,y,w,h
+
+SEE ALSO:  SHOWPAGE
+#############################################################################
+
+Command: GET_LOCATION
+Syntax:  GET_LOCATION lat,lon,alt[,bearing,accuracy,speed,time[,provider$]]
+
+DESCRIPTION:
+
+	GET_LOCATION returns various data from the location device.
+	The location device can be a GPS or any other service which 
+	returns geo-information.  
+	The GPS needs to be turned on with GPS ON before.
+	
+	Return values: 
+	lat -- lattitude in degrees
+	lon -- longitude in degrees
+	alt -- altitude in meters
+	
+
+COMMENT:
+	Works only on Android devices.
+	
+EXAMPLE:   
+	GET_LOCATION x,y,a
+
+SEE ALSO:  GPS, GPS_LON, GPS_LAT, GPS_ALT
+#############################################################################
+
+Command: GET_SCREENSIZE
+Syntax:  GET_SCREENSIZE <varx%>,<vary%>,<varw%>,<varh%>
+
+DESCRIPTION:
+
+	GET_SCREENSIZE returns the size of the screen. This is the area
+	where a window can be placed.
+	
+EXAMPLE:   
+	GET_SCREENSIZE x,y,w,h
+
+SEE ALSO:  GET_GEOMETRY, MOVEW
+#############################################################################
+
+Function: GLOB()
+Syntax:   <bool>=GLOB(name$,pattern$[,flags])
+
+DESCRIPTION:
+
+GLOB() checks if name$ matches the wildcard pattern pattern$ 
+       and gives -1 (TRUE), else 0 (FALSE). The kind of check can be
+       specified with the flags parameter.
+
+       flags
+         0    -- default, no extras
+	 1    -- name$ is treated as a filename
+	         (Chars '/' are not matched)
+         2    -- Backslashes quote special characters
+         4    -- special treatment of '.'
+         8    -- just check path of file name name$
+        16    -- case insensitive
+
+EXAMPLES:
+
+GLOB("abcd","abc?")	    Result: -1
+GLOB("abcd","*")		    -1
+GLOB("abc","ab??")		     0
+GLOB("SA33333","*a[0-9]*",16)	    -1
+
+SEE ALSO: INSTR(), WORT_SEP
+
+##############################################################################
+Command: GOSUB      Abbrev.  @
+Syntax:  GOSUB <procedure-name>[(<parameterlist>)]
+
+DESCRIPTION:
+
+	GOSUB initiates a jump to the procedure specified  after  GOSUB.
+	The code reached that way must end with a RETURN statement which 
+	returns control to the calling line.
+
+	<parameterlist> contains expressions which are passed by value to 
+	local variables to the procedure. 
+	Variables can also be passed by reference (see the VAR statement). 
+	It is possible to call further procedures whilst in a procedure. 
+	It is even possible to call the procedure one is in at the time 
+	(recursive call).
+
+EXAMPLES:
+	GOSUB testproc
+	@calcvac(12,s,4,t$)
+
+SEE ALSO: PROCEDURE, RETURN, SPAWN, GOTO, EVERY, AFTER, VAR
+##############################################################################
+
+Command: GOTO
+Syntax:  GOTO <label-name>
+
+DESCRIPTION:
+
+	Allows an unconditional jump to a label.
+	
+	A label must be defined at the beginning of a line and must end in a
+	colon.
+
+COMMENT: 
+	You should not jump into a procedure or FOR-NEXT loop. If you need
+	to jump out of a loop it is better to use BREAK or EXIT IF.
+
+EXAMPLE:
+	GOTO here
+	PRINT "never"
+	here:
+	PRINT "ever"
+
+SEE ALSO: GOSUB, BREAK, EXIT IF
+##############################################################################
+Command: GPRINT
+Syntax:  GPRINT [[AT(),TAB(),SPC(),COLOR()]a$|b|const|USING|...{;',}]
+
+DESCRIPTION:
+
+	The GPRINT statement writes all its arguments to the graphic window.
+	It uses the same syntax as PRINT. Unlike PRINT the output goes to 
+	the graphic window, where a VT100-Terminal is emulated.
+	
+COMMENT:
+	On Android PRINT and GPRINT share the same output screen, but use
+	different terminals. This can lead to a mixture of charackters 
+	on the screen. Here do not use both, PRINT and GPRINT.
+	
+	There is no INPUT for GPRINT. You would have to program it yourself
+	using KEYEVENT.
+	
+EXAMPLE:
+
+  GPRINT chr$(27);"[2J";     ! Clear the graphics screen (like CLS for PRINT)
+  GPRINT AT(1,1);"This is a demo: ";1.23456 USING "##.##"
+  GPRINT "some more ..."; 
+  GPRINT " and more...";
+  GPRINT COLOR(43,35);" even color does work!"
+  SHOWPAGE
+
+SEE ALSO: PRINT, TEXT
+##############################################################################
+
+Command:  GPS
+Syntax:   GPS ON
+          GPS OFF
+
+DESCRIPTION:
+
+	Switches the GPS (Global positioning System receiver) on or off.
+	
+COMMENT:
+	If switched on this usually drains more power from the battery.
+	
+SEE ALSO: GPS?, GPS_ALT, GPS_LAT, GPS_LON, SENSOR
+##############################################################################
+
+Variable:  GPS?
+Syntax:   a=GPS?
+
+DESCRIPTION:
+
+	This system variable is 0 (FALSE) if no gps receiver is available on
+	this hardware platform.
+
+SEE ALSO: GPS, GPS_ALT, GPS_LAT, GPS_LON, SENSOR
+
+##############################################################################
+
+Variable:  GPS_ALT
+Syntax:   a=GPS_ALT
+
+DESCRIPTION:
+
+	This system variable returns the measured altitude from the GPS
+	in meters.
+	
+SEE ALSO: GPS, GPS_LAT, GPS_LON
+##############################################################################
+
+Variable:  GPS_LAT
+Syntax:   a=GPS_LAT
+
+DESCRIPTION:
+
+	This system variable returns the measured latitude from the GPS
+	in degrees.
+	
+SEE ALSO: GPS, GPS_ALT, GPS_LON
+*#############################################################################
+
+Variable:  GPS_LON
+Syntax:   a=GPS_LON
+
+DESCRIPTION:
+
+	This system variable returns the measured longitude from the GPS
+	in degrees.
+	
+SEE ALSO: GPS, GPS_ALT, GPS_LAT
+
+
+##############################################################################
+
+Command: GRAPHMODE
+Syntax:  GRAPHMODE <n>
+
+DESCRIPTION:
+
+	Sets the graphic mode:
+	
+	<n>=0     default
+	<n>=1     replace
+	<n>=2     transparent
+	<n>=3     xor
+	<n>=4     reverse transparent
+
+
+COMMENT:
+        GRAPHMODE does not yet work on all implmentations of X11-Basic. And 
+	it has limited effects (usually only on TEXT and GPRINT).
+
+SEE ALSO: GOLOR_RGB(), TEXT, GPRINT
+		
+##############################################################################
+
+Function:   GRAY()
+Syntax:     <num-result>=GRAY(<num-expression>)
+DESCRIPTION:
+
+	This function calculates the Gray-code of a given positive integer
+	number. If the number is negative, the inverse Graycode is calculated.
+		
+EXAMPLE:   
+	PRINT GRAY(34)    ! Result: 51
+
+##############################################################################

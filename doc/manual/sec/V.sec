@@ -1,0 +1,132 @@
+##############################################################################
+
+Function: VAL()
+Syntax:   <num-result> = VAL(<string-expression>)
+
+DESCRIPTION:
+
+	VAL() converts String representing a floating point number into 
+	a numeric value. If the string does not represent a valid number
+	0 is returned.
+
+SEE ALSO:  VAL?(),STR$()
+EXAMPLE:
+        a=VAL("3.1415926")
+
+*#############################################################################
+
+Function: VAL?()
+Syntax:   a=val?(t$)
+
+DESCRIPTION:
+	Returns the number of characters from a string which can be converted 
+	to a number. 
+
+
+EXAMPLE:
+	print val?("12345.67e12Hallo")  Result: 11
+SEE ALSO:  VAL()
+
+##############################################################################
+Operator:   VAR
+Syntax:     PROCEDURE name(...,VAR a,...)
+            FUNCTION  name(...,VAR z,...)
+
+DESCRIPTION:
+
+	This operator can declare a variable in a parameter list of a procedure
+	or a function to be passed by reference instead of by value.
+	This is useful to pass (more than one) return values. 
+	
+
+EXAMPLE: 
+	@sum(13,12,a)
+        @sum(7,9,b)
+        PRINT a,b
+        '
+        PROCEDURE sum(x,y,VAR z)
+          z=x+y
+        RETURN
+
+
+SEE ALSO:   PROCEDURE, FUNCTION
+
+##############################################################################
+
+Function: VARIAT()
+Syntax:   a%=VARIAT(n%,k%)
+
+DESCRIPTION:
+	Returns the number of permutations of n elements to the k-th 
+        order without repetition.
+
+EXAMPLE:
+	print VARIAT(6,2)  Result: 30
+SEE ALSO:  COMBIN(), FACT()
+
+##############################################################################
+
+Function:   VARPTR()
+Syntax:     <adr>=VARPTR(<variable>)        
+
+DESCRIPTION:
+
+	Determines the address of a variable and returns a pointer. 
+	Usually this is used together with PEEK() and POKE to modify 
+	the content of the variable.
+	VARPTR() can also be used to determine the address of an 
+	array index.
+
+EXAMPLE:
+	PRINT VARPTR(t$),VARPTR(a(2,4))
+	POKE VARPTR(t$),ASC("A")
+
+SEE ALSO: ARRPTR(), PEEK(), POKE
+
+##############################################################################
+
+Command:    VERSION
+Syntax:     VERSION        
+
+DESCRIPTION:
+
+	Shows X11-Basic version number and date.
+
+EXAMPLE:
+	VERSION   
+	Result: X11-BASIC Version: 1.08 Sat Feb 15 12:00:38 CET 2003 	
+
+##############################################################################
+
+Command:  VOID        Abbrev.   ~
+Syntax:   VOID <expression>
+
+DESCRIPTION:
+
+	This command performs a calculation and forgets the
+        result. Sounds silly but there are occasions when this
+        command is required, e.g. when you want to execute a function
+	but you are not really interested in the return value.
+        e.g. waiting for a keystroke (inp(-2)).
+
+SEE ALSO:  GOSUB, @
+EXAMPLE:
+	~INP(-2)
+	VOID FORM_ALERT(1,"[1][Hello][OK]")
+
+##############################################################################
+
+Command:  VSYNC
+Syntax:   VSYNC
+
+DESCRIPTION:
+
+	Enables synchronization with the screen. Actually this is a 
+	synonym for SHOWPAGE. Graphic output will not be shown in 
+	the window until SHOWPAGE (or VSYNC). 
+	(This command has no effect on the TomTom Device.)
+	
+SEE ALSO:  SHOWPAGE
+
+##############################################################################
+

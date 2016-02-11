@@ -1,0 +1,180 @@
+% This file is part of X11BASIC, the basic interpreter for Unix/X
+% ============================================================
+% X11BASIC is free software and comes with NO WARRANTY - read the file
+% COPYING for details
+%
+
+%\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{memoir}
+\documentclass[14pt,a4paper,twoside,headsepline,dvips,openany,final]{scrbook}
+\usepackage{xcolor}
+\definecolor{nicered}{rgb}{.64,.129,.149}
+\definecolor{nicered2}{rgb}{.64,.2,.2}
+\definecolor{MidnightBlue}{rgb}{.2,.1,.1}
+\font\GIANT=cmsl10 scaled 8000
+\usepackage{tikz}
+\usepackage{kpfonts}
+\usepackage[explicit]{titlesec}
+\newcommand*\chapterlabel{}
+\titleformat{\chapter}
+  {\gdef\chapterlabel{}
+   \normalfont\sffamily\Huge\bfseries\scshape}
+  {\gdef\chapterlabel{\thechapter\ }}{0pt}
+  {\begin{tikzpicture}[remember picture,overlay]
+    \node[yshift=-3cm] at (current page.north west)
+      {\begin{tikzpicture}[remember picture, overlay]
+        \draw[fill=nicered] (0,0) rectangle
+          (\paperwidth,3cm);
+	 \node[anchor=east,xshift=.7\paperwidth,yshift=1.6cm,rectangle,
+              inner sep=11pt,
+              fill=nicered]  {\color{nicered2} \GIANT X11-Basic};
+        \node[anchor=east,xshift=.9\paperwidth,rectangle,
+              rounded corners=20pt,inner sep=11pt,
+              fill=MidnightBlue]
+              {\color{white}\chapterlabel#1};
+       \end{tikzpicture}
+      };
+   \end{tikzpicture}
+  }
+\titlespacing*{\chapter}{0pt}{50pt}{-60pt}
+
+
+
+%\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{scrbook}
+%\documentclass[11pt,a4paper,twoside,headsepline,openany]{book}
+%-------------------------------------------------------------------------------
+% verwendete Pakete
+
+\usepackage[T1]{fontenc}                    % bessere Trennung
+\usepackage[latin1]{inputenc}               % Für üöäß,ÜÖÄ
+% \usepackage{german}                         % Trennung deutsch
+%\usepackage{times}                          % Schoenere Fonts
+\renewcommand{\sfdefault}{phv}
+\renewcommand{\rmdefault}{ptm}
+%\renewcommand{\ttdefault}{pcr}
+%\usepackage{amsfonts}                       % Blackboard Zeichen
+\usepackage{amsmath}                    % Schoenere Formeln
+% \usepackage{pifont}			% ZapfDingbats
+%\usepackage{here}                           % Fliessobjekte hier !
+%\usepackage{floatflt}                       % Umflossene Bilder
+\usepackage{url}                       % 
+\usepackage{enumitem}                       % Customizing lists
+%\usepackage{rotating}                       % Rotieren von Bildern
+%\usepackage{subfigure}                      % Unterabbildungen (vor caption !)
+\usepackage[small,bf]{caption}              % Schoenere Bildunterschriften
+
+\usepackage{sidecap}    
+\usepackage{makeidx}    
+\usepackage{graphicx,footnpag}
+\usepackage{multirow}			% Tabellentexte über mehrere Zeilen
+\usepackage{array}			% Bessere tabular & array-Umgebung
+\usepackage{exscale}			% Bessere Skalierung von \sum, \int
+\usepackage{pstricks,pst-node,pst-text,pst-3d,pst-plot,pstricks-add}
+\usepackage{pslatex}
+\usepackage[right]{eurosym}             % Euro-Symol
+\usepackage{enumitem}        % Engere Listem
+\usepackage{longtable}        % Engere Listem
+\usepackage[framemethod=tikz]{mdframed}   % for framing
+
+\newcommand*{\mybox}[2]{\colorbox{#1!30}{\parbox{.98\linewidth}{#2}}}
+
+
+
+%\setlength{\textwidth}{16.0cm}
+%\setlength{\textheight}{23.5cm}
+%\setlength{\topmargin}{-1cm}
+\setlength{\evensidemargin}{-0.55cm}
+\setlength{\oddsidemargin}{-0.55cm}
+%\setlength{\captionmargin}{20pt}
+%\renewcommand{\floatpagefraction}{0.8}
+
+\pagestyle{headings} 
+ 
+\title{X11-BASIC\\}
+\author{VERSION 1.24\\(C) 1997-2015 by Markus Hoffmann\\
+(kollo@users.sourceforge.net)\\
+(see http://x11-basic.sourceforge.net/)\\} 
+
+\makeindex  
+
+\newcommand{\goodgap}{%
+\hspace{\subfigtopskip}%
+\hspace{\subfigbottomskip}}
+\newcommand{\bb}[1]{\textbf{#1}}
+
+%\hyphenation{Ar-beits-punkt}
+
+
+\begin{document} 
+\setlist{noitemsep}
+
+\setcounter{tocdepth}{2}
+\begin{titlepage} 
+  {\begin{tikzpicture}[remember picture,overlay]
+    \node[yshift=-6cm] at (current page.north west)
+      {\begin{tikzpicture}[remember picture, overlay]
+        \draw[fill=nicered] (0,0) rectangle
+          (\paperwidth,6cm);
+	 \node[anchor=east,xshift=.8\paperwidth,yshift=2.6cm,rectangle,
+              inner sep=11pt,
+              fill=nicered]  {\color{white} \GIANT X11-BASIC};
+        \node[anchor=east,xshift=.9\paperwidth,rectangle,
+              rounded corners=20pt,inner sep=11pt,
+              fill=MidnightBlue]
+              {\color{white}\normalfont\sffamily\Huge\bfseries\scshape VERSION 1.24};
+       \end{tikzpicture}
+      };
+   \end{tikzpicture}
+  }
+       
+\begin{center}
+\vspace{6cm}
+\font\GIANTw=cmsl10 scaled 6000 %\magstep5
+{ \GIANTw {User Manual}}
+ \\[8mm]
+\vspace{6cm}
+    {\Large
+ (C) 1997-2015 by Markus Hoffmann\\
+(kollo@users.sourceforge.net)\\
+(see http://x11-basic.sourceforge.net/)\\{\tiny Latest revision: \today}}
+\end{center}
+\end{titlepage}
+
+%\begin{abstract}
+\include{tex/abstract} 
+%\end{abstract}
+\cleardoublepage
+\pagenumbering{roman}
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1} 
+\include{tex/about}
+\include{tex/usage}
+\include{tex/programming}
+\input{tex/conditions}
+\include{tex/quick}
+\include{tex/syntax}
+\include{A}
+\cleardoublepage
+\include{tex/faq}
+\include{tex/compatibility}
+\cleardoublepage
+\begin{appendix}
+\include{tex/licence}
+\end{appendix}
+%\include{literaturverzeichnis}
+%\listoftables
+%\listoffigures
+
+% ##################  INDEX  ##################
+
+
+\addcontentsline{toc}{chapter}{Index}
+%\index{Synchrotronstrahlungsspektrum|see{Synchrotronlichtspektrum}}
+%\index{Stripline-Kicker|see{Kicker}}
+
+\printindex
+\cleardoublepage		% ungerade Seite erzwingen
+\include{tex/ACKNOWLEGEMENTS}
+\cleardoublepage
+\end{document}

@@ -1,0 +1,427 @@
+##############################################################################
+
+Command:    DATA
+Syntax:     DATA [<const>[,<const>, ...]]
+DESCRIPTION:
+
+	The DATA statement is used to hold information that may be read into
+	variables using the READ statement. DATA items are a list of string or
+	numeric constants separated by commas and may appear anywhere in a
+	program. No comment statement may follow the DATA statement on the same
+	line. Items are read in the order they appear in a program. RESTORE
+	will set the pointer back to the beginning of the first DATA statement. 
+
+	Alphanumeric string information in a DATA statement need not be
+	enclosed in quotes if the first character is not a number, math sign or
+	decimal point. Leading spaces will be ignored (unless in quotes). DATA
+	statements can be included anywhere within a program and will be read
+	in order. Strings not in quotes will be capitalzed.
+
+SEE ALSO:   READ, RESTORE
+
+##############################################################################
+
+Variable:   DATE$
+Syntax:     d$=DATE$
+
+DESCRIPTION:
+
+	Returns the system date. The format is DD.MM.YYYY.
+
+EXAMPLE:
+
+	PRINT TIME$,DATE$   ! 14:49:44        11.03.2014
+
+SEE ALSO: TIME$
+##############################################################################
+
+Command: DEC
+Syntax:  DEC <num-variable>
+	
+DESCRIPTION:
+
+	Decrement Variable a. The result is a=a-1.
+
+SEE ALSO: INC
+
+##############################################################################
+Function: DECLOSE$()
+Syntax:   a$=DECLOSE$(t$)
+	
+DESCRIPTION:
+
+	Removes enclosing characters from string t$. De-closing a string, 
+	following pairs are recognized:
+	"" , '' , <> , () , {} , [], ´`
+	If the string was not enclosed with one of these pairs of characters, 
+	the string will be returned unmodified.
+
+SEE ALSO: ENCLOSE$()
+##############################################################################
+Function: DECRYPT$()
+Syntax:   t$=DECRYPT$(message$,key$[,typ%])
+	
+DESCRIPTION:
+
+	Decrypts a message, which has been encrypted with ENCRYPT$()
+	before. 
+
+COMMENT: 
+  	This function is only available if libgcrypt was compiled in.
+
+SEE ALSO: ENCRYPT$()
+
+##############################################################################
+
+Keyword: DEFAULT
+Syntax:  SELECT ... DEFAULT ... ENDSELECT
+	
+DESCRIPTION:
+
+	See SELECT.
+
+SEE ALSO: SELECT
+
+##############################################################################
+
+Command: DEFFILL
+Syntax:  DEFFILL <col>,<style>,<pattern>
+	
+DESCRIPTION:
+
+	Sets fill color and pattern.
+	<col>     - not used at the moment
+	<style>   - 0=empty, 1=filled, 2=dots, 3=lines, 4=user (not used)
+        <pattern> - 24 dotted patterns and 12 lined can by chosen.
+
+SEE ALSO: DEFLINE, DEFTEXT
+
+##############################################################################
+
+Command:    DEFFN
+Syntax:     DEFFN <function-name>[$][(<variable list>)]=<expression>
+
+DESCRIPTION:
+
+	This statement allows the user to define a single line inline function
+	that can thereafter be called by @name. This is a handy way
+	of adding functions not provided in the language. The expression may be
+	a numeric or string expression and must match the type the function
+	name would assume if it was a variable name. The name must adhere to
+	variable name syntax.
+
+EXAMPLES: 
+	DEFFN av(x,y)=SQR(x^2+y^2)  
+	a=@av(b,c)   ! call av       
+	DEFFN add$(a$,b$)=a$+b$
+
+SEE ALSO:  FUNCTION, GOSUB
+##############################################################################
+
+Command:    DEFLINE
+Syntax:     DEFLINE <style>,<thickness>[,<begin_s>,<end_s>]
+
+DESCRIPTION:
+
+	Sets line style, width and type of line start and end.
+        <style>            -- determines the style of line:
+ 			      1 Solid line
+ 			      2 Long dashed line
+ 			      3 Dotted
+ 			      4 Dot-dashed
+ 			      5 Dashed
+ 			      6 Dash dot dot ..
+ 			      7 Long Dash dot dot ..
+ 			   0x11-0xffffffff User defined (not used)
+        <thickness>        -- sets line width in pixels.
+        <begin_s>,<end_s>  -- The  start  and  end  symbols  are  defined  
+	                      by  the   last parameter, and can be:
+ 			      0 Square
+ 			      1 Arrow
+ 			      2 Round
+	The userdefined style of the line defines a dash-pattern in the 
+	nibbles: 
+	  0x11 means: 1 pixel dash, followed by 1 pixel gap.
+	  0x61 means: 1 pixel dash, followed by 6 pixel gap.
+	0x6133 means: 3 pixel dash, followed by 3 pixel gap, followed by a
+		      1 pixel dash followed by a 6 pixel gap.
+
+
+SEE ALSO: LINE, DEFFILL
+##############################################################################
+
+Command:    DEFMARK
+Syntax:     DEFMARK <color>,<style>,<size>
+
+DESCRIPTION:
+
+         Sets color, type and size of the corner points to be
+         marked using the command POLYMARK.
+         The color value will be ignored. The color of the points can be
+	 set with the COLOR command. 
+	 The following types are possible:
+	   0=point
+           1=dot (circle)
+           2=plus sign
+           3=asterisk
+           4=square
+           5=cross
+           6=hash
+           8=filled circle
+           9=filled square
+ 
+SEE ALSO: POLYMARK, DEFLINE, COLOR
+##############################################################################
+
+Command:    DEFMOUSE
+Syntax:     DEFMOUSE <style>
+
+DESCRIPTION:
+
+	Chooses a pre-defined mouse form.
+        The following mouse forms are available :
+
+           0=arrow             1=expanded (rounded) X
+           2=busy bee          3=hand, pointing finger
+           4=open hand         5=thin crosswire
+           6=thick crosswire   7=bordered crosswire
+	   and about 100 other X-Window specific symbols.
+
+SEE ALSO: HIDEM, SHOWM	   
+##############################################################################
+
+Command:    DEFTEXT
+Syntax:     DEFTEXT flag%,width,height,angle
+
+DESCRIPTION:
+
+	Defines the style, rotation and size of the line font used
+	by the LTEXT command. COLOR and linestyles (e.g. thickness) 
+	can be set with COLOR and DEFLINE.
+
+        flag% : text style - 0=monospace, 1=normal
+        angle : rotation in degrees 
+        width and height : size of text in % 
+	         (100% corresponds to 100 Pixel font)
+
+EXAMPLE:
+	DEFTEXT 0,0.05,0.1,0      ! Size of the charackters is approx 10x5 pixels
+	LTEXT 100,100,"Hello"
+
+SEE ALSO: LTEXT, TEXT, COLOR, DEFLINE
+##############################################################################
+Function: DEG()
+Syntax:  d=DEG(x)
+	
+DESCRIPTION:
+
+	Converts x from radians to degrees. 
+	
+EXAMPLE:
+  PRINT DEG(PI)        ! Result: 180
+
+SEE ALSO: RAD()
+##############################################################################
+
+Command: DELAY
+Syntax:  DELAY <num-of-seconds>	
+
+DESCRIPTION:
+
+	Same as PAUSE. Delays program execution by <num-of-seconds> seconds.	
+
+SEE ALSO: PAUSE
+##############################################################################
+
+Function: DET()
+Syntax:   d=DET(a())
+	
+DESCRIPTION:
+
+	Calculates the determinant of a (square) (two-dimensional) matrix a(). 
+
+        The determinant provides important information about a matrix of 
+	coefficients of a system of linear equations. The system has a unique 
+	solution exactly when the determinant is nonzero. When the determinant 
+	is zero there are either no solutions or many solutions.
+
+EXAMPLE: 
+
+	a()=[3,7,3,0;0,2,-1,1;5,4,3,2;6,6,4,-1]
+	PRINT DET(a())      ! Result: 105
+		
+SEE ALSO: SOLVE(),INV()
+##############################################################################
+
+Function: DEVICE()
+Syntax:   d=DEVICE(filename$)
+	
+DESCRIPTION:
+
+	Returns the device id corresponding to a file. 
+	
+	
+##############################################################################
+
+Command: DIM
+Syntax:  DIM <arrayname>(<indexes>)[,<arrayname>(<indexes>),...]
+
+DESCRIPTION:
+
+	Sets the dimensions of an array or string array. Arrays can be 
+	re-dimensioned any time.
+
+COMMENT: 
+	The argument determines the number of Entries in the array. The 
+	index count starts with 0. So DIM a(10) will produce the 
+	elements a(0), a(1), ... a(8), and a(9) (10 elements). 
+	Note: a(10) does not exist! 
+
+EXAMPLES:
+	DIM a(10)
+	DIM b(100,100)
+	DIM c$(20,30,405,6)
+
+SEE ALSO: ERASE, DIM?()
+
+*##############################################################################
+
+Function: DIM?()
+Syntax:  <num-result>=DIM?(<array-name>())
+	
+DESCRIPTION:
+
+	Determines the number of elements in an array.
+
+EXAMPLE:
+	DIM a(10,10)
+	PRINT DIM?(A())     Result: 100
+	
+SEE ALSO: DIM
+##############################################################################
+Function: DIR$()
+Syntax:  p$=DIR$(0)
+
+DESCRIPTION:
+
+	DIR$() returns the path of the current directory. The otional argument 
+	is ignored. 
+
+SEE ALSO: CHDIR, ENV$()
+##############################################################################
+
+Command: DIV
+Syntax:  DIV <num-var>,<num-expression>
+
+DESCRIPTION:
+
+	Divides the value of var by n. As var=var/n but faster.
+
+SEE ALSO: ADD, MUL, SUB
+*##############################################################################
+
+Function: DIV()
+Syntax:  <num-result>=DIV(<num-expression>,<num-expression>)
+	
+DESCRIPTION:
+
+	Divides the first value by second. 
+
+SEE ALSO: ADD(), MUL(), SUB()
+
+##############################################################################
+
+Command: DO
+Syntax:  DO ... LOOP
+	
+DESCRIPTION:
+
+	DO implements an unconditional
+        loop.  The  lines  between the DO line and the LOOP line form the loop
+        body. The unconditional DO...LOOP block  simply  loops
+        and the only way out is by EXIT IF or BREAK (or GOTO).
+
+SEE ALSO: LOOP, EXIT IF, BREAK, WHILE
+EXAMPLE:
+        DO
+            INPUT a$
+            EXIT IF a$=""
+        LOOP
+
+
+##############################################################################
+
+Keyword:   DOWNTO     
+Syntax:    FOR ... DOWNTO ...
+
+DESCRIPTION:
+
+	Used within a FOR..NEXT loop. DOWNTO indicates that the loop should
+	count backwards.  
+	e.g.: FOR c=100 DOWNTO 1 is the same as FOR c=100 TO 1 STEP -1
+
+EXAMPLE:
+  FOR i=10 DOWNTO 0
+    PRINT i
+  NEXT i
+
+SEE ALSO: FOR, TO, NEXT, STEP
+##############################################################################
+
+Function: DPEEK()
+Syntax:  value%=DPEEK(adr%)
+	
+DESCRIPTION:
+
+	Reads 2 bytes from address adr% (a word).  
+
+EXAMPLE:
+  t$=MKI$(4711)
+  PRINT DPEEK(VARPTR(t$))
+
+SEE ALSO: PEEK(), LPEEK(), DPOKE, MKI$()
+*##############################################################################
+
+Command: DPOKE
+Syntax:  DPOKE adr%,value%
+	
+DESCRIPTION:
+
+	Writes value% as a 2 byte word to address adr%.
+
+EXAMPLE:
+  t$=SPACE$(2)
+  DPOKE VARPTR(t$),4711
+  PRINT CVI(t$)
+
+SEE ALSO: PEEK(), LPEEK(), POKE, DPEEK(),CVI()
+##############################################################################
+
+Command: DRAW
+Syntax:  DRAW [<x1>,<y1>][TO <x2>,<y2>][TO <x3>,<y3>][TO ...]
+	
+DESCRIPTION:
+
+	Draws points and connects two or more points with straight lines. DRAW
+	x,y is the same as PLOT x,y. DRAW TO x,y connects the point to the last
+	set  point (set by PLOT, LINE or DRAW).
+
+SEE ALSO: LINE, PLOT
+##############################################################################
+
+Command: DUMP
+Syntax:  DUMP [t$]
+
+DESCRIPTION:
+
+	Query Information about stored Variables, names: 
+
+	DUMP                    -- Lists all used variable names
+        DUMP "@"                -- list of functions and procedures
+        DUMP ":"                -- list of all labels
+        DUMP "#"                -- list of open Files
+        DUMP "K"                -- list of all X11-Basic commands
+        DUMP "F"                -- list of all X11-Basic functions
+
+SEE ALSO: LIST, PLIST, HELP
+##############################################################################

@@ -1,0 +1,865 @@
+
+
+
+ FEATURES 
+ ======== 
+
+* X11-Basic is a structured dialect of BASIC. So it uses '''no line numbers''',
+* X11-Basic uses block structures for structured programming, but also GOTO label can be used.
+* X11-Basic supports named subroutines and functions with local variables and return values,
+* X11-Basic offers four data types:  INTEGER, FLOAT, STRING and ARRAY.
+* X11-Basic Strings may contain '''any data''' of '''any length''' (up to 4GB).
+* Arrays can be one- or multi-dimensional.
+* X11-Basic offers a complete set of math functions, unlimited parenthesis for mathematical equations.
+* X11-Basic offers all of the usual string manipulation functions including binary data treatment.
+* X11-Basic supports all file I/O functions including: OPEN, CLOSE, IOCTL, LINK, PIPE, MMAP
+* X11-Basic includes full internet socket management and UDP packages as well as TCP/IP connections. 
+* X11-Basic has DATA and READ statements together with restore points (using label: and RESTORE label).
+* X11-Basic has inline data functions, compression and encryption (only in non-US versions) 
+* X11-Basic supports Graphics (variants for libX11, SDL and framebuffer)
+* Graphical user interface functions based on the AES (ATARI ST),
+* supports Self-modifying code
+* "Binding" a X11-Basic program to the interpreter, creating a standalone executable in a single file.
+* dynamical linking to shared object files.
+* Inline data and compression
+* The X11-Basic bytecode compiler and the X11-Basic virtual machine make basic programs run really fast.
+* on Linux, a native compiler is available, which produces native executables.
+
+ - Structure elements:           - A compiler is available
+ WHILE - EXIT IF - WEND      - Many sample programs are available
+ REPEAT - EXIT IF - UNTIL    - can be used as a shell
+ DO - EXIT IF - LOOP         - can be used to write cgi-Scripts
+ IF - ELSE IF - ELSE - ENDIF 
+ FOR - EXIT IF - NEXT 
+ PROCEDURE() - RETURN 
+ FUNCTION() - RETURN - ENDFUNCTION 
+ - Variable types indicated by appendix to name: 
+ varname     REAL (double) 
+ varname%    INTEGER (long) 
+ varname$    STRING 
+ - PROCEDURE and FUNCTION can have formal parameters 
+ and local variables 
+ - DEFFN defines an inline-function 
+ - integrated graphic instructions
+
+
+1. ABOUT X11-Basic
+
+X11-Basic is a dialect of the BASIC programming language with graphics and
+sound  which integrates features like shell scripting, cgi programming and full
+graphical visualization into the easy to learn basic language on modern 
+computers.
+
+  The actual implementation runs on UNIX workstations and Linux-systems with 
+the X-Window system. In case where no X11 implementation is available, X11-Basic
+can be compiled with a frambuffer-device graphics engine. Such a version for the
+TomTom Navigation devices is available. Also porting X11-Basic to more embedded
+systems is possible. On UNIX and Linux systems, the X11 graphics engine can be
+used as well as the SDL library, the framebuffer devices or no graphics at all.
+The MS WINDOWS version supports only SDL (or no graphics at all). On Linux
+systems the ALSA sound engine can be used.
+
+
+    X11-Basic  is  as  well suited to novices as programming wizards,
+    and is appropriate for virtually all programming tasks. For science
+    and engineering X11-Basic has already proved its capability of
+    handling complex simulation and control problems.  For system
+    programs,  X11-Basic has high level language replacements for low
+    level programming features that are much easier to read, understand,
+    and maintain. For all applications, X11-Basic designed to support
+    rapid development of compact, efficient, reliable, readable,
+    portable, well structured programs.
+
+    The X11-Basic environment contains a library of GEM GUI functions
+    This makes writing GUI programs in X11-Basic faster and easier 
+    than programming with native GUI tools.
+
+                           Structured programming                            
+                                                                             
+   X11-Basic is a structured programming language. Structure is a form of    
+   visual and functional encapsulation in which multiple-line sections of    
+   program look and act like single units. The beginning and end of blocks   
+   are marked by descriptive keyword delimiters. Lines within blocks are     
+   generally indented to make the block visible.                             
+                                                                             
+   There are no line numbers and every line holds only one instruction. Jumps
+   with GOTO are possible but not necessary. All the well-known loops are
+   available including an additional command for discontinuation (--> EXIT IF).
+   Procedures and functions with return values of any type can be defined. So a
+   program can contain a main part to call the subfunctions, for example in side
+   of a loop. Whole libraries can be added with the merge command (--> MERGE).
+
+
+   A converter (--> bas2x11basic) allows to convert regular (with line 
+   numbers) ANSI-Basic programs to X11-Basic.
+
+   A third-party tool \verb|gfalist| (the project name is ONS) by Peter Backes
+   (not included in the X11-Basic package) even allows to decode GFA-Basic .gfa
+   files to ASCII.
+
+Speed of X11-Basic
+
+How fast is X11-Basic? This Question can be answered in three steps, because the
+execution speed depends if the code is interpreted, run as bytecode in a
+virtual machine, or being compiled to native machine language: 
+a) The interpreter is slow.
+b) The bytecode is fast.
+c) The compiled programs are even faster.
+
+Byte-coded programs are always interpreted faster than scripted programming 
+languages. The X11-Basic compiler can translate the X11-Basic bytecode to C, 
+which then can be compiled to native machine language using any C-compiler 
+(preferably gcc on UNIX systems). Obviously your programs will be slower than
+optimized C/C++ code and other compilers that build machine language code, but
+it already comes close.
+
+If you need highest possible speed you can load and link a separate
+DLL/shared object with the time critical part of your code written in another 
+language (e.g. C, but not ActiveX or C++). 
+
+
+Optimality of code and code overhead
+
+At a minimum the X11-Basic interpreter and the bytecode interpreter 
+(virtual machine) require about 300~KB of memory and another 300~kB of file 
+size, which includes the X11-Basic runtime-library. 
+So this is the overhead that all your programs will have.
+Compared to some Windows programs, this isn't that bad. Most likely your
+bytecode is less than 50~kB anyway (for a moderate/large application), plus any
+resources and graphics you may want to include of course. In the end the code 
+produced will be reasonably small and light enough to be also used on 
+portable devices (e.g. cell phones and navigation devices) which have only 
+a small amount of native memory (and a relatively slow processor).
+
+
+
+
+                           Copyright information                            
+
+   Copyright (C) 1997-2015 by Markus Hoffmann 
+
+   X11-Basic is free software; you can redistribute it and/or modify it 
+   under the terms of the GNU General Public License as published by the 
+   Free Software Foundation; either version 2 of the License, or (at your 
+   option) any later version.
+
+   This program is distributed in the hope that it will be useful, but 
+   WITHOUT ANY WARRANTY; without even the implied warranty of 
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+   Public License for more details.
+
+   Read the file COPYING for details.
+   
+   (Basically that means, free, open source, use and modify as you like, don't
+   incorporate it into non-free software, no warranty of any sort, don't blame
+   me if it doesn't work.)
+
+                                                                            
+2. Usage                                    
+                                                                             
+The X11-Basic interpreter is called >>xbasic<< (>>xbasic.exe<< under 
+Windows). The compiler >>xbc<< (>>xbc.exe<< under Windows).
+Under Unix these executables are usually installed in the /usr/bin/ (if 
+installed via the package management system) or in /usr/local/bin 
+(if installed manually from the source package) path.
+Under Windows, the files are installed normally under the directory 
+C:\x11basic.
+
+
+
+
+                          Installing X11-Basic                             
+  
+SuSE-Linux and RedHat                                                        
+                                                                             
+   If you got a Redhat-Package (RPM) e.g. the File                           
+   X11Basic-1.24-1.i386.rpm, then you can install this package (being       
+   root) with rpm -i X11Basic-1.24-1.i386.rpm.                               
+                                                                             
+   This is a very convenient way at least for the Linux distributions       
+   Feodora, SuSE and RedHat (and many others) of installing the interpreter  
+   the compiler and its documentation, the man-pages and a small collection 
+   of example programs.
+   
+Following files will be normally installed:
+
+
+/usr/bin/xbasic       -- the interpreter
+/usr/bin/xbc          -- the compiler
+/usr/bin/xbbc         -- bytecode compiler
+/usr/bin/xvbm         -- bytecode interpreter (virtual machine)
+/usr/bin/xb2c         -- the bytecode to C translator
+/usr/bin/bas2x11basic -- the ANSI BASIC to X11-Basic translator
+/usr/lib/libx11basic.so -- the runtime library (shared object)
+/usr/lib/libx11basic.a
+  -- the runtime library for static linking
+/usr/include/x11basic/x11basic.h -- the header file for library API
+/usr/include/x11basic/xb2csol.h  -- the header file for compilation of xb2c output
+/usr/share/man/man1/x11basic.1 -- the man-page of X11-Basic
+/usr/share/man/man1/xbasic.1   -- the man-page of the X11-Basic interpreter
+/usr/share/man/man1/xbc.1   -- the man-page of the compiler
+/usr/share/man/man1/xbbc.1  -- the man-page of the bytecode compiler
+/usr/share/man/man1/xbvm.1  -- the man-page of the virtual machine
+/usr/share/man/man1/xb2c.1  -- the man-page of the X11-Basic to C translator
+/usr/share/man/man1/bas2x11basic.1 -- the man-page of the ANSI to X11-Basic  translator
+
+
+ After having installed the package, you can execute the interpreter 
+with xbasic or read the man pages with man xbasic or 
+man x11basic.
+  
+                                                                             
+   The documentation will be installed in the                                
+   /usr/share/doc/packages/X11Basic/ directory (at least on my system) and   
+   you can find the following files:                                         
+                                                                             
+ -rw-r--r--    1005  ACKNOWLEGEMENTS      -- acknowledgments                 
+ -rw-r--r--      46  AUTHORS              -- contact addresses of the author 
+ -rw-r--r--   17982  COPYING              -- copyright information           
+ -rw-r--r--    2960  INSTALL              -- installation instructions       
+ -rw-r--r--    1752  README               -- short description               
+ -rw-r--r--     169  RELEASE_NOTES        -- release notes                   
+ -rw-r--r--  164366  X11-Basic-manual.txt -- the manual                      
+ drwxr-xr-x    1024  editors/             -- files for editors               
+ drwxr-xr-x    1024  examples/            -- few example programs            
+                  
+		  
+Debian based distributions
+
+  As with Ubuntu Linux the popularity of Debian based Linux distributions  has
+  dramatically increases in the recent past. 
+  Therefor X11-Basic also comes in packages called (e.g.) 
+  x11basic_1.24-1_i386.deb. Usually you can very easily install the file from 
+  a File-Browser with simply double clicking on it. Also a
+  dpkg -i x11basic_1.24-1_i386.deb  will do. 
+  The file system structure should be similar to what is  described in the 
+  previous chapter (explaining the RedHat packages), so you should expect to 
+  find the same files at the same place.
+  	  
+		                                                             
+Other Linux and UNIX distributions                                                    
+
+  Maybe RPM is supported for your distribution, then you can follow the 
+  instructions above. If not, you might look for a Debian package. Also the
+  existence of a package for HPUX is known (unfortunately it contains the very
+  old version 1.04 and seems not to be maintained any more).  So far (as I
+  know) there exist no packages for any other system.
+                                                                             
+   For all other systems you will have to get the source-package             
+   X11Basic-1.17.tar.gz and compile the sources (which is very easy, by      
+   the way). This should work for all Linux distributions, and probably      
+   with little modifications also for HPUX, for DEC/alpha and FreeBSD and    
+   maybe others.                                                             
+                                                                             
+   In order to compile X11Basic, you will need the following:                
+     * A C compiler, preferably GNU C or tcc (but some ANSI C compilers, like       
+       DEC's will do)                                                        
+     * a `csh'-compatible shell
+     * X11R5 or R6 libraries
+     * the readline library
+     * the gmp library
+     * optionally the lapack library
+                                                                             
+   These will suffice to get you started.                                                               
+                                                                             
+   Unpack X11Basic-1.24.tar.gz with                                          
+                                                                             
+ tar xzf X11Basic-1.24.tar.gz                                                
+                                                                             
+   go into the X11Basic-1.24 directory and do a                              
+                                                                             
+   ./configure
+   make
+   sudo make install
+
+   That’s all you will have to do (for more detailed installation instructions 
+   read the file INSTALL, which comes with the package).
+                                                                             
+   If the `configure' script fails, please contact me
+   (kollo@users.sourceforge.net) and send me the output it generated
+   (config.log). I am going to try to help you to fix the problem.
+
+make the compiler work, libraries                                     
+                                                                             
+   If you want to use the pseudo compiler included in this package, you      
+   have to make both the static and dynamic libraries.                       
+                                                                             
+ cd ./src                                                                    
+                                                                             
+   If you do not have the file mathematics.c please do                       
+                                                                             
+ cp mathemat_dummy.c mathematics.c                                           
+                                                                             
+   then:                                                                     
+
+    Libraries                                                                
+                                                                             
+   make lib                                                                  
+           will generate libx11basic.so                                      
+                                                                             
+   make x11basic.a                                                           
+           will generate x11basic.a - now you have to be root -              
+                                                                             
+   make installroot                                                          
+           will generate a dynamic linked binary of the interpreter, copy    
+           it to /bin/, install the libraries in /usr/local/lib/, install    
+           the man-page                                                      
+
+  The compiler                                                             
+                                                                             
+   make xbc                                                                  
+           will make the X11-Basic compiler You can then (being root) do    
+           a                                                                 
+                                                                             
+   make xbcinstall                                                           
+           to install the compiler in /usr/local/bin/ and the compiler       
+           man-page                                                          
+                                                                             
+   After doing all this, you will also find a xbasic.dyn executable. This     
+   is the interpreter, dynamically linked and much shorter.                  
+
+The bytecode compiler and the virtual machine
+
+  Both programs xbbc and xbbc are new to this package. The idea  is to increase
+  the execution speed of X11-basic programs a lot by compiling  it to a
+  bytecode before execution. The bytecode then can be run much faster  with the
+  bytecode interpreter, the so-called virtual machine. The conversion  to
+  bytecode is a real compilation (in contrast to what the pseudo compiler 
+  xbc does). The step to assembler or machine code is not far. Also a 
+  conversion to C or to JAVA or any other language will be straight forward, 
+  although the code will practically not be readable to humans anymore. As with
+  JAVA, the bytecode is still platform independent and can be run  on any
+  system, which has a virtual machine ported to. 
+
+  One point to mention (whether this is a feature or a disadvantage): 
+  X11-basic bytecode can not be converted back to source code (.bas).
+
+  Because this is a new feature which is incomplete and still has a lot of bugs
+  the feature is not incorporated into the interpreter xbasic itself.
+
+  Please try the bytecode compiler out and maybe you want to report errors
+  etc.  
+  Some of the example programs are known to work well with the bytecode 
+  compiler: e.g. mandel-simple.bas. The bytecode will execute about 4 times 
+  faster than the interpreted program.
+
+
+Support                                                                      
+                                                                             
+   If you have trouble with X11-Basic, you may send me a mail or browse      
+   the FAQ.                                                                  
+                                                                             
+   If you have problems compiling X11-Basic under Unix, you should add the   
+   file config.log, which is created by the configure script and
+   contains all the information needed to pin down the error (maybe together 
+
+   with the output/error messages of the compiler. 
+                                                                             
+   If you have trouble with some X11-Basic-command or program , you should   
+   create a minimum sample program to reproduce the error; please keep       
+   this sample program as small as possible. Then take the program and       
+   send it to me. Add a short description of you problem, containing:        
+     * Which Operating system are you using: Windows (95, 98, me, xp, NT,    
+       2000) or Unix (Linux, Solaris, FreeBSD, HPUX ...) ?                   
+     * How does the program behave on your computer ? What did you expect    
+       ?                                                                     
+     * Which version of X11-Basic are you using? Please try the latest      
+       one!
+       
+
+  
+                          The X11-Basic Interpreter                          
+                                                                             
+   There are several ways to start the X11-Basic interpreter.                
+                                                                             
+   The simplest way is to just start it by the command xbasic. Then you      
+   can use the interpreter in interactive mode. Just try to enter some       
+   X11-Basic commands. The interpreter itself also accepts several options 
+   via the command line. Please also read the man-page (man xbasic) for more 
+   details.
+                                                      
+
+Command line parameters                                                      
+                                                                             
+   The X11-Basic Interpreter takes some command line parameters.             
+                                                                             
+   Command line parameters are as follows:                                   
+
+    xbasic <filename>	--- run Basic Program [input.bas]
+
+    -l  		--- load only, don't execute
+    -e <command>	--- execute basic command
+    --eval <expression>	--- evaluate numerical expression
+    --daemon		--- switch off prompting and echoing
+                                                                                                                                                          
+   The program does not insist on its name, the person installing can name   
+   it xbasic, x11basic or any other name. However xbasic is the preferred    
+   name for the executable. When you start the program without arguments     
+   it tells you the different options.                                       
+
+
+    Examples:
+
+    xbasic testme.bas
+    xbasic -l dontrunme.bas
+    xbasic -e 'alert 1,"Hallo !",1," OK ",b'
+    xbasic --eval 1+3-4*3
+
+1.5.1 X11-Basic as daemon:
+
+    The  command line option --daemon forces the interpreter to run in
+    daemon-mode (with no terminal connected). No prompt is given  and
+    the input is not echoed back.
+
+    Example:
+      To  run  the X11-Basic interpreter on a tcp-socket on port
+      1371 create a new user called xbasic and insert
+      --- in /etc/inetd.conf: ---
+      xbasic stream tcp nowait xbasic /usr/sbin/tcpd /bin/xbasic --daemon
+      --- in /etc/services: ---
+      xbasic	      1371/tcp
+      ---
+      Please note that this is not recommended since xbasic would open
+      several security holes on your system.
+
+1.5.2 X11-Basic as shell:
+
+	X11-Basic programs can be executed like shell scripts.
+
+	Make sure that the very first line of your X11-Basic program 
+	starts with the characters '#!' followed by the full pathname 
+	of the X11-Basic interpreter xbasic (e.g. '#!/usr/bin/xbasic'). 
+	This she-bang-line ensures, that your Unix will invoke xbasic to 
+	execute your program. Moreover, you will need to change the
+	permissions of your X11-Basic program, e.g. chmod 755 myprog. 
+	After that your program can simply be executed from your shell 
+	and the interpreter works in the background like shells do. 
+
+1.5.3 Using Syntax highlighting with nedit
+
+    If  you  like  to use nedit as your favorite editor, a nedit.defs
+    file comes with this package. This enables  syntax  highlighting
+    for X11-Basic programs in nedit.
+--------------------------------------------------------------------------------
+
+3. The compiler
+
+  The X11-Basic package is shipped with a  compiler, which
+  makes  stand-alone binaries out of Basic source code. Actually this
+  "compiler" is not a real compiler, since the source code is still
+  interpreted on runtime. But the source code is linked to the
+  X11-Basic library so there results one  independent executable.
+  Another advantage is that it is quite hard to extract a full
+  running *.bas File from this binary since the code is compressed in
+  a way. 
+
+  You can find the compiler in examples/compiler/xbc.bas. Yes, the
+  compiler compiles itself. Just make sure you have built the shared
+  library  libx11basic.so and the library for static linking before 
+  (make lib; make x11basic.a) and moved it to /usr/lib. Then do
+
+  xbasic xbc.bas
+
+  Please note: If you link your programs dynamically, you will
+  eventually have to compile them again when the libx11basic.so will
+  have changed due to a version update of your X11-Basic package.
+
+  See the man page xbc(1) for further information on the compiler.          
+                                                                             
+3.2 The xb2c X11Basic to C translator
+-------------------------------------
+
+  In the latest package a program called xb2c is included. It is meant to be a
+  translator, which should translate the X11Basic language to C source files.
+  These C source files finally can be compiled.
+
+  At least that’s the idea. The implementation does not work currently. Be 
+  patient, this is still work in progress.
+
+
+4. The WINDOWS Version of X11-Basic
+-----------------------------------
+
+   After you have run the setup program, X11-Basic can be invoked in three
+   ways:
+
+   1. Choose "X11-Basic" from the start-menu: xbasic.exe will come up with a       
+      console window and wait for commands to be typed in right away.
+   2. Click with the right mouse button on your desktop. Choose "new" from the 
+      context menu that appears; this will create a new icon on your desktop. 
+      The context-menu of this icon has three entries "Execute", "Edit" and   
+      "View docu" (which shows the embedded documentation, if any); a         
+      double-click executes the program.                                      
+   3. Create a file containing your X11-Basic-program. This file should have    
+      the extension ".bas". Double-click on this file then invokes X11-Basic,   
+      to execute your program.                                                
+
+5. The TomTom Version of X11-Basic
+----------------------------------
+
+  On http://www.opentom.org/X11-Basic you will find a Version of X11-basic which
+  has been specially compiled for TomTom navigation devices. They run Linux
+  based on the ARM processor. No X11 Graphics is needed, since X11Basic comes
+  with a native framebuffer graphics support. Not all graphics features have the
+  same result than on a X11-Installation, but it is sufficient to run most of
+  the programs on the embedded devices. A Package and installation instructions
+  can be found on that web-side. 
+
+--------------------------------------------------------------------------------
+                   The ANSI-Basic to X11-Basic converter                    
+                                                                             
+   You now will find a simple ANSI-Basic to X11-Basic converter              
+   (bas2x11basic.bas) in the examples/compiler/ directory. It helps          
+   converting old (real) Basic Programs with line numbers and multiple        
+   commands per line to the X11-Basic structure. Because there are so many   
+   different BASIC Version around, in most cases you will have to edit        
+   these files produced manually. But most of the work will already have     
+   been done by this converter.                                              
+                                                                             
+   Example:                                                                  
+                                                                             
+ xbasic bas2x11basic.bas ansibasic.bas -o newname.bas                        
+                                                                             
+   For further options try xbasic bas2x11basic.bas --help and read the       
+   man-page bas2x11basic(1).                                                 
+                                                                             
+   A compiled version of the ANSI-Basic to X11-Basic converter is included   
+   in the RPM-packages.                                                      
+
+--------------------------------------------------------------------------------
+                               Getting Started                               
+                                                                             
+   This chapter describes all you need to know to write your own programs    
+   in X11-Basic.                
+
+Introduction to this Dialect of BASIC
+-------------------------------------
+
+The programming language BASIC has been around since the 1960s. BASIC is an
+acronym and it stands for "Beginners All Purpose Symbolic Instruction
+Code". BASIC was originally designed to be a programming language that is easy
+to use for a wide range of projects by anyone.
+X11-Basic is a dialect of this but it is not a BASIC in its original form. It
+is more a mix of classic BASIC with structured languages like PASCAL and
+Modula-2. The Syntax of X11-Basic is oriented to the  famous GFA-BASIC which
+was developed for the ATARI ST in
+ 1985.  
+                                                                            
+
+2. Description of the X11-Basic language
+
+2.1 Variables
+
+    The  X11-Basic  interpreter uses 64-bit floating point variables,
+    32-bit integer variables, character strings and arrays  of  these
+    variables  of arbitrary dimension. A declaration of the variables
+    and of their type is not necessary (except for arrays  -->  DIM),
+    because  the interpreter recognizes the type of the variable from
+    the suffix:  Integer  variables  have  the  suffix  %,  character
+    strings a $, arrays a (). Variables without suffix are treated as
+    float. Pointers are integers, function calls  are  marked  by  @.
+    Logical expressions are also of type integer.
+
+    Variable  names  and  commands  are  case  insensitive.  
+    
+    Each name is bound to only one kind of variable; A$ is 
+    a whole different variable (value) then A which is different from 
+    A(1,1) or A$(1,1).
+
+    Space between commands will be ignored, but note that no space is 
+    allowed between the name of a variable or command and  the '(' of 
+    its parameter list. So, ASC("A") is good, ASC(    "A"     ) also,
+    but ASC ("A") isn't.
+
+  Examples:
+
+ 	     integer variables:    i%=25
+	     			   a%=varptr(b$)
+	     			   b%=malloc(100000)
+ 	     float variables:	   a=1.2443e17
+	     			   b=@f(x)
+ 	     character strings:    t$="Hello everybody !"
+ 	     fields and arrays:    i%(),a(),t$(),
+	                           a()=[1,2,3,4;6,7,8,9]
+
+
+Strings
+
+    X11-Basic string variables automatically  resize to hold whatever 
+    length  string  is  assigned to them.  A wealth of intrinsics and 
+    functions are provided to support efficient string processing.  
+
+Arrays
+
+    X11-Basic   arrays   can  contain  variables  of  any  data type, 
+    including strings. All arrays, even multi-dimensional arrays, can 
+    be re-dimensioned without altering the contents. A special feature 
+    of X11-Basic is the implicit dimensioning of arrays and the existence of 
+    array constants. You may define an array by using the DIM command.
+    You might also define the array by an assignment like
+    a()=b() if b() already has been DIMed or by
+    a()=[1,2,3,4;6,7,8,9] assigning an array constant. (In this
+    example a 2 dimensional array will be created and the rows are 
+    separated by ';').
+
+Subroutines
+
+    Subroutines are blocks of code that can be called from  elsewhere 
+    in  a function.  Subroutines  can take  arguments  but  return no 
+    results.  They  can  access  all variables available but also may 
+    have local variables (--> LOCAL).
+
+Functions
+
+    X11-Basic  functions  are fully  encapsulated and bullet-proof by 
+    default. Variables  are global unless  declared local.  For local 
+    variables  changes  outside  a function have no effect within the 
+    function.  Functions arguments can be variables and arrays of any 
+    data types.  Functions can return variables of any data type.  By 
+    default, arguments are passed by value. 
+
+2.2 Operators
+
+    X11-Basic provides operators for numerical expressions, character 
+    strings and arrays of either type and any dimension.
+
+-- operators for character strings ---
+
++	 conjunction
+	 links two strings together.
+
+	 Example: suppose a$="X11", b$="-" and c$="BASIC", so 
+         d$=a$+b$+c$ results in "X11-BASIC" .
+
+< <= = => >  comparison functions belong to numerical (Boolean) functions
+	     because the result is a number
+
+
+-- numerical operators --
+
+   Numerical operators are roughly categorized in following categories:
+     * arithmetical operators: ^ * / + -
+     * comparison operators: = <> < > <= >=
+     * logical operators: NOT AND OR XOR ...
+
+   X11-Basic recognizes the following operators, in order of falling
+   precedence (the precedence of BASIC operators affects the order of
+   expression evaluation):
+
+
+   +----------------------------------------------+
+   |Order|Operator|Description                    |
+   |-----+--------+-------------------------------|
+   |    1|( )     |Parenthetical expression       |
+   |-----+--------+-------------------------------|
+   |    2|^       |Exponent                       |
+   |-----+--------+-------------------------------|
+   |    3|-       |Sign (negation)                |
+   |-----+--------+-------------------------------|
+   |    3|+       |Sign                           |
+   |-----+--------+-------------------------------|
+   |    4|NOT     |Bitwise not                    |
+   |-----+--------+-------------------------------|
+   |    5| /      |Divide                         |
+   |-----+--------+-------------------------------|
+   |    5|*       |Multiply                       |
+   |-----+--------+-------------------------------|
+   |    5|DIV     |Integer division               |
+   |-----+--------+-------------------------------|
+   |    5|MOD     |Modulus (rest of division)     |
+   |-----+--------+-------------------------------|
+   |    6|+       |Add                            |
+   |-----+--------+-------------------------------|
+   |    6|-       |Subtract                       |
+   |-----+--------+-------------------------------|
+   |    7|  <<    |Bitwise shift to the left      | not implemented see SHL()
+   |-----+--------+-------------------------------| not implemented see SHR()
+   |    7|  >>    |Bitwise shift to the right     |
+   |-----+--------+-------------------------------|
+   |    8|=       |Logical "equals"               |
+   |-----+--------+-------------------------------|
+   |    8|<>      |Logical "not equal"            |
+   |-----+--------+-------------------------------|
+   |    8|<       |Logical "less than"            |
+   |-----+--------+-------------------------------|
+   |    8|>       |Logical "Greater than"         |
+   |-----+--------+-------------------------------|
+   |    8|<=      |Logical "less than or equal"   |
+   |-----+--------+-------------------------------|
+   |    8|>=      |Logical "greater than or equal"|
+   |-----+--------+-------------------------------|
+   |    9|AND     |Bitwise and                    |
+   |-----+--------+-------------------------------|
+   |    9|NAND    |Bitwise not and                |
+   |-----+--------+-------------------------------|
+   |   10|OR      |Bitwise or                     |
+   |-----+--------+-------------------------------|
+   |   10|NOR     |Bitwise not or                 |
+   |-----+--------+-------------------------------|
+   |   10|XOR     |Bitwise exclusive or           |
+   |-----+--------+-------------------------------|
+   |   10|IMP     |Implies                        |
+   |-----+--------+-------------------------------|
+   |   10|EQV     |Equivalence                    |
+   |-----+--------+-------------------------------|
+   |   11|=       |assignment                     |
+   +----------------------------------------------+
+
+
+
+2 operators for character strings
+
+   +
+           conjunction, links two strings together.
+           Example: suppose a$="X11", b$="-" and c$="BASIC", so d$=a$+b$+c$
+           results in "X11-BASIC".
+
+   < <= = => >
+           comparison functions belong to numerical (Boolean) functions
+           because the result is a number.
+
+   &
+           the eval operator evaluates command or expression which is given
+           by the String.
+
+    1 Rules for comparison of strings:
+
+    1. Two strings are equal if all the characters inside are identical (also
+       spaces and punctuation marks).
+       Example:
+       " 123 v fdh.-," = " 123 v fdh.-,"
+
+    2. The comparison of size operates also character by character until one
+       of them is smaller or a the strings ends first, this is the smaller
+       one.
+       Examples:
+
+ "X11">"X11"     result:  0
+ "X11"<"x11"     result: -1
+ "123"<"abc"     result: -1
+ "123">"1234"    result:  0
+
+
+    2 The eval-Operator &:
+
+   The &-operator followed by a string evaluates it for program code.
+   Example:
+
+ REM generate ten times the command 'print a$'
+ CLR i
+ a$="print a$"
+ label1:
+ INC i
+ IF i>10
+   b$="label2"
+ ELSE
+   b$="label1"
+ ENDIF
+ &a$
+ GOTO &b$
+ label2:
+ END
+
+   To act like this can create an unreadable code but this is BASIC.
+
+
+-- operators for arrays --
+
+Matrix operators or more general array operators operate on arrays.
+Depending on the type and dimension of the array, 
+they can have different effects:
+
+                   Array type   dimensioning
+	   	   $	F   I	D2 D3 Dn  comments
+	   +	   *	*   *	 *  *  *
+	   -	   -	*   *	 *  *  *
+	   *	   -	*   *	 *  -  -  M1=N2 , auch skalar
+	   INV()   -	*   *	 *  -  -  M=N
+	   TRANS() *	*   *	 *  -  -  M=N
+
+Furthermore there are operators or functions which operate in between two 
+varable classes: e.g.
+
+a%=INT(b), c=DET(d()), s=SMUL(a(),b()), a()=NULL(2,4,5), ...
+
+Specially mention the reduction operator ":" :
+b()=a(:,3) will return a one dimensional vector, taken from column no. 3 of the
+	matrix a().
+
+4 Spanning operators
+
+   Some operators operate in between of different classes of operands, like
+   the string comparison operators produce a number, or also the array
+   comparison operators produce numbers. Her are ...
+
+
+
+
+1.1 Math Functions
+
+1.1.1 Introduction
+
+  The math function library contains a comprehensive set of mathematics
+  functions, including:
+
+	trigonometric
+	arc-trigonometric
+	hyperbolic
+	arc-hyperbolic
+	logarithmic  ( base e and base 10 )
+	exponential  ( base e and base 10 )
+	miscellaneous  ( square root, power, etc. )
+
+  Some math functions are defined on Vectors and Matrices.
+
+
+1.1.2 Angles
+
+  Angles are always radians, for both arguments and return values.
+
+  To convert degrees to radians, use RAD().
+  To convert radians to degrees, use DEG().
+
+2.3 Structured Programming
+
+  Even if the interpreter is BASIC, there are restraints and extansions to it
+  for a structured programming with a better overall view. There are no line
+  numbers and every line holds only one instruction. Jumps with GOTO are
+  possible but not necessary. All the well-known loops are available including
+  an additional command for discontinuation (--> EXIT IF). Procedures and
+  functions with return values of any type can be defined. So a program can
+  contain a main part to call the subfunctions, for example in side of a loop.
+  Whole libraries can be added with the merge command (--> MERGE).
+
+
+String Variables
+
+  String variables are sequences of characters.  Strings generally
+  contain ASCII text, but can hold arbitrary byte sequences.  Strings
+  are automatically elastic, meaning they automatically resize to
+  contain whatever number of bytes are put into them.  When a string
+  resizes, its location in memory may change, as when a longer string
+  is assigned and there is insufficient room after the string to
+  store the extra bytes.  
+
+   Shortcuts
+
+       '    -- REM
+       ?    -- PRINT
+       @    -- GOSUB
+       ~    -- VOID
+       !    -- comment at the end of a line
+       &    -- indirect command
+
+
+   Numbers
+       Numbers may precede 0x to represent hex values.
+
+Address spaces:
+
+  The full accessible Program memory can be accessed by PEEK/POKE,
+  LPEEK/LPOKE, DPEEK/DPOKE. Be careful. You can manipulate all
+  symbols of the interpreter and or dynamically linked libraries and
+  your program. Address spaces belonging to other programs which are
+  not shared memory blocks can not be accessed. You will get a
+  segmentation fault on trying this.

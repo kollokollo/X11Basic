@@ -1,0 +1,81 @@
+##############################################################################
+
+Command: XLOAD
+Syntax:  XLOAD
+
+DESCRIPTION:
+
+	Opens a fileselector where the user can select a basic source file 
+	which then will be loaded into memory.
+
+SEE ALSO:   XRUN, LOAD, FILESELECT
+##############################################################################
+
+Operator: XOR
+Syntax:     <num-expression1> XOR <num-expression2>
+
+DESCRIPTION:
+
+	Logical exclusive OR operator. XOR returns FALSE (0) if both
+	arguments have the same logical value. The operator also works 
+	on each bit.
+	
+	Table: 
+	-----------------------	    
+	 A  |  B  |  A XOR B
+	----+-----+------------
+	-1  | -1  |    0
+        -1  |  0  |   -1
+         0  | -1  |   -1
+         0  |  0  |    0
+	-----------------------	    
+
+EXAMPLE:       
+
+	PRINT 3=3 XOR 4>2	 Result:   0 (false)
+      	PRINT 3>3 XOR 5>3	 Result:  -1 (true)
+	PRINT (4 XOR 255)        Result:   251
+
+SEE ALSO:   NAND, OR, NOT, AND
+*#############################################################################
+
+Function:   XOR()
+Syntax:     c%=XOR(a%,b%)
+
+DESCRIPTION:
+
+	XOR(a,b) returns the bit-wise exclusive or of the two arguments. 
+
+EXAMPLE:
+  PRINT XOR(7,5)     ! Result: 2
+
+SEE ALSO: OR(), AND, XOR 
+##############################################################################
+
+Command: XRUN
+Syntax:  XRUN
+
+DESCRIPTION:
+
+	Opens a fileselector where the user can select a basic source file 
+	which then will be loaded into memory and executed.
+
+SEE ALSO:   XLOAD, RUN, FILESELECT
+##############################################################################
+Function: XTRIM$()
+Syntax:   b$=XTRIM$(a$)
+
+DESCRIPTION:
+
+	XTRIM$(a$) returns a$ with following modifications:
+
+	1. replace Tab's (CHR$(9)) by space,
+	2. replace double spaces by single ones, 
+	3. remove leading and trailing spaces,
+	4. parts of the string which are in quotes ("") will not be changed,
+	5. convert all parts of the string, which are outside quotes ("")
+	   to upper case.
+
+SEE ALSO: TRIM$(), REPLACE$(), UPPER$()
+
+##############################################################################

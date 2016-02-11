@@ -1,0 +1,183 @@
+\chapter{About X11-Basic}
+
+X11-Basic is a dialect of the BASIC programming language with graphics and sound
+which integrates features like traditional BASIC language syntax, structured
+programming, shell scripting, cgi programming, powerful math, and full graphical
+visualization into the easy to learn BASIC language on modern  computers.
+
+The syntax of X11-Basic is most similar to GFA-Basic in its original ancient 
+implementation for the ATARI ST. Old GFA-programs should run with only a few 
+changes. Also DOS/\-QBASIC programmers will feel comfortable.
+
+X11-Basic is as well suited to novices as programming wizards, and is
+appropriate for virtually all programming tasks. For science and engineering
+X11-Basic has already proven its capability of handling complex simulation
+and control problems. For system programs, X11-Basic has high level language
+replacements for low level programming features that are much easier to read,
+understand, and maintain. For all applications, X11-Basic is designed to support
+rapid development of compact, efficient, reliable, readable, portable, well
+structured programs.
+
+X11-Basic supports the principle 'small is beautiful'. Its aim is to use the 
+fewest system resources and execute with the highest speed. X11-Basic meets in
+this, by providing very powerful built-in commands and functions, and a very fast
+compiler producing even faster applications. X11-Basic lets you write an
+application with very little effort, giving you full control over your
+application. X11-Basic doesn't use "black boxes" with an enormous overhead, but
+instead calls operating system functions whenever possible. In case the
+X11-Basic commands and functions aren't sufficient, you can easily use the
+native shell to execute other programs and commands, or you will be able to use
+any shared library on the system, which can be dynamically linked.
+
+No language is perfect and X11-Basic is no exception. It has its weak and
+it's strong points. You won't use X11-Basic to write major applications, but
+it is extremely well suited to develop small to medium sized programs.
+X11-Basic is nearly as versatile as C, it uses procedures and functions and
+parameter passing similar to C.
+
+X11-Basic programs are constructed in a straightforward fashion. As C, X11-Basic
+doesn't use object oriented structures and allows an easy start. 
+
+Because it is an interpretive language each new step in your program can be
+tested quickly providing you with instant feedback. And when you finished your
+program you can use the X11-Basic compiler to create a very fast stand-alone
+executable. No complicated compiler options and linker switches are necessary to
+create a stand-alone application.
+
+\section*{Portability}
+
+X11-Basic is designed to run on many platforms with extremely low resources.  It
+has started on UNIX workstations and Linux-systems with the X-Window system 
+(commonly known as X11, based on its current major version being 11).  In case
+where no X11 implementation is available, X11-Basic can be compiled with a
+framebuffer-device graphics engine. The Android version e.g. uses the
+framebuffer interface. Also such a version for the TomTom navigation devices has
+been created.
+
+Porting X11-Basic to more basic and embedded systems with a very low amount of
+RAM and processing speed is well possible. On UNIX and Linux systems, not  only
+the X11 graphics engine can be used, but also the SDL library  (=Simple
+Direct-Media Library), as well as any raw framebuffer device or no graphics at
+all. The MS WINDOWS version supports only SDL (or no graphics at all).
+
+X11-Basic supports complex numbers and complex math, as well as arbitrary 
+precision numbers and calculations where needed, as well as very fast 32bit 
+integer and 64bit floating point operations, very powerful string handling 
+functions for charackter strings of any length and any content. 
+
+Sound is not available on every system. Where available, X11-Basic implements a 
+16 channel sound synthesizer as well as the option to play sound samples from
+standard sound file formats (line .wav and .ogg). On LINUX systems the ALSA
+sound engine is used. The Android port of X11-Basic uses the Android sound and
+speech engine.
+
+The X11-Basic environment contains a library of GEM\footnote{GEM=Graphics
+Environment Manager, an operating environment created by Digital Research, Inc.
+(DRI), which was used on the ATARI ST and GFA-BASIC.} GUI\footnote{GUI=Graphical
+User Interface} functions.  This makes writing GUI programs in X11-Basic faster,
+easier and more portable than programming with native GUI tools.
+
+The Android version of X11-Basic contains a full featured coloured 
+VT100/ANSI terminal emulation and support for unicode character sets 
+(UTF-8 coded) for standard output.
+
+
+\section*{Structured programming}
+
+X11-Basic is a structured procedural programming language.  Structure is a form
+of visual and functional encapsulation in which multiple-line sections of
+program look and act like single units. The beginning and end of blocks are
+marked by descriptive keyword delimiters.
+
+In contrast to more traditional BASIC implementations, line  numbers are not
+used in X11-Basic. Every line holds only one instruction. Jumps with GOTO are
+possible but not necessary. All the well-known loops are available including 
+additional commands for discontinuation ($\longrightarrow$ \verb|EXIT IF|, \verb|BREAK|). 
+
+Procedures and functions with return values of any type can be defined. This way
+BASIC  programs can be structured in a modular way. A program can contain a main
+part to call subfunctions and subprocedures, which may or may not be defined in
+the same source file. Distinct sources can form a library. Whole libraries can
+be added with the merge command ($\longrightarrow$ \verb|MERGE|).
+
+To help porting ANSI-Basic\footnote{So-called ANSI-Basic has been  standardized
+by the American National Standards Institute. ANSI-Basic uses line numbers and
+the syntax can be quite different from X11-Basic.} programs (with line numbers)
+to X11-Basic, a converter ($\longrightarrow$ \verb|bas2x11basic|) has been written. It comes
+with the X11-Basic package. 
+
+The third-party tool \verb|gfalist|\footnote{You will find a link to gfalist 
+(the project name is ONS) on the X11-Basic homepage.} by Peter Backes (not
+included in the X11-Basic package) even allows to decode GFA-Basic \verb|.gfa|
+files to ASCII.
+
+\section*{Speed of X11-Basic}
+
+How fast is X11-Basic? The answer depends on the way an X11-Basic program is
+run: It depends on if the code is interpreted, run as bytecode in a virtual
+machine, or being compiled to native machine language. Generally we find:
+
+\begin{enumerate}
+\item X11-Basic programs run by the interpreter are slow,
+\item X11-Basic programs compiled to bytecode and then run in the X11-Basic 
+virtual machine (\verb|xbvm|) is fast, but
+\item X11-Basic bytecode compiled natively to real machine language 
+is even faster.
+\item arbitrary precision numbers and calculations are slow, but 
+\item 64bit floating point and complex number calculations as well as 
+32bit integers are very fast.
+\end{enumerate}
+
+Bytecoded programs are always interpreted faster than scripted programming 
+languages. The X11-Basic compiler can translate the X11-Basic bytecode to C, 
+which then can be compiled to native machine language using any C-compiler 
+(preferably \verb|gcc| on UNIX systems). Obviously your programs will be slower
+than optimized C/C++ code but it already comes close.
+
+If you need highest possible speed you can load and link a separate
+DLL/shared object with the time critical part of your code written in another 
+language (e.g. C or Assembler). 
+
+A speed comparison was done with the Whetstone benchmark ($\longrightarrow$
+\verb|Whets.bas|).  This shows, that bytecode-programs are about 19 times faster
+than the interpreted code and a natively compiled program can run about 28 times
+faster.
+
+\section*{Optimality of code and code overhead}
+
+At a minimum the X11-Basic interpreter and the bytecode interpreter  (virtual
+machine) require about 350~KB of memory and another 400~kB of file  size, which
+includes the X11-Basic runtime-library.  So this is the overhead that all your
+programs will have. Compared to some Windows programs, this isn't that bad. Most
+likely your bytecode is less than 50~kB anyway (for a moderate/large
+application), plus any resources and graphics you may want to include of course.
+In the end the code  produced will be reasonably small and light enough to be
+also used on  portable devices (e.g. cell phones, e-book readers, and navigation
+devices) which have only  a small amount of native memory (and a relatively slow
+processor).
+
+\section*{Copyright information}
+
+Copyright (C) 1997-2015 by Markus Hoffmann 
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled "GNU
+Free Documentation License".
+
+X11-Basic is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+Read the file COPYING for details.
+
+(Basically that means, free, open source, use and modify as you like, don't
+incorporate it into non-free software, no warranty of any sort, don't blame me
+if it doesn't work.)

@@ -1,0 +1,433 @@
+\subsection{Objects}
+
+Objects can be boxes, buttons, text, images, and more. An object tree
+is an array of OBJECT structures linked to form a structured
+relationship to each other. The object itself is a section of data 
+which can be held by a string in X11-Basic.
+
+The OBJECT structure is format is as follows:
+
+\begin{verbatim}
+object$=MKI$(ob_next)+MKI$(ob_head)+MKI$(ob_tail)+
+        MKI$(ob_type)+MKI$(ob_flags)+MKI$(ob_state)+
+        MKL$(ob_spec)+MKI$(ob_x)+MKI$(ob_y)+MKI$(ob_width)+
+        MKI$(ob_height)
+\end{verbatim}
+
+An Object tree is a collection of objects:
+
+\begin{verbatim}
+tree$=object0$+object1$+ ... +objectn$
+\end{verbatim}
+
+The first object in an OBJECT tree is called the ROOT object (OBJECT 0). It's
+coordinates are relative to the upper-left hand corner of the graphics window. 
+The ROOT object can have any number of children and each child can have
+children of their own. In each case, the OBJECT's coordinates, \verb|ob_x|,
+\verb|ob_y|, \verb|ob_width|, and \verb|ob_height| are relative to that of its
+parent. The X11-Basic function \verb|objc_offset()| can, however, be used to
+determine the exact screen coordinates of a child object. \verb|objc_find()| is
+used to determine the object at a given screen coordinate.
+
+The \verb|ob_next|, \verb|ob_head|, and \verb|ob_tail| fields determine this
+relationship between parent OBJECTs and child OBJECTs.
+
+\begin{description}
+
+\item[ob\_next] the index (counting objects from the first object in the
+object tree) of the object's next sibling at the same level in the object tree
+array. The ROOT object should set this value to -1. The last child at any given
+nesting level should set this to the index of its parent.
+
+\item[ob\_head] the index of the first child of the current object. If the
+object has no children then this value should be -1. 
+
+\item[ob\_tail] the index of the last child: the tail of the list of the
+object's children in the object tree array If the object has no children then
+this value should be -1.
+
+\item[ob\_type] the object type. The low byte of the ob\_type field 
+specifies the object type as follows:
+
+\begin{center}\begin{longtable}{|cll|}
+\hline
+{\bf ob\_type} & {\bf Name} & {\bf Description}\\
+\hline
+  20 &  G\_BOX	    &   Box		\\	    
+  21 &  G\_TEXT	    &   Formatted Text  \\	    
+  22 &  G\_BOXTEXT   &   Formatted Text in a Box \\
+  23 &  G\_IMAGE     &   Monochrome Image	\\    
+  24 &  G\_PROGDEF   &   Programmer-Defined Object\\
+  25 &  G\_IBOX	    &   Invisible Box		  \\  
+  26 &  G\_BUTTON    &   Push Button w/String	   \\ 
+  27 &  G\_BOXCHAR   &   Character in a Box	   \\ 
+  28 &  G\_STRING    &   Un-formatted Text	   \\ 
+  29 &  G\_FTEXT     &   Editable Formatted Text \\
+  30 &  G\_FBOXTEXT  &   Editable Formatted Text in a Box\\
+  31 &  G\_ICON	    &   Monochrome Icon \\
+  32 &  G\_TITLE     &   Menu Title\\
+  33 &  G\_CICON     &   Color Icon \\
+\hline
+\end{longtable}\end{center}
+
+\item[ob\_flags] The ob\_flags field of the object structure is a bitmask of
+different flags that can be applied to any object. You may want to apply 
+one ore more flags at once. Just add the values ob\_flags.
+
+\begin{center}\begin{longtable}{|clp{9cm}|}
+\hline
+{\bf ob\_flags} & {\bf Name} & {\bf Description}\\
+\hline
+0 & NONE       & No flag \\\hline
+1 & SELECTABLE & object is selected. state may be toggled by clicking on it with the mouse.\\\hline
+2 & DEFAULT    & An EXIT object with this bit set will have a thicker outline and be triggered when the 
+                 user presses return.\\\hline
+4 & EXIT       & Clicking on this OBJECT and releasing the mouse button while still over it 
+                 will cause the dialog to exit.\\\hline
+8 & EDITABLE   & Set for FTEXT and FBOXTEXT objects to indicate that they may receive edit focus.\\\hline
+16 & RBUTTON   & This object is one of a group of radio buttons. Clicking on it will deselect
+                 any selected objects at the same tree level that also have the RBUTTON flag
+                 set. Likewise, it will be deselected automatically when any other object is selected.\\\hline
+32 & LASTOB    & This flag signals that the current OBJECT is the last in the object tree. (Required!)\\\hline
+64 & TOUCHEXIT & Setting this flag causes the OBJECT to return an exit state immediately after   
+                 being clicked on with the mouse.\\\hline
+256 & HIDETREE & This OBJECT and all of its children will not be drawn.\\\hline
+512 & INDIRECT & This flag cause the ob\_spec field to be interpreted as a pointer to the      
+                 ob\_spec value rather than the value itself.\\\hline
+1024 & FL3DIND & Setting this flag causes the OBJECT to be drawn as a 3D indicator. This is  
+                 appropriate for radio and toggle buttons.\\\hline
+2048 & FL3DACT & Setting this flag causes the OBJECT to be drawn as a 3D activator. This is  
+                 appropriate for EXIT buttons.\\\hline
+3072 & FL3DBAK & If these bits are set, the object is treated as an AES background object.  
+                 If it is OUTLINED, the outlined is drawn in a 3D manner. If its color
+                 is set to WHITE and its fill pattern is set to 0 then the OBJECT will inherit 
+                 the default 3D background color.\\\hline
+4096 & SUBMENU & This bit is set on menu items which have a sub-menu attachment. This bit also
+                 indicates that the high byte of the ob\_type field is being used by the menu
+                 system.\\\hline
+\end{longtable}\end{center}
+
+\item[ob\_state] The ob\_state field determines the display state of the object as
+follows:
+
+\begin{center}\begin{longtable}{|clp{9cm}|}
+\hline
+{\bf ob\_state} & {\bf Name} & {\bf Description}\\
+\hline
+0 & NORMAL   & Normal state \\\hline
+1 & SELECTED & The object is selected. An object with this bit set will be drawn in inverse
+               video except for G\_CICON which will use its 'selected' image.\\\hline
+2 & CROSSED  & An OBJECT with this bit set will be drawn over with a white cross (this   
+               state can only usually be seen over a colored or	SELECTED object).\\\hline
+4 & CHECKED  & An OBJECT with this bit set will be displayed with a check mark in its    
+               upper-left corner.\\\hline
+8 & DISABLED & An OBJECT with this bit set will ignore user input. Text objects with this   
+               bit set will draw in grey or a dithered pattern.\\\hline
+16 & OUTLINED & G\_BOX, G\_IBOX, G\_BOXTEXT, G\_FBOXTEXT, and G\_BOXCHAR OBJECTs   
+               with this bit set will be drawn with a double border.\\\hline
+32 & SHADOWED & G\_BOX, G\_IBOX, G\_BOXTEXT, G\_FBOXTEXT, and G\_BOXCHAR OBJECTs   
+                will be drawn with a shadow.\\\hline
+\end{longtable}\end{center}
+
+\item[ob\_spec] The Object-Specific Field
+
+The ob\_spec field contains different data depending on the object type
+as indicated in the table below:
+\begin{center}\begin{longtable}{|lp{9cm}|}
+\hline
+G\_BOX &
+The low 16 bits contain a WORD containing color information for the OBJECT. 
+Bits 23-16 contain a signed BYTE representing the border thickness of the 
+box.\\\hline
+G\_TEXT &The ob\_spec field contains a pointer to a TEDINFO  structure. \\\hline  
+G\_BOXTEXT &The ob\_spec field contains a pointer to a TEDINFO structure.   \\\hline
+G\_IMAGE   & The ob\_spec field points to a BITBLK structure. \\\hline
+G\_PROGDEF & The ob\_spec field points to a APPLBLK structure.\\\hline
+G\_IBOX	  & The low 16 bits contain a WORD containing color information for the OBJECT. 
+Bits 23-16 contain a signed BYTE representing the border thickness of the box.\\\hline
+G\_BUTTON  & The ob\_spec field contains a pointer to the text to be contained in the button.\\\hline
+G\_BOXCHAR & The low 16 bits contain a WORD containing color information for the OBJECT. 
+Bits 23-16 contain a signed BYTE representing the border thickness of the box. 
+Bits 31-24 contain the ASCII value of the character to display.\\\hline
+G\_STRING  & The ob\_spec field contains a pointer to the text to be displayed.\\\hline
+G\_FTEXT   & The ob\_spec field contains a pointer to a TEDINFO structure.\\\hline
+G\_FBOXTEXT & The ob\_spec field contains a pointer to a TEDINFO structure.\\\hline
+G\_ICON & The ob\_spec field contains a pointer to an ICONBLK structure. \\\hline    
+G\_TITLE  & The ob\_spec field contains a pointer to the text to be used for the title.\\\hline
+G\_CICON  & The ob\_spec field contains a pointer to a CICONBLK structure.\\\hline
+\end{longtable}\end{center}
+
+\begin{description}
+\item[objc\_colorword]
+Almost all objects reference a WORD containing the object color as
+defined below.
+
+{\footnotesize
+\begin{verbatim}
+objc_colorword=bbbbcccctpppcccc
+
+Bits 15-12 contain the border color 
+Bits 11-8  contain the text color 
+Bit   7    is 1 if opaque or 0 if transparent 
+Bits 6-4   contain the fill pattern index 
+Bits 3-0   contain the fill color 
+\end{verbatim}}
+
+Available colors for fill patterns, text, and borders are listed
+below:
+\begin{center}
+\begin{tabular}{|cll|}
+\hline
+{\bf Value} &{\bf  Name}&{\bf  Color}  \\
+\hline
+ 0&  WHITE	&  White\\
+ 1&  BLACK	&  Black\\
+ 2&  RED	&  Red\\
+ 3&  GREEN	&  Green\\
+ 4&  BLUE	&  Blue\\
+ 5&  CYAN	&  Cyan\\
+ 6&  YELLOW	&  Yellow\\
+ 7&  MAGENTA	&  Magenta\\
+ 8&  LWHITE	&  Light Gray\\
+ 9&  LBLACK	&  Dark Gray\\
+ 10& LRED	&  Light Red\\
+ 11& LGREEN	&  Light Green\\
+ 12& LBLUE	&  Light Blue\\
+ 13& LCYAN	&  Light Cyan\\
+ 14& LYELLOW	&  Light Yellow\\
+ 15& LMAGENTA	&  Light Magenta\\
+\hline
+\end{tabular}
+\end{center}
+
+
+\item[TEDINFO]
+G\_TEXT, G\_BOXTEXT, G\_FTEXT, and G\_FBOXTEXT objects all reference a
+TEDINFO structure in their ob\_spec field. The TEDINFO structure is
+defined below:
+ {\footnotesize
+\begin{verbatim}                                                         
+tedinfo$=MKL$(VARPTR(te_ptext$))+MKL$(VARPTR(te_ptmplt$))+
+         MKL$(VARPTR(te_pvalid$))+MKI$(te_font)+MKI$(te_fontid)+
+         MKI$(te_just)+MKI$(te_color)+MKI$(te_fontsize)+
+         MKI$(te_thickness)+MKI$(te_txtlen)+MKI$(te_tmplen)
+\end{verbatim}}
+
+The three character pointer point to text strings required for 
+\verb|G_FTEXT|
+and \verb|G_FBOXTEXT| objects. te\_ptext points to the actual text to be
+displayed and is the only field used by all text objects. te\_ptmplt
+points to the text template for editable fields. For each character
+that the user can enter, the text string should contain a tilde
+character (ASCII 126). Other characters are displayed but cannot be
+overwritten by the user. \verb|te_pvalid| contains validation characters for
+each character the user may enter. The current acceptable validation
+characters are:
+
+\begin{center}
+\begin{tabular}{|cl|}
+\hline
+{\bf Character} &{\bf  Allows}\\
+\hline
+9 & Digits 0-9\\
+A & Uppercase letters A-Z plus space\\
+a & Upper and lowercase letters plus space\\
+N & Digits 0-9, uppercase letters A-Z and space\\
+n & Digits 0-9, upper and lowercase letters A-Z  and space\\
+F & Valid DOS filename characters plus question mark and asterisk \\
+P & Valid DOS pathname characters, backslash, colon, question mark, asterisk \\
+p & Valid DOS pathname characters, backslash and colon\\
+X & All characters\\
+\hline
+\end{tabular}
+\end{center}
+
+\verb|te_font| may be set to any of the following values:
+
+\begin{center}
+\begin{tabular}{|cll|}
+\hline
+{\bf te\_font} &{\bf  Name} & {\bf Description} \\
+\hline
+3 &IBM    & Use the standard monospaced font.\\
+5 &SMALL  &  Use the small monospaced font.\\
+\hline
+\end{tabular}
+\end{center}
+
+\verb|te_just| sets the justification of the text output as follows:
+
+\begin{center}
+\begin{tabular}{|cll|}
+\hline
+{\bf te\_just} &{\bf  Name} & {\bf Description} \\
+\hline
+0 & TE\_LEFT & Left Justify\\
+1 & TE\_RIGHT & Right Justify\\
+2 & TE\_CNTR & Center\\
+\hline
+\end{tabular}
+\end{center}
+
+
+te\_thickness sets the border thickness (positive and negative values
+are acceptable) of the G\_BOXTEXT or G\_FBOXTEXT object. 
+
+te\_txtlen and
+te\_tmplen should be set to the length of the starting text and
+template length respectively. 
+
+\item[BITBLK]
+G\_IMAGE objects contain a pointer to a BITBLK structure in their
+ob\_spec field. The BITBLK structure is defined as follows:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+bitblk$=MKL$(VARPTR(bi_pdata$))+MKI$(bi_wb)+MKI$(bi_hl)+
+        MKI$(bi_x)+MKI$(bi_y)+MKI$(bi_color)
+\end{verbatim}}
+
+\verb|bi_pdata| should contain a monochrome bit image. 
+\verb|bi_wb| specifies the width (in bytes) of the image. 
+All BITBLK images must be a multiple of 16 pixels wide therefore this 
+value must be even.
+\verb|bi_hl| specifies the height of the image in scan lines (rows). 
+\verb|bi_x| and \verb|bi_y| are used as offsets into \verb|bi_pdata|. 
+Any data occurring before these coordinates will be ignored. 
+\verb|bi_color| is a standard color WORD
+where the fill color specifies the color in which the image will be
+rendered.
+
+\item[ICONBLK]
+The \verb|ob_spec| field of \verb|G_ICON| objects point to an ICONBLK structure as
+defined below:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+iconblk$=MKL$(VARPTR(ib_pmask$))+MKL$(VARPTR(ib_pdata$))+MKL$(VARPTR(ib_ptext$))+
+         MKI$(ib_char)+MKI$(ib_xchar)+MKI$(ib_ychar)+
+         MKI$(ib_xicon)+MKI$(ib_yicon)+MKI$(ib_wicon)+MKI$(ib_hicon)+
+	 MKI$(ib_xtext)+MKI$(ib_ytext)+MKI$(ib_wtext)+MKI$(ib_htext)
+\end{verbatim}}
+
+\verb|ib_pmask| and \verb|ib_pdata| contain the monochrome mask and 
+image data respectively. \verb|ib_ptext| is a string pointer to the icon text.
+\verb|ib_char| defines the icon character (used for drive icons) and the icon
+foreground and background color as follows:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+|                              ib_char                               |
+|      Bits 15-12      |      Bits 11-8       |       Bits 7-0       |
+|Icon Foreground Color |Icon Background Color |ASCII Character (or 0 |
+|                      |                      |  for no character).  |
+\end{verbatim}}
+
+\verb|ib_xchar| and \verb|ib_ychar| specify the location of the icon character
+relative to \verb|ib_xicon| and \verb|ib_yicon|. \verb|ib_xicon| and 
+\verb|ib_yicon| specify the
+location of the icon relative to the \verb|ob_x| and \verb|ob_y| of the object.
+\verb|ib_wicon| and \verb|ib_hicon| specify the width and height of the icon in
+pixels. As with images, icons must be a multiple of 16 pixels in
+width.
+\verb|ib_xtext| and \verb|ib_ytext| specify the location of the text string relative
+to the \verb|ob_x| and \verb|ob_y| of the object. \verb|ib_wtext| and \verb|ib_htext| specify the
+width and height of the icon text area.
+
+\item[CICONBLK]
+
+The \verb|G_CICON| object defines its
+\verb|ob_spec| field to be a pointer to a CICONBLK structure as defined
+below:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+ciconblk$=monoblk$+MKL$(VARPTR(mainlist$))
+\end{verbatim}}
+
+\verb|monoblk| contains a monochrome icon which is rendered if a color icon
+matching the display parameters cannot be found. In addition, the icon
+text, character, size, and positioning data from the monochrome icon
+are always used for the color one. \verb|mainlist| contains the first
+CICON structure in a linked list of color icons for different
+resolutions. \verb|CICON| is defined as follows:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+cicon$=MKI$(num_planes)+MKL$(VARPTR(col_data$))+MKL$(VARPTR(col_mask$))+
+       MKL$(VARPTR(sel_data$))+MKL$(VARPTR(sel_mask$))+
+       MKL$(VARPTR(cicon2$))
+\end{verbatim}}
+
+\verb|num_planes| indicates the number of bit planes this color icon
+contains. \verb|col_data| and \verb|col_mask| contain the icon data and 
+mask for the unselected icon respectively. Likewise, 
+\verb|sel_data| and \verb|sel_mask| contain the icon data and mask for 
+the selected icon. \verb|cicon2$| contains
+the next color icon definition. Use \verb|MKL$(0)| if no more are available.
+
+The GUI library searches the CICONBLK object for a color icon that has the
+same number of planes in the display. If none is found, the GUI library simply
+uses the monochrome icon.
+
+\item[APPLBLK]
+
+\verb|G_PROGDEF| objects allow programmers to define custom objects and link
+them transparently in the resource. The \verb|ob_spec| field of
+\verb|G_PROGDEF|
+objects contains a pointer to an APPLBLK as defined below:
+
+ {\footnotesize
+\begin{verbatim}                                                         
+applblk$=MKL$(SYM_ADR(#1,"function"))+MKL$(ap_parm)
+\end{verbatim}}
+
+The first is a pointer to a user-defined routine which will draw the
+object. This routine must be a c-Function, which has to be linked to 
+X11-basic with the LINK command. The routine will be passed a pointer to a
+PARMBLK structure containing the information it needs to render the
+object. The routine must be defined with stack checking off and expect
+to be passed its parameter on the stack. \verb|ap_parm| is a user-defined
+value which is copied into the PARMBLK structure as defined below:
+
+{\footnotesize
+\begin{verbatim}                                                         
+typedef struct parm_blk {
+        OBJECT          *tree;
+        short            pb_obj;
+        short            pb_prevstate;
+        short            pb_currstate;
+        short            pb_x;
+        short            pb_y;
+        short            pb_w;
+        short            pb_h;
+        short            pb_xc;
+        short            pb_yc;
+        short            pb_wc;
+        short            pb_hc;
+        long             pb_parm;
+} PARMBLK;
+\end{verbatim}}
+
+\verb|tree| points to the OBJECT tree of the object being drawn. The object
+is located at index \verb|pb_obj|.
+
+The routine is passed the old \verb|ob_state| of the object in
+\verb|pb_prevstate|
+and the new \verb|ob_state| of the object in \verb|pb_currstate|. 
+If \verb|pb_prevstate|
+and \verb|pb_currstate| is equal then the object should be drawn completely,
+otherwise only the drawing necessary to redraw the object from
+\verb|pb_prevstate| to \verb|pb_currstate| are necessary.
+
+\verb|pb_x|, \verb|pb_y|, \verb|pb_w|, and \verb|pb_h| give the screen 
+coordinates of the object.
+\verb|pb_xc|, \verb|pb_yc|, \verb|pb_wc|, and \verb|pb_hc| give the 
+rectangle to clip to. \verb|pb_parm|
+contains a copy of the \verb|ap_parm| value in the APPLBLK structure.
+The custom routine should return a short containing any remaining
+\verb|ob_state| bits you wish the GUI Library to draw over your custom object.
+
+\end{description}
+
+\end{description}
