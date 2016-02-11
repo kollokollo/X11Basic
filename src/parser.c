@@ -229,6 +229,20 @@ STRING f_envs(STRING n) {
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
 }
+
+
+STRING f_terminalnames(char *n) {   
+  STRING ergebnis;
+  int i=get_number(n);  
+  if(filenr[i]) ergebnis.pointer=terminalname(fileno(dptr[i]));
+  else {
+    ergebnis.pointer=malloc(10);
+    strcpy(ergebnis.pointer,"<ERROR>");
+    error(24,""); /* File nicht geoeffnet */
+  }
+  ergebnis.len=strlen(ergebnis.pointer);
+  return(ergebnis);
+}
 STRING f_systems(STRING n) {   
   STRING ergebnis;
   FILE *dptr=popen(n.pointer,"r");
@@ -468,8 +482,10 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
  { F_ARGUMENT,  "STRING$" , f_strings ,1,2   ,{PL_INT,PL_STRING}},
  { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
+ { F_SQUICK,    "TERMINALNAME$"    , f_terminalnames ,1,1 ,{PL_FILENR}},
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
+ { F_SQUICK,    "UCASE$"    , f_uppers ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "XTRIM$"   , f_xtrims ,1,1   ,{PL_STRING}},
 
@@ -643,8 +659,10 @@ double parser(char *funktion){  /* Rekursiver num. Parser */
 	}else if(strcmp(s,"EOF")==0)  {
 	  int i=get_number(pos);
 	  if(i==-2) return((double)((eof(stdin)) ? -1 : 0));
-	  else if(filenr[i]) return((double)((eof(dptr[i])) ? -1 : 0));
-	  else { error(24,""); return(0); } /* File nicht geoeffnet */	
+	  else if(filenr[i]) {
+	    fflush(dptr[i]);
+	    return((double)((eof(dptr[i])) ? -1 : 0));
+	} else { error(24,""); return(0); } /* File nicht geoeffnet */	
 	} else if(strcmp(s,"MIN")==0)  {
 	  int e;
 	  char w1[strlen(pos)+1],w2[strlen(pos)+1];
@@ -1256,7 +1274,7 @@ STRING string_parser(char *funktion) {
 	 xtrim(ergebnis.pointer,TRUE,ergebnis.pointer);
 	 ergebnis.len=strlen(ergebnis.pointer);
        } else if(strcmp(v,"TERMINALNAME")==0) { 
-         ergebnis.pointer=terminalname();
+         ergebnis.pointer=terminalname(STDIN_FILENO);
 	 ergebnis.len=strlen(ergebnis.pointer);
        } else if(strcmp(v,"INKEY")==0) { 
          char *t=inkey();

@@ -406,7 +406,7 @@ PROCEDURE check_win
   text 480,220,STR$(a+b,4)
 
   IF a=0 AND b>1
-    color 2
+    color gelb
     pbox 320,240,520,300
     color schwarz
     box 320,240,520,300
@@ -414,7 +414,7 @@ PROCEDURE check_win
     CLR spiel
   ENDIF
   IF b=0 AND a>1
-    color 2
+    color gelb
     pbox 320,240,520,300
     color schwarz
     box 320,240,520,300
@@ -642,20 +642,8 @@ PROCEDURE getbest
   m=-32000
   FOR mx=0 TO xspielfeld-1
     FOR my=0 TO yspielfeld-1
-        if cfeld(mx,my)<-20
-	  @led(mx,my,rot)
-	else if cfeld(mx,my)<0
-	  @led(mx,my,gelb) 
-	else if cfeld(mx,my)<2
-	  @led(mx,my,weiss)
-	else if cfeld(x,y)>10
-	  @led(mx,my,gruen)
-	else if cfeld(x,y)>5
-	  @led(mx,my,lila)
-	  
-	else
 	  @led(mx,my,cfeld(mx,my))
-	endif
+	
       IF cfeld(mx,my)>m
         m=cfeld(mx,my)
         CLR a
@@ -862,7 +850,7 @@ procedure mbutton(button_x,button_y,button_t$,sel)
   h=20
   color grau
   pbox x+5,y+5,x+w+5,y+h+5
-  color abs(sel=0)
+  color abs(sel=0)*weiss
   pbox x,y,x+w,y+h
   if sel
    color weiss
@@ -1011,7 +999,20 @@ alert 1,"      A T O M I U M|| (c) Markus Hoffmann 1991| |Dieses Programm darf n
 return
 
 procedure led(x,y,c)
-  color c
+  local r,g,b,col
+  if c=0
+    col=weiss
+  else if c<0
+    col=schwarz
+  else if c>10
+    col=lila
+  else
+    g=0.1*c
+    b=0.1*(10-c)
+    r=sqrt(abs(1-r*r-g*g))
+    col=get_color(r*65535,g*65535,b*65535)
+  endif
+  color col
   pcircle x*10+550,100+y*10,4
   color schwarz
   circle x*10+550,100+y*10,4

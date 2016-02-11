@@ -17,7 +17,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <termio.h>
+
 /* fuer Dynamisches Linken von shared Object-Files   */
+
+#ifndef __hpux
+#include <dlfcn.h>
+#endif
+#ifdef __hpux
+#define RTLD_LAZY       0x00000002  /* bind deferred */
+#endif
+
 #include <dlfcn.h>
 
 #include "file.h"
@@ -49,20 +59,21 @@ void c_print(char *n) {
     }
   if(strlen(v)) {
       if(v[strlen(v)-1]==';' || v[strlen(v)-1]==',' || v[strlen(v)-1]=='\'') {
-        char *buffer;
+        STRING buffer;
         c=v[strlen(v)-1];
         v[strlen(v)-1]=0;
         buffer=print_arg(v);
-        fprintf(fff,"%s",buffer);
-        if(c=='\'') fprintf(fff," ");
-        else if(c==',') fprintf(fff,"\011");
-	free(buffer);
+	fwrite(buffer.pointer,1,buffer.len,fff);
+        if(c=='\'') fputc(' ',fff);
+        else if(c==',') fputc('\011',fff);
+	free(buffer.pointer);
       } else {
-        char *buffer=print_arg(v);
-        fprintf(fff,"%s\n",buffer);
-	free(buffer);
+        STRING buffer=print_arg(v);
+	fwrite(buffer.pointer,1,buffer.len,fff);
+        fputc('\n',fff);
+	free(buffer.pointer);
       }
-    } else fprintf(fff,"\n");
+  } else fputc('\n',fff);
 }
 
 void c_input(char *n) {
@@ -130,6 +141,7 @@ STRING f_lineinputs(char *n) {
 STRING f_inputs(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,s,t);
+
   STRING inbuf;
   if(e==2) {
     int i=get_number(s);
@@ -137,6 +149,7 @@ STRING f_inputs(char *n) {
     FILE *fff=stdin;
     if(filenr[i]) {
       fff=dptr[i];
+      
       inbuf.pointer=malloc(anz+1);
       inbuf.len=(int)fread(inbuf.pointer,1,anz,fff);
       inbuf.pointer[anz]=0;
@@ -329,8 +342,32 @@ void c_open(char *n) {
 	  }
 	} else printf("Socket #d nicht geoeffnet.\n",port); 
       } else dptr[number]=fopen(filename,modus2);
-      if(dptr[number]==NULL) io_error(errno,"OPEN");
+      if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
       else  filenr[number]=1;
+      if(special=='X') {  /* Fuer Serielle Devices !  */
+        int fp=fileno(dptr[number]);
+	struct termios ttyset;
+	if(isatty(fp)) {
+	  printf("Ist ein tty !\n");
+          /* Stream buffering ausschalten */
+	  setbuf(dptr[number],NULL);
+	  /* Nicht-Canoschen Mode setzen */    
+	  tcgetattr(fp,&ttyset);
+          ttyset.c_lflag &= ~(ICANON|ECHO);
+	  ttyset.c_cc[VMIN]=1;
+	  ttyset.c_cc[VTIME]=0;
+	
+          ttyset.c_cflag = (CBAUD|CSIZE|CREAD) & port;
+          ttyset.c_cflag |= CLOCAL;
+          ttyset.c_cflag |= CREAD;
+          ttyset.c_iflag = ttyset.c_oflag = ttyset.c_lflag = (unsigned short) 0;
+          ttyset.c_oflag = (ONLRET);
+          if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
+      } else printf("File ist kein TTY ! Einstellungen ignoriert !\n");
+  
+
+  
+      }
   }
   free(filename);
 }
@@ -617,23 +654,28 @@ void c_relseek(char *n) {
   } else error(32,"RELSEEK"); /* Syntax error */
 }
 int inp8(char *n) {
-  int i=get_number(n);
+  int fp,i=get_number(n);
   char ergebnis;
   FILE *fff;
   if(i==-2) fff=stdin;  
   else if(filenr[i]) fff=dptr[i];
   else {error(24,"");return(-1);} /* File nicht geoeffnet */
-  fread(&ergebnis,sizeof(char),1,fff);
+  
+  fread(&ergebnis,1,1,fff);
   return((int)ergebnis);
 }
 int inpf(char *n) {
-  int i=get_number(n);
+  int fp,i=get_number(n);
   FILE *fff=stdin;
   if(i==-2) {
     return(kbhit() ? -1 : 0);
   } else if(filenr[i]) {
-    fff=dptr[i];
-    return(((eof(fff)) ? 0 : -1));
+    fff=dptr[i];        
+    fflush(fff);
+    fp=fileno(fff);
+    ioctl(fp, FIONREAD, &i);
+    return(i); 
+    /*return(((eof(fff)) ? 0 : -1)); */
   } else {error(24,"");return(-1);} /* File nicht geoeffnet */
 }
 int inp16(char *n) {
@@ -655,7 +697,7 @@ int inp32(char *n) {
 
   if(filenr[i]) {
     fff=dptr[i];
-    fread(&ergebnis,sizeof(int),1,fff);
+    fread(&ergebnis,sizeof(long),1,fff);
     return(ergebnis);
   } else error(24,""); /* File nicht geoeffnet */
   return(-1);
@@ -723,9 +765,9 @@ int f_symadr(char *n) {
 }
 
 
-char *terminalname() {
+char *terminalname(int fp) {
   char *name=NULL,*erg;
-  if(isatty(STDIN_FILENO)) name=ttyname(STDIN_FILENO);
+  if(isatty(fp)) name=ttyname(fp);
   erg=malloc(strlen(name)+1);
   strcpy(erg,name);
   return(erg);
@@ -816,3 +858,128 @@ char *inkey() {
    ik[i]=0;
    return(ik);
 }
+
+
+/* Baut einen String aus der Argumenteliste des PRINT-Kommandos zusammen */
+
+STRING print_arg(char *ausdruck) {
+  int e;
+  char *a1,w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
+  char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
+  STRING ergebnis;
+  ergebnis.pointer=malloc(4);
+  ergebnis.len=0;
+  e=arg2(ausdruck,TRUE,w1,w2);
+  while(e) {
+    a1=indirekt2(w1);
+  /*  printf("TEST: <%s> <%s> %d\n",w1,w2,e);*/
+    if(strncmp(a1,"AT(",3)==0) {
+      a1[strlen(a1)-1]=0;
+      wort_sep(a1+3,',',TRUE,w3,w4);
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+16);
+      sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3d;%.3dH",(int)parser(w3),(int)parser(w4));
+      ergebnis.len+=16;
+    } else if(strncmp(a1,"TAB(",4)==0) {
+      a1[strlen(a1)-1]=0;
+      ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+8);
+      sprintf(ergebnis.pointer+ergebnis.len,"\033[%.3dC",(int)parser(a1+4));
+      ergebnis.len+=8;
+    } else {
+      if(strlen(a1)) {    
+        int typ,ee;
+	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
+	typ=type2(a1);
+	
+	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
+	  if(typ & STRINGTYP) ;
+	  else ;
+	} else if(typ & STRINGTYP) {
+          STRING a3=string_parser(a1);
+	  ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+a3.len);
+          memcpy(ergebnis.pointer+ergebnis.len,a3.pointer,a3.len);
+	  ergebnis.len+=a3.len;
+	  free(a3.pointer);
+        } else {
+	  if(ee==2) {
+	    STRING a3=string_parser(w4);
+	    STRING e2=do_using(parser(a1),a3);
+	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+e2.len);
+	    memcpy(ergebnis.pointer+ergebnis.len,e2.pointer,e2.len);
+            ergebnis.len+=e2.len;
+	    free(a3.pointer);
+	    free(e2.pointer);
+	  } else {
+	    char b[32];
+	    sprintf(b,"%.13g",parser(a1));
+	    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+strlen(b));
+	    memcpy(ergebnis.pointer+ergebnis.len,b,strlen(b));
+	    ergebnis.len+=strlen(b);
+          }
+	}
+      }
+    }
+    ergebnis.pointer=realloc(ergebnis.pointer,ergebnis.len+1);
+    if(e==2) ;
+    else if(e==3) ergebnis.pointer[ergebnis.len++]='\011';   /* TAB */
+    else if(e==4) ergebnis.pointer[ergebnis.len++]=' ';
+    free(a1);
+    e=arg2(w2,TRUE,w1,w2);
+  }
+  return(ergebnis);
+}
+STRING do_using(double num,STRING format){
+  STRING dest;
+  int a,p,p2,r,i,j; /* dummy */
+  int neg,ln=0,vorz=1;
+  char *des;
+  const char *digits="01234567899";
+  
+  if (*format.pointer=='%') { /* c-style format */
+    char b[32];
+    sprintf(b,format.pointer,num);
+    dest.len=strlen(b);
+    dest.pointer=malloc(strlen(b));
+    memcpy(dest.pointer,b,strlen(b));
+  } else { /* basic-style format */
+    dest.len=format.len;
+    dest.pointer=malloc(format.len);
+    des=dest.pointer;
+    
+   /* Zaehle die Rauten vor dem Punkt */
+   a=r=p=0;
+   while((format.pointer)[p] && (format.pointer)[p]!='.') {
+     if((format.pointer)[p++]=='#') r++;
+   }
+   /* Zaehle die Rauten nach dem Punkt */
+   while((format.pointer)[p]) {
+     if((format.pointer)[p++]=='#') a++;
+   }
+  
+   j=a+r;
+   neg=(num<0);
+   num=abs(num);
+   num+=0.5*pow(10,(double)-a);  /* zum Runden */
+   
+   for(i=0;i<format.len;i++) {
+     if(format.pointer[i]=='+') {*des=(neg ? '-':'+'); vorz=0;}
+     else if(format.pointer[i]=='-') {*des=(neg ? '-':' ');vorz=0;}
+     else if(format.pointer[i]=='.') {*des='.';ln=1;}
+     else if(format.pointer[i]=='#') {
+       j--;
+       p=(int)(num/pow(10,(double)--r));
+       p2=(int)(num/pow(10,(double)(r-1)));
+      /* printf("pow=%g\n",num/pow(10,(double)r));*/
+       num-=p*pow(10,(double)r);
+       if(p) {
+         *des=digits[p];ln=1;
+       } else {
+         if(vorz&&p2) { *des=(neg ? '-':' ');vorz=0;}
+	 else *des=(ln?'0':' ');
+       }
+     } else *des=format.pointer[i];
+     des++;
+   }
+  }
+  return(dest);
+}
+

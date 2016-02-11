@@ -255,7 +255,6 @@ char *get_next_data_entry() {
   char *ergebnis=NULL;
   char t[MAXSTRLEN];
   e=wort_sep(databuffer,',',FALSE,t,databuffer);
-
    if(e==0) {
      next_data_line();
      e=wort_sep(databuffer,',',FALSE,t,databuffer);
@@ -1048,7 +1047,7 @@ c_doclr(char *v){
     if(vnr==-1) {   /* Variable existiert gar nicht */
         if(indize) error(15,r); /* Feld nicht dimensioniert */ 
 	else {
-	  if(typ & STRINGTYP) neue_string_variable(r,"",0); 
+	  if(typ & STRINGTYP) neue_string_variable(r,(STRING){0,""},0); 
 	  else if(typ & INTTYP) neue_int_variable(r,0,0); 
 	  else if(typ & FLOATTYP) neue_float_variable(r,0.0,0);
         }

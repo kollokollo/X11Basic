@@ -644,15 +644,15 @@ int neue_int_variable(char *name, int wert, int sp) {
   } else return(-1);
 }
 
-int neue_string_variable(char *name, char *wert,int len, int sp) { 
+int neue_string_variable(char *name, STRING wert, int sp) { 
         
   if(anzvariablen<ANZVARS) {
     variablen[anzvariablen].name=malloc(strlen(name)+1); 
     strcpy(variablen[anzvariablen].name,name);
-    variablen[anzvariablen].opcode=len;
+    variablen[anzvariablen].opcode=wert.len;
     variablen[anzvariablen].local=sp;
-    variablen[anzvariablen].pointer=malloc(len+1);
-    memcpy(variablen[anzvariablen].pointer,wert,len+1);
+    variablen[anzvariablen].pointer=malloc(wert.len);
+    memcpy(variablen[anzvariablen].pointer,wert.pointer,wert.len);
     variablen[anzvariablen].typ=STRINGTYP;
     anzvariablen++;
     return(0);
@@ -900,8 +900,12 @@ int zuweissbuf(char *name, char *inhalt,int len) {
 	  variablen[i].pointer=realloc(variablen[i].pointer,len+1);
 	  memcpy(variablen[i].pointer,inhalt,len+1);
 	  
-    }   else { if(neue_string_variable(w,inhalt,len,0)==-1) 
-              printf("Zu viele Variablen ! max. %d\n",ANZVARS);
+    }   else { 
+      STRING e;
+      e.pointer=inhalt;
+      e.len=len;
+      if(neue_string_variable(w,e,0)==-1) 
+      printf("Zu viele Variablen ! max. %d\n",ANZVARS);
     }
   }
   free(w);
@@ -1006,13 +1010,19 @@ void c_dolocal(char *name, char *inhalt) {
      printf("Feld-Zuweisung noch nicht moeglich. %s\n",buffer1);
    } else if(type2(name) & STRINGTYP) {
      char *buffer4=malloc(strlen(buffer1)+1);
+     STRING e;
      strcpy(buffer4,buffer1);
      buffer4[strlen(buffer4)-1]=0;
      if(strlen(inhalt)) {
-       buffer3=s_parser(inhalt);
-       neue_string_variable(buffer4,buffer3,strlen(buffer3),sp);
-       free(buffer3);
-     } else  neue_string_variable(buffer4,"",0,sp);
+       e=string_parser(inhalt);
+       
+       neue_string_variable(buffer4,e,sp);
+       free(e.pointer);
+     } else {
+       e.len=0;
+       e.pointer=buffer4;
+       neue_string_variable(buffer4,e,sp);
+     }
      free(buffer4);
   } else if(type2(name) & INTTYP) {
     if(strlen(inhalt)) neue_int_variable(buffer1,(int)parser(inhalt),sp);

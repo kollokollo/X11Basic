@@ -8,6 +8,7 @@ ri=0
 schwanz=1
 c=1
 sizew ,320,200
+schwarz=get_color(0,0,0)
 clearw 
 go:
 text 0,190,"Krieche wie ein Wurm ... und Du bist glücklich!  (c) Markus Hoffmann"
@@ -19,7 +20,7 @@ DO
 	c=c mod 200
 	inc c
 	' print at(xkreis(schwanz),ykreis(schwanz));" ";
- 	color 0
+ 	color schwarz
 	circle xkreis(schwanz),ykreis(schwanz),3
 	wechsel=RANDOM(10)
 	IF wechsel<5
@@ -41,7 +42,7 @@ DO
 	ykreis(schwanz)=neuy
 	
 	' print at(neux,neuy);"*";
-	color c
+	color @farbe(c)
 	circle neux,neuy,3
         exit if mousek>500
 	vsync
@@ -49,3 +50,11 @@ DO
 loop
 ' " ... und der Wurm verpuppte sich und ward niemehr gesehen..."
 quit
+function farbe(n)
+local r,g,b,col
+r=random(1000)/1000
+g=random(1000)/1000
+b=sqrt(1-r*r-g*g)
+col=get_color(r*65535,g*65535,b*65535)
+return col
+endfunc

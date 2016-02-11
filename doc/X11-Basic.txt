@@ -20,7 +20,7 @@
 
       See the file `COPYING' for licensing information
 
-         Last change to this file: Aug 5, 2001
+         Last change to this file: Sept 5, 2001
 
 ==>                                                         <==
  Structured-BASIC-Interpreter with X11 graphic capabilities                          
@@ -85,9 +85,9 @@ The actual implementation run on Unix workstations and Linux-PCs with the X
 Window system.
 
 
-##########################
-## Bedienungsanleitung: ## 
-##########################
+
+Usage: 
+======
 
 Das Programm kann mit folgenden Parametern aufgerufen werden:  
 
@@ -97,20 +97,20 @@ xbasic <filename>   --- Basic-Programm ausführen  [input.bas]
 -e <kommando>       --- Basic Kommando ausführen 
 --eval <ausdruck>   --- Num. Ausdruck auswerten  
 
-Beispiel:
+Examples:
 
 xbasic testme.bas
 xbasic -e 'alert 1,"Hallo !",1," OK ",b'
 xbasic --eval 1+3-4*3
 
-X11-Basic als Dämon:
+X11-Basic aa daemon:
 =====================
 wird X11-Basic mit
 xbasic --daemon
 gestartet, so erscheint bei der Kommandoeingabe kein Prompt und es erfolgt kein 
 Echo der Tastatureingabe.
 
-X11-Basic als Shell:
+X11-Basic as shell:
 ====================
 X11-Basic Programme können auch wie Shell-Scripts gestartet werden.
 Hierzu installiert man xbasic in /bin/. Mit der Anweisung
@@ -371,7 +371,7 @@ Rückgabewerten jeden Typs sind möglich.
 Die Programmstruktur eines Programms erlaubt also üblicherweise ein Hauptteil,
 z.B. eine Schleife, von der aus Unterprogramme aufgerufen werden.
 Mit einem Kommando (--> MERGE) lassen sich so auch ganze Bibliotheken 
-hinzuzubinden.
+hinzubinden.
 
 
 ------ Anweisungen -------------
@@ -416,12 +416,12 @@ moment.
 Variablenames and commands are case insensitive. Names of variables are limited
 of a number of characters or digits specified in defs.h and has to be
 begin with a character. Each name is bound to only one kind of variable; A$  is
-a whole different variable(value) then A wich is different then A(1,1) or
+a whole different variable(value) then A wich is different from A(1,1) or
 A$(1,1).
 
-Space between commands will be ignored, but note that command AND dimensioned
-variables wich uses an '(', no space is allowed between the name of the
-variable or command and the '('. So, ASC("A") is good, ASC(     "A"     ) also,
+Space between commands will be ignored, but note that no space is allowed 
+between the name of a variable or command and the '(' of its parameter list. 
+So, ASC("A") is good, ASC(     "A"     ) also,
 but ASC ("A") isn't.
 
 There are some reserved variables. Some Keywords may not work as varable names
@@ -434,7 +434,7 @@ Conditions and expression are the same, FALSE is defined as 0 and TRUE as -1.
 Those definitions are defined in defs.h and could be changed, but that
 is not recommended. Because BASIC doesn't have a seperate boolean operators for
 conditions and expressions, using an boolean operator (AND,OR,XOR,NOT) may give
-various results. When on each site a value of an 0 or -1 is used, it's assumed
+spurious results. When on each site a value of an 0 or -1 is used, it's assumed
 as an condition, if it's not, it considered an expression. Problems could
 occure if you use boolean operators with negative numbers, but that is also
 unrecommended because the outcome of such an expression is highly platform
@@ -453,7 +453,7 @@ Precedence is defined as follows (highest first) :
 6. < > = <> <= >=
 7. AND OR XOR      ??? hier gibt es dch noch mehr !
 
-Although GOSUB..RETURN FOR..NEXT and WHILE..WEND uses different stacks, jumping
+Although GOSUB..RETURN FOR..NEXT and WHILE..WEND use different stacks, jumping
 around and wrong nesting isn't advisable and not garanteed for future releases.
 
 
@@ -492,7 +492,7 @@ MOUSEK                Bitrepräsentation der gedrückten Maustasten,
 MOUSES                Status der Umschalttasten 
 
 INKEY$                Inhalt des Tastaturpuffers
-TERMINALNAME$         Devicename des Terminals
+TERMINALNAME$         Devicename des Standart-Terminals
 TIME$                 Aktuelle Zeit 
 DATE$                 Aktuelles Datum
 
@@ -552,7 +552,7 @@ DIV a,b                 -- entspricht a=a/b
 DO * LOOP		-- Endlosschleife
 DPOKE adr%,word%        -- Schreibt den 2-Byte-Wert an Adresse adr%
 DRAW [[x1,y1] TO] x2,y2
-DUMP			-- Variablenliste
+DUMP			-- lists all used variable names
 DUMP "@"                -- Liste der Funktionen und Prozeduren
 DUMP ":"                -- Liste der Labels
 DUMP "#"                -- Liste der Offenen Files
@@ -568,7 +568,7 @@ EDIT              set edit-mode and perform the following actions
                  - LOAD "name.~~~"   reads the BASIC-program  
                    from the temporary file.                   
 ELLIPSE x,y,a,b[,a1,a2] -- Zeichnet Ellipse bzw. Sektor
-ELSE                    -- Siehe IF * ELSE * ENDIF
+ELSE                    -- see IF * ELSE * ENDIF
 END			-- Programmende, kehrt zurück in den Direktmodus
 ENDFUNCTION             -- siehe FUNCTION * ENDFUNCTION
 ENDIF                   -- Siehe IF * ELSE * ENDIF
@@ -820,6 +820,8 @@ f%=GLOB(a$,b$[,flags%])     -- Testet, ob a$ in das Pattern b$ passt
 t$=HEX$(a%[,n%])        -- a% als Hexadezimalzahl
 
 c%=INP(#n)		-- Liest ein Zeichen (Byte) vom Kanal. Kanal -2 ist stdin
+c%=INP?(#n)		-- Gibt die Anzahl von Zeichen, die vom Kanal gelesen werden 
+			   k"onnen. Kanal -2 ist stdin
 i%=INP%(#n)
 t$=INPUT$(#n,anz%)
 a%=INSTR(s1$,s2$[,n])   -- tests if s2$ is contained in s1$, then      
@@ -882,8 +884,10 @@ t$=SYSTEM$(n$)          -- Ausgabe des Shell-Kommandos n$
 
 TAB(i%)
 b=TAN(a)		-- Tangens
+t$=TERMINALNAME$(#n)    -- Devicename des Terminals an Kanal n
 b=TRUNC(a)
 
+u$=UCASE$(t$)		-- identisch mit UPPER$()
 u$=UPPER$(t$)		-- liefert t$ in Großbuchstaben
 
 a=VAL(t$)		-- Wandelt String in Zahl, falls der String eine
@@ -912,17 +916,22 @@ mode$  "O" = output (write only), "I" = input (read only), "U" = read and write
        "C"  Socket connect
        "S"  Socket listen
        "A"  Socket accept connection
+       "X"  Sondereinstellungen 
+       (z.B. Geschwindigkeit der seriellen Schnittstelle)
+       (nur bei tty-streams)
        
 f$     Filename oder Hostname
 n%     Kanalnummer
 port%  gibt den Port für die Verbindung (Socket) an.
-
+       oder ein Bitmuster fuer die TTY-Einstellungen
 
 Beispiele:
   OPEN "I",#1,"data.dat"    ---- Öffnet File "data.dat" zum Lesen
 
   OPEN "UC",#1,"localhost",80 ---- Öffnet Port 80 zum Lesen und Schreiben
 
+  OPEN "UC",#1,"/dev/ttyS1",8+5+6*8 ---- Öffnet COM2 zum Lesen und Schreiben
+					  mit 9600:8:N:1
 
 #############################################################################
 
@@ -1012,7 +1021,7 @@ Syntax:  t$=GLOB(name$,pattern$[,flags%])
 Beschreibung:
 
 GLOB() "uberpr"uft, ob name$ das Wildcard-Pattern pattern$ erf"ullt
-       und liefert -1 zurueck, wenn erf"ullt, sonst 0. Mit flags% kann ein 
+       und liefert -1 zurueck, wenn erf"ullt, sonst 0. Mit flags% kann
        die Art der "uberpr"ufung beeinflu"st werden.
        flags%
          0    -- default, kein Zeichen wird extra behandelt
@@ -1123,9 +1132,9 @@ segmentation fault on trying this.
   after finishing, you will find a psydo-code.o in the actal directory. You may
   delete this.
 
-  Please note: If you link your progrtams dynamically, you will eventually have
-  to compile  them again when the x11basic.so will have changed due to a
-  version update of you  X11-Basic package.
+  Please note: If you link your programs dynamically, you will eventually have
+  to compile them again when the x11basic.so will have changed due to a
+  version update of your X11-Basic package.
 
 --------------------------------------------------------------------------------
  4. FREQUENTLY ASKED QUESTIONS
@@ -1177,7 +1186,7 @@ Q: Can X11-Basic generate stand-alone programs, which may run
 A: No. X11-Basic does not translate its input into assembly, you always need 
    the xbasic executable. On the other hand: the xbasic executable is rather 
    small (&lt;200 kB), so you might spread it around with your X11-Basic 
-   programs. If you really need stand alone programs try the preudo-compiler.
+   programs. If you really need stand alone programs try the pseudo-compiler.
    
 Q: May I charge for my X11-Basic programs ?
 A: Yes, you may. But you should state clearly, that xbasic itself is available 
@@ -1275,6 +1284,12 @@ Version 1.05 (Aug. 2001)
 - new system errors
 - started to translate everything into english
 
+Version 1.06 (Jan. 2001)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+- included serial device support
+
+
 --------------------------------------------------------------------------------
 
 
@@ -1283,7 +1298,6 @@ Things left to do:
 - Speed up the interpretation  with precompiled tokens
 - Optimize a bit more
 - Fix the bugs
-- make *.rpm distribution to ship with linux distributions
 (etc. etc.)
 
 

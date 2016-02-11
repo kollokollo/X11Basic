@@ -8,7 +8,7 @@ REGS= @regs@
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I${CCSROOT}/include
+INC=@X_CFLAGS@ -I${CCSROOT}/include -I/opt/readline/include
 
 # for MONITOR=1 we need a System V compatible curses library - I need to
 # write an Autoconf macro to test for that...
@@ -94,7 +94,7 @@ DIST2=$(DISTOBJS:.o=.c)
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 
-LINKFLAGS = -L/usr/lib/termcap
+LINKFLAGS = -L/usr/lib/termcap -L/opt/readline/lib
 
 LIBS = -lm -lX11 -lreadline -ldl -ltermcap @xtra@
 

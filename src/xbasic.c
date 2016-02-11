@@ -1,19 +1,26 @@
 /* XBASIC.C 
 
    (c) Markus Hoffmann 
-   
- ****************************************************************************
- **									   **
- **				BASIC   				   **
- **									   **
- **									   **
- ** 									   **
- **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
- ** 									   **
- **  Letzte Bearbeitung: 23.Okt. 1998					   **
- **									   **
- ****************************************************************************/
 
+
+    X     X    1   1        BBBB
+    X     X   11  11        B   B                   i
+      X X      1   1        B   B            sss
+       X       1   1 -----  BBBB    aaaa    s   s   i   cccc
+      X X      1   1        B   B  a   a      s     i  c
+    X     X    1   1        B   B  a   a    s   s   i  c   
+    X     X    1   1        BBBB    aaa a    sss    i   cccc
+    
+    
+    
+                       VERSION 1.06
+
+            (C) 1997-2001 by Markus Hoffmann
+                 (m.hoffmann@uni-bonn.de)
+       (http://www-cip.physik.uni-bonn.de/~hoffmann/)
+   
+ **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
+*/
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
@@ -758,107 +765,7 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
   return(-1);
 }
 
-int do_using(char *dest,double num,char *format){
-  int a,p,p2,r,i,j; /* dummy */
-  int neg,ln=0,vorz=1;
-  const char *digits="01234567899";
-  
-  if (*format=='%') { /* c-style format */
-    sprintf(dest,format,num);
-  } else { /* basic-style format */
-   
-   /* Zaehle die Rauten vor dem Punkt */
-   a=r=p=0;
-   while(format[p] && format[p]!='.') {
-     if(format[p++]=='#') r++;
-   }
-   /* Zaehle die Rauten nach dem Punkt */
-   while(format[p]) {
-     if(format[p++]=='#') a++;
-   }
-  
-   j=a+r;
-   neg=(num<0);
-   num=fabs(num);
-   num+=0.5*pow(10,(double)-a);  /* zum Runden */
-   
-   for(i=0;i<strlen(format);i++) {
-     if(format[i]=='+') {*dest=(neg ? '-':'+'); vorz=0;}
-     else if(format[i]=='-') {*dest=(neg ? '-':' ');vorz=0;}
-     else if(format[i]=='#') {
-       j--;
-       p=(int)(num/pow(10,(double)--r));
-       p2=(int)(num/pow(10,(double)(r-1)));
-      /* printf("pow=%g\n",num/pow(10,(double)r));*/
-       num-=p*pow(10,(double)r);
-       if(p) *dest=digits[p];
-       else {
-         if(vorz&&p2) { *dest=(neg ? '-':' ');vorz=0;}
-	 else *dest=(ln?'0':' ');
-       }
-     } else *dest=format[i];
-     dest++;
-   }
-   *dest='\0';
-  }
-  return(0);
-}
 
-char *print_arg(char *ausdruck) {
-  int e;
-  char *a1,w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
-  char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
-  char *ergebnis=malloc(4);
-  ergebnis[0]=0;
-  e=arg2(ausdruck,TRUE,w1,w2);
-  while(e) {
-    a1=indirekt2(w1);
-  /*  printf("TEST: <%s> <%s> %d\n",w1,w2,e);*/
-    if(strncmp(a1,"AT(",3)==0) {
-      a1[strlen(a1)-1]=0;
-      wort_sep(a1+3,',',TRUE,w3,w4);
-      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+16);
-      sprintf(ergebnis+strlen(ergebnis),"\033[%.3d;%.3dH",(int)parser(w3),(int)parser(w4));
-    } else if(strncmp(a1,"TAB(",4)==0) {
-      a1[strlen(a1)-1]=0;
-      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+8);
-      sprintf(ergebnis+strlen(ergebnis),"\033[%.3dC",(int)parser(a1+4));
-    } else {
-      if(strlen(a1)) {    
-        int typ,ee;
-	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
-	typ=type2(a1);
-	
-	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
-	  if(typ & STRINGTYP) ;
-	  else ;
-	} else if(typ & STRINGTYP) {
-          char *a3=s_parser(a1);
-	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3));
-          strcat(ergebnis,a3); 
-	  free(a3);
-        } else {
-	  if(ee==2) {
-	    char *a3=s_parser(w4);
-	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3)+32);
-	    do_using(ergebnis+strlen(ergebnis),parser(a1),a3);
-	    free(a3);
-	  } else {
-	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
-	    sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
-          }
-	}
-      }
-    }
-    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+1);
-    if(e==2) ;
-    else if(e==3) strcat(ergebnis,"\011");   /* TAB */
-    else if(e==4) strcat(ergebnis," ");
-    free(a1);
-    e=arg2(w2,TRUE,w1,w2);
-  }
-  return(ergebnis);
-}
 
 void kommando(char *cmd) {
   char buffer[strlen(cmd)+1],w1[strlen(cmd)+1],w2[strlen(cmd)+1],zeile[strlen(cmd)+1];

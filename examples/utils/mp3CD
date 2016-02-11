@@ -42,6 +42,7 @@ print "Es wird mit "+str$(speed)+"facher Geschw. gebrannt."
 if exist(workdir$+"tocfile")
   print "Es exisiert noch eine alte Zusammenstellung."
   print "1 = QUIT, 2 = alte löschen, 3 = alte Brennen, 4 = Neuer Durchlauf, 5 = tocfile erzeugen"
+  print "6 = simulieren"
   input t
   if t=1
     print "ABBRUCH"
@@ -56,6 +57,8 @@ if exist(workdir$+"tocfile")
   else if t=5
     nocover=1
     nobrennen=1
+  else if t=6
+    goto simulieren
   else 
     quit
   endif
@@ -64,13 +67,14 @@ endif
 
 playlist$=system$("ls -l ./*.mp3")
 anzahl=0
-wort_sep playlist$,chr$(10),1,t$,playlist$
+wort_sep playlist$,chr$(10),0,t$,playlist$
 while len(t$)
+  print t$
   wort_sep t$," ./",TRUE,a$,t$
   t$="./"+t$
   files$(anzahl)=t$
   inc anzahl
-  wort_sep playlist$,chr$(10),1,t$,playlist$
+  wort_sep playlist$,chr$(10),0,t$,playlist$
 wend
 
 print anzahl;" Stuecke gefunden ."
@@ -90,7 +94,7 @@ print "Es werden "+str$(pregap)+" Sekunden Pause zwischen den Stücken gelassen."
 
 
 
-labels$=system$("mp3info -f '%m %s "+chr$(34)+"%a"+chr$(34)+" "+chr$(34)+"%l"+chr$(34)+" "+chr$(34)+"%t"+chr$(34)+"' ./*.mp3")
+labels$=system$("mp3info -p '%m %s "+chr$(34)+"%a"+chr$(34)+" "+chr$(34)+"%l"+chr$(34)+" "+chr$(34)+"%t"+chr$(34)+"\n' ./*.mp3")
 
 wort_sep labels$,chr$(10),1,t$,labels$
 
@@ -123,7 +127,7 @@ endif
 
 system "mp3cover"
 if anzahl<>anztitel
-  print "Es sind nicht genug Titel vorhanden !"
+  print "Es sind nicht genug Titel vorhanden !",anzahl,anztitel
   quit
 endif
 if nocover=0
@@ -147,6 +151,15 @@ if nobrennen=0
 
 # system "cdrecord -speed 4 -dev=0,0 -v -audio -pad -swab "+workdir$+"*.cdr.swp"
   system "cdrdao write --device 0,0 "+options$+" --speed "+str$(speed)+" "+workdir$+"tocfile"
+endif
+print "fertig."
+quit
+simulieren:
+if nobrennen=0
+  print "Zusammenstellung jetzt auf CD schreiben... (simulation)"
+  t$="cdrdao simulate -n --device 0,0 "+options$+" --speed "+str$(speed)+" "+workdir$+"tocfile"
+  print t$
+  system t$
 endif
 print "fertig."
 quit

@@ -50,7 +50,7 @@ char *program[MAXPRGLEN];
 void intro(){
   puts("***************************************************************");
   printf("*               %s                 V. %s                *\n",xbasic_name, version);
-  puts("*                    by Markus Hoffmann 1997-2001 (c)         *");
+  puts("*                    by Markus Hoffmann 1997-2002 (c)         *");
   puts("*                                                             *");
 #ifdef GERMAN
   printf("* Programmversion vom     %s       *\n",vdate);

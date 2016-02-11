@@ -10,8 +10,8 @@
 #include <X11/Xutil.h>
 
 
-#define GEMFONT "-*-lucidatypewriter-medium-r-*14*-m-*"
-#define GEMFONTSMALL "-*-lucidatypewriter-medium-r-*10*-m-*"
+#define GEMFONT      "-*-lucidatypewriter-medium-r-normal-*-14-*-iso8859-*"
+#define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
 
 #define max(a,b) ((a>b)?a:b)
 #define min(a,b) ((a<b)?a:b)
