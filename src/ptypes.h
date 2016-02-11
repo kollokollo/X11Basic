@@ -161,12 +161,19 @@ typedef struct {
   void *pointer;
 } PARAMETER;
 
+/* Extra typen */
+
+#define PE_NONE 0
+#define PE_COMMENT 1
+
 typedef struct {
   long opcode;
   int integer;
   short panzahl;
   PARAMETER *ppointer;
   char *argument;
+  short etyp;           /* typ of the extra information */
+  void *extra;          /* Pointer to extra Information */
 } P_CODE;
 
 typedef struct {

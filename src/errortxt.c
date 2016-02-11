@@ -7,7 +7,7 @@
  */
 #include "options.h"
 
-const char *errortxt[] = { 
+const char *errortxt[] = {
 #ifdef GERMAN
 /*   0*/  "Division durch Null",
 /*   1*/  "Überlauf",
@@ -156,8 +156,8 @@ const char *errortxt[] = {
 /*  69*/  "ENDFUNC ohne RETURN",
 /*  70*/  "Unbekannter Fehler 70",
 /*  71*/  "Index zu groß",
-/* H*/  " Fehler 72",
-/* I*/  " Fehler 73",
+/* 72*/  " Fehler 72",
+/* 73*/  " Fehler 73",
 /* J*/  " Fehler 74",
 /* K*/  " Fehler 75",
 /* L*/  " Fehler 76",
@@ -165,16 +165,16 @@ const char *errortxt[] = {
 /* N*/  " Fehler 78",
 /* O*/  " Fehler 79",
 
-/* P*/  "Matrizenoperationen nur für ein- oder zweidimensionale Felder",
-/* Q*/  "Matrizen haben nicht die gleiche Ordnung",
-/* R*/  "Vektorprodukt nicht definiert",
-/* S*/  "Matrizenprodukt nicht definiert",
-/* T*/  "Scalarprodukt nicht definiert",
-/* U*/  "Transposition nur für zweidimensionale Matrizen",
-/* V*/  "Matrix nicht quadratisch",
+/* 80*/  "Matrizenoperationen nur für ein- oder zweidimensionale Felder",
+/* 81*/  "Matrizen haben nicht die gleiche Ordnung",
+/* 82*/  "Vektorprodukt nicht definiert",
+/* 83*/  "Matrizenprodukt nicht definiert",
+/* 84*/  "Scalarprodukt nicht definiert",
+/* 85*/  "Transposition nur für zweidimensionale Matrizen",
+/* 86*/  "Matrix nicht quadratisch",
 /* W*/  "Transposition nicht definiert",
 /* X*/  "FACT/COMBIN/VARIAT nicht definiert",
-/*  89*/  " Fehler 89",
+/*  89*/  "Array must be two dimensional",
 /*  90*/  "Fehler bei Local",
 /*  91*/  "Fehler bei For",
 /*  92*/  "Resume (next) nicht möglich   Fatal, For oder Local",
@@ -186,7 +186,7 @@ const char *errortxt[] = {
 /*  a*/  "Error 97",
 /*  98*/  "Error 98",
 /*  99*/  "Error 99",
-/* 100*/  "X11-BASIC Version 1.12  Copyright (c) 1997-2005 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version 1.13  Copyright (c) 1997-2006 Markus Hoffmann",
 /* e*/  "** 1 - Segmentation fault : Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",
 /* g*/  "** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?",
@@ -237,7 +237,7 @@ const char *errortxt[] = {
 /* -110*/  "* Connection timed out : Zeitüberschreitung bei Verbindung",
 /* -109*/  "* Too many references: cannot splice",
 /* -108*/  "* Cannot send after transport endpoint shutdown",
-/* -107*/  "* Transport endpoint is not connected : Keine Verbindung, Verbindung unterbrochen ?",
+/* -107*/  "* Transport endpoint is not connected :%s: Keine Verbindung, Verbindung unterbrochen ?",
 /* -106*/  "* Transport endpoint is already connected : Verbindung schon geöffnet ",
 /* -105*/  "* No buffer space available : Speicher voll",
 /* -104*/  "* Connection reset by peer",

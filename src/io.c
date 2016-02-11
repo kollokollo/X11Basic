@@ -17,7 +17,14 @@
 #include <unistd.h>
 #include <math.h>
 #ifndef WINDOWS
+#ifdef __hpux
+#define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
+#define CRTS_IFLOW      0x00020000      /* RTS flow control of input */
+#define CRTSCTS         (CRTS_IFLOW|CCTS_OFLOW) /* RTS/CTS flow control */
+#include <sys/termios.h>
+#else
 #include <termios.h>
+#endif
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #ifdef HAVE_SYS_KD_H
@@ -25,6 +32,7 @@
 #endif
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #else
@@ -69,7 +77,7 @@ void io_error(int,char *);
 
 /* Get the number of rows and columns for this screen. */
 void getrowcols(int *rows, int *cols) {
-
+#ifndef WINDOWS
 #ifdef TIOCGWINSZ
 	struct winsize ws;
 
@@ -86,15 +94,8 @@ void getrowcols(int *rows, int *cols) {
 		*cols = ws.ts_cols;
 	}
 #endif
+#endif
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -117,6 +118,31 @@ int f_freefile() {
     i++;
   }
   return(-1);
+}
+#if 0
+int f_map(PARAMETER *plist,int e) {
+  int ergebnis;
+  ergebnis=mmap(0, size_t length, int prot , int flags, int
+       fd, off_t offset);
+  if(ergebnis==MAP_FAILED) io_error(errno,"mmap");
+  return(ergebnis);
+}
+#endif
+void c_msync(PARAMETER *plist,int e) {
+  if(e>=2) {
+  #ifndef WINDOWS
+      if(msync((void *)plist[0].integer, plist[1].integer,MS_SYNC|MS_INVALIDATE))
+        io_error(errno,"msync"); 
+  #endif
+  }
+}
+void c_unmap(PARAMETER *plist,int e) {
+  if(e>=2) {
+   #ifndef WINDOWS 
+      if(munmap((void *)plist[0].integer, plist[1].integer))
+        io_error(errno,"munmap"); 
+   #endif
+  }
 }
 void c_locate(PARAMETER *plist,int e) {
   printf("\033[%.3d;%.3dH",plist[0].integer,plist[1].integer);
@@ -228,12 +254,17 @@ STRING f_inputs(char *n) {
     FILE *fff=stdin;
     if(filenr[i]) {
       fff=dptr[i];
-      
       inbuf.pointer=malloc(anz+1);
       inbuf.len=(int)fread(inbuf.pointer,1,anz,fff);
       inbuf.pointer[anz]=0;
       return(inbuf);
     } else error(24,""); /* File nicht geoeffnet */
+  } else if(e==1) {
+     int anz=(int)parser(s);
+     inbuf.pointer=malloc(anz+1);
+     inbuf.len=(int)fread(inbuf.pointer,1,anz,stdin);
+     inbuf.pointer[anz]=0;
+     return(inbuf);
   } else error(32,"INPUT$"); /* Syntax Error */
   return(vs_error());
 }
@@ -291,20 +322,37 @@ int get_number(char *w) {
 /* Internetroutinen */
 
 int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned short int port) {
-#ifndef WINDOWS
   struct hostent *hostinfo;
   name->sin_family=AF_INET;
   name->sin_port=htons(port);
   hostinfo=gethostbyname(hostname);
   if(hostinfo==NULL) return(-1);
   name->sin_addr=*(struct in_addr *)hostinfo->h_addr;
-#endif
   return(0);
 }
 
+/* Connect #n,"polarfrost.homenet.al",5556
+ connect  socket to server and port */
+
+void c_connect(PARAMETER *plist,int e) {
+  FILE *fff;
+  struct sockaddr_in host_address;
+  int host_address_size;
+  unsigned char *address_holder;
+  if(e>=2) {
+    int sock;
+    fff=get_fileptr(plist[0].integer);
+    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    sock=fileno(fff);
+    if(init_sockaddr(&host_address,plist[1].pointer,plist[2].integer)<0) io_error(errno,"init_sockadr");
+    else { 
+      if(0>connect(sock,(struct sockaddr *) &host_address, sizeof(host_address))) 
+            io_error(errno,"connect");    
+    }
+  }
+}
 int make_socket(unsigned short int port) {
   int sock;
-#ifndef WINDOWS
   struct sockaddr_in name;
   sock=socket(PF_INET, SOCK_STREAM,0);
   if(sock<0) return(-1);
@@ -312,9 +360,25 @@ int make_socket(unsigned short int port) {
   name.sin_port=htons(port);
   name.sin_addr.s_addr=htonl(INADDR_ANY);
   if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
-#endif
   return(sock);
 }
+int make_UDP_socket(unsigned short int port) {
+  int sock;
+  struct sockaddr_in name;
+
+  sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+  if(sock<0) return(-1);
+  memset((void*)&name, 0, sizeof(name));
+  name.sin_family=AF_INET;
+  name.sin_addr.s_addr=INADDR_ANY;
+  name.sin_port=htons(port);
+  if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
+  return(sock);
+}
+
+
+
+
 
 /* Universelle OPEN-Funktion. Oeffnet Files, Devices, und sockets   */
 /* OPEN "I",#1,filename$[,port]   */
@@ -329,10 +393,6 @@ void c_open(char *n) {
   char modus2[5]="r";
   int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
  /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
-
-#ifdef DEBUG
-  printf("OPEN %s\n",n);
-#endif
   e=wort_sep(n,',',TRUE,w1,w2);
   while(e) {
     if(strlen(w1)) {
@@ -400,7 +460,6 @@ void c_open(char *n) {
     /*  Sockets  */
     if(special=='C') { /* Connect */
       int sock;
-#ifndef WINDOWS
       struct sockaddr_in servername;
 #ifdef DEBUG	 
      printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
@@ -420,10 +479,8 @@ void c_open(char *n) {
 	  } else dptr[number]=fdopen(sock,modus2);
 	}
       }
-#endif	
     } else if(special=='S') { /* serve */
       int sock;
-#ifndef WINDOWS
 #ifdef DEBUG
    printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
 #endif
@@ -439,11 +496,9 @@ void c_open(char *n) {
           dptr[number]=fdopen(sock,modus2);
 	}
       }
-#endif
     } else if(special=='A') { /* accept */
       int sock,sock2;
       size_t size;	
-#ifndef WINDOWS
       struct sockaddr_in clientname;
 #ifdef DEBUG
       printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
@@ -463,7 +518,20 @@ void c_open(char *n) {
           dptr[number]=fdopen(sock2,modus2);
 	}
       } else printf("Socket #d nicht geoeffnet.\n",port); 
+    } else if(special=='U') { /* UDP datagramms */
+      int sock;
+#ifdef DEBUG
+   printf("Create UDP Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
 #endif
+      sock=make_UDP_socket(port);
+      if(sock<0) {
+	io_error(errno,"make_udp_socket");
+	dptr[number]=NULL;
+      } else {
+         printf("sock=%d\n",sock);
+          dptr[number]=fdopen(sock,modus2);
+          if(dptr[number]==NULL) io_error(errno,"make_udp_socket");
+      }
     } else dptr[number]=fopen(filename,modus2);
     if(dptr[number]==NULL) {io_error(errno,"OPEN");free(filename);return;}
     else  filenr[number]=1;
@@ -596,7 +664,7 @@ void c_open(char *n) {
 #endif /* TIOCSDTR */
         }
       } else printf("No TTY: cannot set %s !\n");
-  #endif
+  #endif /* WINDOWS */
     }
   }
   free(filename);
@@ -622,6 +690,60 @@ void c_link(PARAMETER *plist, int e) {
 #endif
 #endif
     } 
+  }
+}
+void c_send(PARAMETER *plist, int e) {
+  FILE *fff;
+  if(e>=2) {
+    int sock;
+    fff=get_fileptr(plist[0].integer);
+    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    sock=fileno(fff);
+    if(e>=4) {
+      struct sockaddr_in host_address;
+      int host_address_size;
+
+      memset((void*)&host_address,0,sizeof(host_address));
+      host_address.sin_family=AF_INET;
+      host_address.sin_port=htons(plist[3].integer);
+      *((unsigned int*)&host_address.sin_addr.s_addr)=plist[2].integer;
+      if(sendto(sock,plist[1].pointer,plist[1].integer,0,
+	   (struct sockaddr*)&host_address,sizeof(host_address))<0)	
+		io_error(errno,"sendto()");
+    } else {
+      if(send(sock,plist[1].pointer,plist[1].integer,0)<0)	
+		io_error(errno,"send()");
+    }	
+  }
+}
+void c_receive(PARAMETER *plist, int e) {
+  int number;
+  FILE *fff;
+  char buffer[1500];
+	 struct	sockaddr_in	host_address;
+	 int	host_address_size;
+	 unsigned	char	*address_holder;
+
+  if(e>=2) {
+    int len,fdes;
+    number=plist[0].integer;
+    fff=get_fileptr(number);
+    fdes=fileno(fff);
+    if(fff==NULL) {error(24,"");return;} /* File nicht geoeffnet */    
+    memset((void*)&host_address,0,sizeof(host_address));
+    host_address.sin_family=AF_INET;
+    host_address_size=sizeof(host_address);
+    if((len=recvfrom(fdes,buffer,1500,0,(struct sockaddr*)&host_address,
+       &host_address_size))<0) {io_error(errno,"recvfrom()");return;}
+address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
+#if DEBUG
+    printf("Port  obtained %d Bytes message '%s' from host %d.%d.%d.%d.\n",
+    len,buffer,address_holder[0],address_holder[1],address_holder[2],
+    address_holder[3]);
+#endif
+    zuweissbuf(plist[1].pointer,buffer,len);
+    if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=host_address.sin_addr.s_addr;
+    if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)host_address.sin_addr.s_addr;
   }
 }
 
@@ -755,21 +877,6 @@ void c_close(char *w) {
 }
 
 
-void c_bload(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *filename;
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  int g,len=-1,a;
-  if(e<2) error(42,"BLOAD"); /* Zu wenig Parameter */
-  else {
-    filename=s_parser(w1); 
-    e=wort_sep(w2,',',TRUE,w1,w2);
-    if(e==2) len=(int)parser(w2);
-    g=bload(filename,(char *)(int)parser(w1),len);
-    free(filename);
-    if(g==-1) io_error(errno,"BLOAD");
-  }
-}
 /* Fuehrt Code an Adresse aus */
 void c_exec(char *n) { f_exec(n);}
 int f_exec(char *n) {
@@ -800,62 +907,38 @@ int f_exec(char *n) {
   else return(adr(gtt));
   return(0);
 }
-
-void c_bsave(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *filename;
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  int g,len,a;
-  if(e<2) error(42,"BSAVE"); /* Zu wenig Parameter */
-  else {
-    filename=s_parser(w1); 
-    e=wort_sep(w2,',',TRUE,w1,w2);
-    if(e!=2) error(42,"BSAVE"); /* Zu wenig Parameter */
-    else {
-      len=(int)parser(w2);
-      g=bsave(filename,(char *)(int)parser(w1),len);
-      if(g==-1) io_error(errno,"BSAVE");
-    }
-    free(filename);
+void c_bload(PARAMETER *plist,int e) {
+  int len=-1;
+  if(e>=2) {
+    if(e==3) len=plist[2].integer;
+    if(bload(plist[0].pointer,(char *)plist[1].integer,len)==-1)
+      io_error(errno,"BLOAD");
   }
 }
-void c_bget(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *adr;
-  int anzahl;
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  int i=get_number(w1);
-  e=wort_sep(w2,',',TRUE,w1,w2);
-  adr=(char *)(int)parser(w1);
-  anzahl=(int)parser(w2);
-  if(filenr[i]) {
-    fread(adr,1,anzahl,dptr[i]);
-  } else {error(24,w1);return;} /* File nicht geoeffnet */
-}
-void c_bput(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *adr;
-  int anzahl;
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  int i=get_number(w1);
-  e=wort_sep(w2,',',TRUE,w1,w2);
-  adr=(char *)(int)parser(w1);
-  anzahl=(int)parser(w2);
-  if(filenr[i]) {
-    fwrite(adr,1,anzahl,dptr[i]);
-  } else {error(24,w1);return;} /* File nicht geoeffnet */
 
+void c_bsave(PARAMETER *plist,int e) {
+  if(e==3) { 
+      if(bsave(plist[0].pointer,(char *)plist[1].integer,plist[2].integer)==-1)
+        io_error(errno,"BSAVE");
+  }
 }
-void c_bmove(char *n) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *ziel;
-  int anzahl;
-  int e=wort_sep(n,',',TRUE,w1,w2);
-  char *quelle=(char *)(int)parser(w1);
-  e=wort_sep(w2,',',TRUE,w1,w2);
-  ziel=(char *)(int)parser(w1);
-  anzahl=(int)parser(w2);
-  memmove(ziel,quelle,(size_t)anzahl);
+void c_bget(PARAMETER *plist,int e) {
+  int i=plist[0].integer;
+  if(e==3) {
+    if(filenr[i]) fread((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
+    else error(24,""); /* File nicht geoeffnet */
+  }
+}
+void c_bput(PARAMETER *plist,int e) {
+  int i=plist[0].integer;
+  if(e==3) {
+    if(filenr[i]) fwrite((char *)plist[1].integer,1,plist[2].integer,dptr[i]);
+    else error(24,""); /* File nicht geoeffnet */
+  }
+}
+void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
+  if(e==3) 
+    memmove((char *)plist[1].integer,(char *)plist[0].integer,(size_t)plist[2].integer);
 }
 void c_unget(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1];
@@ -881,33 +964,22 @@ void c_flush(PARAMETER *plist,int e) {
   if(fflush(fff)) io_error(errno,"FLUSH");
 }
 
-void c_seek(char *n) {
- char v[strlen(n)+1],w[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,v,w);
-  if(e>1) {
-    int i=get_number(v);
-    FILE *fff=NULL;
-
+void c_seek(PARAMETER *plist,int e) {
+  if(e>=1) {
+    int j=0,i=plist[0].integer;
+    if(e>1) j=plist[1].integer;
     if(filenr[i]) {
-      fff=dptr[i];
-      wort_sep(w,',',TRUE,v,w);
-      if(fseek(fff,(int)parser(v),SEEK_SET)) io_error(errno,"SEEK");
+      if(fseek(dptr[i],j,SEEK_SET)) io_error(errno,"SEEK");
     } else error(24,""); /* File nicht geoeffnet */
-  } else error(32,"SEEK"); /* Syntax error */
+  } 
 }
-void c_relseek(char *n) {
- char v[strlen(n)+1],w[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,v,w);
-  if(e>1) {
-    int i=get_number(v);
-    FILE *fff=NULL;
-
+void c_relseek(PARAMETER *plist,int e) {
+  if(e==2) {
+    int i=plist[0].integer;
     if(filenr[i]) {
-      fff=dptr[i];
-      wort_sep(w,',',TRUE,v,w);
-      if(fseek(fff,(int)parser(v),SEEK_CUR)) io_error(errno,"RELSEEK");
+      if(fseek(dptr[i],plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
     } else error(24,""); /* File nicht geoeffnet */
-  } else error(32,"RELSEEK"); /* Syntax error */
+  } 
 }
 
 int inp8(char *n) {
@@ -1293,21 +1365,18 @@ void memdump(unsigned char *adr,int l) {
   printf("\033[m");
 }
 
-
-
-
-
-
 /* Sound the speaker */
 void speaker(int frequency) {
+#ifdef WINDOWS
+  Beep(frequency,1);
+#else
   int tone;
   int fd=1;
   if(frequency>0) tone=1190000/frequency;
   else tone=0;
-#ifndef WINDOWS
   if (strncmp(getenv("TERM"), "xterm", 5) == 0) {
   fd = open("/dev/console", O_WRONLY);
-  if (fd < 0) {fd = 1; io_error(errno,"/dev/console");}
+  if(fd<0) {fd=1; io_error(errno,"/dev/console");}
  }
 #ifdef KIOCSOUND
   ioctl(fd,KIOCSOUND,tone);

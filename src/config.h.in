@@ -137,6 +137,9 @@
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
 
+/* Define to 1 if you have the `memfrob' function. */
+#undef HAVE_MEMFROB
+
 /* Define to 1 if `st_blocks' is member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_BLOCKS
 

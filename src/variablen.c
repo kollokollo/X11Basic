@@ -416,9 +416,73 @@ void array_smul(ARRAY a1, double m) {
     for(j=0;j<anz;j++) pp1[j]=m*pp1[j];
   } else puts("ERROR: inkompatible array type.");
 }
+
+extern double *SVD(double *a, double *w, double *v,int anzzeilen, int anzspalten);
+extern double *backsub(double *, double *, double *, double *,int,int);
+
 ARRAY inv_array(ARRAY a) {
-  error(9,"INV"); /* Befehl noch nicht moeglich.*/
-  return(nullmatrix(a.typ,a.dimension,a.pointer));
+  if(a.dimension==0) {
+    double d=*((double *)a.pointer);
+    if(d==0) error(0,""); /* Division durch Null */
+    else d=1/d;
+    return(form_array(a.typ,0,NULL,(char *)&d));
+  } else if(a.dimension!=2) {
+    error(89,""); /* Array must be two dimensional */
+    return(nullmatrix(a.typ,a.dimension,a.pointer));
+  } else {
+    if(((int *)a.pointer)[0]!=((int *)a.pointer)[1]) {
+      error(86,""); /* Matrix nicht quadratisch */
+      return(nullmatrix(a.typ,a.dimension,a.pointer));
+    } else {
+      ARRAY ergeb;
+      double maxsing=0;
+      int i,j,elim=0;
+      int fsing=0;
+      int anzzeilen=((int *)a.pointer)[0];
+      int anzspalten=((int *)a.pointer)[1];
+      double *pp=(double *)(a.pointer+a.dimension*INTSIZE);
+      double *u = malloc(sizeof(double)*anzzeilen*anzspalten);
+      double *v = malloc(sizeof(double)*anzspalten*anzspalten);
+      double *ergebnis = malloc(sizeof(double)*anzspalten*anzspalten);
+      double *singulars = malloc(sizeof(double)*anzspalten);
+      double *col;
+      double *univ = malloc(sizeof(double)*anzspalten);
+      memcpy(u,pp,sizeof(double)*anzzeilen*anzspalten);
+      singulars=SVD(u,singulars,v,anzzeilen,anzspalten);
+      /* Groessten Singulaerwert rausfinden */
+      for(i=0;i<anzspalten;i++) {
+        if(fabs(singulars[i])>maxsing) maxsing=fabs(singulars[i]);
+      }
+     /* Zaehle Anzahl der Singulaeren Werte (d.h. Eigenwerte=0) */
+     /* Akzeptiere nur Eigenwerte die mindestens 1e-10 vom groessten sind,
+        ansonsten setze sie zu 0 */
+
+      for(i=0;i<anzspalten;i++) {
+        if(singulars[i]==0) fsing++;
+        if(fabs(singulars[i])/maxsing<1e-10 && singulars[i]) {
+          printf("** %g\n",singulars[i]);
+          singulars[i]=0;
+          elim++;
+        }
+      }
+      if(fsing || elim) printf("Found %d singularities and eliminated another %d.\n",fsing,elim);
+
+      /* Jetzt die inverse Matrix ausrechnen   */
+      for(i=0;i<anzspalten;i++) {
+        for(j=0;j<anzspalten;j++) univ[j]=0;
+        univ[i]=1;
+        col=backsub(singulars,u,v,univ,anzzeilen,anzspalten);
+	for(j=0;j<anzspalten;j++) ergebnis[i*anzspalten+j]=col[j];
+        free(col);
+      }
+      free(u);free(v);
+      free(singulars);
+      free(univ);
+      ergeb=form_array(a.typ,2,a.pointer,(char *)ergebnis);
+      free(ergebnis);
+      return(ergeb);
+    }
+  }
 }
 
 /* Transponiere ein 2-d-Array    */
@@ -526,6 +590,34 @@ ARRAY mul_array(ARRAY a1, ARRAY a2) {
     }
   }
 }
+
+/* Uebernimmt einen Speicherbereich in ein Array */
+
+ARRAY form_array(int typ, int dimension, int *dimlist, char *inhalt) {
+  int j,anz=1,dlen;
+  char *pp;
+  ARRAY ergebnis;
+  ergebnis.typ=typ;
+  ergebnis.dimension=dimension;
+  
+  if(dimension) {
+    for(j=0;j<dimension;j++) anz=anz*dimlist[j];
+  }
+  if(typ & INTTYP) dlen=sizeof(int);
+  else if(typ & FLOATTYP) dlen=sizeof(double);
+  else dlen=sizeof(STRING);
+  
+  
+  ergebnis.pointer=malloc(dimension*INTSIZE+anz*dlen);
+  pp=(char *)(ergebnis.pointer+dimension*INTSIZE);
+  /* dimlist kopieren */
+  if(dimension) {
+    for(j=0;j<dimension;j++) ((int *)(ergebnis.pointer))[j]=dimlist[j];
+  }
+  memcpy(pp,inhalt,dlen*anz);
+  return(ergebnis);
+}
+
 ARRAY nullmatrix(int typ, int dimension, int *dimlist) {
   ARRAY ergebnis;
   int anz=1,j;

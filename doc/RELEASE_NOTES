@@ -1,4 +1,3 @@
-Release notes for Version 1.12 (Mar 2005)
+Release notes for Version 1.13 (Feb 2006)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- fixed bug with DEFMARK
-- experimental LISTSELECT
+- fixed bug in INPUT$()

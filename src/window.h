@@ -7,7 +7,7 @@
  */
 
 #ifdef WINDOWS
-  #include <windows.h> 
+  #include <windows.h>
   #include <process.h>
 #else
 #ifdef USE_VGA
@@ -17,10 +17,7 @@
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
 #endif
-  #define max(a,b) ((a>b)?a:b)
-  #define min(a,b) ((a<b)?a:b)
 #endif
-
 
 #define GEMFONT      "-*-fixed-*-r-normal-*-16-*-iso8859-*"
 #define GEMFONTSMALL "-*-fixed-medium-r-normal-*-10-*-iso8859-*"
@@ -45,7 +42,7 @@
  DeleteObject(brush[usewindow]); \
  brush[usewindow]=CreateSolidBrush(c); \
  SelectObject(bitcon[usewindow],brush[usewindow]); \
- SetTextColor(bitcon[usewindow],c); } 
+ SetTextColor(bitcon[usewindow],c); }
 #define SetBackground(c) SetBkColor(bitcon[usewindow],c)
 #define FillRectangle(a,b,c,d); { \
   RECT rc; \
@@ -63,13 +60,14 @@
   rc.bottom=b+d; \
   FrameRect(bitcon[usewindow],&rc,brush[usewindow]); \
 }
-#define DrawLine(a,b,c,d);  {  MoveToEx(bitcon[usewindow],a,b,NULL); \
-  LineTo(bitcon[usewindow],c,d); \
-}
-#define DrawPoint(a,b) SetPixelV(bitcon[usewindow],a,b,global_color);
+#define DrawLine(a,b,c,d);  {MoveToEx(bitcon[usewindow],a,b,NULL); \
+  LineTo(bitcon[usewindow],c,d);}
+#define XDrawArc(a,b,c,d,e,f,g,h,i) Arc(bitcon[usewindow],d,e,d+2*(f),d+2*(g),1000*(int)cos((double)h/64/180*PI),1000*(int)sin((double)h/64/180*PI),1000*(int)cos((double)i/64/180*PI),1000*(int)sin((double)i/64/180*PI))
+#define XFillArc(a,b,c,d,e,f,g,h,i) Ellipse(bitcon[usewindow],d,e,d+2*(f),d+2*(g));
+#define DrawPoint(a,b) SetPixelV(bitcon[usewindow],a,b,global_color)
 #define CopyArea(a,b,c,d,e,f) BitBlt(bitcon[usewindow],e,f,c,d,bitcon[usewindow],a,b,SRCCOPY)
 #define DrawString(a,b,c,d) TextOut(bitcon[usewindow],a,(b-baseline),c,d)
-#define SetFillRule(c)   ; 
+#define SetFillRule(c)   ;
 #define SetFillStyle(c)  ;
 #else
 #ifdef USE_VGA
@@ -80,17 +78,16 @@
 #define FillRectangle(a,b,c,d)  ;
 #define DrawRectangle(a,b,c,d)  ;
 #define DrawString(a,b,c,d) ;
-#define DrawLine(a,b,c,d)  ; 
-#define DrawPoint(a,b)  ; 
+#define DrawLine(a,b,c,d)  ;
+#define DrawPoint(a,b)  ;
 #define CopyArea(a,b,c,d,e,f) ;
-
 #else
 #define SetFillRule(c)   XSetFillRule(display[usewindow], gc[usewindow],c)
 #define SetFillStyle(c)  XSetFillStyle(display[usewindow], gc[usewindow],c)
 #define SetForeground(c) XSetForeground(display[usewindow],gc[usewindow],c)
 #define SetBackground(c) XSetBackground(display[usewindow],gc[usewindow],c)
-#define FillRectangle(a,b,c,d) XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d) 
-#define DrawRectangle(a,b,c,d) XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d) 
+#define FillRectangle(a,b,c,d) XFillRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
+#define DrawRectangle(a,b,c,d) XDrawRectangle(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
 #define DrawString(a,b,c,d) XDrawString(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
 #define DrawLine(a,b,c,d)  XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],a,b,c,d)
 #define DrawPoint(a,b)     XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],a,b)
@@ -142,9 +139,9 @@ int global_color,global_keycode,global_ks,global_eventtype;
 extern HANDLE keyevent,buttonevent,motionevent;
 
 #else
-Window win[MAXWINDOWS];                 
+Window win[MAXWINDOWS];
 Pixmap pix[MAXWINDOWS];
-Display *display[MAXWINDOWS];            
+Display *display[MAXWINDOWS];
 GC gc[MAXWINDOWS];                      /* Im Gc wird Font, Farbe, Linienart, u.s.w.*/
 XSizeHints size_hints[MAXWINDOWS];       /* Hinweise fuer den WIndow-Manager..*/
 XWMHints wm_hints[MAXWINDOWS];
@@ -387,7 +384,7 @@ BITBLK
 	WORD	bi_x;			/* source x in bit form		*/
 	WORD	bi_y;			/* source y in bit form		*/
 	WORD	bi_color;		/* fg color of blt 		*/
-       
+
 };
 
 #define USERBLK struct user_blk

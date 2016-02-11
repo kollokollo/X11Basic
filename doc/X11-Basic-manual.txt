@@ -11,9 +11,9 @@
         ###############################################################
   
  
- 		    		  VERSION 1.12
+ 		    		  VERSION 1.13
 
- 		       (C) 1997-2005 by Markus Hoffmann
+ 		       (C) 1997-2006 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
  		    (see http://x11-basic.sourceforge.net/)
 
@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Do Mär 3 13:18:43 CET 2005
+          Last change to this file:  So Feb 5 12:45:19 CET 2006
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -1717,7 +1717,7 @@ XXXX \=     X11-Basic Error messages:           \kill    \\
 92 \> Resume (next) nicht möglich   Fatal, For oder Local\\
 93 \> Stapel-Fehler\\
 
-100 \> X11BASIC Version 1.12  Copyright (c) 1997-2005 Markus Hoffmann\\
+100 \> X11BASIC Version 1.13  Copyright (c) 1997-2006 Markus Hoffmann\\
 101 \> ** 1 - Segmentation fault : Speicherschutzverletzung\\
 102 \> ** 2 - Bus Error Peek/Poke falsch?\\
 103 \> ** 3 - Adress error Ungerade Wort-Adresse! Dpoke/Dpeek, Lpoke/Lpeek?\\
@@ -2365,6 +2365,40 @@ DESCRIPTION:
 	BTST results in -1 (TRUE) if bit y of x is set.
 	
 SEE ALSO: BCHG(), BCLR(), BSET()
+##############################################################################
+
+Function: BWTD$()
+Syntax:   b$=BWTD$(a$)
+
+DESCRIPTION:
+
+	BWTD$() performs the inverse Burrows-Wheeler transform on the 
+	string a$.  
+	
+SEE ALSO: BWTE$()
+##############################################################################
+
+Function: BWTE$()
+Syntax:   b$=BWTE$(a$)
+
+DESCRIPTION:
+
+	BWTE$() performs a Burrows-Wheeler transform on the string a$.
+	  
+	The Burrows-Wheeler transform (BWT) is an algorithm used in data 
+	compression techniques such as bzip2. It was invented by Michael 
+	Burrows and David Wheeler.
+
+	When a character string is transformed by the BWT, none of its 
+	characters change. It just rearranges the order of the characters. 
+	If the original string had several substrings that occurred often, 
+	then the transformed string will have several places where a single 
+	character is repeated multiple times in a row. This is useful for 
+	compression, since it tends to be easy to compress a string that has 
+	runs of repeated characters by techniques such as run-length encoding.
+
+
+SEE ALSO: BWTD$()
 
 ##############################################################################
 
@@ -2668,6 +2702,47 @@ DESCRIPTION:
 
 	   Calculates the number of combinations of <n> elements to  the 
            <k>th class without repetitions. Defined as z=n!/((n-k)!*k!).
+##############################################################################
+
+Function:   COMPRESS$()
+Syntax:     c$=COMPRESS$(a$)
+
+DESCRIPTION:
+
+           Performs a losless compression on the String a$.
+	   The algorithm uses run length encoding in combination with 
+	   the Burrows-Wheeler transform. The result is a better compression 
+	   than p.ex. the algorithm used by gzip. At the moment the 
+	   COMPRESS$() function is identical to following combination:
+	   b$=ARIE$(RLE$(MTFE$(BWTE$(RLE$(a$)))))
+           
+SEE ALSO:  UNCOMPRESS$(), BWTE$(), RLE$(), MTFE$()
+#############################################################################
+
+Command: CONNECT
+Syntax:  CONNECT #n,server$,port%
+
+DESCRIPTION:
+
+       Initiate a connection on a socket.        
+
+       The file number #n must refer to a socket.  If the
+       socket is of type "U" then the server$ address is
+       the address to which packets are sent by  default,  and
+       the  only  address  from which packets are received.  If
+       the socket is of type "S","A","C",  this
+       call attempts to make a connection to another socket.  The
+       other socket  is  specified  by  server$,  which  is  an
+       address in the communications space of
+       the socket.  
+       
+       Generally,  connection-based protocol sockets may success­
+       fully connect only once; connectionless  protocol  sockets
+       may  use  connect  multiple times to change their associa­
+       tion.  
+       
+SEE ALSO:   OPEN, CLOSE, SEND, RECEIVE       
+
 #############################################################################
 
 Command: CONT
@@ -2720,6 +2795,18 @@ DESCRIPTION:
 	defined mathematically as (exp(x)+exp(-x))/2
 
 SEE ALSO:  COS(), ACOSH()
+*##############################################################################
+
+Function:   CRC()
+Syntax:     <num-result>=CRC(t$[,oc])
+
+DESCRIPTION:
+
+	 Calculates a 32 bit checksum on the given String.
+	 If oc is passed, the checksum will be updated with the 
+	 given String.
+
+SEE ALSO:  LEN()
 
 #############################################################################
 
@@ -2992,6 +3079,17 @@ DESCRIPTION:
 	Same as PAUSE. Delays program execution by <num-of-seconds> seconds.	
 
 SEE ALSO: PAUSE
+##############################################################################
+
+Function: DET()
+Syntax:   d=DET(a())
+	
+DESCRIPTION:
+
+	Calculates the determinant of a (square) matrix a().
+		
+SEE ALSO: SOLVE(),INV()
+
 ##############################################################################
 
 Command: DIM
@@ -4233,6 +4331,17 @@ DESCRIPTION:
 SEE ALSO: INP()
 
 ##############################################################################
+Function:   INV()
+Syntax:     b()=INV(a()) 
+
+DESCRIPTION:
+	Calculate the inverse of a square matrix a(). The calculation is done 
+	using the singular value decomposition. If the matrix is singular the 
+	algorithm tells you how many singular values are zero or close to zero. 
+
+SEE ALSO: SOLVE(),DET()
+
+##############################################################################
 
 Command: INPUT
 Syntax:  INPUT [#<device-number>]|<prompt-expression>], <variable> [, ...]
@@ -4256,14 +4365,15 @@ EXAMPLE:
 ##############################################################################
 
 Function:   INPUT$()
-Syntax:     <string-result>=INPUT$(<device-nr>,<len>) 
+Syntax:     <string-result>=INPUT$(#<nr>,<len>) 
+            <string-result>=INPUT$(<len>) 
 
 DESCRIPTION:
 
 	Reads <len> characters from the keyboard and assigns them 
         to  a  string.  Optionally,  if  the device-number is 
         specified,  the  characters are read in from  a  previously 
-        OPENed channel.
+        OPENed channel <nr>.
 
 SEE ALSO: INPUT, INP()
 ##############################################################################
@@ -4866,6 +4976,39 @@ DESCRIPTION:
 
 SEE ALSO: OPENW, SIZEW, TITLEW
 ##############################################################################
+Function: MTFD$() 
+Syntax:  b$=MTFD$(a$)
+
+DESCRIPTION:
+
+	This function performs a Move To Front decoding function on an
+        input string.
+        The MTF decoder keeps an array of 256 characters
+        in the order that they have appeared.  Each time the encoder
+        sends a number, the decoder uses it to look up a character in
+        the corresponding position of the array, and outputs it.  That
+        character is then moved up to position 0 in the array, and all
+        the in-between characters are moved down a spot.
+
+SEE ALSO: MTFE$()
+##############################################################################
+Function: MTFE$() 
+Syntax:  b$=MTFE$(a$)
+
+DESCRIPTION:
+
+	This function performs a Move To Front encoding function on an
+        input string.
+        An MTF encoder encodes each character using the
+        count of distinct previous characters seen since the characters
+        last appearance. This is implemented by keeping an array of
+        characters.  Each new input character is encoded with its
+        current position in the array.  The character is then moved to
+        position 0 in the array, and all the higher order characters
+        are moved down by one position to make roon. 
+
+SEE ALSO: MTFD$()
+##############################################################################
 Command:  MUL 
 Syntax:   MUL <num-var>,<num-expression>
 
@@ -5075,18 +5218,21 @@ DESCRIPTION:
 	The second character specifies the type of File which should be opened 
 	or created: 
 	""   default opens regular file
-        "C"  opens a socket connection
-        "S"  Socket listen
+	"U"  opens a datagramm socket connection
+        "C"  opens a Strem socket as client with connection
+        "S"  opens a stream socket as server
         "A"  Socket accept connection
-        "X"  extra settings for a special device following 
+        "X"  extra settings for a special device following: 
         (e.g. speed and parity of transmission via serial ports)
+	"UX:baud,parity,bits,stopbits,flow"
 
-<port-nr> The portnr is used only by the OPEN "UC" statement. It determines the
+<port-nr> The portnr is used only by the OPEN "UC" and OPEN "UU" statement. 
+        It determines the
 	TCP/IP Port of connection (FTP, WWW, TELNET, MAIL etc.).
 
 
 SEE ALSO: CLOSE, EXIST(), INPUT, LINEINPUT, PRINT, SEEK, LOF(), EOF(),
-          LOC(), BLOAD, LINK
+          LOC(), BLOAD, LINK, FREEFILE(), CONNECT
 
 EXAMPLES:
 	OPEN "I",#1,"data.dat"      ---- opens file "data.dat" for input
@@ -5094,7 +5240,7 @@ EXAMPLES:
 					 write
 	OPEN "UX:9600,N,8,1,XON,CTS,DTR",#1,"/dev/ttyS1"  
                  ---- open COM2 for input and output with 9600:8:N:1 with
-		      sofware flow control and hardware flow control and also 
+		      software flow control and hardware flow control and also 
 		      drop DTR line and raise it again.
 
 ##############################################################################
@@ -5604,6 +5750,16 @@ EXAMPLE
         FUNCTION givemefive
             RETURN 5
         ENDFUNCTION
+##############################################################################
+
+Function: REVERSE$()
+Syntax:  a$=REVERSE$(t$) 
+
+DESCRIPTION:
+
+         Reverses a String. 
+
+SEE ALSO:  UPPER$(), TRIM$()
 
 ##############################################################################
 
@@ -5620,6 +5776,43 @@ DESCRIPTION:
         start comparison at right
 
 SEE ALSO: INSTR()
+##############################################################################
+
+Function:  RLD$()
+Syntax:    a$=RLD$(a$)  
+
+DESCRIPTION:
+
+	Does a run length decoding of string a$. This function reverses the 
+	Run Length Encoding function on a string.
+
+        In the input string, any two consecutive
+        characters with the same value flag a run.  A byte following
+        those two characters gives the count of additional(!)
+        repeat characters, which can be anything from 0 to 255.
+
+	
+SEE ALSO: RLE$()
+
+##############################################################################
+
+Function:  RLE$()
+Syntax:    a$=RLE$(a$)  
+
+DESCRIPTION:
+
+	Does a run length encoding of string a$. This function performs a 
+	Run Length Encoding function on a string.
+        In the output string, any two consecutive
+        characters with the same value flag a run.  A byte following
+        those two characters gives the count of additional(!)
+        repeat characters, which can be anything from 0 to 255.
+	The resulting String might be shorter than the input string if
+	there are many equal characters following each other. In the worst case 
+	the resulting string will be 50% longer.
+
+	
+SEE ALSO: RLD$()
 
 ##############################################################################
 
@@ -5774,6 +5967,34 @@ DESCRIPTION:
 	Position 0 which is the beginning of File.)
 
 SEE ALSO: RELSEEK, LOC(), EOF(), LOF()
+##############################################################################
+Command: SEND
+Syntax:  SEND #n,msg$[,adr%,port%]
+
+
+DESCRIPTION:
+	
+       SEND is used to transmit a message via fast UDP datagramms to  another
+       socket which may be on another host. Send with only two parameters may
+       be used only  when the socket is in a connected state (see CONNECT),
+       otherwise the destination adress and the port  has to be specified.
+
+       The address of the target is given by adr%, which usually contains a 
+       IP4 adress (e.g. cvl(chr$(127)+chr$(0)+chr$(0)+chr$(1)) which
+       corresponds to 127.0.0.1). msg$ can be an arbitrary message with any
+       data in it. The length of the  message  must not exceed 1500 Bytes.  If 
+       the  message  is  too  long  to pass atomically through the underlying
+       protocol,  an  error occurs, and the message is not transmitted.
+
+       No indication of failure to deliver is implicit in a send.
+
+       When  the message does not fit into the send buffer of the
+       socket, send blocks. The OUT?() function may
+       be  used  to  determine  when  it is possible to send more
+       data.
+
+
+SEE ALSO: OPEN, CLOSE, CONNECT, RECEIVE, OUT?()
 ##############################################################################
 
 
@@ -5948,6 +6169,20 @@ DESCRIPTION:
 	Returns a string containing n spaces.
 	
 SEE ALSO:  STRING$()	
+##############################################################################
+Function: SOLVE()
+Syntax:   x()=SOLVE(m(),d())
+
+DESCRIPTION:
+	
+	Soves a set of linear equations d()=M()*x(). M() has to be a 2 dim Array
+	not necessarily a square matrix. d() must be a 1 dim Array with exactly 
+	as many elements as lines of M(). x() will be a 1 dim Array with exactly
+	as many elements as rows of M(). Internally a singular value 
+	decomposition is used to solve the equation. If singular values found 
+	to be smaller than 1e-10 of the largest value they are set to zero. 
+	
+SEE ALSO: INV(),DET()
 ##############################################################################
 Command:  SPLIT
 Syntax:   SPLIT t$,t$,i%,var$[,var$]
@@ -6198,6 +6433,17 @@ DESCRIPTION:
 
 SEE ALSO: UPPER$(), LOWER$()
 
+##############################################################################
+
+Variable: UNCOMPRESS$()
+Syntax:   t$=UNCOMPRESS$(c$) 
+
+DESCRIPTION:
+
+	Uncompresses the content of a string which has been compressed with the 
+	COMPRESS$() function before.
+
+SEE ALSO: COMPRESS$()
 ##############################################################################
 
 Variable: UNIX?  
@@ -6736,8 +6982,16 @@ Version 1.12 (Mar 2005)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - fixed bug with DEFMARK
 - experimental LISTSELECT
+- worked on MATRIX functions: SOLVE(),INV(),DET()
+- OPEN "UU"  UDP-Sockets
+- CONNECT, SEND, RECEIVE
+- New String Functions: REVERSE$(), MTFE$(), MTFD$(), RLD$(), RLE$()
+- CRC()
+- New Code Engines: BETE$(), BWTD$(), COMPRESS$()
 
-
+Version 1.13 (Feb 2006)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- fixed bug in INPUT$()
 
 --------------------------------------------------------------------------------
 *Acknowlegements

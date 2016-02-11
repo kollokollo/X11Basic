@@ -25,9 +25,11 @@ DEF= @def@
 #CC=@CC@ @static@ $(REGS)
 CC=@CC@ $(REGS)
 
-# Compiler fuer Windows-Excecutable
+# Cross-Compiler fuer Windows-Excecutable
 
-WINCC=i386-mingw32msvc-gcc
+# WINCC=i386-mingw32msvc-gcc
+WINCC=i686-pc-mingw32-gcc
+
 
 # Preprocessor
 CPP=@CPP@
@@ -44,13 +46,15 @@ LIBDIR=@libdir@
 MANDIR=@mandir@
 
 OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o\
-        runtime.o wort_sep.o ltext.o\
+        runtime.o wort_sep.o ltext.o functions.o\
 	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
 	sysVstuff.o
 
 DISTOBJS=$(OBJS) main.o mathemat_dummy.o
 LIBOBJS= $(OBJS) mathematics.o
+WINLIBOBJS= $(OBJS) mathematics.o Windows.extension/fnmatch.o Windows.extension/memfrob.o
 AOBJS=   main.o $(LIBOBJS)
+BOBJS=   main.o blowfish.o $(LIBOBJS)
 CSRC=    $(DISTOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 DEPSRC=  $(CSRC) 
@@ -73,6 +77,8 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/* doc/ACKNOWLEGEMENTS \
       src/kommandos.h \
       src/gkommandos.c \
       src/gkommandos.h \
+      src/functions.c \
+      src/functions.h \
       src/do_gets.c \
       src/errortxt.c \
       src/window.c \
@@ -102,8 +108,8 @@ DIR2=X11Basic-src-@version@
 LINKFLAGS =
 WINLINKFLAGS =
 
-LIBS =  @libs@ @xtra@ -lX11
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid
+LIBS =  @libs@ @xtra@ @X_EXTRA_LIBS@
+WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 TINEWINLIBS = -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 CCSLIBS = ${CCSROOT}/lib/libtine.a
 
@@ -120,6 +126,10 @@ fft : $(AOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.fft $(AOBJS) \
 		$(LIBS) $(XLIBS)
 	strip xbasic.fft
+blow : $(BOBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.blow $(BOBJS) \
+		$(LIBS) $(XLIBS)
+	strip xbasic.blow
 vga : $(DISTOBJS) 
 	$(CC) $(OPT) -DUSE_VGA $(LINKFLAGS) -o xbasic.vga $(DISTOBJS) \
 		$(LIBS) $(VGA_LIBS)
@@ -127,16 +137,17 @@ vga : $(DISTOBJS)
 static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.static main.o x11basic.a\
 		$(LIBS) $(XLIBS)
+	strip xbasic.static
 psydo : psydo.o lib
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o  \
 		$(LIBS)-lx11basic $(XLIBS)
 psydostatic : psydo.o x11basic.a
 	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
 		$(LIBS) $(XLIBS)
-windows: clean
-	$(WINCC) -DWINDOWS -c $(DIST2)
-	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe $(DISTOBJS) \
-		$(WINLIBS) Windows.extension/fnmatch.o
+windows: x11basic.lib	
+	$(WINCC) -DWINDOWS -c main.c
+	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe main.o x11basic.lib \
+		$(WINLIBS)
 	strip xbasic.exe
 	rm -f X11-Basic-@version@.zip
 	
@@ -147,16 +158,22 @@ windows: clean
 
 examples: dist
 	cd .. ; zip -r  src/X11-Basic-examples-@version@.zip examples2/
+examples2: myzip
+	cd .. ; tar chf  src/X11-Basic-examples-@version@.tar examples2/
+	rm -f X11-Basic-examples-@version@.tar.myz
+	myzip -c "X11-Basic example files (c) Markus Hoffmann" \
+	                   X11-Basic-examples-@version@.tar 
 
 
 tineexe: $(OBJS) main.o mathematics.o
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
 	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(DISTOBJS) \
-		 Windows.extension/fnmatch.o rpclib.lib $(TINEWINLIBS)
+		 Windows.extension/fnmatch.o  Windows.extension/memfrob.o rpclib.lib $(TINEWINLIBS)
 
 xbasic : $(DISTOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(DISTOBJS) \
 		$(LIBS) $(XLIBS)
+	strip xbasic
 
 csxbasic : $(OBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
@@ -165,15 +182,23 @@ csxbasic : $(OBJS)
 tinexbasic : $(OBJS) main.o mathematics.o
 	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o tinexbasic $(AOBJS) \
 		$(LIBS) $(CCSLIBS) $(XLIBS)
-
+	strip tinexbasic
 lib : $(LIBOBJS)
 	$(CC) -shared -o libx11basic.so $(LIBOBJS)
+winlib : x11basic.lib
+	$(WINCC) -shared -o libx11basic.dll x11basic.lib
 
 tlib : $(LIBOBJS)
 	$(CC) $(OPT) $(LINKFLAGS) -shared -o libtinex11basic.so $(LIBOBJS) $(CCSLIBS)
 
 x11basic.a : $(LIBOBJS)
 	 ar -ru x11basic.a $(LIBOBJS) 
+
+x11basic.lib : clean
+	$(WINCC) -DWINDOWS -c $(DIST2)
+	$(WINCC) -DWINDOWS -c mathematics.c
+	i686-pc-mingw32-ar -ru x11basic.lib $(WINLIBOBJS) 
+
 tx11basic.a : $(LIBOBJS)
 	 ar -ru tx11basic.a $(LIBOBJS)  $(CCSLIBS)
 
@@ -186,6 +211,12 @@ xbc : dyn
 	strip xbc
 bas2x11basic : xbc
 	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o bas2x11basic
+	strip bas2x11basic
+myzip : xbc
+	xbc ../examples2/utils/myzip.bas --dynamic -o myzip
+	xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip
+	strip myzip
+	strip myunzip
 installhome : xbasic
 	install -s -m 755 xbasic ${HOME}/bin/xbasic
 installdyn : dyn lib
@@ -207,7 +238,9 @@ uninstall :
 	rm -f $(MANDIR)/man1/xbasic.1
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1
 clean :
-	rm -f xbasic xbasic.dyn xbasic.static xbc *.o *.so a.out *.a
+	rm -f xbasic xbasic.dyn xbasic.static xbc *.o *.so a.out *.a \
+	myzip myunzip bas2x11basic X11-Basic-examples-@version@.tar.myz \
+	X11-Basic-examples-@version@.tar
 
 distclean : clean
 	rm -f Makefile config.cache config.status config.log X11-Basic-examples-@version@.zip

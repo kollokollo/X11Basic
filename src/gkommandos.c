@@ -226,8 +226,8 @@ void c_sget(char *n) {
     free(data);
 #endif
 }
-void c_sput(char *n) {
-    STRING str=string_parser(n);
+void c_sput(PARAMETER *plist,int e) {
+  if(e) {
 #ifndef WINDOWS
     XImage *ximage;
     XWindowAttributes xwa;
@@ -235,14 +235,13 @@ void c_sput(char *n) {
     graphics();    
     XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
 
-    ximage=xwdtoximage(str.pointer,xwa.visual);
+    ximage=xwdtoximage(plist[0].pointer,xwa.visual);
     XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
                 ximage, 0,0,0,0, ximage->width, ximage->height);
     XDestroyImage(ximage);
 #endif
-    free(str.pointer);
+  }
 }
-
 void c_line(PARAMETER *plist,int e) {
   graphics(); 
   line(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
@@ -258,12 +257,10 @@ void c_rbox(PARAMETER *plist,int e) {
   line(plist[2].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
   line(plist[2].integer-RBOX_RADIUS,plist[3].integer,plist[0].integer+RBOX_RADIUS,plist[3].integer);
   line(plist[0].integer,plist[3].integer-RBOX_RADIUS,plist[0].integer,plist[1].integer+RBOX_RADIUS);
-#ifndef WINDOWS
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
   XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
-#endif
 }
 void c_pbox(PARAMETER *plist,int e) {
   graphics(); 
@@ -273,12 +270,10 @@ void c_prbox(PARAMETER *plist,int e) {
   graphics(); 
   pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
   pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
-#ifndef WINDOWS
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
   XFillArc(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
-#endif
 }
 
 void c_dotodraw(char *n) {
@@ -344,11 +339,7 @@ void c_circle(PARAMETER *plist,int e) {
     if(e>=5) a2=plist[4].integer*64;
     
     graphics(); 
-#ifdef WINDOWS
-  Arc(bitcon[usewindow],x,y,x+2*r,y+2*r,0,0,0,0);    
-#else
-  XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r,2*r,a1,a2-a1); 
-#endif
+    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r,2*r,a1,a2-a1); 
   }
 }
 void c_pcircle(PARAMETER *plist,int e) {
@@ -362,11 +353,7 @@ void c_pcircle(PARAMETER *plist,int e) {
     if(e>=5) a2=plist[4].integer*64;
     
     graphics(); 
-#ifdef WINDOWS
-    Ellipse(bitcon[usewindow],x,y,x+2*r,y+2*r);
-#else
     XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r,2*r,a1,a2-a1); 
-#endif
   }
 }
 
@@ -382,11 +369,7 @@ void c_ellipse(PARAMETER *plist,int e) {
     if(e>=6) a2=plist[5].integer*64;
 
     graphics(); 
-#ifdef WINDOWS
-    Arc(bitcon[usewindow],x,y,x+2*r1,y+2*r2,0,0,0,0);    
-#else
     XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r1,2*r2,a1,a2-a1);
-#endif
   }
 }
 void c_pellipse(PARAMETER *plist,int e) {
@@ -401,11 +384,7 @@ void c_pellipse(PARAMETER *plist,int e) {
     if(e>=6) a2=plist[5].integer*64;
 
     graphics(); 
-#ifdef WINDOWS
-    Ellipse(bitcon[usewindow],x,y,x+2*r1,y+2*r2);
-#else
     XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,2*r1,2*r2,a1,a2-a1);
-#endif
   }
 }
 
@@ -525,7 +504,7 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
           x1=(int)(varptrx[i]*xscale)+xoffset;
           x2=(int)(varptrx[i+1]*xscale)+xoffset;
         } else {x1=i*xscale+xoffset;x2=(i+1)*xscale+xoffset;}
-        if(mode==0) DrawLine(x1,y1,x2,y2);
+        if(mode==0) {DrawLine(x1,y1,x2,y2);}
 	else if(mode==1 && vnrx!=-1) DrawPoint(x1,y1);
         else DrawLine(x1,yoffset,x1,y2); 
       }
@@ -537,9 +516,12 @@ void c_polyline(char *n) { do_polygon(1,n);}
 void c_polyfill(char *n) { do_polygon(2,n);}
 void do_polygon(int doit,char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
+  int vnrx=-1,vnry=-1,typ,e,i=0,anz=0,xoffset=0,yoffset=0;
 #ifndef WINDOWS
-  int e,i=0,anz=0,shape=Nonconvex;
-  int vnrx=-1,vnry=-1,typ,mode=CoordModeOrigin,xoffset=0,yoffset=0;
+  int mode=CoordModeOrigin,shape=Nonconvex;
+#else
+  int mode,shape;
+#endif
   char *r;
   
   e=wort_sep(n,',',TRUE,w1,w2);
@@ -574,7 +556,9 @@ void do_polygon(int doit,char *n) {
 	 case 0: { anz=max(0,(int)parser(w1)); break; } 
 	 case 3: { xoffset=(int)parser(w1); break; } 
 	 case 4: { yoffset=(int)parser(w1); break;} 
+	#ifndef WINDOWS 
 	 case 5: { mode=(((int)parser(w1))&1) ?CoordModePrevious:CoordModeOrigin; break;} 
+        #endif
 	 case 6: { shape=(int)parser(w1); break;} 
 	   
          default: break;
@@ -585,6 +569,11 @@ void do_polygon(int doit,char *n) {
   }
   if(vnrx!=-1 && vnry!=-1 && anz>0) {
     if((variablen[vnry].typ & FLOATTYP)) {   /* Was machen wir mit int-Arrays ????  */
+#ifdef WINDOWS
+       typedef struct {
+            short x, y;
+       } XPoint;
+#endif
       XPoint points[anz];
       double *varptry=(double  *)(variablen[vnry].pointer+variablen[vnry].opcode*INTSIZE);
       double *varptrx=(double  *)(variablen[vnrx].pointer+variablen[vnrx].opcode*INTSIZE);
@@ -631,12 +620,17 @@ void do_polygon(int doit,char *n) {
 	  for(i=0;i<anz;i++) {
 	    pbox(points[i].x-marker_size,points[i].y-marker_size,points[i].x+marker_size,points[i].y+marker_size);
 	  }
-	} else XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
-      } else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+	} 
+	#ifndef WINDOWS
+	  else XDrawPoints(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
+        #endif
+      } 
+      #ifndef WINDOWS
+      else if(doit==1) XDrawLines(display[usewindow],pix[usewindow],gc[usewindow],points,anz,mode);
      else if(doit==2) XFillPolygon(display[usewindow],pix[usewindow],gc[usewindow],points,anz,shape,mode);
+     #endif
     }
   }
-#endif
 }
 
 
@@ -723,14 +717,9 @@ void c_defmark(PARAMETER *plist,int e) {
 
   if(e>=1 && plist[0].typ!=PL_LEER){
     /* Marker color not supported */
-  } 
-  if(e>=2 && plist[1].typ!=PL_LEER){
-    marker_typ=plist[1].integer;
   }
-  if(e>=3 && plist[2].typ!=PL_LEER){
-    marker_size=max(0,plist[2].integer);
-  }
-  
+  if(e>=2 && plist[1].typ!=PL_LEER) marker_typ=plist[1].integer;
+  if(e>=3 && plist[2].typ!=PL_LEER) marker_size=max(0,plist[2].integer);
 }
 
 
@@ -745,7 +734,8 @@ void c_fill(PARAMETER *plist,int e) {
   }
 }
 void c_clip(PARAMETER *plist,int e) {
-  graphics();      
+#ifndef WINDOWS
+  graphics();
   if(e==1) XSetClipMask(display[usewindow], gc[usewindow], None); /*CLIP OFF */
   else if(e>3) {
     XRectangle rectangle;
@@ -758,6 +748,7 @@ void c_clip(PARAMETER *plist,int e) {
     if(e>5) oy=plist[5].integer;
     XSetClipRectangles(display[usewindow], gc[usewindow], ox, oy, &rectangle, 1,Unsorted);
   }
+#endif
 }
 void c_defline(PARAMETER *plist,int e) { 
   static int style=0,width=0,cap=0,join=0;
@@ -1190,15 +1181,17 @@ void c_titlew(PARAMETER *plist,int e) {
       printf("Couldn't set Name of Window.\n");
     XSetWMName(display[winnr], win[winnr], &win_name[winnr]);
 #endif
-  } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
+  } else printf("Ungültige Windownr. %d. Max: %d\n",winnr,MAXWINDOWS);
 }
 void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
   int winnr=usewindow;
   if(e) winnr=plist[0].integer;
   if(winnr<MAXWINDOWS && e>1) {
+#ifndef WINDOWS
     graphics();
     XSetIconName(display[winnr], win[winnr],plist[1].pointer);
-  } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
+#endif
+  } else printf("Ungültige Windownr. %d. Max: %d\n",winnr,MAXWINDOWS);
 }
 void c_clearw(PARAMETER *plist,int e) {
   int winnr=usewindow,x,y,w,h,b,d;
@@ -1311,12 +1304,14 @@ void c_fullw(PARAMETER *plist,int e) {
   if(e) winnr=plist[0].integer;
   if(winnr<MAXWINDOWS) {
     if(winbesetzt[winnr]) {
+#ifndef WINDOWS
       Window root;
       int ox,oy,ow,oh,ob,d;
       graphics();
       do_movew(winnr,0,0);
       XGetGeometry(display[winnr],RootWindow(display[winnr],DefaultScreen(display[winnr])),&root,&ox,&oy,&ow,&oh,&ob,&d);
       do_sizew(winnr,ow,oh);
+#endif
     } else  puts("Window does not exist.");
   } else if(winnr==0) puts("This operation is not allowed for root window.");
   else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
@@ -1329,7 +1324,9 @@ void c_topw(PARAMETER *plist,int e) {
   else if(winnr<MAXWINDOWS) {
     if(winbesetzt[winnr]) {
       graphics();
+#ifndef WINDOWS
       XRaiseWindow(display[winnr], win[winnr]);
+#endif
     } else  puts("Window does not exist.");
   } else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
 }
@@ -1339,8 +1336,10 @@ void c_bottomw(PARAMETER *plist,int e) {
   if(winnr==0) puts("This operation is not allowed for root window.");
   else if(winnr<MAXWINDOWS) {
     if(winbesetzt[winnr]) {
+#ifndef WINDOWS
       graphics();
       XLowerWindow(display[winnr], win[winnr]);
+#endif
     } else  puts("Window does not exist.");
   } else if(winnr==0) puts("This operation is not allowed for root window.");
   else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
@@ -1624,31 +1623,10 @@ void c_menudef(char *n) {
     }
   }
 }
-void c_menuset(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int i=0,e;
-  int nr,flag;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-       if(strlen(w1)) {
-       switch(i) {
-         case 0: {
-	   nr=parser(w1);
-	   break;
-	   }
-	 case 1: {   
-	   flag=parser(w1);
-	   break;
-	   } 	 
-         default: break;
-       }
-     }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i<2) error(42,""); /* Zu wenig Parameter  */
-  else {
-    if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=flag;    
+void c_menuset(PARAMETER *plist, int e) {
+  if(e==2) {
+    int nr=plist[0].integer;
+    if(nr<MAXMENUENTRYS && nr>0) menuflags[nr]=plist[1].integer;    
     else printf("Nr. des Menueintrags zu gross. Max %d.\n",MAXMENUENTRYS);
   }
 }

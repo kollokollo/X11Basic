@@ -139,7 +139,15 @@ Version 1.12 (Mar 2005)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 - fixed bug with DEFMARK
 - experimental LISTSELECT
+- worked on MATRIX functions: SOLVE(),INV(),DET()
+- OPEN "UU"  UDP-Sockets
+- CONNECT, SEND, RECEIVE
+- New String Functions: REVERSE$(), MTFE$(), MTFD$(), RLD$(), RLE$()
+- CRC()
+- New Code Engines: BETE$(), BWTD$(), COMPRESS$()
 
-
+Version 1.13 (Feb 2006)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- fixed bug in INPUT$()
 
 --------------------------------------------------------------------------------

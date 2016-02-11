@@ -52,7 +52,7 @@ void cs_init() {
   if (CCSERR) printf("ERROR in ccs_attach_control\n");
   else {
     /* attach to notification system */
-    
+
     ccs_attach_notification( xbasic_name, CCS_NOTIFY_ASYNC, notify_handler, MAXPIDS, 1);
     if ( CCSERR ) printf ( "CCS: Keine Verbindung zum Benachrichtigungs-System: %s\n", ccs_get_error_message() );
 #ifdef DEBUG
@@ -70,10 +70,10 @@ void cs_exit() {
 #endif
 #ifdef CONTROL
   #define CT
-#endif  
+#endif
 #ifdef TINE
   #define CT
-#endif  
+#endif
 
 
 #ifdef CT
@@ -132,7 +132,7 @@ int cstyp(char *n) {
     ccs_convert_pid_netroute( pid, &route );
     if (CCSERR) printf("ERROR in ccs_convert_pid_netroute\n");
     else {
-      if(route.size>1) typ=typ|ARRAYTYP; 
+      if(route.size>1) typ=typ|ARRAYTYP;
     }
   }
   ccs_err=CCSERR;
@@ -177,7 +177,7 @@ double csget(char *n) {
   int pid,j;
   float data;
   int i;
-  
+
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) printf("ERROR in ccs_convert_parametername_id\n");
   else {
@@ -202,7 +202,7 @@ double csmin(char *n) {
   int pid;
   char unit[32];
   union {int i;float f;double d; char *s;} min,max;
-  
+
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) printf("ERROR in ccs_convert_parametername_id\n");
   else {
@@ -222,7 +222,7 @@ double csmax(char *n) {
   int pid;
   char unit[32];
   union {int i;float f;double d; char *s;} min,max;
-  
+
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) printf("ERROR in ccs_convert_parametername_id\n");
   else {
@@ -241,13 +241,13 @@ double csres(char *n) {
 
   int pid;
   union {int i;float f;double d; char *s;} res;
-  
+
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) printf("ERROR in ccs_convert_parametername_id\n");
   else {
-    
+
     ccs_resource_read_parameter_resolution( pid, &res, NULL );
-    
+
 
     if (CCSERR) printf(" ERROR in ccs_resource_read_parameter_resolution: %s\n", ccs_get_error_message());
     if ( IS_PID_ANALOG(pid) ) return((double)res.f);
@@ -262,7 +262,7 @@ ARRAY *csvget(char *n,int nn, int o) {
   int pid,j;
   ROUTE route;
   ARRAY *ergebnis=malloc(sizeof(ARRAY));
-  
+
   ergebnis->dimension=1;
   ccs_convert_parametername_id(n, &pid );
   if (CCSERR) {
@@ -288,7 +288,7 @@ ARRAY *csvget(char *n,int nn, int o) {
 	ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(double));
 	((int *)ergebnis->pointer)[0]=nn;
 	varptr=ergebnis->pointer+INTSIZE;
-	fpt=malloc(nn*sizeof(float)); 
+	fpt=malloc(nn*sizeof(float));
 	ccs_get_subvector( pid,fpt, &j, o, nn, NULL );
 	for(j=0;j<nn;j++) varptr[j]=(double)fpt[j];
 	free(fpt);
@@ -299,7 +299,7 @@ ARRAY *csvget(char *n,int nn, int o) {
         ergebnis->typ=INTARRAYTYP;
 	ergebnis->pointer=malloc(1*INTSIZE+nn*sizeof(int));
 	((int *)ergebnis->pointer)[0]=nn;
-	varptr=ergebnis->pointer+INTSIZE; 
+	varptr=ergebnis->pointer+INTSIZE;
 	ccs_get_subvector( pid, varptr, &j,o,nn, NULL );
 	if (CCSERR) printf("ERROR in ccs_get_subvector: %s\n", ccs_get_error_message());
 	return(ergebnis);
@@ -335,7 +335,7 @@ char *csgets(char *n) {
   	strcpy(ergebnis,"<ERROR>");
 	ccs_err=CCSERR;
   	return(ergebnis);
-      } 
+      }
       ergebnis=malloc(strlen(s)+1);
       strcpy(ergebnis,s);
       ccs_err=CCSERR;
@@ -365,7 +365,7 @@ void c_cssetcallback(char *n) {
         free(test);
         ccs_err=CCSERR;
         return;
-  } 
+  }
   free(test);
   pc2=procnr(w2,1);
   if(pc2==-1)   error(19,w2); /* Procedure nicht gefunden */
@@ -410,10 +410,10 @@ void c_csvput(char *w) {
         free(test);
         ccs_err=CCSERR;
         return;
-  } 
+  }
   free(test);
   e=wort_sep(t,',',TRUE,n,t);
-    
+
       /* get size of Vector */
   ccs_convert_pid_netroute( pid, &route );
   if (CCSERR) {
@@ -421,15 +421,15 @@ void c_csvput(char *w) {
     nn=1;
   } else nn=route.size;
   if(e==2) nn=min(nn,(int)parser(t));
-   
+
      /* Typ bestimmem. Ist es Array ? */
- 
+
     typ=type2(n);
     if(typ & ARRAYTYP) {
       r=varrumpf(n);
       vnr=variable_exist(r,typ);
       free(r);
-      if(vnr==-1) error(15,n); /* Feld nicht dimensioniert */ 
+      if(vnr==-1) error(15,n); /* Feld nicht dimensioniert */
       else {
         int anz=min(do_dimension(vnr),nn);
         if( !(typ & (FLOATTYP | INTTYP))) {printf("CSVPUT: Muss Float-ARRAY sein. \n");return;}
@@ -439,24 +439,24 @@ void c_csvput(char *w) {
 
 	if ( IS_PID_ANALOG(pid) ) {
           float *buffer=calloc(anz,sizeof(float));
-	  
+	
 	  if(typ & FLOATTYP) {
 	    double *varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(float)varptr[i];
           } else if(typ & INTTYP) {
 	    int *varptr=(int  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(float)varptr[i];
-	  } 
-	  
+	  }
+	
 	  /* Schreiben !!! */
 	  if(o) {
             ccs_put_subvector( pid,o,anz, buffer, &j);
 	    if (CCSERR) printf("ERROR in ccs_put_subvector: %s\n", ccs_get_error_message());
 	  } else {
 	    ccs_put_value_secure( pid, anz, buffer, &j );
-	    if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message()); 
+	    if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
 	  }
-	  
+	
           free(buffer);
 	} else if ( IS_PID_DIGITAL(pid) ) {
 	  int *buffer=calloc(anz,sizeof(int));
@@ -466,21 +466,21 @@ void c_csvput(char *w) {
           } else if(typ & INTTYP) {
 	    int *varptr=(int  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
 	    for(i=0;i<anz;i++) buffer[i]=(int)varptr[i];
-	  } 
-	  
+	  }
+	
 	  /* Schreiben !!! */
 	  if(o) {
 	    ccs_put_subvector( pid,o,anz, buffer, &j);
 	    if (CCSERR) printf("ERROR in ccs_put_subvector: %s\n", ccs_get_error_message());
 	  } else {
 	    ccs_put_value_secure( pid, anz, buffer, &j );
-	    if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message()); 
+	    if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
 	  }
 	  free(buffer);
         } else printf("Csvput: Parameter hat falschen Typ %s\n",n);
       }
-      ccs_err=CCSERR;      
-    } else printf("CSVPUT: Kein ARRAY. \n");      
+      ccs_err=CCSERR;
+    } else printf("CSVPUT: Kein ARRAY. \n");
 }
 
 
@@ -504,23 +504,23 @@ void c_csput(char *w) {
         free(test);
         ccs_err=CCSERR;
         return;
-  } 
+  }
   free(test);
 /* switch appropriate to type */
 
     if ( IS_PID_ANALOG(pid) && (type2(t) & (FLOATTYP|INTTYP)) ) {
         f=(float)parser(t);
         ccs_put_value_secure( pid, 1, &f, &j );
-	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message()); 
+	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
     } else if ( IS_PID_DIGITAL(pid) && (type2(t) & (FLOATTYP|INTTYP))  ) {
 	i=(int)parser(t);
 	ccs_put_value_secure( pid, 1, &i, &j );
-	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message()); 
-    } else if ( IS_PID_STRING(pid) && (type2(t) & STRINGTYP) ) { 
+	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
+    } else if ( IS_PID_STRING(pid) && (type2(t) & STRINGTYP) ) {
         test=s_parser(t);
         ccs_put_value_secure( pid, strlen(test), test, &j );
 	free(test);
-	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message()); 
+	if (CCSERR)   printf("ERROR in ccs_set_value: %s\n", ccs_get_error_message());
     } else printf("Csput: Parameter hat falschen Typ %s\n",w);
   ccs_err=CCSERR;
 }
@@ -543,7 +543,7 @@ void c_cssweep(char *w) {
 	printf("ERROR in ccs_convert_parametername_id <%s>\n",test);
         free(test);
         return;
-  } 
+  }
   free(test);
 /* switch appropriate to type */
 
@@ -599,7 +599,7 @@ void sweep_value( int pid, float lastvalue, float v, float dt, int steps ) {
 			/* ignore intermediate errors */
 		}
 		ccs_wait(ddt); /* and wait intermediate delay */
-	} 
+	}
 }
 
 #endif
@@ -637,7 +637,7 @@ void tmonitorCallback(int id,int cc) {
   if (cc) printf("error: %s\n>",RPCLastErrorString);
 }
 
-/* Verhindert, dass Logfile angelegt wird und bestimmt die Geschwindigkeit der 
+/* Verhindert, dass Logfile angelegt wird und bestimmt die Geschwindigkeit der
    Abfragen */
 
 void fix_tine_start() {
@@ -663,7 +663,7 @@ int my_ExecLinkEx(char *dev, char *prop, DTYPE *dout, DTYPE *din,short access,in
 int GetPropertyInformation(char *srv,char *prp,PropertyQueryStruct *srvProps){
   DTYPE dout,din;
   int cc = 0;
- 
+
   din.dFormat = CF_NAME32;
   din.dArrayLength = 1;
   din.data.vptr = prp;
@@ -680,7 +680,7 @@ int tservers(char *cnt) {
   NAME16 srvs[256];
   if ((cc=GetDeviceServersEx(cnt,srvs,&n)) != 0) return cc;
   printf("%d servers found :\n",n);
-  for (i=0; i<n; i++) 
+  for (i=0; i<n; i++)
   {
     printf("%16s ",srvs[i].name);
     if ((i+1)%4 == 0) printf("\n");
@@ -692,7 +692,7 @@ int tprops(char *dev) {
   NAME32 prps[256];
   if ((cc=GetDeviceProperties(dev,prps,&n)) != 0) return cc;
   printf("%d properties found :\n",n);
-  for (i=0; i<n; i++) 
+  for (i=0; i<n; i++)
   {
     printf("%32s ",prps[i].name);
     if ((i+1)%4 == 0) printf("\n");
@@ -705,7 +705,7 @@ int tdevs(char *dev) {
   char devname[32];
   if ((cc=GetDeviceNames(dev,devs,&n)) != 0) return cc;
   printf("%d devices found :\n",n);
-  for (i=0; i<n; i++) 
+  for (i=0; i<n; i++)
   {
     strncpy(devname,devs[i].name,16);
     if (devname[15] == '&')
@@ -743,7 +743,7 @@ int tinesize(char *n) {
   else {
     PropertyQueryStruct prpinfo;
     /* get size of Vector */
-    if(ccs_err=GetPropertyInformation(dev,prop,&prpinfo)) 
+    if(ccs_err=GetPropertyInformation(dev,prop,&prpinfo))
       printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
     else return(prpinfo.prpSize);
   }
@@ -751,11 +751,11 @@ int tinesize(char *n) {
 }
 int tinetyp(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
-  if(ccs_err=convert_name_convention(n,w1,w2)) 
+  if(ccs_err=convert_name_convention(n,w1,w2))
 	printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,n);
   else {
     PropertyQueryStruct prpinfo;
-    
+
     /* get size of Vector */
     ccs_err=GetPropertyInformation(w1,w2,&prpinfo);
     if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
@@ -770,7 +770,7 @@ int tinetyp(char *n) {
       else if(f==CF_NAME16) typ=typ|STRINGTYP;
       else if(f==CF_NAME32) typ=typ|STRINGTYP;
       else printf("Unbekannter Paramertertyp: %d\n",prpinfo.prpFormat);
-      if(prpinfo.prpSize>1) typ=typ|ARRAYTYP; 
+      if(prpinfo.prpSize>1) typ=typ|ARRAYTYP;
       return(typ);
     }
   }
@@ -783,7 +783,7 @@ char *tineunit(char *n) {
   if(ccs_err) printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,n);
   else {
     float mmax,mmin;
-    fix_tine_start();    
+    fix_tine_start();
     ccs_err=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
     if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
   }
@@ -794,9 +794,9 @@ char *tineinfo(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
   ccs_err=rc;
-  if(rc) 
+  if(rc)
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
-  else {    
+  else {
     PropertyQueryStruct prpinfo;
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     strncpy(des,prpinfo.prpDescription,80);
@@ -808,12 +808,12 @@ double tinemin(char *n) {
   char unit[80];float mmax,mmin;
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
-  ccs_err=rc; 
-  if(rc) 
+  ccs_err=rc;
+  if(rc)
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
    else {
     float mmax,mmin;
-    fix_tine_start();     
+    fix_tine_start();
     rc=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
      if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
   }
@@ -823,12 +823,12 @@ double tinemax(char *n) {
   char unit[80];float mmax,mmin;
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int rc=convert_name_convention(n,w1,w2);
-  ccs_err=rc; 
+  ccs_err=rc;
   if(rc)  printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
   else {
-    fix_tine_start(); 
+    fix_tine_start();
     rc=GetDevicePropertyEGU(w1,w2,&mmax,&mmin,unit);
-    ccs_err=rc; 
+    ccs_err=rc;
     if(rc) printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
   }
   return((double)mmax);
@@ -839,12 +839,12 @@ double tineget(char *n) {
   char *buf;
   int buflen;
   double ergeb;
-  if(rc) 
+  if(rc)
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
   else {
-    PropertyQueryStruct prpinfo;  
+    PropertyQueryStruct prpinfo;
     DTYPE dout;
-    
+
     /* get size of Vector */
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
@@ -892,9 +892,9 @@ STRING tinegets(char *n) {
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
         ergebnis=vs_error();
   } else {
-    PropertyQueryStruct prpinfo;  
+    PropertyQueryStruct prpinfo;
     DTYPE dout;
-    
+
     /* get size of Vector */
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
@@ -915,10 +915,10 @@ STRING tinegets(char *n) {
       } else {
 #if 0
         switch (LFMT(prpinfo.prpFormat)) {
-          case CF_BYTE:         
-          case CF_TEXT:         
-          case CF_NAME16:         
-          case CF_NAME32:  break;      
+          case CF_BYTE:
+          case CF_TEXT:
+          case CF_NAME16:
+          case CF_NAME32:  break;
           default: printf("output format type %d is not a string !\n",LFMT(prpinfo.prpFormat));
         }
 #endif
@@ -926,7 +926,7 @@ STRING tinegets(char *n) {
 	ergebnis.len=buflen;
       }
     }
-   
+
   }
   ccs_err=rc;
   return(ergebnis);
@@ -947,9 +947,9 @@ STRING tinequery(char *n,int start) {
 	printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
         ergebnis=vs_error();
   } else {
-    PropertyQueryStruct prpinfo;  
+    PropertyQueryStruct prpinfo;
     DTYPE dout,din;
-    
+
     /* get size of Vector */
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
@@ -975,7 +975,7 @@ STRING tinequery(char *n,int start) {
 	ergebnis.len=buflen;
       }
     }
-   
+
   }
   ccs_err=rc;
   return(ergebnis);
@@ -987,7 +987,7 @@ ARRAY tinevget(char *n,int nn, int o) {
   int buflen;
   int f,j;
   ARRAY ergebnis;
-  
+
   ergebnis.dimension=1;
   if(rc) {
     printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
@@ -996,16 +996,16 @@ ARRAY tinevget(char *n,int nn, int o) {
   } else {
       /* get size of Vector */
 
-    PropertyQueryStruct prpinfo;  
+    PropertyQueryStruct prpinfo;
     DTYPE dout;
-    
+
     rc=GetPropertyInformation(w1,w2,&prpinfo);
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
       ergebnis.pointer=malloc(40);
       ((int *)ergebnis.pointer)[0]=1;
       return(ergebnis);
-    }     
+    }
     if(nn==0) nn=prpinfo.prpSize;
     nn=min(nn,prpinfo.prpSize-o);
     buflen=prpinfo.prpSize*getFormatSize(LFMT(prpinfo.prpFormat));
@@ -1015,7 +1015,7 @@ ARRAY tinevget(char *n,int nn, int o) {
     dout.dTag[0] = 0;
     dout.data.vptr = buf;
     rc=my_ExecLinkEx(w1,w2,&dout,NULL,CA_READ,buflen);
-    ccs_err=rc; 
+    ccs_err=rc;
     if(rc) {
       printf("Tine-Error: %d  %s\n",rc,erlst[rc]);
       free(buf);
@@ -1023,7 +1023,7 @@ ARRAY tinevget(char *n,int nn, int o) {
       ((int *)ergebnis.pointer)[0]=1;
       return(ergebnis);
     }
-    
+
     /* switch appropriate to type */
 
     f=LFMT(prpinfo.prpFormat);
@@ -1087,9 +1087,9 @@ ARRAY tinehistory(char *n,int start, int stop) {
   UINT32 startstopArray[3];
   DTYPE dout,din;
   double *varptr;
-  
+
   ergebnis.dimension=2;
-  
+
   if(rc) {
     printf("Syntax-Error %d in Parameter-Name %s\n",rc,n);
     ergebnis.pointer=malloc((4+2)*sizeof(int));
@@ -1098,7 +1098,7 @@ ARRAY tinehistory(char *n,int start, int stop) {
     ((int *)ergebnis.pointer)[1]=1;
   } else {
       /* get size of History */
-     
+
     buflen=65532;
     buf=malloc(buflen);
 
@@ -1134,7 +1134,7 @@ ARRAY tinehistory(char *n,int start, int stop) {
       for(j=0;j<nn;j++) {
         varptr[2*j]=(double)(((float *)buf)[2*j]);  /*+2 entfernt*/
         varptr[2*j+1]=(double)(((int *)buf)[2*j+1]);/*+2 entfernt*/
-      }  
+      }
       free(buf);
   }
   return(ergebnis);
@@ -1154,8 +1154,8 @@ void c_tinemonitor(char *n) {
     char *buf;
     int buflen;
     if(rc) printf("Syntax-Error in Parameter-Name %s\n",test);
-    else {   
-        
+    else {
+
       DTYPE dout;
       rc=GetPropertyInformation(dev,prop,&prpinfo);
       ccs_err=rc;
@@ -1190,8 +1190,8 @@ void c_tinemonitor(char *n) {
           } else printf("Zu viele Callbacks. max. <%d>\n",MAXPIDS);
         }
       }
-    } 
-    free(test);    
+    }
+    free(test);
   }
 }
 
@@ -1210,7 +1210,7 @@ void c_tineput(char *w) {
     free(test);
     if(ccs_err) printf("Syntax-Error %d in Parameter-Name %s\n",ccs_err,test);
     else {
-      PropertyQueryStruct prpinfo;  
+      PropertyQueryStruct prpinfo;
       DTYPE dout;
       int buflen;
       char *buf;
@@ -1226,7 +1226,7 @@ void c_tineput(char *w) {
       dout.dArrayLength = prpinfo.prpSize;
       dout.dTag[0] = 0;
       dout.data.vptr = buf;
-      
+
       if(type2(t)&ARRAYTYP) {
         ARRAY abuffer=array_parser(t);
 	int l=anz_eintraege(abuffer);
@@ -1257,47 +1257,47 @@ void c_tineput(char *w) {
 	    } else {
   	      for(i=0;i<l;i++) ((char *)buf)[i]=(char)((int *)ptr)[i];
 	    }
-	    break;  
+	    break;
 	  case CF_SHORT:
 	    if(abuffer.typ & FLOATTYP) {
   	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((short *)buf)[i]=(short)((int *)ptr)[i];
 	    }
-	    break;  	  
+	    break;  	
 	  case CF_LONG:
 	    if(abuffer.typ & FLOATTYP) {
   	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((double *)ptr)[i];
 	    } else {
   	      for(i=0;i<l;i++) ((long *)buf)[i]=(long)((int *)ptr)[i];
 	    }
-	    break;  	  
+	    break;  	
 	  default:
             printf("output format type %d is not numeric !\n",LFMT(prpinfo.prpFormat));
-	    free_array(abuffer); 
+	    free_array(abuffer);
             free(buf);return;
 	  }
 	} else if(type2(t) & STRINGTYP) {
           switch (LFMT(prpinfo.prpFormat)) {
           case CF_BYTE:
-          case CF_TEXT:         
-          case CF_NAME8:         
-          case CF_NAME16:         
-          case CF_NAME16FI:         
+          case CF_TEXT:
+          case CF_NAME8:
+          case CF_NAME16:
+          case CF_NAME16FI:
           case CF_NAME32:
           case CF_NAME48:
           case CF_STRUCT:
 	  /* Tu was hier !!! */
 	  printf("Art der Uebergabe noch nicht realisiert !\n");
           break;
-          default: 
+          default:
             printf("output format type %d is not a Stringtype !\n",LFMT(prpinfo.prpFormat));
             free(buf);free_array(abuffer); return;
           }
 
 	}
 	
-	free_array(abuffer); 
+	free_array(abuffer);
       } else {
         /* switch appropriate to type */
         if(type2(t) & (FLOATTYP|INTTYP)) {
@@ -1312,7 +1312,7 @@ void c_tineput(char *w) {
             *((float *)buf)=(float)parser(t);break;
           case CF_DOUBLE:
             *((double *)buf)=(double)parser(t);break;
-          default: 
+          default:
             printf("output format type %d is not a number !\n",LFMT(prpinfo.prpFormat));
             free(buf);return;
           }
@@ -1331,21 +1331,21 @@ void c_tineput(char *w) {
       /* Typen ueberpruefen */
       switch (LFMT(prpinfo.prpFormat)) {
       case CF_BYTE:
-      case CF_TEXT:         
-      case CF_NAME8:         
-      case CF_NAME16:         
-      case CF_NAME16FI:         
+      case CF_TEXT:
+      case CF_NAME8:
+      case CF_NAME16:
+      case CF_NAME16FI:
       case CF_NAME32:
       case CF_NAME48:
       case CF_STRUCT:
         break;
-      default: 
+      default:
         printf("output format type %d is not a Stringtype !\n",LFMT(prpinfo.prpFormat));
         free(buf);return;
       }
-      printf("Gebe #%d Daten\n",buflen);  
+      printf("Gebe #%d Daten\n",buflen);
 #endif
-        } 
+        }
       }
       ccs_err=my_ExecLinkEx(w1,w2,NULL,&dout,CA_WRITE,buflen);
       if(ccs_err) printf("Tine-Error: %d  %s\n",ccs_err,erlst[ccs_err]);
@@ -1370,31 +1370,31 @@ int tineserver_callback(char *devName,char *Property, DTYPE *dout, DTYPE *din, s
   if(vnr==-1) return illegal_property;
   else {
     len=do_dimension(vnr);
-    if(typ & STRINGTYP) etyp=CF_TEXT; 
-    else if(typ & INTTYP) etyp=CF_LONG; 
+    if(typ & STRINGTYP) etyp=CF_TEXT;
+    else if(typ & INTTYP) etyp=CF_LONG;
     else if(typ & FLOATTYP) etyp=CF_DOUBLE;
-    
+
     if(access&CA_WRITE) {
       if(din->dFormat!=etyp) return illegal_format;
       if(din->dArrayLength > len) return dimension_error;
-    if(typ & ARRAYTYP) ; 
-    else if(typ & STRINGTYP) ; 
-    else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0]; 
+    if(typ & ARRAYTYP) ;
+    else if(typ & STRINGTYP) ;
+    else if(typ & INTTYP) variablen[vnr].opcode=din->data.lptr[0];
     else if(typ & FLOATTYP) variablen[vnr].zahl=din->data.dptr[0];
-      
+
     } else if(access&CA_READ) {
       if(dout->dFormat!=etyp) return illegal_format;
       if(dout->dArrayLength < len) return dimension_error;
-     if(typ & ARRAYTYP) ; 
-    else if(typ & STRINGTYP) ; 
-    else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode; 
+     if(typ & ARRAYTYP) ;
+    else if(typ & STRINGTYP) ;
+    else if(typ & INTTYP) dout->data.lptr[0]=variablen[vnr].opcode;
     else if(typ & FLOATTYP) dout->data.dptr[0]=variablen[vnr].zahl;
-    
+
     }
     return(0);
   }
 }
-void c_tineserver(PARAMETER *plist, int e) { 
+void c_tineserver(PARAMETER *plist, int e) {
   int i,cc;
   if(e>0) strncpy(tine_eqn,plist[0].pointer,31);
   /* init RPC server: */
@@ -1406,7 +1406,7 @@ void c_tineserver(PARAMETER *plist, int e) {
     else RegisterEquipmentModule(tine_eqn,tine_eqn,1,tineserver_callback,NULL,NULL,1000,NULL);
   }
 }
-void c_tineexport(char *n) { 
+void c_tineexport(char *n) {
   char v[strlen(n)+1],w[strlen(n)+1],*r;
   int p;
   int len=1;
@@ -1414,18 +1414,18 @@ void c_tineexport(char *n) {
   strcpy(v,n);
   p=wort_sep(v,',',TRUE,w,v);
   while(p) {
-    xtrim(w,TRUE,w);  
+    xtrim(w,TRUE,w);
     typ=type2(w);
     if(typ & CONSTTYP) error(32,"TINEEXPORT");  /* Syntax error */
     else {
       r=varrumpf(w);
       vnr=variable_exist(r,typ);
       if(typ & ARRAYTYP) { /* ganzes Array  */
-        if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */ 
+        if(vnr==-1) error(15,w); /* Feld nicht dimensioniert */
         else len=do_dimension(vnr);
       }
-      if(typ & STRINGTYP) etyp=CF_TEXT; 
-      else if(typ & INTTYP) etyp=CF_LONG; 
+      if(typ & STRINGTYP) etyp=CF_TEXT;
+      else if(typ & INTTYP) etyp=CF_LONG;
       else if(typ & FLOATTYP) etyp=CF_DOUBLE;
       RegisterProperty(tine_eqn,w,len,etyp,CA_WRITE|CA_READ,"X11-Basic variable");
       /*Hier sollte man die Variable anlegen, falls nicht existent...*/
@@ -1433,10 +1433,10 @@ void c_tineexport(char *n) {
       tineexportvars[anztineexportvars++]=vnr;
       free(r);
     }
-    p=wort_sep(v,',',TRUE,w,v); 
+    p=wort_sep(v,',',TRUE,w,v);
   }
 }
-void c_tinecycle(char *n) { 
+void c_tinecycle(char *n) {
   SystemCycle(FALSE);
 }
 

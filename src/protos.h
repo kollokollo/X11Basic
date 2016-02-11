@@ -94,6 +94,7 @@ ARRAY inv_array(ARRAY);
 ARRAY mul_array(ARRAY,ARRAY);
 ARRAY trans_array(ARRAY);
 ARRAY create_array(int , int ,int *);
+ARRAY form_array(int , int ,int *,char *);
 ARRAY nullmatrix(int , int ,int *);
 ARRAY einheitsmatrix(int , int ,int *);
 

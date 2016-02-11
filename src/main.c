@@ -1,13 +1,13 @@
-/* MAIN.C 
-
-   (c) Markus Hoffmann 
+/* MAIN.C                                           (c) Markus Hoffmann
 */
 
- /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+/* This file is part of X11BASIC, the basic interpreter for Unix/X
+ * ======================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
- */  
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,20 +16,17 @@
 void reset_input_mode();
 void x11basicStartup();
 void programmlauf();
-char *do_gets (char *); 
+char *do_gets (char *);
 
 void loadprg(char *);
 void kommando(char *);
-
 
 extern int param_anzahl;
 extern char **param_argumente;
 extern const char xbasic_name[];
 extern int pc,sp,err,errcont,everyflag,batch,echoflag;
 
-
-
-const char version[]=VERSION;           /* Programmversion           */
+const char version[]=VERSION;        /* Programmversion          */
 const char vdate[]=VERSION_DATE;
 extern const char libversion[];
 extern const char libvdate[];
@@ -48,7 +45,7 @@ char *program[MAXPRGLEN];
 void intro(){
   puts("***************************************************************");
   printf("*           %10s                     V.%5s            *\n",xbasic_name, version);
-  puts("*                    by Markus Hoffmann 1997-2005 (c)         *");
+  puts("*                    by Markus Hoffmann 1997-2006 (c)         *");
   puts("*                                                             *");
 #ifdef GERMAN
   printf("* Programmversion vom     %30s      *\n",vdate);
@@ -57,7 +54,7 @@ void intro(){
   printf("* version date:           %30s      *\n",vdate);
   printf("* library V. %s date:   %30s      *\n",libversion,libvdate);
 #endif
-  puts("***************************************************************"); 
+  puts("***************************************************************");
   puts("");
 }
 
@@ -69,7 +66,7 @@ void usage(){
   puts("-e <kommando>       --- Basic Kommando ausführen");
   puts("--eval <ausdruck>   --- Num. Ausdruck auswerten");
   puts("-h --help           --- Diese Kurzhilfe");
-  puts("--help <Stichwort>  --- Hilfe zum Stichwort/Befehl\n");  
+  puts("--help <Stichwort>  --- Hilfe zum Stichwort/Befehl\n");
 #else
   puts("\n Usage:\n ------ \n");
   printf(" %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n",xbasic_name,ifilename);
@@ -77,7 +74,7 @@ void usage(){
   puts("-e <command>        --- execute basic command");
   puts("--eval <exp>        --- evaluate num. expression");
   puts("-h --help           --- Usage");
-  puts("--help <topic>      --- Print help on topic\n");    
+  puts("--help <topic>      --- Print help on topic\n");
 #endif
 }
 
@@ -91,7 +88,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
     if (strcmp(argumente[count],"-l")==FALSE)               runfile=FALSE;
     else if (strcmp(argumente[count],"--load-only")==FALSE) runfile=FALSE;
     else if (strcmp(argumente[count],"--eval")==FALSE) {
-      printf("%.13g\n",parser(argumente[++count])); 
+      printf("%.13g\n",parser(argumente[++count]));
       quitflag=1;
     } else if (strcmp(argumente[count],"-e")==FALSE) {
       kommando(argumente[++count]);
@@ -102,7 +99,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"-h")==FALSE) {
       intro();
       usage();
-      quitflag=1;   
+      quitflag=1;
     } else if (strcmp(argumente[count],"--help")==FALSE) {
       intro();
       if(count<anzahl-1 && *argumente[count+1]!='-') {
@@ -110,14 +107,14 @@ void kommandozeile(int anzahl, char *argumente[]) {
         xtrim(buffer,TRUE,buffer);
         c_help(buffer);
       } else usage();
-      quitflag=1;   
+      quitflag=1;
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
       intro();
       daemonf=1;
     } else {
       if(!loadfile) {
         loadfile=TRUE;
-        strcpy(ifilename,argumente[count]); 
+        strcpy(ifilename,argumente[count]);
       }
     }
    }
@@ -130,17 +127,17 @@ HINSTANCE hInstance;
 #endif
 extern char *simple_gets(char *);
 main(int anzahl, char *argumente[]) {
-  char buffer[MAXSTRLEN],*zw; 
+  char buffer[MAXSTRLEN],*zw;
 #ifdef WINDOWS
   hInstance=GetModuleHandle(NULL);
-#endif 
-  x11basicStartup();   /* initialisieren   */  
+#endif
+  x11basicStartup();   /* initialisieren   */
 
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
   atexit(reset_input_mode);
   param_anzahl=anzahl;
   param_argumente=argumente;
-  
+
   if(anzahl<2) {    /* Kommandomodus */
     intro();
     batch=0;
@@ -149,11 +146,11 @@ main(int anzahl, char *argumente[]) {
     if(loadfile) {
       if(exist(ifilename)) {
         loadprg(ifilename);
-	if (runfile) c_run("");     
+	if(runfile) c_run("");
       } else printf("ERROR: %s not found !\n",ifilename);
     }
-  } 
-  
+  }
+
   /* Programmablaufkontrolle  */
   for(;;) {
     programmlauf();
@@ -162,7 +159,7 @@ main(int anzahl, char *argumente[]) {
     else zw=do_gets("> ");
     if(zw==NULL) c_quit("",0);
     else {
-      strcpy(buffer,zw);  
+      strcpy(buffer,zw);
       kommando(buffer);
     }
   }

@@ -26,9 +26,18 @@
 /*  #define TINE  */
 #endif 
 
+#ifdef WINDOWS
+  #undef HAVE_READLINE
+#endif
+
 /* If you do not want to have the graphics ... */
 
 /*#define NOGRAPHICS*/
+
+
+/* If you are allowed to use stron cryptographics ... */
+
+/*#define USE_BLOWFISH*/
 
 
 #endif /* OPTIONS_H */

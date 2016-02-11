@@ -226,7 +226,7 @@ void c_run(char *n) {        /* Programmausfuehrung starten und bei 0 beginnen *
   do_restore();
 }
 
-void c_chain(char *n){ c_load(n); c_run(n);    }
+void c_chain(char *n){ c_load(n); c_run("");    }
 
 void c_cont(char *n) {
   if(pc<=prglen) batch=1;
@@ -331,13 +331,22 @@ char *plist_zeile(P_CODE *code) {
   int i;
   ergebnis[0]=0;
   if(code->opcode&P_INVALID) strcat(ergebnis,"==> ");
+  if(code->opcode==P_REM) {
+    strcat(ergebnis,"' ");
+    strcat(ergebnis,code->argument);
+    return(ergebnis);
+  }
+  if(code->opcode==(P_IGNORE|P_NOCMD)) return(ergebnis);
+  
   if(code->opcode==P_LABEL) {
     strcat(ergebnis,labels[code->integer].name);
     strcat(ergebnis,":");
-  } else if(code->opcode==P_REM) {
-    strcat(ergebnis,"' ");
+  } else if((code->opcode)&P_EVAL) {
+    strcat(ergebnis,"eval ---> ");
+ 
     strcat(ergebnis,code->argument);
-  } else if((code->opcode&PM_COMMS)<anzcomms) {
+  }  
+  else if((code->opcode&PM_COMMS)<anzcomms) {
     strcat(ergebnis,comms[(code->opcode&PM_COMMS)].name);
     if(code->panzahl) {
       strcat(ergebnis," ");
@@ -347,9 +356,11 @@ char *plist_zeile(P_CODE *code) {
       }
       ergebnis[strlen(ergebnis)-1]=0;
     }
-  } else if((code->opcode)&P_EVAL) strcpy(ergebnis,code->argument);
-  else sprintf(ergebnis,"=?=> %d",code->opcode);
-  
+  } else sprintf(ergebnis,"=?=> %d",code->opcode);
+  if(code->etyp==PE_COMMENT) {
+    strcat(ergebnis," !");
+    strcat(ergebnis,(char *)code->extra);
+  }
   return(ergebnis);
 }
 int plist_printzeile(P_CODE *code, int level) {
@@ -1219,7 +1230,12 @@ void c_inc(PARAMETER *plist,int e) {
   if(e) {
     if(plist[0].integer&FLOATTYP) 
       *((double *)plist[0].pointer)=*((double *)plist[0].pointer)+1;
-    else if(plist[0].integer&INTTYP) *((int *)plist[0].pointer)++;
+    else if(plist[0].integer&INTTYP)
+#ifdef __hpux
+      *((int *)plist[0].pointer)=*((int *)plist[0].pointer)+1; 
+#else
+      *((int *)plist[0].pointer)++;
+#endif
   }
 }
 
@@ -1227,7 +1243,12 @@ void c_dec(PARAMETER *plist,int e) {
   if(e) {
     if(plist[0].integer&FLOATTYP) 
       *((double *)plist[0].pointer)=*((double *)plist[0].pointer)-1;
-    else if(plist[0].integer&INTTYP) *((int *)plist[0].pointer)--;
+    else if(plist[0].integer&INTTYP) 
+ #ifdef __hpux
+    *((int *)plist[0].pointer)=*((int *)plist[0].pointer)-1;
+ #else
+    *((int *)plist[0].pointer)--;
+ #endif
   }
 }
 void c_cls(char *n) { 

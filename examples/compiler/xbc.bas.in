@@ -1,13 +1,15 @@
 ' Pseudo-Kompiler fuer X11-Basic (console-Version)
 ' erzeugt allein lauffaehigen Code auf Wunsch auch statisch mit der
 ' X11-Basic-Library gelinkt
-' (c) Markus Hoffmann Dec. 2002 (letzte Bearbeitung: 10.04.2004)
+' (c) Markus Hoffmann Dec. 2002 (letzte Bearbeitung: 10.09.2005)
 ' 10.2004: Produziert nun auch Object-Files ohne main()
+' 10.2005: Produziert nun auch WINDOWS .exe files
 
 i=1
 compileonly=FALSE
 precomponly=FALSE
 lflag=FALSE
+win32=FALSE
 CLR inputfile$,dyn,collect$
 outputfilename$="b.out"
 WHILE LEN(param$(i))
@@ -20,6 +22,11 @@ WHILE LEN(param$(i))
       QUIT
     ELSE IF param$(i)="--dynamic"
       dyn=TRUE
+    ELSE IF param$(i)="-win32"
+      win32=TRUE
+      if outputfilename$="b.out"
+        outputfilename$="b.exe"
+      endif
     ELSE IF param$(i)="-b"
       precomponly=TRUE
       compileonly=TRUE
@@ -80,6 +87,7 @@ PROCEDURE using
   PRINT "  -c                       precompile and compile, but do not link"
   PRINT "  -l                       produce linkable object file (no executable)"
   PRINT "  -shared                  produce shared object file"
+  PRINT "  -win32                   produce Windows .exe file"
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
 procedure compile
@@ -147,7 +155,14 @@ procedure compile
     PRINT #2,"return(returnvalue.f);}"
   else 
     PRINT #2,"int prglen=sizeof(program)/sizeof(char *);"
+    if win32
+      print #2,"#include <windows.h>"
+      print #2,"HINSTANCE hInstance;"
+    endif
     print #2,"main(int anzahl, char *argumente[]){"
+    if win32
+      print #2,"hInstance=GetModuleHandle(NULL);"
+    endif
     print #2,"x11basicStartup(); set_input_mode(1,0);" 
     print #2,"atexit(reset_input_mode);"
     print #2,"param_anzahl=anzahl;"
@@ -156,15 +171,27 @@ procedure compile
   endif
   CLOSE #2
   IF NOT precomponly
-    system "@CC@ @copt@ -c "+rumpf$+".c"
+    if win32
+      system "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
+    else
+      system "@CC@ @copt@ -c "+rumpf$+".c"
+    endif
     system "rm -f "+rumpf$+".c"
   ENDIF
 RETURN
 
 PROCEDURE link
   IF dyn
-    system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @X_LIBS@ -lx11basic  @libs@"
+    if win32
+      system "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o -L/usr/lib/ -lx11basic -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32"
+    else
+      system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @X_LIBS@ -lx11basic  @libs@"
+    endif
   else
-    system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.a @X_LIBS@ @libs@"
+    if win32
+      system "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.lib -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 "
+    else
+      system "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o /usr/lib/x11basic.a @X_LIBS@ @libs@"
+    endif
   ENDIF
 RETURN

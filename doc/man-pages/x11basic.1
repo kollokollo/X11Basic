@@ -1,4 +1,4 @@
-.TH X11BASIC 1 10-Aug-2003 "Version 1.09" "Linux Basic Interpreter"
+.TH X11BASIC 1 10-Aug-2004 "Version 1.10" "Linux Basic Interpreter"
 .SH NAME
 xbasic (X11-Basic) \- Basic interpreter and shell
 .SH SYNOPSIS
@@ -8,12 +8,13 @@ xbasic (X11-Basic) \- Basic interpreter and shell
 .SH DESCRIPTION
 
 X11-Basic is a comprehensive non-standard Basic interpreter with full X 
-capability that integrates fratures like shell scripting, cgi-Programming and 
+capability that integrates features like shell scripting, cgi-Programming and 
 full graphical visualisation into the easy to learn basic language on moden 
 computers.
 
 The syntax is most similar to the old GFA-Basic ATARI ST
-implementation. Old GFA-programs should run with only few changes. 
+implementation. Old GFA-programs should run with only few changes. Also 
+DOS/QBASIC programmers will feel comfortable.
 
 Old ANSI-Basic programs (with line numbers) can be converted to X11-Basic 
 with the 
@@ -55,7 +56,9 @@ print help on topic
 daemon mode
 
 For detailed help and description of the implemented basic commands take a 
-look at the README file which comes with the X11Basic package. 
+look at the README file which comes with the X11Basic package. There is also a 
+full users manual available as *.pdf file on the homepage.
+
 .SH INTERACTIVE USE
 If no options are given on the command line, 
 .B xbasic
@@ -185,6 +188,8 @@ CTIMER        system timer in units of CPU-time
 PC            line number of next line to be processed
 SP            internal stack pointer
 ERR           error number of last error
+COLS          number of colums of the terminal connected to text output
+ROWS          number of rows of the terminal
 
 MOUSEX        x coordinate of mouse position relative to window 
 MOUSEY        y coordinate of mouse position 
@@ -389,16 +394,22 @@ BOUNDARY b		-- sets boundary for filled box/circle etc. on or off
 BOX x1,y1,x2,y2         -- draw a frame
 CIRCLE x,y,r            -- draw a circle
 CLEARW [[#]n%]          -- clear graphic window
+CLIP i%,i%,i%,i%[,i%,i%]-- defines the  clipping  rectangle
 CLOSEW [[#]n%]          -- close graphic window
 COLOR f[,b]             -- Set foreground color (and background color)
+
 DEFFILL c,a,b           -- set fill style and pattern 
 DEFLINE a,b             -- set line width and type
 DEFMARK c,a,g           -- define: colour, size, type (POLYMARK)        
 DEFMOUSE i              -- set mouse cursor type
 DEFTEXT c,s,r,g	        -- set text properties for ltext
 DRAW [[x1,y1] TO] x2,y2 -- draw line 
+
 ELLIPSE x,y,a,b[,a1,a2] -- draw an ellipse
 FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box            
+FILL i%,i%[,i%]         -- flood fill 
+FULLW n                 -- raises window size to full screen
+
 GET x,y,w,h,g$          -- grabs part of graphic window to string
 GPRINT                  -- like PRINT, but the output goes to the graphic window
 GRAPHMODE mode          -- set graphic-mode                 
@@ -633,6 +644,7 @@ a%=VARPTR(v)		-- returns pointer to variable
 u$=LCASE$(t$)		-- converts t$ to lower case
 u$=LOWER$(t$)		-- converts t$ to lower case
 t$=REPLACE$(a$,b$,c$)   -- replace all b$ in a$ with c$
+t$=REVERSE$(a$)         -- reverse the order of the string
 t$=RIGHT$(a$[,n])       -- returns right n characters of a$
 t$=SPACE$(i)		-- returns string consisting of i spaces
 t$=STRING$(w$,i)        -- returns string consisting of i copys of w$
@@ -683,7 +695,7 @@ ENDFUNCTION
 .fi
 
 .SH VERSION
-Page was created for V.1.09
+Page was created for V.1.10
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic interpreter, you should
@@ -705,7 +717,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2003 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2004 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public

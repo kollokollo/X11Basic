@@ -1,9 +1,10 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic],[1.12], [kollo@users.sourceforge.net])
-version="1.12"
+AC_INIT([X11-Basic], [1.13], [kollo@users.sourceforge.net])
+version=$PACKAGE_VERSION
 vdate=`date`
+AC_REVISION($Revision: 0.12 $)
 AC_SUBST(version)
 AC_CONFIG_HEADERS([config.h])
 AH_TOP([
@@ -318,7 +319,7 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
-AC_CHECK_FUNCS([nanosleep alarm atexit getcwd gethostbyname gettimeofday inet_ntoa memmove select socket strchr strdup strstr utime])
+AC_CHECK_FUNCS([nanosleep alarm atexit getcwd gethostbyname gettimeofday inet_ntoa memmove memfrob select socket strchr strdup strstr utime])
 
 
 # Versioning

@@ -5,7 +5,7 @@
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
- 
+
 #ifndef __X11BASICDEFS
 #define __X11BASICDEFS
 
@@ -13,7 +13,7 @@
 #include "options.h"
 
 
-#ifndef FALSE 
+#ifndef FALSE
   #define FALSE    0
   #define TRUE     (!FALSE)
 #endif
