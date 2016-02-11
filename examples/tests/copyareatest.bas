@@ -1,5 +1,5 @@
 ' rootwindow
-
+clearw 1
 color get_color(65535,65535,0)
 pcircle 400,10,10
 color get_color(65535,0,0)

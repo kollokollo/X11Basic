@@ -1,8 +1,8 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic],[1.10], [kollo@users.sourceforge.net])
-version="1.10"
+AC_INIT([X11-Basic],[1.11], [kollo@users.sourceforge.net])
+version="1.11"
 vdate=`date`
 AC_SUBST(version)
 AC_CONFIG_HEADERS([config.h])
@@ -108,16 +108,11 @@ AC_CHECK_HEADERS([sys/kd.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.
 
 # Checks for libraries.
 # `-lX11':
-AC_CHECK_LIB([X11], [main], libs="$libs -lX11",,[$X_LIBS])
+AC_CHECK_LIB([X11], [main], xlibs="-lX11",,[$X_LIBS])
 # `-ldl':
 AC_CHECK_LIB([dl], [dlopen], [
 libs="$libs -ldl"
 AC_DEFINE(HAVE_LIBDL,1,[dllib])
-AC_DEFINE(HAVE_DLOPEN,1,[dlopen in dllib])
-])
-AC_CHECK_LIB([dlfcn], [dlopen],[
-libs="$libs -ldlfcn"
-AC_DEFINE(HAVE_LIBDLFCN,1,[dlopen in dllib])
 AC_DEFINE(HAVE_DLOPEN,1,[dlopen in dllib])
 ])
 # `-lm':
@@ -129,16 +124,22 @@ AC_CHECK_LIB([m], [pow], AC_DEFINE(HAVE_POW,1,[pow in Mathlib]))
 AC_CHECK_LIB([m], [expm1], AC_DEFINE(HAVE_EXPM1,1,[expm1 in Mathlib]))
 AC_CHECK_LIB([m], [log1p], AC_DEFINE(HAVE_LOG1P,1,[log1p in Mathlib]))
 # `-lreadline':
-AC_CHECK_LIB([readline], [readline], libs="$libs -lreadline")
+AC_CHECK_LIB([readline], [readline], [
+libs="$libs -lreadline"
+AC_DEFINE(HAVE_READLINE,1,[readline in readline])
+])
 # `-ltermcap':
-AC_CHECK_LIB([termcap], [main], libs="$libs -ltermcap")
+#AC_CHECK_LIB([termcap], [main], libs="$libs -ltermcap")
 # `-lcurses':
 AC_CHECK_LIB([curses], [main], libs="$libs -lcurses")
 # `-lncurses':
 AC_CHECK_LIB([ncurses], [main], libs="$libs -lncurses")
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS -lX11 -lm])
+# `-lvgagl -lvga':
+AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
 
+libs="$libs $xlibs"
 
 AC_SUBST(inc)
 AC_SUBST(X_CFLAGS)
@@ -164,7 +165,7 @@ small=0
 conf="config/generic.h"
 case $t in
 sparc-sun-sunos*)
-	echo "Congratulations! You've got the same system type as I! ;-)"
+	echo "Congratulations! "
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
 
 if test "n$CC" = ngcc; then

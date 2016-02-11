@@ -121,7 +121,7 @@ void kommandozeile(int anzahl, char *argumente[]) {
       }
     }
    }
-   if(quitflag) c_quit("");
+   if(quitflag) c_quit("",0);
 }
 #ifdef WINDOWS
 
@@ -160,7 +160,7 @@ main(int anzahl, char *argumente[]) {
     echoflag=batch=0;
     if(daemonf) zw=simple_gets("");
     else zw=do_gets("> ");
-    if(zw==NULL) c_quit("");
+    if(zw==NULL) c_quit("",0);
     else {
       strcpy(buffer,zw);  
       kommando(buffer);

@@ -276,7 +276,6 @@ int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 int arg2(char *t,int klamb ,char *w1, char *w2)    {
   int f=0, klam=0, i=0, j=0,ergeb;
-
   if(!*t) return(*w1=*w2=0);
   while(t[i] && ((t[i]!=';' && t[i]!=','&& t[i]!='\'') || f || klam!=0)) {
     if(t[i]=='"') f=!f;

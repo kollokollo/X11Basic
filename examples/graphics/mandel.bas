@@ -1,4 +1,4 @@
-' mandelbrotfraktale (c) Markus Hoffmann
+' Mandelbrotfraktale (c) Markus Hoffmann
 randomize
 bx=0
 by=0
@@ -26,9 +26,11 @@ count=0
 count2=0
 do
   if mousek
-  vsync
-  x=mousex
-  y=mousey
+    vsync
+    if mousex>=0 and mousey>=0 and mousex<bw and mousey<bh
+      x=mousex
+      y=mousey
+    endif
   endif
   while field(x,y)
      x=random(bw)

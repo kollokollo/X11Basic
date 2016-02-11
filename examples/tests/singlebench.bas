@@ -1,4 +1,4 @@
-ac=100000
+ac=500000
 
 t=ctimer
 for i=0 to ac

@@ -1032,10 +1032,19 @@ void c_on(char *n) {
     else mode=0;
     
     if(strcmp(w1,"ERROR")==0) {
-      errcont=(mode==1);
-      
+      errcont=(mode>0);
+      if(mode==2) errorpc=labelnr(w3);
+      else if(mode==3) {
+        errorpc=procnr(w3,1);
+	if(errorpc!=-1) errorpc=procs[errorpc].zeile;      
+      }
     } else if(strcmp(w1,"BREAK")==0) {
-      breakcont=(mode==1);
+      breakcont=(mode>0);
+      if(mode==2) breakpc=labelnr(w3);
+      else if(mode==3) {
+        breakpc=procnr(w3,1);
+	if(breakpc!=-1) breakpc=procs[breakpc].zeile;
+      }
 #ifndef NOGRAPHICS 
     } else if(strcmp(w1,"MENU")==0) {
       if(mode==0)  c_menu("");  
@@ -1203,27 +1212,19 @@ void c_void(char *n) {
 }
 void c_nop(char *n) { return; }
 
-void c_inc(char *n) {
-  int typ=type2(n);
-  void *v;
-  v=varptr(n);
-  if(v==NULL) printf("Fehler bei varptr.\n");
-  else {
-    if(typ&FLOATTYP) *((double *)v)=*((double *)v)+1;
-    else if(typ&INTTYP) *((int *)v)++;
-    else error(58,n); /* Variable hat falschen Typ */
+void c_inc(PARAMETER *plist,int e) {
+  if(e) {
+    if(plist[0].integer&FLOATTYP) 
+      *((double *)plist[0].pointer)=*((double *)plist[0].pointer)+1;
+    else if(plist[0].integer&INTTYP) *((int *)plist[0].pointer)++;
   }
 }
 
-void c_dec(char *n) { 
-  int typ=type2(n);
-  void *v;
-  v=varptr(n);
-  if(v==NULL) printf("Fehler bei varptr.\n");
-  else {
-    if(typ&FLOATTYP) *((double *)v)=*((double *)v)-1;
-    else if(typ&INTTYP) *((int *)v)--;
-    else error(58,n); /* Variable hat falschen Typ */
+void c_dec(PARAMETER *plist,int e) { 
+  if(e) {
+    if(plist[0].integer&FLOATTYP) 
+      *((double *)plist[0].pointer)=*((double *)plist[0].pointer)-1;
+    else if(plist[0].integer&INTTYP) *((int *)plist[0].pointer)--;
   }
 }
 void c_cls(char *n) { 

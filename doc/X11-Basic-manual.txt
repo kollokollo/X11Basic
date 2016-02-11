@@ -11,7 +11,7 @@
         ###############################################################
   
  
- 		    		  VERSION 1.10
+ 		    		  VERSION 1.11
 
  		       (C) 1997-2004 by Markus Hoffmann
  		    	 (kollo@users.sourceforge.net)
@@ -23,7 +23,7 @@
 
              See the file `COPYING' for licensing information
 
-          Last change to this file:  Sa Feb 28 01:13:18 CET 2004
+          Last change to this file:  Fr Dez 17 17:30:06 CET 2004
 
        ==>							    <==
           X11-Basic is a  comprehensive  non-standard  Basic  inter­
@@ -51,6 +51,100 @@ About this document
       can be found at http://x11-basic.sourceforge.net/.
 
        
+===============================================================================
+
+    * Contents
+    * ABOUT X11-Basic
+          o Structured programming
+          o Copyright information
+
+    * Usage
+          o Installing X11-Basic
+                # SuSE-Linux and RedHat
+                # Other linux distributions
+                # make the pseudo-compiler work, libraries
+                # Support
+          o The X11-Basic Interpreter
+                # Command line parameters
+                * 2 X11-Basic as daemon
+                * 3 X11-Basic as shell
+          o Using Syntax highlighting with nedit
+          o The pseudo compiler
+          o The WINDOWS Version of X11-Basic
+          o The ANSI-Basic to X11-Basic converter
+
+    * Getting Started
+          o Variables
+                # Strings and Arrays
+          o Subroutines and Functions
+          o Adress spaces
+          o Operators
+                # numerical operators
+                # operators for character strings
+                # Array operators
+                # Spanning operators
+          o Expressions and Conditions
+          o General Syntax
+                # Appending lines
+                # Comments
+          o The very BASIC commands: PRINT, INPUT, IF and GOTO
+          o Graphics: Drawing and painting
+          o Reading from and writing to files
+          o Internet connections, special files and sockets
+          o String processing
+          o Arithmetic
+          o Data within the program
+          o Other features
+          o Using the Graphical User Interface (GUI)
+               * 1 ALERT and FILESELECT
+               * 2 Recources
+               * 3 Objects
+               * 4 The gui file format
+               * 5 Menus
+          o WEB programming with X11-Basic
+               * 1 What is CGI?
+               * 2 Configuration
+               * 3 How it works
+               * 4 Example cgi-Script envtest.cgi
+
+    * Quick reference
+          o reserved variable names
+          o Abbreviations
+          o Commands
+          o Graphic commands
+          o Math commands
+          o Math functions
+                # Angles
+                # Trigonometric functions
+                # Boolean functions
+          o String functions
+          o Graphic functions
+          o Other functions
+          o Subroutines and Functions
+                # Subroutines
+                # User defined functions
+          o Error Messages
+
+    * X11-Basic command reference
+          o Syntax templates
+
+    * Compatibility
+          o General remarks
+                # ELSE IF vs. ELSEIF
+                # Local variables
+                # Call By-Value vs. By-Reference
+                # Assignment operator
+                # Assignments to modifiable lvalue
+                # TOS/GEM implementation
+                # The INLINE statement
+          o GFA-Basic compatibility
+          o Ideas for future releases of X11-Basic
+
+    * Index
+    * Acknowlegements
+    * About this document ...
+
+===============================================================================
 
 
 
@@ -81,13 +175,6 @@ About this document
 
 1. ABOUT X11-Basic
 
-1.1 Copyright information
-
-    X11-Basic is free software and distributed under the GNU License.
-    Read the file COPYING for details.
-
-1.2 Abstract
-
     X11-Basic is a comprehensive non-standard Basic interpreter  with
     full  X capability that integrates features like shell scripting,
     cgi-Programming and full graphical visualisation into the easy to
@@ -112,18 +199,186 @@ About this document
     tions. This makes writing GUI programs in  X11-Basic  faster  and
     easier than programming with native GUI tools.
 
-1.3 Structured Programming
+                           Structured programming                            
+                                                                             
+   X11-Basic is a structured programming language. Structure is a form of    
+   visual and functional encapsulation in which multiple-line sections of    
+   program look and act like single units. The beginning and end of blocks   
+   are marked by descriptive keyword delimiters. Lines within blocks are     
+   generally indented to make the block visible.                             
+                                                                             
+   Even if the interpreter is BASIC, there are restraints and extansions     
+   to it for a structured programming with a better overall view. There      
+   are no line numbers and every line holds only one instruction. Jumps      
+   with GOTO are possible but not necessary. All the well-known loops are    
+   available including an additional command for discontinuation (-> EXIT    
+   IF). Procedures and functions with return values of any type can be       
+   defined. So a program can contain a main part to call the subfunctions,   
+   for example in side of a loop. Whole libraries can be added with the      
+   merge command (-> MERGE).                                                 
 
-    X11-Basic  is  a  structured programming language. Structure is a
-    form of visual and functional encapsulation  in  which  multiple-
-    line  sections of program look and act like single units. The be­
-    ginning and end of blocks are marked by descriptive  keyword  de­
-    limiters.  Lines within blocks are generally indented to make the
-    block visible.
 
-1.4 Usage
+                           Copyright information                            
+                                                                             
+   X11-Basic is free software and distributed under the GNU License. Read    
+   the file COPYING for details.                                             
+                                                                             
+                                                                            
+2. Usage                                    
+                                                                             
+   The X11-Basic interpreter is called xbasic (xbasic.exe under Windows).    
+   Under Unix it is usually installed in the /usr/bin/ (if installed via     
+   the .rpm) or in /usr/local/bin (if installed manually from the source     
+   package) path.                                                            
+                          Installing X11-Basic                             
+  
+SuSE-Linux and RedHat                                                        
+                                                                             
+   If you got a Redhat-Package (RPM) e.g. the File                           
+   X11Basic-1.09-4.i386.rpm, then you can install this package (beeing       
+   root) with rpm -i X11Basic-1.09-4.i386.rpm.                               
+                                                                             
+   This is a very convienient way at least for the Linux distributions       
+   SuSE and RedHat of installing the interpreter and its documentation,      
+   the X11-Basic pseudo compiler xbc and the ANSI-Basic to X11-Basic          
+   converter bas2x11basic, the man-pages and a small collection of example   
+   programs.                                                                 
+                                                                             
+   After having done so, do a rehash, and then you can execute the           
+   interpreter with xbasic or read the man pages with man xbasic or man      
+   x11basic.                                                                 
+                                                                             
+   The documentation will be installed in the                                
+   /usr/share/doc/packages/X11Basic/ directory (at least on my system) and   
+   you can find the following files:                                         
+                                                                             
+ -rw-r--r--    1005  ACKNOWLEGEMENTS      -- acknowlegements                 
+ -rw-r--r--      46  AUTHORS              -- contact addresses of the author 
+ -rw-r--r--   17982  COPYING              -- copyright information           
+ -rw-r--r--    2960  INSTALL              -- installation instructions       
+ -rw-r--r--    1752  README               -- short description               
+ -rw-r--r--     169  RELEASE_NOTES        -- release notes                   
+ -rw-r--r--  164366  X11-Basic-manual.txt -- the manual                      
+ drwxr-xr-x    1024  editors/             -- files for editors               
+ drwxr-xr-x    1024  examples/            -- few example programs            
+                                                                             
+Other linux distributions                                                    
+                                                                             
+   Maybe RPM is supported for your distribution, then you can follow the     
+   instructions above. If not, you might look for a debian package or a      
+   package for HPUX. So far there exist no packages for any other system.    
+                                                                             
+   For all other systems you will have to get the source-package             
+   X11Basic-1.09.tar.gz and compile the sources (which is very easy, by      
+   the way). This should work for all linux distributions, and probably      
+   with little modifications also for HPUX, for DEC/alpha and FreeBSD and    
+   maybe others.                                                             
+                                                                             
+   In order to compile X11Basic, you will need the following:                
+     * A C compiler, preferably GNU C (but some ANSI C compilers, like       
+       DEC's will do)                                                        
+     * a `csh'-compatible shell                                              
+     * X11R5 or R6 libraries                                                 
+     * the readline library                                                  
+     * the ncurses library                                                   
+                                                                             
+   These will suffice to get you started.                                                               
+                                                                             
+   Unpack X11Basic-1.09.tar.gz with                                          
+                                                                             
+ tar xzf X11Basic-1.09.tar.gz                                                
+                                                                             
+   go into the X11Basic-1.09 directory and do a                              
+                                                                             
+ sh ./install.sh                                                               
+                                                                             
+   Thats all you will have to do (except for something goes wrong).          
+                                                                             
+   A xbasic binary will be compiled into the ./src/ directory                
+                                                                             
+ cd src/                                                                     
+ make install                                                                
+                                                                             
+   will copy the binary in ${HOME}/bin/.                                     
+                                                                             
+   If the `install.sh' script fails, please contact me                       
+   (kollo@users.sourceforge.net) and send me the output it generated         
+   (install.log).                                                            
 
-    command line parameters are as follows:
+make the pseudo-compiler work, libraries                                     
+                                                                             
+   If you want to use the pseudo compiler included in this package, you      
+   have to make both the static and dynamic libraries.                       
+                                                                             
+ cd ./src                                                                    
+                                                                             
+   If you do not have the file mathematics.c please do                       
+                                                                             
+ cp mathemat_dummy.c mathematics.c                                           
+                                                                             
+   then:                                                                     
+
+    Libraries                                                                
+                                                                             
+   make lib                                                                  
+           will generate libx11basic.so                                      
+                                                                             
+   make x11basic.a                                                           
+           will generate x11basic.a - now you have to be root -              
+                                                                             
+   make installroot                                                          
+           will generate a dynamic linked binary of the interpreter, copy    
+           it to /bin/, install the libraries in /usr/local/lib/, install    
+           the man-page                                                      
+
+  The compiler                                                             
+                                                                             
+   make xbc                                                                  
+           will make the X11-Basic compiler You can then (beeing root) do    
+           a                                                                 
+                                                                             
+   make xbcinstall                                                           
+           to install the compiler in /usr/local/bin/ and the compiler       
+           man-page                                                          
+                                                                             
+   After doing all this, you will also find a xbasic.dyn executabe. This     
+   is the interpreter, dynamically linked and much shorter.                  
+
+Support                                                                      
+                                                                             
+   If you have trouble with X11-Basic, you may send me a mail or browse      
+   the faq.                                                                  
+                                                                             
+   If you have problems compiling X11-Basic under Unix, you should add the   
+   file install.log, which is created by the install.sh-script and           
+   contains all the information needed to pin down the error.                
+                                                                             
+   If you have trouble with some X11-Basic-command or program , you should   
+   create a minimum sample program to reproduce the error; please keep       
+   this sample program as small as possible. Then take the program and       
+   send it to me. Add a short description of you problem, containing:        
+     * Which Operating system are you using: Windows (95, 98, me, xp, NT,    
+       2000) or Unix (linux, solaris, FreeBSD, HPUX ...) ?                   
+     * How does the program behave on your computer ? What did you expect    
+       ?                                                                     
+     * Which version of X11-Basic are you using ? Please try the latest      
+       one ! You also might fill in the bug report form.                     
+       
+
+  
+                          The X11-Basic Interpreter                          
+                                                                             
+   There are several ways to start the X11-Basic interpreter.                
+                                                                             
+   The simplest way is to just start it by the command xbasic. Then you      
+   can use the interpreter in interactive mode. Just try to enter some       
+   X11-Basic commands.                                                       
+
+Command line parameters                                                      
+                                                                             
+   The X11-Basic Interpreter takes some command line parameters.             
+                                                                             
+   Command line parameters are as follows:                                   
 
     xbasic <filename>	--- run Basic-Programm [input.bas]
 
@@ -131,6 +386,12 @@ About this document
     -e <kommando>	--- excecute basic command
     --eval <ausdruck>	--- evaluate numerical expression
     --daemon		--- switch off prompting and echoing
+                                                                                                                                                          
+   The program does not insist on its name, the person installing can name   
+   it xbasic, x11basic or any other name. However xbasic is the preferred    
+   name for the executable. When you start the program without arguments     
+   it tells you the different options.                                       
+
 
     Examples:
 
@@ -198,6 +459,8 @@ About this document
   eventually have to compile them again when the libx11basic.so will
   have changed due to a version update of your X11-Basic package.
 
+  See the man page xbc(1) for further information on the compiler.          
+                                                                             
 
 --------------------------------------------------------------------------------
 
@@ -220,23 +483,32 @@ Invocation
       to execute your program.                                                
 
 --------------------------------------------------------------------------------
+                   The ANSI-Basic to X11-Basic converter                    
+                                                                             
+   You now will find a simple ANSI-Basic to X11-Basic converter              
+   (bas2x11basic.bas) in the examples/compiler/ directory. It helps          
+   convertig old (real) Basic Programs with line numbers and multiple        
+   commands per line to the X11-Basic structure. Because there are so many   
+   different BASIC Version aroud, in most cases you will have to edit        
+   these files produced manually. But most of the work will already have     
+   been done by this converter.                                              
+                                                                             
+   Example:                                                                  
+                                                                             
+ xbasic bas2x11basic.bas ansibasic.bas -o newname.bas                        
+                                                                             
+   For further options try xbasic bas2x11basic.bas --help and read the       
+   man-page bas2x11basic(1).                                                 
+                                                                             
+   A compiled version of the ANSI-Basic to X11-Basic converter is included   
+   in the RPM-packages.                                                      
 
-5. The ANSI-Basic to X11-Basic converter
-
-You now will find a simple ANSI-Basic to X11-Basic converter (bas2x11basic.bas)
-in the /examples/compiler/ directory. It helps convertig old (real) Basic
-Programs with line numbers and multiple commands per line to the X11-Basic
-structure.  Because there are so many different BASIC Version aroud, in most
-cases you will  have to edit these files produced manually. But most of the
-work will already  have been done by this converter.
-
-Example:
-
-xbasic bas2x11basic.bas ansibasic.bas -o newname.bas
-
-For further options try xbasic bas2x11basic.bas --help and read the man-page
-bas2x11basic(1).
 --------------------------------------------------------------------------------
+                               Getting Started                               
+                                                                             
+   This chapter describes all you need to know to write your own programs    
+   in X11-Basic.                                                             
+                                                                             
 
 2. Description of the X11-Basic language
 
@@ -336,10 +608,127 @@ Functions
 
 -- numerical operators --
 
-*	arithmetical operators:  ^ * / + - 
-*	comparison operators:  = <> < > <= >=
-*	logical operators:     NOT AND OR XOR ...
-*	built-in and user defined functions:   ()  @()
+   Numerical operators are roughly categorized in following categories:
+     * arithmetical operators: ^ * / + -
+     * comparison operators: = <> < > <= >=
+     * logical operators: NOT AND OR XOR ...
+
+   X11-Basic recognizes the following operators, in order of falling
+   precedence (the precedence of BASIC operators affects the order of
+   expression evaluation):
+
+
+   +----------------------------------------------+
+   |Order|Operator|Description                    |
+   |-----+--------+-------------------------------|
+   |    1|( )     |Parenthetical expression       |
+   |-----+--------+-------------------------------|
+   |    2|^       |Exponent                       |
+   |-----+--------+-------------------------------|
+   |    3|-       |Sign (negation)                |
+   |-----+--------+-------------------------------|
+   |    3|+       |Sign                           |
+   |-----+--------+-------------------------------|
+   |    4|NOT     |Bitwise not                    |
+   |-----+--------+-------------------------------|
+   |    5| /      |Divide                         |
+   |-----+--------+-------------------------------|
+   |    5|*       |Multiply                       |
+   |-----+--------+-------------------------------|
+   |    5|\       |Integer division               |
+   |-----+--------+-------------------------------|
+   |    5|MOD     |Modulus (rest of division)     |
+   |-----+--------+-------------------------------|
+   |    6|+       |Add                            |
+   |-----+--------+-------------------------------|
+   |    6|-       |Subtract                       |
+   |-----+--------+-------------------------------|
+   |    7|  <<    |Bitwise shift to the left      |
+   |-----+--------+-------------------------------|
+   |    7|  >>    |Bitwise shift to the right     |
+   |-----+--------+-------------------------------|
+   |    8|=       |Logical "equals"               |
+   |-----+--------+-------------------------------|
+   |    8|<>      |Logical "not equal"            |
+   |-----+--------+-------------------------------|
+   |    8|<       |Logical "less than"            |
+   |-----+--------+-------------------------------|
+   |    8|>       |Logical "Greater than"         |
+   |-----+--------+-------------------------------|
+   |    8|<=      |Logical "less than or equal"   |
+   |-----+--------+-------------------------------|
+   |    8|>=      |Logical "greater than or equal"|
+   |-----+--------+-------------------------------|
+   |    9|AND     |Bitwise and                    |
+   |-----+--------+-------------------------------|
+   |    9|OR      |Bitwise or                     |
+   |-----+--------+-------------------------------|
+   |    9|XOR     |Bitwise xor                    |
+   |-----+--------+-------------------------------|
+   |    9|IMP     |Implies                        |
+   |-----+--------+-------------------------------|
+   |    9|EQV     |Equivalence                    |
+   |-----+--------+-------------------------------|
+   |   10|=       |assignment                     |
+   +----------------------------------------------+
+
+
+
+2 operators for character strings
+
+   +
+           conjunction, links two strings together.
+           Example: suppose a$="X11", b$="-" and c$="BASIC", so d$=a$+b$+c$
+           results in "X11-BASIC".
+
+   < <= = => >
+           comparison functions belong to numerical (boolean) functions
+           because the result is a number.
+
+   &
+           the eval operator evaluates command or expression which is given
+           by the String.
+
+    1 Rules for comparison of strings:
+
+    1. Two strings are equal if all the characters inside are identical (also
+       spaces and punctuation marks).
+       Example:
+       " 123 v fdh.-," = " 123 v fdh.-,"
+
+    2. The comparison of size operates also character by character until one
+       of them is smaller or a the strings ends first, this is the smaller
+       one.
+       Examples:
+
+ "X11">"X11"     result:  0
+ "X11"<"x11"     result: -1
+ "123"<"abc"     result: -1
+ "123">"1234"    result:  0
+
+
+    2 The eval-Operator &:
+
+   The &-operator followed by a string evaluates it for program code.
+   Example:
+
+ REM generate ten times the command 'print a$'
+ CLR i
+ a$="print a$"
+ label1:
+ INC i
+ IF i>10
+   b$="label2"
+ ELSE
+   b$="label1"
+ ENDIF
+ &a$
+ GOTO &b$
+ label2:
+ END
+
+   To act like this can create an unreadable code but this is BASIC.
+
 
 -- operators for arrays --
 
@@ -362,51 +751,11 @@ b()=a(:,3) ist ein eindimensionaler Vektor, nämlich die Spalte Nr. 3 der
         Matrix a. 
 
 
-Rules for comparison of strings: 
+4 Spanning operators
 
-*	Two strings are equal if all the characters inside are identical
-	(also spaces and punctuation marks).
-  Example:
-	" 123 v fdh.-," = " 123 v fdh.-,"
-
-*	The comparison of size operates also character by character until one
-	of them is smaller or a the strings ends first, this is the smaller
-	one.
-
-
-  Examples:
-
-	"X11">"X11"     result:  0
-        "X11"<"x11"     result: -1
-        "123"<"abc"     result: -1
-        "123">"1234"    result:  0
-
-logical operators: AND OR NAND OR NOT XOR EQV IMP 
-=================================================
-
-Mit Hilfe der logischen Operatoren können Ausdrücke oder Beziehungen zwischen
-Ausdrücken miteinander verbunden werden.
-
-In der Regel werden mit logischen Operatoren Wahrheitswerte verknüpft und als
-Ergebnis wiederum Wahrheitswerte ausgegeben.
-Dabei wird jedem numerischen Ausdruck ungleich 0 der Wahrheitswert >wahr< und jedem
-Ausdruck, dessen Wert gleich 0 ist, der Wahrheitswert >falsch< zugeordnet.
-Die von den logischen Operatoren erzeugten Wahrheitswerte ergeben sich aus
-der Bit-weisen Operation, wenn die Operanden als 32-Bit Integerwerte
-angesehen werden. Deshalb gehört zum Wahrheitswert 0 (falsch) der
-Wahrheitswert -1 (wahr). Hierfür gibt es auch die Systemvariablen TRUE=-1
-und FALSE=0. Dies kann man auch in numerischen Ausdrücken Verwenden, z.B.:
-a=ABS(x=0)*100+ABS(x=1)*200   je nach dem Wert von x erhält die Variable a die
-Werte 100 oder 200.
-
-Die logischen Operatoren werden hauptsächlich dazu benutzt, um abhängig vom
-Wahrheitswert verbundener Ausdrücke verschiedene Programmabläufe zu ermöglichen
-(z.B. über die Befehle IF, WHILE, EXIT IF ...)
-Logische Operatoren können aber auch dazu benutzt werden, um Bitfolgen zu
-verknüpfen.
-
-      Example:
-      PRINT 9 AND 5      Result:   1
+   Some operators operate in between of different classes of operands, like
+   the string comparison operators produce a number, or also the array
+   comparison operators produce numbers. Her are ...
 
 
 
@@ -448,49 +797,7 @@ verknüpfen.
   Whole libraries can be added with the merge command (--> MERGE).
 
 
------- general syntax  ------------------
-link two lines together (with '\' at end of line): 
-PRINT "Hello,";   \
-      " thats it"
-will be treated as:
-PRINT "Hello,";" thats it"
 
-
------- end of line comments -------------
-
-
-After the instructions comments are allowed that are prefaced with '!'.
-
-Examples:
-DO    ! endless loop
-LOOP  ! with nothing inside
-
-This comments can not be used after DATA (and REM).
-
-
------- the &-operator -------------------
-
-The &-operator followed by a string evaluates it for program code.
-
-
-Example:
-
-REM generate ten times the command 'print a$'
-clr i
-a$="print a$"
-label1:
-inc i
-if i>10 
-  b$="label2"
-else
-  b$="label1"
-endif
-&a$
-goto &b$
-label2:
-end
-
-To act like this can create an unreadable code but this is BASIC.
 
 
 String Variables
@@ -524,110 +831,6 @@ Adress spaces:
   your program. Adress spaces belonging to other programs which are
   not shared memory blocks can not be accessed. You will get a
   segmentation fault on trying this.
-
-
-The very basic commands: print, input and others
-
-   The print-command is used to put text on the text screen. Here, the term
-   text screen stands for your terminal (under Unix) or the console window
-   (under Windows).
-
-   At the bottom line, print simply outputs its argument to the text window.
-   However, you may use advanced features
-   like printing colors.
-
-   You may ask the user for input with the input-command; use inkey$ to get
-   each key as soon as it is pressed.
-
-Control statements: loops, if and switch
-
-   Of course, X11-Basic has the goto- and gosub-statements; you may go to a
-   label. goto,
-   despite its bad reputation ([goto considered harmful]), has still its good
-   uses; however in many cases you are probably better off with loops like
-   repeat-until, while-wend or do-loop; you may leave any of these loops with
-   the break- or exit if-statement.
-
-   Decisions can be made with the if-statement. It extends up to the final
-   endif and may use some of the keywords else or else if.
-
-   If you want to test the result of an expression against many different
-   values, you should probably use the switch-statement.
-
-Graphics: Drawing and painting
-
-   A Graphics window will be automatically opened by using the first graphic
-   command in your program. Witout using any graphic commands no X11-Server is
-   needed at all and your programs also run under a text console or as a daemon
-   or as CGI scripts. But if you want to draw anything  with e.g. line, circle 
-   or box, control the MOUSE pointer, the keyboard or use the graphical user
-   interface with e.g. ALERT or MENU. All graphic output can be done in fill
-   color which can be set with the get_color() and the color statements. 
-   Moreover, there can be up to 16 different graphic windows opened at a time.
-   Please Note that all graphics is displaied after a SHOWPAGE command only.
-   This allows fast animations.
-
-   To allow for some animated bitmap graphics, X11-Basic
-   offers the commands get and put, which retrieve rectangular regions
-   from the graphics-window into a string or vice versa.
-
-
-Reading from and writing to files
-
-   Before you may read or write a file, you need to open it; once you are
-   done, you should close it. Each open file is designated by a simple
-   number, which might be stored within a variable and must be supplied if
-   you want to access the file. This is simply done by putting a hash ('#')
-   followd by the number of the file after the keyword input (for reading
-   from) or print (for writing to a file) respectively.
-
-   If you need more control, you may consider reading and writing one byte at
-   a time, using the multi-purpose commands INP() and OUT.
-
-The internet connection: Special Files and Sockets
-
-   With the OPEN command it is also possible to open a pipe or a real internet 
-   connection. Please refer to the example programs.
-
-String processing
-
-   X11-Basic has the usual functions to extract parts from a string: LEFT$,
-   MID$ and RIGHT$. 
-   
-   If you want to split a string into tokens you should use the functions
-   WORT_SEP or SPLIT.
-
-   There is quite a bunch of other string-processing functions like UPPER$()
-   (converting to upper case), INSTR() (finding one string within the other),
-   CHR$() (converting an ascii-code into a character), GLOB (testing a string
-   against a pattern) and more. 
-
-Arithmetic
-
-   X11-Basic handles numbers and arithmetic: You may calculate trigonometric
-   functions like sin or atan, or logarithms (with LOG). Bitwise operations,
-   like and or or are available as well MIN() or MAX() (calculate the minimum or
-   maximum of its argument) or MOD or INT() (reminder of a division or integer
-   part or a number).
-
-Data and such
-
-   You may store data within your program within data-statements; during
-   execution you will probably want to read it into arrays.
-   Also the assignment of constant to arrays may be used to store data in
-   your program and last but not least the INLINE$() Function may be used to store
-   huge binary data segments.
-
-Other interesting commands.
-
-     * X11-Basic programs may start other programs with the commands system and
-       system$().
-
-     * The ENV$() function allows access to environment variables.
-
-     * The current time or date can be retrieved with (guess what !) time$
-       and date$.
-
 
  BASIC Operators
 
@@ -664,212 +867,460 @@ Other interesting commands.
 	    =         |  assignment
 
 
-\section{Expressions and Conditions}
-\begin{description}
-\item[Expressions] are needed 
-to  calculate  values. The simplest expression  is  a numerical or string 
-constant.  More  complex  expressions  may  contain constants, variables, 
-operators, function
-calls and possibly parentheses. The expression format   used   by
-X11-Basic  is  identical  with that of many other BASIC packages:
-The operators have precedence of the usual order and you can  alter  the   
-order   of   operator  evaluation  using  parentheses.
-Here is an example numeric expression  following  after  a  PRINT
-statement:
+                          5 Expressions and Conditions
 
-\begin{verbatim}
-PRINT (X-1)*10+SIN(x)
-\end{verbatim}
+   Expressions
+           are needed to calculate values. The simplest expression is a
+           numerical or string constant. More complex expressions may contain
+           constants, variables, operators, function calls and possibly
+           parentheses. The expression format used by X11-Basic is identical
+           with that of many other BASIC packages: The operators have
+           precedence of the usual order and you can alter the order of
+           operator evaluation using parentheses. Here is an example numeric
+           expression following after a PRINT statement:
 
-\item[Conditions] and  expression are the same in X11-Basic, FALSE is defined
-       as 0 and TRUE as -1.  Those  definitions  are  defined  in
-       defs.h  and could be changed, but that is not recommended.
-       Because BASIC doesn't have seperate  boolean  operators
-       for  conditions and expressions, using an boolean operator
-       (AND,OR,XOR,NOT) may give spurious results. When  on  each
-       site  a  value  of  an 0 or -1 is used, it's assumed as an
-       condition, if it's not, it considered an expression. Problems  
-       could occure if you use boolean operators with negative 
-       numbers, but that is also unrecommended  because  the
-       outcome of such an expression is highly platform depended.
-\end{description}
+ PRINT (X-1)*10+SIN(x)
 
-\section{General Syntax}
-\subsection*{Appending lines}
-Since for a structured programming language like X11-Basic each line must not contain more than 
-a single command, some restrictions apply for the program code.
+   Conditions
+           and expression are the same in X11-Basic, FALSE is defined as 0
+           and TRUE as -1. Those definitions are defined in defs.h and could
+           be changed, but that is not recommended. Because BASIC doesn't
+           have seperate boolean operators for conditions and expressions,
+           using an boolean operator (AND,OR,XOR,NOT) may give spurious
+           results. When on each site a value of an 0 or -1 is used, it's
+           assumed as an condition, if it's not, it considered an expression.
+           Problems could occure if you use boolean operators with negative
+           numbers, but that is also unrecommended because the outcome of
+           such an expression is highly platform depended.
 
-With many editors a limitation on the maximal line length applies  (e.g. 4096
-characters/line). In X11-Basic a single command may in very rare cases consist
-of more than 4096 characters (e.g. by assigning an array constant to an array).
-Therfor a possibility of plitting lines into two (or more) has been
-implemented. If the last character of a line is a \verb|'\'| (it must be really
-the last character of the line and may not be followed by a space character!),
-the following line will be appended to this line by replacing the 
-\verb|'\'| and the following newline character by spaces.\\
-{\bf Example:}
-\begin{verbatim}
-PRINT "Hello,";   \
-      " thats it"
-\end{verbatim}
-will be treated as:
-\begin{verbatim}
-PRINT "Hello,";" thats it"
-\end{verbatim}
+                                6 General Syntax
 
-Please note: The \verb|'\'| character must be placed at a position within the command where
-a space would be allowed, too.
+Appending lines
 
-\subsection*{Comments}
+   Since for a structured programming language like X11-Basic each line must
+   not contain more than a single command, some restrictions apply for the
+   program code.
 
-A comment can be inserted into your program code with the REM command or the abbreviation 
-\verb|'|. Also the \verb|'#'| as a first character of the program line
-reserves the rest of the line for a comment.
-If you want to place comments at the end of a line, they have to be
-prefaced with \verb|'!'|.\\
-{\bf Example:}
-\begin{verbatim}
-' This is a demonstration of comments
-DO    ! endless loop
-LOOP  ! with nothing inside
-\end{verbatim}
-These end of line comments can not be used after DATA (and REM).
+   With many editors a limitation on the maximal line length applies (e.g.
+   4096 characters/line). In X11-Basic a single command may in very rare
+   cases consist of more than 4096 characters (e.g. by assigning an array
+   constant to an array). Therfor a possibility of plitting lines into two
+   (or more) has been implemented. If the last character of a line is a '\'
+   (it must be really the last character of the line and may not be followed
+   by a space character!), the following line will be appended to this line
+   by replacing the '\' and the following newline character by spaces.
+   Example:
 
+ PRINT "Hello,";   \
+       " thats it"
 
-\section{The very BASIC commands: PRINT, INPUT, IF and GOTO}
+   will be treated as:
 
-The {\bf PRINT}-command is used to put text on the text screen. Text screen
-means  your terminal (under Unix) or the console window (under Windows). PRINT
-is used to generate basic output, e.g. text, strings,  numbers, e.g. the result
-of a calculation. Some basic formatting is possible.
+ PRINT "Hello,";" thats it"
 
-   With the {\bf INPUT} command you let the user input data, p.ex. numbers or text.
+   Please note: The '\' character must be placed at a position within the
+   command where a space would be allowed, too.
 
-The {\bf IF} command let the program do different things depending on the result of
-a calculation. 
+Comments
 
-With {\bf GOTO} you can branch to a different part of your program. 
-GOTO, despite its bad reputation ([goto considered harmful]), has still its 
-good uses.
+   A comment can be inserted into your program code with the REM command or
+   the abbreviation '. Also the '#' as a first character of the program line
+   reserves the rest of the line for a comment. If you want to place comments
+   at the end of a line, they have to be prefaced with '!'.
+   Example:
 
-Besides these four very basic commands (which are really standard basic
-commands,  and you can already write very handy calculations with only these
-four commands) X11-Basic has many more features which make life easier and your
-programs more user friendly.
+ ' This is a demonstration of comments
+ DO    ! endless loop
+ LOOP  ! with nothing inside
 
-\section{Graphics: Drawing and painting}
+   These end of line comments can not be used after DATA (and REM).
+              7 The very BASIC commands: PRINT, INPUT, IF and GOTO
 
-A graphics window will be automatically opened when the first graphic
-command appears in your program. Without using any graphic commands no X11-Server is
-needed at all and your programs also runs under a text console or as a daemon
-or as CGI scripts. But if you want to draw anything  with e.g. LINE, CIRCLE  or
-BOX, control the MOUSE pointer, the keyboard or use the graphical user
-interface with e.g. ALERT or MENU, a graphic window will open with the default 
-geometry \verb|640x400|. All graphic output can be done in full color which can
-be set with the GET\_COLOR() and the COLOR statements.  Moreover, there can be
-up to 16 different graphic windows opened at a time. Please Note that all
-graphics is displaied after a SHOWPAGE command only. This allows fast
-animations.
+   The PRINT-command is used to put text on the text screen. Text screen
+   means your terminal (under Unix) or the console window (under Windows).
+   PRINT is used to generate basic output, e.g. text, strings, numbers, e.g.
+   the result of a calculation. Some basic formatting is possible.
 
-   To allow for some animated bitmap graphics, X11-Basic
-   offers the commands GET and PUT, which retrieve rectangular regions
-   from the graphics-window into a string or vice versa.
+   With the INPUT command you let the user input data, p.ex. numbers or text.
 
+   The IF command let the program do different things depending on the result
+   of a calculation.
 
-\section{Reading from and writing to files}
+   With GOTO you can branch to a different part of your program. GOTO,
+   despite its bad reputation ([goto considered harmful]), has still its good
+   uses.
 
-Before you may read from or write to a file, you need to open it; once you are
-done, you should close it. Each open file is designated by a simple number,
-which might be stored within a variable and must be supplied to the PRINT and
-INPUT commands if you want to access the file. 
+   Besides these four very basic commands (which are really standard basic
+   commands, and you can already write very handy calculations with only
+   these four commands) X11-Basic has many more features which make life
+   easier and your programs more user friendly.
 
-If you need more control, you may consider reading and writing one byte at
-a time, using the multi-purpose commands INP() and OUT, or reading the whole file
-as a binary block with BLOAD.
+                        8 Graphics: Drawing and painting
 
-\section{Internet connections, special files and sockets}
+   A graphics window will be automatically opened when the first graphic
+   command appears in your program. Without using any graphic commands no
+   X11-Server is needed at all and your programs also runs under a text
+   console or as a daemon or as CGI scripts. But if you want to draw anything
+   with e.g. LINE, CIRCLE or BOX, control the MOUSE pointer, the keyboard or
+   use the graphical user interface with e.g. ALERT or MENU, a graphic window
+   will open with the default geometry 640x400. All graphic output can be
+   done in full color which can be set with the GET_COLOR() and the COLOR
+   statements. Moreover, there can be up to 16 different graphic windows
+   opened at a time. Please Note that all graphics is displaied after a
+   SHOWPAGE command only. This allows fast animations.
 
-   With the OPEN command it is also possible to open a pipe or a real internet 
-   connection. Please refer to the example programs.
+   To allow for some animated bitmap graphics, X11-Basic offers the commands
+   GET and PUT, which retrieve rectangular regions from the graphics-window
+   into a string or vice versa.
 
-\section{String processing}
+                      9 Reading from and writing to files
 
-   X11-Basic has the usual functions to extract parts from a string: LEFT\$,
-   MID\$ and RIGHT\$. 
-   
+   Before you may read from or write to a file, you need to open it; once you
+   are done, you should close it. Each open file is designated by a simple
+   number, which might be stored within a variable and must be supplied to
+   the PRINT and INPUT commands if you want to access the file.
+
+   If you need more control, you may consider reading and writing one byte at
+   a time, using the multi-purpose commands INP() and OUT, or reading the
+   whole file as a binary block with BLOAD.
+
+               10 Internet connections, special files and sockets
+
+   With the OPEN command it is also possible to open a pipe or a real
+   internet connection. Please refer to the example programs.
+
+                              11 String processing
+
+   X11-Basic has the usual functions to extract parts from a string: LEFT$,
+   MID$ and RIGHT$.
+
    If you want to split a string into tokens you should use the functions
-   WORT\_SEP or SPLIT.
+   WORT_SEP or SPLIT.
 
-   There is quite a bunch of other string-processing functions like UPPER\$
+   There is quite a bunch of other string-processing functions like UPPER$
    (converting to upper case), INSTR() (finding one string within the other),
-   CHR\$ (converting an ascii-code into a character), GLOB() (testing a string
-   against a pattern) and more. 
+   CHR$ (converting an ascii-code into a character), GLOB() (testing a string
+   against a pattern) and more.
 
-\section{Arithmetic}
+                                 12 Arithmetic
 
    X11-Basic handles numbers and arithmetic: You may calculate trigonometric
-   functions like SIN() or ATAN(), or logarithms (with LOG()). Bitwise operations,
-   like AND or OR are available as well MIN() or MAX() (calculate the minimum or
-   maximum of its argument) or MOD or INT() (reminder of a division or integer
-   part or a number). Many other statements give a complete set of math functions.
+   functions like SIN() or ATAN(), or logarithms (with LOG()). Bitwise
+   operations, like AND or OR are available as well MIN() or MAX() (calculate
+   the minimum or maximum of its argument) or MOD or INT() (reminder of a
+   division or integer part or a number). Many other statements give a
+   complete set of math functions.
 
-\section{Data within the program}
+                           13 Data within the program
 
    You may store data within your program within DATA-statements; during
-   execution you will probably want to READ it into variables or arrays.
-   Also the assignment of constant to arrays may be used to store data in
-   your program and last but not least the INLINE\$() function may be used to store
+   execution you will probably want to READ it into variables or arrays. Also
+   the assignment of constant to arrays may be used to store data in your
+   program and last but not least the INLINE$() function may be used to store
    huge binary data segments.
 
-\section{Other features}
-\begin{itemize}
-     \item X11-Basic programs may start other programs with the commands 
-     SYSTEM and SYSTEM\$().
+                               14 Other features
 
-     \item The ENV\$() function allows access to environment variables.
+     * X11-Basic programs may start other programs with the commands SYSTEM
+       and SYSTEM$().
 
-     \item The current time or date can be retrieved with (guess what !) TIME\$
-       and DATE\$.
-       
-     \item The interpreter allows self modifying code.  
-\end{itemize}
+     * The ENV$() function allows access to environment variables.
 
-  reserved variable names
+     * The current time or date can be retrieved with (guess what !) TIME$
+       and DATE$.
 
-       There are some reserved variables. Some Keywords  may  not
-       work as varable names as well. Although there is no check­
-       ing done, parsing errors could  occure.   Please  try  the
-       command  LET in such cases. In general, as long as an end­
-       ing of an variable name is different then any  command  or
-       keyword, it's usable as name.
+     * The interpreter allows self modifying code.
 
-    Reserved and system variables are:
+                  15 Using the Graphical User Interface (GUI)
 
-       TRUE          -1
-       FALSE         0
-       PI            3.141592...
-       TIMER         unix system timer, float, seconts
-       STIMER        integer system timer
-       CTIMER        system timer in units of CPU-time
-       PC            line number of next line to be processed
-       SP            internal stack pointer
-       CRSCOL			n.n.
-       CRSLIN			n.n.
-       ERR           error number of last error
+1 ALERT and FILESELECT
 
-       MOUSEX        x coordinate of mouse position relative to origin of 
-                     the graphics window
-       MOUSEY        y coordinate of mouse position
-       MOUSEK        mouse button state
-                     Button 1=Bit 0,Button 2=Bit 1 etc.
-       MOUSES        state of the shift,alt,ctrl,caps keys
+   Two most often used Graphic functions are implementet as a full functional
+   graphical user interface dialog: Message boxes and a Fileselector.
+   Arbitrary dialogs can be createt with the object and recource functions.
+   Also a pull down menu function is implemented.
 
-       INKEY$        content of the keyboard-buffer
-       TERMINALNAME$ device name of the standard terminal
-       TIME$         current time
-       DATE$         todays date
 
-commands
+   Fig. 3.1 shows a typical messagebox. The command which produces it is:
+
+ ALERT 3,"This file is write protected.|You can only read or
+          delete it.",1,"OK|DELETE|CANCEL",sel
+
+   ALERT boxes can also be used to manage simple input forms like the one you
+   can see in fig. 3.2. Here is a little exapmle program:
+
+ CLEARW
+ i=1
+ name$="TEST01"
+ posx$="N54DEG50'32.3"
+ posy$="E007DEG50'32.3"
+ t$="Edit waypoint:||Name:   "+CHR$(27)+name$+"|"
+ t$=t$+"Breite: "+chr$(27)+posx$+"|"
+ t$=t$+"La:nge:  "+chr$(27)+posy$+"|"
+ t$=t$+"Ho:he:   "+chr$(27)+str$(alt,5,5)+"|"
+ t$=t$+"Typ:    "+chr$(27)+hex$(styp,4,4)+"|"
+ ALERT 0,t$,1,"OK|UPDATE|LO:SCHEN|CANCEL",a,f$
+ WHILE LEN(f$)
+   WORT_SEP f$,CHR$(13),0,a$,f$
+   PRINT "Feld";i;": ",a$
+   INC i
+ WEND
+ QUIT
+
+   Fig. 3.4 shows the fileselector box. The command which produces it is:
+
+ FILESELECT "load program:","./*.bas","in.bas",f$
+
+   The complete path and filname of the selected file will be returned in f$.
+
+4 The gui file format
+
+   The *.gui file format, which is basically an ASCII representation of the
+   ATARI ST recource files (*.rsc), can be converted to X11-Basic code, which
+   then can handle message boxes and forms. The converter gui2bas(1) does
+   this job. For conversion of ATARI ST recource files to *.gui Files see
+   rsc2gui(1).
+
+   The *.gui file consists of Lines and Blocks which specify objects and
+   their hirarchical dependencies. The generic format of such an object is:
+
+ label: TYPE(variables) {
+  ... block ...
+ }
+
+   The label is optional and gives the object a name. Depending on TYPE of
+   the object, one or more variables are given as a comma separated list in
+   brackets.
+
+   Each object may start a block with '{' at the end of the line. Inside this
+   block there might be one or more objects given which then are considered
+   as sub-objects of the one whichopened the block. The block will be closed
+   by a '}' in a single line.
+
+   Example:
+
+ ' Little selector box   (c) Markus Hoffmann    07.2003
+ ' convert this with gui2bas !
+ ' as an example for the use of the gui system
+ ' with X11-Basic
+
+
+   BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0, STATE=OUTLINED+) {
+     BOXTEXT(X=2,Y=1,W=70,H=1, TEXT="Select option ...", FONT=3, JUST=2, COLOR=4513, BORDER=253, STATE=SHADOWED+)
+     BOX(X=2,Y=3,W=60,H=10, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0) {
+       FTEXT(X=1,Y=1,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="Line 1", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+       FTEXT(X=1,Y=2,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+       FTEXT(X=1,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+       FTEXT(X=1,Y=4,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+       BOX(X=2,Y=6,W=50,H=3, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=5, TEXTMODE=0) {
+         BUTTON(X=2,Y=1,W=4,H=1, TEXT="ON",STATE=SELECTED, FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
+         BUTTON(X=8,Y=1,W=4,H=1, TEXT="OFF",FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
+       }
+     }
+     ok:     BUTTON(X=65,Y=4,W=7,H=4, TEXT="OK", FLAGS=SELECTABLE+DEFAULT+EXIT)
+     cancel: BUTTON(X=65,Y=9,W=7,H=4, TEXT="CANCEL", FLAGS=SELECTABLE+EXIT+LASTOB+)
+   }
+
+5 Menus
+
+   Most applications use a menu bar to allow the user to navigate through
+   program options. In addition, future versions of X11-Basic will allow
+   popup menus and drop-down list boxes (a special form of a popup menu).
+                       16 WEB programming with X11-Basic
+
+   This chapter explaines, how you can use X11-Basic programs for
+   WEB-interfacing. Especially via the use of so-called CGI-Scripts.
+
+1 What is CGI?
+
+   CGI stands for Common Gateway Interface -- a term you don't really need to
+   know. In short, CGI defines how web servers and web browsers handle
+   information from HTML forms on web pages. This means instead of the WEB
+   server sending static web pages to the clients, it can invoke a program,
+   typically called a cgi-script, to generate the page on the time the
+   request was received. These cgi"-scripts take some action, and then send a
+   results page back to the user's web browser. The results page might be
+   different every time the program is run.
+
+   And these programs can be X11-Basic programs.
+
+2 Configuration
+
+    1. All X11-Basic scripts must begin with the following statement, on the
+       first line:
+
+ #!/usr/bin/xbasic
+
+       Because Unix does not map file suffixes to programs, there has to be a
+       way to tell Unix that this file is a X11-Basic program, and that it is
+       to be executed by the X11-Basic interpreter xbasic. This is seen
+       before in shell scripts, in which the first line tells Unix to execute
+       it with one of the shell programs. The xbasic executable, which will
+       take this file, parse it, and execute it, is located in the directory
+       /usr/bin. This may be different on some systems. If you are not sure
+       where the xbasic executable is, type which xbasic on the command line,
+       and it will return you the path.
+
+    2. All scripts should be marked as executable by the system.
+
+       Executable files are types that contain instructions for the machine
+       or an interpreter, such as xbasic, to execute. To mark a file as
+       executable, you need to alter the file permissions on the script file.
+       There are three basic permissions: read, write, and execute. There are
+       also three levels of access: owner, group, and anyone. X11-Basic files
+       should have their permissions changed so that you, the owner, has
+       permission to read, write and execute your file, while others only
+       have permission to read and execute your file. This is done with the
+       following command:
+
+ chmod 755 filename.bas
+
+       The number 755 is the file access mask. The first digit is your
+       permission; it is 7 for full access. The user and anyone settings are
+       5 for read and execute.
+
+    3. The very first print statement in a X11-Basic cgi script that returns
+       HTML should be:
+
+ print "Content-type: text/html"+chr$(13)
+ print ""+chr$(13)
+ flush
+
+       When your X11-Basic script is going to return an HTML file, you must
+       have this as the very first print statement in order to tell the web
+       server that this is an HTML file. There must be two end of line
+       characters (CR+LF) (the aditional chr$(13)) in order for this to work.
+       The flush statement ensures, that this statement ist sent to the
+       web-server. After that, you usually print "<HTML><BODY>" etc.
+
+    4. End your program with quit
+
+       Do not use END. Otherwise the cgi-program will remain is the servers
+       memory as a zombie.
+
+    5. Always use the POST method with HTML forms
+
+       There are 2 ways to get information from the client to the web server.
+       The GET method takes all of the data from the forms and concatenates
+       it onto the end of the URL. This information is then passed to the CGI
+       program as an environment variable (QUERY_STRING). Because the GET
+       method has the limitation of being 1024 characters long, it is best to
+       use the POST method. This takes the data and sends it allong with the
+       request to the web server, without the user seeing the ugly strings in
+       the URL. This information is passed to the CGI program through
+       standard in, which the program can easilly read from. To use the POST
+       method, make sure that your HTML form tag has METHOD=POST (no quotes).
+
+    6. HTML forms must reference the cgi script to be executed.
+
+       In your FORM tag, there is an ACTION attribute. This is like the HREF
+       attribute for a link. It should be the URL of the CGI program you want
+       the form data sent to. Usually this is ACTION="/cgi-bin/filename.bas"
+
+    7. X11-Basic-cgi files usually go in the cgi-bin directory of your web
+       server.
+
+       The web server has a "root" directory. This is the highest directory
+       your HTML files can access. (You don't want clients to be able to
+       snoop around your entire system, so the rest of the system is sealed
+       off) in this directory, there is usually one called cgi-bin, where all
+       the CGI programs go. Some web service providers give each user a
+       cgi-local directory in their home directory where they can put their
+       cgi scripts. If this is the case, use this one instead.
+
+
+4 Example cgi-Script envtest.cgi
+
+   Here is a simple sample cgi-script, which simply returns all the
+   information which it gets from the web server as a html page.
+
+ #!/usr/bin/xbasic
+ print "Content-type: text/html"+chr$(13)
+ print ""+chr$(13)
+ flush
+ print "<html><head><TITLE>Test CGI</TITLE><head><body>"
+ print "<h1>Commandline:</h1>"
+ i=0
+ while len(param$(i))
+   print str$(i)+": "+param$(i)+"<br>"
+   inc i
+ wend
+ print "<h1>Environment:</h1><pre>"
+ flush      ! flush the output before another program is executed !
+ system "env"
+ print "</pre><h1>Stdin:</h1><pre>"
+ length=val(env$("CONTENT_LENGTH"))
+ if length
+   for i=0 to length-1
+     t$=t$+chr$(inp(-2))
+   next i
+   print t$
+ endif
+ print "</pre>"
+ print "<FORM METHOD=POST ACTION=/cgi-bin/envtest.cgi>"
+ print "Name: <INPUT NAME=name><BR>"
+ print "Email: <INPUT NAME=email><BR>"
+ print "<INPUT TYPE=submit VALUE="+chr$(34)+"Test POST Method"+chr$(34)+">"
+ print "</FORM>"
+ print "<hr><h6>(c) Markus Hoffmann cgi with X11-basic</h6></body></html>"
+ flush
+ quit
+
+                               4 Quick reference
+
+                           1 reserved variable names
+
+   There are some reserved variables. Some Keywords may not work as varable
+   names as well. Although there is no checking done, parsing errors could
+   occure. Please try the command LET in such cases. In general, as long as
+   an ending of a variable name is different from any command or keyword,
+   it's usable as name.
+
+   Reserved and system variables are:
+
+   TRUE          -1                                                
+   FALSE         0                                                 
+   PI            3.14159265359...                                  
+   TIMER         unix system timer, float, seconts                 
+   STIMER        integer system timer                              
+   CTIMER        system timer in units of CPU-time                 
+   PC            line number of next line to be processed          
+   SP            internal stack pointer                            
+   ROWS          number of rows of the terminal                    
+   COLS          number of columns of the terminal                 
+   ERR           error number of last error                        
+   MOUSEX        x coordinate of mouse position relative to window 
+   MOUSEY        y coordinate of mouse position                    
+   MOUSEK        mouse button state                                
+   MOUSES        state of the shift,alt,ctrl,caps keys             
+   INKEY$        content of the keyboard-buffer                    
+   TERMINALNAME$ device name of the standard terminal              
+   TIME$         current time                                      
+   DATE$         current date                                      
+
+
+                                2 Abbreviations
+
+   In direct mode in the interpreter every command can be abbreviated as long
+   as the command parser can identify uniquely the command. So you may use q
+   instead of QUIT.
+
+   In addition there are abbreviations which are actually alternate commands
+   like:
+
+                                   +-------+
+                                   |'|REM  |
+                                   |-+-----|
+                                   |?|PRINT|
+                                   |-+-----|
+                                   |@|GOSUB|
+                                   |-+-----|
+                                   |~|VOID |
+                                   |-+-----|
+                                   |&|EVAL |
+                                   +-------+
+
+                                   3 Commands
 
        AFTER n,procedure       -- execute procedure after n seconds
        ARRAYFILL a(),b         -- fills array with value
@@ -1012,6 +1463,7 @@ commands
    Graphic commands
 
        ALERT a,b$,c,d$,var[,ret$] -- Infobox
+       BOTTOMW n               -- lowers window to bottom of stack
        BOX x1,y1,x2,y2         -- draw a frame
        CIRCLE x,y,r            -- draw a circle
        CLEARW [[#]n%]          -- clear graphic window
@@ -1025,10 +1477,12 @@ commands
        DRAW [[x1,y1] TO] x2,y2 -- draw line
        ELLIPSE x,y,a,b[,a1,a2] -- draw an ellipse
        FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box
+       FULLW [n]	       -- Enlarges window to full screen size.
        GET x,y,w,h,g$          -- Grafik-Ausschnitt in g$ speichern
        GPRINT                  -- like PRINT, but the output goes to the graphic
  				  window
        GRAPHMODE mode          -- set graphic-mode
+       INFOW n,t$              -- sets information string to a window
        KEYEVENT a,b            -- Waits until key is pressed
        LINE x1,y1,x2,y2        -- draw a line
        LTEXT x,y,t$            -- Linegraphic-Text
@@ -1064,6 +1518,7 @@ commands
        SPUT screen$            -- maps (xwd-)graphic to window
        TEXT x,y,t$             -- draw text
        TITLEW n,t$             -- set window title
+       TOPW n                  -- sets window on top of screen
        VSYNC                   -- same as SHOWPAGE
        XLOAD                   -- load a program, with FILESELECTOR
        XRUN                    -- load and run a program, with FILESELECTOR
@@ -1163,6 +1618,7 @@ commands
    Graphic functions
 
        a=FORM_ALERT(n,t$)      -- message box with default button n
+       a=FORM_CENTER(tree,x,y,w,h)  -- Centers the tree, and returns its coordinates.\\
        a=FORM_DIAL(i,i,i,i,i,i,i,i,i) -- complex function
        a=FORM_DO(i)            -- do dialog
        c=GET_COLOR(r,g,b)      -- allocate color by rgb value
@@ -1170,6 +1626,7 @@ commands
        ob=OBJC_FIND(tree,x,y)  -- return object number by coordinates
        c=POINT(x,y)            -- returns color of pixel of graphic in window
        a=RSRC_GADDR(typ,nr)    -- get pointer to object tree
+       c=PTST(x,y)             -- returns color of pixel of graphic in window
 
 XXXX \=     X11-Basic Error messages:           \kill    \\
 0 \> Divide by zero\\
@@ -1398,418 +1855,32 @@ XXXX \=     X11-Basic Error messages:           \kill    \\
 254 \> * Timeout\\
 255 \> * IO-Error : Allgemeiner IO-Fehler \\
 
-\chapter{Compatibility}
-
-\section{General remarks}
-
-    X11-Basic deviates in numerous aspects from ANSI BASIC. It in event is 
-    also different from Gfa-Basic (Atari ST) all though it really looks similar:
-
-\subsection*{ELSE IF vs. ELSEIF}
-
-        This interpreter uses the ELSE IF form of the "else if" statement with
-        a  space  between  ELSE and IF. In contrast, ANSI BASIC uses ELSEIF and END IF.  Other
-        interpreters may also use the combination ELSEIF and END IF.
+X11-Basic command reference
 
 
-\subsection*{Local variables}
-
-	Local variables must be declared local in the procedure/function. Any 
-	other variables are treated as global.
-
-\subsection*{Call By-Value vs. By-Reference}
-
-	Variables  in  a GOSUB statement as in "GOSUB test(a)" are passed
-	"by-value" to the PROCEDURE: the subroutine gets  the  value  but
-	can not change the variable. To pass the variable "by-reference",
-	use the VAR keyword as in "GOSUB  test(VAR  a)":  the  subroutine
-	then  not  only  gets  the  value but the variable itself and can
-	change it (for more information, see the documentation of the GO­
-	SUB  statement). The same rules apply to FUNCTION: VAR in the pa­
-	rameter list of a function call allows a FUNCTION to get a  vari­
-	able parameter "by-reference". In contrast, traditional BASIC in­
-	terpreters always pass variables in  parameter  lists  "by-refer­
-	ence".  The  problem  with  "by-reference" parameters is that you
-	must be fully aware of what happens inside  the  subroutine:  as­
-	signments  to  parameter  variables  inside  the subroutine might
-	change the values of variables in the calling line.
-
-
-
-\subsection*{Assignment operator}
-
-        X11-BASIC does not have an assignment operator but  overloads  the
-        equal sign to act as the assignment operator or as comparison operator
-        depending on context: In a regular expression,  all  equal  signs  are
-        considered  to  be  the  comparison  operator,  as in "IF (a=2) THEN".
-        However, in an "assignment-style" expression (as in  "LET  a=1"),  the
-        first  equal sign is considered to be the assignment operator. Here is
-        an example which assigns the result of a comparison (TRUE or FALSE) to
-        the variable <a> and thus shows both forms of usage of the equal sign:
-
-\begin{verbatim}
-a=(b=c)
-\end{verbatim}
-
-
-\subsection*{Assignments to modifiable lvalue}
-
-        Some implementations of BASIC allow the use of functions on  the  left
-        side of assignments as in \verb|MID$(a$,5,1)="a"|. X11-Basic does not
-        support this syntax but requires a variable (a "modifiable lvalue") on
-        the left side of such expressions.
-
-\subsection*{TOS/GEM implementation}
-
-	Because Gfa-Basic on ATARI-ST makes much use of the built in GUI 
-	functions of the ATARI ST, the X11-Basic interpreter can only have 
-	limited compatibility. GEM style (and compatible) ALERT boxes, menus 
-	and object trees are included in the interpreter and can be used in a 
-	similar way. Even ATARI ST *.rsc files can be loaded. But Other
-	functions  like LINEA functions, the VDISYS, GEMSYS, BIOS, XBIOS and
-	GEMDOS calls  are (of course) not possible. Also many other commands
-	are not implemented  because the author thinks that they have no useful
-	effect on UNIX platforms. Some might be included in a later Version of
-	X11-Basic (see the list below). Since many Gfa-basic programs make use
-	of  more or less of these functions, they will have to be modified
-	before they can be run with X11-Basic.
-
-\subsection*{The INLINE statement}
-       
-       The INLINE statement is not supported, because the source code of
-       X11-Basic  programs is pure ASCII text. But an alternative has been
-       implemented. (see \verb|INLINE$()|).
-
-\section{GFA-Basic compatibility}
-    
-	Following GFA-Basic Commands and functions are not supported and 
-	probably never will be. When porting from GFA-Basic to X11-Basic 
-	they have to be removed or replaced by an alternative routine:
-
-\begin{tabbing}
-XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
-\verb|==|\>		Comparison operator for approximately equal  --> =\\
-\verb|ACHAR, ACLIP|\>	LINE-A function\\
-\verb|ADDRIN, ADDROUT|\> address of the AES Address Input/Output blocks\\
-\verb|ALINE, APOLY TO|\> LINE-A function\\
-\verb|APPL_EXIT()|\>	Declare program has finished\\
-\verb|APPL_INIT()|\>	Announce the program as an application.\\
-\verb|APPL_READ()|\>	read from the event buffer.\\
-\verb|APPL_TPLAY()|\>	Plays back a record of user activities\\
-\verb|APPL_TRECORD()|\>	makes a record of user activities\\
-\verb|APPL_WRITE()|\>	write to the event buffer.\\
-\verb|ARECT, ATEXT|\>	LINE-A function\\
-\verb|BASEPAGE|\>	address of the basepage\\
-\verb|BIOS()|\>		call BIOS routinen.\\
-\verb|BITBLT|\>		Raster copying command\\
-\verb|CFLOAT()|\>	Changes integer into a floating point number.\\
-\verb|CHDRIVE|\>		Sets the default disk drive\\
-\verb|CONTRL|\>		Address of the VDI control table.\\
-\verb|COSQ()|\>		cosine of value from an internal table\\
-\verb|DEFBIT, DEFBYT, DEFWRD, DEFFLT, DEFSTR |\>  \>      sets the varaible  type\\
-\verb|DFREE()|\>		free space on a disc\\
-\verb|DIR|\>		Lists the files on a disc.  --> system "ls"\\
-\verb|DIR$()|\>		Names the active directory  --> env\$("PWD")\\
-\verb|DMACONTROL, DMASOUND|\>     Controls the DMA sound\\
-\verb|FGETDTA()|\>	Returns the DTA (Disk Transfer Address).\\
-\verb|FILES|\>		Lists the files on a disk.  --> system "ls -l"\\
-\verb|FSETDTA|\> 	Sets the address of the DTA\\
-\verb|GB, GCONTRL |\>    Address of the AES Parameter/control Block\\
-\verb|GDOS?|\>		Returns  TRUE  (-1)  if GDOS is  resident\\
-\verb|GEMDOS()|\>	call the GEMDOS routines.\\
-\verb|GEMSYS|\>		call the AES routinen\\
-\verb|GETSIZE()|\>	return the number of Bytes required by a screen area\\
-\verb|GINTIN, GINTOUT|\> Address of the AES Integer input/output block.\\
-\verb|HARDCOPY|\>       	Prints the screen          --> savescreen\\
-\verb|HIMEM |\>         	address of the area of memory which is not allocated by interpreter\\
-\verb|HLINE|\>	       	LINE-A function\\
-\verb|INPAUX$|\>        	read data from the serial port\\
-\verb|INPMID$|\>        	read data from the MIDI port\\
-\verb|INTIN, INTOUT|\>   Address of the VDI integer Input/output block.\\
-\verb|KEYDEF |\>        	Assign a string to a Function Key.\\
-\verb|LLIST |\>         	Prints out the listing of the current program.\\
-\verb|LPENX, LPENY |\>   Returns the coordinates of a light pen.\\
-\verb|LPOS()|\>         	column in which the printer head is located\\
-\verb|LPRINT|\>         	prints data on the printer.\\
-\verb|L~A |\>           	Returns base address of the LINE-A variables.\\
-\verb|MENU_REGISTER()|\> Give a desk accessory a name\\
-\verb|MONITOR|\>        	Calls a monitor resident in memory.\\
-\verb|MSHRINK()|\>      	Reduces the size of a storage area --> REALLOC()\\
-\verb|NAME AS|\>        	Renames an existing file.\\
-\verb|PADT(), PADX(), PADY()|\> Reads the paddle on the STE\\
-\verb|PSAVE |\>         	save with protection\\
-\verb|RCALL |\>    	Calls an assembler routine\\
-\verb|RC_COPY|\>   	Copies rectangular screen sections  (--> see copyarea)\\
-\verb|RENAME AS |\>     	Rename a file.	\\
-\verb|RESERVE|\>      	Increases or decreases the memory used by basic\\
-\verb|RMDIR|\>        	Deletes empty directories\\
-\verb|SCRP_READ(), SCRP_WRITE()|\>   communication between GEM programs.\\
-\verb|SDPOKE, SLPOKE, SPOKE|\>  Supervisor mode memory access\\
-\verb|SETCOLOR i,r,g,b|\>  set rgb value of color cell (-->GET\_COLOR())\\
-\verb|SETTIME|\>		Sets the time and the date.\\
-\verb|SHEL_ENVRN()|\>	--> ENV\$()\\
-\verb|SHEL_FIND()|\>     --> system "find ..."\\
-\verb|SHEL_GET, SHEL_PUT|\>  	obsolete\\
-\verb|SHEL_READ |\> 	obsolete  --> PARAM\$()\\
-\verb|SHEL_WRITE|\>	obsolete\\
-\verb|SINQ()|\>		Returns the extrapolated sine\\
-\verb|STICK|\>		control the joystick\\
-\verb|SYSTEM |\> 	obsolete  --> QUIT\\
-\verb|THEN|\>            keyword in If statements (obsolete)\\
-\verb|VDIBASE, VDISYS|\> VDI  functions\\
-\verb|VQT_EXTENT|\>     	coordinates of a rectangle  which surround the text\\
-\verb|VQT_NAME()|\>     	VDI  function\\
-\verb|VSETCOLOR |\>     	TOS specific\\
-\verb|VST_LOAD_FONTS(), VST_UNLOAD_FONTS()|\> VDI  function\\
-\verb|V_CLRWK(), V_CLSVWK(), V_CLSWK(), V_OPNVWK()|	\\
-\verb|V_OPNWK(), V_UPDWK()|\> VDI-GDOS functions\\
-\verb|V~H|\>	       	Returns the internal VDI handle\\
-\verb|WAVE  |\>         	Produces noises from the sound channels.\\
-\verb|WINDTAB|\>	       	Gives the address of the Window Parameter Table.\\
-\verb|WIND_CALC(), WIND_CLOSE(), WIND_CREATE(), WIND_DELETE(), WIND_FIND(),| \\
-\verb|WIND_GET(), WIND_OPEN(), WIND_SET(), WIND_UPDATE()|\> \> GEM-Wondow-Function\\
-\verb|WORK_OUT() |\>    	Determines the values from OPEN_WORKSTATION.\\
-\verb|W_HAND(#n) |\>    	Returns the GEM handle of the window\\
-\verb|W_INDEX()  |\>    	Returns the window number of the specified GEM handle.\\
-\verb|XBIOS()|\>	       	call XBIOS system routines.\\
-\verb|_DATA|\>	       	Specifies the position of the DATA pointer.\\
-\end{tabbing}
-\\[3ex]
-
-{\bf These GFA-Basic commands may be supported in a later versions of 
-X11-Basic:}
-
-\begin{tabbing}
-XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
-\verb|ABSOLUTE x,y|\>	Assigns the address y to the variable x.\\
-\verb|APPL_FIND(fname$)|\> Returns the ID of the sought after application.\\
-\verb|BYTE{x}|\>		read the contents of the address x\\
-\verb|C:|\>	      Calls a C or assembler program with parameters as in C\\
-\verb|CARD{x}|\>	      Reads/writes a 2-byte unsigned integer\\
-\verb|CHAR{x}|\>	      Reads a string of bytes until a null byte is  encountered\\
-\verb|CHDIR|\>	      Changes the current directory.\\
-\verb|CLIP|\>	      set clipping area\\
-\verb|CRSCOL  CRSLIN|\>   Returns current cursor line and column.\\
-\verb|CURVE x0,y0,x1,y1,x2,y2,x3,y3|\>   The  BEZIER-Curve\\
-\verb|DEFLIST x|\>       Defines the program listing format.\\
-\verb|DEFMARK [C],[A],[G]|\>  Sets colour, type and size of the corner points\\
-\verb|DEFNUM n|\>        Affects  output  of numbers by the PRINT  command\\
-\verb|DELETE x(i)|\>     Removes  the ith element of array x.\\
-\verb|DO UNTIL |\>      extention\\
-\verb|DO WHILE |\>      extention\\
-\verb|DOUBLE{x}|\>       reads/writes  an  8-byte floating point  variable\\
-\verb|DRAW|\>	      Draws points and lines\\
-\verb|EVNT_BUTTON()|\>   Waits for one or more mouse clicks\\
-\verb|EVNT_DCLICK()|\>   Sets the speed for double-clicks of a mouse button.\\
-\verb|EVNT_KEYBD()|\>    Waits for  a key to be pressed and  returns  a  word\\
-\verb|EVNT_MESAG()|\>    Waits for the arrival of a message in the event buffer.\\
-\verb|EVNT_MOUSE()|\>    Waits for  the  mouse pointer to  be  located  inside \\
-\verb|EVNT_MULTI()|\>    Waits for the occurence of selected  events.\\
-\verb|EVNT_TIMER() |\>   waits for a period  of  time\\
-\verb|FATAL|\>	      Returns the value 0 or -1 according to the type of error\\
-\verb|FIELD|\>	      Divides records into fields.\\
-\verb|FILL|\>	      Fills a bordered area with a pattern\\
-\verb|FORM INPUT|\>      Enables the insertion of a character string\\
-\verb|FORM INPUT AS|\>   the current value of a\$ is displayed, and can be edited.\\
-\verb|FORM_BUTTON()|\>   Make inputs in a form possible using the mouse.\\
-\verb|FORM_CENTER()|\>   Centers the tree, and returns its coordinates.\\
-\verb|FORM_ERROR()|\>    Displays the ALERT associated with the error numbered\\
-\verb|FORM_KEYBD()|\>    Allows a form to be edited via the keyboard.\\
-\verb|FRE()|\>	      Returns the amount of memory free (in bytes).\\
-\verb|FSEL_INPUT()|\>    Calls the AES fileselect library\\
-\verb|FSFIRST()|\>       Searches for the first file to fulfill the criteria \\
-\verb|FSNEXT()|\>        Search for the next file which fulfills the conditions\\
-\verb|FULLW|\>	      Enlarges window to full screen size.\\
-\verb|GET #|\>	      Reads a record from a random access file.\\
-\verb|GRAF_DRAGBOX()|\>  a rectangle to be moved about the screen\\
-\verb|GRAF_GROWBOX()|\>  Draws an expanding rectangle.\\
-\verb|GRAF_HANDLE() |\>  supplies the size of a character from the system set\\
-\verb|GRAF_MKSTATE()|\>  supplies the current mouse  coordinates\\
-\verb|GRAF_MOUSE)   |\>  allows  the  mouse  shape  to  be  changed.\\
-\verb|GRAF_MOVEBOX()|\>  a moving rectangle with constant size\\
-\verb|GRAF_RUBBERBOX()|\> draws an outline of a rectangle\\
-\verb|GRAF_SHRINKBOX()|\> Draws an shrinking rectangle.\\
-\verb|GRAF_SLIDEBOX()|\>  moves one rectangular object within another\\
-\verb|GRAF_WATCHBOX()|\>  monitors  an object tree while a mouse button  is  pressed\\
-\verb|HIDEM|\>	       Switches off the mouse pointer.\\
-\verb|HTAB|\>	       Positions  the cursor to the  specified  column. \\  
-\verb|INFOW|\>	       information line to the window\\
-\verb|OUT, OUT #n, OUT?()|\>  output to device\\
-\verb|INSERT|\>	       Inserts  an  element  into  an  array.\\
-\verb|INT{x}|\>	       Reads/writes a 2 byte signed integer from/to address x.\\
-\verb|KEYGET n |\>        similar to INKEY\$  but wait\\
-\verb|KEYLOOK n |\>       similar to INKEY\$  but putback chars\\
-\verb|KEYTEST n |\>       similar to INKEY\$\\
-\verb|KEYPAD n  |\>       Sets  the  usage of the  numerical  keypad.\\
-\verb|KEYPRESS n|\>       This  simulates the pressing of a key.\\
-\verb|KILL|\>	       Deletes a file\\
-\verb|LOCATE|\>	       Positions the cursor to the specified location.\\
-\verb|LONG{x}|\>	       Reads/writes a 4 byte integer from/to address x. Abbrev {}\\
-\verb|LOOP UNTIL condition|\>     extention\\
-\verb|LOOP WHILE condition|\>     extention\\
-\verb|LSET var=string|\>  Puts the 'string' in the string variable 'var' lefft justified\\
-\verb|MAT ADD a(),b()|\>\\
-\verb|MAT ADD a(),x|\>\\
-\verb|MAT CLR a()|\>\\
-\verb|MAT CPY a([i,j])=b([k,l])[,h,w]|\>\\
-\verb|MAT DET x=a([i,j])[,n]|\>\\
-\verb|MAT INPUT #i,a()|\>\\
-\verb|MAT INV a()=b()|\>\\
-\verb|MAT MUL|\>\\
-\verb|MAT MUL a(),x|\>\\
-\verb|a()=b()*c()|\>\\
-\verb|MAT MUL x=a()*b()|\>\\
-\verb|MAT MUL x=a()*b()*c()|\>\\
-\verb|MAT NORM a(),{0/1}|\>\\
-\verb|MAT ONE a()|\>\\
-\verb|MAT PRINT [#i]a[,g,n]|\>\\
-\verb|MAT QDET x=a([i,j])[,n]|\>\\
-\verb|MAT RANG x=a([i,j])[,n]|\>\\
-\verb|MAT READ a()|\>\\
-\verb|MAT SET a()=x|\>\\
-\verb|MAT SUB a(),b()|\>\\
-\verb|MAT SUB a(),x|\>\\
-\verb|MAT TRANS a()[=b()]|\>\\
-\verb|MAT XCPY a([i,j])=b([k,l])[,h,w]|\>\\
-\verb|MAT BASE {0/1}|\>\\
-\verb|MAX(x [,y,z,...])  or  MAX(a$[,y$,z$....])|\>  Returns the greatest value (or largest string)\\
-\verb|MENU(x)|\>	      Returns the information about an event in the variable \\
-\verb|MENU OFF|\>        Returns a menu title to 'normal' display.\\
-\verb|MENU_BAR()|\>      Displays/erases a menu bar (from a resource file)\\
-\verb|MENU_ICHECK()|\>   Deletes/displays a tick against a menu item.\\
-\verb|MENU_IENABLE()|\>  Enables/disables a menu entry.\\
-\verb|MENU_TEXT()|\>     Changes the text of a menu item.\\
-\verb|MENU_TNORMAL()|\>  Switches the menu title to normal/inverse video.\\
-\verb|MFREE()|\>	      Releases the storage  location  reserved with MALLOC\\
-\verb|MID$(a$,x[,y])|\> (as a command)\\
-\verb|MIN(expression [ ,expression... ])|\> Returns the smallest value (or smallest string)\\
-\verb|MKDIR|\>	      Creates a new directory.\\
-\verb|MODE|\>	      representation of decimal point, date and files\\
-\verb|OBJC_ADD()|\>	      Adds an object to a given tree\\
-\verb|OBJC_CHANGE()|\>        Changes the status of an object.\\
-\verb|OBJC-DELETE()|\>        object is deleted from an object tree\\
-\verb|OBJC_EDIT()|\>	      Allows input and editing\\
-\verb|OBJC_FIND()|\>	      Determines the object, which is at the coordinate\\
-\verb|OBJC_OFFSET()|\>        Calculates the absolute screen  coordinates\\
-\verb|OBJC_ORDER()|\>	      re-positions an object within a tree.\\
-\verb|OB_ADR()|\>	      Gets the address of an individual object.\\
-\verb|OB_FLAGS()|\>	      Gets the status of the flags for an object.\\
-\verb|OB_H()|\> 	      Returns the height of an object\\
-\verb|OB_HEAD()|\>	      Points to the object's first child\\
-\verb|OB_NEXT()|\>	      Points to the following object on the same level\\
-\verb|OB_SPEC()|\>	      Returns the address of the the data structure\\
-\verb|OB_STATE()|\>	      returns the status of an object\\
-\verb|OB_TAIL()|\>	      Points to the objects last child\\
-\verb|OB_TYPE()|\>	      Returns the type of object specified.\\
-\verb|OB_W()|\> 	      Returns the width of an object\\
-\verb|OB_X(), OB_Y()|\>       relative  coordinates  of  the   object\\
-\verb|OCT$()|\> 	      value in octal form \\
-\verb|ON BREAK|\>	      influence behavior of CTRL-C\\
-\verb|OPTION BASE|\>	      determine whether an  array  is  to contain a zero element\\
-\verb|PTST()|\> 	      same as point()\\
-\verb|QSORT|\>  	      Sorts  the elements of an array.\\
-\verb|RCALL|\>        Calls  an assembler routine\\
-\verb|RC_INTERSECT()|\>  Detects whether two rectangles overlap.\\
-\verb|RECALL|\>       Inputs n lines from a text file\\
-\verb|RECORD |\>	      Sets the number of the next record (GET#, PUT#)\\
-\verb|RND as a sysvar|\>  see RND()\\
-\verb|ROL(), ROL&(), ROL%()|\>  Rotates a bit pattern left.\\
-\verb|ROR(), ROR&(), ROR%()|\>  Rotates a bit pattern right.\\
-\verb|RSET a$=b$|\>   Moves a string expression, right justified to a string.\\
-\verb|RSRC_OBFIX()|\> converts the coordinates of an object\\
-\verb|RSRC_SADDR()|\> sets the address of an object.\\
-\verb|RUN <filname>|\>   see RUN\\
-\verb|SETDRAW|\>      see DRAW\\
-\verb|SHL(), SHL&(), SHL%()|\>  Shifts a bit pattern left\\
-\verb|SHOWM |\> 	      Makes the mouse pointer appear.\\
-\verb|SHR(), SHR&(), SHR%()|\>  Shifts a bit pattern left\\
-\verb|SINGLE{x}|\>    Reads/writes  a  4  byte floating point\\
-\verb|SPRITE|\> 	      Puts a sprite\\
-\verb|SSORT|\>  	      Sorts using the Shell-Metzner method.\\
-\verb|STORE|\>  	      Fast save of a string array as a text file.\\
-\verb|TOPW|\>	      Activates the window\\
-\verb|TOUCH|\>  	      Updates the date and time stamps od a file.\\
-\verb|TRON# |\> 	      Tron to file\\
-\verb|TRONproc |\>    procedure is called  before  the execution of each command\\
-\verb|VARIAT()|\>     Returns the number of permutations of n elements to the kth order\\
-\verb|VTAB|\>		      positions the cursor to the specified line number\\
-\verb|WRITE|\>  	      Stores data in a sequential file\\
-\end{tabbing}
-
-Following commands have a different meaning and/or syntax in Gfa-Basic:
-
-\begin{verbatim}
-	GFA-BASIC           X11-Basic
-	--------------------------------
-	SYSTEM              QUIT
-	LINE INPUT          LINEINPUT
-	SOUND		     -
-	VSYNC                -
-	ON MENU		    MENU
-	ON MENU GOSUB ...   MENUDEF
-	MENU a$()           MENUDEF
-	MENU OFF             -
-	MENU KILL           MENUKILL
-	MENU()               -
-	MONITOR	            SYSTEM
-\end{verbatim}
-
-\section{Ideas for future releases of X11-Basic}
-
-\begin{verbatim}
-
-ENCLOSE$(str[, pair])   
-	       
-Encloses a string.     
-The default pair is "" 
-	       
-Example:	       
-? enclose$("abc","()")  
-	       
-Result: 	       
-(abc)		       
-========================	
- LEFTOF$(s1,s2), 	      
- RIGHTOF$(s1,s2) 	      
-			      
- 	Returns the left/right part  
- 	of s1 at the position of the 
- 	first occurrence of the      
- 	string s2 into string s1     
-========================
-SPRINT var$;[USING...;]...			    
- PRINT anweisung, aber in var$ (Statt Print #1,...) 
- 		        
-\end{verbatim}
-\chapter{X11-Basic command reference}
-
-\section{Syntax templates}
-
-    This manual describes the syntax of BASIC commands and BASIC functions  in
-    a generalized form. Here is an example:
-
-\begin{verbatim}
-PRINT [#<device-number>,] <expression> [<,>|<;> [...]]
-\end{verbatim}
-
-    Those parts of the command that must appear literally in the  source  code
-    (like PRINT in the example above) are all uppercase. Descriptions in angle
-    brackets ("<>") are not meant to appear literally in the source  code  but
-    are  descriptive  references to the element that is supposed to be used in
-    the source code at this place, like a variable, a numeric expression  etc.
-    Optional elements are listed inside square brackets ("[]").  They  may  be
-    omitted  from  the  command  line.  Mutually  exclusive  alternatives  are
-    separated by the "|" character. Exactly  one  of  these  alternatives must
-    appear  in  the  command  line. Finally, repetitive syntax is indicated by
-    three dots "...". Here are some BASIC command lines  that  all  match  the
-    syntax template above:
-
-\begin{verbatim}
-PRINT x
-PRINT #1,2*y
-PRINT "result = ";result
-\end{verbatim}
-
+                              Syntax templates                               
+                                                                             
+   This manual describes the syntax of BASIC commands and BASIC functions    
+   in a generalized form. Here is an example:                                
+                                                                             
+ PRINT [#<device-number>,] <expression> [<,>|<;> [...]]                      
+                                                                             
+   Those parts of the command that must appear literally in the source       
+   code (like PRINT in the example above) are all uppercase. Descriptions    
+   in angle brackets ("<>") are not meant to appear literally in the         
+   source code but are descriptive references to the element that is         
+   supposed to be used in the source code at this place, like a variable,    
+   a numeric expression etc. Optional elements are listed inside square      
+   brackets ("[]"). They may be omitted from the command line. Mutually      
+   exclusive alternatives are separated by the "|" character. Exactly one    
+   of these alternatives must appear in the command line. Finally,           
+   repetitive syntax is indicated by three dots "...". Here are some BASIC   
+   command lines that all match the syntax template above:                   
+                                                                             
+ PRINT x                                                                     
+ PRINT #1,2*y                                                                
+ PRINT "result = ";result                                                    
+                                                                             
 ##############################################################################
 
 Function:   ABS()
@@ -2307,7 +2378,6 @@ SEE ALSO: CARD(), WORD(), SWAP()
 
 ##############################################################################
 #############################################################################
-
 Command: CALL
 Syntax:  CALL <adr>[,<parameter-list>]
 
@@ -2339,7 +2409,7 @@ Syntax:   <num>=CARD(<num-expression>)
 
 DESCRIPTION:
 
-	Returns lower 16 bits if b. (same as a=b AND (2^16-1))
+	Returns lower 16 bits of b. (same as a=b AND (2^16-1))
 
 SEE ALSO: BYTE(), WORD(), SWAP()
 
@@ -2498,6 +2568,23 @@ DESCRIPTION:
 
 SEE ALSO:   CLOSEW
 #############################################################################
+Command: CLIP
+Syntax:  CLIP x,y,w,h[,ox,oy]
+
+DESCRIPTION:
+
+	This command provide the 'Clipping' function, ie. the 
+           limiting of graphic display within a specified  rectangular 
+           screen area.
+           The  command  CLIP x,y,w,h defines the  clipping  rectangle 
+           starting  at upper left coordinates x,y and extends w  wide 
+           and h high.
+           The optional additional  command  parameters ox,oy make it 
+	   possible to redefine the  origin  of  the 
+           graphic display. 
+
+SEE ALSO:  
+#############################################################################
 
 Command: CLOSE
 Syntax:  CLOSE [[#]<num-expression>[,[#]<num-expression>,...]]
@@ -2593,6 +2680,22 @@ DESCRIPTION:
 
 ##############################################################################
 Command: COPYAREA
+Syntax:  COPYAREA x,y,w,h,xd,yd
+
+DESCRIPTION:
+
+	 Copies a rectangular screen sections given by x,y,w,h to
+	 a destination at xd,yd.
+	 
+           x,y    top left corner of source rectangle
+           w,h    width & height  "   "        "
+           xd,yd    destination x and y coordinates
+
+	This command is very fast compared to the GET and PUT commands because 
+	the whole data transfer takes place on the X-client.
+
+
+SEE ALSO: GET, PUT, GRAPHMODE
 ##############################################################################
 
 Function:   COS()
@@ -2992,12 +3095,7 @@ SEE ALSO: LINE, PLOT
 ##############################################################################
 
 Command: DUMP
-Syntax:  DUMP	 
-         DUMP "@" 
-         DUMP ":" 
-         DUMP "#" 
-         DUMP "K" 
-         DUMP "F" 
+Syntax:  DUMM [t$]
 
 DESCRIPTION:
 
@@ -3016,7 +3114,8 @@ SEE ALSO: LIST, PLIST, HELP
 ##############################################################################
 
 Command:  ECHO
-Syntax:   ECHO {ON|OFF} 
+Syntax:   ECHO ON
+          ECHO OFF
 
 DESCRIPTION:
 
@@ -3459,8 +3558,14 @@ DESCRIPTION:
 
 SEE ALSO: TRUE
 ##############################################################################
-FFT a(),i [,...] -- Fouriertransformation. i=-1 Rücktransformation
+Command: FFT
+Syntax:  FFT a(),
+  	  
+DESCRIPTION:
+
+	FFT a(),i [,...] -- Fouriertransformation. i=-1 Rücktransformation
 			   Dim?(a()) muss Zweierpotenz sein.
+SEE ALSO:
 ##############################################################################
 
 Command:  FILESELECT
@@ -3470,8 +3575,14 @@ DESCRIPTION:
 
 	Opens a fileselect box.
         <title$> gives a short title to  be placed in the fileselect box.
-	
+		 Such as 'Select a .DOC file to open...'.
+
 	<path$>  path - if none specified  then  the  default path is assumed.
+                 The pathname should include a complete path specification 
+		 including a drive letter (except for UNIX file system), 
+		 colon, path, and filemask.
+	         The filemask may (and usually does include wildcard 
+		 characters).
 
 	<default$>  contains the name of the file to apppear  in  the 
 	   selection line. ("" for no default).
@@ -3479,10 +3590,25 @@ DESCRIPTION:
 	FILESELECT returns the selected filename (including path) in 
 	<string-variable>. If CANCEL is selected an empty string is returned.
 
+
 SEE ALSO: XLOAD, XRUN, FSEL_INPUT()
 EXAMPLE:
 	FILESELECT "LOAD File",".\*.dat","input.dat",file$
-##############################################################################
+###############################################################################
+Command:  FILL
+Syntax:   FILL x,y[,bc]
+  	  
+DESCRIPTION:
+
+	Fills a bordered area with a color commencing at
+           the co-ordinates 'x,y'. If a border color (bc) is specified,            
+           The fill stops at boundaries with this color. If no border color 
+	   is given, the fill will stop at any oter color than the one of 
+	   the starting coordinate. 
+	   The fill color can be chosen with the command COLOR.
+
+SEE ALSO: COLOR
+#############################################################################
 FIT a(),a(),???,???[,???,???,???,???,???,???]
 FIT_LINEAR x(),y()[,[xerr(),]yerr()],n,a,b[,siga,sigb,chi2,q]
 			-- Lineare Regression optional mit Fehlerbalken in beide
@@ -3668,8 +3794,18 @@ SEE ALSO: MALLOC()
 ##############################################################################
 a=FREEFILE()            -- Returns first free filenumber or -1 on error.
 ##############################################################################
+Command:    FULLW
+Syntax:     FULLW [[#]n]
+
+DESCRIPTION:
+          Enlarges window 'n' to full screen size.
+          'n' is the window number.
+
+SEE ALSO: OPENW, CLOSEW, MOVEW, SIZEW, TOPW, BOTTOMW
+##############################################################################
 Command:    FUNCTION
 Syntax:     FUNCTION <name>[$][(<expression> [, ...])]
+
 DESCRIPTION:
 
 	FUNCTION starts a user-defined multi-line function  that calculates and
@@ -4009,8 +4145,10 @@ Syntax:     INFOW [<window-nr>],<string-expression>
 DESCRIPTION:
 
 	Links the (new) information string to the window with the
-        number. (This command has still no effect on UNIX).
-	   
+        number. On UNIX this Information will be displayed in ICONIFIED
+	state of the window. 
+
+SEE ALSO:  TITLEW	   
 ##############################################################################
 
 Variable:   INKEY$
@@ -4037,6 +4175,9 @@ DESCRIPTION:
 	This command basically does a RADIX conversion (from 64 to 256) on the
 	contents of the  string. This is intended to be used to include binary
 	data into the  source code of a basic program.
+	
+	The inverse coding (from binary to 7 bit ASCII) is done by the program 
+	inline.bas which comes with X11-Basic.
 
 EXAMPLE:
         sym$=INLINE$("$$$$$$$$0$&Tc_>$QL&ZD3cccccK]UD<*%D$$$$$$$$$") ! Train
@@ -4772,21 +4913,117 @@ DESCRIPTION:
 
 ##############################################################################
 ##############################################################################
+Command:       OBJC_ADD
+Syntax:        OBJC_ADD tree,parent,child
+
+DESCRIPTION:
+
+	Adds  an object to a given tree and  pointers  between 
+        the existing objects and the new object are created.
+           tree     address of the object tree
+           parent   object number of the parent object
+           child    object number of the child to be added.
+
+SEE ALSO: OBJC_DELETE
+##############################################################################
+Command:       OBJC_DELETE
+Syntax:        OBJC_DELETE tree,object
+
+DESCRIPTION:
+
+	An  object is deleted from an object tree by  removing 
+           the  pointers.  The object is still there and  can  be 
+           restored by repairing the pointers.
+         
+           tree     address of the object tree
+           object  Object number of the object to delete.
+
+SEE ALSO: OBJC_ADD
+##############################################################################
+Function:      OBJC_DRAW()
+Syntax:        ret=objc_draw(tree,startob,depth,cx,cy,cw,ch)
+
+DESCRIPTION:
+
+	Draws any object or objects in an object tree.
+
+	Each OBJC_DRAW call defines a new clip rectangle, to which the drawing 
+        is limited for that call.
+
+        Returns 0 on error.
+        tree     address of the object tree
+        startob  number of the first object to be drawn
+        depth    Number of object levels to be drawn
+        cx,cy    coordinates  of top left corner  of  clipping 
+                 rectangle
+        cw,ch    width & height of clipping rectangle
+
+
+SEE ALSO:  OBJC_FIND()
+##############################################################################
+Function:      OBJC_FIND()
+Syntax:        idx=objc_find(tree,startob,depth,x,y)
+
+DESCRIPTION:
+
+	Finds an object under a specific screen coordinate. 
+	(These may be the mouse coordinates.)
+
+	The application supplies a pointer to the object tree, the index 
+	to the start object to search from, the x- and y-coordinates of the 
+	mouse's position, as well as a parameter that tells OBJC_FIND how far 
+	downthe tree to search (depth).
+	
+	This Fucntion returns the index of the found Object or -1 in case no 
+	object could be found.
+
+SEE ALSO:  OBJC_DRAW()
+##############################################################################
+Function:      OBJC_OFFSET()
+Syntax:        ret=objc_offset(tree,obj,x,y)
+
+DESCRIPTION:
+
+	Calculates  the  absolute screen  coordinates  of  the 
+        specified object in a specified tree.  
+        Returns 0 on error.
+        tree     address of the object tree
+        obj      object number 
+        x,y       returns  the  x,y  coordinates  to  these 
+                  variables.
+
+SEE ALSO: OBJC_FIND()
+##############################################################################
 o$=OCT$(d%,n%)
 ON * GOSUB proc1[,proc2,...]
-ON BREAK GOSUB proc
+##############################################################################
+Command:      ON BREAK
+Syntax:       ON BREAK CONT
+              ON BREAK GOSUB <procedure>
+              ON BREAK GOTO <label>
+
+DESCRIPTION:
+
+       ON BREAK installs a subroutine  that  gets  called  when  the  
+       BREAK condition (normally CTRL-c) occurs. ON BREAK CONT causes the 
+       program to continue in any case.  ON BREAK GOTO jumps to a specified 
+       label. 
+
+SEE ALSO:  GOTO, ON ERROR
 ##############################################################################
 
-Command:      ON ERROR GOSUB
-Syntax:       ON ERROR GOSUB <procedure>
+Command:      ON ERROR
+Syntax:       ON ERROR CONT
+              ON ERROR GOSUB <procedure>
+              ON ERROR GOTO <label>
 
 DESCRIPTION:
 
        ON ERROR installs an error handling
        subroutine  that  gets  called  when  the  next error occurs. 
+       ON ERROR CONT will ignore any error. 
 
 SEE ALSO:  GOSUB, ERROR
-
 ##############################################################################
 
 Command:      OPEN
@@ -4838,8 +5075,10 @@ EXAMPLES:
 	OPEN "I",#1,"data.dat"      ---- opens file "data.dat" for input
 	OPEN "UC",#1,"localhost",80 ---- opens port 80 of localhost for read and#
 					 write
-	OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1"  
-                 ---- open COM2 for input and output with 9600:8:N:1
+	OPEN "UX:9600,N,8,1,XON,CTS,DTR",#1,"/dev/ttyS1"  
+                 ---- open COM2 for input and output with 9600:8:N:1 with
+		      sofware flow control and hardware flow control and also 
+		      drop DTR line and raise it again.
 
 ##############################################################################
 Command:  OPENW
@@ -4898,7 +5137,7 @@ Syntax:    <int-result>=PEEK(<address>)
 DESCRIPTION:
 
 	PEEK() reads a byte from an address in memory. The following example 
-	dumps a section of the internal memory near a string t\$.
+	dumps a section of the internal memory near a string t$.
 
 EXAMPLE:
 
@@ -5076,6 +5315,15 @@ DESCRIPTION:
 	value.
 
 SEE ALSO: GOSUB, RETURN, LOCAL, FUNCTION
+##############################################################################
+Function:  PTST()
+Syntax:    c=PTST(x,y)
+
+DESCRIPTION:
+
+	returns colour of graphic point x,y in current window. Same as POINT().
+
+SEE ALSO: POINT(),PLOT
 ##############################################################################
 
 PSAVE a$                -- writes the reformatted BASIC-program into file with 
@@ -5386,6 +5634,63 @@ DESCRIPTION:
 	
 SEE ALSO: LINE, POLYLINE
 ##############################################################################
+Command: SCREEN
+Syntax:  SCREEN n
+
+DESCRIPTION:
+	This commands select the Screen-Resolution in SVGA-Mode. It is only
+	available in the SVGA-Version of X11-Basic and has no effect on the
+	X11-Version or WINDOWS-Version.
+	
+	Following Screen modes are supported:
+	 n               Mode
+	===============================================
+	 0               TEXT-Mode, no graphics
+	 1		 320x 200  16 colors
+	 2		 640x 200  16 colors
+	 3		 640x 350  16 colors
+	 4		 640x 480  16 colors
+	 5		 320x 200 256 colors
+	 6		 320x 240 256 colors
+	 7		 320x 400 256 colors
+	 8 		 360x 480 256 colors
+	 9		 640x 480     monochrome
+	10		 640x 480 256 colors
+	11		 800x 600 256 colors
+	12		1024x 768 256 colors
+
+	13		1280x1024 256 colors
+
+	14		 320x200 15Bit colors
+	15		 320x200 16Bit colors
+	16		 320x200 24Bit colors
+
+	17		 640x480 15Bit colors
+	18		 640x480 16Bit colors
+	19		 640x480 24Bit colors
+
+	20		 800x600 15Bit colors
+	21		 800x600 16Bit colors
+	22		 800x600 24Bit colors
+
+	23		 1024x768 15Bit colors
+	24		 1024x768 16Bit colors
+	25		 1024x768 24Bit colors
+
+	26		 1280x1024 15Bit colors
+	27		 1280x1024 16Bit colors
+	28		 1280x1024 24Bit colors
+
+	29		  800x 600 16 colors
+	30		 1024x 768 16 colors
+	31		 1280x1024 16 colors
+
+	32		 720x 348 monochrome  Hercules emulation mode 
+	33-37		 32-bit per pixel modes.
+	38-74		 additional resolutions 	
+	
+SEE ALSO: VGA-Version of X11-Basic
+##############################################################################
 Command: SEEK
 Syntax:  SEEK #n[,d]
 
@@ -5574,7 +5879,7 @@ Command:  SPLIT
 Syntax:   SPLIT t$,t$,i%,var$[,var$]
 
 DESCRIPTION:
-	Same as WORT\_SEP.
+	Same as WORT_SEP.
 	
 SEE ALSO: WORT_SEP
 ##############################################################################
@@ -5763,6 +6068,27 @@ DESCRIPTION:
 	Returns actual time in number of seconds since 01.01.1970.  
 
 SEE ALSO: STIMER, CTIMER, TIME$, DATE$, UNIXTIME$(), UNIXDATE$()
+##############################################################################
+Command:  TITLEW
+Syntax:   TITLEW n,title$
+
+DESCRIPTION: 
+
+         Gives the window number 'n', the new title title$
+
+SEE ALSO: OPENW, INFOW
+##############################################################################
+Command:  TOPW
+Syntax:   TOPW [n]
+
+DESCRIPTION: 
+
+         Activates the windows number n and moves it to the top of
+	 the window stack.
+	 
+
+SEE ALSO: BOTTOMW, MOVEW
+
 ##############################################################################
 
 Command:  TROFF 
@@ -6314,14 +6640,24 @@ Version 1.10 (Feb 2004)
 - new REPLACE$() function 
 - improved speed 
 - bug fixed in ROUND() function
+- fixed bug in PUT_BITMAP
+- fixed bug in serial device handling
+- added sysvars COLS and ROWS
+- new INODE/DEVICE/MODE/NLINK/SIZE file functions
+
+Version 1.11 (Oct 2004)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Parser now accepts unique short commands
+- fixed little bug in INPUT
+- new chapters in manual
+- new commands: TOPW, BOTTOMW, INFOW, FULLW, CLIP
+
 
 
 --------------------------------------------------------------------------------
 *Acknowlegements
 
-I would like to thank all people, which helped me to realize this
-package.
-
+Thanks to all people, who helped me to realize this package.
 
 Many  thanks  to  the developers of GFA-Basic. This basic made me
 start programming in the 1980s. Many ideas and most of  the  command 

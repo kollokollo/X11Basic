@@ -1,5 +1,4 @@
-Release notes for version 1.10
-===============================
-- new REPLACE$() function 
-- improved speed by factor 2
-- bug fixed in ROUND() function
+Release notes for Version 1.11 (Oct 2004)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Parser now accepts unique short commands
+- fixed little bug in INPUT

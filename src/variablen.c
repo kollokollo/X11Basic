@@ -16,7 +16,39 @@
 
 /* Variablen-Verwaltung   */
 
-char *varrumpf(char *n) {
+
+int vartype(char *name) {  /* Bestimmt Typ der Variablen */
+  char w1[strlen(name)+1];
+  char *pos;
+  int typ=0;
+  
+  if(strlen(name)==0) return(NOTYP);
+  strcpy(w1,name);
+/*  printf("Vartype(%s): ",name);*/
+  pos=searchchr(w1+1,'(');
+  if(pos!=NULL) {
+    if(pos[1]==')') typ=(typ|ARRAYTYP);
+    else {   /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
+      char *ppp=pos+1;
+      int i=0,flag=0,sflag=0,count=0;
+      while(ppp[i]!=0 && !(ppp[i]==')' && flag==0 && sflag==0)) {
+        if(ppp[i]=='(') flag++;
+	if(ppp[i]==')') flag--;
+	if(ppp[i]=='"') sflag=(!sflag);
+	if(ppp[i]==':' && flag==0 && sflag==0) count++;
+        i++;
+      } 
+      if(count) typ=(typ|ARRAYTYP);
+    }
+  } else pos=&w1[strlen(w1)];
+  if(*(pos-1)=='$') typ=(typ|STRINGTYP);
+  else if(*(pos-1)=='%') typ=(typ|INTTYP);
+  else typ=(typ|FLOATTYP);
+/*  printf("%d\n",typ);*/
+  return(typ);
+}
+
+char *varrumpf(char *n) {  /* Rumpf des Variablennamens */
   char *ergebnis=malloc(strlen(n)+1);
   char *pos;
   strcpy(ergebnis,n);
@@ -24,6 +56,20 @@ char *varrumpf(char *n) {
   while(strchr("$%()",ergebnis[strlen(ergebnis)-1])!=NULL && strlen(ergebnis)) ergebnis[strlen(ergebnis)-1]=0;
   return(ergebnis);
 }
+
+
+
+
+void varcastint(int typ,void *pointer,int val) {
+    if(typ&FLOATTYP) *((double *)pointer)=(double)val;
+    else if(typ&INTTYP) *((int *)pointer)=val;
+}
+void varcastfloat(int typ,void *pointer,double val) {
+    if(typ&FLOATTYP) *((double *)pointer)=val;
+    else if(typ&INTTYP) *((int *)pointer)=(int)val;
+}
+
+
 char *argument(char *n) {
   char *ergebnis=malloc(strlen(n)+1);
   char *pos;
@@ -46,7 +92,7 @@ int do_dimension(int vnr) {  /* liefert Anzahl der Elemente in einem ARRAY */
 }
 
 char *arrptr(char *n) {
-  int typ=type2(n);
+  int typ=vartype(n);
   char *r=varrumpf(n);
   char *ergebnis=NULL;
   int vnr=variable_exist(r,typ);
@@ -82,7 +128,7 @@ void *arrayvarptr2(int vnr, int *indexliste,int size) {
 }
 
 void *varptr(char *n) {
-  int typ=type2(n);
+  int typ=vartype(n);
   char *r=varrumpf(n);
   void *ergebnis=NULL;
   char *pos=strchr(n,'(');
@@ -93,7 +139,7 @@ void *varptr(char *n) {
     indize=1; 
     vnr=variable_exist(r,typ|ARRAYTYP);
   } 
-  else vnr=variable_exist(r,typ);
+  else vnr=variable_exist_or_create(r,typ);
  /* printf("varptr: typ=%d, r=%s, vnr=%d, indize=%d\n",typ,r,vnr,indize);*/
   if(vnr==-1) error(57,n); /* Variable existiert nicht */
   else {
@@ -188,14 +234,14 @@ void copy_string_array(int vnr1, int vnr2) {
 }
 
 void fill_int_array(int vnr, int inh) {
-  int anz=do_dimension(vnr),j; 
+  int anz=do_dimension(vnr),j=0; 
   int *pp=(int *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE); 
-  for(j=0;j<anz;j++) pp[j]=inh;	 
+  while(j<anz) pp[j++]=inh;	 
 }
 void fill_float_array(int vnr, double inh) {
-  int anz=do_dimension(vnr),j; 
+  int anz=do_dimension(vnr),j=0; 
   double *pp=(double *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE); 
-  for(j=0;j<anz;j++) pp[j]=inh;	 
+  while(j<anz) pp[j++]=inh;	 
 }
 void copy_float_array(int vnr1, int vnr2) {
   int anz1=do_dimension(vnr1),j;
@@ -486,8 +532,8 @@ ARRAY *einheitsmatrix(int typ, int dimension, int *dimlist) {
 }
 
 
-int variable_exist_type( char *name ){
-  int typ=type2(name);
+int variable_exist_type(char *name ){
+  int typ=vartype(name);
   char w1[strlen(name)+1];
   strcpy(w1,name);
   while(strchr("$%()",w1[strlen(w1)-1])!=NULL && strlen(w1)) w1[strlen(w1)-1]=0;
@@ -505,7 +551,17 @@ int variable_exist(char *name, int typ) {
   }
   return(vnr);
 }
-
+int variable_exist_or_create(char *name, int typ) {
+  int vnr=variable_exist(name,typ);
+  if(vnr==-1) {
+    if(typ&FLOATTYP) {
+      if((vnr=neue_float_variable(name,0.0,0))==-1) printf("Zu viele Variablen ! max. %d\n",ANZVARS);
+    } else if(typ&INTTYP) {
+      if((vnr=neue_int_variable(name,0,0))==-1) printf("Zu viele Variablen ! max. %d\n",ANZVARS);
+    } else printf("Variablen-Typ komisch! kann nicht kreieren\n");
+  } 
+  return(vnr);
+}
 int zuweis(char *name, double wert) {
   /* Zuweisungen fuer Float-Variablen und Felder    */
 
@@ -627,7 +683,7 @@ int neue_float_variable(char *name, double wert, int sp) {
     variablen[anzvariablen].local=sp;
     variablen[anzvariablen].typ=FLOATTYP;
     anzvariablen++;
-    return(0);
+    return(anzvariablen-1);
   } else return(-1);
 }
 int neue_int_variable(char *name, int wert, int sp) {
@@ -638,12 +694,11 @@ int neue_int_variable(char *name, int wert, int sp) {
     variablen[anzvariablen].local=sp;
     variablen[anzvariablen].typ=INTTYP;
     anzvariablen++;
-    return(0);
+    return(anzvariablen-1);
   } else return(-1);
 }
 
 int neue_string_variable(char *name, STRING wert, int sp) { 
-        
   if(anzvariablen<ANZVARS) {
     variablen[anzvariablen].name=malloc(strlen(name)+1); 
     strcpy(variablen[anzvariablen].name,name);
@@ -653,7 +708,7 @@ int neue_string_variable(char *name, STRING wert, int sp) {
     memcpy(variablen[anzvariablen].pointer,wert.pointer,wert.len);
     variablen[anzvariablen].typ=STRINGTYP;
     anzvariablen++;
-    return(0);
+    return(anzvariablen-1);
   } else return(-1);
 }
 int neue_array_variable_and_free(char *name, ARRAY *wert, int sp) { 
@@ -669,7 +724,7 @@ int neue_array_variable_and_free(char *name, ARRAY *wert, int sp) {
     variablen[anzvariablen].typ=(wert->typ | ARRAYTYP);
     free(wert);
     anzvariablen++;
-    return(0);
+    return(anzvariablen-1);
   } else return(-1);
 }
 void feed_array_and_free(int vnr, ARRAY *wert) { 
@@ -991,7 +1046,7 @@ void xzuweis(char *name, char *inhalt) {
   
   buffer1=indirekt2(name);
   buffer2=indirekt2(inhalt);
-  typ=type2(buffer1);
+  typ=vartype(buffer1);
   
  /* printf("XZUWEIS: %s \n",buffer1); */
 
@@ -1011,7 +1066,7 @@ void xzuweis(char *name, char *inhalt) {
 void array_zuweis_and_free(char *name, ARRAY *inhalt) {
   int typ,ztyp;
  
-  ztyp=type2(name);
+  ztyp=vartype(name);
  
   typ=inhalt->typ;
   if(ztyp!=typ) {    

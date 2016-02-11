@@ -14,7 +14,7 @@
     
     
     
-                       VERSION 1.10
+                       VERSION 1.11
 
             (C) 1997-2004 by Markus Hoffmann
               (kollo@users.sourceforge.net)
@@ -65,6 +65,7 @@ const char xbasic_name[]="xbasic";
 #endif
 #endif
 int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
+int errorpc=-1,breakpc=-1;
 int everytime=0,alarmpc=-1;
 
 int stack[STACKSIZE];
@@ -103,6 +104,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "BLOAD"    , c_bload     ,2, 3,{PL_STRING,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3, {PL_INT,PL_INT,PL_INT} }, 
 #ifndef NOGRAPHICS
+ { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0,1,   {PL_FILENR}},
  { P_PLISTE,     "BOUNDARY" , c_boundary  ,1, 1, {PL_INT}},
  { P_PLISTE,     "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
@@ -118,11 +120,12 @@ const COMMAND comms[]= {
 #endif
  { P_ARGUMENT,   "CLEAR"    , c_clear  ,0,-1},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,   "CLEARW"   , c_clearw ,0,1,{PL_INT}},
+ { P_PLISTE,   "CLEARW"   , c_clearw ,0,1,{PL_FILENR}},
+ { P_PLISTE,   "CLIP"     , c_clip ,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1,{PL_FILENR}},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1,{PL_INT}},
+ { P_PLISTE,   "CLOSEW"   , c_closew ,0,1,{PL_FILENR}},
 #endif
  { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1,{PL_ALLVAR}},
  { P_SIMPLE, "CLS"      , c_cls    ,0,0},
@@ -144,7 +147,7 @@ const COMMAND comms[]= {
 #endif
 
  { P_DATA,     "DATA"     , c_nop ,0,-1 },
- { P_ARGUMENT, "DEC"      , c_dec, 1,1,{PL_NVAR}},
+ { P_PLISTE, "DEC"      , c_dec, 1,1,{PL_NVAR}},
  { P_DEFAULT,  "DEFAULT"  , c_case, 0,0},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,{PL_INT,PL_INT,PL_INT}},
@@ -169,7 +172,6 @@ const COMMAND comms[]= {
 #endif
  { P_ELSE,   "ELSE"     , bidnm  ,0,2,{PL_KEY,PL_CONDITION}},
  { P_SIMPLE, "END"      , c_end   ,0,0},
- { P_ENDPROC,"ENDFUNC"  , c_return,0,0},
  { P_ENDPROC,"ENDFUNCTION", c_return,0,0},
  { P_ENDIF,  "ENDIF"       , bidnm  ,0,0},
  { P_ENDSELECT,"ENDSELECT" , bidnm  ,0,0},
@@ -188,12 +190,14 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "FFT"      , c_fft,1,-1},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "FILESELECT", c_fileselect,4,4,{PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
+ { P_PLISTE,   "FILL"     , c_fill,2,3,{PL_INT,PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,   "FIT",        c_fit,4,10,{PL_FARRAY,PL_FARRAY}},
  { P_ARGUMENT,   "FIT_LINEAR", c_fit_linear,4,10,{PL_FARRAY,PL_FARRAY}},
- { P_ARGUMENT,   "FLUSH"    , c_flush,0,1,{PL_FILENR}},
+ { P_PLISTE,   "FLUSH"    , c_flush,0,1,{PL_FILENR}},
  { P_FOR,    "FOR"      , c_for,1,-1,{PL_EXPRESSION,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
  { P_PLISTE,    "FREE"      , c_free,1,1,{PL_INT}},
+ { P_PLISTE,   "FULLW"    , c_fullw,0,1, {PL_FILENR}},
  { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_EXPRESSION}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
@@ -208,9 +212,9 @@ const COMMAND comms[]= {
  { P_SIMPLE,     "HOME"     , c_home,0,0},
 
  { P_IF,         "IF"       , c_if,1,-1,{PL_CONDITION}},
- { P_ARGUMENT,   "INC"      , c_inc,1,1,{PL_NVAR}},
+ { P_PLISTE,   "INC"      , c_inc,1,1,{PL_NVAR}},
 #ifndef NOGRAPHICS
- { P_IGNORE,   "INFOW"    , c_nop,2,2,{PL_INT,PL_STRING}},
+ { P_PLISTE,	 "INFOW"    , c_infow,    2,2,{PL_FILENR,PL_STRING}},
 #endif
  { P_ARGUMENT,   "INPUT"    , c_input,1,-1},
 #ifndef NOGRAPHICS
@@ -245,7 +249,7 @@ const COMMAND comms[]= {
  { P_PLISTE,   "MOUSE"    , c_mouse,1,5,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
  { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,6},
  { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,5},
- { P_ARGUMENT,   "MOVEW"    , c_movew,3,3},
+ { P_PLISTE,   "MOVEW"    , c_movew,3,3, {PL_FILENR,PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,   "MUL"      , c_mul,2,2,{PL_NVAR,PL_NUMBER}},
  
@@ -256,10 +260,12 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
 #endif
+ { P_PLISTE,   "OBJC_ADD"    , c_objc_add,      3,3,{PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "OBJC_DELETE"    , c_objc_delete,      2,2,{PL_INT,PL_INT}},
  { P_ARGUMENT,   "ON"       , c_on,         1,-1},
  { P_ARGUMENT,   "OPEN"     , c_open,       3,4,{PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,   "OPENW"    , c_openw,      1,-1,{PL_INT}},
+ { P_PLISTE,   "OPENW"    , c_openw,      1,1,{PL_FILENR}},
 #endif
  { P_ARGUMENT,   "OUT"      , c_out,        2,-1,{PL_FILENR,PL_INT}},
 
@@ -316,9 +322,12 @@ const COMMAND comms[]= {
 
  { P_ARGUMENT,   "SAVE"     , c_save,0,1,{PL_STRING}},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1,{PL_STRING}},
- { P_ARGUMENT,   "SAVEWINDOW", c_savewindow,1,1,{PL_STRING}},
+ { P_PLISTE,   "SAVESCREEN", c_savescreen,1,1,{PL_STRING}},
+ { P_PLISTE,   "SAVEWINDOW", c_savewindow,1,1,{PL_STRING}},
  { P_ARGUMENT,   "SCOPE"    , c_scope,      1,-1},
+#endif
+#ifdef USE_VGA
+ { P_PLISTE,   "SCREEN"    , c_screen,      1,1,{PL_INT}},
 #endif
  { P_ARGUMENT,   "SEEK"     , c_seek,       1,2,{PL_FILENR,PL_INT}},
  { P_SELECT, "SELECT"   , c_select,     1,1,{PL_CONDITION}},
@@ -335,7 +344,7 @@ const COMMAND comms[]= {
  { P_PLISTE,    "SHM_FREE" , c_shm_free,1,1,{PL_INT}},
 #ifndef NOGRAPHICS
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
- { P_ARGUMENT,	"SIZEW"    , c_sizew,      3,3,{PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,	"SIZEW"    , c_sizew,      3,3,{PL_FILENR,PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,  "SORT",     c_sort,        2,3,{PL_ARRAY,PL_INT,PL_IARRAY}},
  { P_PLISTE,    "SOUND",     c_sound,        1,1,{PL_INT}},
@@ -358,7 +367,8 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,{PL_STRING}},
 #endif
 #ifndef NOGRAPHICS
- { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2,{PL_INT,PL_STRING}},
+ { P_PLISTE,	"TITLEW"   , c_titlew,     2,2,{PL_FILENR,PL_STRING}},
+ { P_PLISTE,    "TOPW"     , c_topw,       0,1,   {PL_FILENR}},
 #endif
  { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
@@ -366,7 +376,7 @@ const COMMAND comms[]= {
  { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1,{PL_FILENR}},
  { P_UNTIL,	"UNTIL"    , c_until,      1,1,{PL_CONDITION}},
 #ifndef NOGRAPHICS
- { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1,{PL_INT}},
+ { P_PLISTE,	"USEWINDOW", c_usewindow,  1,1,{PL_FILENR}},
 #endif
 
  { P_SIMPLE,	"VERSION"  , c_version,    0,0},
@@ -407,6 +417,7 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
     pret[i].pointer=NULL; /* Default is NULL */
     pret[i].integer=0;
     pret[i].real=0.0;
+    pret[i].typ=pliste[i];
       if(strlen(w1)){
         if(pliste[i]==PL_LABEL) {
           pret[i].integer=labelnr(w1);
@@ -440,8 +451,6 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	    free_pliste(i,pret);
             return(-1);
           }
-	} else if(pliste[i]==PL_LEER) { 
-	  pret[i].typ=PL_LEER; /* Nixtun */
 	} else if(pliste[i] & PL_FLOAT) {  /* Float oder Nuber */
           pret[i].real=parser(w1);
 	} else if(pliste[i]==PL_INT) {  /* Integer */
@@ -452,6 +461,11 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 	  str.pointer=realloc(str.pointer,str.len+1);
 	  str.pointer[str.len]=0;
 	  pret[i].pointer=str.pointer;
+	} else if((pliste[i] & PL_NVAR)) { ; /* Variable */
+           pret[i].integer=type2(w1);
+	   if(!(pret[i].integer&FLOATTYP) && !(pret[i].integer&INTTYP)) error(58,n); /* Variable hat falschen Typ */
+           pret[i].pointer=varptr(w1);
+	   if(pret[i].pointer==NULL) printf("Fehler bei varptr.\n");
 	} else if((pliste[i] & PL_VAR) || (pliste[i] & PL_KEY)) { ; /* Varname */
 	  pret[i].pointer=malloc(strlen(w1)+1);
 	  strcpy(pret[i].pointer,w1);
@@ -474,12 +488,13 @@ int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
 void free_pliste(int anz,PARAMETER *pret){
   int i;
   for(i=0;i<anz;i++) {
-    if(pret[i].pointer!=NULL) free(pret[i].pointer);
+    if(pret[i].pointer!=NULL && !(pret[i].typ&PL_VAR)) free(pret[i].pointer);
   }
   if(pret!=NULL) free(pret);
 }
 
 void loadprg(char *filename) {
+  clear_parameters();
   programbufferlen=prglen=pc=sp=0;
   mergeprg(filename);
 }
@@ -539,12 +554,11 @@ void structure_warning(char *comment) {
 int init_program() {
   char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,typ;
 
-  clear_parameters();
   clear_labelliste();
   clear_procliste();
    
   /* Label- und Procedurliste Erstellen und p_code transformieren*/
-  
+
   for(i=0; i<prglen;i++) {
     zeile=realloc(zeile,strlen(program[i])+1);
     buffer=realloc(buffer,strlen(program[i])+1);
@@ -716,8 +730,10 @@ void clear_parameters() {
       if(pcode[i].ppointer!=NULL) {
         free(pcode[i].ppointer->pointer);
         free(pcode[i].ppointer);
+	pcode[i].ppointer=NULL;
       }
       free(pcode[i].argument);
+      pcode[i].argument=NULL;
     }
   }
 }
@@ -766,7 +782,7 @@ char *indirekt2(char *funktion) {
   return(ergebnis);
 }
 
-
+/* Bestimmt den Typ eines Ausdrucks */
 
 int type2(char *ausdruck) {
   char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
@@ -850,7 +866,7 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
 void kommando(char *cmd) {
   char buffer[strlen(cmd)+1],w1[strlen(cmd)+1],w2[strlen(cmd)+1],zeile[strlen(cmd)+1];
   char *pos;
-  int i,a,b,oa;
+  int i,a,b;
  
   xtrim(cmd,TRUE,zeile);
   wort_sep2(zeile," !",TRUE,zeile,buffer);
@@ -884,19 +900,21 @@ void kommando(char *cmd) {
   
   /* Kommandoliste durchsuchen, moeglichst effektiv ! */
 
-
-  i=0;a=anzcomms;
+  i=0;a=anzcomms-1;
   for(b=0; b<strlen(w1); b++) {
     while(w1[b]>(comms[i].name)[b] && i<a) i++;
-    oa=a;a=i;
-    while(w1[b]<(comms[a].name)[b]+1 && a<oa) a++;
-#ifdef DEBUG    
-    printf("%c:%d,%d: %s <--> %s \n",w1[b],i,a,w1,comms[i].name);
+    while(w1[b]<(comms[a].name)[b] && a>i) a--;
+#ifdef DEBUG
+    printf("%c:%d,%d: %s: %s <--> %s \n",w1[b],i,a,w1,comms[i].name,comms[a].name);
 #endif
     if(i==a) break;
   }
-  if(i<anzcomms) {
-    if(strcmp(w1,comms[i].name)==0) {
+  
+  if((i==a && strncmp(w1,comms[i].name,strlen(w1))==0) ||
+     (i!=a && strcmp(w1,comms[i].name)==0) ) {
+#ifdef DEBUG    
+      if(b<strlen(w1)) printf("Befehl %s vervollstaendigt --> %s\n",w1,comms[i].name);
+#endif
       if(comms[i].opcode & P_IGNORE) return;
       if(comms[i].opcode==P_ARGUMENT) (comms[i].routine)(w2);
       else if(comms[i].opcode==P_SIMPLE) (comms[i].routine)();
@@ -906,14 +924,9 @@ void kommando(char *cmd) {
         (comms[i].routine)(plist,e);
 	if(e!=-1) free_pliste(e,plist);
       } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
-      return;
-    } 
-  } 
-#ifdef GERMAN
-  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);  
-#else
-  printf("Syntax error! unknown command <%s> <%s>\n",w1,w2);  
-#endif
+    } else if(i!=a) {
+       printf("Befehl uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name); 
+    }  else error(32,w1);  /* Syntax Error */
 }
 
 

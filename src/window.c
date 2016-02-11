@@ -3,7 +3,7 @@
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+ * ======================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
@@ -16,21 +16,27 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include "defs.h"
 
 #ifdef WINDOWS
   #include "Windows.extension/fnmatch.h"
 #else
+  #ifdef USE_VGA
+    #include <vga.h>
+    #include <vgagl.h>
+  #else
+    #include <X11/XWDFile.h>
+  #endif
   #include <fnmatch.h>
-  #include <X11/XWDFile.h>
 #endif
 
-#include "defs.h"
 #include "window.h"
 
 
 /* globale Variablen */
 /* GEM-Globals   */
 
+#ifndef NOGRAPHICS
 int chw=4,chh=8,baseline=7,depth=8;
 const struct { int r,g,b;} gem_colordefs[]={
 {65535,65535,65535},  /* WHITE */
@@ -54,7 +60,6 @@ int gem_colors[16];
 
 ARECT sbox;
 
-#ifndef NOGRAPHICS
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];  
 #ifdef WINDOWS
@@ -63,6 +68,7 @@ char iname[MAXWINDOWS][80];
   HANDLE motionevent=INVALID_HANDLE_VALUE; /* handle for win thread event */
   HANDLE tsync=INVALID_HANDLE_VALUE; /* handle for win thread event */
 #else
+#ifndef USE_VGA
   char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
   #include "bitmaps/bombe_gross.bmp"
 
@@ -77,6 +83,7 @@ void fetch_icon_pixmap(int nummer) {
   XDrawString(display[nummer],icon_pixmap[nummer],gc,9,24,t,strlen(t));
   XFreeGC(display[nummer],gc);
 }
+#endif
 #endif  
 
 
@@ -287,6 +294,10 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
   winbesetzt[nummer]=1;
   WaitForSingleObject(tsync,INFINITE);
 #else
+#ifdef USE_VGA
+  vga_init();
+
+#else
   XGCValues gc_val;            /* */
   Window root;
   char *wn;
@@ -353,7 +364,9 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
 
   XSetForeground(display[nummer], gc[nummer], foreground);
   winbesetzt[nummer]=1;
+#endif  /*VGA*/
 #endif  
+
   }
   return(nummer);
 }
@@ -363,6 +376,7 @@ void open_window(int nr) {
  if(winbesetzt[nr]) {
 #ifdef WINDOWS
 #else
+#ifndef USE_VGA
     XEvent event;
     /* Das Fensterauf den Screen Mappen */
   
@@ -370,6 +384,7 @@ void open_window(int nr) {
     XNextEvent(display[nr], &event);
     handle_event(nr,&event);
 #endif  
+#endif
   }
 }
 
@@ -377,11 +392,15 @@ void close_window(int nr) {
 #ifdef WINDOWS
   if(winbesetzt[nr]) DestroyWindow(win_hwnd[nr]);
 #else
+#ifdef USE_VGA
+  vga_setmode(TEXT);
+#else
   XEvent event;
       if(winbesetzt[nr]) {
         XUnmapWindow(display[nr], win[nr]);
         XCheckWindowEvent(display[nr],win[nr],ExposureMask, &event);
       }
+#endif      
 #endif        
 }
 #ifndef WINDOWS
@@ -465,6 +484,7 @@ void graphics(){
 
 int fetch_rootwindow() {
 #ifndef WINDOWS
+#ifndef USE_VGA
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
   unsigned long foreground,background;
   int i,x,y,w,h,b,d;
@@ -496,8 +516,9 @@ int fetch_rootwindow() {
 	       KeyReleaseMask); */
 	       
   gc[0] = XCreateGC(display[0], win[0], 0, &gc_val);
-  winbesetzt[0]=1; 
-   #endif
+  winbesetzt[0]=1;
+#endif   
+#endif
   return(0);
 }
 
@@ -558,6 +579,7 @@ swapdws (char *bp, unsigned n) {
 }
 
 #ifndef WINDOWS
+#ifndef USE_VGA
 char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
     XWDFileHeader *data;
     unsigned long swaptest = 1;
@@ -646,7 +668,7 @@ XImage *xwdtoximage(char *data,Visual *visual) {
 }
 
 #endif
-
+#endif
 
 /* Alloziert einen Farbeintrag in der Palette. 
    Rueckgabewert ist die Nummer des Farbeintrags.
@@ -717,6 +739,17 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
 }
 
 #endif
+
+
+
+
+
+
+void  ffill(int x0,int y0,int fill_color, int border_color) {
+/* Wird evtl spaeter implementiert */
+}
+
+
 
 
 /* AES-Nachbildungen (c) Markus Hoffmann     */
@@ -985,7 +1018,7 @@ void put_bitmap(char *adr,int x,int y,int w, int h) {
   bitpix=XCreateBitmapFromData(display[usewindow],win[usewindow],
     adr,w,h);
     XCopyPlane(display[usewindow],bitpix,pix[usewindow],gc[usewindow],
-     0,0,w,w,x,y,1);
+     0,0,w,h,x,y,1);
     XFreePixmap(display[usewindow],bitpix);
 #endif    
 }
@@ -1095,6 +1128,8 @@ int draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   if(tree[idx].ob_flags & EXIT) randdicke--;
   if(tree[idx].ob_flags & DEFAULT) randdicke--;
 
+
+
 if (drawbg) {
 
 /* Zeichnen  */
@@ -1114,6 +1149,7 @@ if (drawbg) {
 /* Hintergrund zeichnen */
   SetForeground(gem_colors[WHITE]);
   if(!opaque) {FillRectangle(obx,oby,obw,obh);}
+
 
 if(pattern) {
   SetForeground(gem_colors[fillcolor]);
@@ -1144,7 +1180,7 @@ if(pattern) {
     break;
   case G_BUTTON:
     text=(char *)((int)tree[idx].ob_spec);
-    DrawString(obx+(obw-chw*strlen(text))/2,oby+chh-1+(obh-chh)/2,text,strlen(text));
+    DrawString(obx+(obw-chw*strlen(text))/2,oby+chh-2+(obh-chh)/2,text,strlen(text));
     break;
   case G_BOXCHAR:
     DrawString(obx+(obw-chw)/2,oby+chh-2+(obh-chh)/2,&zeichen,1);
@@ -1198,10 +1234,13 @@ if(pattern) {
   case G_IMAGE:
     {BITBLK *bit=(BITBLK *)((int)tree[idx].ob_spec);
     unsigned int adr;
+    
     adr=*((LONG *)&(bit->bi_pdata));
-
     SetForeground(gem_colors[(bit->bi_color) & 0xf]);   
-    put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);}
+    SetBackground(gem_colors[WHITE]);   
+
+    put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);
+   }
     break;
   case G_ICON:
     {ICONBLK *bit=(ICONBLK *)((int)tree[idx].ob_spec);
@@ -1212,7 +1251,7 @@ if(pattern) {
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
     FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
     adr=*(LONG *)&bit->ib_pdata;
-    
+    SetBackground(gem_colors[WHITE]);   
     SetForeground(gem_colors[BLACK]);   
     put_bitmap((char *)adr,obx,oby,bit->ib_wicon,bit->ib_hicon);
     /* Icon-Text */
@@ -1462,11 +1501,71 @@ void fix_iconblk() {
 }
 
 
+void  objc_add(OBJECT *tree,int p,int c) {
+  if(tree[p].ob_tail<0) {
+    tree[p].ob_head = c;
+    tree[p].ob_tail = c;
+    tree[c].ob_next = p;
+  } else {
+    tree[c].ob_next = p;
+    tree[tree[p].ob_tail].ob_next = c;
+    tree[p].ob_tail = c;
+  }
+}
+
+void objc_delete(OBJECT *tree,int object) {
+  int i=0;
+  int prev=-1;
+  int next=tree[object].ob_next;	
+  if(next!=-1) {
+    if(tree[next].ob_tail==object) next=-1;
+  }
+  while(1) {	
+    if((tree[i].ob_next==object) && (tree[object].ob_tail!=i)) {
+      prev=i;
+      tree[i].ob_next=tree[object].ob_next;
+      break;
+    }
+    if(tree[i].ob_flags & LASTOB) break;
+    i++;
+  }
+  i=0;
+  while(1) {	
+    if(tree[i].ob_head==object) tree[i].ob_head=next;
+    if(tree[i].ob_tail == object) tree[i].ob_tail=prev;
+    if(tree[i].ob_flags & LASTOB) break;
+    i++;
+  }
+}
+
+
+
+
+/* *****************************  */
+/*     objc_offset                  */
+
+int objc_offset(OBJECT *tree,int object,int *x,int *y) {
+  if((tree == NULL)) return(0);
+  *x=*y=0;
+  while(1) {
+    int last;	
+    *x+=tree[object].ob_x;
+    *y+=tree[object].ob_y;
+    if((tree[object].ob_next<0) || (object==0)) break;		
+    do {
+      last=object;
+      object=tree[object].ob_next;
+    } while(last!=tree[object].ob_tail);	
+  }
+  if(object==0) return 1;
+  else return 0;
+}
+
+
+
+
 /* *****************************  */
 /*     objc_find                  */
-
-
-
 
 int objc_find(OBJECT *tree,int x,int y) {
   int i=0;

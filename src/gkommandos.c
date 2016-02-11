@@ -49,23 +49,17 @@ void c_norootwindow(char *n){
   usewindow=DEFAULTWINDOW; 
   graphics();
 }
-void c_usewindow(char *n){
-  usewindow=max(0,min(MAXWINDOWS-1,(int)parser(n)));
+void c_usewindow(PARAMETER *plist,int e){
+  if(e) usewindow=max(0,min(MAXWINDOWS-1,plist[0].integer));
   graphics();
 }
 
-void c_vsync(char *n) {
-  activate();
-}
+void c_vsync(char *n) {activate();}
 
 void c_plot(PARAMETER *plist,int e) {
   if(e==2) {
     graphics();
-#ifdef WINDOWS
-    SetPixelV(bitcon[usewindow],plist[0].integer,plist[1].integer,global_color);
-#else
-    XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],plist[0].integer,plist[1].integer);
-#endif
+    DrawPoint(plist[0].integer,plist[1].integer);
   }
 }
 int get_point(int x, int y) {
@@ -82,10 +76,10 @@ int get_point(int x, int y) {
     return(r);
 }
 
-void c_savescreen(char *n) {
+void c_savescreen(PARAMETER *plist,int e) {
     int d,b,x,y,w,h,len,i;
-    char *name=s_parser(n);
     char *data;
+    if(e) {
 #ifndef WINDOWS
     XImage *Image;
     Window root;
@@ -108,14 +102,15 @@ void c_savescreen(char *n) {
       XQueryColors(display[usewindow], map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);	
-    bsave(name,data,len);
-    XDestroyImage(Image);free(name);free(data);
+    bsave(plist[0].integer,data,len);
+    XDestroyImage(Image);free(data);
 #endif
+  }
 }
-void c_savewindow(char *n) {
-    int d,b,x,y,w,h,len,i;
-    char *name=s_parser(n);
-    char *data;
+void c_savewindow(PARAMETER *plist,int e) {
+  int d,b,x,y,w,h,len,i;
+  char *data;
+  if(e) {
 #ifndef WINDOWS
     XImage *Image;
     Window root;
@@ -124,7 +119,6 @@ void c_savewindow(char *n) {
     XWindowAttributes xwa;
     
     graphics();
-    
     XGetGeometry(display[usewindow], win[usewindow], 
 	&root,&x,&y,&w,&h,&b,&d); 
     XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
@@ -137,11 +131,11 @@ void c_savewindow(char *n) {
       XQueryColors(display[usewindow], map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
-    bsave(name,data,len);
+    bsave(plist[0].integer,data,len);
     XDestroyImage(Image);
     free(data);
-    free(name);
 #endif    
+  }
 }
 #ifndef WINDOWS
 XImage *xwdtoximage(char *,Visual *);
@@ -445,7 +439,12 @@ int get_bcolor() {
 return(0);
 #endif
 }
-
+#ifdef USE_VGA
+void c_screen(PARAMETER *plist,int e) {
+  graphics();
+  vga_setmode(plist[0].integer);
+}
+#endif
 void c_graphmode(PARAMETER *plist,int e) {
   graphics();
   set_graphmode(plist[0].integer);
@@ -525,11 +524,9 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
           x1=(int)(varptrx[i]*xscale)+xoffset;
           x2=(int)(varptrx[i+1]*xscale)+xoffset;
         } else {x1=i*xscale+xoffset;x2=(i+1)*xscale+xoffset;}
-#ifndef WINDOWS
-        if(mode==0) XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,y1,x2,y2);
-	else if(mode==1 && vnrx!=-1) XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],x1,y1);
-        else XDrawLine(display[usewindow],pix[usewindow],gc[usewindow],x1,yoffset,x1,y2); 
-#endif
+        if(mode==0) DrawLine(x1,y1,x2,y2);
+	else if(mode==1 && vnrx!=-1) DrawPoint(x1,y1);
+        else DrawLine(x1,yoffset,x1,y2); 
       }
     }
   }
@@ -682,7 +679,30 @@ void c_deffill(PARAMETER *plist,int e) {
   }
 #endif  
 }
-
+extern void ffill(int,int,int,int);
+void c_fill(PARAMETER *plist,int e) {
+  int bc=-1;
+  if(e>1) {
+    graphics();
+    if(e>2) bc=plist[2].integer;
+    ffill(plist[0].integer,plist[1].integer,get_fcolor(),bc);
+  }
+}
+void c_clip(PARAMETER *plist,int e) {
+  graphics();      
+  if(e==1) XSetClipMask(display[usewindow], gc[usewindow], None); /*CLIP OFF */
+  else if(e>3) {
+    XRectangle rectangle;
+    int ox=0,oy=0;
+    rectangle.x=plist[0].integer;
+    rectangle.y=plist[1].integer;
+    rectangle.width=plist[2].integer;
+    rectangle.height=plist[3].integer;
+    if(e>4) ox=plist[4].integer;
+    if(e>5) oy=plist[5].integer;
+    XSetClipRectangles(display[usewindow], gc[usewindow], ox, oy, &rectangle, 1,Unsorted);
+  }
+}
 void c_defline(PARAMETER *plist,int e) { 
   static int style=0,width=0,cap=0,join=0;
   if(e>=1 && plist[0].typ!=PL_LEER) style=plist[0].integer;
@@ -770,9 +790,12 @@ int mouses() {
 
 void c_mouse(PARAMETER *plist,int e) {
 #ifdef WINDOWS
-  if(e>=1 && plist[0].typ!=PL_LEER) zuweis(plist[0].pointer,(double)global_mousex);
-  if(e>=2 && plist[1].typ!=PL_LEER) zuweis(plist[1].pointer,(double)global_mousey);
-  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)(global_mousek|(global_mouses<<8)));
+  if(e>=1 && plist[0].typ!=PL_LEER) 
+    varcastint(plist[0].integer,plist[0].pointer,global_mousex);
+  if(e>=2 && plist[1].typ!=PL_LEER) 
+    varcastint(plist[1].integer,plist[1].pointer,global_mousey);
+  if(e>=3 && plist[2].typ!=PL_LEER) 
+    varcastint(plist[2].integer,plist[2].pointer,(global_mousek|(global_mouses<<8)));
 #else
    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
    Window root_return,child_return;
@@ -782,11 +805,16 @@ void c_mouse(PARAMETER *plist,int e) {
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
 
-  if(e>=1 && plist[0].typ!=PL_LEER) zuweis(plist[0].pointer,(double)win_x_return);
-  if(e>=2 && plist[1].typ!=PL_LEER) zuweis(plist[1].pointer,(double)win_y_return);
-  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)(((mask_return>>8)|(mask_return<<8)) & 0xffff));
-  if(e>=4 && plist[3].typ!=PL_LEER) zuweis(plist[3].pointer,(double)root_x_return);
-  if(e>=5 && plist[4].typ!=PL_LEER) zuweis(plist[4].pointer,(double)root_y_return);
+  if(e>=1 && plist[0].typ!=PL_LEER) 
+    varcastint(plist[0].integer,plist[0].pointer,win_x_return);
+  if(e>=2 && plist[1].typ!=PL_LEER) 
+    varcastint(plist[1].integer,plist[1].pointer,win_y_return);
+  if(e>=3 && plist[2].typ!=PL_LEER) 
+    varcastint(plist[2].integer,plist[2].pointer,(((mask_return>>8)|(mask_return<<8)) & 0xffff));
+  if(e>=4 && plist[3].typ!=PL_LEER) 
+    varcastint(plist[3].integer,plist[3].pointer,root_x_return);
+  if(e>=5 && plist[4].typ!=PL_LEER) 
+    varcastint(plist[4].integer,plist[4].pointer,root_y_return);
 #endif
 #ifdef DEBUG
   printf("Mouse: x=%d y=%d m=%d\n",win_x_return,win_y_return,mask_return);
@@ -1094,33 +1122,31 @@ void c_allevent(char *n) {
     }
 #endif    
 }
-void c_titlew(char *n) {
-  char *v,*t;
-  int winnr=DEFAULTWINDOW,e;
- 
-  graphics();
-  v=malloc(strlen(n)+1);t=malloc(strlen(n)+1);
-  e=wort_sep(n,',',TRUE,v,t);
-  if(e) { if(v[0]=='#') winnr=(int)parser(v+1); else winnr=(int)parser(v);}
-  if(winnr<MAXWINDOWS) {
-    char *text=s_parser(t);
+void c_titlew(PARAMETER *plist,int e) {
+  int winnr=DEFAULTWINDOW;
+  if(e) winnr=plist[0].integer;
+  if(winnr<MAXWINDOWS && e>1) {
+    graphics();
 #ifdef WINDOWS
-  SetWindowText(win_hwnd[winnr],text);
+  SetWindowText(win_hwnd[winnr],plist[1].pointer);
 #else
-    if (!XStringListToTextProperty(&text, 1, &win_name[winnr]))    printf("Couldn't set Name of Window.\n");
+    if (!XStringListToTextProperty((char **)&(plist[1].pointer), 1, &win_name[winnr]))    
+      printf("Couldn't set Name of Window.\n");
     XSetWMName(display[winnr], win[winnr], &win_name[winnr]);
 #endif
-    free(text);
   } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
-  free(v);free(t);
 }
-void c_clearw(char *n) {
+void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
+  int winnr=usewindow;
+  if(e) winnr=plist[0].integer;
+  if(winnr<MAXWINDOWS && e>1) {
+    graphics();
+    XSetIconName(display[winnr], win[winnr],plist[1].pointer);
+  } else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
+}
+void c_clearw(PARAMETER *plist,int e) {
   int winnr=usewindow,x,y,w,h,b,d;
-  
-  if(strlen(n)) {
-    if(n[0]=='#') winnr=max(0,(int)parser(n+1)); 
-    else winnr=max(0,(int)parser(n));
-  }
+  if(e) winnr=max(0,plist[0].integer);
 
   if(winnr<MAXWINDOWS) {
     graphics();
@@ -1150,49 +1176,40 @@ void c_clearw(char *n) {
     }
   }
 }
-void c_closew(char *n) {
+void c_closew(PARAMETER *plist,int e) {
   int winnr=usewindow;
-  graphics();
-  if(strlen(n)) {
-    if(n[0]=='#') winnr=max(0,(int)parser(n+1)); else winnr=max(0,(int)parser(n));
+  if(e) winnr=plist[0].integer;
+  if(winnr>0 && winnr<MAXWINDOWS && winbesetzt[winnr]) {
+    graphics();
+    close_window(winnr);
   }
-  close_window(winnr);
 }
-void c_openw(char *n) {
+void c_openw(PARAMETER *plist,int e) {
   int winnr=DEFAULTWINDOW;
-  graphics();
-  if(strlen(n)) {
-    if(n[0]=='#') winnr=max(0,(int)parser(n+1)); else winnr=max(0,(int)parser(n));
+  if(e) winnr=plist[0].integer;
+  if(winnr>0 && winnr<MAXWINDOWS && !winbesetzt[winnr]) {
+    graphics();
+    open_window(winnr);
   }
-  open_window(winnr);
 }
+void do_sizew(int,int,int);
+void do_movew(int,int,int);
 
-void c_sizew(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int winnr=usewindow,e,i=0;
-  int w=640,h=400;
-  
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-     if(strlen(w1)) {
-         switch(i) {
-         case 0: {
-	   if(w1[0]=='#') winnr=(int)parser(w1+1);
-	   else winnr=(int)parser(w1);
-	   break;
-	   }
-	 case 1: {w=max(0,(int)parser(w1));  break;} 
-	 case 2: {h=max(0,(int)parser(w1));  break;} 
-         default: break;
-       }
-     }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-
-  if(winnr<MAXWINDOWS && winnr>0 ) {
+void c_sizew(PARAMETER *plist,int e) {
+  int winnr=usewindow;
+  if(e && plist[0].typ!=PL_LEER) winnr=plist[0].integer;
+  if(winnr<MAXWINDOWS) {
+    int w=640,h=400;
+    if(e>1) w=max(0,plist[1].integer);
+    if(e>2) h=max(0,plist[2].integer);
     graphics();
     if(winbesetzt[winnr]) {
+      do_sizew(winnr,w,h);
+    } else  puts("Window does not exist.");
+  } else if(winnr==0) puts("This operation is not allowed for root window.");
+  else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
+}
+void do_sizew(int winnr,int w,int h) {
 #ifdef WINDOWS    
         RECT interior;
         GetClientRect(win_hwnd[winnr],&interior);
@@ -1210,37 +1227,70 @@ void c_sizew(char *n) {
 	pix[winnr]=pixi;
 	XFlush(display[winnr]);
 #endif
-    } else  puts("Window existiert nicht.");
-  } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
-  else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
-
 }
-
-void c_movew(char *n) {
-  char v[strlen(n)+1],t[strlen(n)+1];
-  int winnr=usewindow,e;
- 
-  graphics();
-  wort_sep(n,',',TRUE,v,t);
-  if(strlen(v)) { if(v[0]=='#') winnr=(int)parser(v+1); else winnr=(int)parser(v);}
+void c_movew(PARAMETER *plist,int e) {
+  int winnr=usewindow;
+  if(e && plist[0].typ!=PL_LEER) winnr=plist[0].integer;
   if(winnr<MAXWINDOWS) {
     int x=100,y=100;
-    e=wort_sep(t,',',TRUE,v,t);
-    if(e) {
-      x=max((int)parser(v),0);
-      e=wort_sep(t,',',TRUE,v,t);
-      if(e) {
-        y=max((int)parser(v),0);
-#ifndef WINDOWS
-        XMoveWindow(display[winnr], win[winnr], x, y);
-#else
-       MoveWindow(win_hwnd[winnr], x, y,640,400,1);
-#endif
-      }
-    }
-  } else if(winnr==0) puts("Rootwindow läßt sich nicht verändern.");
-  else printf("Ungültige Windownr. %d. Maximal %d\n",winnr,MAXWINDOWS);
+    if(e>1) x=max(0,plist[1].integer);
+    if(e>2) y=max(0,plist[2].integer);
+    graphics();
+    if(winbesetzt[winnr]) {
+      do_movew(winnr,x,y);
+    } else  puts("Window does not exist.");
+  } else if(winnr==0) puts("This operation is not allowed for root window.");
+  else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
 }
+
+void do_movew(int winnr,int x,int y) {
+#ifndef WINDOWS
+      XMoveWindow(display[winnr], win[winnr], x, y);
+#else
+      MoveWindow(win_hwnd[winnr], x, y,640,400,1);
+#endif  
+}
+void c_fullw(PARAMETER *plist,int e) {
+  int winnr=usewindow;
+  if(e) winnr=plist[0].integer;
+  if(winnr<MAXWINDOWS) {
+    if(winbesetzt[winnr]) {
+      Window root;
+      int ox,oy,ow,oh,ob,d;
+      graphics();
+      do_movew(winnr,0,0);
+      XGetGeometry(display[winnr],RootWindow(display[winnr],DefaultScreen(display[winnr])),&root,&ox,&oy,&ow,&oh,&ob,&d);
+      do_sizew(winnr,ow,oh);
+    } else  puts("Window does not exist.");
+  } else if(winnr==0) puts("This operation is not allowed for root window.");
+  else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
+}
+
+void c_topw(PARAMETER *plist,int e) {
+  int winnr=usewindow;
+  if(e) winnr=plist[0].integer;
+  if(winnr==0) puts("This operation is not allowed for root window.");
+  else if(winnr<MAXWINDOWS) {
+    if(winbesetzt[winnr]) {
+      graphics();
+      XRaiseWindow(display[winnr], win[winnr]);
+    } else  puts("Window does not exist.");
+  } else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
+}
+void c_bottomw(PARAMETER *plist,int e) {
+  int winnr=usewindow;
+  if(e) winnr=plist[0].integer;
+  if(winnr==0) puts("This operation is not allowed for root window.");
+  else if(winnr<MAXWINDOWS) {
+    if(winbesetzt[winnr]) {
+      graphics();
+      XLowerWindow(display[winnr], win[winnr]);
+    } else  puts("Window does not exist.");
+  } else if(winnr==0) puts("This operation is not allowed for root window.");
+  else printf("illegal window nr. %d. Max. %d\n",winnr,MAXWINDOWS);
+}
+
+
 
 #ifndef WINDOWS
 #include "bitmaps/biene.bmp"
@@ -1405,7 +1455,7 @@ void c_alert(PARAMETER *plist,int e) {
   char buffer2[MAXSTRLEN];
   if(e>=5) {
     sprintf(buffer,"[%d][%s][%s]",plist[0].integer,plist[1].pointer,plist[3].pointer);
-    zuweis(plist[4].pointer,(double)form_alert2(plist[2].integer,buffer,buffer2));
+    varcastint(plist[4].integer,plist[4].pointer,form_alert2(plist[2].integer,buffer,buffer2));
   }
   if(e==6) zuweiss(plist[5].pointer,buffer2);
 }
@@ -1564,6 +1614,12 @@ void c_rsrc_load(char *n) {
 }
 void c_rsrc_free(char *n) {
   if(rsrc_free()) puts("Fehler bei RSRC_FREE.");
+}
+void c_objc_add(PARAMETER *plist,int e) {
+  objc_add(plist[0].integer,plist[1].integer,plist[2].integer);
+}
+void c_objc_delete(PARAMETER *plist,int e) {
+  objc_delete(plist[0].integer,plist[1].integer);
 }
 void c_xload(char *n) {
   char *name=fsel_input("load program:","./*.bas","");

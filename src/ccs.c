@@ -24,6 +24,12 @@ int pids[MAXPIDS];
 int isubs[MAXPIDS];
 int pidanz=0;
 #endif
+#ifdef TINE
+int notify_handler(int , int , int );
+int pids[MAXPIDS];
+int isubs[MAXPIDS];
+int pidanz=0;
+#endif
 
 #ifndef WINDOWS
 #ifdef CONTROL
@@ -59,7 +65,8 @@ void cs_exit() {
 }
 #endif
 #endif
-#ifdef CONTROL
+
+#ifdef CONTROL 
 int notify_handler(int pid, int overflow, int entries) {
   int i,pc2,flag=0;
   for(i=0;i<pidanz;i++) {
@@ -79,12 +86,8 @@ int notify_handler(int pid, int overflow, int entries) {
     }
   }
   if(flag==0) printf("Uninitialisierter Interrupt: pid=%d, over=%d, ent=%d \n",pid,overflow,entries);
-
 }
-
-
 int cssize(char *n) {
-
   int pid;
   ROUTE route;
   ccs_convert_parametername_id(n, &pid );
@@ -1112,15 +1115,17 @@ ARRAY *tinehistory(char *n,int start, int stop) {
       ((int *)ergebnis->pointer)[1]=1;
       return(ergebnis);
     }
-    nn=((int *)buf)[1];
+  /*    nn=((int *)buf)[1];  */
+  /*  nn=dout.dArrayLength;  */
+    nn=GetCompletionDataSize(-1);
     ergebnis->typ=FLOATARRAYTYP;
     ergebnis->pointer=malloc(2*INTSIZE+2*nn*sizeof(double));
     ((int *)ergebnis->pointer)[0]=nn;
     ((int *)ergebnis->pointer)[1]=2;
     varptr=ergebnis->pointer+2*INTSIZE;
       for(j=0;j<nn;j++) {
-        varptr[2*j]=(double)(((float *)buf)[2*j+2]);
-        varptr[2*j+1]=(double)(((int *)buf)[2*j+1+2]);
+        varptr[2*j]=(double)(((float *)buf)[2*j]);  /*+2 entfernt*/
+        varptr[2*j+1]=(double)(((int *)buf)[2*j+1]);/*+2 entfernt*/
       }  
       free(buf);
   }

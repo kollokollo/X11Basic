@@ -15,6 +15,7 @@ extern const char vdate[];
 extern const char xbasic_name[];
 extern char ifilename[];
 extern int pc,sp,prglen,echoflag,batch,globalerr,errcont,breakcont,everyflag;
+extern int errorpc, breakpc;
 extern int everytime,alarmpc;
 extern int menuaction;
 

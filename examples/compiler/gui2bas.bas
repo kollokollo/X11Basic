@@ -1,6 +1,6 @@
 ' Utility to convert gui Files with Formulars or other Graphical user interface
 ' Objects to X11Basic executable programs
-' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.07.2003)
+' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.08.2003)
 '
 '
 dim iz$(1000)
@@ -9,7 +9,7 @@ anziz=0
 anzstring=0
 anztree=0
 anzobj=0
-anztedinfo=0
+clr anztedinfo,anzdata,anzbitblk,anziconblk
 
 inputfile$=param$(2)
 chw=8
@@ -17,16 +17,17 @@ chh=16
 OPEN "I",#1,inputfile$
 while not eof(#1)
   lineinput #1,t$
-  if len(trim$(t$))
-    iz$(anziz)=trim$(t$)
+  t$=trim$(t$)
+  if len(t$)
+    iz$(anziz)=t$
     inc anziz
   endif
 wend
 close #1
 
-print "' gui2bas V.1.00   (c) Markus Hoffmann 2003"
+print "' gui2bas V.1.01   (c) Markus Hoffmann 2003"
 print "' convertetd "+inputfile$+"  "+date$+" "+time$
-print "bx=0"
+print "bx=0          ! standard screen dimensions"
 print "by=20"
 print "bw=640"
 print "bh=400"
@@ -44,7 +45,7 @@ quit
 
 function doit2(parent)
   local t$,klammer,idx,typ$,label$,obnext,obtail,obhead,parameter$
-  ' print "# DOIT2: ",parent,count
+  print "'# DOIT2: ",parent,count
   idx=-1
   while count<anziz
     t$=iz$(count)
@@ -92,7 +93,7 @@ function doit2(parent)
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
     endif
   wend
-  ' print "# END DOIT2: ",parent,count
+   print "'# END DOIT2: ",parent,count
 
   return idx
 endfunc
@@ -254,7 +255,41 @@ procedure doobj(idx,obnext,obhead,obtail,a$,b$)
       @addstring(text$)
       print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
       print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(string";anzstring-1;"$))";
+    else if upper$(a$)="IMAGE"
+      data$=@getval$(b$,"DATA")
+      iw=val(@getval$(b$,"IW"))
+      ih=val(@getval$(b$,"IH"))
+      ix=val(@getval$(b$,"IX"))
+      iy=val(@getval$(b$,"IY"))
+      ic=val(@getval$(b$,"IC"))
+      @addbitblk(data$,iw,ih,ix,iy,ic)
+      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(bitblk";anzbitblk-1;"$))";
+    else if upper$(a$)="ICON"
+      data$=@getval$(b$,"DATA")
+      mask$=@getval$(b$,"MASK")
+      text$=@getval$(b$,"TEXT")
+      char=val(@getval$(b$,"CHAR"))
+      xchar=val(@getval$(b$,"XCHAR"))
+      ychar=val(@getval$(b$,"YCHAR"))
+      xicon=val(@getval$(b$,"XICON"))
+      yicon=val(@getval$(b$,"YICON"))
+      wicon=val(@getval$(b$,"WICON"))
+      hicon=val(@getval$(b$,"HICON"))
+      xtext=val(@getval$(b$,"XTEXT"))
+      ytext=val(@getval$(b$,"YTEXT"))
+      wtext=val(@getval$(b$,"WTEXT"))
+      htext=val(@getval$(b$,"HTEXT"))
+      if left$(text$)=chr$(34)
+        text$=right$(text$,len(text$)-1)  
+      endif
+      if right$(text$)=chr$(34)
+        text$=left$(text$,len(text$)-1)  
+      endif
 
+      @addiconblk(data$,mask$,text$,char,xchar,ychar,xicon,yicon,wicon,hicon,xtext,ytext,wtext,htext)
+      print "obj"+str$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(iconblk";anziconblk-1;"$))";
     else if upper$(a$)="UNKNOWN"
       print "' UNKNOWN: ";b$
     else
@@ -291,6 +326,10 @@ procedure addstring(r$)
   print "string"+str$(anzstring)+"$="+chr$(34)+r$+chr$(34)+"+chr$(0)"
   inc anzstring
 return
+procedure adddata(r$)
+  print "data"+str$(anzdata)+"$=INLINE$("+r$+")"
+  inc anzdata
+return
 procedure addtedinfo(a$,b$,c$,d,e,f,g)
   print "string"+str$(anzstring)+"$="+chr$(34)+a$+chr$(34)+"+chr$(0)+space$("+str$(len(c$))+")"
   inc anzstring
@@ -303,6 +342,23 @@ procedure addtedinfo(a$,b$,c$,d,e,f,g)
   print "+mkl$(varptr(string"+str$(anzstring-1)+"$))";
   print "+mki$(";d;")+mki$(0)+mki$(";e;")+mki$(";f;")+mki$(0)+mki$(";g;")+mki$(";len(b$);")+mki$(";len(c$);")"
   inc anztedinfo
+return
+procedure addbitblk(a$,b,c,d,e,f)
+  @adddata(a$)
+  print "bitblk"+str$(anzbitblk)+"$=mkl$(varptr(data"+str$(anzdata-1)+"$))";
+  print "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")"
+  inc anzbitblk
+return
+procedure addiconblk(a$,b$,c$,b,c,d,e,f,g,h,i,j,k,l)
+  @adddata(a$)
+  @adddata(b$)
+  @addstring(c$)
+  print "iconblk"+str$(anziconblk)+"$=mkl$(varptr(data"+str$(anzdata-2)+"$))";
+  print "+mkl$(varptr(data"+str$(anzdata-1)+"$))";
+  print "+mkl$(varptr(string"+str$(anzstring-1)+"$))";
+  print "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")";
+  print "+mki$(";g;")+mki$(";h;")+mki$(";i;")+mki$(";j;")+mki$(";k;")+mki$(";l;")"
+  inc anziconblk
 return
 function getval$(t$,f$)
   local a$,val$

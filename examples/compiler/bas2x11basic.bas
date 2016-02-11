@@ -5,29 +5,29 @@
 '
 i=1
 outputfilename$="b.bas"
-while len(param$(i))
-  if left$(param$(i))="-"
-    if param$(i)="--help" or param$(i)="-h"
+WHILE LEN(PARAM$(i))
+  IF LEFT$(PARAM$(i))="-"
+    IF PARAM$(i)="--help" OR PARAM$(i)="-h"
       @intro
       @using
-    else if param$(i)="--version"
+    ELSE IF PARAM$(i)="--version"
       @intro
-      quit
-    else if param$(i)="-o"
-      inc i
-      if len(param$(i))
-        outputfilename$=param$(i)
-      endif
-    endif
-  else
+      QUIT
+    ELSE IF PARAM$(i)="-o"
+      INC i
+      IF LEN(PARAM$(i))
+        outputfilename$=PARAM$(i)
+      ENDIF
+    ENDIF
+  ELSE
     inputfile$=param$(i)
     if not exist(inputfile$)
       print "bas2x11basic: "+inputfile$+": file or path not found"
       clr inputfile$
-    endif
-  endif
-  inc i
-wend
+    ENDIF
+  ENDIF
+  INC i
+WEND
 if len(inputfile$)
   rumpf$=inputfile$
   while len(rumpf$)
@@ -211,27 +211,27 @@ procedure processcommand(b$)
   b$=replace$(b$,"INPUT"+chr$(34),"INPUT "+chr$(34))
   wort_sep b$," ",1,b$,a$
   if upper$(b$)="GOTO"
-        wort_sep a$," ",1,a$,c$
-	if pass=1
-	  labeling(anzlabel)=val(a$)
-	  inc anzlabel
-	else
-          print #2,b$;" L";a$+" "+c$         
-	endif
-      else if upper$(b$)="GOSUB"
-        wort_sep a$," ",1,a$,c$
-	if pass=1
-          procs(anzprocs)=val(a$)
-	  inc anzprocs
-	else
-          print #2,"@P";a$+" "+c$         
-	endif
-      else if upper$(b$)="IF"
-	print #2,"' ERROR: No if here !"      
-      else
-        if pass=1
-	else
-        print #2,b$;" ";a$
-      endif	
-      endif
-return
+    wort_sep a$," ",1,a$,c$
+    if pass=1
+      labeling(anzlabel)=val(a$)
+      inc anzlabel
+    else
+      print #2,b$;" L";a$+" "+c$         
+    endif
+  else if upper$(b$)="GOSUB"
+    wort_sep a$," ",1,a$,c$
+    if pass=1
+      procs(anzprocs)=val(a$)
+      inc anzprocs
+    else
+      print #2,"@P";a$+" "+c$         
+    endif
+  else if upper$(b$)="IF"
+    print #2,"' ERROR: No if here !"      
+  else
+    if pass=1
+    else
+      print #2,b$;" ";a$
+    ENDIF	
+  ENDIF
+RETURN

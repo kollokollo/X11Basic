@@ -64,6 +64,40 @@
 
 void io_error(int,char *);
 
+
+
+
+/* Get the number of rows and columns for this screen. */
+void getrowcols(int *rows, int *cols) {
+
+#ifdef TIOCGWINSZ
+	struct winsize ws;
+
+	if (ioctl(0, TIOCGWINSZ, &ws) >= 0) {
+		*rows = ws.ws_row;
+		*cols = ws.ws_col;
+	}	
+#else
+//#  ifdef TIOCGSIZE */
+	struct ttysize ws;
+
+	if (ioctl(0, TIOCGSIZE, &ws) >= 0) {
+		*rows = ws.ts_lines;
+		*cols = ws.ts_cols;
+	}
+#endif
+}
+
+
+
+
+
+
+
+
+
+
+
 /*******************************/
 /* Ein- und Ausgaberoutinen    */
 
@@ -123,25 +157,21 @@ void c_print(char *n) {
 
 void c_input(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
-  char *u,*text;
+  char *u,*v,*text;
   char inbuf[MAXSTRLEN];
-  int e;
+  int e,e2;
   FILE *fff=stdin;
   
-  if(n[0]=='#') {
-    char *buffer=malloc(strlen(n)+1);
-    int i;
-    
-    wort_sep(n,',',TRUE,buffer,s);
-    i=get_number(buffer);
-    if(filenr[i]) fff=dptr[i];
+  if(*n=='#') {
+    wort_sep(n,',',TRUE,t,s);
+    e=get_number(t);
+    if(filenr[e]) fff=dptr[e];
     else error(24,""); /* File nicht geoeffnet */
-    free(buffer);
   } else strcpy(s,n);
-  if(strlen(s)) {
-   
+  
+  if(strlen(s)) {   
     e=arg2(s,TRUE,s,t);
-    if(s[0]=='\"') {
+    if(*s=='\"') {
       u=s_parser(s);
       text=malloc(strlen(u)+4);
       strcpy(text,u);
@@ -153,20 +183,25 @@ void c_input(char *n) {
       text=malloc(3);
       strcpy(text,"? ");
     }
-        
+     /* Wenn Terminal: Jetzt ganze Zeile einlesen */
+    if(fff==stdin) v=do_gets(text);
+    u=inbuf;
     while(e!=0) {
       xtrim(s,TRUE,s);
-      if(fff==stdin) u=do_gets(text);
-      else {
-        u=input(fff,inbuf);
-      }
+      if(fff==stdin) {
+        e2=arg2(v,TRUE,u,v);
+        while(e2==0) {
+	  v=do_gets(text);
+	  e2=arg2(v,TRUE,u,v);
+	}
+      } else u=input(fff,inbuf);
+     
       if(type2(s) & STRINGTYP) zuweiss(s,u);
       else zuweis(s,parser(u));
       e=arg2(t,TRUE,s,t);
     }
     free(text);
-  }
-  
+  }  
 }
 STRING f_lineinputs(char *n) {
   int i=get_number(n);
@@ -284,16 +319,18 @@ int make_socket(unsigned short int port) {
 /* Universelle OPEN-Funktion. Oeffnet Files, Devices, und sockets   */
 /* OPEN "I",#1,filename$[,port]   */
 
+//#define DEBUG 1
 
 void c_open(char *n) {
   char modus,special=0;
   char w1[strlen(n)+1],w2[strlen(n)+1];
-  int number=1,e,port=5555,i=0;
+  int number=1,e,port=0,i=0;
   char *filename=NULL;
   char modus2[5]="r";
-  int baud=9600,bits=8,stopbits=1;
+  int baud=9600,bits=8,stopbits=1,parity=0,sflow=0,hflow=0,dtr=0;
  /* 'OPEN "UX:9600,N,8,1,DS,CS,RS,CD",#1,"/dev/ttyS1",8+5+6*8 */
-#if DEBUG
+
+#ifdef DEBUG
   printf("OPEN %s\n",n);
 #endif
   e=wort_sep(n,',',TRUE,w1,w2);
@@ -314,6 +351,17 @@ void c_open(char *n) {
 	        case 0: { baud=(int)parser(ww1);  break; } /* Baudrate */  
 		case 2: { bits=(int)parser(ww1);  break; } /* Bits */  
 		case 3: { stopbits=(int)parser(ww1);  break; } /* Stopbits */  
+
+                default: 
+		  if(strcmp(ww1,"N")==0) parity=0;
+		  else if(strcmp(ww1,"O")==0) parity=1;
+		  else if(strcmp(ww1,"E")==0) parity=2;
+		  else if(strcmp(ww1,"XON")==0) sflow=1;
+		  else if(strcmp(ww1,"CTS")==0) hflow=1;
+		  else if(strcmp(ww1,"DTR")==0) dtr=1;
+		  else
+		printf("Unknown extra Option: %s\n",ww1);
+
 	      }
 	    }
 	    ii++;
@@ -321,7 +369,8 @@ void c_open(char *n) {
 	    
 	  }
 #if DEBUG
-	  printf("baud=%d, bits=%d, stopbits=%d\n",baud,bits,stopbits);
+	  printf("baud=%d, bits=%d, stopbits=%d, parity=%d\n",baud,bits,
+	  stopbits,parity);
 #endif
 	}
         free(mod);
@@ -332,7 +381,7 @@ void c_open(char *n) {
         else error(21,""); /* bei Open nur erlaubt ...*/
 	break;
       }
-      case 1: {number=get_number(w1); break; } 
+      case 1: { number=get_number(w1); break; } 
       case 2: { filename=s_parser(w1); break; } 
       case 3: { port=(int)parser(w1);  break; } 	   
       default: break;
@@ -341,7 +390,10 @@ void c_open(char *n) {
     i++;
     e=wort_sep(w2,',',TRUE,w1,w2);
   } 	    
- 
+#ifdef DEBUG
+   printf("number=%d, filename=<%s>, port=%d ($08x)\n",number,filename,port,port);
+#endif
+
   if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
   else if(number>99 || number<1) error(23,"");  /* File # falsch  */
   else {
@@ -350,8 +402,9 @@ void c_open(char *n) {
       int sock;
 #ifndef WINDOWS
       struct sockaddr_in servername;
-	 
-    /* printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
+#ifdef DEBUG	 
+     printf("Open Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+#endif
       sock=socket(PF_INET, SOCK_STREAM,0);
       if(sock<0) {
 	io_error(errno,"socket");
@@ -371,7 +424,9 @@ void c_open(char *n) {
     } else if(special=='S') { /* serve */
       int sock;
 #ifndef WINDOWS
-   /*  printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);*/
+#ifdef DEBUG
+   printf("Create Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+#endif
       sock=make_socket(port);
       if(sock<0) {
 	io_error(errno,"make_socket");
@@ -421,6 +476,15 @@ void c_open(char *n) {
 	setbuf(dptr[number],NULL);
 	/* Nicht-Canoschen Mode setzen */    
 	tcgetattr(fp,&ttyset);
+#ifdef DEBUG	
+	  printf("Old Port-Settings:\n");
+	  printf("cflag=$%08x \n",ttyset.c_cflag);
+	  printf("iflag=$%08x \n",ttyset.c_iflag);
+	  printf("oflag=$%08x \n",ttyset.c_oflag);
+	  printf("lflag=$%08x \n",ttyset.c_lflag);
+//	  printf("cc(VMIN)=$%08x \n",ttyset.c_cc[VMIN]);
+//	  printf("cc(VMAX)=$%08x \n",ttyset.c_cc[VMAX]);
+#endif
 	ttyset.c_cc[VMIN]=1;
 	ttyset.c_cc[VTIME]=0;
 	if(!port) {
@@ -435,43 +499,102 @@ void c_open(char *n) {
 	  else if(baud==2400) port|=B2400;
 	  else if(baud==4800) port|=B4800;
 	  else if(baud==9600) port|=B9600;
+#ifdef B19200
 	  else if(baud==19200) port|=B19200;
+#else /* B19200 */
+#  ifdef EXTA
+	  else if(baud==19200) port|=EXTA;
+
+#endif
+#endif
+#ifdef B38400
 	  else if(baud==38400) port|=B38400;
+#else /* B38400 */
+#  ifdef EXTB
+	  else if(baud==38400) port|=EXTB;
+#endif
+#endif
+#ifdef B57600
 	  else if(baud==57600) port|=B57600;
+#endif
+#ifdef B115200
+	  else if(baud==115200) port|=B115200;
+#endif
+#ifdef B230400
+	  else if(baud==230400) port|=B230400;
+#endif  
           else printf("Baud rate not supported !\n");
    	  port&=~CSIZE;      /* Bits loeschen !  */
           if(bits==7) port|=CS7;
           else if(bits==8) port|=CS8;
           else if(bits==6) port|=CS6;
           else if(bits==5) port|=CS5;
-	  else printf("Bits not supported !\n");
-          if(stopbits==2) port|=CSTOPB;
+	  else printf("%d Bits not supported !\n",bits);
+          port&=~(PARENB|PARODD);
+          if(parity==2)      port|=PARENB;
+          else if(parity==1) port|=(PARENB|PARODD);
+          if(stopbits==2)    port|=CSTOPB;
+          else               port&=~CSTOPB;
+
 	}
-	#ifdef DEBUG
-	  printf("port =$%08x \n",port);
-	  printf("cflag=$%08x \n",ttyset.c_cflag);
-	  printf("iflag=$%08x \n",ttyset.c_iflag);
-	  printf("oflag=$%08x \n",ttyset.c_oflag);
-	  printf("lflag=$%08x \n",ttyset.c_lflag);
-	#endif
-#ifdef CBAUD
-	ttyset.c_cflag&=~(CBAUD|CSIZE);
-#else
-	ttyset.c_cflag = (unsigned short) 0;
-#endif	
-        ttyset.c_cflag |=  port | (CLOCAL|CREAD);
-        ttyset.c_iflag = IGNPAR;
+/* 
+  Set bps rate and hardware flow control and 8n1 (8bit,no parity,1 stopbit).
+  Also don't hangup automatically and ignore modem status.
+  Finally enable receiving characters.
+*/
+        ttyset.c_iflag = IGNBRK;
+        ttyset.c_lflag = 0;
         ttyset.c_lflag &= ~(ICANON|ECHO);
 	ttyset.c_oflag = (unsigned short) 0;
-	#ifdef DEBUG
+
+        ttyset.c_cflag = port|CLOCAL|CREAD;
+        ttyset.c_cflag &= ~CRTSCTS;
+
+#ifndef _DCDFLOW 
+                /* Set Hardware-Flow */
+           if(hflow) ttyset.c_iflag |= CRTSCTS;
+
+#endif
+           if(sflow) ttyset.c_iflag |= IXON | IXOFF;
+           else ttyset.c_iflag &= ~(IXON|IXOFF|IXANY);
+
+#ifdef DEBUG
+          printf("IGNPAR  =$%08x \n",IGNPAR);
+          printf("PARENB  =$%08x \n",PARENB);
+          printf("PARODD  =$%08x \n",PARODD);
+
 	  printf("port =$%08x \n",port);
 	  printf("cflag=$%08x \n",ttyset.c_cflag);
 	  printf("iflag=$%08x \n",ttyset.c_iflag);
 	  printf("oflag=$%08x \n",ttyset.c_oflag);
 	  printf("lflag=$%08x \n",ttyset.c_lflag);
-	#endif
+#endif
         
         if(tcsetattr(fp,TCSADRAIN,&ttyset)<0)   printf("X: fileno=%d ERROR\n",fp);
+        /* set RTS */
+        /* Set RTS line. Sometimes dropped. Linux specific? */
+
+	#if defined(TIOCM_RTS) && defined(TIOCMODG)
+        {int mcs=0;
+
+        ioctl(fp, TIOCMODG, &mcs);
+        mcs |= TIOCM_RTS;
+        ioctl(fp, TIOCMODS, &mcs);}
+        #endif
+        #ifdef _COHERENT
+          ioctl(fp, TIOCSRTS, 0);
+        #endif
+
+        if(dtr) {
+        /*
+        * Drop DTR line and raise it again.
+        */
+#ifdef TIOCSDTR
+          ioctl(fp, TIOCCDTR, 0);   
+          sleep(1);  /* for one second */
+          ioctl(fp, TIOCSDTR, 0);
+#endif /* TIOCSDTR */
+        }
       } else printf("No TTY: cannot set %s !\n");
   #endif
     }
@@ -747,13 +870,13 @@ void c_unget(char *n) {
   ungetc(i,fff);
 }
 
-void c_flush(char *n) {
+void c_flush(PARAMETER *plist,int e) {
   FILE *fff=stdout;
   int i;
-  if(strlen(n)) {
-    i=get_number(n);
+  if(e) {
+    i=plist[0].integer;
     if(filenr[i]) fff=dptr[i];      
-    else {error(24,n);return;} /* File nicht geoeffnet */
+    else {error(24,"");return;} /* File nicht geoeffnet */
   }
   if(fflush(fff)) io_error(errno,"FLUSH");
 }

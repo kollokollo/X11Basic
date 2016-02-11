@@ -1,6 +1,6 @@
-X11-Basic V.1.09
+X11-Basic V.1.10
 
-This is a macro package for nedit.
+This is a macro package for nedit -- the Nirvana editor.
 
 
 simply type
@@ -11,3 +11,24 @@ and then save defaults.
 
 regards
 Markus Hoffmann
+
+
+================ INFORMATION ABOUT NEDIT ================================
+
+
+Name        : nedit 
+Version     : 5.3   
+Group       : Productivity/Editors/Other
+License     : GPL
+URL         : http://nedit.org/
+Summary     : Full featured, plain text Nirvana editor
+Description :
+NEdit is a GUI style plain text editor for workstations with the X
+Window System and Motif. NEdit provides all of the standard menu,
+dialog, editing, mouse support, macro extension language, syntax
+highlighting, and a lot other nice features (and extensions for
+programmers).
+
+Authors:
+--------
+    Mark Edel <edel@fnal.gov>

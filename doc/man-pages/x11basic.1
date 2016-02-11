@@ -384,6 +384,7 @@ WORT_SEP t$,d$,mode,a$,b$ -- separates string t$ by deliminator d$ in
 .SS Graphic commands
 .nf
 ALERT a,b$,c,d$,var[,ret$] -- Infobox
+BOTTOMW n               -- lowers window n and moves it to the bottom of statck
 BOUNDARY b		-- sets boundary for filled box/circle etc. on or off              
 BOX x1,y1,x2,y2         -- draw a frame
 CIRCLE x,y,r            -- draw a circle
@@ -401,6 +402,7 @@ FILESELECT titel$,pfad$,default$,f$  --     display a fileselector-box
 GET x,y,w,h,g$          -- grabs part of graphic window to string
 GPRINT                  -- like PRINT, but the output goes to the graphic window
 GRAPHMODE mode          -- set graphic-mode                 
+INFOW n,t$              -- set information strong for a window
 KEYEVENT a,b            -- Waits until key is pressed
 LINE x1,y1,x2,y2        -- draw a line
 LTEXT x,y,t$            -- Linegraphic-Text
@@ -436,6 +438,7 @@ SHOWPAGE                -- maps all graphic to window
 SPUT screen$            -- maps (xwd-)graphic to window 
 TEXT x,y,t$             -- draw text
 TITLEW n,t$             -- set window title
+TOPW n                  -- raises window n to the top of the stack
 VSYNC                   -- same as SHOWPAGE
 XLOAD                   -- load a program, with FILESELECTOR
 XRUN                    -- load and run a program, with FILESELECTOR
@@ -646,9 +649,9 @@ c=GET_COLOR(r,g,b)      -- allocate color by rgb value
 dummy=OBJC_DRAW(i,i,i,i,i) -- draw object tree
 ob=OBJC_FIND(tree,x,y)  -- return object number by coordinates
 c=POINT(x,y)            -- returns color of pixel of graphic in window
+c=PTST(x,y)             -- same as POINT()
 a=RSRC_GADDR(typ,nr)    -- get pointer to object tree
 .fi
-
 
 
 .SS SUBROUTINES

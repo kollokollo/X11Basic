@@ -84,6 +84,8 @@ void array_zuweis_and_free(char *, ARRAY *);
 void c_dolocal(char *, char *);
 void xzuweis(char *, char *);
 int xzuweissbuf(char *, char *,int);
+void varcastint(int,void *,int);
+void varcastfloat(int,void *,double);
 void *varptr(char *);
 ARRAY *copy_var_array(int);
 ARRAY *inv_array(ARRAY *);

@@ -1,4 +1,4 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.in by autoheader.  */
 
 
 /* CONFIG.H (c) Markus Hoffmann  */
@@ -14,58 +14,56 @@
      
 
 
-/* Define if you have the `alarm' function. */
+/* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
-/* Define if you have the `atexit' function. */
+/* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
-/* Define if you have the <dirent.h> header file, and it defines `DIR'. */
+/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
+   */
 #undef HAVE_DIRENT_H
 
 /* dlopen in dllib */
 #undef HAVE_DLOPEN
 
-/* Define if you have the <errno.h> header file. */
+/* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
 /* expm1 in Mathlib */
 #undef HAVE_EXPM1
 
-/* Define if you have the <fcntl.h> header file. */
+/* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
 /* floor in Mathlib */
 #undef HAVE_FLOOR
 
-/* Define if your system has a working `fnmatch' function. */
+/* Define to 1 if your system has a working POSIX `fnmatch' function. */
 #undef HAVE_FNMATCH
 
-/* Define if you have the `fork' function. */
+/* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
-/* Define if you have the `getcwd' function. */
+/* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
 
-/* Define if you have the `gethostbyname' function. */
+/* Define to 1 if you have the `gethostbyname' function. */
 #undef HAVE_GETHOSTBYNAME
 
-/* Define if you have the `gettimeofday' function. */
+/* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
-/* Define if you have the `inet_ntoa' function. */
+/* Define to 1 if you have the `inet_ntoa' function. */
 #undef HAVE_INET_NTOA
 
-/* Define if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* dllib */
 #undef HAVE_LIBDL
 
-/* dlopen in dllib */
-#undef HAVE_LIBDLFCN
-
-/* Define if you have the <limits.h> header file. */
+/* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
 /* log1p in Mathlib */
@@ -74,140 +72,161 @@
 /* logb in Mathlib */
 #undef HAVE_LOGB
 
-/* Define if your system has a working `malloc' function. */
+/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
+   to 0 otherwise. */
 #undef HAVE_MALLOC
 
-/* Define if you have the `memmove' function. */
+/* Define to 1 if you have the `memmove' function. */
 #undef HAVE_MEMMOVE
 
-/* Define if you have the <memory.h> header file. */
+/* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define if you have the `nanosleep' function. */
+/* Define to 1 if you have the `nanosleep' function. */
 #undef HAVE_NANOSLEEP
 
-/* Define if you have the <ndir.h> header file, and it defines `DIR'. */
+/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
-/* Define if you have the <netdb.h> header file. */
+/* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
-/* Define if you have the <netinet/in.h> header file. */
+/* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
 
 /* pow in Mathlib */
 #undef HAVE_POW
 
-/* Define if you have the `select' function. */
+/* readline in readline */
+#undef HAVE_READLINE
+
+/* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
 
-/* Define if you have the `socket' function. */
+/* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
 /* sqrt in Mathlib */
 #undef HAVE_SQRT
 
-/* Define if `stat' has the bug that it succeeds when given the zero-length
-   file name argument. */
+/* Define to 1 if `stat' has the bug that it succeeds when given the
+   zero-length file name argument. */
 #undef HAVE_STAT_EMPTY_STRING_BUG
 
-/* Define if you have the <stddef.h> header file. */
+/* Define to 1 if you have the <stddef.h> header file. */
 #undef HAVE_STDDEF_H
 
-/* Define if you have the <stdint.h> header file. */
+/* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
-/* Define if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
-/* Define if you have the `strchr' function. */
+/* Define to 1 if you have the `strchr' function. */
 #undef HAVE_STRCHR
 
-/* Define if you have the `strdup' function. */
+/* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
 
-/* Define if you have the <strings.h> header file. */
+/* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
-/* Define if you have the <string.h> header file. */
+/* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define if you have the `strstr' function. */
+/* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
 
-/* Define if `st_blocks' is member of `struct stat'. */
+/* Define to 1 if `st_blocks' is member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_BLOCKS
 
-/* Define if your `struct stat' has `st_blocks'. Deprecated, use
+/* Define to 1 if your `struct stat' has `st_blocks'. Deprecated, use
    `HAVE_STRUCT_STAT_ST_BLOCKS' instead. */
 #undef HAVE_ST_BLOCKS
 
-/* Define if you have the <sys/dir.h> header file, and it defines `DIR'. */
+/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
+   */
 #undef HAVE_SYS_DIR_H
 
-/* Define if you have the <sys/file.h> header file. */
+/* Define to 1 if you have the <sys/file.h> header file. */
 #undef HAVE_SYS_FILE_H
 
-/* Define if you have the <sys/ioctl.h> header file. */
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
 #undef HAVE_SYS_IOCTL_H
 
-/* Define if you have the <sys/kd.h> header file. */
+/* Define to 1 if you have the <sys/kd.h> header file. */
 #undef HAVE_SYS_KD_H
 
-/* Define if you have the <sys/ndir.h> header file, and it defines `DIR'. */
+/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
+   */
 #undef HAVE_SYS_NDIR_H
 
-/* Define if you have the <sys/param.h> header file. */
+/* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
-/* Define if you have the <sys/socket.h> header file. */
+/* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
 
-/* Define if you have the <sys/stat.h> header file. */
+/* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
-/* Define if you have the <sys/timeb.h> header file. */
+/* Define to 1 if you have the <sys/timeb.h> header file. */
 #undef HAVE_SYS_TIMEB_H
 
-/* Define if you have the <sys/time.h> header file. */
+/* Define to 1 if you have the <sys/time.h> header file. */
 #undef HAVE_SYS_TIME_H
 
-/* Define if you have the <sys/types.h> header file. */
+/* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define if you have the <termios.h> header file. */
+/* Define to 1 if you have the <termios.h> header file. */
 #undef HAVE_TERMIOS_H
 
-/* Define if you have the <unistd.h> header file. */
+/* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the `utime' function. */
+/* Define to 1 if you have the `utime' function. */
 #undef HAVE_UTIME
 
-/* Define if you have the <utime.h> header file. */
+/* Define to 1 if you have the <utime.h> header file. */
 #undef HAVE_UTIME_H
 
-/* Define if `utime(file, NULL)' sets file's timestamp to the present. */
+/* Define to 1 if `utime(file, NULL)' sets file's timestamp to the present. */
 #undef HAVE_UTIME_NULL
 
-/* Define if you have the `vfork' function. */
+/* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 
-/* Define if you have the <vfork.h> header file. */
+/* Define to 1 if you have the <vfork.h> header file. */
 #undef HAVE_VFORK_H
 
-/* Define if `fork' works. */
+/* Define to 1 if `fork' works. */
 #undef HAVE_WORKING_FORK
 
-/* Define if `vfork' works. */
+/* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
 
 /* System is big or little endian */
 #undef IS_BIG_ENDIAN
 
-/* Define if `lstat' dereferences a symlink specified with a trailing slash.
-   */
+/* Define to 1 if `lstat' dereferences a symlink specified with a trailing
+   slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
@@ -215,16 +234,16 @@
 /* Small Memory layout */
 #undef SMALL
 
-/* Define if you have the ANSI C header files. */
+/* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Timeval workaround */
 #undef TIMEVAL_WORKAROUND
 
-/* Define if you can safely include both <sys/time.h> and <time.h>. */
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
-/* Define if your <sys/time.h> declares `struct tm'. */
+/* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
 /* Version of actual implementation */
@@ -233,14 +252,14 @@
 /* Date of actual compilation */
 #undef VERSION_DATE
 
-/* Define if the X Window System is missing or not being used. */
+/* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING
-
-/* Define if you need to in order for stat and other things to work. */
-#undef _POSIX_SOURCE
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* Define to rpl_malloc if the replacement function should be used. */
+#undef malloc
 
 /* Define to `long' if <sys/types.h> does not define. */
 #undef off_t

@@ -117,6 +117,18 @@ Version 1.10 (Feb 2004)
 - new REPLACE$() function 
 - improved speed 
 - bug fixed in ROUND() function
+- fixed bug in PUT_BITMAP
+- fixed bug in serial device handling
+- added sysvars COLS and ROWS
+- new INODE/DEVICE/MODE/NLINK/SIZE file functions
+
+Version 1.11 (Oct 2004)
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Parser now accepts unique short commands
+- fixed little bug in INPUT
+- new chapters in manual
+- new commands: TOPW, BOTTOMW, INFOW, FULLW, CLIP
+- found bug in ON ERROR and ON BREAK
 
 
 --------------------------------------------------------------------------------

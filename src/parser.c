@@ -59,9 +59,11 @@ int f_instr(PARAMETER *,int);
 int f_rinstr(PARAMETER *,int);
 int f_glob(PARAMETER *,int);
 int f_form_alert(PARAMETER *,int);
+int f_form_center(PARAMETER *,int);
 int f_form_dial(PARAMETER *,int);
 int f_form_do(PARAMETER *,int);
 int f_objc_draw(PARAMETER *,int);
+int f_objc_offset(PARAMETER *,int);
 int f_rsrc_gaddr(PARAMETER *,int);
 int f_objc_find(PARAMETER *,int);
 int f_get_color(PARAMETER *,int);
@@ -132,8 +134,14 @@ double f_round(PARAMETER *plist,int e) {
   }
 }
 
-int f_len(STRING n) { return(n.len); }
-int f_exist(STRING n) {   return(-exist(n.pointer)); }
+int f_len(STRING n)    { return(n.len); }
+int f_exist(STRING n)  { return(-exist(n.pointer)); }
+int f_size(STRING n)   { return(stat_size(n.pointer)); }
+int f_nlink(STRING n)  { return(stat_nlink(n.pointer)); }
+int f_device(STRING n) { return(stat_device(n.pointer)); }
+int f_inode(STRING n)  { return(stat_inode(n.pointer)); }
+int f_mode(STRING n)   { return(stat_mode(n.pointer)); }
+
 double f_val(STRING n) { return((double)atof(n.pointer)); }
 #define IGREG (15+31L*(10+12L*1582))
 int f_julian(STRING n) { /* Julianischer Tag aus time$ */
@@ -283,6 +291,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_SQUICK|F_IRET,  "CVS"       , f_cvf ,1,1     ,{PL_STRING}},
 
  { F_DQUICK|F_DRET,    "DEG"       , f_deg ,1,1     ,{PL_NUMBER}},
+ { F_SQUICK|F_IRET,    "DEVICE"    , f_device,1,1   ,{PL_STRING}},
  { F_ARGUMENT|F_IRET,  "DIM?"      , f_dimf ,1,1      ,{PL_ARRAY}},
  { F_DQUICK|F_DRET,    "DIV"       , f_div ,2,2     ,{PL_NUMBER,PL_NUMBER}},
  { F_IQUICK|F_IRET,    "DPEEK"     , f_dpeek ,1,1     ,{PL_INT}},
@@ -304,6 +313,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 #endif
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "FORM_ALERT", f_form_alert ,2,2   ,{PL_INT,PL_STRING}},
+ { F_PLISTE|F_IRET,    "FORM_CENTER", f_form_center ,5,5   ,{PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
  { F_PLISTE|F_IRET,    "FORM_DIAL", f_form_dial ,9,9   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "FORM_DO",   f_form_do ,1,1   ,{PL_INT}},
 #endif
@@ -319,7 +329,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
-
+ { F_SQUICK|F_IRET,    "INODE"     , f_inode,1,1   ,{PL_STRING}},
  { F_ARGUMENT|F_IRET,  "INP"       , inp8 ,1,1      ,{PL_FILENR}},
  { F_ARGUMENT|F_IRET,  "INP?"      , inpf ,1,1      ,{PL_FILENR}},
  { F_ARGUMENT|F_IRET,  "INP&"      , inp16 ,1,1      ,{PL_FILENR}},
@@ -346,10 +356,15 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE|F_DRET,    "MAX"     , f_max ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_PLISTE|F_DRET,    "MIN"     , f_min ,1,-1     ,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_DQUICK|F_DRET,    "MOD"     , fmod ,2,2     ,{PL_NUMBER,PL_NUMBER }},
+ { F_SQUICK|F_IRET,    "MODE"     , f_mode,1,1   ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "MUL"     , f_mul ,2,2     ,{PL_NUMBER,PL_NUMBER}},
+
+ { F_SQUICK|F_IRET,    "NLINK"     , f_nlink,1,1   ,{PL_STRING}},
+
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "OBJC_DRAW", f_objc_draw ,5,5   ,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,    "OBJC_FIND", f_objc_find ,3,3   ,{PL_INT,PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,    "OBJC_OFFSET", f_objc_offset ,4,4,{PL_INT,PL_INT,PL_NVAR,PL_NVAR}},
 #endif
  { F_IQUICK|F_IRET,    "ODD"       , f_odd ,1,1     ,{PL_NUMBER}},
 
@@ -358,6 +373,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_IRET,    "POINT"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
 #endif
  { F_DQUICK|F_DRET,    "PRED"      , f_pred ,1,1     ,{PL_NUMBER}},
+#ifndef NOGRAPHICS
+ { F_DQUICK|F_IRET,    "PTST"     , f_point ,2,2     ,{PL_NUMBER, PL_NUMBER }},
+#endif
 
  { F_DQUICK|F_DRET,    "RAD"      , f_rad ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "RAND"      , rand ,1,1     ,{PL_NUMBER}},
@@ -375,6 +393,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK|F_IRET,    "SHM_MALLOC"    , shm_malloc ,2,2     ,{PL_INT,PL_INT}},
  { F_DQUICK|F_DRET,    "SIN"       , sin ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SINH"      , sinh ,1,1     ,{PL_NUMBER}},
+ { F_SQUICK|F_IRET,    "SIZE"     , f_size,1,1   ,{PL_STRING}},
  { F_DQUICK|F_DRET,    "SQR"       , sqrt ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_DRET,    "SQRT"      , sqrt ,1,1     ,{PL_NUMBER}},
  { F_DQUICK|F_IRET,    "SRAND"     , f_srand ,1,1     ,{PL_NUMBER}},
@@ -832,6 +851,19 @@ int v_stimer() {   /* Sekunden-Timer */
   if(timec==-1) io_error(errno,"TIMER");
   return(timec);
 }
+extern int getrowcols(int *, int *);
+
+int v_cols() {   /* Anzahl Spalten des Terminals */
+  int rows=0,cols=0;
+  getrowcols(&rows,&cols);
+  return(cols);
+}
+int v_rows() {   /* Anzahl Zeilen des Terminals */
+  int rows=0,cols=0;
+  getrowcols(&rows,&cols);
+  return(rows);
+}
+
 double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
 double v_pi() {return(PI);}
 extern int mousex(),mousey(), mousek(), mouses();
@@ -841,6 +873,7 @@ const SYSVAR sysvars[]= {  /* alphabetisch !!! */
  { PL_INT,    "CCSAPLID",   v_ccsaplid},
 #endif
  { PL_INT,    "CCSERR",     v_ccserr},
+ { PL_INT,    "COLS",       v_cols},
  { PL_FLOAT,  "CTIMER",     v_ctimer},
  { PL_INT,    "ERR",        v_err},
  { PL_INT,    "FALSE",      v_false},
@@ -852,6 +885,7 @@ const SYSVAR sysvars[]= {  /* alphabetisch !!! */
 #endif
  { PL_INT,    "PC",         v_pc},
  { PL_FLOAT,  "PI",         v_pi},
+ { PL_INT,    "ROWS",       v_rows},
  { PL_INT,    "SP",         v_sp},
  { PL_INT,    "STIMER",     v_stimer},
  { PL_FLOAT,  "TIMER",      v_timer},
@@ -1050,6 +1084,20 @@ int f_form_alert(PARAMETER *plist,int e) {
   if(e==2) return(form_alert(plist[0].integer,plist[1].pointer));
   else return(-1);
 }
+int f_form_center(PARAMETER *plist,int e) {
+  int x,y,w,h;
+  graphics();
+  gem_init();
+  if(e==1) return(form_center(plist[0].integer,&x,&y,&w,&h));
+  else if(e==5) {
+    e=form_center(plist[0].integer,&x,&y,&w,&h);
+    if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
+    if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
+    if(plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,w);
+    if(plist[4].typ!=PL_LEER) varcastint(plist[4].integer,plist[4].pointer,h);
+    return(e);
+  } else return(-1);
+}
 int f_form_dial(PARAMETER *plist,int e) {
   if(e==9) {
     graphics();
@@ -1078,6 +1126,23 @@ int f_objc_find(PARAMETER *plist,int e) {
   if(e==3) {
     return(objc_find((char *)plist[0].integer,plist[1].integer
     ,plist[2].integer));
+  } else return(-1);
+}
+int f_objc_offset(PARAMETER *plist,int e) {
+  int x,y;
+  if(e==4) {
+    if(plist[2].integer&FLOATTYP) x=(int)*((double *)plist[2].pointer);
+    else if(plist[2].integer&INTTYP) x=*((int *)plist[2].pointer);
+    else error(58,""); /* Variable hat falschen Typ */
+    if(plist[3].integer&FLOATTYP) y=(int)*((double *)plist[3].pointer);
+    else if(plist[3].integer&INTTYP) y=*((int *)plist[3].pointer);
+    else error(58,""); /* Variable hat falschen Typ */
+    e=objc_offset((char *)plist[0].integer,plist[1].integer,&x,&y);
+    if(plist[2].integer&FLOATTYP) *((double *)plist[2].pointer)=(double)x;
+    else if(plist[2].integer&INTTYP) *((int *)plist[2].pointer)=x;
+     if(plist[3].integer&FLOATTYP) *((double *)plist[3].pointer)=(double)y;
+    else if(plist[3].integer&INTTYP) *((int *)plist[3].pointer)=y;
+    return(e);
   } else return(-1);
 }
 int f_get_color(PARAMETER *plist,int e) {
@@ -1195,14 +1260,13 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
         if(*s=='@') return(do_funktion(s+1,pos));
 	else {
 	  /* Liste durchgehen */
-	  int i=0,oa,a=anzpfuncs,b,l=strlen(s);
+	  int i=0,a=anzpfuncs-1,b,l=strlen(s);
           for(b=0; b<l; b++) {
             while(s[b]>(pfuncs[i].name)[b] && i<a) i++;
-            oa=a;a=i;
-            while(s[b]<(pfuncs[a].name)[b]+1 && a<oa) a++;
+            while(s[b]<(pfuncs[a].name)[b] && a>i) a--;
             if(i==a) break;
           }
-          if(i<anzpfuncs && strcmp(s,pfuncs[i].name)==0) {
+          if(strcmp(s,pfuncs[i].name)==0) {
 	     /* printf("Funktion %s gefunden. Nr. %d\n",pfuncs[i].name,i); */
 	      if((pfuncs[i].opcode&FM_TYP)==F_SIMPLE || pfuncs[i].pmax==0) {
 	        if(pfuncs[i].opcode&F_IRET) 
@@ -1279,15 +1343,13 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 
 	  /* Liste durchgehen */
 	  char c=*s;
-	  int i=0,oa,a=anzsysvars,b,l=strlen(s);
+	  int i=0,a=anzsysvars-1,b,l=strlen(s);
           for(b=0; b<l; c=s[++b]) {
             while(c>(sysvars[i].name)[b] && i<a) i++;
-            oa=a;a=i;
-            while(c<(sysvars[a].name)[b]+1 && a<oa) a++;
+            while(c<(sysvars[a].name)[b] && a>i) a--;
             if(i==a) break;
           }
-
-          if(i<anzsysvars && strcmp(s,sysvars[i].name)==0) {
+          if(strcmp(s,sysvars[i].name)==0) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",sysvars[i].name,i);*/ 
 	   if((sysvars[i].opcode)==PL_INT) return((double)((int (*)())sysvars[i].routine)());
 	   if((sysvars[i].opcode)==PL_FLOAT) return((sysvars[i].routine)());
@@ -1619,14 +1681,13 @@ STRING string_parser(char *funktion) {
  	  ergebnis=do_sfunktion(v+1,pos);	  
         else {  /* Liste durchgehen */
 
-	  int i=0,oa,a=anzpsfuncs,b;
+	  int i=0,a=anzpsfuncs-1,b;
           for(b=0; b<strlen(v); b++) {
             while(v[b]>(psfuncs[i].name)[b] && i<a) i++;
-            oa=a;a=i;
-            while(v[b]<(psfuncs[a].name)[b]+1 && a<oa) a++;
+            while(v[b]<(psfuncs[a].name)[b] && a>i) a--;
             if(i==a) break;
           }
-          if(i<anzpsfuncs && strcmp(v,psfuncs[i].name)==0) {
+          if(strcmp(v,psfuncs[i].name)==0) {
 	      if((psfuncs[i].opcode&FM_TYP)==F_SIMPLE || psfuncs[i].pmax==0) 
 	        ergebnis=(psfuncs[i].routine)();
 	      else if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT) 
@@ -1722,14 +1783,13 @@ STRING string_parser(char *funktion) {
         ergebnis=vs_error();
       } else {                      /* einfache Variablen und Systemvariablen */
 	/* Liste durchgehen */
-	int i=0,oa,a=anzsyssvars,b;
+	int i=0,a=anzsyssvars,b;
         for(b=0; b<strlen(v); b++) {
           while(v[b]>(syssvars[i].name)[b] && i<a) i++;
-          oa=a;a=i;
-          while(v[b]<(syssvars[a].name)[b]+1 && a<oa) a++;
+          while(v[b]<(syssvars[a].name)[b] && a>i) a--;
           if(i==a) break;
         }
-        if(i<anzsyssvars && strcmp(v,syssvars[i].name)==0) {
+        if(strcmp(v,syssvars[i].name)==0) {
 	    /*  printf("Sysvar %s gefunden. Nr. %d\n",syssvars[i].name,i);*/ 
 	  return((syssvars[i].routine)());
         }

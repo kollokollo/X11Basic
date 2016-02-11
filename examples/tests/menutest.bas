@@ -10,10 +10,14 @@ field$(i)=""
 print i
 DATA "INFO","  Menutest"
 DATA "---------------"
-DATA "- Access.1","- Access.2","- Access.3","- Access.4","- Access.5","- Access.6",""
-DATA "FILE","  new","  open ...","  save","  save as ...","--------------","  print","--------------","  Quit",""
-DATA "EDIT","  cut","  copy","  paste","----------","  help1","  helper","  assist",""
-DATA "HELP","  online help","--------------","  edifac","  editor","  edilink","  edouard",""
+DATA "- Access.1","- Access.2","- Access.3","- Access.4","- Access.5"
+DATA "- Access.6",""
+DATA "FILE","  new","  open ...","  save","  save as ...","--------------"
+DATA "  print","--------------","  Quit",""
+DATA "EDIT","  cut","  copy","  paste","----------","  help1","  helper"
+DATA "  assist",""
+DATA "HELP","  online help","--------------","  edifac","  editor","  edilink"
+DATA "  edouard",""
 DATA "***"
 
 grau=get_color(32000,32000,32000)
@@ -40,7 +44,7 @@ PROCEDURE menuaction(k)
     ~form_alert(1,"[0][---- Menutest ----||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
   ELSE   
     PRINT "MENU selected ";k;" contents: ";field$(k)
-    b=form_alert(1,"[1][--- Menutest ---||You selected item (Nr. "+str$(k)+"),| fuer den es keine|Funktion gibt !][ OK |Deaktivieren]")
+    b=form_alert(1,"[1][--- Menutest ---||You selected item (No. "+str$(k)+"),| for which was no|function definded !][ OK |disable]")
     if b=2
       MENUSET k,8
     endif

@@ -1,4 +1,4 @@
-.TH XBC 1 19-Sep-2002 "Version 1.08" "Linux Basic Compiler"
+.TH XBC 1 19-Sep-2004 "Version 1.11" "Linux Basic Compiler"
 .SH NAME
 xbc (X11-Basic compiler) \- X11-Basic pseudo compiler 
 .SH SYNOPSIS
@@ -37,8 +37,10 @@ processing to be done:
 .Sp
 Linking is always the last stage unless you use one of the
 .BR \-c 
-or
+, 
 .BR \-b 
+or
+.BR \-l 
 options to avoid it (or unless compilation errors stop the whole
 process).
 .SH OPTIONS
@@ -64,7 +66,23 @@ output is an object file corresponding to each source file.
 By default, xbc makes the object file name for a source file by replacing
 the suffix `\|\c
 .B .bas\c
-with `\|\c
+ with `\|\c
+.B .o\c
+\&\|'.  Use
+.B \-o\c
+\& to select another name.
+.TP
+.B \-l
+Precompile and compile the source files, but do not link.  The compiler
+output is an object file corresponding to each source file. The source files are compiled 
+in a way that they can (and will have to) be linked to other object files. With these
+object files it is possible to create a library from your basic routines, which can be 
+executed from another program.
+.Sp
+By default, xbc makes the object file name for a source file by replacing
+the suffix `\|\c
+.B .bas\c
+ with `\|\c
 .B .o\c
 \&\|'.  Use
 .B \-o\c
@@ -105,6 +123,17 @@ in `\|\c
 this is the default. The X11-Basic library will be linked to the excecutable.
 .SS \--dynamic
 The excecutable will be linked dynamically against the X11-Basic library.
+.SS \-shared
+This option is passed to the linker and tells it, that it should produce a shared
+object file which can then be linked with other objects to
+form an executable.  Not all systems support this option. 
+Usually the extention should be 
+.B .so\c
+.
+ This option only makes sense
+if it was used together with the 
+.B -l\c
+ option.
 
 .SS \--version
 shows version, program and other information and exits
@@ -137,7 +166,7 @@ independant executable. Another advantage is that it is quite hard to extract a
 full running *.bas File from this binary since the code is compressd in a way. 
 
 .SH VERSION
-Page was created for V.1.08
+Page was created for V.1.11
 .SH BUG REPORTS       
 
 If you find a bug in the X11-Basic pseudo compiler, you should
@@ -159,7 +188,7 @@ Still some bugs
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2003 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2004 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software;  you  can  redistribute  it
 and/or modify it under the terms of the GNU General Public

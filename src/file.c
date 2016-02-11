@@ -14,7 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifndef FALSE
 #define FALSE 0
@@ -34,8 +36,8 @@ char *lineinput( FILE *n, char *line) {   /* liest eine ganze Zeile aus einem AS
     line[i]='\0';
     return line;
 }
-char *input( FILE *n, char *line)    /* liest bis Komma oder Zeilenende einem ASCII-File ein */
-{ char c; 
+char *input( FILE *n, char *line) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
+  char c; 
   int  i=0,ff=0;
   while((c=fgetc(n))!=EOF) {
       if(c=='\n' || (c==',' && ff==0)) {
@@ -100,3 +102,46 @@ int exist(char *filename) {
   return(TRUE);
 }
 #endif
+
+int stat_device(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_dev);  
+}
+int stat_inode(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_ino);  
+}
+int stat_mode(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_mode);  
+}
+int stat_nlink(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_nlink);  
+}
+int stat_uid(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_uid);  
+}
+int stat_gid(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_gid);  
+}
+int stat_size(char *filename) {
+  struct stat fstats;
+  int retc=stat(filename, &fstats);
+  if(retc==-1) io_error(errno,"stat");
+  return(fstats.st_size);  
+}

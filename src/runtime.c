@@ -27,19 +27,49 @@ int globalerr=0;
 
 void error(char errnr, char *bem) {
   extern int globalerr;
-#ifdef GERMAN
-  printf("Zeile %d: %s\n",pc-1,error_text(errnr,bem));
-#else
-  printf("Line %d: %s\n",pc-1,error_text(errnr,bem));
-#endif
-  if(!errcont) batch=0;   
   globalerr=errnr;
+  if(errcont) {   
+    errcont=0;
+    if(errorpc!=-1) {
+      int osp=sp;
+        if(sp<STACKSIZE) {stack[sp++]=pc;pc=errorpc+1;}
+        else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
+        programmlauf();
+	
+        if(osp!=sp) {
+	  pc=stack[--sp]; /* wenn error innerhalb der func. */
+        }
+      }
+  } else { 
+    batch=0;   
+#ifdef GERMAN
+    printf("Zeile %d: %s\n",pc-1,error_text(errnr,bem));
+#else
+    printf("Line %d: %s\n",pc-1,error_text(errnr,bem));
+#endif
+  }
 }
+
+extern int breakcont;
+extern int breakpc;
 
 void break_handler( int signum) {
   if(batch) {
-    puts("** PROGRAM-STOP");
-    batch=0;
+    if(breakcont) {
+      breakcont=0;
+      if(breakpc!=-1) {
+        int osp=sp;
+        if(sp<STACKSIZE) {stack[sp++]=pc;pc=breakpc+1;}
+        else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
+        programmlauf();
+        if(osp!=sp) {
+	  pc=stack[--sp]; /* wenn error innerhalb der func. */
+        }
+      }
+    } else {
+      puts("** PROGRAM-STOP");
+      batch=0;
+    }
     signal(signum, break_handler);
   } else {
     puts("** X11BASIC-QUIT");
@@ -96,7 +126,6 @@ void timer_handler( int signum) {
       batch=min(oldbatch,batch);
       if(osp!=sp) {
 	pc=stack[--sp]; /* wenn error innerhalb der func. */
-        puts("Fehler innerhalb Interrupt-FUNCTION.");
       }
       
   }

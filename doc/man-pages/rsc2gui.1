@@ -1,0 +1,115 @@
+.TH bas2x11basic 1 19-Sep-2003 "Version 1.09" "ANSI-Basic to X11-Basic converter"
+.SH NAME
+bas2x11basic  \- ANSI-Basic to X11-Basic converter
+.SH SYNOPSIS
+.B bas2x11basic
+.RI "[ " option " ] " <filename>
+
+.SH DESCRIPTION
+
+X11-Basic is a comprehensive non-standard Basic interpreter with full X 
+capability that integrates fratures like shell scripting, cgi-Programming and 
+full graphical visualisation into the easy to learn basic language on moden 
+computers.
+
+X11-Basic  is  a  structured programming language. Structure is a
+form of visual and functional encapsulation  in  which  multipleline 
+sections of program look and act like single units. The beginning and 
+end of blocks are marked by descriptive  keyword  delimiters.  Lines within 
+blocks are generally indented to make the
+block visible. Most important: X11-Basic does not use line numbers.
+
+.IR bas2x11basic
+can be used to make X11-Basic template programs out of ANSI basic Files.
+It helps convertig old (real) Basic Programs
+with line numbers and multiple commands per line to the X11-Basic structure. 
+Because there are so many different BASIC Version aroud, in most cases you will 
+have to edit these files produced manually. But most of the work will already 
+have been done by this converter.
+
+.B For a desciption of the X11-basic language and Usage of the interpreter see
+.I xbasic(1).
+
+.SH Filenames
+
+bas2x11basic processes input files with extention .bas. The default 
+output filename is b.bas.
+
+.SH OPTIONS
+.TP
+.BI "\-o " file
+Place output in file \c
+.I file\c
+\&.  This applies regardless to whatever
+sort of output bas2x11basic is producing.
+.Sp
+If you do not specify `\|\c
+.B \-o\c
+\&\|', the default is to use
+`\|\c
+.B b.bas\c
+\&\|'
+
+.SS \--version
+shows version, program and other information and exits
+.SS -h --help
+print a short help
+
+For detailed help and description of the implemented basic commands take a 
+look at the README file. 
+
+
+.SH EXAMPLES
+.nf
+bas2x11basic ansibasic.bas
+    produces an output file b.bas
+
+bas2x11basic ansibasic.bas -o newname.bas
+    produces an output file newname.bas
+.fi
+
+You can find some samples of former ANSI basic programs in 
+.I /usr/share/doc/packages/X11Basic/examples.
+.SH The ANSI Basic to X11-Basic converter
+Actually this converter is not yet complete. Further improvenents may 
+be applied in future. Please let me know about ANSI-Basic programs which 
+will not be converted.
+
+.SH VERSION
+Page was created for V.1.09
+.SH BUG REPORTS       
+
+If you find a bug in the ANSI Basic to X11-Basic converter, you should
+report it. But first,  you  should make sure that it really is
+a bug, and that it appears in the latest version of the
+X11-Basic package that you have.
+
+Once  you have determined that a bug actually exists, mail a
+bug report to kollo@users.sourceforge.net. If you have a fix,
+you  are  welcome  to  mail that as well!  Suggestions  may 
+be  mailed  to the x11-basic mailing list on 
+www.sourceforge.net/projects/x11-basic  or posted to the bug
+tracking system.
+
+Comments and  bug  reports  concerning  this  manual  page
+should be directed to kollo@users.sourceforge.net.
+.SH BUGS
+Still some bugs
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2003 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software;  you  can  redistribute  it
+and/or modify it under the terms of the GNU General Public
+License as published  by  the  Free  Software  Foundation;
+either  version  2 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that  it  will  be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+PURPOSE.   See  the  GNU  General  Public License for more
+details.
+.SH SEE ALSO
+xbasic(1)

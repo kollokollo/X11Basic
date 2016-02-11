@@ -13,7 +13,9 @@ else if a=-1
   print "ERROR, fork() failed !"
   quit
 else      ! parent instance
+  dump
   alert 1,"Hi, I am Parent. Child PID="+str$(a),1," OK | Kill Child ! ",b
+  dump
   if b=2
     system "kill "+str$(a)
     alert 1,"Child PID="+str$(a)+" killed !",1," OK ",b

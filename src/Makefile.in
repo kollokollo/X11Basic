@@ -8,10 +8,11 @@ REGS= @regs@
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I${CCSROOT}/include -I/opt/readline/include
+INC=@X_CFLAGS@ -I${CCSROOT}/include
 
 # X11 library path
 XLIBS=@X_LIBS@
+VGA_LIBS= -lvgagl -lvga 
 SFLAGS=
 
 #Linux SVGALIB support :
@@ -89,8 +90,8 @@ DIST= README INSTALL COPYING install.sh doc/man-pages/* doc/ACKNOWLEGEMENTS \
         examples/compiler/inline.bas \
         examples/compiler/bas2x11basic.bas \
         examples/compiler/gui2bas.bas \
+        examples/compiler/c-demo.c \
 	examples/tests/* \
-	examples/calculation/* \
 	examples/graphics/* 
 
 DIST2=$(DISTOBJS:.o=.c)
@@ -98,12 +99,12 @@ DIST2=$(DISTOBJS:.o=.c)
 DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 
-LINKFLAGS = -L/usr/lib/termcap -L/opt/readline/lib
-WINLINKFLAGS = -L/usr/lib/termcap 
+LINKFLAGS =
+WINLINKFLAGS =
 
-LIBS =  @libs@ @xtra@
-WINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid
-TINEWINLIBS = -lm   -ltermcap -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
+LIBS =  @libs@ @xtra@ -lX11
+WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid
+TINEWINLIBS = -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32
 CCSLIBS = ${CCSROOT}/lib/libtine.a
 
 all :    configure Makefile xbasic
@@ -116,9 +117,13 @@ Makefile : Makefile.in
 #.c.o:
 #	$(CC) -c $(CFLAGS) -o $@ $<
 fft : $(AOBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(AOBJS) \
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.fft $(AOBJS) \
 		$(LIBS) $(XLIBS)
-	strip xbasic	
+	strip xbasic.fft
+vga : $(DISTOBJS) 
+	$(CC) $(OPT) -DUSE_VGA $(LINKFLAGS) -o xbasic.vga $(DISTOBJS) \
+		$(LIBS) $(VGA_LIBS)
+	strip xbasic.vga
 static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.static main.o x11basic.a\
 		$(LIBS) $(XLIBS)
@@ -132,11 +137,13 @@ windows: clean
 	$(WINCC) -DWINDOWS -c $(DIST2)
 	$(WINCC) -DWINDOWS $(OPT) $(WINLINKFLAGS) -o xbasic.exe $(DISTOBJS) \
 		$(WINLIBS) Windows.extension/fnmatch.o
-	rm -f X11-Basic.zip
+	strip xbasic.exe
+	rm -f X11-Basic-@version@.zip
+	
 	zip -j -D -K -o X11-Basic-@version@.zip Windows-Installer/setup.exe xbasic.exe \
 	Windows-Installer/readme.txt Windows-Installer/demo.bas \
 	Windows-Installer/x11basic.ico Windows-Installer/x11bver.txt \
-	Windows-Installer/X11-Basic.htm Windows-Installer/bas.ico
+	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico
 
 examples: dist
 	cd .. ; zip -r  src/X11-Basic-examples-@version@.zip examples2/
@@ -176,6 +183,7 @@ dyn : lib main.o
 	strip xbasic.dyn
 xbc : dyn 
 	xbasic.dyn ../examples/compiler/xbc.bas --dynamic -o xbc
+	strip xbc
 bas2x11basic : xbc
 	xbc ../examples/compiler/bas2x11basic.bas --dynamic -o bas2x11basic
 installhome : xbasic
