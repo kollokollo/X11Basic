@@ -36,7 +36,6 @@ XClassHint class_hint[MAXWINDOWS];
 Pixmap icon_pixmap[MAXWINDOWS];
 XTextProperty win_name[MAXWINDOWS], icon_name[MAXWINDOWS];
 
-static char dash_list [] = { 12, 24};
 char wname[MAXWINDOWS][80];
 char iname[MAXWINDOWS][80];  
 
@@ -115,7 +114,7 @@ int create_window2(int nummer,char *title, char* info,unsigned int x,unsigned in
   wm_hints[nummer].initial_state = NormalState;
   wm_hints[nummer].input = True;
   wm_hints[nummer].icon_pixmap = icon_pixmap[nummer];
-  class_hint[nummer].res_name = "XBASIC";
+  class_hint[nummer].res_name = "X11BASIC";
   class_hint[nummer].res_class = "Graphics";  
   
     if (!XStringListToTextProperty(&wn, 1, &win_name) ||

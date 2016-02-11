@@ -13,8 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "defs.h"
+#include "globals.h"
 #include "protos.h"
-#include "xbasic.h"
+#include "gkommandos.h"
 #include "window.h"
 
 /* Line-Funktion fuer ltext */
@@ -58,15 +60,11 @@ void c_vsync(char *n) {
   activate();
 }
 
-void c_plot(char *n) {
-  char v[MAXVARNAMLEN],t[MAXSTRLEN];
-  int e;
-  
-  e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
+void c_plot(PARAMETER *plist,int e) {
+  if(e==2) {
     graphics();
-     XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],(int)parser(v),(int)parser(t));
+    XDrawPoint(display[usewindow],pix[usewindow],gc[usewindow],
+    plist[0].integer,plist[1].integer);
   }
 }
 int get_point(int x, int y) {
@@ -140,87 +138,47 @@ void c_savewindow(char *n) {
 }
 XImage *xwdtoximage(char *,Visual *);
 
-void c_get(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int d,b,x,y,w,h,bx,by,bw,bh,len,i=0;
+void c_get(PARAMETER *plist,int e) {
+  int d,b,bx,by,bw,bh,len,i;
   char *data;
   XImage *Image;
   Window root;
   Colormap map;
   XColor ppixcolor[256];
   XWindowAttributes xwa;
-  char name[strlen(n)+1];
-  int e=wort_sep(n,',',TRUE,w1,w2);
-    
-  while(e) {
-       switch(i) {
-         case 0: {  x=(int)parser(w1);break;}
-	 case 1: {  y=(int)parser(w1);break;} 
-	 case 2: {  w=(int)parser(w1);break;} 
-	 case 3: {  h=(int)parser(w1);break;} 
-	 case 4: {  strcpy(name,w1);break;} 
-         default: break;
-       }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i<5) error(42,""); /* Zu wenig Parameter  */
-  else {
-    
-    
+  if(e==5) { 
     graphics();
-    
     XGetGeometry(display[usewindow], win[usewindow], 
 	&root,&bx,&by,&bw,&bh,&b,&d); 
     XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
-    
     Image=XGetImage(display[usewindow],pix[usewindow],
-                x, y, w, h, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
+                plist[0].integer,plist[1].integer,plist[2].integer,
+		plist[3].integer, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
     if(d==8) {
       map =XDefaultColormapOfScreen ( XDefaultScreenOfDisplay(display[usewindow]));
       for(i=0;i<256;i++) ppixcolor[i].pixel=i;
       XQueryColors(display[usewindow], map, ppixcolor,256);
     }
     data=imagetoxwd(Image,xwa.visual,ppixcolor,&len);
-    zuweissbuf(name,data,len);
+    zuweissbuf(plist[4].pointer,data,len);
     XDestroyImage(Image);
     free(data);
   }
 }
-void c_put(char *n) {  
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int x,y,mode;
-  char name[strlen(n)+1];    
-  STRING str;
+void c_put(PARAMETER *plist,int e) {  
   XImage *ximage;
   XWindowAttributes xwa;
-
-  int i=0,e=wort_sep(n,',',TRUE,w1,w2);  
-      while(e) {
-       switch(i) {
-         case 0: {  x=(int)parser(w1);break;}
-	 case 1: {  y=(int)parser(w1);break;} 
-	 case 2: {  strcpy(name,w1);break;} 
-	 case 3: {  mode=(int)parser(w1);break;} 
-         default: break;
-       }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i<3) error(42,""); /* Zu wenig Parameter  */
-  else {
-    str=string_parser(name);
+   if(e==3 || e==4) {
     graphics();    
     XGetWindowAttributes(display[usewindow], win[usewindow], &xwa);
-    ximage=xwdtoximage(str.pointer,xwa.visual);
+    ximage=xwdtoximage(plist[2].pointer,xwa.visual);
     if(xwa.depth!=ximage->depth)
       printf("Grafik hat die falsche Farbtiefe !\n");
     else {
       XPutImage(display[usewindow],pix[usewindow],gc[usewindow],
-                ximage, 0,0,x,y, ximage->width, ximage->height);
+                ximage, 0,0,plist[0].integer,plist[1].integer, ximage->width, ximage->height);
     }
     XDestroyImage(ximage);
-    free(str.pointer);
   }
 }
 
@@ -266,32 +224,17 @@ void c_sput(char *n) {
     free(str.pointer);
 }
 
-void c_box(char *n) {
- c_x4(n,1);
+void c_line(PARAMETER *plist,int e) {
+  graphics(); 
+  line(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
-void c_pbox(char *n) {
- c_x4(n,2);
+void c_box(PARAMETER *plist,int e) {
+  graphics(); 
+  box(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
-void c_line(char *n) {
- c_x4(n,0);
-}
-
-int c_x4(char *n, int k) {
-  char v[MAXSTRLEN],t[MAXSTRLEN],u[MAXSTRLEN],w[MAXSTRLEN];
-  int e;
-  
-  wort_sep(n,',',TRUE,v,t);
-  wort_sep(t,',',TRUE,t,u);
-  e=wort_sep(u,',',TRUE,u,w);
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
-    graphics(); 
-    
-    if(k==0) line((int)parser(v),(int)parser(t),(int)parser(u),(int)parser(w)); 
-    else if(k==1) box((int)parser(v),(int)parser(t),(int)parser(u),(int)parser(w)); 
-    else if(k==2) pbox((int)parser(v),(int)parser(t),(int)parser(u),(int)parser(w)); 
-  }
-  return(0);
+void c_pbox(PARAMETER *plist,int e) {
+  graphics(); 
+  pbox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 }
 
 void c_dotodraw(char *n) {
@@ -300,7 +243,7 @@ void c_dotodraw(char *n) {
   t=malloc(strlen(n)+1);u=malloc(strlen(n)+1);
   xtrim(n,TRUE,n);
   e2=wort_sep(n,',',TRUE,u,t);
-  if(e2<2) printf("Zuwenig Parameter !\n");
+  if(e2<2) error(42,"DRAW TO"); /* Zu wenig Parameter */
   else {
     x=(int)parser(u);
     y=(int)parser(t);
@@ -326,7 +269,7 @@ void c_draw(char *n) {
     if(strlen(t)) {
       e2=wort_sep(t,',',TRUE,u,t);
       
-      if(e2<2) printf("Zuwenig Parameter !\n");
+      if(e2<2) error(42,"DRAW"); /* Zu wenig Parameter */
       else {
         turtlex=(int)parser(u);
         turtley=(int)parser(t);
@@ -346,99 +289,72 @@ void c_draw(char *n) {
   return;
 }
 
-void c_circle(char *n) {
-  char v[MAXSTRLEN],t[MAXSTRLEN],u[MAXSTRLEN];
-  int e,r,x,y,a1=0,a2=64*360;
-  
-  wort_sep(n,',',TRUE,v,t);
-  e=wort_sep(t,',',TRUE,t,u);
-  
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
+void c_circle(PARAMETER *plist,int e) {
+  int r,x,y,a1=0,a2=64*360;
+  if(e>=3) {
+    x=plist[0].integer-plist[2].integer;
+    y=plist[1].integer-plist[2].integer;
+    r=2*plist[2].integer;
+
+    if(e>=4) a1=plist[3].integer*64;
+    if(e>=5) a2=plist[4].integer*64;
+    
     graphics(); 
-    x=(int)parser(v);
-    y=(int)parser(t);   
-    wort_sep(u,',',TRUE,u,t);
-    e=wort_sep(t,',',TRUE,t,v); 
-    r=(int)parser(u);
-    if(e==2) {a1=(int)parser(t)*64;a2=(int)parser(v)*64;}
-    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x-r,y-r,2*r,2*r,a1,a2-a1); 
+    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r,r,a1,a2-a1); 
   }
-  return;
+}
+void c_pcircle(PARAMETER *plist,int e) {
+  int r,x,y,a1=0,a2=64*360;
+  if(e>=3) {
+    x=plist[0].integer-plist[2].integer;
+    y=plist[1].integer-plist[2].integer;
+    r=2*plist[2].integer;
+
+    if(e>=4) a1=plist[3].integer*64;
+    if(e>=5) a2=plist[4].integer*64;
+    
+    graphics(); 
+    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r,r,a1,a2-a1); 
+  }
 }
 
-void c_ellipse(char *n) {
-  char v[MAXSTRLEN],t[MAXSTRLEN],u[MAXSTRLEN],w[MAXSTRLEN];
-  int e,r1,r2,x,y,a1=0,a2=64*360;
-  
-  wort_sep(n,',',TRUE,v,t);
-  wort_sep(t,',',TRUE,t,u);
-  e=wort_sep(u,',',TRUE,u,w);
-  
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
+void c_ellipse(PARAMETER *plist,int e) {
+  int r1,r2,x,y,a1=0,a2=64*360;
+  if(e>=4) {
+    x=plist[0].integer-plist[2].integer;
+    y=plist[1].integer-plist[3].integer;
+    r1=2*plist[2].integer;
+    r2=2*plist[3].integer;
+
+    if(e>=5) a1=plist[4].integer*64;
+    if(e>=6) a2=plist[5].integer*64;
+
     graphics(); 
-    x=(int)parser(v);
-    y=(int)parser(t); 
-    r1=(int)parser(u);   
-    wort_sep(w,',',TRUE,w,t);
-    e=wort_sep(t,',',TRUE,t,v); 
-    r2=(int)parser(w);
-    if(e==2) {a1=(int)parser(t)*64;a2=(int)parser(v)*64;}
-    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x-r1,y-r2,2*r1,2*r2,a1,a2-a1);
+    XDrawArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r1,r2,a1,a2-a1);
   }
-  return;
+}
+void c_pellipse(PARAMETER *plist,int e) {
+  int r1,r2,x,y,a1=0,a2=64*360;
+  if(e>=4) {
+    x=plist[0].integer-plist[2].integer;
+    y=plist[1].integer-plist[3].integer;
+    r1=2*plist[2].integer;
+    r2=2*plist[3].integer;
+
+    if(e>=5) a1=plist[4].integer*64;
+    if(e>=6) a2=plist[5].integer*64;
+
+    graphics(); 
+    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x,y,r1,r2,a1,a2-a1);
+  }
 }
 
-void c_pellipse(char *n) {
-  char v[MAXSTRLEN],t[MAXSTRLEN],u[MAXSTRLEN],w[MAXSTRLEN];
-  int e,r1,r2,x,y,a1=0,a2=64*360;
-  
-  wort_sep(n,',',TRUE,v,t);
-  wort_sep(t,',',TRUE,t,u);
-  e=wort_sep(u,',',TRUE,u,w);
-  
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
-    graphics(); 
-    x=(int)parser(v);
-    y=(int)parser(t); 
-    r1=(int)parser(u);   
-    wort_sep(w,',',TRUE,w,t);
-    e=wort_sep(t,',',TRUE,t,v); 
-    r2=(int)parser(w);
-    if(e==2) {a1=(int)parser(t)*64;a2=(int)parser(v)*64;}
-    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x-r1,y-r2,2*r1,2*r2,a1,a2-a1); 
-  }  
-  return;
-}
-void c_pcircle(char *n) {
-  char v[MAXSTRLEN],t[MAXSTRLEN],u[MAXSTRLEN];
-  int e,r,x,y,a1=0,a2=64*360;
-  
-  wort_sep(n,',',TRUE,v,t);
-  e=wort_sep(t,',',TRUE,t,u);
-  
-  if(e<2) printf("Zuwenig Parameter !\n");
-  else {
-    graphics(); 
-    x=(int)parser(v);
-    y=(int)parser(t);   
-    wort_sep(u,',',TRUE,u,t);
-    e=wort_sep(t,',',TRUE,t,v); 
-    r=(int)parser(u);
-    if(e==2) {a1=(int)parser(t)*64;a2=(int)parser(v)*64;}
-    XFillArc(display[usewindow],pix[usewindow],gc[usewindow],x-r,y-r,2*r,2*r,a1,a2-a1); 
-  }
-  return;
-}
 
 void c_color(char *n) {  
   graphics();
   XSetForeground(display[usewindow],gc[usewindow],(int)parser(n));
   return;
 }
-
 
 int get_fcolor() {
    XGCValues gc_val;  
@@ -532,15 +448,9 @@ void c_scope(char *n) {                                      /* SCOPE y()[,sy[,o
     }
   }
 }
-void c_polymark(char *n) {
-  do_polygon(0,n);
-}
-void c_polyline(char *n) {
-  do_polygon(1,n);
-}
-void c_polyfill(char *n) {
-  do_polygon(2,n);
-}
+void c_polymark(char *n) { do_polygon(0,n);}
+void c_polyline(char *n) { do_polygon(1,n);}
+void c_polyfill(char *n) { do_polygon(2,n);}
 void do_polygon(int doit,char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int e,i=0,anz=0,shape=Nonconvex;
@@ -606,9 +516,6 @@ void do_polygon(int doit,char *n) {
 }
 
 
-
-
-
 void set_graphmode(int n) { 
 /*            n=1 copy src
               n=2 src xor dest
@@ -648,142 +555,53 @@ int get_graphmode() {
 }
 #include "bitmaps/fill.xbm"
 
-void c_deffill(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e,i=0;
-  e=wort_sep(n,',',TRUE,w1,w2);
+void c_deffill(PARAMETER *plist,int e) {
   graphics();
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-	 case 0: {
-	   int fs;
-	   fs=(int)parser(w1);
-	   if(fs>=0 && fs<2) XSetFillRule(display[usewindow], gc[usewindow], fs);
-	   break;
-	   } 
-	 case 1: {
-	   int fs;
-	   fs=(int)parser(w1);
-	   if(fs>=0 && fs<4) XSetFillStyle(display[usewindow], gc[usewindow], fs);
-	   break;
-	   }
-	  case 2: {
-	   Pixmap fill_pattern;
-	   int pa;
-	   pa=(int)parser(w1);
-	   pa=max(0,min(fill_height/fill_width,pa));
-	   fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
+  if(e>=1 && plist[0].typ!=PL_LEER){
+    int fs=plist[0].integer;
+    if(fs>=0 && fs<2) XSetFillRule(display[usewindow], gc[usewindow], fs);
+  } 
+  if(e>=2 && plist[1].typ!=PL_LEER){
+    int fs=plist[1].integer;
+    if(fs>=0 && fs<4) XSetFillStyle(display[usewindow], gc[usewindow], fs);
+  }
+  if(e>=3 && plist[2].typ!=PL_LEER){
+    Pixmap fill_pattern;
+    int pa=plist[2].integer;
+    pa=max(0,min(fill_height/fill_width,pa));
+    fill_pattern = XCreateBitmapFromData(display[usewindow],win[usewindow],
                 fill_bits+pa*fill_width*fill_width/8,fill_width,fill_width);
            /*XSetFillStyle(display[usewindow], gc[usewindow], FillStippled); */
 	   
            XSetStipple(display[usewindow], gc[usewindow],fill_pattern );
-	   break;
-	   }
-         default: break;
-       }
-     }
-  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
   }
 }
-void c_defline(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e,i=0;
-  static int width=0,style=0,cap=0,join=0;
-  e=wort_sep(n,',',TRUE,w1,w2);
+void c_defline(PARAMETER *plist,int e) { 
+  static int style=0,width=0,cap=0,join=0;
+  if(e>=1 && plist[0].typ!=PL_LEER) style=plist[0].integer;
+  if(e>=2 && plist[1].typ!=PL_LEER) width=plist[1].integer;
+  if(e>=3 && plist[2].typ!=PL_LEER)   cap=plist[2].integer;
+  if(e>=4 && plist[3].typ!=PL_LEER)  join=plist[3].integer;
   graphics();
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: {
-	   style=min(max((int)parser(w1)-1,0),3);
-	   break;
-	   }
-	 case 1: {   /* Dicke */
-	   width=max((int)parser(w1),0);
-	   break;
-	   } 
-	 
-	 case 2: {
-	   cap=min(max((int)parser(w1),0),3);
-	   break;
-	   } 
-	 case 3: {
-	   join=min(max((int)parser(w1),0),2);
-	   break;
-	   } 
-	   
-         default: break;
-       }
-     }
-  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  XSetLineAttributes(display[usewindow], gc[usewindow], width, style,cap,join);
+  XSetLineAttributes(display[usewindow], gc[usewindow],width,style,cap,join);
 }
-void c_copyarea(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e,i=0;
-  int x1,x2,y1,y2,w,h;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: {x1=parser(w1);break;}
-         case 1: {y1=parser(w1);break;}
-         case 2: {w=parser(w1);break;}
-         case 3: {h=parser(w1);break;}
-         case 4: {x2=parser(w1);break;}
-         case 5: {y2=parser(w1);break;}
-         default: break;
-       }
-     }  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
+void c_copyarea(PARAMETER *plist,int e) {
+  if(e==6) {
+    graphics();   
+    XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],
+    plist[0].integer,plist[1].integer,plist[2].integer,
+    plist[3].integer,plist[4].integer,plist[5].integer);
   }
-  graphics();   
-  XCopyArea(display[usewindow],pix[usewindow],pix[usewindow],gc[usewindow],x1,y1,w,h,x2,y2);
 }
 
 double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
 int ltextpflg=0;
 
-void c_deftext(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int e,i=0;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  graphics();
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: {
-	   ltextpflg=(int)parser(w1);
-	   break;
-	   }
-	 case 1: {   /* Dicke */
-	   ltextxfaktor=parser(w1);
-	   break;
-	   } 
-	 
-	 case 2: {
-	   ltextyfaktor=parser(w1);
-	   break;
-	   } 
-	 case 3: {
-	   ltextwinkel=parser(w1);
-	   break;
-	   } 
-	   
-         default: break;
-       }
-     }
-  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
+void c_deftext(PARAMETER *plist,int e) {
+  if(e>=1 && plist[0].typ!=PL_LEER)    ltextpflg=plist[0].integer;
+  if(e>=2 && plist[1].typ!=PL_LEER) ltextxfaktor=plist[1].real;
+  if(e>=3 && plist[2].typ!=PL_LEER) ltextyfaktor=plist[2].real;
+  if(e>=4 && plist[3].typ!=PL_LEER)  ltextwinkel=plist[3].real;
 }
 
 
@@ -828,80 +646,34 @@ int mouses() {
    return(mask_return & 255);
 }
 
-void c_mouse(char *n) {
+void c_mouse(PARAMETER *plist,int e) {
    Window root_return,child_return;
    int root_x_return, root_y_return,win_x_return, win_y_return,mask_return;
-   int e,i=0;
-   char w1[strlen(n)+1],w2[strlen(n)+1];
-   
    graphics();
    
    XQueryPointer(display[usewindow], win[usewindow], &root_return, &child_return,
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: {
-	   zuweis(w1,(double)win_x_return);
-	   break;
-	   }
-	 case 1: {   /* Dicke */
-	   zuweis(w1,(double)win_y_return);
-	   break;
-	   } 
-	 
-	 case 2: {
-	   zuweis(w1,(double)mask_return);
-	   break;} 
-	 case 3: {zuweis(w1,(double)root_x_return);break;}
-	 case 4: {zuweis(w1,(double)root_y_return);break;}  
-         default: break;
-       }
-     }
-  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
+
+  if(e>=1 && plist[0].typ!=PL_LEER) zuweis(plist[0].pointer,(double)win_x_return);
+  if(e>=2 && plist[1].typ!=PL_LEER) zuweis(plist[1].pointer,(double)win_y_return);
+  if(e>=3 && plist[2].typ!=PL_LEER) zuweis(plist[2].pointer,(double)mask_return);
+  if(e>=4 && plist[3].typ!=PL_LEER) zuweis(plist[3].pointer,(double)root_x_return);
+  if(e>=5 && plist[4].typ!=PL_LEER) zuweis(plist[4].pointer,(double)root_y_return);
+
 #ifdef DEBUG
   printf("Mouse: x=%d y=%d m=%d\n",win_x_return,win_y_return,mask_return);
 #endif
 }
 
-void c_setmouse(char *n) {
-   int root_x, root_y,win_x, win_y,mode=0;
-   int e,i=0;
-   char w1[strlen(n)+1],w2[strlen(n)+1];
-   
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-         case 0: {
-	   win_x=(int)parser(w1);
-	   break;
-	   }
-	 case 1: {   
-	   win_y=(int)parser(w1);
-	   break;
-	   } 
-	 
-	 case 2: {mode=(int)parser(w1);
-	   
-	   break;} 
-	 case 3: {break;}
-	 case 4: {break;}  
-         default: break;
-       }
-     }
-  
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }   
-  graphics();
-  if(mode==0) XWarpPointer(display[usewindow], None, win[usewindow], 0, 0,0,0, win_x, win_y);
-  else if(mode==1) XWarpPointer(display[usewindow], None, None, 0, 0,0,0, win_x, win_y);
+void c_setmouse(PARAMETER *plist,int e) {
+  int mode=0;
+  if(e>=2) {
+    if(e==3) mode=plist[2].integer;
+    graphics();
+    if(mode==0) XWarpPointer(display[usewindow], None, win[usewindow], 0, 0,0,0,plist[0].integer,plist[1].integer);
+    else if(mode==1) XWarpPointer(display[usewindow], None, None, 0, 0,0,0,plist[0].integer,plist[1].integer);
+  }
 }
 
 
@@ -1125,11 +897,8 @@ void c_clearw(char *n) {
        /* Erst den Graphic-Kontext retten  */
     sgc=XCreateGC(display[winnr], win[winnr], 0, &gc_val);
     XCopyGC(display[winnr], gc[winnr],GCForeground , sgc);
- 
       XGetGeometry(display[winnr],win[winnr],&root,&x,&y,&w,&h,&b,&d);
-  
       XSetForeground(display[winnr],gc[winnr],0);
-
       XFillRectangle(display[winnr],pix[winnr],gc[winnr],x,y,w,h); 
 
       /* XClearWindow(display[winnr],win[winnr]); */
@@ -1309,80 +1078,26 @@ void c_ltext(char *n) {
   free(v);free(t);free(buffer);
 }
 
-void c_alert(char *n) {
+void c_alert(PARAMETER *plist,int e) {
   /* setzt nur das Format in einen FORM_ALERT Aufruf um */
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *buffer=malloc(MAXSTRLEN);
-  char *boxtext,*buttontext;
-  int dbut,i=0,symbol,e;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e>1) {
-       switch(i) {
-         case 0: {
-	   symbol=(int)parser(w1);
-	   break;
-	   }
-	 case 1: {   
-	   boxtext=s_parser(w1);
-	   break;
-	   } 
-	 
-	 case 2: {
-	   dbut=(int)parser(w1);
-	   break;
-	   } 
-	 case 3: {
-	   buttontext=s_parser(w1);
-	   break;
-	   } 
-	 case 4: {
-	   ; /* nixtun, denn w1=backvar  */
-	 }
-         default: break;
-       }
-     
+  char buffer[MAXSTRLEN];
   
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  
-  if(i>=4) {
-    sprintf(buffer,"[%d][%s][%s]",symbol,boxtext,buttontext);
-    zuweis(w1,(double)form_alert(dbut,buffer));
-  } else error(42,""); /* Zu wenig Parameter  */
-  if(i>1) free(boxtext);
-  if(i>3) free(buttontext);
-  free(buffer);
+  if(e==5) {
+    sprintf(buffer,"[%d][%s][%s]",plist[0].integer,plist[1].pointer,plist[3].pointer);
+    zuweis(plist[4].pointer,(double)form_alert(plist[2].integer,buffer));
+  } 
 }
 
 char *fsel_input(char *,char *,char *);
 
-void c_fileselect(char *n) { 
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  char *backval;
-  int i=0,e;
-  char *titel=NULL,*pfad=NULL,*sel=NULL,*varname=NULL;
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-       if(strlen(w1)) {
-       switch(i) {
-         case 0: { titel=s_parser(w1); break; }
-	 case 1: { pfad=s_parser(w1); break; } 
-	 case 2: { sel=s_parser(w1); break; } 
-	 case 3: { varname=malloc(strlen(w1)+1); strcpy(varname,w1); break; } 
-         default: break;
-       }
-     }
-     e=wort_sep(w2,',',TRUE,w1,w2);
-     i++;
-  }
-  if(i>=3) {
-    backval=fsel_input(titel,pfad,sel);
-    zuweiss(varname,backval);
+void c_fileselect(PARAMETER *plist,int e) { 
+  if(e==4) {
+    char *backval=fsel_input(plist[0].pointer,plist[1].pointer,plist[2].pointer);
+    zuweiss(plist[3].pointer,backval);
     free(backval);
-  } else error(42,""); /* Zu wenig Parameter  */
-  free(sel);free(varname);free(pfad);free(titel);
+  } 
 }
+
 #define MAXMENUENTRYS 200
 #define MAXMENUTITLES 80
 
@@ -1538,22 +1253,15 @@ void c_form_do(char *n) {
   while(e) {
        if(strlen(w1)) {
        switch(i) {
-         case 0: {
-	   tnr=(int)parser(w1);
-	   break;
-	   }
-	 
+         case 0: { tnr=(int)parser(w1); break; }
 	 case 1: {
 	   varname=malloc(strlen(w1)+1);
 	   strcpy(varname,w1);
 	   break;
 	   } 
-	 
-	 
          default: break;
        }
      }
-  
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }
@@ -1563,20 +1271,11 @@ void c_form_do(char *n) {
     gem_init();
     rsrc_gaddr(R_TREE,tnr,&tree);
     backval=form_do(tree);
-   
-    
-    
     zuweis(varname,(double)backval);
-    
-   
   } else error(42,""); /* Zu wenig Parameter  */
-  
   free(varname);
-
-
 }
 void c_alert_do(char *n) {
-
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int backval;
   int i=0,e;
@@ -1586,10 +1285,7 @@ void c_alert_do(char *n) {
   while(e) {
        if(strlen(w1)) {
        switch(i) {
-         case 0: {
-	   tnr=(int)parser(w1);
-	   break;
-	   }
+        case 0: {tnr=(int)parser(w1);break;}
         case 1: {
 	   def=(int)parser(w1);
 	   break;
@@ -1600,12 +1296,9 @@ void c_alert_do(char *n) {
 	   strcpy(varname,w1);
 	   break;
 	   } 
-	 
-	 
          default: break;
        }
      }
-  
      e=wort_sep(w2,',',TRUE,w1,w2);
      i++;
   }

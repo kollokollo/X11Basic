@@ -1,13 +1,17 @@
 ' Hier wird gezeigt, wie man externe Programmroutinen verwenden kann
 
-'t$=env$("PWD")+"/tmp/goguo.so"
-t$="/usr/lib/libm.so"
+t$="/usr/lib/libreadline.so"
 print t$
 link #1,t$
 dump "#"
-argument=3.45678
-exec sym_adr(#1,"sin")
-r=exec(sym_adr(#1,"sin"),0.1)
-print "Return war: "+str$(r)
+promt$=">>>"
+adr=exec(sym_adr(#1,"readline"),L:varptr(promt$))
+r=adr
+while peek(r)>0
+  print chr$(peek(r));
+  inc r
+wend
+print
 unlink #1
+~free(adr)
 quit

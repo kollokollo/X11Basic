@@ -41,4 +41,5 @@ typedef struct {
   int len;
   char *pointer;
 } STRING;
+
 #endif

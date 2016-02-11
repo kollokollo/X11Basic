@@ -12,80 +12,96 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <signal.h>
 #include "protos.h"
+#include "globals.h"
 
-#define FALSE 0
-#define TRUE (!FALSE)
 extern const char version[];           /* Programmversion           */
 extern const char vdate[];
 extern const char xbasic_name[];
-extern char ifilename[];
-extern int loadfile,runfile,daemonf;
-extern int pc,sp,prglen,err,errcont,everyflag;
-extern int programbufferlen;
 
-void usage(){
-  printf("\n Bedienungsanleitung: \n");
-  printf(" -------------------- \n\n");
-  printf("%s [-e -h -l] [<filename>] --- Basic-Programm ausfuehren  [%s]\n",xbasic_name,ifilename);
-  printf("\n"); 
-  printf("-l                  --- Programm nur laden \n");
-  printf("-e <kommando>       --- Basic Kommando ausfuehren \n");
-  printf("--eval <ausdruck>   --- Num. Ausdruck auswerten  \n");
-  printf("-h --help           --- Usage  \n");
-/*  printf("--help <topic>      --- Print help on topic \n");  */
-  printf("\n");
+void *obh;       /* old break handler  */
+
+
+/* Standard-Fehlerroutine   */
+
+
+void error(char err, char *bem) {
+  printf("Zeile %d: %s\n",pc-1,error_text(err,bem));
+  if(!errcont) batch=0;   
 }
+
+void break_handler( int signum) {
+  if(batch) {
+    printf("** PROGRAM-STOP \n");
+    batch=0;
+    signal(signum, break_handler);
+  } else {
+    printf("** X11BASIC-QUIT \n");
+    signal(SIGINT, obh);
+    raise(signum);
+  }
+}
+void fatal_error_handler( int signum) {
+  printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
+  if(batch) {
+    if(pc>=0) {
+      printf("    pc-1  : %s\n",program[pc-2]);
+      printf("--> pc=%d : %s\n",pc-1,program[pc-1]);
+      printf("    pc+1  : %s\n",program[pc]);
+    } else printf("PC negativ !\n");
+      printf("Stack-Pointer: SP=%d\n",sp);
+      batch=0;
+  } else {
+    c_dump("");
+    printf("Programm-Abbruch...\n");    
+    signal(signum,SIG_DFL);
+  }
+  raise(signum);
+}
+
+
+void timer_handler( int signum) {
+  if(alarmpc==-1) printf("** Uninitialisierter Interrupt #%d \n",signum);
+  else {
+    int oldbatch,osp=sp,pc2;
+      pc2=procs[alarmpc].zeile;
+      
+      if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+      else {printf("Stack overflow ! PC=%d\n",pc); batch=0;}
+      oldbatch=batch;batch=1;
+      programmlauf();
+      batch=min(oldbatch,batch);
+      if(osp!=sp) {
+	pc=stack[--sp]; /* wenn error innerhalb der func. */
+        printf("Fehler innerhalb Interrupt-FUNCTION. \n");
+      }
+      
+  }
+  signal(signum, timer_handler);
+  if(everyflag) alarm(everytime); 
+}
+
 void intro(){
   printf("***************************************************************\n");
   printf("*               %s                 V. %s                *\n",xbasic_name, version);
   printf("*                   von Markus Hoffmann 1997-2001 (c)         *\n");
   printf("*                                                             *\n");
   printf("* Programmversion vom %s           *\n",vdate);
-  printf("*                                                             *\n");
   printf("***************************************************************\n\n"); 
 }
 
-void kommandozeile(int anzahl, char *argumente[]) {
-  int count,quitflag=0;
+/* Initialisierungsroutine  */
 
-  /* Kommandozeile bearbeiten   */
-  runfile=TRUE;
-  for(count=1;count<anzahl;count++) {
-    if (strcmp(argumente[count],"-l")==FALSE)               runfile=FALSE;
-    else if (strcmp(argumente[count],"--load-only")==FALSE) runfile=FALSE;
-    else if (strcmp(argumente[count],"--eval")==FALSE) {
-      printf("%.13g\n",parser(argumente[++count])); 
-      quitflag=1;
-    } else if (strcmp(argumente[count],"-e")==FALSE) {
-      kommando(argumente[++count]);
-      quitflag=1;
-    } else if (strcmp(argumente[count],"--exec")==FALSE) {
-      kommando(argumente[++count]);
-      quitflag=1;
-    } else if (strcmp(argumente[count],"-h")==FALSE) {
-      intro();
-      usage();
-      quitflag=1;   
-    } else if (strcmp(argumente[count],"--help")==FALSE) {
-      intro();
-      usage();
-      quitflag=1;   
-    } else if (strcmp(argumente[count],"--daemon")==FALSE) {
-      intro();
-      daemonf=1;
-    } else {
-      if(!loadfile) {
-        loadfile=TRUE;
-        strcpy(ifilename,argumente[count]); 
-      }
-    }
-   }
-   if(quitflag) c_quit("");
-}
+void x11basicStartup() {
 
-void loadprg(char *filename) {
-  programbufferlen=prglen=pc=sp=0;
-  mergeprg(filename);
+#ifdef CONTROL  
+  cs_init();        /* Kontrollsystem anmelden */
+#endif
+  /* Signal- und Interrupt-Handler installieren  */
+  obh=signal(SIGINT, break_handler);
+  signal(SIGILL, fatal_error_handler);
+  signal(SIGSEGV, fatal_error_handler);
+  signal(SIGBUS, fatal_error_handler);
+  signal(SIGALRM, timer_handler);
 }

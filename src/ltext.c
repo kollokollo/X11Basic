@@ -1,8 +1,6 @@
 /* ltext.c (c) Markus Hoffmann
    Fontdaten einlesen fuer Linienfont char font[zeile][spalte] */
 
-/* Letzte Bearbeitung 30.11.1997   */
-
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
@@ -18,19 +16,28 @@
 
 extern void line(int x1,int y1,int x2, int y2);
 
-double ltext ( int x, int y, double s, double t, double wk, int pflg, char *tt) 
+double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt) 
 {
    double obxx,bxx=0,msin,mcos;
-   int a,i,j,len,len2,fx,fy,charw,center,px,py,pxo,pyo;
+   unsigned int a;
+   int i,j,len,len2,fx,fy,charw,center,px,py,pxo,pyo;
    int xx,yy,ox,oy;
    
-          
-  msin=sin(rad(wk));
-  mcos=cos(rad(wk)); 
   len=strlen(tt);
   if(len>0) {
+    msin=sin(rad(wk));
+    mcos=cos(rad(wk)); 
+
     for(i=0;i<len;i++) {
-      a=(int)tt[i];
+      a=tt[i];
+      if(a=='ß') a=16;
+      else if(a=='Ä') a=17;
+      else if(a=='ä') a=18;
+      else if(a=='Ö') a=19;
+      else if(a=='ö') a=20;
+      else if(a=='Ü') a=21;
+      else if(a=='ü') a=22;
+      else a&=0x7f;
       fy=bxx*msin+y;
       fx=bxx*mcos+x;
       len2=strlen(font[a]);
@@ -41,16 +48,15 @@ double ltext ( int x, int y, double s, double t, double wk, int pflg, char *tt)
         center=(100-charw)/2;
         charw=100;
       } else center=0;
-      if(len2>1) { 
+      if(len2>1) {
         for(j=1;j<len2;j++) {
           xx=font[a][j++];
           yy=font[a][j];
 
 
-          if(xx>100) {
-            xx=xx-101+center;  }
+          if(xx>100) xx=xx-101+center;
           else {
-            xx=xx+center;
+            xx+=center;
             if (j>2) {
               pxo=ox*s*mcos-oy*t*msin;
               pyo=oy*t*mcos+ox*s*msin;
@@ -59,8 +65,7 @@ double ltext ( int x, int y, double s, double t, double wk, int pflg, char *tt)
 	      line(pxo+fx,pyo+fy,px+fx,py+fy); 
             }
           }
-          ox=xx;
-          oy=yy;
+          ox=xx; oy=yy;
         }
       }
       obxx=bxx;
@@ -69,25 +74,19 @@ double ltext ( int x, int y, double s, double t, double wk, int pflg, char *tt)
   }
   return(bxx);
 }
-double ltextlen (double s, int pflg, char *tt) 
-{
-   double obxx,bxx=0,msin,mcos;
-   int a,i,j,len,len2,fx,fy,charw;
+double ltextlen (double s, int pflg, char *tt) {
+  int a,i,len,len2,charw=100,bxx=0;
   
   len=strlen(tt);
   if(len>0) {
     for(i=0;i<len;i++) {
       a=(int)tt[i];
-     
       len2=strlen(font[a]);
       if(len2>1) { 
-        charw=(int)font[a][0];
-        if(pflg==FALSE) {
-          charw=100;
-        } 
+        if(pflg) charw=(int)font[a][0];
       } 
-      bxx+=(charw+30)*s;
+      bxx+=(charw+30);
     }
   }
-  return(bxx);
+  return(bxx*s);
 }

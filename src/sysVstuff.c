@@ -101,7 +101,7 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 }
 
 
-#ifdef 0
+#if 0
 
 
 void opensem(int *sid, key_t key)
@@ -331,8 +331,8 @@ void change_shm_mode(int shmid, char *mode) {
       /*  printf("Old permissions were: %o\n", myshmds.shm_perm.mode); */
         /* Convert and load the mode */
         sscanf(mode, "%o", &myshmds.shm_perm.mode);
-        /* Update the mode */
-        shmctl(shmid, IPC_SET, &myshmds);
+        
+        shmctl(shmid, IPC_SET, &myshmds);  /* Update the mode */
 /*        printf("New permissions are : %o\n", myshmds.shm_perm.mode);*/
 }
 

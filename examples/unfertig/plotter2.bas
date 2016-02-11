@@ -13,24 +13,20 @@
 ' Alle Funktionen werden in einem Koordinatensystem dargestellt.
 ' Um eine Funktion nicht darzustellen, einfach f(x)=0 deklarieren.
 echo off
-weiss=get_color(65535,65535,65535)
-schwarz=get_color(0,0,0)
-grau=get_color(32000,32000,32000)
+
 schaarstart=-1 
 schaarend=1     
 schaarstep=1 
-color weiss
-pbox 0,0,640,400
 '
 ' ++++++++++++++++++++++++++++++++++++++++
 ' ++ Weitere Parameter Voreingestellt:  ++
 ' ++++++++++++++++++++++++++++++++++++++++
-x1=0    
-x2=5   
-y1=-0.01   
-y2=10    
-ex=0.1     
-ey=0.1     
+x1=-10    
+x2=10     
+y1=-2.2   
+y2=2.2    
+ex=1     
+ey=1     
 xab$="X" 
 yab$="Y"
 '
@@ -86,12 +82,12 @@ RETURN
 PROCEDURE make(bx,by,bw,bh)
   '
 '  DEFFILL 1,0
-  color grau
+  color 2
   PBOX bx-1,by-1,bx+bw+1,by+bh+1
   ' Koordinatenkreuz:
   '
   ' ---Hilfslinien
-  color schwarz
+  color 1
   FOR x=0 TO MAX(ABS(x1),ABS(x2)) STEP ex
    ' DEFLINE &X11111111111111111010101010101011,0,0,0
     LINE @kx(x),by&,@kx(x),by&+bh&
@@ -212,62 +208,6 @@ PROCEDURE save_img(f$,adr%,aw&,bw&,bh&,fl!)
   ENDIF
   CLOSE #1
 RETURN
-> FUNCTION pack_zeile$(z$)
-LOCAL c$
-CLR c$,bu$
-'
-' Diese Prozedur ist zeitkritisch, deshalb gut optimieren !!!
-'
-WHILE LEN(z$)
-  CLR ff&
-  null&=@nulltest(z$)
-  IF null&=0
-    ff&=@fftest(z$)
-  ENDIF
-  pat&=@pattest(z$)
-  vpat=pat&*patlen&/(2+patlen&)
-  IF ff& AND ff&>=vpat
-    IF LEN(bu$) AND ff&=1
-      bu$=bu$+LEFT$(z$)
-      z$=RIGHT$(z$,LEN(z$)-1)
-    ELSE
-      IF LEN(bu$)
-        c$=c$+CHR$(&H80)+CHR$(LEN(bu$))+bu$
-        CLR bu$
-      ENDIF
-      c$=c$+CHR$(ff& OR &X10000000)
-      z$=RIGHT$(z$,LEN(z$)-ff&)
-    ENDIF
-  ELSE IF null& AND null&>=vpat
-    IF LEN(bu$) AND null&=1
-      bu$=bu$+LEFT$(z$)
-      z$=RIGHT$(z$,LEN(z$)-1)
-    ELSE
-      IF LEN(bu$)
-        c$=c$+CHR$(&H80)+CHR$(LEN(bu$))+bu$
-        CLR bu$
-      ENDIF
-      c$=c$+CHR$(null& OR &X0)
-      z$=RIGHT$(z$,LEN(z$)-null&)
-    ENDIF
-  ELSE IF vpat>ff& AND vpat>null& AND pat&>1
-    IF LEN(bu$)
-      c$=c$+CHR$(&H80)+CHR$(LEN(bu$))+bu$
-      CLR bu$
-    ENDIF
-    c$=c$+CHR$(0)+CHR$(pat&)+LEFT$(z$,2)
-    z$=RIGHT$(z$,LEN(z$)-pat&*patlen&)
-  ELSE
-    bu$=bu$+LEFT$(z$)
-    z$=RIGHT$(z$,LEN(z$)-1)
-  ENDIF
-WEND
-IF LEN(bu$)
-  c$=c$+CHR$(&H80)+CHR$(LEN(bu$))+bu$
-  CLR bu$
-ENDIF
-RETURN c$
-ENDFUNC
 FUNCTION nulltest(z$)
 LOCAL c,i
 IF LEN(z$)
@@ -300,9 +240,32 @@ ELSE
 RETURN 0
 ENDIF
 ENDFUNC
-
+FUNCTION pattest(z$)
+LOCAL c&,i&,j&
+' Prozedur benoetigt die meiste Zeit !
+'
+IF LEN(z$)>=patlen&
+c&=1
+IF LEN(z$)>=2*patlen&
+pat$=LEFT$(z$,patlen&)
+FOR i&=1 TO INT(LEN(z$)/patlen&)-1
+FOR j&=0 TO patlen&-1
+  IF PEEK(V:z$+i&*patlen&+j&)<>PEEK(V:pat$+j&)
+    RETURN c&
+  ENDIF
+NEXT j&
+INC c&
+NEXT i&
+RETURN c&
+ELSE
+RETURN 1
+ENDIF
+ELSE
+RETURN 0
+ENDIF
+ENDFUNC
 function f(x)
-return sqr(-(0.6*2300)/(pi*274*0.063)*(cos(pi+x/180*pi)-1))
+return SIN(x)                        ! # Funktion F(x)
 function t(x)
 return COS(x)*SIN(x)+SIN(x)           ! # Funktion T(x)
 function schaar(x,a)

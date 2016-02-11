@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "xbasic.h"
+#include "defs.h"
+#include "vtypes.h"
 #include "protos.h"
 
 /* Falls mit Kontrollsystem  */

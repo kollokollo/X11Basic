@@ -22,7 +22,7 @@
 
 #include "file.h"
 #include "defs.h"
-#include "xbasic.h"
+#include "globals.h"
 #include "protos.h"
 
 
@@ -314,8 +314,9 @@ void c_open(char *n) {
         int sock,sock2;
 	size_t size;	
 	struct sockaddr_in clientname;
-
+#ifdef DEBUG
         printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
+#endif
         if(filenr[port]) {
 	  sock=fileno(dptr[port]);
 	  size=sizeof(clientname);
@@ -323,9 +324,11 @@ void c_open(char *n) {
 	  if(sock2<0) {
 	    printf("ERROR: accept\n");
 	    dptr[number]=NULL;
-	  } else { 
+	  } else {
+#ifdef DEBUG	   
 	    printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), 
 	      ntohs(clientname.sin_port),sock2);
+#endif
             dptr[number]=fdopen(sock2,modus2);
 	    
 	  }
@@ -337,38 +340,20 @@ void c_open(char *n) {
   free(filename);
 }
 
-void c_link(char *n) {
-  char w1[strlen(n)+1],w2[strlen(n)+1];
-  int number=1,e,i=0;
-  char *filename=NULL;
-  
-  e=wort_sep(n,',',TRUE,w1,w2);
-  while(e) {
-     if(strlen(w1)) {
-       switch(i) {
-	 case 0: {  number=get_number(w1);    /* Nummer */ break; } 
-	 case 1: { filename=s_parser(w1); break; } 	   
-         default: break;
-       }
-     }
-     i++;
-     e=wort_sep(w2,',',TRUE,w1,w2);
-  }
-  
-  if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
-  else if(number>99 || number<1) error(23,"");  /* File # falsch  */
-  else {
-      dptr[number]=dlopen(filename,RTLD_LAZY);
+void c_link(PARAMETER *plist, int e) {
+  int number;
+  if(e==2) {
+    number=plist[0].integer;
+    if(filenr[number]) error(22,"");  /* File schon geoeffnet  */
+    else {
+      dptr[number]=dlopen(plist[1].pointer,RTLD_LAZY);
       if(dptr[number]==NULL) io_error(errno,"LINK");
       else  filenr[number]=2;
+    } 
   }
-  free(filename);
 }
 
-
-
-void io_error(int n, char *s) {
-  struct {int sf; char xf; } table[] = {
+const struct {int sf; char xf; } table[] = {
     { EACCES,  -36 }, /* Zugriff nicht m"oglich */
     { ENOTDIR, -36 }, 
     { ELOOP,   -36 }, 
@@ -394,7 +379,9 @@ void io_error(int n, char *s) {
     { EROFS,   -30 }, /* FILE SYSTEM SCHREIBGESCHUetzt */
     { EIO,      -1 } /* Allgemeiner IO-Fehler */
   };
-  int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
+const int anztabs=sizeof(table)/sizeof(struct {int sf; char xf; });
+  
+void io_error(int n, char *s) {
   int i;
   for(i=0;i<anztabs;i++) {
     if(n==table[i].sf) {
@@ -436,9 +423,8 @@ void c_bload(char *n) {
   char *filename;
   int e=wort_sep(n,',',TRUE,w1,w2);
   int g,len=-1,a;
-  if(e<2) printf("BLOAD: Zuwenig Parameter !\n");
+  if(e<2) error(42,"BLOAD"); /* Zu wenig Parameter */
   else {
-    
     filename=s_parser(w1); 
     e=wort_sep(w2,',',TRUE,w1,w2);
     if(e==2) len=(int)parser(w2);
@@ -448,9 +434,7 @@ void c_bload(char *n) {
   }
 }
 /* Fuehrt Code an Adresse aus */
-void c_exec(char *n) {
-  f_exec(n);
-}
+void c_exec(char *n) { f_exec(n);}
 int f_exec(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,w1,w2);
@@ -475,7 +459,7 @@ int f_exec(char *n) {
     i++;
     e=wort_sep(w2,',',TRUE,w1,w2);
   }
-  if(i==0) printf("EXEC: Zuwenig Parameter !\n");
+  if(i==0) error(42,"EXEC"); /* Zu wenig Parameter */
   else return(adr(gtt));
   return(0);
 }
@@ -485,11 +469,11 @@ void c_bsave(char *n) {
   char *filename;
   int e=wort_sep(n,',',TRUE,w1,w2);
   int g,len,a;
-  if(e<2) printf("BSAVE: Zuwenig Parameter !\n");
+  if(e<2) error(42,"BSAVE"); /* Zu wenig Parameter */
   else {
     filename=s_parser(w1); 
     e=wort_sep(w2,',',TRUE,w1,w2);
-    if(e!=2) printf("BSAVE: Zuwenig Parameter !\n");
+    if(e!=2) error(42,"BSAVE"); /* Zu wenig Parameter */
     else {
       len=(int)parser(w2);
       g=bsave(filename,(char *)(int)parser(w1),len);
@@ -783,9 +767,9 @@ int kbhit() {
 
 
 char *inkey() {
- static char ik[MAXSTRLEN];
- int i=0;
- while(kbhit()) ik[i++]=getc(stdin);
- ik[i]=0;
- return(ik);
+   static char ik[MAXSTRLEN];
+   int i=0;
+   while(kbhit()) ik[i++]=getc(stdin);
+   ik[i]=0;
+   return(ik);
 }

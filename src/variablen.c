@@ -748,12 +748,10 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 		   printf("%d: Rechnung geht nicht auf. <%s>\n",jj,pos);
 		   printf("anz=%d\n",anz);
 		   printf("--anz2=%d\n",anz2);
-		   printf("ARRAY wert: dim=%d\n",wert->dimension);
-		   printf("ARRAY wert: (");
+		   printf("ARRAY wert: dim=%d (",wert->dimension);
 		   for(i=0;i<wert->dimension;i++) printf("%d ",((int *)wert->pointer)[i]);
 		   printf(")\n");
-		   printf("ARRAY vnr: dim=%d\n",variablen[vnr].opcode);
-		   printf("ARRAY vnr: (");
+		   printf("ARRAY vnr: dim=%d (",variablen[vnr].opcode);
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",((int *)variablen[vnr].pointer)[i]);
 		   printf(")\n");
 		   printf("INDEXO: [");
@@ -765,9 +763,7 @@ void feed_subarray_and_free(int vnr,char *pos, ARRAY *wert) {
 		   printf("INDEXA: [");
 		   for(i=0;i<variablen[vnr].opcode;i++) printf("%d ",indexa[i]);
 		   printf("]\n");
-		   
-		   
-		   do_gets("");
+		   do_gets("Press RETURN");
 		 }
 		   
 		 
@@ -1040,7 +1036,7 @@ double arrayinhalt(char *name, char* index) {
   int vnr,ndim,a=0,i;
 /*  printf("ARRAYINHALT: %s %s\n",name,index);*/
   vnr=variable_exist(name,FLOATARRAYTYP);
-  if(vnr==-1) printf("Variable nicht dimensioniert. %s \n",name);
+  if(vnr==-1) error(15,name); /* Feld nicht dimensioniert */
   else {
     varptr=(double  *)(variablen[vnr].pointer+variablen[vnr].opcode*INTSIZE);
     /* Index- Liste aufloesen  */

@@ -6,7 +6,7 @@
  * COPYING for details
  */
 
-static char *errortxt[] = { 
+const char *errortxt[] = { 
 /*   0*/  "Division durch Null",
 /*   1*/  "Ueberlauf",
 /*   2*/  "Zahl nicht Integer -2147483648 .. 2147483647",
@@ -39,17 +39,17 @@ static char *errortxt[] = {
 /*  29*/  "Fehler #29",
 /*  30*/  "Merge - Kein ASCII-File",
 /*  31*/  "Merge - Zeile zu lang - Abbruch",
-/*  32*/  "==> Syntax nicht korrekt",
+/*  32*/  "==> Syntax nicht korrekt %s",
 /*  33*/  "Marke nicht definiert",
 /*  34*/  "Zu wenig Data",
 /*  35*/  "Data nicht numerisch",
 /*  36*/  "Programmstruktur Fehlerhaft %s",
 /*  37*/  "Diskette voll",
-/*  38*/  "Befehl im Direktmodus nicht möglich",
+/*  38*/  "Befehl %s im Direktmodus nicht möglich",
 /*  39*/  "Programmfehler Kein Gosub möglich",
 /*  40*/  "Clear nicht möglich in For-Next-Schleifen oder Proceduren",
 /*  41*/  "Cont nicht möglich",
-/*  42*/  "Zu wenig Parameter",
+/*  42*/  "Zu wenig Parameter %s",
 /*  43*/  "Ausdruck zu komplex",
 /*  44*/  "Funktion %s nicht definiert",
 /*  45*/  "Zu viele Parameter",
@@ -265,11 +265,9 @@ static char *errortxt[] = {
 /*  -1*/  "* Allgemeiner IO-Fehler %s"
 };
 
-static char errbuffer[256];
 char *error_text(unsigned char err, char *bem) {
-        
-	
-	sprintf(errbuffer,errortxt[err],bem );
-	return( errbuffer );
+  static char errbuffer[128];
+  sprintf(errbuffer,errortxt[err],bem );
+  return( errbuffer );
 }
 

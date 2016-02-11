@@ -11,9 +11,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xbasic.h"
+#include "defs.h"
+#include "ptypes.h"
+#include "vtypes.h"
+#include "globals.h"
 #include "protos.h"
-
+#include "kommandos.h"
 
 
 /*****************************************/
@@ -82,7 +85,7 @@ void c_after(char *n) {
   int e=wort_sep(n,',',TRUE,w1,w2);  
   int pc2;
   if(e<2) {
-    printf("Syntax-Error bei AFTER. <%s>\n",n);
+    error(42,"AFTER"); /* Zu wenig Parameter  */
     return;
   }
   pc2=procnr(w2,1);
@@ -98,7 +101,7 @@ void c_every(char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,w1,w2),pc2;
   if(e<2) {
-    printf("Syntax-Error bei AFTER. <%s>\n",n);
+    error(42,"EVERY"); /* Zu wenig Parameter  */
     return;
   }
   pc2=procnr(w2,1);
@@ -123,13 +126,13 @@ c_dodim(char *w){
  /*  printf("DODIM: %s\n",w); */
 
   pos=searchchr(v, '(');
-  if(pos==NULL) printf("DIM: Syntax Error.\n");
+  if(pos==NULL) error(32,"DIM"); /* Syntax nicht Korrekt */
   else {
     pos2=v+strlen(v)-1;
     pos[0]=0;
     pos++;
 
-    if(pos2[0]!=')') printf("DIM: Syntax Error.\n");
+    if(pos2[0]!=')') error(32,"DIM"); /* Syntax nicht Korrekt */
     else {
       /* Typ Bestimmen  */
       pos2[0]=0;
@@ -429,7 +432,7 @@ void c_arraycopy(char *n) {
 	else printf("ARRAYCOPY: Typen inkompatibel. \n");
       }
     } else printf("ARRAYCOPY: Kein ARRAY. \n");
-  } else printf("ARRAYCOPY: Syntax error. \n");
+  } else error(32,"ARRAYCOPY"); /* Syntax error */
 
 }
 void c_arrayfill(char *n) {
@@ -457,11 +460,13 @@ void c_arrayfill(char *n) {
         } else if(typ & INTTYP) fill_int_array(vnr,(int)parser(w)); 
         else if(typ & FLOATTYP) fill_float_array(vnr,parser(w));
       }
-    } else printf("ARRAYFILL: Kein ARRAY. \n");
-  } else printf("ARRAYFILL: Syntax error. \n");
+    } else error(32,"ARRAYFILL: Kein ARRAY.");
+  } else error(32,"ARRAYFILL"); /* Syntax error */
 }
-
-
+extern const int anzpfuncs;
+extern const FUNCTION pfuncs[];
+extern const int anzpsfuncs;
+extern const FUNCTION psfuncs[];
 void c_dump(char *n) {
   int i;
   char kkk=0;
@@ -546,7 +551,123 @@ void c_dump(char *n) {
       }
     }
   }
-  
+  if(kkk=='C' || kkk=='K'|| kkk=='c'|| kkk=='k') {
+    int j;
+    for(i=0;i<anzcomms;i++) {
+      printf("%3d: [%08x] %s ",i,comms[i].opcode,comms[i].name);  
+      if(comms[i].pmin) {
+        for(j=0;j<comms[i].pmin;j++) {
+	  switch(comms[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<comms[i].pmin-1) printf(",");
+	}
+      }
+      if(comms[i].pmax>comms[i].pmin || comms[i].pmax==-1) printf("[,");
+      if(comms[i].pmax==-1) printf("...");
+      else {
+      for(j=comms[i].pmin;j<comms[i].pmax;j++) {
+	  switch(comms[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<comms[i].pmax-1) printf(",");
+	}
+      }
+      if(comms[i].pmax>comms[i].pmin || comms[i].pmax==-1) printf("]");
+      printf("\n");
+    }
+  }
+  if(kkk=='F' || kkk=='f') {
+    int j;
+    for(i=0;i<anzpfuncs;i++) {
+      printf("%3d: [%08x] %s(",i,pfuncs[i].opcode,pfuncs[i].name);  
+      if(pfuncs[i].pmin) {
+        for(j=0;j<pfuncs[i].pmin;j++) {
+	  switch(pfuncs[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<pfuncs[i].pmin-1) printf(",");
+	}
+      }
+      if(pfuncs[i].pmax>pfuncs[i].pmin || pfuncs[i].pmax==-1) printf("[,");
+      if(pfuncs[i].pmax==-1) printf("...");
+      else {
+      for(j=pfuncs[i].pmin;j<pfuncs[i].pmax;j++) {
+	  switch(pfuncs[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<pfuncs[i].pmax-1) printf(",");
+	}
+      }
+      if(pfuncs[i].pmax>pfuncs[i].pmin || pfuncs[i].pmax==-1) printf("]");
+      printf(")\n");
+    }    
+    for(i=0;i<anzpsfuncs;i++) {
+      printf("%3d: [%08x] %s(",i,psfuncs[i].opcode,psfuncs[i].name);  
+      if(psfuncs[i].pmin) {
+        for(j=0;j<psfuncs[i].pmin;j++) {
+	  switch(psfuncs[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<psfuncs[i].pmin-1) printf(",");
+	}
+      }
+      if(psfuncs[i].pmax>psfuncs[i].pmin || psfuncs[i].pmax==-1) printf("[,");
+      if(psfuncs[i].pmax==-1) printf("...");
+      else {
+      for(j=psfuncs[i].pmin;j<psfuncs[i].pmax;j++) {
+	  switch(psfuncs[i].pliste[j]) {
+	    case PL_INT: printf("i%%"); break;
+	    case PL_FILENR: printf("#n"); break;
+	    case PL_STRING: printf("t$"); break;
+	    case PL_NUMBER: printf("num"); break;
+	    case PL_SVAR: printf("var$"); break;
+	    case PL_NVAR: printf("var"); break;
+	    case PL_KEY: printf("KEY"); break;
+	    default: printf("???");
+	  }
+	  if(j<psfuncs[i].pmax-1) printf(",");
+	}
+      }
+      if(psfuncs[i].pmax>psfuncs[i].pmin || psfuncs[i].pmax==-1) printf("]");
+      printf(")\n");
+    }
+  }
 }
 
 void c_end(char *n) {
@@ -609,7 +730,7 @@ void c_addsubmuldiv(char *n,int z) {
     else if(z==2) zuweis(var,parser(var)-parser(t));
     else if(z==3) zuweis(var,parser(var)*parser(t));
     else if(z==4) zuweis(var,parser(var)/parser(t));
-    else printf("Unbekannter Befehl !\n");
+    else error(32,""); /* Syntax error */
   }
 }
 
@@ -680,13 +801,13 @@ c_doerase(char *w){
  
  
   pos=searchchr(v, '(');
-  if(pos==NULL) printf("ERASE: Syntax Error.\n");
+  if(pos==NULL) error(23,"ERASE"); /* Syntax error */
   else {
     pos2=v+strlen(v)-1;
     pos[0]=0;
     pos++;
 
-    if(pos2[0]!=')') printf("ERASE: Syntax Error.\n");
+    if(pos2[0]!=')') error(23,"ERASE"); /* Syntax error */
     else {
       /* Typ Bestimmen  */
       pos2[0]=0;
@@ -719,9 +840,7 @@ void c_return(char *n) {
       if(type2(n) & STRINGTYP) {
         returnvalue.str=string_parser(n); /* eigentlich muss auch der Funktionstyp 
                                        	 abgefragt werden */
-      } else {
-        returnvalue.f=parser(n);
-      }
+      } else returnvalue.f=parser(n);
     }
     local_vars_loeschen(sp-1);
     pc=stack[--sp];
@@ -811,7 +930,7 @@ c_doclr(char *v){
  /* Typ bestimmem. Ist es Array ? */
  
   typ=type2(v);
-  if(typ & CONSTTYP) {printf("CLR: Syntax error..\n"); return;}
+  if(typ & CONSTTYP) {error(32,"CLR"); return;} /* Syntax error */
   r=varrumpf(v);
   vnr=variable_exist(r,typ);
 
@@ -1045,7 +1164,7 @@ void c_poke(char *n) {
   int e;
   char *adr;
   e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) printf("Zuwenig Parameter !\n");
+  if(e<2) error(42,"POKE"); /* Zu wenig Parameter */
   else {
     adr=(char *)((int)parser(v));
     *adr=(char)parser(t);
@@ -1056,7 +1175,7 @@ void c_dpoke(char *n) {
   int e;
   short *adr;
   e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) printf("Zuwenig Parameter !\n");
+  if(e<2) error(42,"DPOKE"); /* Zu wenig Parameter */
   else {
     adr=(short *)((int)parser(v));
     *adr=(short)parser(t);
@@ -1067,7 +1186,7 @@ void c_lpoke(char *n) {
   int e;
   long *adr;
   e=wort_sep(n,',',TRUE,v,t);
-  if(e<2) printf("Zuwenig Parameter !\n");
+  if(e<2) error(42,"LPOKE"); /* Zu wenig Parameter */
   else {
     adr=(long *)((int)parser(v));
     *adr=(long)parser(t);

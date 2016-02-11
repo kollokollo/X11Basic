@@ -8,26 +8,26 @@
 
 
 /* Globale Variablen nur definition*/
+#include "defs.h"
 #include "ptypes.h"
 extern const char version[];           /* Programmversion           */
 extern const char vdate[];
 extern const char xbasic_name[];
 extern char ifilename[];
-int loadfile,runfile,daemonf;
-int pc,sp,prglen,echo,batch,err,errcont,breakcont,everyflag;
-int everytime,alarmpc;
+extern int pc,sp,prglen,echo,batch,err,errcont,breakcont,everyflag;
+extern int everytime,alarmpc;
 extern int menuaction;
 
 extern int stack[];
-char *program[MAXPRGLEN];
+extern char *program[];
 P_CODE pcode[MAXPRGLEN];
 int  ptimes[MAXPRGLEN];   /* Ausfuehrungszeien der Programmzeilen  */ 
 
 int param_anzahl;             /* fuer PARAM$()*/
 char **param_argumente;
 
-char *programbuffer;
-int programbufferlen;
+extern char *programbuffer;
+extern int programbufferlen;
 int datazeile;              /* fuer Restore, read , DATA */
 char *datapos;
 char databuffer[MAXSTRLEN];
@@ -39,13 +39,13 @@ extern int filenr[];
 
 
 extern VARIABLE variablen[];
-int anzvariablen;
+extern int anzvariablen;
 
-extern COMMAND comms[];
+extern const COMMAND comms[];
 extern LABEL labels[];
 extern PROC  procs[];
-int anzlabels, anzprocs;
-int anzcomms;
+extern int anzlabels, anzprocs;
+extern const int anzcomms;
 
 union {double f;
        STRING str;} returnvalue;

@@ -1,0 +1,42 @@
+/* Grafikroutinen */
+
+void c_alert(PARAMETER *,int);
+void c_allevent(char *);
+void c_clearw(char *);
+void c_circle(PARAMETER *,int);
+void c_color(char *);
+void c_copyarea(PARAMETER *,int);
+void c_deffill(PARAMETER *,int);
+void c_defline(PARAMETER *,int);
+void c_defmouse(char *);
+void c_deftext(PARAMETER *,int);
+void c_draw(char *);
+void c_ellipse(PARAMETER *,int);
+void c_get(PARAMETER *,int);
+void c_graphmode(char *);
+void c_infow(char *);
+void c_keyevent(char *);
+void c_menu(char *);
+void c_menudef(char *);
+void c_menukill(char *);
+void c_menuset(char *);
+void c_mouse(PARAMETER *,int);
+void c_norootwindow(char *);
+void c_put(PARAMETER *,int);
+void c_rootwindow(char *);
+void c_scope(char *);
+void c_setfont(char *);
+void c_setmouse(PARAMETER *,int);
+void c_sget(char *);
+void c_sput(char *);
+void c_text(char *);
+void c_usewindow(char *);
+void c_vsync(char *);
+
+void c_ltext(char *), c_mouseevent(char *),c_motionevent(char *);
+void c_movew(char *), c_openw(char *),c_pcircle(PARAMETER *,int);
+void c_pellipse(PARAMETER *,int), c_plot(PARAMETER *,int),c_sizew(char *),c_titlew(char *);
+void c_fileselect(PARAMETER *,int),c_xload(char *),c_xrun(char *);
+void c_savescreen(char *),c_savewindow(char *);
+void c_box(PARAMETER *,int),c_pbox(PARAMETER *,int),c_line(PARAMETER *,int);
+void c_polyfill(char *),c_polyline(char *),c_polymark(char *);

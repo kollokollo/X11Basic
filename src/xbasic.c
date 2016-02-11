@@ -20,7 +20,6 @@
  * COPYING for details
  */  
 #include <stdio.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -29,25 +28,28 @@
 #include <ctype.h>
 
 #include "version.h"
+#include "defs.h"
 #include "protos.h"
-#include "xbasic.h"
+#include "kommandos.h"
+#include "gkommandos.h"
+#include "globals.h"
 
 
-const char version[]=VERSION;           /* Programmversion           */
-const char vdate[]=VERSION_DATE;
+const char libversion[]=VERSION;           /* Programmversion           */
+const char libvdate[]=VERSION_DATE;
+extern const char version[];
+extern const char libvdate[];
+
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
 #else
 const char xbasic_name[]="xbasic";
 #endif
 
-int pc=0,sp=0,prglen=0,echo=0,batch=0,errcont=0,breakcont=0,everyflag=0;
+int pc=0,sp=0,echo=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int everytime=0,alarmpc=-1;
-char ifilename[100]="input.bas";       /* Standartfile             */
-int loadfile=FALSE;
+
 int stack[STACKSIZE];
-/*int param_anzahl; */             /* fuer PARAM$()*/
-/*char **param_argumente;*/
 
 /* fuer die Dateiverwaltung     */
 FILE *dptr[100];
@@ -62,71 +64,71 @@ PROC procs[ANZPROCS];
 int anzprocs=0;
 int usewindow=DEFAULTWINDOW;
 
-void *obh;       /* old break handler  */
 /* Kommandoliste: muss alphabetisch sortiert sein !   */
 
-COMMAND comms[]= {
+const COMMAND comms[]= {
 
  { P_ARGUMENT,  "!nulldummy", bidnm ,0,0   ,{0}},
  { P_ARGUMENT,  "?"         , c_print ,0,-1 ,{0}},
     
  { P_ARGUMENT,   "ADD"      , c_add       ,2, 2,{PL_ADD,PL_ADD}},
  { P_ARGUMENT,   "AFTER"    , c_after     ,2, 2 },
- { P_ARGUMENT,   "ALERT"    , c_alert     ,5, 5,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
+ { P_PLISTE,     "ALERT"    , c_alert     ,5, 5,{PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR}},
  { P_ARGUMENT,   "ALERT_DO" , c_alert_do  ,3, 3,{PL_NUMBER,PL_STRING,PL_NUMBER,PL_STRING,PL_NVAR}},
  { P_ARGUMENT,   "ARRAYCOPY", c_arraycopy ,2, 2},
  { P_ARGUMENT,   "ARRAYFILL", c_arrayfill ,2, 2},
 
  { P_SIMPLE, "BEEP"     , c_beep      ,0, 0},
  { P_SIMPLE, "BELL"     , c_beep      ,0, 0},
- { P_ARGUMENT,   "BGET"     , c_bget      ,3, 3},
- { P_ARGUMENT,   "BLOAD"    , c_bload     ,1,-1},
+ { P_ARGUMENT,   "BGET"     , c_bget      ,3, 3,{PL_FILENR,PL_INT,PL_INT}},
+ { P_ARGUMENT,   "BLOAD"    , c_bload     ,2, 3,{PL_STRING,PL_INT,PL_INT}},
  { P_ARGUMENT,   "BMOVE"    , c_bmove     ,3, 3, {PL_INT,PL_INT,PL_INT} }, 
- { P_ARGUMENT,   "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_ARGUMENT,   "BPUT"     , c_bput      ,3, 3},
+ { P_PLISTE,     "BOX"      , c_box       ,4, 4, {PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_ARGUMENT,   "BPUT"     , c_bput      ,3, 3,{PL_FILENR,PL_INT,PL_INT}},
  { P_BREAK,  "BREAK"    , c_break     ,0, 0}, 
- { P_ARGUMENT,   "BSAVE"    , c_bsave     ,1,-1},
+ { P_ARGUMENT,   "BSAVE"    , c_bsave     ,3, 3,{PL_STRING,PL_INT,PL_INT}},
 
- { P_CASE,   "CASE"     , c_case   ,1,1},
- { P_ARGUMENT,   "CHAIN"    , c_chain  ,1,1},
- { P_ARGUMENT,   "CIRCLE"   , c_circle ,3,4},
+ { P_ARGUMENT,   "CALL"     , c_exec,1,-1,{PL_INT}},
+ { P_CASE,       "CASE"     , c_case   ,1,1,{PL_NUMBER}},
+ { P_ARGUMENT,   "CHAIN"    , c_chain  ,1,1,{PL_STRING}},
+ { P_PLISTE,     "CIRCLE"   , c_circle ,3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "CLEAR"    , c_clear  ,0,-1},
- { P_ARGUMENT,   "CLEARW"   , c_clearw ,0,1},
+ { P_ARGUMENT,   "CLEARW"   , c_clearw ,0,1,{PL_INT}},
  { P_ARGUMENT,   "CLOSE"    , c_close  ,0,-1},
- { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1},
+ { P_ARGUMENT,   "CLOSEW"   , c_closew ,0,1,{PL_INT}},
  { P_ARGUMENT,   "CLR"      , c_clr    ,0,-1},
  { P_SIMPLE, "CLS"      , c_cls    ,0,0},
  { P_ARGUMENT,   "COLOR"    , c_color  ,1,1,{PL_INT}},
  { P_SIMPLE, "CONT"     , c_cont   ,0,0},
- { P_ARGUMENT, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE, "COPYAREA"     , c_copyarea   ,6,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 /* Kontrollsystembefehle  */
 #ifdef CONTROL 
 
- { P_ARGUMENT,   "CSPUT"    , c_csput ,1,-1},
+ { P_ARGUMENT,   "CSPUT"    , c_csput ,2,-1},
  { P_SIMPLE, "CSCLEARCALLBACKS"    , c_csclearcallbacks,0,0},
- { P_ARGUMENT,   "CSSET"    , c_csput,1,-1},
- { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,1,-1},
+ { P_ARGUMENT,   "CSSET"    , c_csput,2,-1},
+ { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,2,-1},
  { P_ARGUMENT,   "CSSWEEP"  , c_cssweep,2,-1},
- { P_ARGUMENT,   "CSVPUT"   , c_csvput,1,-1},
+ { P_ARGUMENT,   "CSVPUT"   , c_csvput,2,-1},
 #endif
 
- { P_DATA,   "DATA"     , c_nop ,0,-1 },
- { P_ARGUMENT,   "DEC"      , c_dec, 1,1},
- { P_DEFAULT,"DEFAULT"  , c_case, 0,0},
- { P_ARGUMENT,   "DEFFILL"  , c_deffill ,1,-1},
- { P_ARGUMENT,   "DEFLINE"  , c_defline ,1,-1},
- { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1},
- { P_ARGUMENT,   "DEFTEXT"  , c_deftext,1,-1},
+ { P_DATA,     "DATA"     , c_nop ,0,-1 },
+ { P_ARGUMENT, "DEC"      , c_dec, 1,1},
+ { P_DEFAULT,  "DEFAULT"  , c_case, 0,0},
+ { P_PLISTE,   "DEFFILL"  , c_deffill ,1,3,{PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "DEFLINE"  , c_defline ,1,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_ARGUMENT,   "DEFMOUSE" , c_defmouse, 1,1,{PL_INT}},
+ { P_PLISTE,   "DEFTEXT"  , c_deftext,1,4,{PL_INT,PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { P_ARGUMENT,   "DIM"      , c_dim ,1,-1},
- { P_ARGUMENT,   "DIV"      , c_div ,2,2},
+ { P_ARGUMENT,   "DIV"      , c_div ,2,2,{PL_NVAR,PL_NUMBER}},
  { P_DO,     "DO"       , c_do  ,0,0}, 
  { P_ARGUMENT,   "DPOKE"    , c_dpoke,       2,2,{PL_INT,PL_INT}},
- { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1},
- { P_ARGUMENT,   "DUMP"     , c_dump ,0,1},
+ { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,{PL_INT,PL_INT}},
+ { P_ARGUMENT,   "DUMP"     , c_dump ,0,1,{PL_STRING}},
 
- { P_ARGUMENT,   "ECHO"     , c_echo ,1,1},
- { P_ARGUMENT,   "ELIPSE"     , c_ellipse,4,5},
- { P_ARGUMENT,   "ELLIPSE"  , c_ellipse,4,5},
+ { P_ARGUMENT,   "ECHO"     , c_echo ,1,1,{PL_KEY}},
+ { P_PLISTE,   "ELIPSE"   , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ELSE,   "ELSE"     , bidnm  ,0,2},
  { P_SIMPLE, "END"      , c_end   ,0,0},
  { P_ENDPROC,"ENDFUNC"  , c_return,0,0},
@@ -136,58 +138,58 @@ COMMAND comms[]= {
  { P_ENDSELECT,"ENDSWITCH" , bidnm  ,0,0},
  { P_ARGUMENT,   "ERASE"    , c_erase,0,-1},
  { P_ARGUMENT,   "ERROR"    , c_error,0,1},
- { P_ARGUMENT,   "EVENT"    , c_allevent,0,-1},
+ { P_ARGUMENT,   "EVENT"    , c_allevent,0,9},
  { P_ARGUMENT,   "EVERY"    , c_every,0,-1},
- { P_ARGUMENT,   "EXEC"     , c_exec,1,2},
+ { P_ARGUMENT,   "EXEC"     , c_exec,1,-1,{PL_INT}},
  { P_ARGUMENT,   "EXIT"     , c_exit,0,-1},
 /*
  { P_ARGUMENT,   "EXPORT"     , c_export,1,2, {PL_ALL, PL_NUMBER}},  
 */
- { P_ARGUMENT,   "FFT"      , c_fft,0,-1},
- { P_ARGUMENT,   "FILESELECT", c_fileselect,3,-1},
+ { P_ARGUMENT,   "FFT"      , c_fft,1,-1},
+ { P_PLISTE,   "FILESELECT", c_fileselect,4,4,{PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
  { P_ARGUMENT,   "FLUSH"    , c_flush,0,-1},
- { P_FOR,    "FOR"      , c_for,1,-1},
+ { P_FOR,    "FOR"      , c_for,1,-1,{PL_KEY}},
  { P_ARGUMENT,    "FORM_DO"      , c_form_do,2,2},
- { P_PROC,   "FUNCTION" , c_end,1,-1},
+ { P_PROC,   "FUNCTION" , c_end,1,-1,{PL_KEY}},
 
- { P_ARGUMENT,   "GET"      , c_get,5,5},
- { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1},
- { P_ARGUMENT,   "GOTO"     , c_goto,1,1},
- { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1},
+ { P_PLISTE,   "GET"      , c_get,5,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
+ { P_ARGUMENT,   "GOSUB"    , c_gosub,1,1,{PL_PROC}},
+ { P_ARGUMENT,   "GOTO"     , c_goto,1,1,{PL_LABEL}},
+ { P_ARGUMENT,   "GRAPHMODE", c_graphmode,1,1,{PL_INT}},
 
  { P_SIMPLE, "HOME"     , c_home,0,0},
 
- { P_IF,     "IF"       , c_if,1,-1},
- { P_ARGUMENT,   "INC"      , c_inc,1,1},
- { P_ARGUMENT,   "INFOW"    , c_infow,2,2},
+ { P_IF,     "IF"       , c_if,1,-1,{PL_KEY}},
+ { P_ARGUMENT,   "INC"      , c_inc,1,1,{PL_NVAR}},
+ { P_ARGUMENT,   "INFOW"    , c_infow,2,2,{PL_INT,PL_STRING}},
  { P_ARGUMENT,   "INPUT"    , c_input,1,-1},
 
- { P_ARGUMENT,   "KEYEVENT" , c_keyevent,0,-1},
+ { P_ARGUMENT,   "KEYEVENT" , c_keyevent,0,8},
 
 
- { P_ARGUMENT,   "LET"      , c_let,1,-1},
- { P_ARGUMENT,   "LINE"     , c_line,4,4},
+ { P_ARGUMENT,   "LET"      , c_let,1,-1,{PL_KEY}},
+ { P_PLISTE,     "LINE"     , c_line,4,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_ARGUMENT,   "LINEINPUT", c_lineinput,1,2},
- { P_ARGUMENT,   "LINK"     , c_link,       2,2},
+ { P_PLISTE,     "LINK"     , c_link,       2,2,{PL_FILENR,PL_STRING}},
  
  { P_SIMPLE, "LIST"     , c_list,0,0},
- { P_ARGUMENT,   "LOAD"     , c_load,1,1},
+ { P_ARGUMENT,   "LOAD"     , c_load,1,1,{PL_STRING}},
  { P_ARGUMENT,   "LOCAL"    , c_local,1,-1},
  { P_LOOP,   "LOOP"     , bidnm,0,0}, 
- { P_ARGUMENT,   "LPOKE"    , c_lpoke,       2,2},
+ { P_ARGUMENT,   "LPOKE"    , c_lpoke,       2,2,{PL_INT,PL_INT}},
 
  { P_ARGUMENT,   "LTEXT"    , c_ltext,0,-1},
 
- { P_ARGUMENT,   "MERGE"    , c_merge,1,1},
+ { P_ARGUMENT,   "MERGE"    , c_merge,1,1,{PL_STRING}},
  { P_SIMPLE,     "MENU"    , c_menu,0,0},
  { P_ARGUMENT,   "MENUDEF"  , c_menudef,1,2},
  { P_SIMPLE,     "MENUKILL" , c_menukill,0,0},
- { P_ARGUMENT,   "MENUSET"  , c_menuset,2,2},
- { P_ARGUMENT,   "MOUSE"    , c_mouse,1,4},
- { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,-1},
- { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,-1},
+ { P_ARGUMENT,   "MENUSET"  , c_menuset,2,2,{PL_INT,PL_INT}},
+ { P_PLISTE,   "MOUSE"    , c_mouse,1,5,{PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_ARGUMENT,   "MOUSEEVENT" , c_mouseevent,0,6},
+ { P_ARGUMENT,   "MOTIONEVENT" , c_motionevent,0,5},
  { P_ARGUMENT,   "MOVEW"    , c_movew,0,-1},
- { P_ARGUMENT,   "MUL"      , c_mul,2,2},
+ { P_ARGUMENT,   "MUL"      , c_mul,2,2,{PL_NVAR,PL_NUMBER}},
  
  { P_SIMPLE, "NEW"      , c_new,0,0},
  { P_NEXT,   "NEXT"     , c_next,0,1},
@@ -196,17 +198,18 @@ COMMAND comms[]= {
  { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
 
  { P_ARGUMENT,   "ON"       , c_on,         1,-1},
- { P_ARGUMENT,   "OPEN"     , c_open,       1,-1},
- { P_ARGUMENT,   "OPENW"    , c_openw,      1,-1},
- { P_ARGUMENT,   "OUT"      , c_out,        2,-1},
+ { P_ARGUMENT,   "OPEN"     , c_open,       3,4,{PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
+ { P_ARGUMENT,   "OPENW"    , c_openw,      1,-1,{PL_INT}},
+ { P_ARGUMENT,   "OUT"      , c_out,        2,-1,{PL_FILENR,PL_INT}},
 
- { P_ARGUMENT,   "PAUSE"    , c_pause,      1,1},
- { P_ARGUMENT,   "PBOX"     , c_pbox ,      4,4},
- { P_ARGUMENT,   "PCIRCLE"  , c_pcircle,    3,4},
- { P_ARGUMENT,   "PELLIPSE"  , c_pellipse,   4,5},
- { P_SIMPLE, "PLIST"    , c_plist,      0,0},
- { P_ARGUMENT,   "PLOT"     , c_plot,       2,2},
- { P_ARGUMENT,   "POKE"     , c_poke,       2,2},
+ { P_ARGUMENT,   "PAUSE"    , c_pause,      1,1,{PL_NUMBER}},
+ { P_PLISTE,     "PBOX"     , c_pbox ,      4,4,{PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PCIRCLE"  , c_pcircle,    3,5,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PELIPSE"  , c_pellipse,   4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PELLIPSE" , c_pellipse,   4,6,{PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
+ { P_PLISTE,     "PLOT"     , c_plot,       2,2,{PL_INT,PL_INT}},
+ { P_ARGUMENT,   "POKE"     , c_poke,       2,2,{PL_INT,PL_INT}},
  { P_ARGUMENT,   "POLYFILL" , c_polyfill,   3,7},
  { P_ARGUMENT,   "POLYLINE" , c_polyline,   3,6},
  { P_ARGUMENT,   "POLYMARK" , c_polymark,   3,6},
@@ -217,53 +220,53 @@ COMMAND comms[]= {
  /* Ausdruck als Message queuen
   { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALL,PL_NUMBER}},
  */
- { P_ARGUMENT,   "PUT"  , c_put,      3,3},
- { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,2},
+ { P_PLISTE,   "PUT"  , c_put,      3,4,{PL_INT,PL_INT,PL_STRING,PL_INT}},
+ { P_ARGUMENT,   "PUTBACK"  , c_unget,      1,-1},
 
  { P_SIMPLE, "QUIT"     , c_quit,       0,0},
 
  { P_IGNORE, "RANDOMIZE", c_nop  ,      0,0},
  { P_ARGUMENT,   "READ"     , c_read,       1,-1},
- { P_ARGUMENT,   "RELSEEK"  , c_relseek,    2,2},
+ { P_ARGUMENT,   "RELSEEK"  , c_relseek,    2,2,{PL_FILENR,PL_INT}},
  { P_REM,    "REM"      , c_nop  ,      0,0},
  { P_REPEAT, "REPEAT"   , c_nop  ,      0,0},
- { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1},
+ { P_ARGUMENT,   "RESTORE"  , c_restore,    1,1,{PL_LABEL}},
  { P_ARGUMENT,   "RETURN"   , c_return,     0,1},
  { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
  { P_SIMPLE, "RSRC_FREE", c_rsrc_load,0,0},
- { P_ARGUMENT, "RSRC_LOAD", c_rsrc_load,1,1},
+ { P_ARGUMENT, "RSRC_LOAD", c_rsrc_load,1,1,{PL_STRING}},
 
  { P_SIMPLE, "RUN"      , c_run,        0,0},
 
- { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1},
- { P_ARGUMENT,   "SAVEWINDOW", c_savewindow,1,1},
+ { P_ARGUMENT,   "SAVESCREEN", c_savescreen,1,1,{PL_STRING}},
+ { P_ARGUMENT,   "SAVEWINDOW", c_savewindow,1,1,{PL_STRING}},
  { P_ARGUMENT,   "SCOPE"    , c_scope,      1,-1},
- { P_ARGUMENT,   "SEEK"     , c_seek,       1,-1},
+ { P_ARGUMENT,   "SEEK"     , c_seek,       1,2,{PL_FILENR,PL_INT}},
  { P_SELECT, "SELECT"   , c_select,     1,1},
  /*
  { P_ARGUMENT,   "SEMGIVE"  , c_semgive, 1,2,{PL_NUMBER,PL_NUMBER}},
  { P_ARGUMENT,   "SEMTAKE"  , c_semtake, 1,2,{PL_NUMBER,PL_NUMBER}},
  */
- { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1},
- { P_ARGUMENT,	"SETMOUSE" , c_setmouse,   1,-1},
- { P_ARGUMENT,	"SGET" , c_sget,   1,1},
+ { P_ARGUMENT,	"SETFONT"  , c_setfont,    1,1,{PL_STRING}},
+ { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,3,{PL_INT,PL_INT,PL_INT}},
+ { P_ARGUMENT,	"SGET" , c_sget,   1,1,{PL_STRING}},
  { P_SIMPLE,	"SHOWPAGE" , c_vsync,      0,0},
- { P_ARGUMENT,	"SIZEW"    , c_sizew,      1,-1},
- { P_ARGUMENT,	"SPUT"    , c_sput,      1,1},
+ { P_ARGUMENT,	"SIZEW"    , c_sizew,      3,3,{PL_INT,PL_INT,PL_INT}},
+ { P_ARGUMENT,	"SPUT"    , c_sput,      1,1,{PL_STRING}},
  { P_SIMPLE,	"STOP"     , c_stop,       0,0},
- { P_ARGUMENT,	"SUB"      , c_sub,        2,2},
+ { P_ARGUMENT,	"SUB"      , c_sub,        2,2,{PL_NVAR,PL_NUMBER}},
  { P_ARGUMENT,	"SWAP"     , c_swap,       2,2},
  { P_SELECT,	"SWITCH"   , c_select,     1,1},
- { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1},
+ { P_ARGUMENT,	"SYSTEM"   , c_system,     1,1,{PL_STRING}},
 
- { P_ARGUMENT,	"TEXT"     , c_text,       3,3},
- { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2},
+ { P_ARGUMENT,	"TEXT"     , c_text,       3,3,{PL_INT,PL_INT,PL_STRING}},
+ { P_ARGUMENT,	"TITLEW"    , c_titlew,    2,2,{PL_INT,PL_STRING}},
  { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
  { P_SIMPLE,	"TRON"     , c_tron,       0,0},
 
  { P_ARGUMENT,  "UNLINK"   , c_close  ,1,-1},
  { P_UNTIL,	"UNTIL"    , c_until,      1,1},
- { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1},
+ { P_ARGUMENT,	"USEWINDOW", c_usewindow,  1,1,{PL_INT}},
 
  { P_SIMPLE,	"VERSION"  , c_version,    0,0},
  { P_ARGUMENT,	"VOID"     , c_void,       1,1},
@@ -271,72 +274,14 @@ COMMAND comms[]= {
 
  { P_WEND,	"WEND"     , bidnm,       0,0},
  { P_WHILE,	"WHILE"    , c_while,      1,1},
- { P_ARGUMENT,	"WORT_SEP" , c_wort_sep,  2,-1},
+ { P_ARGUMENT,	"WORT_SEP" , c_wort_sep,  4,5,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
  
  { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
  { P_SIMPLE,	"XRUN"     , c_xrun,     0,0},
 
 };
-int anzcomms=sizeof(comms)/sizeof(COMMAND);
+const int anzcomms=sizeof(comms)/sizeof(COMMAND);
 
-/* Standard-Fehlerroutine   */
-
-
-void error(char err, char *bem) {
-  printf("Zeile %d: %s\n",pc-1,error_text(err,bem));
-  if(!errcont) batch=0;   
-}
-
-void break_handler( int signum) {
-  if(batch) {
-    printf("** PROGRAM-STOP \n");
-    batch=0;
-    signal(signum, break_handler);
-  } else {
-    printf("** X11BASIC-QUIT \n");
-    signal(SIGINT, obh);
-    raise(signum);
-  }
-}
-void fatal_error_handler( int signum) {
-  printf("** Fataler BASIC-Interpreterfehler #%d \n",signum);
-  if(batch) {
-    if(pc>=0) {
-      printf("Zeile  pc-1   : %s\n",program[pc-2]);
-      printf("Zeile: Pc=%d  : %s\n",pc-1,program[pc-1]);
-      printf("Zeile  pc+1   : %s\n",program[pc]);
-    } else printf("PC negativ !\n");
-      printf("Stack-Pointer: SP=%d\n",sp);
-      batch=0;
-  } else {
-    c_dump("");
-    printf("Programm-Abbruch...\n");    
-    signal(signum,SIG_DFL);
-  }
-  raise(signum);
-}
-
-
-void timer_handler( int signum) {
-  if(alarmpc==-1) printf("** Uninitialisierter Interrupt #%d \n",signum);
-  else {
-    int oldbatch,osp=sp,pc2;
-      pc2=procs[alarmpc].zeile;
-      
-      if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
-      else {printf("Stack-Overflow ! PC=%d\n",pc); batch=0;}
-      oldbatch=batch;batch=1;
-      programmlauf();
-      batch=min(oldbatch,batch);
-      if(osp!=sp) {
-	pc=stack[--sp]; /* wenn error innerhalb der func. */
-        printf("Fehler innerhalb Interrupt-FUNCTION. \n");
-      }
-      
-  }
-  signal(signum, timer_handler);
-  if(everyflag) alarm(everytime); 
-}
 
 
 P_CODE make_pcode(char *n) {
@@ -359,8 +304,97 @@ P_CODE make_pcode(char *n) {
 
 }
 
+int make_pliste(int pmin,int pmax,short *pliste,char *n, PARAMETER **pr){
+  char w1[strlen(n)+1],w2[strlen(n)+1];
+  PARAMETER *pret;
+  int i=0,e=wort_sep(n,',',TRUE,w1,w2);
+  int typ;
+  if(pmax==-1) pret=malloc(sizeof(PARAMETER)*12);
+  else pret=malloc(sizeof(PARAMETER)*pmax);
+  *pr=pret;
+  while(e && i<pmax) {
+    pret[i].pointer=NULL; /* Default is NULL */
+    pret[i].integer=0;
+    pret[i].real=0.0;
+      if(strlen(w1)){
+        if(pliste[i]==PL_LABEL) {
+          pret[i].integer=labelnr(w1);
+          if(pret[i].integer==-1) {
+	    error(20,w1);/* Label nicht gefunden */
+            free_pliste(i,pret);
+            return(-1);
+	  }
+	} else if(pliste[i]==PL_FILENR) {
+           pret[i].integer=get_number(w1);
+	   if(pret[i].integer>99 || pret[i].integer<1) {
+	     error(23,"");  /* File # falsch  */
+	     free_pliste(i,pret);
+             return(-1);
+           }
+	} else if(pliste[i]==PL_PROC) {
+	  char *pos2,*pos=searchchr(w1,'(');
+          if(pos!=NULL) {
+            pos[0]=0;pos++;
+            pos2=pos+strlen(pos)-1;
+            if(pos2[0]!=')') {
+	      error(32,w1); /* Syntax error */
+	      free_pliste(i,pret);
+              return(-1);
+            }
+            else pos2[0]=0;
+          } else pos=w1+strlen(w1);
+          pret[i].integer=procnr(w1,1);
+          if(pret[i].integer==-1) {
+            error(19,w1); /* Procedure nicht gefunden */
+	    free_pliste(i,pret);
+            return(-1);
+          }
+	} else if(pliste[i]==PL_LEER) { 
+	  pret[i].typ=PL_LEER; /* Nixtun */
+	} else if(pliste[i] & PL_FLOAT) {  /* Float oder Nuber */
+          pret[i].real=parser(w1);
+	} else if(pliste[i]==PL_INT) {  /* Integer */
+	  pret[i].integer=(int)parser(w1);
+	} else if(pliste[i]==PL_STRING) {  /* String */
+          STRING str=string_parser(w1);
+	  pret[i].integer=str.len;
+	  pret[i].pointer=str.pointer;
+	} else if((pliste[i] & PL_VAR) || (pliste[i] & PL_KEY)) { ; /* Varname */
+	  pret[i].pointer=malloc(strlen(w1)+1);
+	  strcpy(pret[i].pointer,w1);
+	  pret[i].integer=strlen(w1);
+        } else printf("Unbekannter Parametertyp.\n");
+      } else pret[i].typ=PL_LEER;
+      
+      e=wort_sep(w2,',',TRUE,w1,w2);
+     i++;
+  }
+  if(i<pmin) {
+    error(42,""); /* Zu wenig Parameter  */
+    free_pliste(i,pret);
+    return(-1);
+  } else if(i==pmax && e) {
+    error(45,""); /* Zu viele Parameter  */
+  } 
+  return(i);
+}
+void free_pliste(int anz,PARAMETER *pret){
+  int i;
+  for(i=0;i<anz;i++) {
+    if(pret[i].pointer!=NULL) free(pret[i].pointer);
+  }
+  if(pret!=NULL) free(pret);
+}
+
+void loadprg(char *filename) {
+  programbufferlen=prglen=pc=sp=0;
+  mergeprg(filename);
+}
+
 int mergeprg(char *fname) {
-  char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,len,typ;  FILE *dptr;
+  int i,len;
+  char *pos;  
+  FILE *dptr;
 
   /* Filelaenge rauskriegen */
 
@@ -368,9 +402,8 @@ int mergeprg(char *fname) {
   programbuffer=realloc(programbuffer,programbufferlen+len+1);
   bload(fname,programbuffer+programbufferlen,len);
   programbufferlen+=len;
-  clear_parameters();
 
-  /* Zeilenzahl herausbekommen */
+ /* Zeilenzahl herausbekommen */
   pos=programbuffer;
   i=prglen=0;
   while(i<programbufferlen) {
@@ -381,11 +414,19 @@ int mergeprg(char *fname) {
     }
     i++;
   }
-  
-  /* Label- und Procedurliste Erstellen und p_code transformieren*/
 
+
+  return(init_program());
+}
+
+int init_program() {
+  char *pos,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  int i,typ;
+
+  clear_parameters();
   clear_labelliste();
   clear_procliste();
+   
+  /* Label- und Procedurliste Erstellen und p_code transformieren*/
   
   for(i=0; i<prglen;i++) {
     zeile=realloc(zeile,strlen(program[i])+1);
@@ -399,6 +440,9 @@ int mergeprg(char *fname) {
 
     wort_sep2(zeile," !",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
     xtrim(zeile,TRUE,zeile);
+#ifdef DEBUG
+    printf("Zeile %d : %s\n",i,zeile);
+#endif
     if(wort_sep(zeile,' ',TRUE,zeile,buffer)==0) pcode[i].opcode=P_IGNORE|P_NOCMD;	      
     else if(zeile[0]=='\'' || zeile[0]=='#') {
       pcode[i].opcode=P_REM;
@@ -517,6 +561,9 @@ int mergeprg(char *fname) {
     }
     
   } 
+#ifdef DEBUG
+  printf("PASS 2:\n");
+#endif
   /* Pass 2 */
   for(i=0; i<prglen;i++) {
   
@@ -535,6 +582,7 @@ int mergeprg(char *fname) {
     }
   }
   free(buffer);free(zeile); 
+  return(0);
 }
 
 void clear_labelliste() {
@@ -680,52 +728,101 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
   return(-1);
 }
 
+int do_using(char *dest,double num,char *format){
+  int a,p,p2,r,i,j; /* dummy */
+  int neg,ln=0,vorz=1;
+  const char *digits="01234567899";
+  
+  if (*format=='%') { /* c-style format */
+    sprintf(dest,format,num);
+  } else { /* basic-style format */
+   
+   /* Zaehle die Rauten vor dem Punkt */
+   a=r=p=0;
+   while(format[p] && format[p]!='.') {
+     if(format[p++]=='#') r++;
+   }
+   /* Zaehle die Rauten nach dem Punkt */
+   while(format[p]) {
+     if(format[p++]=='#') a++;
+   }
+  
+   j=a+r;
+   neg=(num<0);
+   num=fabs(num);
+   num+=0.5*pow(10,(double)-a);  /* zum Runden */
+   
+   for(i=0;i<strlen(format);i++) {
+     if(format[i]=='+') {*dest=(neg ? '-':'+'); vorz=0;}
+     else if(format[i]=='-') {*dest=(neg ? '-':' ');vorz=0;}
+     else if(format[i]=='#') {
+       j--;
+       p=(int)(num/pow(10,(double)--r));
+       p2=(int)(num/pow(10,(double)(r-1)));
+      /* printf("pow=%g\n",num/pow(10,(double)r));*/
+       num-=p*pow(10,(double)r);
+       if(p) *dest=digits[p];
+       else {
+         if(vorz&&p2) { *dest=(neg ? '-':' ');vorz=0;}
+	 else *dest=(ln?'0':' ');
+       }
+     } else *dest=format[i];
+     dest++;
+   }
+   *dest='\0';
+  }
+  return(0);
+}
 
 char *print_arg(char *ausdruck) {
   int e;
-  char *ergebnis;
   char *a1,w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
-  
-  /*printf("print_arg: %s\n",ausdruck);*/
-  ergebnis=malloc(4);
+  char *ergebnis=malloc(4);
   ergebnis[0]=0;
   e=arg2(ausdruck,TRUE,w1,w2);
-  while(e!=0) {
+  while(e) {
     a1=indirekt2(w1);
   /*  printf("TEST: <%s> <%s> %d\n",w1,w2,e);*/
     if(strncmp(a1,"AT(",3)==0) {
       a1[strlen(a1)-1]=0;
       wort_sep(a1+3,',',TRUE,w3,w4);
-      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+10);
+      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+16);
       sprintf(ergebnis+strlen(ergebnis),"\033[%.3d;%.3dH",(int)parser(w3),(int)parser(w4));
     } else if(strncmp(a1,"TAB(",4)==0) {
       a1[strlen(a1)-1]=0;
-      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+6);
+      ergebnis=realloc(ergebnis,strlen(ergebnis)+1+8);
       sprintf(ergebnis+strlen(ergebnis),"\033[%.3dC",(int)parser(a1+4));
     } else {
       if(strlen(a1)) {    
-      /*printf("TEST2: <%s> <%s> %d\n",a1,a2,e);*/
-        int typ=type2(a1);
-	if(typ & ARRAYTYP) {
+        int typ,ee;
+	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
+	typ=type2(a1);
+	
+	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
 	  if(typ & STRINGTYP) ;
 	  else ;
 	} else if(typ & STRINGTYP) {
-	  /*printf("TEST3: <%s> <%s> %d\n",a1,a2,e);*/
-
           char *a3=s_parser(a1);
 	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3));
           strcat(ergebnis,a3); 
 	  free(a3);
         } else {
-	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+15);
-	  sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
-        }
+	  if(ee==2) {
+	    char *a3=s_parser(w4);
+	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3)+32);
+	    do_using(ergebnis+strlen(ergebnis),parser(a1),a3);
+	    free(a3);
+	  } else {
+	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
+	    sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
+          }
+	}
       }
     }
     ergebnis=realloc(ergebnis,strlen(ergebnis)+1+1);
     if(e==2) ;
-    else if(e==3) strcat(ergebnis,"\011");
+    else if(e==3) strcat(ergebnis,"\011");   /* TAB */
     else if(e==4) strcat(ergebnis," ");
     free(a1);
     e=arg2(w2,TRUE,w1,w2);
@@ -751,7 +848,22 @@ void kommando(char *cmd) {
     xzuweis(w1,w2);
     return;
   }
-  
+   if(isdigit(w1[0]) || w1[0]=='(') {
+     printf("%.13g\n",parser(zeile));
+     return;  
+  } else if(w1[0]=='&') {
+    char *test,*test2;
+    test=indirekt2(w1);
+    test2=malloc(strlen(test)+1+1+strlen(w2));
+    strcpy(test2,test);
+    free(test);
+    strcat(test2," ");
+    strcat(test2,w2);  
+    kommando(test2);
+    free(test2);
+    return;
+  } 
+ 
   
   /* Kommandoliste durchsuchen, moeglichst effektiv ! */
 
@@ -767,21 +879,19 @@ void kommando(char *cmd) {
     if(i==a) break;
   }
   if(i<anzcomms) {
-    if(strcmp(w1,comms[i].name)==0) {(comms[i].routine)(w2);return;}
-  }   
-  
-  if(isdigit(w1[0])) printf("%.13g\n",parser(zeile));  
-  else if(w1[0]=='&') {
-    char *test,*test2;
-    test=indirekt2(w1);
-    test2=malloc(strlen(test)+1+1+strlen(w2));
-    strcpy(test2,test);
-    free(test);
-    strcat(test2," ");
-    strcat(test2,w2);  
-    kommando(test2);
-    free(test2);
-  } else  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);
+    if(strcmp(w1,comms[i].name)==0) {
+      if(comms[i].opcode & P_IGNORE) return;
+      if(comms[i].opcode==P_ARGUMENT) (comms[i].routine)(w2);
+      else if(comms[i].opcode==P_SIMPLE) (comms[i].routine)();
+      else if(comms[i].opcode==P_PLISTE) {
+        PARAMETER *plist;
+        int e=make_pliste(comms[i].pmin,comms[i].pmax,(short *)comms[i].pliste,w2,&plist);
+        (comms[i].routine)(plist,e);
+	if(e!=-1) free_pliste(e,plist);
+      } else error(38,w1); /* Befehl im Direktmodus nicht moeglich */
+      return;
+    }
+  } else  printf("Unbekannter Befehl: <%s> <%s>\n",w1,w2);  
 }
 
 
@@ -813,63 +923,17 @@ void programmlauf(){
       } else {
         if(pcode[opc].opcode&P_ARGUMENT)
           (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].argument);
-        else if(pcode[opc].opcode&P_PLISTE)
-	 (comms[pcode[opc].opcode&PM_COMMS].routine)(pcode[opc].ppointer);
-        else printf("Was denn noch ?: %s\n",program[opc]);
+        else if(pcode[opc].opcode&P_PLISTE) {
+	  PARAMETER *plist;
+	  int i=pcode[opc].opcode&PM_COMMS;
+          int e=make_pliste(comms[i].pmin,comms[i].pmax,(short *)comms[i].pliste,pcode[opc].argument,&plist);
+          (comms[i].routine)(plist,e);
+	  if(e!=-1) free_pliste(e,plist);
+        } else printf("Was denn noch ?: %s\n",program[opc]);
       }
 #ifdef DEBUG
       ptimes[opc]=(int)((clock()-timer)/1000);  /* evaluiert die
                                                    Ausfuehrungszeit der Programmzeile */
 #endif
     }
-}
-
-
-main(int anzahl, char *argumente[]) {
-  char buffer[MAXSTRLEN],*zw; 
- 
-   programbuffer=NULL;
-  
-#ifdef CONTROL  
-  cs_init();        /* Kontrollsystem anmelden */
-#endif
-  /* Signal- und Interrupt-Handler installieren  */
-  obh=signal(SIGINT, break_handler);
-  signal(SIGILL, fatal_error_handler);
-  signal(SIGSEGV, fatal_error_handler);
-  signal(SIGBUS, fatal_error_handler);
-  signal(SIGALRM, timer_handler);
-  set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
-  atexit(reset_input_mode);
-  param_anzahl=anzahl;
-  param_argumente=argumente;
-  
-  if(anzahl<2) {    /* Kommandomodus */
-    intro();
-    usage();
-    batch=0;
-  } else {
-    kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
-    if(loadfile) {
-      if(exist(ifilename)) {
-        loadprg(ifilename);
-	if (runfile) c_run("");     
-      } else printf("ERROR: %s nicht gefunden !\n",ifilename);
-    
-    }
-  } 
-  
-  /* Programmablaufkontrolle  */
-  for(;;) {
-    programmlauf();
-    echo=0;batch=0;
-    if(daemonf) zw=simple_gets("");
-    else zw=do_gets("> ");
-    if(zw==NULL) {
-      c_quit("");
-    } else {
-      strcpy(buffer,zw);  
-      kommando(buffer);
-    }
-  }
 }

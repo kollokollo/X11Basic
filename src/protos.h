@@ -6,14 +6,19 @@
  * COPYING for details
  */
 #include "vtypes.h"
+#include "ptypes.h"
 
 /* Prototypen */
 
 /* Hilfsfunktionen */
 
-
+void break_handler( int);
+void fatal_error_handler( int);
+void timer_handler( int);
 double ltext(int, int, double, double, double , int, char *);
 char *inkey();
+int make_pliste(int,int,short *,char *,PARAMETER **);
+void free_pliste(int,PARAMETER *);
 int wort_sep (char *,char ,int ,char *, char *);
 int wort_sepr(char *,char ,int ,char *, char *);
 int wort_sep2(char *,char *,int ,char *, char *);
@@ -80,65 +85,18 @@ ARRAY *create_array(int , int ,int *);
 ARRAY *nullmatrix(int , int ,int *);
 ARRAY *einheitsmatrix(int , int ,int *);
 
-/* Kommandos */
-void bidnm(char *);
-void c_poke(char *),c_dpoke(char *),c_lpoke(char *);
-void c_local(char *),c_flush(char *);
-void c_nop(char *),c_do(char *),c_else(char *);
-void c_arrayfill(char *),c_arraycopy(char *),c_cls(char *),c_clr(char *);
-void c_print(char *),c_clear(char *),c_tron(char *),c_troff(char *);
-void c_add(char *),c_quit(char *),c_stop(char *),c_beep(char *);
-void c_sub(char *),c_erase(char *),c_void(char *);
-void c_mul(char *),c_exit(char *),c_pause(char *);
-void c_div(char *),c_dec(char *),c_dim(char *);
-void c_loop(char *),c_version(char *),c_chain(char *);
-void c_while(char *),c_echo(char *),c_end(char *);
-void c_return(char *),c_for(char *),c_inc(char *);
-void c_if(char *), c_fft(char *),c_error(char *);
-void c_load(char *),c_goto(char *),c_gosub(char *);
-void c_merge(char *),c_home(char *),c_input(char *);
-void c_new(char *),c_read(char *),c_cont(char *);
-void c_wend(char *),c_next(char *),c_until(char *),c_break(char *);
-void c_run(char *),c_list(char *),c_plist(char *),c_out(char *);
-void c_dump(char *),c_open(char *),c_close(char *),c_lineinput(char *);
-void c_closew(char *),c_circle(char *),c_clearw(char *);
-void do_restore();
-void c_dolocal(char *,char *);
-void next_data_line();
-void c_onbreak(char *),c_seek(char *),c_relseek(char *);
-void c_link(char *),c_exec(char *);
-void c_onmenu(char *),c_case(char *),c_select(char *),c_endselect(char *);
-void c_onerror(char *),c_system(char *),c_let(char *);
-void c_on(char *),c_restore(char *),c_swap(char *);
-void handle_window(int),c_bload(char *),c_bsave(char *),c_bmove(char *);
-void c_bput(char *),c_bget(char *),c_wort_sep(char *);
-void c_addsubmuldiv(char *,int),c_unget(char *);
-void c_after(char *),c_every(char *),c_rsrc_load(char *),c_rsrc_free(char *),c_form_do(char *),c_alert_do(char *);
-void programmlauf();
 
-/* Grafikroutinen */
-
-void c_alert(char *),c_setfont(char *),c_defmouse(char *),c_allevent(char *);
-void c_menu(char *),c_menuset(char *),c_menudef(char *),c_menukill(char *);
-void set_graphmode(int),set_font(char *),c_vsync(char *);
-void c_copyarea(char *),c_sget(char *),c_sput(char *),c_get(char *),c_put(char *);
-void c_scope(char *), c_color(char *), c_deffill(char *);
-void c_defline(char *), c_deftext(char *), c_text(char *),c_setmouse(char *);
-void c_rootwindow(char *), c_norootwindow(char *),c_usewindow(char *);
-void c_draw(char *), c_ellipse(char *),c_graphmode(char *);
-void c_infow(char *), c_keyevent(char *),c_mouse(char *);
-void c_ltext(char *), c_mouseevent(char *),c_motionevent(char *);
-void c_movew(char *), c_openw(char *),c_pcircle(char *);
-void c_pellipse(char *), c_plot(char *),c_sizew(char *),c_titlew(char *);
-void c_fileselect(char *),c_xload(char *),c_xrun(char *);
-void c_savescreen(char *),c_savewindow(char *);
-void c_box(char *),c_pbox(char *),c_line(char *);
-void c_polyfill(char *),c_polyline(char *),c_polymark(char *);
 void do_menu_draw();
 int  do_menu_select();
 void do_polygon(int,char *);
+void do_restore();
  
 void activate();
+void next_data_line();
+void handle_window(int);
+void programmlauf();
+void set_font(char *);
+void set_graphmode(int);
 
 char *rsearchchr(char *, char);
 char *rsearchchr2(char *,char,char *);

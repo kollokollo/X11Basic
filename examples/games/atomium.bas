@@ -23,10 +23,8 @@ weiss=get_color(65530,65530,65530)
 schwarz=get_color(0,0,0)
 lila=get_color(65530,0,65530)
 gruen=get_color(0,65530)
+defmouse 2
 
-'
-
-'
 @init
 LET sound=TRUE
 @l.i
@@ -46,6 +44,7 @@ spiel=TRUE
 ON MENU BUTTON 1,1,1 GOSUB button
 ' every 1,lauf
 CLR cnt
+defmouse 0
 DO
   color gruen
   pcircle 10,360,4
@@ -62,7 +61,7 @@ DO
   circle 10,360,4
   spieler=NOT spieler
   @check_win
-
+  defmouse 2
   IF s$(ABS(spieler)+1)="Computer" AND spiel
     timevalue=ctimer
     @computer
@@ -104,6 +103,7 @@ DO
     SUB stackp,4
   ELSE
     fertig=0
+    defmouse 0
     REPEAT
       VSYNC
      
@@ -116,8 +116,6 @@ DO
 '          NEXT my
 '        NEXT mx
 '      ENDIF
-     
-      
       mouseevent x,y,k
       @button(x,y,k)
     UNTIL fertig
@@ -138,8 +136,10 @@ PROCEDURE button(x,y,k)
     @ende
   else if @inbutton(300,380,"Zugvorschlag",x,y)
     @mbutton(300,380,"Zugvorschlag",1)
+    defmouse 2
     vsync
     @zugvorschlag
+    defmouse 0
     @mbutton(300,380,"Zugvorschlag",0)
     vsync
   else if @inbutton(500,380,"Sound",x,y)
@@ -148,12 +148,14 @@ PROCEDURE button(x,y,k)
     vsync
   else if @inbutton(400,380,"neues Spiel",x,y)
     @mbutton(400,380,"neues Spiel",1)
+    defmouse 2
     vsync
     @spieler
     spieler=-RANDOM(2)
     spiel=TRUE
     CLR cnt,feld()
     @show_f
+    defmouse 0
     @mbutton(400,380,"neues Spiel",0)
     vsync
   else if @inbutton(200,380,"Farbwechsel",x,y)
@@ -389,12 +391,18 @@ PROCEDURE check_win
   color schwarz
   box 320,130,520,300
   
-  text 350,160,"Spielsteine:"
-  text 350,180,s$(1)+": "+STR$(a,4)+" (weiß)"
-  text 350,200,s$(2)+": "+STR$(b,4)+" (schwarz)"
-  text 350,220,"Gesamt: "+STR$(a+b,4)
+  setfont "*-courier-bold-r-*-14-*"
+  text 350,160,"Spielsteine:"  
+  text 340,260,s$(abs(spieler)+1)+" ist dran !"
 
-  text 350,260,s$(abs(spieler)+1)+" ist dran !"
+  setfont "*-courier-medium-r-*-12-*"
+ 
+  text 350,220,"Gesamt: "
+  text 350,180,s$(1)+" (weiß):    "
+  text 350,200,s$(2)+" (schwarz): "
+  text 480,180,STR$(a,4)
+  text 480,200,STR$(b,4)
+  text 480,220,STR$(a+b,4)
 
   IF a=0 AND b>1
     color 2
@@ -481,11 +489,11 @@ PROCEDURE zugvorschlag
   @computer
   FOR i=0 TO 10
     @draw_platz(x,y,spieler,(feld(x,y) and 255)+1)
-    PAUSE 0.2
-    VSYNC
+    vsync
+    PAUSE 0.3
     @make(x,y)
     vsync
-    pause 0.2
+    pause 0.3
   NEXT i
 RETURN
 procedure draw_platz(x,y,g,a)

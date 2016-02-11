@@ -154,43 +154,45 @@ typedef struct {
 
 
 typedef struct {
-  int typ;
+  short typ;
+  int integer;
+  double real;
   void *pointer;
 } PARAMETER;
 
 typedef struct {
-  int opcode;
+  long opcode;
   int integer;
-  int panzahl;
+  short panzahl;
   PARAMETER *ppointer;
   char *argument;
 } P_CODE;
 
 typedef struct {
-  int opcode;
-  char name[32];
+  long opcode;
+  char name[20];
   void (*routine)();
-  short pmin;        /* Mindestanzahl an Parametern */
-  short pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
-  short pliste[16];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+  char pmin;        /* Mindestanzahl an Parametern */
+  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } COMMAND;
 
 typedef struct {
-  int opcode;
-  char name[32];
+  long opcode;
+  char name[20];
   double (*routine)();
-  short pmin;        /* Mindestanzahl an Parametern */
-  short pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
-  short pliste[16];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+  char pmin;        /* Mindestanzahl an Parametern */
+  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } FUNCTION;
 
 typedef struct {
   int opcode;
-  char name[32];
+  char name[20];
   STRING (*routine)();
-  short pmin;        /* Mindestanzahl an Parametern */
-  short pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
-  short pliste[16];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
+  char pmin;        /* Mindestanzahl an Parametern */
+  char pmax;        /* Maximal moegliche Anzahl (-1) = beliebig */
+  short pliste[12];  /* Liste der Kommandoparametertypen mit pmin Eintraegen */
 } SFUNCTION;
 
 

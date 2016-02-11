@@ -39,25 +39,29 @@ CFLAGS= $(INC) $(DEF) $(OPT) $(SFLAGS)
 
  
 
-DISTOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
-        mathemat_dummy.o runtime.o wort_sep.o xtrim.o ltext.o\
+OBJS=   xbasic.o file.o ccs.o io.o parser.o variablen.o\
+        runtime.o wort_sep.o ltext.o\
 	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
 	sysVstuff.o
 
-OBJS=$(DISTOBJS)
-
-AOBJS=xbasic.o file.o ccs.o io.o parser.o variablen.o\
-	mathematics.o runtime.o\
-	kommandos.o gkommandos.o do_gets.o errortxt.o window.o\
-	wort_sep.o xtrim.o ltext.o sysVstuff.o
+DISTOBJS=$(OBJS) main.o mathemat_dummy.o
 
 
-CSRC=$(OBJS:.o=.c)
+
+LIBOBJS=$(OBJS) mathematics.o
+	
+AOBJS=  main.o $(LIBOBJS)
+
+
+CSRC=$(DISTOBJS:.o=.c)
 DISTCSRC=$(DISTOBJS:.o=.c)
 
-DIST= doc/* \
+DEPSRC=$(CSRC) 
+
+DIST= README INSTALL COPYING install.sh doc/* \
       src/xbasic.c \
       src/file.c \
+      src/main.c \
       src/ccs.c \
       src/io.c \
       src/parser.c \
@@ -65,23 +69,27 @@ DIST= doc/* \
       src/mathemat_dummy.c \
       src/runtime.c \
       src/wort_sep.c \
-      src/xtrim.c \
       src/ltext.c \
       src/kommandos.c \
+      src/kommandos.h \
       src/gkommandos.c \
+      src/gkommandos.h \
       src/do_gets.c \
       src/errortxt.c \
       src/window.c \
-      src/sysVstuff.c src/defs.h src/globals.h src/xbasic.h src/fdata.c \
+      src/sysVstuff.c \
+      src/defs.h \
+      src/globals.h \
+      src/xbasic.h src/fdata.c \
       src/window.h src/file.h src/protos.h src/options.h \
 	src/Makefile.in src/ptypes.h src/vtypes.h\
 	src/configure src/config/*\
-	src/config.guess src/INSTALL \
+	src/config.guess \
         src/configure.in\
         src/bitmaps/* examples/*
 
 DIST2=$(DISTOBJS:.o=.c)
-DEPSRC=$(CSRC) $(MOREOBJ:.o=.c)
+
 
 DIR=X11Basic-@version@
 
@@ -93,24 +101,57 @@ all :    configure Makefile xbasic
 
 configure : configure.in
 	autoconf
-
+Makefile : Makefile.in
+	./configure
+ 
 fft : $(AOBJS) 
 	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
+	strip xbasic	
+static : x11basic.a main.o
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic.static main.o x11basic.a\
+		$(LIBS) $(XLIBS)
+psydo : psydo.o lib
+	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o  \
+		$(LIBS)-lx11basic $(XLIBS)
+psydostatic : psydo.o x11basic.a
+	$(CC) $(OPT) -L. $(LINKFLAGS) -o a.out psydo.o x11basic.a \
+		$(LIBS) $(XLIBS)
 
-xbasic : $(OBJS) 
-	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(OBJS) \
+xbasic : $(DISTOBJS) 
+	$(CC) $(OPT) $(LINKFLAGS) -o xbasic $(DISTOBJS) \
 		$(LIBS) $(XLIBS)
 
 csxbasic : $(OBJS) 
 	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o csxbasic $(AOBJS) \
 		$(LIBS) $(XLIBS)
+lib : $(LIBOBJS)
+	$(CC) $(OPT) $(LINKFLAGS) -shared -o libx11basic.so $(LIBOBJS)
+x11basic.a : $(LIBOBJS)
+	 ar -ru x11basic.a $(LIBOBJS) 
 
-install : all
+dyn : lib main.o
+	$(CC) $(OPT) -L. $(LINKFLAGS) -o xbasic.dyn main.o \
+	$(LIBS) -lx11basic $(XLIBS)
+	strip xbasic.dyn
+
+install : xbasic
 	cp xbasic ${HOME}/bin/xbasic
-
+install2 : dyn lib 
+	cp xbasic.dyn ${HOME}/bin/xbasic
+	cp libx11basic.so /usr/local/lib/
+	strip ${HOME}/bin/xbasic
+installroot : dyn lib 
+	cp xbasic.dyn /bin/xbasic
+	cp libx11basic.so /usr/local/lib/
+	rm -f /usr/lib/libx11basic.so
+	ln -s /usr/local/lib/libx11basic.so /usr/lib/libx11basic.so
+	strip /bin/xbasic
+	strip /usr/local/lib/libx11basic.so
+	(cd .. ; cp man-pages/x11basic.1 /usr/man/man1/x11basic.1)
+	
 clean :
-	rm -f xbasic *.o
+	rm -f xbasic xbasic.dyn xbasic.static *.o *.so a.out *.a
 
 distclean : clean
 	rm -f Makefile config.cache config.status

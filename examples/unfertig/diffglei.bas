@@ -85,6 +85,9 @@ PROCEDURE init
   RESTORE py_data
   READ pkoyv,pkoyb,pkoy_v,pkoy_b,pkorwy,pkorwy_
 RETURN
+procedure n
+  ~form_alert(1,"[3][Funktion nicht implementiert !][ OH ]")
+return
 function kx(x)
   return bw/(kkob-kkoa)*(x-kkoa)
 endfunc
@@ -124,6 +127,7 @@ PROCEDURE sh_x
   WHILE t<MOUSEK=0
     @dgl2
     PLOT @bx(t),@by(x)
+    vsync
   WEND
   
   DEFMOUSE 5
@@ -145,6 +149,7 @@ PROCEDURE sh_x_
   DO
     @dgl2
     PLOT @bx(t),@by(x_)
+    vsync
     EXIT IF t>et 
   LOOP
   DEFMOUSE 5
@@ -163,6 +168,7 @@ PROCEDURE sh_x__
   DO
     @dgl2
     PLOT @bx(t),@by(x__)
+    vsync
     EXIT IF t>et 
   LOOP
   DEFMOUSE 5
@@ -181,6 +187,7 @@ PROCEDURE sh_y
   DO
     @dgl2
     PLOT @bx(t),@by(y)
+    vsync
     EXIT IF t>et 
   LOOP
   DEFMOUSE 5
@@ -199,6 +206,7 @@ PROCEDURE sh_y_
   DO
     @dgl2
     PLOT @bx(t),@by(y_)
+    vsync
     EXIT IF t>et 
   LOOP
   DEFMOUSE 5
@@ -217,6 +225,7 @@ PROCEDURE sh_y__
   DO
     @dgl2
     PLOT @bx(t),@by(y__)
+    vsync
     EXIT IF t>et 
   LOOP
   DEFMOUSE 5
@@ -226,16 +235,17 @@ y_data__:
 DATA -1,7,-2,2,1,1
 PROCEDURE sh_xy
   DEFMOUSE 2
+  text 500,10,"Maustaste=stop"
   RESTORE xy_data
   @kkoordinate("x","y")
   RESTORE aw_data
   READ x,y,x_,y_
-  PLOT @kx(x),@ky(y)
-  DO
-    EXIT IF MOUSEK
+  DRAW @kx(x),@ky(y) to @kx(x),@ky(y)
+  while mousek=0
     DRAW  TO @kx(x),@ky(y)
+    vsync
     @dgl2
-  LOOP
+  wend
   DEFMOUSE 5
   vsync
 RETURN
@@ -496,9 +506,9 @@ PROCEDURE ox
   REPEAT
     @dgl2
     DRAW  TO @px(x),@py(x_)
+    vsync
   UNTIL MOUSEK 
   DEFMOUSE 5
-  vsync
 RETURN
 PROCEDURE oy
   DEFMOUSE 2
@@ -518,9 +528,9 @@ PROCEDURE oy
   REPEAT
     @dgl2
     DRAW  TO @px(y),@py(y_)
+    vsync
   UNTIL MOUSEK 
   DEFMOUSE 5
-  vsync
 RETURN
 PROCEDURE rennenx
   @rennen(1)
@@ -551,7 +561,7 @@ PROCEDURE rennen(nnU)
   DEFMOUSE 5
   vsync
   DO
-    PRINT AT(1,1);"links Nr. ";nU;"    Rechts  Start "
+    text 500,10,"links Nr. "+str$(nU)+"    Rechts  Start "
     REPEAT
       MOUSE xU,yU,kU
     UNTIL kU
@@ -572,7 +582,7 @@ PROCEDURE rennen(nnU)
   UNTIL kU=0
   DEFLINE 1,2,2,2
   ON ERROR GOSUB error
-  PRINT AT(1,1);" Links fixieren  Rechts beenden"
+  text 500,10," Links fixieren  Rechts beenden"
   DEFMOUSE 2
   DO
     IF MOUSEK=256
@@ -602,10 +612,11 @@ PROCEDURE rennen(nnU)
         f_(iU)=f_(nU-1)
         DEC nU
       ELSE
-        DRAW @px(f(iU)),@py(f_(iU))
-        vsync
+        plot @px(f(iU)),@py(f_(iU))
+        
       ENDIF
     NEXT iU
+    vsync
     EXIT IF MOUSEK=512
     REPEAT
     UNTIL MOUSEK=0
@@ -671,6 +682,7 @@ PROCEDURE vektorfeld(nU,f)
       ELSE
         LINE xU,yU,@px(@pbx(xU)+(@pbx(xU)-x)*20),@py(@pby(yU)+(@pby(yU)-x_)*20)
       ENDIF
+      vsync
       EXIT IF MOUSEK
     NEXT yU
     EXIT IF MOUSEK

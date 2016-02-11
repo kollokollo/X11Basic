@@ -65,7 +65,8 @@ int wort_sep (char *t,char c,int klamb ,char *w1, char *w2)    {
 }
 
 int wort_sepr(char *t,char c,int klamb ,char *w1, char *w2)    {
-  int f=0, klam=0, i=0, j=0;
+  register int i;
+  int f=0, klam=0, j=0;
   
   if(strlen(t)==0) {
      w1[0]=0;
@@ -140,8 +141,8 @@ int wort_sep2(char *t,char *c,int klamb ,char *w1, char *w2)    {
 
 
 int wort_sepr2(char *t,char *c,int klamb ,char *w1, char *w2)    {
-
-  int f=0, klam=0, i=0, j=0;
+  register int i;
+  int f=0, klam=0, j=0;
 
 
   if(strlen(t)==0) {   /* hier gibts nix zu trennen */
@@ -211,7 +212,7 @@ int arg2(char *t,int klamb ,char *w1, char *w2)    {
     if(t[i]==';') ergeb=2;
     else if(t[i]==',') ergeb=3;
     else if(t[i]=='\'') ergeb=4;
-    else {printf("arg2: Fehler: %d %d <%s>\n",t[i],i,t); ergeb=-1;}
+    else ergeb=-1;
     w1[j]=0;
     strcpy(w2,t+i+1); 
     return(ergeb);
@@ -249,6 +250,21 @@ char *rsearchchr2(char *start,char c,char *end) {
   }
   return(start);
 }
+
+void *memmem(const void *buf,  size_t buflen,const void *pattern, size_t len) {
+  size_t i, j;
+  char *bf = (char *)buf, *pt = (char *)pattern;
+
+      if(len > buflen) return (void *)NULL;
+      for(i = 0; i <= (buflen - len); ++i) {
+        for (j = 0; j < len; ++j) {
+          if (pt[j] != bf[i + j]) break;
+        }
+        if (j == len) return (bf + i);
+      }
+      return NULL;
+}
+
 #define min(a,b) ((a<b)?a:b)
 char *rmemmem(char *s1,int len1,char *s2,int len2) {
   char *pos=s1+len1;
@@ -257,4 +273,34 @@ char *rmemmem(char *s1,int len1,char *s2,int len2) {
     pos--;
   }
   return(NULL);
+}
+
+/* This file is part of X11BASIC, the basic interpreter for Unix/X
+ * ============================================================
+ * X11BASIC is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ */
+
+
+
+/*  (c) Markus Hoffmann
+  ' Teile in Anfhrungszeichen werden nicht ver„ndert
+  ' Ersetzt Tabulator durch Leerzeichen
+  ' mehrfache Leerzeichen zwischen W”rtern werden entfernt
+  ' wenn fl&=1 ,  gib Grožbuchstaben zurck
+ */
+ 
+void xtrim(char *t,int f, char *w ) {
+  register int a=0,i=0,j=0,u=0,b=0;
+
+  while(t[i]!=0) {
+    while(t[i]!=0 && ( !isspace(t[i]) || a)) {
+      if(t[i]=='"') a=!a;
+      u=1; if(b==1) {w[j++]=' '; b=0;}
+      if(f && !a) w[j++]=toupper(t[i++]); else w[j++]=t[i++];
+    }
+    if(u && !b) { b=1;}
+    if(t[i]!=0) i++;
+  }
+  w[j]=0;
 }
