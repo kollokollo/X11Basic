@@ -728,51 +728,6 @@ int suchep(int begin, int richtung, int such, int w1, int w2) {
   return(-1);
 }
 
-int do_using(char *dest,double num,char *format){
-  int a,p,p2,r,i,j; /* dummy */
-  int neg,ln=0,vorz=1;
-  const char *digits="01234567899";
-  
-  if (*format=='%') { /* c-style format */
-    sprintf(dest,format,num);
-  } else { /* basic-style format */
-   
-   /* Zaehle die Rauten vor dem Punkt */
-   a=r=p=0;
-   while(format[p] && format[p]!='.') {
-     if(format[p++]=='#') r++;
-   }
-   /* Zaehle die Rauten nach dem Punkt */
-   while(format[p]) {
-     if(format[p++]=='#') a++;
-   }
-  
-   j=a+r;
-   neg=(num<0);
-   num=fabs(num);
-   num+=0.5*pow(10,(double)-a);  /* zum Runden */
-   
-   for(i=0;i<strlen(format);i++) {
-     if(format[i]=='+') {*dest=(neg ? '-':'+'); vorz=0;}
-     else if(format[i]=='-') {*dest=(neg ? '-':' ');vorz=0;}
-     else if(format[i]=='#') {
-       j--;
-       p=(int)(num/pow(10,(double)--r));
-       p2=(int)(num/pow(10,(double)(r-1)));
-      /* printf("pow=%g\n",num/pow(10,(double)r));*/
-       num-=p*pow(10,(double)r);
-       if(p) *dest=digits[p];
-       else {
-         if(vorz&&p2) { *dest=(neg ? '-':' ');vorz=0;}
-	 else *dest=(ln?'0':' ');
-       }
-     } else *dest=format[i];
-     dest++;
-   }
-   *dest='\0';
-  }
-  return(0);
-}
 
 char *print_arg(char *ausdruck) {
   int e;
@@ -795,11 +750,9 @@ char *print_arg(char *ausdruck) {
       sprintf(ergebnis+strlen(ergebnis),"\033[%.3dC",(int)parser(a1+4));
     } else {
       if(strlen(a1)) {    
-        int typ,ee;
-	ee=wort_sep2(a1," USING ",TRUE,a1,w4);
-	typ=type2(a1);
-	
-	if(typ & ARRAYTYP) {    /* Hier koennte man .... */
+      /*printf("TEST2: <%s> <%s> %d\n",a1,a2,e);*/
+        int typ=type2(a1);
+	if(typ & ARRAYTYP) {
 	  if(typ & STRINGTYP) ;
 	  else ;
 	} else if(typ & STRINGTYP) {
@@ -808,16 +761,9 @@ char *print_arg(char *ausdruck) {
           strcat(ergebnis,a3); 
 	  free(a3);
         } else {
-	  if(ee==2) {
-	    char *a3=s_parser(w4);
-	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+strlen(a3)+32);
-	    do_using(ergebnis+strlen(ergebnis),parser(a1),a3);
-	    free(a3);
-	  } else {
-	    ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
-	    sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
-          }
-	}
+	  ergebnis=realloc(ergebnis,strlen(ergebnis)+1+32);
+	  sprintf(ergebnis+strlen(ergebnis),"%.13g",parser(a1));
+        }
       }
     }
     ergebnis=realloc(ergebnis,strlen(ergebnis)+1+1);

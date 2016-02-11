@@ -101,7 +101,7 @@ void remove_queue(int qid) /* Remove the msg-queue */ {
 }
 
 
-#if 0
+#ifdef 0
 
 
 void opensem(int *sid, key_t key)

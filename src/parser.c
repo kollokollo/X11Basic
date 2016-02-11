@@ -27,7 +27,6 @@ int f_btst(double v1, double v2) { return((((int)v1 & (1 <<((int)v2)))==0) ?  0 
 
 int f_instr(PARAMETER *,int);
 int f_rinstr(PARAMETER *,int);
-int f_glob(PARAMETER *,int);
 
 extern int f_symadr(char *);
 extern int f_exec(char *);
@@ -114,8 +113,6 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_DQUICK|F_DRET,    "FLOOR"     , floor ,1,1     ,{PL_NUMBER}},
  { F_SIMPLE|F_IRET,    "FORK"     , fork ,0,0     },
  { F_DQUICK|F_DRET,    "FRAC"      , f_frac ,1,1     ,{PL_NUMBER}},
-
- { F_PLISTE|F_IRET,    "GLOB"     , f_glob ,2,3   ,{PL_STRING,PL_STRING,PL_INT}},
 
  { F_DQUICK|F_DRET,    "HYPOT"     , hypot ,2,2     ,{PL_NUMBER,PL_NUMBER}},
 
@@ -210,36 +207,6 @@ STRING f_envs(STRING n) {
   } else {
     ergebnis.pointer=malloc(strlen(ttt)+1);
     strcpy(ergebnis.pointer,ttt);
-  }
-  ergebnis.len=strlen(ergebnis.pointer);
-  return(ergebnis);
-}
-STRING f_systems(STRING n) {   
-  STRING ergebnis;
-  FILE *dptr=popen(n.pointer,"r");
-
-  if (dptr==NULL) {
-    ergebnis.pointer=malloc(32+n.len);
-    sprintf(ergebnis.pointer,"couldn't execute '%s'",n.pointer);
-  } else {
-    int len=0;
-    int limit=1024;
-    char c;
-    ergebnis.pointer=NULL;
-    do {
-      ergebnis.pointer=realloc(ergebnis.pointer,limit);
-     /* printf("Bufferlaenge: %d Bytes.\n",limit); */
-      while(len<limit) {
-        c=fgetc(dptr);
-        if(c==EOF) {
-          ergebnis.pointer[len]='\0';
-          break;
-        }
-        ergebnis.pointer[len++]=c;
-      }
-      limit+=len;
-    } while(c!=EOF);
-    pclose(dptr);
   }
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
@@ -451,7 +418,6 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK,    "SPACE$"  , f_spaces ,1,1   ,{PL_INT}},
  { F_PLISTE,  "STR$"    , f_strs ,1,4   ,{PL_NUMBER,PL_INT,PL_INT,PL_INT}},
  { F_ARGUMENT,  "STRING$" , f_strings ,1,2   ,{PL_INT,PL_STRING}},
- { F_SQUICK,    "SYSTEM$"    , f_systems ,1,1   ,{PL_STRING}},
  { F_SQUICK,    "TRIM$"   , f_trims ,1,1   ,{PL_STRING}},
 
  { F_SQUICK,    "UPPER$"    , f_uppers ,1,1   ,{PL_STRING}},
@@ -510,16 +476,6 @@ int f_rinstr(PARAMETER *plist,int e) {
     if(e==3) start=min(plist[0].integer,max(1,plist[2].integer));
     pos=rmemmem(plist[0].pointer,start-1,plist[1].pointer,plist[1].integer);
     if(pos!=NULL) return((int)(pos-(char *)plist[0].pointer)+1);
-  } return(0);
-}
-#include <fnmatch.h>
-int f_glob(PARAMETER *plist,int e) {
-  char *pos=NULL,*n;
-  int flags=FNM_NOESCAPE;
-  if(e>=2) {
-    if(e==3) flags^=plist[2].integer;
-    flags=fnmatch(plist[1].pointer,plist[0].pointer,flags);
-    if(flags==0) return(-1);
   } return(0);
 }
 
