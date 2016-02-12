@@ -62,7 +62,7 @@ X11-BASICVERSION  1.24
 
 
 
-                  (C)  1997-2015  by  Markus  Hooemann
+                  (C)  1997-2016  by  Markus  Hooemann
 
 
                          (kollo@users.sourceforge.net)
@@ -70,7 +70,7 @@ X11-BASICVERSION  1.24
 
                  (see  http://x11-basic.sourceforge.net/)
 
-                                             Latest revision: January 13, 2016
+                                             Latest revision: February 8, 2016
     __________________________________________________________________________________________________________________________
 
 
@@ -734,7 +734,7 @@ Copyright  information
 
 
 
-Copyright (C) 1997-2015 by Markus Hooemann
+Copyright (C) 1997-2016 by Markus Hooemann
 
     Permission is granted to copy, distribute and/or modify this document under the
 
@@ -9991,7 +9991,7 @@ X11-Basic can produce a number of internal errors, which are referred to by a nu
 
 99        Window does not exist
 
-100      X11-BASIC Version 1.24 Copyright (c) 1997-2015 Markus Hooemann
+100      X11-BASIC Version 1.24 Copyright (c) 1997-2016 Markus Hooemann
 
 101      ** 1 - Segmentation fault
 
@@ -28193,7 +28193,6 @@ RND  as  a  sysvar                see RND()
 
 ROL&(),  ROL%()                  Rotates a bit pattern left. ~> ROL()
 
-SHEL`ENVRN()                        ! ENV$()
 
 
                                                                                                                 631
@@ -28301,13 +28300,6 @@ GEMDOS()                             call the GEMDOS routines.
 
 GEMSYS                                call the AES routine
 
-
-
-622
-    _______________________________________________________________________9.2.__GFA-Basic_compatibility______________________
-
-
-
 GINTIN,  GINTOUT                Address of the AES Integer input/output block.
 
 HIMEM                                  address of the area of memory which is not allocated by interpreter
@@ -28382,13 +28374,6 @@ Not supported because of other reasons:
 
 
 APPL`READ()                       read from the event buoeer.
-
-
-
-                                                                                                                623
-9.  Compatibility_____________________________________________________________________________________________________________
-
-
 
 APPL`WRITE()                      write to the event buoeer.
 
@@ -28466,15 +28451,6 @@ DO  UNTIL                             extension
 DO  WHILE                             extension
 
 DOUBLE-x"                           reads/writes an 8-byte AEoating point variable
-
-
-
-624
-    _______________________________________________________________________9.2.__GFA-Basic_compatibility______________________
-
-
-
-DRAW                                    Draws points and lines
 
 EVNT`BUTTON()                    Waits for one or more mouse clicks
 
@@ -28556,13 +28532,6 @@ KEYPRESS  n                         This simulates the pressing of a key.
 LONG-x"                              Reads/writes a 4 byte integer from/to address x. Abbrev
 
 LOOP  UNTIL  condition       extension
-
-
-
-                                                                                                                625
-9.  Compatibility_____________________________________________________________________________________________________________
-
-
 
 LOOP  WHILE  condition       extension
 
@@ -28647,13 +28616,6 @@ OB`NEXT()                           Points to the following object on the same l
 
 OB`SPEC()                           Returns the address of the data structure
 
-
-
-626
-    _______________________________________________________________________9.2.__GFA-Basic_compatibility______________________
-
-
-
 OB`STATE()                         returns the status of an object
 
 OB`TAIL()                           Points to the objects last child
@@ -28668,8 +28630,6 @@ ON  BREAK                             inAEuence behavior of CTRL-C
 
 OPTION  BASE                       determine whether an array is to contain a zero element
 
-QSORT                                  Sorts the elements of an array. ~> SORT
-
 RCALL                                  Calls an assembler routine
 
 RC`INTERSECT()                  Detects whether two rectangles overlap.
@@ -28677,12 +28637,6 @@ RC`INTERSECT()                  Detects whether two rectangles overlap.
 RECALL                                Inputs n lines from a text ole
 
 RECORD                                Sets the number of the next record (GET#, PUT#)
-
-RND  as  a  sysvar                see RND()
-
-ROL(),  ROL&(),  ROL%()      Rotates a bit pattern left.
-
-ROR(),  ROR&(),  ROR%()      Rotates a bit pattern right.
 
 RSET  a$=b$                         Moves a string expression, right justioed to a string.
 
@@ -28693,10 +28647,6 @@ RSRC`SADDR()                      sets the address of an object.
 RUN  <filename>                  see RUN
 
 SETDRAW                              see DRAW
-
-SHL(),  SHL&(),  SHL%()      Shifts a bit pattern left
-
-SHR(),  SHR&(),  SHR%()      Shifts a bit pattern left
 
 SINGLE-x"                           Reads/writes a 4 byte AEoating point
 
@@ -28875,7 +28825,7 @@ SPAWN    ....
 
 
 
-                                                                                                                629
+                                                                                                                639
 9.  Compatibility_____________________________________________________________________________________________________________
 
 
@@ -28922,16 +28872,11 @@ use  the  sqlite  excecutable  and  SYSTEM$()
 
 =============================================
 
-A)  Complex  array  and  linear  algebra  functions
-
-B)  arbitrary  precision  numbers
+arbitrary  precision  (floatingpoint)  numbers
 
 **  integers  and  floatingpoint/complex  numbers
 
-i&=128831982371049870293828338383838338  (done)
-
 a##=1.84902948755588584888888888888888834
-
 
 
 
@@ -28983,7 +28928,7 @@ LIBGCRYPT:
 
 
 
-632
+642
 
 
 
@@ -29048,7 +28993,7 @@ the Document does not identify any Invariant Sections then there are none.
 
 
 
-                                                                                                                633
+                                                                                                                643
 A.  GNU_License_______________________________________________________________________________________________________________
 
 
@@ -29115,7 +29060,7 @@ with all words of the title equally prominent and visible. You may add other mat
 
 
 
-634
+644
     __________________________________________________________________________________________________________________________
 
 
@@ -29179,7 +29124,7 @@ addition, you must do these things in the Modioed Version:
 
 
 
-                                                                                                                635
+                                                                                                                645
 A.  GNU_License_______________________________________________________________________________________________________________
 
 
@@ -29248,7 +29193,7 @@ volume of a storage or distribution medium, is called an "aggregate" if the copy
 
 
 
-636
+646
     __________________________________________________________________________________________________________________________
 
 
@@ -29316,7 +29261,7 @@ copyright and license notices just after the title page:
 
 
 
-                                                                                                                637
+                                                                                                                647
 A.  GNU_License_______________________________________________________________________________________________________________
 
 
@@ -29346,7 +29291,7 @@ under your choice of free software license, such as the GNU General Public Licen
 
 
 
-638
+648
 
 
 
@@ -29419,15 +29364,9 @@ gebra Package) is a standard software library for numerical linear algebra.
 
    Linux GCC and all of the GNU tools, of course.  The readline library.  The SDL
 
-(Simple  Direct  Media)  library.   Creator  of  the  8x16  font  "spat`a".   The  Burrow-
-
-Wheeler-Transform. And any other libraries used by X11-Basic.
-
-   Some pieces of code of X11-Basic are based on third party software:
 
 
-
-                                                                                                                639
+                                                                                                                649
 A.  GNU_License_______________________________________________________________________________________________________________
 
 
@@ -29492,17 +29431,17 @@ A: Classic Basic programs have to be converted before they can be run with
    X11-Basic. With the bas2x11basic converter program most of this convertion
    will be done automatically. 
 
-F: Kann ich meine alten Atari Programme "einfach" rÃ¼berziehen oder mÃ¼ssen
+F: Kann ich meine alten Atari Programme "einfach" rüberziehen oder müssen
    die noch irgendwie ( speziell Gem Programme ) angepasst werden?
-A: Die mÃ¼ssen noch angepasst werden. Es gibt kleinere Unterschiede in der
-   Syntax, Systemaufrufe (XBIOS,BIOS,VDISYS etc), Inline-BlÃ¶cke gehen
-   natÃ¼rlich nicht, short int
+A: Die müssen noch angepasst werden. Es gibt kleinere Unterschiede in der
+   Syntax, Systemaufrufe (XBIOS,BIOS,VDISYS etc), Inline-Blöcke gehen
+   natürlich nicht, short int
    Variablen gibt es nicht etc. Also man muss nochmal mit der Hand
-   drÃ¼bergehen. Aber es gibt nichts, was nicht irgendwie auch geht.
+   drübergehen. Aber es gibt nichts, was nicht irgendwie auch geht.
    Bei kleinen Programmen (ca. 100 Zeilen) ist es ein Kinderspiel. Bei
-   grÃ¶ÃŸeren (mehere 1000 Zeilen) ist es schon was arbeit. 10000-Zeilen
+   größeren (mehere 1000 Zeilen) ist es schon was arbeit. 10000-Zeilen
    Programme habe ich noch nicht portiert. Es lohnt wahrscheinlich nicht.
-   FÃ¼r Programme, an denen man nichts mehr machen will, empfehle ich dann
+   Für Programme, an denen man nichts mehr machen will, empfehle ich dann
    doch lieber STonX oder sowas.
 
 Q: Program XXX doesn't run, what should I do?
@@ -29915,4 +29854,7 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - fixed INKEY$ and INP(-2) (Windows)
 - fixed PUT_BITMAP (Android + Windows)
 - fixed bug in PUT (Android)
-          Last change to this file:  Mi 13. Jan 10:44:15 CET 2016
+- added sqlite3 binary to Android Version (make sqldemo.bas work again)
+- added gfalist binary to Android Version (see gfalist.bas)
+- fixed subarry assignment
+          Last change to this file:  Mo 8. Feb 19:07:17 CET 2016

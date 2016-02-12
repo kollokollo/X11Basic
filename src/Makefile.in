@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=32
+RELEASE=34
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -875,13 +875,13 @@ DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.De
 	../doc/editors/x11basic.geany ../RELEASE_NOTES ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 
 doc-pak: $(DEBDOC)
-	mkdir $@
+	mkdir -p $@
 	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY $@/
 	cp ../doc/AUTHORS ../RELEASE_NOTES ../README $@/
 	cp Debian/changelog.Debian $@/
 	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/
-	mkdir $@/editors/
+	mkdir -p $@/editors/
 	cp ../doc/editors/nedit.defs $@/editors/
 	cp ../doc/editors/README $@/editors/
 	cp ../doc/editors/920.conf $@/editors/
