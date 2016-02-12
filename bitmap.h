@@ -60,10 +60,35 @@ typedef struct  {                    /**** Colormap entry structure ****/
 } RGBQUAD;
 #endif
 
+
+typedef struct {
+  unsigned int w;
+  unsigned int h;
+  unsigned int d;  /*1,8,16,24,32*/
+  void *data;
+} MYBITMAP;
+
+/* Standard Bitmap in RGBA format */
+
+typedef struct {
+  unsigned int w;
+  unsigned int h;
+  unsigned char *image;  /*RGBA Werte*/
+} STANDARDBITMAP;
+
+
+
 int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int bw,unsigned int bh,unsigned int depth, unsigned char *mask);
 
 #ifdef USE_X11
 XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMask, int tres, double scale);
+XImage *stdbmtoximage(STANDARDBITMAP bmp,Visual *visual, int depth, XImage **XMask);
 unsigned char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len);
+unsigned char *imagetobmp(XImage *image,Visual *visual,XColor *pixc, int *len);
+STANDARDBITMAP imagetostdbm(XImage *image,Visual *visual,XColor *pixc,int usealpha, int bcolor);
 #endif
 void bitmap_scale(const unsigned char *oadr,unsigned int depth,unsigned int ow,unsigned int oh,unsigned char *adr,unsigned int w,unsigned int h);
+STRING pngtobmp(unsigned char *data,size_t pngsize);
+STRING bmptopng(unsigned char *data);
+unsigned char *stdbmtobmp(STANDARDBITMAP bmp, int *len);
+STANDARDBITMAP bmp2stdbm(const unsigned char *data);

@@ -17,6 +17,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "variablen.h"
 #include "parameter.h"
@@ -437,9 +438,9 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
   sp-=anzarg;
   if((psfuncs[i].opcode&FM_TYP)==F_SIMPLE || psfuncs[i].pmax==0) {
     STRING s=(psfuncs[i].routine)();
-    sp[0].pointer=s.pointer;
-    sp[0].integer=s.len;
-    sp[0].typ=PL_STRING;
+    sp->pointer=s.pointer;
+    sp->integer=s.len;
+    sp->typ=PL_STRING;
     return 1-anzarg;
   }  
   if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
@@ -462,7 +463,8 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
                  &sp[0],&plist,anzarg);
     s=(psfuncs[i].routine)(plist,anzarg);
     if(e!=-1) free_pliste(e,plist);
-
+    e=anzarg;
+    while(--e>=0) free_parameter(&sp[e]);
     sp[0].pointer=s.pointer;
     sp[0].integer=s.len;
     sp[0].typ=PL_STRING;
@@ -585,38 +587,38 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     return 1-anzarg;
   } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {
     PARAMETER *plist;
-    PARAMETER rpar;
+    PARAMETER *rpar=calloc(1,sizeof(PARAMETER));
     int e=make_pliste3(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,sp,&plist,anzarg);
     switch(pfuncs[i].opcode&FM_RET) {
     case F_IRET: 
-      rpar.integer=((int (*)())pfuncs[i].routine)(plist,anzarg);
-      rpar.typ=PL_INT;
+      rpar->integer=((int (*)())pfuncs[i].routine)(plist,anzarg);
+      rpar->typ=PL_INT;
       break;
     case F_CRET:
-      *((COMPLEX *)&(rpar.real))=((COMPLEX (*)())pfuncs[i].routine)(plist,anzarg);
-      rpar.typ=PL_COMPLEX;
+      *((COMPLEX *)&(rpar->real))=((COMPLEX (*)())pfuncs[i].routine)(plist,anzarg);
+      rpar->typ=PL_COMPLEX;
       break;
     case F_DRET:
-      rpar.real=(pfuncs[i].routine)(plist,anzarg);
-      rpar.typ=PL_FLOAT;
+      rpar->real=(pfuncs[i].routine)(plist,anzarg);
+      rpar->typ=PL_FLOAT;
       break;
     case F_AIRET: 
-       rpar.typ=PL_ARBINT;
-       rpar.pointer=malloc(sizeof(ARBINT));
-       mpz_init(*(ARBINT *)rpar.pointer);
-       ((void (*)())pfuncs[i].routine)(*(ARBINT *)rpar.pointer,plist,anzarg);
+       rpar->typ=PL_ARBINT;
+       rpar->pointer=malloc(sizeof(ARBINT));
+       mpz_init(*(ARBINT *)rpar->pointer);
+       ((void (*)())pfuncs[i].routine)(*(ARBINT *)rpar->pointer,plist,anzarg);
        break;
     case F_ANYRET:
     case F_NRET:
     case F_ANYIRET:
-       rpar=((ppfunc)(pfuncs[i].routine))(plist,anzarg);
+       *rpar=((ppfunc)(pfuncs[i].routine))(plist,anzarg);
        break;
     default: xberror(13,"");  /* Type mismatch */
     }
     if(e!=-1) free_pliste(e,plist);
     e=anzarg;
     while(--e>=0) free_parameter(&sp[e]);
-    sp[0]=rpar;
+    *sp=*rpar;free(rpar);
     return 1-anzarg;
   }
  
@@ -750,6 +752,10 @@ STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
                  &sp[-anzarg],&plist,anzarg);
     (comms[i].routine)(plist,e);
     if(e!=-1) free_pliste(e,plist);
+    e=anzarg;
+  //  printf("Parameters to clear:  (%d)\n",e);
+  //  dump_parameterlist(&sp[-e],e);
+    while(--e>=0) free_parameter(&sp[-e-1]);
     }
     return -anzarg;
   } 
@@ -787,6 +793,9 @@ STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
     make_indexliste_plist(dim,p,indexliste);
  //   printf("Index=%d\n",*indexliste); 
   }
+  int e=dim;
+  while(--e>=0) free_parameter(&p[e]);
+  bzero(p,sizeof(PARAMETER));
   p->integer=vnr;
   p->pointer=varptr_indexliste(&variablen[vnr],indexliste,dim);
  // printf("Pointer=%x\n",(int)p->pointer);
@@ -819,6 +828,7 @@ STATIC int vm_zuweisindex(int vnr,PARAMETER *sp,int dim) {    /*  */
   }
   zuweispbyindex(vnr,indexliste,dim,&sp[-dim-1]);
   free(indexliste);
+  free_parameter(&sp[-dim-1]);
   return(-dim-1);
 }
 
@@ -1132,8 +1142,8 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
     case BC_PUSHFUNC:
       a=bcpc.pointer[i++]&0xff;
       n=bcpc.pointer[i++]&0xff;
-  //    dump_parameterlist(opstack-3,3);
       opstack+=vm_func(opstack,a,n);
+    //  dump_parameterlist(opstack,n);
       break;
     case BC_PUSHSFUNC:
       a=bcpc.pointer[i++]&0xff;

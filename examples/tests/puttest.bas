@@ -470,6 +470,7 @@ for j=0 to num
   next i
   get 350-m(j)*20,20-m(j)*20,2*m(j)*20,2*m(j)*20,kugel$(j)
 next j
+scale=1
 do
   get 300,dropy,60,70,dh$
   for i=0 to num
@@ -477,6 +478,8 @@ do
     y(i)=max(0,min(y(i),359))
     get x(i),y(i),40,40,hinter$(i)
   next i
+  scale=1+0.9*sin(timer/10*2*pi)
+  get x(0),y(0),40*scale,40*scale,hinter$(0)
   put 300,dropy,p01705_bmp$
   color schwarz
   for i=1 to num
@@ -485,7 +488,7 @@ do
     graphmode 2
     put x(i),y(i),kugel$(i)
   next i
-  put x(0),y(0),p01277_bmp$
+  put x(0),y(0),p01277_bmp$,scale
   SHOWPAGE
   PAUSE 0.05
   GRAPHMODE 1

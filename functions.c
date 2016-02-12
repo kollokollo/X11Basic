@@ -24,6 +24,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "parameter.h"
 #include "gkommandos.h"
@@ -181,6 +182,8 @@
 #define f_random NULL
 #define f_realloc NULL
 #define f_rinstr NULL
+#define f_rol NULL
+#define f_ror NULL
 #define f_root NULL
 #define f_rsrc_gaddr NULL
 #define f_sensor NULL
@@ -208,6 +211,7 @@
 #define f_valf NULL
 #define f_variat NULL
 #define f_varptr NULL
+#define f_ubound NULL
 #define f_word NULL
 #define f_wort_sep NULL
 #define f_xor NULL
@@ -307,7 +311,7 @@ static char   *arrptr(PARAMETER *p,int e) {return((char *)variablen[p->integer].
 static PARAMETER f_random(PARAMETER *plist,int e) {
  extern gmp_randstate_t state;
  extern int randstate_isinit;
- PARAMETER pret;
+ PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   pret.typ=plist->typ;
   switch(pret.typ) {
   case PL_INT: 
@@ -333,7 +337,7 @@ static PARAMETER f_random(PARAMETER *plist,int e) {
 }
 
 static PARAMETER f_add(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
   cast_to_x(plist,pret.typ);
   cast_to_x(plist+1,pret.typ);
@@ -358,7 +362,7 @@ static PARAMETER f_add(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_sub(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
   cast_to_x(plist,pret.typ);
   cast_to_x(plist+1,pret.typ);
@@ -376,7 +380,7 @@ static PARAMETER f_sub(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_mul(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
   cast_to_x(plist,pret.typ);
   cast_to_x(plist+1,pret.typ);
@@ -396,7 +400,7 @@ static PARAMETER f_mul(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_div(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'/'));
   cast_to_x(plist,pret.typ);
   cast_to_x(plist+1,pret.typ);
@@ -417,7 +421,7 @@ static PARAMETER f_div(PARAMETER *plist,int e) {
 }
 static PARAMETER f_max(PARAMETER *plist,int e) {
   if(e==1) return(double_parameter(plist));
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=plist->typ;
   int i;
   for(i=1;i<e;i++) pret.typ=(PL_CONSTGROUP|combine_type(pret.typ&PL_BASEMASK,plist[i].typ&PL_BASEMASK,'+'));
@@ -452,7 +456,7 @@ static PARAMETER f_max(PARAMETER *plist,int e) {
 }
 static PARAMETER f_min(PARAMETER *plist,int e) {
   if(e==1) return(double_parameter(plist));
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=plist->typ;
   int i;
   for(i=1;i<e;i++) pret.typ=(PL_CONSTGROUP|combine_type(pret.typ&PL_BASEMASK,plist[i].typ&PL_BASEMASK,'+'));
@@ -488,7 +492,7 @@ static PARAMETER f_min(PARAMETER *plist,int e) {
 
 
 static PARAMETER f_abs(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret; bzero(&pret,sizeof(PARAMETER));
   pret.typ=plist->typ;
   switch(pret.typ) {
   case PL_INT: pret.integer=abs(plist->integer); break;
@@ -506,7 +510,7 @@ static PARAMETER f_abs(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_acos(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cacos(*(COMPLEX *)&(plist->real));
 #else
@@ -517,7 +521,7 @@ static PARAMETER f_acos(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_acosh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cacosh(*(COMPLEX *)&(plist->real));
 #else
@@ -528,7 +532,7 @@ static PARAMETER f_acosh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_asin(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=casin(*(COMPLEX *)&(plist->real));
 #else
@@ -539,7 +543,7 @@ static PARAMETER f_asin(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_asinh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=casinh(*(COMPLEX *)&(plist->real));
 #else
@@ -550,7 +554,7 @@ static PARAMETER f_asinh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_atan(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=catan(*(COMPLEX *)&(plist->real));
 #else
@@ -561,7 +565,7 @@ static PARAMETER f_atan(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_atanh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=catanh(*(COMPLEX *)&(plist->real));
 #else
@@ -572,7 +576,7 @@ static PARAMETER f_atanh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_tan(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ctan(*(COMPLEX *)&(plist->real));
 #else
@@ -583,7 +587,7 @@ static PARAMETER f_tan(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_tanh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ctanh(*(COMPLEX *)&(plist->real));
 #else
@@ -594,7 +598,7 @@ static PARAMETER f_tanh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_sin(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=csin(*(COMPLEX *)&(plist->real));
 #else
@@ -605,7 +609,7 @@ static PARAMETER f_sin(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_sinh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=csinh(*(COMPLEX *)&(plist->real));
 #else
@@ -616,7 +620,7 @@ static PARAMETER f_sinh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_cos(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ccos(*(COMPLEX *)&(plist->real));
 #else
@@ -627,7 +631,7 @@ static PARAMETER f_cos(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_cosh(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=ccosh(*(COMPLEX *)&(plist->real));
 #else
@@ -638,7 +642,7 @@ static PARAMETER f_cosh(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_log(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifdef HAVE_COMPLEX_H
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=clog(*(COMPLEX *)&(plist->real));
@@ -652,7 +656,7 @@ static PARAMETER f_log(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_log10(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifdef HAVE_COMPLEX_H
 #ifndef HAVE_CLOG10
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=((COMPLEX (*)())clog10)(*(COMPLEX *)&(plist->real));
@@ -666,7 +670,7 @@ static PARAMETER f_log10(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_exp(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
 #ifndef HAVE_CACOS
   if(plist->typ==PL_COMPLEX) *(COMPLEX *)&pret.real=cexp(*(COMPLEX *)&(plist->real));
 #else
@@ -678,7 +682,7 @@ static PARAMETER f_exp(PARAMETER *plist,int e) {
 }
 
 static PARAMETER f_mod(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   pret.typ=(PL_CONSTGROUP|combine_type(plist->typ&PL_BASEMASK,plist[1].typ&PL_BASEMASK,'+'));
   cast_to_x(plist,pret.typ);
   cast_to_x(plist+1,pret.typ);
@@ -700,7 +704,7 @@ static PARAMETER f_mod(PARAMETER *plist,int e) {
 }
 
 static PARAMETER f_sqrt(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   switch(plist->typ) {
   case PL_FLOAT: pret.real=sqrt(plist->real); break;
   case PL_COMPLEX: 
@@ -817,7 +821,7 @@ static int f_cspid(STRING n)     {return(cspid(n.pointer)); }
 /*  Logische Funktionen (selten benutzt) */
 
 static PARAMETER f_xor(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
     pret.typ=PL_INT;
     pret.integer=plist->integer ^ plist[1].integer;
@@ -832,7 +836,7 @@ static PARAMETER f_xor(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_and(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
     pret.typ=PL_INT;
     pret.integer=plist->integer & plist[1].integer;
@@ -847,7 +851,7 @@ static PARAMETER f_and(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_or(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   if(plist->typ==PL_INT && plist[1].typ==PL_INT) {  /*Damit es schnell geht....*/
     pret.typ=PL_INT;
     pret.integer=plist->integer | plist[1].integer;
@@ -862,7 +866,7 @@ static PARAMETER f_or(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_not(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   if(plist->typ==PL_INT) {  /*Damit es schnell geht....*/
     pret.typ=PL_INT;
     pret.integer=(~plist->integer);
@@ -880,6 +884,24 @@ static PARAMETER f_not(PARAMETER *plist,int e) {
 
 static int f_shr(int v1, int v2)  {return(v1>>v2);}
 static int f_shl(int v1, int v2)  {return(v1<<v2);}
+static int f_ror(PARAMETER *plist,int e)  {
+  int w=sizeof(int)*8;
+  if(e>2) w=plist[2].integer;
+  int n=plist[1].integer;
+  unsigned int pat=(1<<w)-1;
+  unsigned int a=plist->integer&pat;
+  unsigned int b=plist->integer&(~pat);
+  return(b|(a>>n)|((a<<(w-n))&pat));
+}
+static int f_rol(PARAMETER *plist,int e)  {
+  int w=sizeof(int)*8;
+  if(e>2) w=plist[2].integer;
+  int n=plist[1].integer;
+  unsigned int pat=(1<<w)-1;
+  unsigned int a=plist->integer&pat;
+  unsigned int b=plist->integer&(~pat);
+  return(b|((a<<n)&pat)|(a>>(w-n)));
+}
 
 static int f_btst(PARAMETER *plist,int e) {
   switch(plist->typ) {
@@ -892,7 +914,7 @@ static int f_btst(PARAMETER *plist,int e) {
   return(0);
 }
 static PARAMETER f_bset(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   switch(plist->typ) {
   case PL_INT:
     pret.typ=PL_INT; 
@@ -910,7 +932,7 @@ static PARAMETER f_bset(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_bclr(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   switch(plist->typ) {
   case PL_INT:
     pret.typ=PL_INT; 
@@ -928,7 +950,7 @@ static PARAMETER f_bclr(PARAMETER *plist,int e) {
   return(pret);
 }
 static PARAMETER f_bchg(PARAMETER *plist,int e) {
-  PARAMETER pret;
+  PARAMETER pret;bzero(&pret,sizeof(PARAMETER));
   switch(plist->typ) {
   case PL_INT:
     pret.typ=PL_INT; 
@@ -947,9 +969,7 @@ static PARAMETER f_bchg(PARAMETER *plist,int e) {
 }
 
 #ifdef ATARI
-  double round(double a) {
-    return((double)(int)(a+0.5));
-  }
+  double round(double a) {return((double)(int)(a+0.5));}
 #endif
 
 
@@ -1103,9 +1123,9 @@ static int f_wort_sep(PARAMETER *plist,int e) {
   ret=wort_sep2(plist[0].pointer,plist[1].pointer,plist[2].integer,str1.pointer,str2.pointer);
   str1.len=strlen(str1.pointer);
   str2.len=strlen(str2.pointer);
-  if(e>3)  varcaststring_and_free(plist[3].typ,(STRING *)plist[3].pointer,str1);  
+  if(e>3)  varcaststring_and_free((STRING *)plist[3].pointer,str1);  
   else free_string(&str1);
-  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
+  if(e>4)  varcaststring_and_free((STRING *)plist[4].pointer,str2);
   else free_string(&str2);
   return(ret);
 }
@@ -1195,8 +1215,10 @@ static int f_form_do(PARAMETER *plist,int e) {
 static int f_objc_draw(PARAMETER *plist,int e) {
   graphics();
   gem_init();
-  return(objc_draw((OBJECT *)plist->integer,plist[1].integer
-    ,plist[2].integer,plist[3].integer,plist[4].integer,plist[5].integer,plist[6].integer));
+  /*TODO: Clipping */
+  
+  return(objc_draw((OBJECT *)plist->integer,plist[1].integer,plist[2].integer,
+  0,0,plist[5].integer,plist[6].integer));
 }
 static int f_objc_find(PARAMETER *plist,int e) {
     return(objc_find((OBJECT *)plist[0].integer,0,7,plist[1].integer,plist[2].integer));
@@ -1285,152 +1307,23 @@ static int f_varptr(PARAMETER *p,int e) {
   }  
 }
 
+/*Einzelne Dimensionierungen eines (mehrdimensionalen) Arrays*/
 
-/*  Gibt returntyp einer Funktion zurück undter beachtung des Typs der
-    Eingangsparameter (Nur der erste PL_NUMBER oder PL_ANYVALUE ist relevant)
-    */
-int returntype(int idx, PARAMETER *p,int n) {
-  int  g=(pfuncs[idx].opcode&FM_RET);
-  switch(g) {
-  case F_IRET: return(INTTYP);
-  case F_DRET: return(FLOATTYP);
-  case F_CRET: return(COMPLEXTYP);
-  case F_AIRET: return(ARBINTTYP);
-  case F_AFRET: return(ARBFLOATTYP);
-  case F_ACRET: return(ARBCOMPLEXTYP);
-  case F_SRET: return(STRINGTYP);
-  case F_ANYIRET:
-  case F_NRET:
-  case F_ANYRET:
-    if(!p ||n==0 || pfuncs[idx].pmax==0) return(NOTYP);
-    
-  /* Jetzt eingangstypen der Funktion bis n durchgehen, ersten 
-     PL_NUMBER oder PL_ANYVALUE(?) finden, danach den Returntyp
-     bestimmen. */
-  
-    if(n==1 && (pfuncs[idx].opcode&FM_TYP)==F_ARGUMENT && (p->typ==PL_KEY || p->typ==PL_EVAL)) {
-      int typ;
-      if(p->typ==PL_EVAL && p->arraytyp) typ=(p->arraytyp&TYPMASK);
-      else typ=(type(p->pointer)&TYPMASK);
-      switch(typ) {
-        case INTTYP:
-        case ARBINTTYP: return(typ);
-        case FLOATTYP:
-        case COMPLEXTYP:
-        case ARBFLOATTYP:
-        case ARBCOMPLEXTYP:
-          if(g==F_NRET || g==F_ANYRET) return(typ);
-          else if(g==F_ANYIRET) return(ARBINTTYP);
-          break;
-        case STRINGTYP:
-          if(g==F_ANYRET) return(typ);
-          break;
-      }
-      printf("ERROR: something is wrong! returntype\n");
-      return(typ);
+static int f_ubound(PARAMETER *p,int e) {
+  int idx=0;
+  if(e>1) idx=p[1].integer;
+  if(variablen[p->integer].typ==ARRAYTYP) {
+    ARRAY *a=variablen[p->integer].pointer.a;
+    if(idx<0 || idx>=a->dimension) {
+      xberror(16,""); /* Feldindex zu gross*/
+      return(0);
     }
-    if(n>0) {
-      int i;
-      for(i=0;i<n;i++) {
-        if((pfuncs[idx].pmax>-1) && i>pfuncs[idx].pmax) break;
-        if((pfuncs[idx].pmax==-1) && i>pfuncs[idx].pmin) break;
-	if(pfuncs[idx].pliste[i]==PL_ANYVALUE || pfuncs[idx].pliste[i]==PL_NUMBER) {
-	  switch(p[i].typ) {
-	  case INTTYP:
-	  case ARBINTTYP: return(p[i].typ&PL_BASEMASK);
-	  case FLOATTYP:
-	  case COMPLEXTYP:
-	  case ARBFLOATTYP:
-	  case ARBCOMPLEXTYP:
-	    if(g==F_NRET || g==F_ANYRET) return(p[i].typ&PL_BASEMASK);
-	    else if(g==F_ANYIRET) return(ARBINTTYP);
-	    break;
-	  case STRINGTYP:
-	    if(g==F_ANYRET) return(p[i].typ&PL_BASEMASK);
-	    break;
-	  }
-	} else if(pfuncs[idx].pliste[i]==PL_CFAI ||pfuncs[idx].pliste[i]==PL_CF) {
-	  switch(p[i].typ) {
-	  case PL_INT:    
-	  case PL_FLOAT:  return(FLOATTYP);
-	  case PL_COMPLEX:return(COMPLEXTYP);
-	  case ARBINTTYP: 
-	    if(pfuncs[idx].pliste[i]==PL_CF) return(FLOATTYP);
-	    else return(ARBINTTYP);
-	  }
-	} else if(pfuncs[idx].pliste[i]==PL_ARRAY || pfuncs[idx].pliste[i]==PL_NARRAY|| pfuncs[idx].pliste[i]==PL_CFARRAY) {
-	  switch(p[i].typ) {
-	  case PL_IARRAY:
-	  case PL_FARRAY:
-	  case PL_CARRAY:
-	  case PL_AIARRAY:
-	  case PL_SARRAY:
-	    return(p[i].typ&PL_BASEMASK&TYPMASK);	  
-          }
-	}
-      }
-    }
-  default: printf("ERROR: something is wrong! x324\n");
-  }
-  return(NOTYP);
+    return(((int *)a->pointer)[idx]);
+  } else xberror(58,variablen[p->integer].name); /* Variable %s has incorrect type */
+  return 0;
 }
-int returntype2(int idx, char *n) {
-  int  g=(pfuncs[idx].opcode&FM_RET);
-  switch(g) {
-  case F_IRET: return(INTTYP);
-  case F_DRET: return(FLOATTYP);
-  case F_CRET: return(COMPLEXTYP);
-  case F_AIRET: return(ARBINTTYP);
-  case F_AFRET: return(ARBFLOATTYP);
-  case F_ACRET: return(ARBCOMPLEXTYP);
-  case F_SRET: return(STRINGTYP);
-  case F_ANYIRET:
-  case F_NRET:
-  case F_ANYRET: {
-    if(!n ||*n==0 || pfuncs[idx].pmax==0) return(NOTYP);
-    char w1[strlen(n)+1],w2[strlen(n)+1];
-    int e=wort_sep(n,',',TRUE,w1,w2);
-    int i=0;
-    int typ;
-    while(e) {
-      if((pfuncs[idx].pmax>-1) && i>pfuncs[idx].pmax) break;
-      if((pfuncs[idx].pmax==-1) && i>pfuncs[idx].pmin) break;
-      if(pfuncs[idx].pliste[i]==PL_ANYVALUE || pfuncs[idx].pliste[i]==PL_NUMBER) {
-        typ=type(w1)&(~CONSTTYP);
-	switch(typ) {
-	  case INTTYP:
-	  case ARBINTTYP: return(typ);
-	  case FLOATTYP:
-	  case COMPLEXTYP:
-	  case ARBFLOATTYP:
-	  case ARBCOMPLEXTYP:
-	    if(g==F_NRET || g==F_ANYRET) return(typ);
-	    else if(g==F_ANYIRET) return(ARBINTTYP);
-	    break;
-	  case STRINGTYP:
-	    if(g==F_ANYRET) return(typ);
-	    break;
-	}
-      } else if(pfuncs[idx].pliste[i]==PL_CFAI || pfuncs[idx].pliste[i]==PL_CF) {
-        typ=type(w1)&(~CONSTTYP);
-	switch(typ) {
-	  case PL_INT:    
-	  case PL_FLOAT:  return(FLOATTYP);
-	  case PL_COMPLEX:return(COMPLEXTYP);
-	  case ARBINTTYP: 
-	    if(pfuncs[idx].pliste[i]==PL_CF) return(FLOATTYP);
-	    else return(ARBINTTYP);
-	}
-      }
-      if(pfuncs[idx].pliste[i]==PL_ARRAY || pfuncs[idx].pliste[i]==PL_NARRAY|| pfuncs[idx].pliste[i]==PL_CFARRAY) return(type(w1)&TYPMASK);
-      i++;
-      e=wort_sep(w2,',',TRUE,w1,w2);
-    }
-    }
-  default: printf("ERROR: something is wrong! x324-2 %s\n",pfuncs[idx].name);
-  }
-  return(NOTYP);
-}
+
+
 
 #endif
 /*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
@@ -1655,7 +1548,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK|F_IRET,    "REALLOC"    , (pfunc)f_realloc ,2,2     ,{PL_INT,PL_INT}},
  { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , (pfunc)f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,0,1     ,{PL_FLOAT}},
+ { F_CONST|F_PLISTE|F_IRET,    "ROL"      , (pfunc)f_rol,2,3     ,{PL_INT,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE|F_AIRET,   "ROOT"      , (pfunc)f_root      ,2,2,{PL_ARBINT,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "ROR"      , (pfunc)f_ror,2,3     ,{PL_INT,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE|F_DRET,    "ROUND"     , f_round ,1,2   ,{PL_FLOAT,PL_INT}},
 #ifndef NOGRAPHICS
  { F_PLISTE|F_IRET,    "RSRC_GADDR", (pfunc)f_rsrc_gaddr ,2,2   ,{PL_INT,PL_INT}},
@@ -1695,6 +1590,9 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_DQUICK|F_DRET, "TRUNC"     , trunc ,1,1     ,{PL_FLOAT}},
 #endif
  { F_ARGUMENT|F_IRET,       "TYP?"       , (pfunc)type ,1,1     ,{PL_ALLVAR}},
+
+ { F_PLISTE|F_IRET,         "UBOUND"    , (pfunc)f_ubound     ,1,2,{PL_ARRAYVAR, PL_INT}},
+
 
  { F_CONST|F_SQUICK|F_DRET, "VAL"       , f_val ,1,1     ,{PL_STRING}},
  { F_CONST|F_SQUICK|F_IRET, "VAL?"       ,(pfunc) f_valf ,1,1   ,{PL_STRING}},

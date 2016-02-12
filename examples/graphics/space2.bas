@@ -1,16 +1,14 @@
 ' This version of space.bas works only with X11-Basic V.1.16 and later
 '
-a&=6
-DIM pkx(200+1),pky(200+1),r&(200+1),v&(200+1)
+a%=6
+DIM pkx(200+1),pky(200+1),r%(200+1),v%(200+1)
 ARRAYFILL pkx(),320
 ARRAYFILL pky(),200
-FOR i&=0 TO 200
-  r&(i&)=RANDOM(1000)
-NEXT i&
-FOR i&=0 TO 200
-  v&(i&)=RANDOM(20)+3
-NEXT i&
-weiss=get_color(65535,65535,65535)
+FOR i%=0 TO 200
+  r%(i%)=RANDOM(1000)
+  v%(i%)=RANDOM(20)+3
+NEXT i%
+weiss=COLOR_RGB(1,1,1)
 t=TIMER
 zc=0
 
@@ -47,49 +45,48 @@ p01277$=p01277$+"V0>X*c:c.-;X,T2^M4('VUPF?%P=$[>:ZF:M8Y<=7bE4$**^CU/[@`b[>J3WF'/
 p01277$=p01277$+"%'%Z.LN>`D0@,$$$"
 p01277_bmp$=UNCOMPRESS$(INLINE$(p01277$))
 
-color get_color(65535,65535,20000)
-clearw 
-text 200,30," S P A C E      von Markus Hoffmann "
-c&=0
+COLOR GET_COLOR(65535,65535,20000)
+CLEARW 
+TEXT 200,30," S P A C E      von Markus Hoffmann "
+c%=0
 DO
   EXIT IF MOUSEK
   COLOR schwarz
-  pbox 0,0,640,400
+  PBOX 0,0,640,400
   COLOR weiss
-  for c&=0 to a&-1
-  
-  z0=360*r&(c&)/1000
-  v1=v&(c&)*(SQR((pkx(c&)-320)^2+(pky(c&)-200)^2)+0.1)*0.01
-  ADD pkx(c&),SIN(rad(z0))*v1
-  ADD pky(c&),COS(rad(z0))*v1
-  put pkx(c&),pky(c&),p01277_bmp$,v&(c&)*0.1
-  IF pkx(c&)>639 OR pkx(c&)<0 OR pky(c&)>399 OR pky(c&)<0
-    r&(c&)=RANDOM(1000)
-    pkx(c&)=320
-    pky(c&)=200
-    z0=2*PI*r&(c&)/1000
-    z1=SIN(z0)
-    z2=COS(z0)
-    v1=RANDOM(100)
-    ADD pkx(c&),z1*v1
-    ADD pky(c&),z2*v1
-    v&(c&)=RANDOM(5)+3
+  FOR c%=0 to a%-1
+    z0=360*r%(c%)/1000
+    v1=v%(c%)*(SQR((pkx(c%)-320)^2+(pky(c%)-200)^2)+0.1)*0.01
+    ADD pkx(c%),SIN(rad(z0))*v1
+    ADD pky(c%),COS(rad(z0))*v1
+    PUT pkx(c%),pky(c%),p01277_bmp$,v%(c%)*0.1
+    IF pkx(c%)>639 OR pkx(c%)<0 OR pky(c%)>399 OR pky(c%)<0
+      r%(c%)=RANDOM(1000)
+      pkx(c%)=320
+      pky(c%)=200
+      z0=2*PI*r%(c%)/1000
+      z1=SIN(z0)
+      z2=COS(z0)
+      v1=RANDOM(100)
+      ADD pkx(c%),z1*v1
+      ADD pky(c%),z2*v1
+      v%(c%)=RANDOM(5)+3
+    ENDIF
+  NEXT c%
+  SHOWPAGE
+  PAUSE 0.05
+  IF zc=40
+    PRINT AT(1,1);TIMER-t
+    IF TIMER-t>3
+      DEC a%
+      PRINT "-"'a%
+    ELSE
+      INC a%
+      PRINT "+"'a%
+    ENDIF
+    t=TIMER
+    CLR zc
   ENDIF
-next c&
-vsync 
-pause 0.05
-    if zc=40
-      print at(1,1);timer-t
-      IF TIMER-t>3
-        DEC a&
-        print "-"'a&
-      ELSE
-        INC a&
-        print "+"'a&
-      ENDIF
-      t=TIMER
-      clr zc
-    endif
-inc zc
+  INC zc
 LOOP
-quit
+QUIT

@@ -65,7 +65,7 @@ typedef struct {
   
 } WINDOWDEF;
 
-WINDOWDEF window[MAXWINDOWS];
+extern WINDOWDEF window[];
 
 
 

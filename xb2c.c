@@ -53,8 +53,8 @@ FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.23";        /* Programmversion*/
-const char vdate[]="2015-01-01";
+const char version[]="1.24";        /* Programmversion*/
+const char vdate[]="2015-09-01";
 char *programbuffer=NULL;
 char **program=NULL;
 int programbufferlen=0;
@@ -312,7 +312,7 @@ static void translate() {
     fflush(optr);
     
     redo=0;
-    fprintf(optr,"/* %02x */",i);
+    fprintf(optr,"/* %02x / %02x */",i,i+sizeof(BYTECODE_HEADER));
     if((b=havesymbol(i,STT_LABEL))>=0) 
       fprintf(optr,"%s:  ",&strings[symtab[b].name]);
     else if((b=havesymbol(i,0))>=0) {
@@ -717,12 +717,12 @@ static int loadbcprg(char *filename) {
   int len,i,c;
   char *p;
   FILE *dptr;
-  dptr=fopen(filename,"r"); len=lof(dptr); fclose(dptr);
+  dptr=fopen(filename,"rb"); len=lof(dptr); fclose(dptr);
   p=malloc(len);
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.23\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.24\n"
                  "   (c) Markus Hoffmann 2002-2015\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);

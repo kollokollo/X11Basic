@@ -271,20 +271,23 @@ static void LWSWAP(short *adr) {
 double ltext(int, int, double, double, double , int, char *);
 
 #ifndef USE_GEM
-short form_alert(short dbut,char *n) {
-  return(form_alert2(dbut,n,NULL));
-}
+short form_alert(short dbut,char *n) {return(form_alert2(dbut,n,strlen(n),NULL));}
 #endif
-int form_alert2(int dbut,char *n, char *tval) {
+
+/* Diese Funktion kann ja auch Input-Felder annehmen. Es können
+   0-bytes in n sein.*/
+
+int form_alert2(int dbut,char *n,int size, char *tval) {
   char *bzeilen[30],*bbuttons[30],*buffer[30];
+  int bzeilenlen[30],bbuttonslen[30];
   int anzzeilen=0,anzbuttons=0,anztedinfo=0,anzbuffer=0;
   int symbol=0,sbut=0;
   char *pos=n;
   char **ein=bzeilen;
-  int i=0,j=strlen(n),k=0,l=0;
+  int *len=bzeilenlen;
+  int i=0,j=size,k=0,l=0;
   TEDINFO tedinfo[32];
-  char tmplt[32*80];
-  char valid[32*80];
+  char tmplt[32*80],valid[32*80];
   int tmpltptr=0,validptr=0;
   OBJECT objects[64]={{-1,1,1,G_BOX, 0, OUTLINED, { 0x00021100}, 0,0,100,100}};
   int objccount=1;
@@ -292,28 +295,37 @@ int form_alert2(int dbut,char *n, char *tval) {
 #ifdef DEBUG
   printf("**form_alert:\n");
 #endif
-  memset(tmplt,'_',32*80);
-  memset(valid,'X',32*80);
+  memset(tmplt,'_',sizeof(tmplt));
+  memset(valid,'X',sizeof(valid));
   while(i<j) {
     if(n[i]=='[') {
       pos=&n[i+1];
       k++;l=0;
     } else if(n[i]==']') {
       n[i]=0;
-      if(k>0) ein[l++]=pos;
+      if(k>0) {
+        ein[l]=pos;
+	len[l]=&n[i]-pos;
+	l++;
+      }
       if(k==1) {
         symbol=atoi(pos);
 	ein=bzeilen;
+	len=bzeilenlen;
       } else if(k==2) {
         ein=bbuttons;anzzeilen=l;
+	len=bbuttonslen;
       } else if(k==3) anzbuttons=l;
     } else if(n[i]=='|') {
-      ein[l++]=pos;
+      ein[l]=pos;
+      len[l]=&n[i]-pos;
       n[i]=0;
+      l++;
       pos=n+i+1;
     };
     i++;
   }
+
 
   if(anzbuttons) {
     /* Box-Abmessungen bestimmen */
@@ -331,7 +343,7 @@ int form_alert2(int dbut,char *n, char *tval) {
     objects[0].ob_height=max(objects[0].ob_height+2*max(window[usewindow].chh,16),max(window[usewindow].chh,16)*2+(anzzeilen+2)*window[usewindow].chh);
 
 
-    for(i=0;i<anzzeilen;i++) maxc=max(maxc,strlen(bzeilen[i]));
+    for(i=0;i<anzzeilen;i++) maxc=max(maxc,bzeilenlen[i]); /*Auch textfelder mit längeren default berücksichtigen*/
     objects[0].ob_width+=window[usewindow].chw*maxc;
 
      /* Buttons  */
@@ -365,7 +377,7 @@ int form_alert2(int dbut,char *n, char *tval) {
     for(i=0;i<anzzeilen;i++) {
       objects[objccount].ob_x=textx+window[usewindow].chh;
       objects[objccount].ob_y=(1+i)*window[usewindow].chh;
-      objects[objccount].ob_width=window[usewindow].chw*strlen(bzeilen[i]);
+      objects[objccount].ob_width=window[usewindow].chw*bzeilenlen[i];
       objects[objccount].ob_height=window[usewindow].chh;
       objects[objccount].ob_spec.free_string=bzeilen[i];
       objects[objccount].ob_head=-1;
@@ -380,13 +392,13 @@ int form_alert2(int dbut,char *n, char *tval) {
         for(j=0;j<strlen(objects[objccount-1].ob_spec.free_string);j++) {
 	  if((objects[objccount-1].ob_spec.free_string)[j]==27) {
             (objects[objccount-1].ob_spec.free_string)[j]=0;
-	//  printf("Textfeld gefunden. OB=%d vorne=<%s>\n",objccount,objects[objccount-1].ob_spec);
+	     // printf("Textfeld gefunden. OB=%d vorne=<%s>\n",objccount,objects[objccount-1].ob_spec);
 	    
 	    objects[objccount].ob_x=textx+window[usewindow].chh+window[usewindow].chw*j+window[usewindow].chw;
             objects[objccount].ob_y=(1+i)*window[usewindow].chh;
             objects[objccount-1].ob_width=window[usewindow].chw*(strlen(objects[objccount-1].ob_spec.free_string));
-            objects[objccount].ob_width=window[usewindow].chw*(strlen(bzeilen[i]+j+1));
-	   // printf("default=<%s>\n",bzeilen[i]+j+1);
+            objects[objccount].ob_width=window[usewindow].chw*(bzeilenlen[i]-j-1);
+	    // printf("default=<%s> len=%d\n",bzeilen[i]+j+1,bzeilenlen[i]-j-1);
             objects[objccount].ob_height=window[usewindow].chh;
             objects[objccount].ob_spec.tedinfo=&tedinfo[anztedinfo];
             objects[objccount].ob_head=-1;
@@ -396,21 +408,24 @@ int form_alert2(int dbut,char *n, char *tval) {
             objects[objccount].ob_flags=EDITABLE;
             objects[objccount].ob_state=NORMAL;
 	    tedinfo[anztedinfo].te_ptext=(char *)(bzeilen[i]+j+1);
-	    buffer[anzbuffer]=malloc(strlen((char *)tedinfo[anztedinfo].te_ptext)+1);
+	    buffer[anzbuffer]=malloc(bzeilenlen[i]-j-1+1);
 	    tedinfo[anztedinfo].te_ptmplt=(char *)&tmplt[tmpltptr];
-	    tmpltptr+=strlen(bzeilen[i]+j+1)+1;
+	    tmpltptr+=bzeilenlen[i]-j-1+1;
 	    tmplt[tmpltptr-1]=0;
 	    tedinfo[anztedinfo].te_pvalid=(char *)&valid[validptr];
-	    validptr+=strlen(bzeilen[i]+j+1)+1;
+	    validptr+=bzeilenlen[i]-j-1+1;
 	    valid[validptr-1]=0;
 	    tedinfo[anztedinfo].te_font=FONT_IBM;
 	    tedinfo[anztedinfo].te_just=TE_LEFT;
-	    tedinfo[anztedinfo].te_fontid=strlen(bzeilen[i]+j+1);
+	    tedinfo[anztedinfo].te_fontid=strlen(bzeilen[i]+j+1);  /*Cursor-Position*/
 	    tedinfo[anztedinfo].te_fontsize=0;
 	    tedinfo[anztedinfo].te_color=0x1100;
 	    tedinfo[anztedinfo].te_thickness=1;
-	    tedinfo[anztedinfo].te_txtlen=strlen((char *)tedinfo[anztedinfo].te_ptext);
-	    tedinfo[anztedinfo].te_tmplen=strlen((char *)tedinfo[anztedinfo].te_ptext);
+	    tedinfo[anztedinfo].te_txtlen=bzeilenlen[i]-j-1;
+	    tedinfo[anztedinfo].te_tmplen=bzeilenlen[i]-j-1;
+	    // printf("ptext=<%s>\n",tedinfo[anztedinfo].te_ptext);
+	    // printf("tmplt=<%s>\n",tedinfo[anztedinfo].te_ptmplt);
+	    // printf("valid=<%s>\n",tedinfo[anztedinfo].te_pvalid);
 	    anztedinfo++;
             objccount++;
 	  /*  printf("Objcount: %d\n",objccount);*/
@@ -452,10 +467,8 @@ int form_alert2(int dbut,char *n, char *tval) {
     form_dial(2,0,0,0,0,x,y,w,h);
 
     if(tval!=NULL) { /* Textfelder zusammensuchen  */
-
       tval[0]=0;
       for(i=0;i<objccount;i++) {
-
         if(objects[i].ob_flags & EDITABLE) {
 	  strcat(tval,(char *)(objects[i].ob_spec.tedinfo)->te_ptext);
 	  tval[strlen(tval)+1]=0;
@@ -464,9 +477,7 @@ int form_alert2(int dbut,char *n, char *tval) {
       }
     //  printf("tval=<%s>\n",tval);
     }
-    while(anzbuffer) {
-      free(buffer[--anzbuffer]);
-    }
+    while(anzbuffer) free(buffer[--anzbuffer]);
   }
   return(sbut);
 }
@@ -725,18 +736,17 @@ if (drawbg) {
     ted=tree[idx].ob_spec.tedinfo;
     
     load_GEMFONT(ted->te_font);      
-    text=(char *)malloc(strlen(ted->te_ptext)+1+strlen(ted->te_ptmplt));
+    text=(char *)malloc(ted->te_txtlen+ted->te_tmplen+1);
     
     ob_format(ted->te_just,ted->te_ptext,ted->te_ptmplt,text);
-
-/* j1 ist die cursorposition relativ zum ptext feld, 
-   j2 ein offset der darstellung, die maximal darstellbare Laenge ergibt 
+/* ted->te_fontid ist die cursorposition relativ zum ptext feld, 
+   ted->te_fontsize ein offset der darstellung, die maximal darstellbare Laenge ergibt 
    sich aus obw, Maximale laenge des eingabestrings aus der laenge des tmpl
    
    */
-
-//printf("j1=%d, j2=%d\n",ted->te_fontid,ted->te_fontsize);
     flen=strlen(text);
+// printf("Zusammengesetzter text: <%s> len=%d ",text,flen);
+// printf("cursorpos=%d, offset=%d\n",ted->te_fontid,ted->te_fontsize);
     x=fontwidth(ted->te_font); /*x temporarily used*/
     if(flen*x>obw) {
       if((flen-ted->te_fontsize)*x>obw) flen=obw/x;
@@ -760,6 +770,7 @@ if (drawbg) {
       SetForeground(gem_colors[textcolor]);
     }
     DrawString(x,y,text+ted->te_fontsize,flen);
+    // printf("DrawString: <%s> l=%d\n",text+ted->te_fontsize,flen);
     SetForeground(gem_colors[RED]);
     if(strlen(text)-ted->te_fontsize>obw)
       DrawString(obx+obw,oby+obh,">",1);
@@ -820,11 +831,13 @@ if (drawbg) {
   }
 }
 
-short objc_draw(OBJECT *tree,short start, short stop,short rootx,short rooty,short w,short h) {
+short objc_draw(OBJECT *tree,short start, short stop,short rootx,short rooty,short clipw,short cliph) {
   int idx=start;
 #if DEBUG 
   printf("**objc_draw: von %d bis %d\n",start,stop);
-#endif 
+#endif
+// TODO: 
+// if(clipw<=0 || cliph<=0) return(0);
 #ifdef FRAMEBUFFER
   FB_hide_mouse();
 #endif
@@ -837,7 +850,7 @@ short objc_draw(OBJECT *tree,short start, short stop,short rootx,short rooty,sho
   }
   if(tree[idx].ob_head!=-1) {
     if(!(tree[idx].ob_flags & HIDETREE)) {
-      objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,w,h);
+      objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,clipw,cliph);
     }
   }
   if(idx==stop) {
@@ -856,7 +869,7 @@ short objc_draw(OBJECT *tree,short start, short stop,short rootx,short rooty,sho
       return(1);
     }
     if(tree[idx].ob_head!=-1) {
-      if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,w,h);
+      if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,clipw,cliph);
     }
     if(idx==stop) {
 #ifdef FRAMEBUFFER
@@ -1038,11 +1051,12 @@ void memdump    (const unsigned char *adr,int l);
 short rsrc_load(const char *filename) {
   int i;
   if(exist(filename)) {
-    FILE *dptr=fopen(filename,"r");
+    FILE *dptr=fopen(filename,"rb");
     if(dptr==NULL) return(-1);
     int len=lof(dptr);
     rsrc=malloc(len);
-    if(fread(rsrc,1,len,dptr)==len) {
+    int a;
+    if((a=fread(rsrc,1,len,dptr))==len) {
       WSWAP((char *)((long)rsrc));
       if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
 //        if(rsrc->rsh_vrsn==0) {
@@ -1081,11 +1095,14 @@ memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
         printf("Unsupported RSC version %d.\n",rsrc->rsh_vrsn);
 	memdump((unsigned char *)rsrc,64);
 	}
+    } else {
+      printf("fread failed. %d  %d \n",a,len);
+    
     }
     fclose(dptr);
     free(rsrc);
     rsrc=NULL;
-  }
+  } else xberror(-33,filename); /* File not found*/
   return(-1);
 }
 

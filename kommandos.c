@@ -32,6 +32,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "type.h"
 
 #include "kommandos.h"
 #include "array.h"
@@ -268,6 +269,26 @@ static int saveprg(char *fname) {
   return(0);
 }
 
+static void c_memdump(PARAMETER *plist,int e) {
+  memdump((unsigned char *)plist[0].integer,plist[1].integer);
+}
+
+static void stringdump(const char *s,int l,char *d) {
+  int i=0;
+  unsigned char a;
+  while(i<l && i<60) {
+    a=s[i];
+    if(isprint(a)) d[i]=a;
+    else d[i]='.';
+    i++;
+  } 
+  if(i<l) {
+    d[i++]='.';
+    d[i++]='.';
+    d[i++]='.';
+  }
+  d[i]=0;
+}
 
 
 /*****************************************/
@@ -657,7 +678,12 @@ char *plist_paramter(PARAMETER *p) {
     break;
   case PL_COMPLEX: sprintf(ergebnis,"(%g+%gi)",p->real,p->imag);break;
   case PL_FILENR:  sprintf(ergebnis,"#%d",p->integer); break;
-  case PL_STRING:  sprintf(ergebnis,"\"%s\"",(char *)p->pointer); break;
+  case PL_STRING: { 
+    char *buf=malloc(min(p->integer+1,64));
+    stringdump(p->pointer,p->integer,buf);
+    sprintf(ergebnis,"\"%s\"",buf); 
+    break;
+  }
   case PL_LABEL:   strcpy(ergebnis,labels[p->integer].name); break;
   case PL_ARRAY:   strcpy(ergebnis,"[..array..]"); break;
   case PL_IVAR:    sprintf(ergebnis,"%s%%",variablen[p->integer].name); break;
@@ -1268,15 +1294,10 @@ static void c_arrayfill(PARAMETER *plist,int e) {
   free_array(arr);
   *arr=a;
 }
-static void c_memdump(PARAMETER *plist,int e) {
-  memdump((unsigned char *)plist[0].integer,plist[1].integer);
-}
 
 static char *varinfo(VARIABLE *v) {
   static char info[128];
   char *buf;
-  char a;
-  int i=0;
   switch(v->typ) {
     case INTTYP:   sprintf(info,"%s%%=%d",v->name,*(v->pointer.i));break;
     case FLOATTYP: sprintf(info,"%s=%.13g",v->name,*(v->pointer.f)); break;
@@ -1291,14 +1312,8 @@ static char *varinfo(VARIABLE *v) {
       free(buf);
       break;
     case STRINGTYP:
-      buf=malloc(v->pointer.s->len+1);
-      while(i<v->pointer.s->len && i<60) {
-        a=(v->pointer.s->pointer)[i];
-        if(isprint(a)) buf[i]=a;
-	else buf[i]='.';
-        i++;
-      } 
-      buf[i]=0;
+      buf=malloc(min(v->pointer.s->len+1,64));
+      stringdump(v->pointer.s->pointer,v->pointer.s->len,buf);
       sprintf(info,"%s$=\"%s\" (len=%d)",v->name,buf,v->pointer.s->len);
       free(buf);
       break;
@@ -1883,31 +1898,34 @@ static int do_return() {
 static void c_return(const char *n) {
   if(sp>0) {
     if(n && *n) {
+      PARAMETER ret;
+      bzero(&ret,sizeof(PARAMETER));
       int t=type(n)&(~CONSTTYP);
    // printf("returntype %s --> %x \n",n,t);
       
-      if(returnvalue.typ!=PL_LEER) free_parameter(&returnvalue);
       switch(t&TYPMASK) {
       case STRINGTYP:
-        *(STRING *)&(returnvalue.integer)=string_parser(n);
+        *(STRING *)&(ret.integer)=string_parser(n);
         break;
       case COMPLEXTYP:
-        *(COMPLEX *)&(returnvalue.real)=complex_parser(n); 
+        *(COMPLEX *)&(ret.real)=complex_parser(n); 
 	break;
       case INTTYP:
-        returnvalue.integer=(int)parser(n);
+        ret.integer=(int)parser(n);
 	break;
       case FLOATTYP:
-        returnvalue.real=parser(n);
+        ret.real=parser(n);
 	break;
       case ARBINTTYP:
-        returnvalue.pointer=malloc(sizeof(ARBINT));
-	mpz_init(*((ARBINT *)returnvalue.pointer));
-        arbint_parser(n,*((ARBINT *)returnvalue.pointer));
+        ret.pointer=malloc(sizeof(ARBINT));
+	mpz_init(*((ARBINT *)ret.pointer));
+        arbint_parser(n,*((ARBINT *)ret.pointer));
 	break;
       default: xberror(13,n);  /* Type mismatch */
       }
-      returnvalue.typ=(PL_CONSTGROUP|t);
+      ret.typ=(PL_CONSTGROUP|t);
+      if(returnvalue.typ!=PL_LEER) free_parameter(&returnvalue);
+      returnvalue=ret;
     }
     restore_locals(sp);
     pc=stack[--sp];
@@ -2420,8 +2438,8 @@ static void c_split(PARAMETER *plist,int e) {
   STRING str1,str2;
   
   s_wort_sep2((STRING *)&(plist[0].integer),(STRING *)&(plist[1].integer),plist[2].integer,&str1,&str2);
-  varcaststring_and_free(plist[3].typ,plist[3].pointer,str1);  
-  if(e>4)  varcaststring_and_free(plist[4].typ,(STRING *)plist[4].pointer,str2);
+  varcaststring_and_free(plist[3].pointer,str1);  
+  if(e>4)  varcaststring_and_free((STRING *)plist[4].pointer,str2);
   else free_string(&str2);
 }
 
@@ -2665,7 +2683,7 @@ const COMMAND comms[]= {
  { P_PLISTE,   "ERROR"    , c_error,1,1,(unsigned short []){PL_INT}},
  { P_PLISTE,   "EVAL"     , c_eval,1,1,(unsigned short []){PL_STRING}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "EVENT"    , c_allevent,0,9,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
+ { P_PLISTE,   "EVENT"    , c_allevent,0,10,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR}},
 #endif
  { P_PLISTE,   "EVERY"    , c_every,2,2,(unsigned short []){PL_INT,PL_PROC}},
  { P_PLISTE,   "EXEC"     , c_exec,1,3,(unsigned short []){PL_STRING,PL_STRING,PL_STRING}},
@@ -2689,7 +2707,7 @@ const COMMAND comms[]= {
 #endif
  { P_PROC,     "FUNCTION" , c_end,0,0},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "GET"      , c_get,5,5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR}},
+ { P_PLISTE,   "GET"      , c_get,5,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR,PL_INT}},
  { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,(unsigned short []){PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
  { P_PLISTE,   "GET_LOCATION" , c_getlocation,2,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
  
@@ -2806,7 +2824,7 @@ const COMMAND comms[]= {
   { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALLVAR,PL_NUMBER}},
  */
 #ifndef NOGRAPHICS
- { P_PLISTE,   "PUT"  , c_put,      3,4,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_FLOAT}},
+ { P_PLISTE,   "PUT"  , c_put,      3,10,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_FLOAT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_FLOAT}},
 #endif
  { P_PLISTE,   "PUTBACK"  , c_unget,      2,2,(unsigned short []){PL_FILENR,PL_INT}},
 #ifndef NOGRAPHICS

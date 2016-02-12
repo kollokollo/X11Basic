@@ -116,6 +116,7 @@
 #define P_NOTHING  (P_IGNORE|P_NOCMD)
 
 #define P_ZUWEIS   (P_SPECIAL7|P_NOCMD)
+#define P_VOID     (P_SPECIAL7|P_ARGUMENT)
 
 
 /* F-Code-Definitionen   long */
@@ -267,8 +268,6 @@ char *indirekt2(const char *funktion);
 unsigned int type_list(const char *ausdruck);
 
 void free_pcode(int l);
-unsigned int type(const char *ausdruck);
-unsigned int combine_type(unsigned int rtyp,unsigned int ltyp,char c);
 
 
 #ifndef ANDROID

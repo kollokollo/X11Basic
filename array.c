@@ -15,6 +15,7 @@
 #include "variablen.h"
 
 #include "xbasic.h"
+#include "type.h"
 #include "wort_sep.h"
 #include "array.h"
 #include "parser.h"

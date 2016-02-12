@@ -14,14 +14,14 @@
 
 
 
-                       VERSION 1.23
+                       VERSION 1.24
 
             (C) 1997-2015 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
- **  letzte Bearbeitung: Dez. 2013   von Markus Hoffmann		   **
+ **  letzte Bearbeitung: 08/2015  von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -49,6 +49,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "parameter.h"
 #include "kommandos.h"
@@ -355,8 +356,11 @@ int mergeprg(const char *fname) {
     i=prglen=0;
     
     /*Erster Durchgang */
-
     while(i<programbufferlen) {
+      if(i<programbufferlen-1 && programbuffer[i]=='\r' && programbuffer[i+1]=='\n') {  /*DOS WINDOWS line ending behandeln.*/
+        programbuffer[i]='\n';
+	programbuffer[i+1]=2;
+      }
       if(i>0 && programbuffer[i]=='\n' && programbuffer[i-1]=='\\') {
         programbuffer[i]=1;   /* Marker */
         programbuffer[i-1]=' ';
@@ -371,6 +375,7 @@ int mergeprg(const char *fname) {
     program=(char **)realloc(program,prglen*sizeof(char *));  /*Array mit Zeilenpointern*/
     linetable=realloc(linetable,prglen*sizeof(int));
     bzero(linetable,prglen*sizeof(int));
+ 
 
     /* Zweiter Durchgang */
 
@@ -380,6 +385,12 @@ int mergeprg(const char *fname) {
       if(programbuffer[i]==1) {
         programbuffer[i]=' '; /* Marker entfernen*/
 	linetable[prglen]++;
+	if(i<programbufferlen+1 &&  programbuffer[i+1]==2) {
+	  programbuffer[i+1]=' '; /* Marker entfernen*/
+	}
+      } else if(programbuffer[i]==2) {
+        programbuffer[i]=0; /* Marker entfernen*/
+	pos++;  // alternativ: pos=programbuffer+i+1;
       } else if(programbuffer[i]==0) {
         program[prglen++]=pos;
         pos=programbuffer+i+1;
@@ -503,7 +514,7 @@ int init_program(int prglen) {
       continue;
     case '~':
       pcode[i].argument=strdup(zeile+1);
-      pcode[i].opcode=P_GOSUB|find_comm("VOID");
+      pcode[i].opcode=P_VOID|find_comm("VOID");
       continue;
     }
     len=strlen(zeile);
@@ -954,369 +965,7 @@ char *indirekt2(const char *funktion) {
 
 
 
-/*Bestimmt den Ergebnistyp einer Binaeren Operation, gegeben durch das
-Zeichen c.*/
 
-unsigned int combine_type(unsigned int rtyp,unsigned int ltyp,char c) {
-  int typ=0;
-  /*könnte man mit einer lookup-Tabelle loesen...*/
-    const static unsigned char combtyp[8*8]={
-    NOTYP,NOTYP,        NOTYP,         NOTYP,        NOTYP,        NOTYP,        NOTYP,        NOTYP,  /*NOTYP*/
-    NOTYP,INTTYP,       FLOATTYP,      ARBINTTYP,    ARBFLOATTYP,  COMPLEXTYP,   ARBCOMPLEXTYP,NOTYP,  /*INTTYP*/
-    NOTYP,FLOATTYP,     FLOATTYP,      ARBINTTYP,    ARBFLOATTYP,  COMPLEXTYP,   ARBCOMPLEXTYP,NOTYP,  /*FLOATTYP*/
-    NOTYP,ARBINTTYP,    ARBFLOATTYP,   ARBINTTYP,    ARBFLOATTYP,  ARBCOMPLEXTYP,ARBCOMPLEXTYP,NOTYP,  /*ARBINTTYP*/
-    NOTYP,ARBFLOATTYP,  ARBFLOATTYP,   ARBFLOATTYP,  ARBFLOATTYP,  ARBCOMPLEXTYP,ARBCOMPLEXTYP,NOTYP,  /*ARBFLOATTYP*/
-    NOTYP,COMPLEXTYP,   COMPLEXTYP,    ARBCOMPLEXTYP,ARBCOMPLEXTYP,COMPLEXTYP,   ARBCOMPLEXTYP,NOTYP,  /*COMPLEXTYP*/
-    NOTYP,ARBCOMPLEXTYP,ARBCOMPLEXTYP, ARBCOMPLEXTYP,ARBCOMPLEXTYP,ARBCOMPLEXTYP,ARBCOMPLEXTYP,NOTYP,  /*ARBCOMPLEXTYP*/
-    NOTYP,NOTYP,        NOTYP,         NOTYP,        NOTYP,        NOTYP,        NOTYP,        STRINGTYP /*STRINGTYP*/
-    };
- //  printf("combine-type %x %x %c \n",rtyp,ltyp,c);
-  if((ltyp&CONSTTYP) && (rtyp&CONSTTYP)) typ|=CONSTTYP;
-  if((ltyp&ARRAYTYP) || (rtyp&ARRAYTYP)) typ|=ARRAYTYP;
-  rtyp&=TYPMASK;
-  ltyp&=TYPMASK;
-  
-  if(c=='/') { /*War division, dann kann das Ergebnis nur float,complex oder arbfloat,arbcomplex sein */
-    if(rtyp==INTTYP) rtyp=FLOATTYP;
-    else if(rtyp==ARBINTTYP) rtyp=ARBFLOATTYP;
-    else if(ltyp==INTTYP) ltyp=FLOATTYP;
-    else if(ltyp==ARBINTTYP) ltyp=ARBFLOATTYP;
-    typ|=combtyp[8*rtyp+ltyp];
-  } 
-  else if(c=='m') { /* MOD operator */
-    int a=combtyp[8*rtyp+ltyp];
-    if(rtyp==ARBINTTYP) a=ltyp;
-    typ|=a;
-  }
-  else if(c=='d') { /* DIV operator Ganzzahl, also nur INT oder ARBINT*/
-    int a=combtyp[8*rtyp+ltyp];
-    if(rtyp==ARBINTTYP) a=ltyp;
-    if(a==FLOATTYP || a==COMPLEXTYP) a=INTTYP;
-    if(a==ARBFLOATTYP || a==ARBCOMPLEXTYP) a=ARBINTTYP;
-    typ|=a;
-  }
-  else if(c=='=' || c=='<' || c=='>') typ|=INTTYP; /*War Vergleichsoperator, dann kann das Ergebnis nur int sein */
-  else if(c=='&') {/*War logic operator, dann kann das Ergebnis nur int oder arbint sein */
-    if(rtyp==ARBINTTYP || ltyp==ARBINTTYP) typ|=ARBINTTYP;
-    else typ|=INTTYP;
-  } else if(c==',') typ|=rtyp;   /* Hm... */
-  else  typ|=combtyp[8*rtyp+ltyp];  /*   + - * etc... */
-  //printf("combine-type %x %x %c -->> %x\n",rtyp,ltyp,c,typ);
-  
-  if((typ&TYPMASK)==NOTYP && (typ&ARRAYTYP)!=ARRAYTYP) {
-    xberror(51,"combine-type");  /* Parser: Syntax Error */
-    printf("WARNING: combine-typ r=%x l=%x c=%c ---> %x\n",rtyp,ltyp,c,typ);
-  }
-  return(typ);
-}
-
-
-/* Bestimmt best passendsten einzeltyp aus eine mit Komma oder Semikolon 
-   separierten Liste:
-   Ist ein Typ eine float zahl, dann ist alles Float
-   Ist ein Typ ein String, dann ist alles String
-   Ist ein Typ ein Array, dann ist alles Array.
-   
-   
-   */
-unsigned int type_list(const char *ausdruck) {
-  int e,f,i=0;
-  unsigned int typ=CONSTTYP;
-  unsigned int temptyp;
-  char t[strlen(ausdruck)+1];
-  char t2[strlen(ausdruck)+1];
-  char t3[strlen(ausdruck)+1];
- // printf("Type-List: <%s>\n",ausdruck);
- // printf("Type() ergibt: %x\n",type(ausdruck));
-  e=wort_sep(ausdruck,';',-1,t,t2);
-  while(e) {
-    f=wort_sep(t,',',-1,t3,t);
-    while(f) {
-      temptyp=type(t3);
-      if(temptyp&ARRAYTYP) typ=(typ|ARRAYTYP);
-      if(!(temptyp&CONSTTYP)) typ=(typ&(~CONSTTYP));
-      temptyp&=TYPMASK;
-      /* Macht aus NOTYP -> INTTYP --> FLOATTYP usw...*/
-      if(i) typ=(typ&(~TYPMASK))|combine_type(typ&TYPMASK,temptyp,'+');
-      else typ=(typ&(~TYPMASK))|temptyp;
-      i++;
-      f=wort_sep(t,',',-1,t3,t);
-    }
-    e=wort_sep(t2,';',TRUE,t,t2);
-  }
-  // printf("Ergebnis: %x\n",typ);  
-  return(typ);
-}
-
-
-
-
-static int find_sysvar(const char *s) {
-  /* Liste durchgehen */
-  char c=*s;
-  int i=0,a=anzsysvars-1,b,l=strlen(s);
-  for(b=0; b<l; c=s[++b]) {
-            while(c>(sysvars[i].name)[b] && i<a) i++;
-            while(c<(sysvars[a].name)[b] && a>i) a--;
-            if(i==a) break;
-  }
-  if(strcmp(s,sysvars[i].name)==0) return(i);
-  return(-1);
-}
-
-
-
-
-
-/* Bestimmt den Typ eines Ausdrucks, 
-   es darf sich nicht um eine Liste von Ausdr"ucken handeln.
-
-*/
-//#define TYPEDEBUG
-#ifdef TYPEDEBUG
-/* Typ von Ausdruecken */
-
-static void dump_type(unsigned int typ) {
-  if(typ==NOTYP) printf("notyp ");
-  else {
-    if(typ&INDIRECTTYP) printf("indirect ");
-    if(typ&FILENRTYP) printf("filenr ");
-    if(typ&CONSTTYP) printf("const ");
-    if(typ&ARRAYTYP) printf("array ");
-
-    switch(typ&TYPMASK) {
-    case INTTYP: printf("int ");break;
-    case FLOATTYP: printf("float ");break;
-    case COMPLEXTYP: printf("complex ");break;
-    case ARBINTTYP: printf("arbint ");break;
-    case ARBFLOATTYP: printf("arbflt ");break;
-    case STRINGTYP: printf("string ");break;
-    default: printf("unknown ");break;
-    }
-  }
-}
-unsigned int type_(const char *ausdruck);
-unsigned int type(const char *ausdruck) {
-//#if 0
-  int i;
-  static int level=0;
-  static int count=0;
-  level++;
-  unsigned int a=type_(ausdruck);
-  level--;
-  printf("%4d: ",count);
-  for(i=0;i<level*2;i++) putchar(' ');
-  printf("TYPE <%s> --> %x ",ausdruck,a);
-  dump_type(a);
-  printf("\n");
-  // if(count==59) *((char *)count)=1;
-  count++;
-  return(a);
-}
-unsigned int type_(const char *ausdruck) {
-#else 
-unsigned int type(const char *ausdruck) {
-#endif
-  if(!ausdruck) return(NOTYP);  
-  while (w_space(*ausdruck)) ausdruck++;  /* Skip leading white space, if any. */
-
-  // printf("TYPE: <%s> \n",ausdruck);
-  switch(*ausdruck) {
-  case 0: return(NOTYP);
-  case '+':
-  case '-': return(type(ausdruck+1));  /* war Vorzeichen */
-  case '&':
-    if(ausdruck[1]=='"') return(INDIRECTTYP|CONSTTYP); 
-    else return(INDIRECTTYP);
-  case '[': {
-    char s[strlen(ausdruck)+1];
-    xtrim(ausdruck,TRUE,s);  /* Leerzeichen vorne und hinten entfernen, Grossbuchstaben */
-    char *pos=searchchr2(s+1,']');
-    if(pos!=NULL) *pos=0;
-    return(ARRAYTYP|type(s+1));  
-    }
-  }
-  char s[strlen(ausdruck)+1];
-  char *pos;
-  
-  xtrim(ausdruck,TRUE,s);  /* Leerzeichen vorne und hinten entfernen, Grossbuchstaben */
-  if((pos=searchchr3(s,';'))!=NULL) { /* Erst der Semikolon-Operator */
-    *pos++=0;
-    return(combine_type(type(pos),type(s),';'));
-  }  
-  
-  if((pos=searchchr3(s,','))!=NULL) {  /* Dann der Komma-Operator */
-    *pos++=0;
-    return(combine_type(type(pos),type(s),','));
-  }  
-
-/* jetzt = < > */
-
-  pos=searchchr2_multi(s,"=<>");
-  
-  if(pos!=NULL) {
-    char a=*pos;
-    *pos++=0;
-    while(*pos=='=' ||*pos=='<' ||*pos=='>') pos++; /* faengt die operatoen <>,==,<=,>= ab.*/
-    return(combine_type(type(pos),type(s),a));
-  }
-
-  if((pos=searchchr3(s,'|'))!=NULL) {  /* Dann || operatoren */
-    if(*pos=='|' && pos[1]=='|') {
-      *pos++=0;
-      return(combine_type(type(++pos),type(s),'&'));
-    }
-  }  
-
-  char *w1,*w2;
-/*  jetzt OR NOR XOR | */
-  if(wort_sepr2_destroy(s," OR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," NOR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," XOR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-
-
-  if((pos=searchchr3(s,'&'))!=NULL) {  /* Dann &&  operatoren */
-    if(*pos=='&' && pos[1]=='&') {
-      *pos++=0;
-      return(combine_type(type(++pos),type(s),'&'));
-    }
-  }  
-  
-  if(wort_sepr2_destroy(s," AND ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," NAND ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," EQR ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," EQV ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," IMP ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'&'));
-  if(wort_sepr2_destroy(s," MOD ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'m'));
-  if(wort_sepr2_destroy(s," DIV ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'d'));
-  if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
-      if(strlen(w1)==0) return(type(w2));    /* von rechts !!  */
-      /* Ansonsten ist NOT Teil eines Variablennamens */
-  }
-  
-    /* Addition/Subtraktion/Vorzeichen  */
-
-    /* Suche eine g"ultige Trennstelle f"ur + oder -  */
-  /* Hier muessen wir testen, ob es nicht ein vorzeichen war oder Teil eines Exponenten ...*/
-
-  pos=searchchr2_multi_r(s,"+-",s+strlen(s));  /* Finde n"achsten Kandidaten  von rechts*/
-  while(pos!=NULL) {
-    if(pos==s) return(type(s+1));/*Das +/-  war ganz am Anfang*/
-    if(pos>s && strchr("*/^",*(pos-1))==NULL && 
-                                     !( *(pos-1)=='E' && pos-1>s && vfdigittest(s,pos-1) && v_digit(*(pos+1)))) {
-    /* Kandidat war gut.*/
-      char c=*pos;
-      *pos=0;
-      return(combine_type(type(pos+1),type(s),c));
-    } 
-    pos=searchchr2_multi_r(s,"+-",pos);  /* Finde n"achsten Kandidaten  von rechts*/
-  }
-
-  /* File-Type */
-  if(*s=='#') return(FILENRTYP|type(s+1));
-  
-  /* Restliche Trennzeichen= ''', ' ', "* /^()|<>=&!" */
-
-  pos=searchchr2_multi(s,"'*/^");
-  
-  if(pos!=NULL) {
-    char a=*pos;
-    *pos++=0;
-    return(combine_type(type(pos),type(s),a));
-  }
-
-  
-  /*  hier ist nun nurnoch ein operand zu untersuchen */
-
-  if(*s=='(' && s[strlen(s)-1]==')') {
-    s[strlen(s)-1]=0;
-    return(type(s+1));
-  }
-  int typ=0;
-  int i=0;
-  pos=searchchr(s,'(');
-  if(pos!=NULL) {       /* Erste Klammer finden*/
-    if(*s!='@') {
-      if(pos==s) printf("WARNING: Syntax-error in expression: parenthesis? <%s>\n",s);
-      /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
-      char *ppp=pos+1;
-      int i=0,flag=0,sflag=0,count=0;
-      *pos=0;
-      if((i=find_func(s))!=-1) { /* Koennte funktion sein: */
- 	if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
-        typ=returntype2(i,ppp);
-	if(pfuncs[i].opcode&F_CONST) {
-          if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
-        }
-	return(typ);
-      } else if((i=find_sfunc(s))!=-1) { /* Koennte $-funktion sein: */
-        typ=STRINGTYP;
-	if(psfuncs[i].opcode&F_CONST) {
-	  if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	  else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
-          if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
-        }
-	return(typ);
-      } else if((i=find_afunc(s))!=-1) { /* Koennte Array-funktion sein: */
-        typ=ARRAYTYP;
-	// printf("Array-Funktion %s gefunden.\n",s);
-	if(psfuncs[i].opcode&F_CONST) {
-	  if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
-	  else printf("WARNING: Syntay-error in expression: closing parenthesis?. <%s>\n",ppp);
-          if(type(ppp)&CONSTTYP) typ|=CONSTTYP;
-	}
-        return(typ);
-      } else {                   /* wird wohl Array sein.*/
-        if(pos[1]==')') typ=(typ | ARRAYTYP);
-        else {
-          while(ppp[i]!=0 && !(ppp[i]==')' && flag==0 && sflag==0)) { /*Fine doppelpunkte in Argumentliste*/
-            if(ppp[i]=='(') flag++;
-	    if(ppp[i]==')') flag--;
-	    if(ppp[i]=='"') sflag=(!sflag);
-	    if(ppp[i]==':' && flag==0 && sflag==0) count++;
-            i++;
-          }
-          if(count) typ=(typ | ARRAYTYP);
-        }
-      }
-    } /* Kann auch @-Funktionsergebnis sein */
-    if((pos-1)[0]=='$') typ=(typ | STRINGTYP);
-    else if((pos-1)[0]=='%') typ=(typ | INTTYP);
-    else if((pos-1)[0]=='&') typ=(typ | ARBINTTYP);
-    else if((pos-1)[0]=='#') typ=(typ | COMPLEXTYP);
-    else typ=(typ | FLOATTYP);
-    return(typ);
-  } 
-  /* Keine Klammer*/
-  switch(*s) {
-  case 0:   typ=NOTYP; break;
-  case '"': typ=CONSTTYP|STRINGTYP;break;
-  case '$':				  /*HEX Zahl*/
-  case '%': typ=INTTYP|CONSTTYP;break;    /*BIN Zahl*/
-  default:
-    if((i=find_sysvar(s))!=-1) {  /*Es koennte sysvar sein. Dann testen, ob ggf constant.*/
-          typ=sysvars[i].opcode;
-    } else { /* Normale Variablen und Konstanten*/
-      int l=strlen(s);
-      if(s[l-1]=='$') typ=STRINGTYP;
-      else if(s[l-1]=='%') typ=INTTYP;
-      else if(s[l-1]=='&') typ=ARBINTTYP;
-      else if(s[l-1]=='#') typ=COMPLEXTYP;
-      else { /*Unterscheide nun noch zwischen ZahlenKonstanten und float variablen*/
-        int i=myisatof(s);
-//	printf("myisatof <%s> --> %x\n",s,i);
-        if(i==INTTYP) typ=INTTYP|CONSTTYP;
-	else if(i==FLOATTYP) typ=FLOATTYP|CONSTTYP;
-	else if(i==COMPLEXTYP) typ=COMPLEXTYP|CONSTTYP;
-	else if(i==ARBINTTYP) typ=ARBINTTYP|CONSTTYP;
-	else typ=FLOATTYP;
-      }
-   //  printf("type---> <%s> = %x\n",s,typ);
-    }
-  }
-  return(typ);
-}
 
 
 
@@ -1559,6 +1208,9 @@ void programmlauf(){
         }
 
 	} break;
+      case P_VOID:
+        c_void(pcode[opc].argument);
+        break;
       default:
         switch(pcode[opc].opcode&PM_TYP) {
         case P_EVAL:   kommando(program[opc]);

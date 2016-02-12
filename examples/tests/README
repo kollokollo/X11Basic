@@ -1,5 +1,16 @@
+This folder contains example sourcecode for X11-Basic.
+
+X11-Basic - The BASIC language interpreter and shell
+
+
+/tests/    -- little feature test examples
+
 These programs do not do useful things. 
 They just demonstrate how to use 
 specific commands in X11-Basic.
 
 ...
+
+
+COPYING:
+If not claimed differently in the sourcecode, all programs are public domain.

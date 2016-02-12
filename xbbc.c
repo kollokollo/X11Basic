@@ -33,6 +33,7 @@
 #include "bytecode.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "parameter.h"
 #include "file.h"
@@ -67,8 +68,8 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
-const char version[]="1.23"; /* Version Number. Put some useful information here */
-const char vdate[]="2015-01-01";   /* Creation date.  Put some useful information here */
+const char version[]="1.24"; /* Version Number. Put some useful information here */
+const char vdate[]="2015-09-01";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 

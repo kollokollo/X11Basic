@@ -10,17 +10,17 @@
     
     
     
-                       VERSION 1.23
+                       VERSION 1.24
 
             (C) 1997-2015 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.23                              Vendor: Markus Hoffmann
+Version     : 1.24                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
-Summary     : A Basic Interpreter and compiler with graphics capabilities
+Summary     : A Basic interpreter and compiler with graphics capabilities
 Description :
 
   X11-Basic is a dialect of the BASIC programming language with graphics
@@ -29,12 +29,7 @@ Description :
   computers.
 
   The structure of the language is similar to the ATARI-ST GFA-BASIC.
-  GFA-Basic programs should run with only few changes.
  
-  On UNIX and linux systems, the X11 graphics engine can be used as well as the
-  SDL library, the framebuffer devices or no graphics at all.  The MS WINDOWS
-  version supports only SDL (or no graphics at all). 
-
   This package includes the basic interpreter named xbasic and a set of
   different  compilers. The interpreter can be used as a shell, and can so run
   basic-scripts. You can make excecutable scripts p.ex. *.cgi-Scripts for
@@ -59,7 +54,7 @@ Description :
 
   You will find the compiler sourcecode and some other sample programs in 
   /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-  can be found in X11-Basic-examples-1.23.zip, which you can download from the 
+  can be found in X11-Basic-examples-1.24.zip, which you can download from the 
   homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
   of the manual can be found there.
 

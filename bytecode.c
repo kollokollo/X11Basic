@@ -19,6 +19,7 @@
 #include "variablen.h"
 #include "array.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "parameter.h"
 #include "number.h"
@@ -819,7 +820,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 		  e=wort_sep(w2,',',TRUE,w1,w2);
                   ii++;
                 }
-	// printf("name=%s %s\n",pfuncs[i].name,pos);
+	  // printf("name=%s %s\n",pfuncs[i].name,pos);
           plist_to_stack(par,(short *)pfuncs[i].pliste,anz,pfuncs[i].pmin,pfuncs[i].pmax);
 	  for(ii=0;ii<anz;ii++) free(par[ii].pointer);
           free(par);
@@ -1723,7 +1724,7 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	
 	PARAMETER *p=pcode[i].ppointer;
 	char *n;
-	int count=0;
+	
 	#ifdef ATARI
 	char code[200];
 	#else
@@ -1740,17 +1741,22 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	        // else 
 	        if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
 	        BCADD(BC_I2FILE);TR(PL_FILENR);
-		continue;
-	      } else {BCADD(BC_PUSHLEER);TP(PL_LEER); bc_print_arg(n,code);count++;}
-	    } else {
-	      if(count) strcat(code,"+CHR$(9)");
-	      bc_print_arg(n,code);  /* Ergebnis ist dann ein String-Parameter auf dem Stack.*/
-	      count++;
-	    }
-	    if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'') strcat(code,"+CHR$(10)");;
-	  } else plist_to_stack(p+j,(short *)comms[find_comm("PRINT")].pliste,1,0,-1);
+	      } else {BCADD(BC_PUSHLEER);TP(PL_LEER); }
+	      if(*n=='#') continue;
+	    } 
+	    bc_print_arg(n,code);  /* Ergebnis ist dann ein String-Parameter auf dem Stack.*/
+	    if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'' && j==pcode[i].panzahl-1) strcat(code,"+CHR$(10)");
+	    else if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'' && j<pcode[i].panzahl-1) strcat(code,"+CHR$(9)");
+	  //  printf("n=<%s> --> <%s>\n",n,code);
+	  } else if(p[j].typ==PL_LEER) {
+            ; /* nixtun !*/
+	  } else {
+	    /*Hier stimmt was nicht, denn das ist so noch nicht implementiert.*/
+	    printf("WARNING: noeval\n");
+	    plist_to_stack(p+j,(short *)comms[find_comm("PRINT")].pliste,1,0,-1);
+	  }
 	}
-	 //  printf("Codezeile: <%s>\n",code);
+	// printf("Codezeile: <%s>\n",code);
 	if(TL!=PL_LEER && TL!=PL_FILENR) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
 	bc_parser(code);
 	if(TL!=PL_STRING) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);

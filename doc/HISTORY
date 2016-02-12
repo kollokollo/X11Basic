@@ -319,4 +319,39 @@ Release notes for Version 1.22 (Dec 2013-June 2014)
 - bugfix in compiler, improved error messages
 - fixed bug in DIM, VAL?(), PLIST
 
+Release notes for Version 1.23 (July 2014 -- August 2015)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- New data type: complex numbers a#
+- New data type: arbitrary precision integers a& (experimental)
+- LAPACK functions (e.g. SOLVE(), INVERT() etc.) now work in Android version
+- New functions LCM() and GCD()
+- fixed bugs in compiler (PRINT)
+- fixed bug in MID$()
+- compiled an ATARI ST (MINT) version of X11-Basic
+- Fixed bug in LOAD / Screen rotation
+- Again modified MID$
+- Crashfix: clear_variable
+- Fixed unavail basedir in Android
+- fixed bug in EVAL, HELP, RND(), SGET, GET, PLIST, RSRC_LOAD, OBJC_DRAW()
+- increased speed of assignment in interpreter
+- workaround for TTS crash (Android)
+- new functions UBOUND() and DIR$()
+- further crashfixes (bytecode)
+- fixed bugs in WINDOWS version (RSRC_LOAD)
+- improved GPRINT COLOR(), ALERT
+- fixed bugs in bytecode compiler MIN(), MAX() and PRINT
+- fixed bugs in BIN$(), OCT$(), HEX$(), RADIX$()
+- new functions ROR() and ROL()
+- improved EVENT and EVENT?() (Windows)
+- SGET/GET/SAVEWINDOW/SAVESCREEN now produce BMP data also in UNIX/LINUX
+- new functions PNGENCODE$() and PNGDECODE$()
+- fixed bug in FREEFILE()
+- fixed memory leak in virtual machine (less crashes now!)
+- fixed bug in SIZEW (linux) introduced in V.1.23
+- made tolerant for CRLF (DOS mode) .bas files
+- added View Docu function in context menu (WINDOWS)
+- added source box to PUT
+- fixed SPEAK (Android)
+- fixed crash (Android) on load while program is still running
+
 --------------------------------------------------------------------------------

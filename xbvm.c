@@ -23,6 +23,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "variablen.h"
 #include "parameter.h"

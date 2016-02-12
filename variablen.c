@@ -14,6 +14,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "parameter.h"
 #include "array.h"
@@ -287,7 +288,7 @@ void set_var_adr(int vnr,void *adr) {
 void zuweisxbyindex(int vnr,int *indexliste,int n,char *ausdruck,short atyp) {
   int typ=variablen[vnr].typ;
   char *varptr=varptr_indexliste(&variablen[vnr],indexliste,n);
-  int ia;
+  int ia=0;
   // printf("zuweisxbyindex: <%s>  typ=%x  n=%d\n",ausdruck,typ,n);
   if(typ==ARRAYTYP) {
     ia=isarray(indexliste,n);

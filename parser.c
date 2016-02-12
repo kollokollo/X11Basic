@@ -19,6 +19,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "type.h"
 #include "variablen.h"
 #include "parser.h"
 #include "parameter.h"
@@ -1566,7 +1567,7 @@ STRING string_parser(const char *funktion) {
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 		ergebnis=(psfuncs[i].routine)(parser(pos));
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_IQUICK) {
-		ergebnis=(psfuncs[i].routine)((int)parser(pos));
+		ergebnis=(psfuncs[i].routine)(*pos?(int)parser(pos):0);
 	      } else if(psfuncs[i].pmax==2 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 	       	 char *w1,*w2;
 	         int e;
@@ -1739,7 +1740,6 @@ int do_parameterliste(const char *pos, const int *l,int n) {
 static void do_benfunction(const char *name,const char *argumente) {
 //  printf("Do benutzerdef function: %s  <-- %s\n",name,argumente);
   int oldbatch,osp=sp;
-  free_parameter(&returnvalue);
   int pc2=procnr(name,PROC_FUNC|PROC_DEFFN);  /*FUNCTION und DEFFN*/
   if(pc2==-1) { xberror(44,name); /* Funktion  nicht definiert */ return; } 
   if(do_parameterliste(argumente,procs[pc2].parameterliste,procs[pc2].anzpar)) {
@@ -1753,24 +1753,22 @@ static void do_benfunction(const char *name,const char *argumente) {
   if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
   else {xberror(75,""); /* Stack Overflow! */restore_locals(sp+1);return;}
   if(proctyp==PROC_DEFFN) {
-    returnvalue.typ=typ;
+    PARAMETER localpar;  /* Localer parameter, da die Parseraufrufe returnvalue wiederum veraendern.*/
+    bzero(&localpar,sizeof(PARAMETER));
+    localpar.typ=typ;
     switch(typ) {
-    case INTTYP:
-      returnvalue.integer=(int)parser(pcode[pc2].argument);
-      break;
-    case FLOATTYP:
-      returnvalue.real=parser(pcode[pc2].argument);
-      break;
+    case INTTYP:   localpar.integer=(int)parser(pcode[pc2].argument); break;
+    case FLOATTYP: localpar.real=parser(pcode[pc2].argument);         break;
     case COMPLEXTYP:
-      *(COMPLEX *)&returnvalue.real=complex_parser(pcode[pc2].argument);
+      *(COMPLEX *)&localpar.real=complex_parser(pcode[pc2].argument);
       break;
     case ARBINTTYP:
-      returnvalue.pointer=malloc(sizeof(ARBINT));
-      mpz_init(*((ARBINT *)returnvalue.pointer));
-      arbint_parser(pcode[pc2].argument,*((ARBINT *)returnvalue.pointer));
+      localpar.pointer=malloc(sizeof(ARBINT));
+      mpz_init(*((ARBINT *)localpar.pointer));
+      arbint_parser(pcode[pc2].argument,*((ARBINT *)localpar.pointer));
       break;
     case STRINGTYP:
-      *((STRING *)&returnvalue.integer)=string_parser(pcode[pc2].argument);
+      *((STRING *)&localpar.integer)=string_parser(pcode[pc2].argument);
       break;
     case ARRAYTYP:
     case (ARRAYTYP|INTTYP):
@@ -1783,6 +1781,8 @@ static void do_benfunction(const char *name,const char *argumente) {
     }
     restore_locals(sp);
     pc=stack[--sp];
+    free_parameter(&returnvalue);
+    returnvalue=localpar;
   } else {
     oldbatch=batch;batch=1;
     programmlauf();
@@ -1794,7 +1794,7 @@ static void do_benfunction(const char *name,const char *argumente) {
       pc=stack[--sp]; /* wenn error innerhalb der func. */
       printf("Error within FUNCTION. pc=%d, sp=%d, FATAL!\n",pc,sp);
     }
-  }  
+  }
 }
 
 static COMPLEX do_cfunktion(char *name,char *argumente) {

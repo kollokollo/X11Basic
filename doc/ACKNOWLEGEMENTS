@@ -34,6 +34,8 @@ in 2014:
 
 in 2015:
 
+* Guillaume Tello, Wanderer, and John Sheales  (beta testing and bug fixing)
+
 X11-Basic is build on top of many free softwares, and could not exist without 
 them.
 
@@ -49,6 +51,12 @@ LAPACK (Linear Algebra Package) is a standard software library for
 numerical linear algebra. 
 
 For details, see: http://www.netlib.org/lapack/
+
+X11-Basic uses the lodepng code for the PNG bitmap graphics support.
+Copyright (c) 2005-2013 Lode Vandevenne
+
+
+
 
 So I would like to thank every people involved in the following projects:
 

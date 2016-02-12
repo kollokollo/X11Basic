@@ -116,6 +116,16 @@ char *dump_arr(int);
 }
 
 
+static inline STRING create_string_and_free2(char *n) {
+  STRING ergeb;
+  ergeb.pointer=n;
+  if(n) ergeb.len=strlen(n);
+  else ergeb.len=0;
+  return(ergeb);
+}
+
+
+
 
 static inline void free_string(STRING *str) {
   free(str->pointer);str->pointer=NULL;str->len=0; 
@@ -160,7 +170,7 @@ static inline STRING create_string_and_free(char *n,int l) {
   return(ergeb);
 }
 
-static inline void varcaststring_and_free(int typ,void *pointer,STRING val) {
+static inline void varcaststring_and_free(void *pointer,STRING val) {
   free(((STRING *)pointer)->pointer);
   *((STRING *)pointer)=val;
 }

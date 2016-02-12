@@ -38,11 +38,13 @@
 #endif
 #ifdef HAVE_USB
 #include <usb.h>
+// #include <libusb-1.0/libusb.h>
 #define TIMEOUT 5000
 #endif
 
 #include "x11basic.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parser.h"
 #include "svariablen.h"
 #include "number.h"
@@ -221,7 +223,7 @@ static DIR *dp=NULL;
 
 STRING f_fsfirsts(PARAMETER *plist,int e) {
 #ifdef WINDOWS
- strncpy(fspath,plist[0].pointer,min(plist[0].integer,NAME_MAX));
+  strncpy(fspath,plist->pointer,min(plist->integer+1,NAME_MAX));
 #endif
   if(e>1)  strncpy(fspattern,plist[1].pointer,min(plist[1].integer,NAME_MAX));
   else strcpy(fspattern,"*");
@@ -230,7 +232,7 @@ STRING f_fsfirsts(PARAMETER *plist,int e) {
   // printf("FSFIRST: path=<%s>, pattern=<%s>, attr=<%s>\n",plist->pointer,fspattern,fsattr);
   if(dp) closedir(dp);
   dp=opendir(plist->pointer);
- // printf("OPENDIR: <%s> --> %p\n",plist->pointer,dp);
+  // printf("OPENDIR: <%s> --> %p\n",plist->pointer,dp);
   return(f_fsnexts());
 }
 STRING f_fsnexts() {
@@ -246,7 +248,7 @@ STRING f_fsnexts() {
 //  printf("FSNEXT: pattern=<%s>, attr=<%s>\n",fspattern,fsattr);
   while(1) {
     ep=readdir(dp);
-   // printf("READDIR: --> %p\n",ep);
+ //   printf("READDIR: --> %p\n",ep);
     if(!ep) {
       ergebnis.pointer=malloc(1);
       ergebnis.len=0;
@@ -260,6 +262,7 @@ STRING f_fsnexts() {
 #ifdef WINDOWS
   char filename[NAME_MAX];
   sprintf(filename,"%s/%s",fspath,ep->d_name);
+ // printf("FILENAME: <%s>\n",filename);
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,filename);
@@ -605,9 +608,52 @@ static int make_UDP_socket(unsigned short int port) {
   return(sock);
 }
 
+#if defined HAVE_USB && defined DEBUG
 
 
+static void print_endpoint(struct usb_endpoint_descriptor *endpoint) {
+  printf(" bEndpointAddress: %02xh\n", endpoint->bEndpointAddress);
+  printf(" bmAttributes: %02xh\n", endpoint->bmAttributes);
+  printf(" wMaxPacketSize: %d\n", endpoint->wMaxPacketSize);
+  printf(" bInterval: %d\n", endpoint->bInterval);
+  printf(" bRefresh: %d\n", endpoint->bRefresh);
+  printf(" bSynchAddress: %d\n", endpoint->bSynchAddress);
+}
 
+static void print_altsetting(struct usb_interface_descriptor *interface) {
+  int i;
+
+  printf(" bInterfaceNumber: %d\n", interface->bInterfaceNumber);
+  printf(" bAlternateSetting: %d\n", interface->bAlternateSetting);
+  printf(" bNumEndpoints: %d\n", interface->bNumEndpoints);
+  printf(" bInterfaceClass: %d\n", interface->bInterfaceClass);
+  printf(" bInterfaceSubClass: %d\n", interface->bInterfaceSubClass);
+  printf(" bInterfaceProtocol: %d\n", interface->bInterfaceProtocol);
+  printf(" iInterface: %d\n", interface->iInterface);
+
+  for (i = 0; i < interface->bNumEndpoints; i++)
+    print_endpoint(&interface->endpoint[i]);
+}
+
+
+static void print_interface(struct usb_interface *interface) {
+  int i;
+  for (i = 0; i < interface->num_altsetting; i++)
+    print_altsetting(&interface->altsetting[i]);
+}
+
+static void print_configuration(struct usb_config_descriptor *config) {
+  int i;
+
+  printf(" wTotalLength: %d\n", config->wTotalLength);
+  printf(" bNumInterfaces: %d\n", config->bNumInterfaces);
+  printf(" bConfigurationValue: %d\n", config->bConfigurationValue);
+  printf(" iConfiguration: %d\n", config->iConfiguration);
+  printf(" bmAttributes: %02xh\n", config->bmAttributes);
+  printf(" MaxPower: %d\n", config->MaxPower);
+  for (i = 0; i < config->bNumInterfaces; i++) print_interface(&config->interface[i]);
+}
+#endif
 
 /* Universelle OPEN-Funktion. Oeffnet Files, Devices, und sockets   */
 /* OPEN "I",#1,filename$[,port]   */
@@ -615,7 +661,7 @@ static int make_UDP_socket(unsigned short int port) {
 //#define DEBUG 1
 
 
-static struct usb_dev_handle *open_USB_device(const char *filename) {
+static struct usb_dev_handle *open_USB_device(const char *filename, int idx) {
 #ifdef HAVE_USB
   static int usb_is_init=0;
   static struct usb_bus *busses=NULL;
@@ -631,7 +677,7 @@ static struct usb_dev_handle *open_USB_device(const char *filename) {
     vid=(int)parser(w1); /* Vendor id */  
     pid=(int)parser(w2); /* Product id */  
   }
-  printf("OPEN USB: vid=0x%04x, pid=0x%04x, stopbits=%d, parity=%d\n",vid,pid,0,0);
+  // printf("OPEN USB: idx=%d, vid=0x%04x, pid=0x%04x\n",idx,vid,pid);
 
 #ifdef HAVE_USB
 
@@ -652,54 +698,41 @@ static struct usb_dev_handle *open_USB_device(const char *filename) {
   busses=usb_get_busses();
   for(bus_cur=busses; bus_cur!=NULL; bus_cur=bus_cur->next) {
     for(dev_cur=bus_cur->devices; dev_cur!=NULL; dev_cur=dev_cur->next) {
-      printf("Wir haben: %04x/%04x\n",dev_cur->descriptor.idVendor,dev_cur->descriptor.idProduct);
+    #ifdef DEBUG
+      printf("Wir haben: %04x/%04x (bus <%s>, device <%s>)\n",dev_cur->descriptor.idVendor,dev_cur->descriptor.idProduct,
+        bus_cur->dirname, dev_cur->filename);
+    #endif
       if((dev_cur->descriptor.idVendor == vid && dev_cur->descriptor.idProduct == pid)) {
 	dev=dev_cur;
-	printf("Gerät gefunden.\n");
+#ifdef DEBUG
+	printf("found.\n");
+#endif
 	break;
       }
     }
     if(dev!=NULL) break;
   }
   if(dev==NULL) {
-    printf("Kein unterstuetzter Logger angeschlossen.\n");
-    errno=ENOENT;
+    errno=ENOENT;    /* device not found.*/
     return(NULL);
   }
+
   dev_hdl=usb_open(dev);
   if(dev_hdl==NULL) {
     printf("usb_open failed: %s\n", usb_strerror());
     errno=ENOENT;
     return(NULL);
   }
-  if(dev->descriptor.bNumConfigurations) {
-    printf("%d Configurations.\n",dev->descriptor.bNumConfigurations);
+#ifdef DEBUG
+  if(dev->descriptor.bNumConfigurations) printf("%d Configurations.\n",dev->descriptor.bNumConfigurations);
+  if(!dev->config) printf(" Couldn't retrieve descriptors\n");
+  else {
+    int i;
+    for(i=0;i<dev->descriptor.bNumConfigurations;i++) {
+      print_configuration(&dev->config[i]);
+    }
   }
-
-/* Todo: Es muessen Endpoints gesetzt werden, am besten zwei, einen zum 
-    lesen und einen zum schreiben. Sind weniger (nur 1) endpoints da, wird auf dem 
-    0 (control endpoint) geschrieben. Ist kein endpoint da, wird auch auf der 0 
-    gelesen.*/
-
-
-  char string[100];
-  ret=usb_get_string_simple(dev_hdl, dev->descriptor.iProduct,string, sizeof(string)); 
-  printf("Geraet Name=<%s>\n",string);
-#ifndef WINDOWS
-  ret=usb_reset(dev_hdl);
-  if(ret<0) {
-    printf("usb_reset failed with status %i: %s\n", ret, usb_strerror());
-  }
-#endif	
-  ret=usb_set_configuration(dev_hdl, 1); //1 bConfigurationValue=1, iConfiguration=0
-  if(ret<0) {
-    printf("usb_set_configuration failed with status %i\n", ret);
-  }
-  ret=usb_claim_interface(dev_hdl, 0); // bInterfaceNumber=0, bAlternateSetting=0, bNumEndpoints=2
-  if(ret<0) {
-    printf("usb_claim_interface failed with status %i: %s\n", ret, usb_strerror());
-  }
-
+#endif
   return(dev_hdl);
 #else
   printf("The %s function is not implemented \n"
@@ -1032,7 +1065,7 @@ void c_open(PARAMETER *plist, int e) {
   else if(special=='S') filenr[number].dptr=create_socket(port,modus2);             /* serve */
   else if(special=='A') filenr[number].dptr=accept_socket(port,modus2);             /* accept */
   else if(special=='U') filenr[number].dptr=create_udp_socket(port,modus2);         /* UDP socket*/
-  else if(special=='Y') filenr[number].dptr=(FILE *) open_USB_device(filename);     /* USB devices */
+  else if(special=='Y') filenr[number].dptr=(FILE *) open_USB_device(filename,port);     /* USB devices */
   else                  filenr[number].dptr=fopen(filename,modus2);                 /* Normal File */
     
   if(filenr[number].dptr==NULL) {io_error(errno,"OPEN");return;}
@@ -1074,9 +1107,11 @@ void c_send(PARAMETER *plist, int e) {
 #ifdef HAVE_USB
     int ep_out=fff.ep_out;
     if(e>2) ep_out=plist[2].integer;
-  /*  TODO */ 
-    int ret=usb_bulk_write(fff.dptr,ep_out,plist[1].pointer,plist[1].integer,TIMEOUT);
-    if(ret<0) printf("usb_bulk_write failed with code %i: %s\n", ret, usb_strerror());
+    int ret=usb_bulk_write((usb_dev_handle *) filenr[plist->integer].dptr,ep_out,plist[1].pointer,plist[1].integer,TIMEOUT);
+    if(ret<0) {
+      printf("usb_bulk_write failed with code %i: %s\n", ret, usb_strerror());
+      xberror(-1,"SEND"); /* IO-ERROR */
+    }
 #endif
   } else {
     int sock=fileno(fff.dptr);
@@ -1100,19 +1135,25 @@ void c_receive(PARAMETER *plist, int e) {
   FILEINFO fff=get_fileptr(plist->integer);
   if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
   else if(fff.typ==FT_USB) {
-    /*   TODO    */
-#ifdef HAVE_USB
     STRING str;
-    str.pointer=malloc(fff.blk_len+1);    
-    str.len=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
-    if(str.len<0) {
-      printf("usb_bulk_read failed with code %i: %s\n", str.len, usb_strerror());
+    int ret;
+    if(fff.blk_len<=0) fff.blk_len=64;
+    str.pointer=malloc(fff.blk_len+1);
+#ifdef HAVE_USB
+    ret=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
+    if(e>2) varcastint(plist[2].integer,plist[2].pointer,ret);
+    if(ret<0) {
+      printf("usb_bulk_read failed with code %i: %s\n", ret, usb_strerror());
+      xberror(-1,"RECEIVE"); /* IO-ERROR */
       str.len=0;
-    }
+    } else str.len=ret;
+#else
+    str.len=fff.blk_len;
+#endif
     str.pointer[str.len]=0;
+    
     varcaststring(plist[1].integer,plist[1].pointer,str);
     free(str.pointer);
-#endif
   } else {
     int fdes=fileno(fff.dptr);
     struct	sockaddr_in	host_address;
@@ -1988,24 +2029,88 @@ void speaker(int frequency) {
 #endif
 }
 
+/* IOCTL #n,rec[,pointer]   implementation on normal files/sockets and USB devices...*/
 
 int f_ioctl(PARAMETER *plist,int e) {
-  int ret=0;
+  int ret=-1;
   FILEINFO fff=get_fileptr(plist->integer);
-  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
-  else {
-    int sock=fileno(fff.dptr);
+  if(fff.typ==FT_NONE) {
+    xberror(24,""); /* File nicht geoeffnet */    
+    return(ret);
+  } else if(fff.typ==FT_USB) {
+    // printf("IOCTL on USB device: %d\n",plist[1].integer);
+#ifdef HAVE_USB
+    if(plist[1].integer==0) {  /*USB reset*/
+       ret=usb_reset((usb_dev_handle *) filenr[plist->integer].dptr);
+       return(ret);
+    }
+    if(e<=2) return(-1);  /*Ab jetzt bracuhen wir einen zweiten Parameter/Datenpointer*/
+    switch(plist[1].integer) {
+    case 0: ret=usb_reset((usb_dev_handle *) filenr[plist->integer].dptr); break;  /* USB Reset*/
+    case 1:   /* get descriptor data structure*/
+      { struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
+     	
+  	  memcpy((void *)plist[2].integer,a,sizeof(struct usb_device));
+          ret=sizeof(struct usb_device);
+        break; }
+    case 2: /* Set configuration */
+      ret=usb_set_configuration((usb_dev_handle *) filenr[plist->integer].dptr, plist[2].integer);
+      break;
+    case 3: /* Claim Interface */
+      ret=usb_claim_interface((usb_dev_handle *) filenr[plist->integer].dptr, plist[2].integer);
+      break;
+    case 4:
+      { int *params=(int *)plist[2].integer;
+        void *data=NULL;
+	// printf("cm: %d %d %d %d\n",params[0],params[1],params[2],params[3]);
+	if(params[5]>0) data=(void *)&params[6];
+        ret=usb_control_msg((usb_dev_handle *) filenr[plist->integer].dptr, params[0],params[1],params[2],params[3],data,params[5],params[4]);
+      }
+      break;
+    case 5: filenr[plist->integer].blk_len=plist[2].integer;ret=0; break; /*  Set default blk_len */
+    case 6: filenr[plist->integer].ep_in=plist[2].integer;  ret=0; break; /*  Set ep_in */
+    case 7: filenr[plist->integer].ep_out=plist[2].integer; ret=0; break; /*  Set ep_out */
+    case 12: {  /* get filename+path */
+      	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
+    	strncpy((void *)plist[2].integer,a->filename,sizeof(a->filename));
+        ret=strlen(a->filename);
+      } break;
+    case 13: {  /* get manufacturer */
+      	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
+        if(a->descriptor.iManufacturer) 
+	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iManufacturer, (void *)plist[2].integer, 100);
+      } break;
+    case 14: {  /* get Product name */
+      	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
+        if(a->descriptor.iProduct) 
+	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iProduct, (void *)plist[2].integer, 100);
+      } break;
+    case 15: {  /* get Serial number */
+        struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
+        if(a->descriptor.iSerialNumber) 
+          ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iSerialNumber, (void *)plist[2].integer, 100);
+      } break;
+    case 16:   /* get error text */
+      strncpy((void *)plist[2].integer,usb_strerror(),100);
+      break;
+    default:
+      ret=-1;
+    }
+#endif
+    return(ret);
+  }
+  
+  int sock=fileno(fff.dptr);
 #ifndef WINDOWS
 #ifdef ATARI
-    if (e==2) ret=ioctl(sock,plist[1].integer,NULL);
+  if(e==2) ret=ioctl(sock,plist[1].integer,NULL);
 #else
-    if (e==2) ret=ioctl(sock,plist[1].integer);
+  if(e==2) ret=ioctl(sock,plist[1].integer);
 #endif
-    else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
-    if(ret==-1) 
+  else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
+  if(ret==-1) 
 #endif
-      io_error(errno,"ioctl");
-  }
+    io_error(errno,"ioctl");
   return(ret);
 }
 

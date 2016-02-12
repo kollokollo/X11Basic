@@ -232,7 +232,7 @@ void draw_string(int x, int y, char *text,int len) {
 #ifdef WINDOWS_NATIVE
   TextOut(bitcon[usewindow],x,(y-window[usewindow].baseline),text,len);
 #elif defined FRAMEBUFFER
-  FB_DrawString(x,y-window[usewindow].baseline,text,len);
+  FB_DrawString(x,y-window[usewindow].baseline,text,len,window[usewindow].chw,window[usewindow].chh);
 #elif defined USE_X11 
   #ifdef X_HAVE_UTF8_STRING 
     // TODO:

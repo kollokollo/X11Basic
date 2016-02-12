@@ -261,6 +261,7 @@ static inline void eval2par(char *n, PARAMETER *pret) {
 }
 static inline void eval2partype(char *n, PARAMETER *pret,int typ) {
   typ&=(~CONSTTYP);
+  if((typ&FILENRTYP)==FILENRTYP) typ=INTTYP;
   pret->typ=(PL_CONSTGROUP|typ);
   switch(typ&TYPMASK) {
   case INTTYP:

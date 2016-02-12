@@ -383,5 +383,5 @@ void draw_edcursor(OBJECT *tree,int ndx);
 int rootob(OBJECT *tree,int onr);
 void relobxy(OBJECT *tree,int ndx,int *x, int *y);
 #endif
-int form_alert2(int dbut,char *n, char *tval);
+int form_alert2(int dbut,char *n,int size, char *tval);
 #endif

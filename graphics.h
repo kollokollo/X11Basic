@@ -73,7 +73,7 @@
 #define XFillArc(a,b,c,d,e,f,g,h,i) Ellipse(window[usewindow].bitcon,d,e,d+f,d+g)
 #define DrawPoint(a,b) SetPixelV(window[usewindow].bitcon,a,b,window[usewindow].fcolor)
 #define CopyArea(a,b,c,d,e,f) BitBlt(window[usewindow].bitcon,e,f,c,d,window[usewindow].bitcon,a,b,SRCCOPY)
-#define DrawString(a,b,c,d) TextOut(window[usewindow].bitcon,a,(b-baseline),c,d)
+#define DrawString(a,b,c,d) TextOut(window[usewindow].bitcon,a,(b-window[usewindow].baseline),c,d)
 #define SetFillRule(c)   ;
 #define SetFillStyle(c)  ;
 #else
@@ -84,15 +84,15 @@
 #define SetBackground(c) FB_set_bcolor(c)
 #define FillRectangle(a,b,c,d)  FB_pbox(a,b,(a)+(c),(b)+(d))
 #define DrawRectangle(a,b,c,d)  FB_box(a,b,(a)+(c),(b)+(d))
-#define DrawString(a,b,c,d) FB_DrawString(a,b-baseline,c,d)
+#define DrawString(a,b,c,d) FB_DrawString(a,b-window[usewindow].baseline,c,d,window[usewindow].chw,window[usewindow].chh)
 #define DrawLine(a,b,c,d)  FB_line(a,b,c,d)
 #define DrawPoint(a,b)  FB_plot(a,b)
 #define CopyArea(a,b,c,d,e,f) FB_copyarea(a,b,c,d,e,f)
 #elif defined USE_SDL
 #define SetFillRule(c)   ;
 #define SetFillStyle(c)  ;
-#define SetForeground(c) window[usewindow].fcolor=c;
-#define SetBackground(c) window[usewindow].bcolor=c;
+#define SetForeground(c) window[usewindow].fcolor=c
+#define SetBackground(c) window[usewindow].bcolor=c
 #define FillRectangle(a,b,c,d)  boxColor(window[usewindow].display,a,b,(a)+(c)-1,(b)+(d)-1,window[usewindow].fcolor)
 #define DrawRectangle(a,b,c,d)  rectangleColor(window[usewindow].display,a,b,(a)+(c),(b)+(d),window[usewindow].fcolor)
 #define DrawString(a,b,c,d) {char s[d+1];memcpy(s,c,d);s[d]=0;stringColor(window[usewindow].display,a,(b)-window[usewindow].chh+4,s,window[usewindow].fcolor);}
@@ -119,8 +119,8 @@
 #else
 #define SetFillRule(c)   XSetFillRule(window[usewindow].display, window[usewindow].gc,c)
 #define SetFillStyle(c)  XSetFillStyle(window[usewindow].display, window[usewindow].gc,c)
-#define SetForeground(c) XSetForeground(window[usewindow].display,window[usewindow].gc,c)
-#define SetBackground(c) XSetBackground(window[usewindow].display,window[usewindow].gc,c)
+#define SetForeground(c) XSetForeground(window[usewindow].display,window[usewindow].gc,c),window[usewindow].fcolor=c
+#define SetBackground(c) XSetBackground(window[usewindow].display,window[usewindow].gc,c),window[usewindow].bcolor=c
 #define FillRectangle(a,b,c,d) XFillRectangle(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)
 #define DrawRectangle(a,b,c,d) XDrawRectangle(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)
 #define DrawString(a,b,c,d) XDrawString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)

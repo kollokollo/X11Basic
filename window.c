@@ -37,6 +37,10 @@
 
 
 /* globale Variablen */
+
+WINDOWDEF window[MAXWINDOWS];
+
+
 /* GEM-Globals   */
 
 #if defined NOGRAPHICS 
@@ -382,15 +386,15 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
 
   /* Auswaehlen, welche Events man von dem Fenster bekommen moechte */
   XSelectInput(window[nummer].display, window[nummer].win,
-               /*ResizeRedirectMask |*/
+               /*ResizeRedirectMask |*/ /*sonst geht SIZEW nicht!*/
 	       ExposureMask |
 	       ButtonPressMask|
 	       ButtonReleaseMask|
-	       PointerMotionMask |
+	       PointerMotionMask |StructureNotifyMask|VisibilityChangeMask|
 	       KeyPressMask|
 	       KeyReleaseMask);
   window[nummer].gc = XCreateGC(window[nummer].display, window[nummer].win, 0, &gc_val);
-
+  XSetGraphicsExposures(window[nummer].display, window[nummer].gc,0);
   
   XSetBackground(window[nummer].display, window[nummer].gc, window[nummer].bcolor);
   XSetForeground(window[nummer].display, window[nummer].gc, window[nummer].bcolor);
@@ -488,6 +492,24 @@ void handle_event(WINDOWDEF *w,XEvent *event) {
       printf("Configure Request: %d\n",event->type);break;
     case ResizeRequest:
       printf("Resize Request: %d\n",event->type);break;
+   case UnmapNotify:
+     printf("UnmapNotify type=%d\n",event->type);break;
+   case DestroyNotify:
+     printf("DestroyNotify type=%d\n",event->type);break;
+   case CreateNotify:
+     printf("CreateNotify type=%d\n",event->type);break;
+   case VisibilityNotify:
+     printf("VisibilityNotify type=%d  state=%d\n",event->type,event->xvisibility.state);break;
+   case FocusIn:
+     printf("FocusIn type=%d\n",event->type);break;
+   case FocusOut:
+     printf("FocusOut type=%d\n",event->type);break;
+   case EnterNotify:
+     printf("EnterNotify type=%d\n",event->type);break;
+   case LeaveNotify:
+     printf("LeaveNotify type=%d\n",event->type);break;
+   case ReparentNotify:  /*  21 */
+      break;
     default:
       printf("Window-Event: %d\n",event->type);
       break;
@@ -505,6 +527,39 @@ void handle_event(WINDOWDEF *w,XEvent *event) {
             printf("App iconified\n");
         }
     }
+  #ifdef SDL_WINDOWEVENT
+  case SDL_WINDOWEVENT:
+    switch (event->window.event) {
+    case SDL_WINDOWEVENT_SHOWN:
+      printf("Window %d shown", event->window.windowID);break;
+    case SDL_WINDOWEVENT_HIDDEN:
+      printf("Window %d hidden", event->window.windowID);break;
+    case SDL_WINDOWEVENT_EXPOSED:
+      printf("Window %d exposed", event->window.windowID);break;
+    case SDL_WINDOWEVENT_MOVED:
+      printf("Window %d moved to %d,%d",event->window.windowID, event->window.data1,event->window.data2);break;
+    case SDL_WINDOWEVENT_RESIZED:
+      printf("Window %d resized to %dx%d",event->window.windowID, event->window.data1,event->window.data2);break;
+    case SDL_WINDOWEVENT_MINIMIZED:
+      printf("Window %d minimized", event->window.windowID);break;
+    case SDL_WINDOWEVENT_MAXIMIZED:
+      printf("Window %d maximized", event->window.windowID);break;
+    case SDL_WINDOWEVENT_RESTORED:
+      printf("Window %d restored", event->window.windowID);break;
+    case SDL_WINDOWEVENT_ENTER:
+      printf("Mouse entered window %d",event->window.windowID);break;
+    case SDL_WINDOWEVENT_LEAVE:
+      printf("Mouse left window %d", event->window.windowID);break;
+    case SDL_WINDOWEVENT_FOCUS_GAINED:
+      printf("Window %d gained keyboard focus",event->window.windowID);break;
+    case SDL_WINDOWEVENT_FOCUS_LOST:
+      printf("Window %d lost keyboard focus",event->window.windowID);break;
+    case SDL_WINDOWEVENT_CLOSE:
+      printf("Window %d closed", event->window.windowID);break;
+    default:
+      printf("Window %d got unknown event %d",event->window.windowID, event->window.event);break;
+    }
+  #endif
 #endif
   }
 }
@@ -749,7 +804,7 @@ short form_dial(unsigned short fo_diflag,short x1,short y1,short w1,short h1,
 #ifdef FRAMEBUFFER
    FB_hide_mouse();
    FB_savecontext();
-   spix[sgccount]=FB_get_image(x2-3,y2-3,w2+7,h2+7,NULL);
+   spix[sgccount]=FB_get_image(x2-3,y2-3,w2+7,h2+7,NULL,0,0);
    FB_show_mouse();
 #endif
 #ifdef USE_X11
@@ -1294,7 +1349,7 @@ void do_menu_open(int nr) {
 #endif
   #ifdef FRAMEBUFFER
      FB_hide_mouse();
-     schubladepix=FB_get_image(schubladex,schubladey,schubladew,schubladeh,NULL);
+     schubladepix=FB_get_image(schubladex,schubladey,schubladew,schubladeh,NULL,0,0);
   #endif
   schubladeff=1;
   schubladenr=nr;

@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.23], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.24], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 AC_REVISION($Revision: 0.12 $)
@@ -178,9 +178,15 @@ AC_DEFINE(HAVE_PRIMORIAL_UI,1,[mpz_primorial_ui in gmp])
 ],,[$libs])
 
 # `-lusb':
-#AC_CHECK_LIB([usb], [usb_open], [
-#libs="$libs -lusb"
-#AC_DEFINE(HAVE_USB,1,[usb_open in lusb])
+AC_CHECK_LIB([usb], [usb_open], [
+libs="$libs -lusb"
+AC_DEFINE(HAVE_USB,1,[usb_open in lusb])
+],,[$libs])
+
+# `-lusb-1.0':
+#AC_CHECK_LIB([usb-1.0], [libusb_control_transfer], [
+#libs="$libs -lusb-1.0"
+#AC_DEFINE(HAVE_LIBUSB,1,[libusb_control_transfer in lusb-1.0])
 #],,[$libs])
 
 # `-lgcrypt':
@@ -252,7 +258,15 @@ else
 fi
 	;;
 i*86-*-linux)
-	echo 'Oh no, a 80x86-based Linux box... My condolences! :-)'
+	echo 'Oh, a 80x86-based Linux box... Very nice! :-)'
+	regs="-fomit-frame-pointer"
+	;;
+i*86-*-linux-*)
+	echo 'Oh, a 80x86-based Linux box... Very nice! :-)'
+	regs="-fomit-frame-pointer"
+	;;
+armv*-*-linux-*)
+	echo 'Oh no, an arm-based Linux box... Maybe the Raspberry PI. My condolences! :-)'
 	regs="-fomit-frame-pointer"
 	;;
 i*86-*bsd*)

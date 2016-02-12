@@ -1111,9 +1111,8 @@ void Fb_BlitCharacter816_scale_raw(int x, int y, unsigned short aColor, unsigned
 
 
 extern int ltextpflg;
-extern unsigned short chw,chh;
 
-void FB_DrawString(int x, int y, const char *t,int len) {
+void FB_DrawString(int x, int y, const char *t,int len,unsigned short chw, unsigned short chh) {
   if(len>0) {
     char buf[len+1];
     FB_hide_mouse();
@@ -1136,109 +1135,107 @@ void FB_get_geometry(int *x, int *y, unsigned int *w, unsigned int *h, int *b, u
   *h=screen.height;
   *d=screen.bpp;
 }
-/* We need these because ARM has 32 Bit alignment (and the compiler has a bug)*/
-static void writeint(unsigned char *p,int n) {
-  p[0]=n&0xff;
-  p[1]=(n&0xff00)>>8;
-  p[2]=(n&0xff0000)>>16;
-  p[3]=(n&0xff000000)>>24;
-}
-static void writeshort(unsigned char *p,short n) {
-  p[0]=n&0xff;
-  p[1]=(n&0xff00)>>8;
-}
 
+static STANDARDBITMAP framebuffertostdbm(unsigned short *ptr1,int w,int h,int line,int usealpha, unsigned short bcolor) {
+  STANDARDBITMAP ret;
+  ret.w=w;
+  ret.h=h;
+  ret.image=malloc(ret.w*ret.h*4);
+  int i,j;
+  unsigned char r,g,b,a;
+  unsigned short p;
+  unsigned char *buf=ret.image;
+  for(i=0;i<h;i++) {
+    for(j=0;j<w;j++) {
+      p=ptr1[j+i*line];
+      if(usealpha && bcolor==p) {r=b=g=a=0;}
+      else {
+        a=255;
+	r=((p>>11)& 0x1f)<<3;
+        g=((p>>5)& 0x3f)<<2;
+        b=(p & 0x1f)<<3;
+      }
+      *buf++=r;
+      *buf++=g;
+      *buf++=b;
+      *buf++=a;
+    }    
+  }
+  return(ret);
+}
 
 
 /* This produces data which conforms to a WINDOWS .bmp file */
 
-unsigned char *FB_get_image(int x, int y, int w,int h, int *len) {
-  if(x<0||y<0||w<=0||h<=0|| x+w>screen.width|| y+h>screen.height) return(NULL);
-  register unsigned short *ptr1  = (unsigned short*)(screen.pixels+y*screen.scanline);
-  int size=h*w*4;
-  int i,j,r,g,b,l;
-  l=size+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
-  unsigned char *buf=malloc(l);
-  unsigned char *buf3;
-  unsigned char *buf2=buf+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
-  BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)buf;
-  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(buf+BITMAPFILEHEADERLEN);
-  header->bfType=BF_TYPE;
-  writeint((unsigned char *)&buf[10],BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-  writeint((unsigned char *)&(iheader->biSize),BITMAPINFOHEADERLEN);
-  writeint((unsigned char *)&(iheader->biWidth),w);
-  writeint((unsigned char *)&(iheader->biHeight),h);
-  writeshort((unsigned char *)&(iheader->biPlanes),1);
-  writeshort((unsigned char *)&(iheader->biBitCount),24);
-  writeint((unsigned char *)&(iheader->biCompression),BI_RGB);
-  writeint((unsigned char *)&(iheader->biSizeImage),0);
-  writeint((unsigned char *)&(iheader->biXPelsPerMeter),0);
-  writeint((unsigned char *)&(iheader->biYPelsPerMeter),0);
-  writeint((unsigned char *)&(iheader->biClrUsed),0);
-  writeint((unsigned char *)&(iheader->biClrImportant),0);
+unsigned char *FB_get_image(int x, int y, int w,int h, int *len,int usealpha,int bcolor) {
+  if(x<0) x=0;
+  if(y<0) y=0;
+  if(w<0 || h<0) {if(len) *len=0; return(NULL);}
+  if(x+w>screen.width) w=screen.width-x;
+  if(y+h>screen.height) h=screen.height-y;
+  unsigned short *ptr1  = (unsigned short*)(screen.pixels+y*screen.scanline);
   ptr1+=x;
-  buf3=buf2;
-  for(i=h-1;i>=0;i--) {
-    for(j=0;j<w;j++) {
-      r=((ptr1[j+i*screen.width]>>11)& 0x1f)<<3;
-      g=((ptr1[j+i*screen.width]>>5)& 0x3f)<<2;
-      b=(ptr1[j+i*screen.width] & 0x1f)<<3;
-      *buf2++=b;
-      *buf2++=g;
-      *buf2++=r;
-    }    
-    buf2=(unsigned char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
-  }
-  size=buf2-buf3;
-  l=size+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
-  writeint(&buf[2],l);
-  if(len) *len=l;
+  
+  STANDARDBITMAP bitmap=framebuffertostdbm(ptr1,w,h,screen.scanline/2,usealpha,(unsigned short)bcolor);
+  unsigned char *buf=stdbmtobmp(bitmap,len);
+  free(bitmap.image);
   return(buf);
 }
 
-static void FB_put_bitmap(unsigned const char *oadr,unsigned char *adr,unsigned int w,unsigned int h,int dx,int dw,int dh) {
-  short *sptr=((short *)oadr);
-  short *dptr=((short *)adr)+dx;
-  int j;
-  for(j=0;j<h && j<dh;j++) {
-    memcpy(dptr,sptr,2*w);
-    sptr+=w;
-    dptr+=dw;
+
+
+static void stdbmtoframebuffer(STANDARDBITMAP bm,int x,int y,int sx,int sy,unsigned int sw,unsigned int sh) {
+  unsigned short *ptr=(unsigned short *)(screen.pixels+y*screen.scanline);
+  ptr+=x;
+  if(sw<=0 || sh<=0) return;
+  if(sx<0) sx=0;
+  if(sy<0) sy=0;
+  sx=min(bm.w-1,sx);
+  sy=min(bm.h-1,sy);
+  sw=min(bm.w-sx,sw);
+  sh=min(bm.h-sy,sh);
+  int i,j;
+  unsigned char r,g,b,a;
+  unsigned char *buf;
+  unsigned short *ptr2;
+  for(j=sy;j<sh;j++) {
+    buf=bm.image+j*bm.w*4;
+    ptr2=ptr+j*screen.scanline/2;
+    for(i=sx;i<sw;i++) {
+      r=*buf++;
+      g=*buf++;
+      b=*buf++;
+      a=*buf++;
+      
+      *ptr2=mix_color(((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f)),
+	*ptr2,a);
+      ptr2++;
+    }
   }
 }
 
-
-void FB_put_image_scale(const unsigned char *data,int x, int y,double scale) {
- // BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
-  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
-  int  w=iheader->biWidth;
-  int  h=iheader->biHeight; 
-  int  dd=16;  /* Ziel ist ja framebuffer*/
-
-  if(x<screen.clip_x||y<screen.clip_y||x>screen.width||y>screen.height) return;
-
-  if(scale!=1) {
- 	int oh=h;
-	int ow=w; 
-	unsigned char *adr=malloc(h*dd*w/8);
-        bmp2bitmap(data,adr,0,w,h,dd,NULL);
-
-	h=(int)((double)h*scale);
-	w=(int)((double)w*scale);
-	unsigned char *adr2=malloc(h*dd*w/8);
-        bitmap_scale(adr,dd,ow,oh,adr2,w,h);
-        free(adr);
-	FB_put_bitmap(adr2,screen.pixels+y*screen.scanline,w,h,x,screen.width,screen.height-y);
-        free(adr2);
-  
-  } else {
-    bmp2bitmap(data,screen.pixels+y*screen.scanline,x,screen.width,screen.height-y,16,NULL);
-  }
-}
 void FB_put_image(unsigned char *data,int x, int y) {
-  if(x<screen.clip_x||y<screen.clip_y||x>screen.width||y>screen.height) return;
-  bmp2bitmap(data,screen.pixels+y*screen.scanline,
-             x,screen.width,screen.height-y,16,NULL);
+  if(x>screen.width||y>screen.height) return;
+  if(x<screen.clip_x||y<screen.clip_y) return;
+  STANDARDBITMAP bm=bmp2stdbm(data);
+  stdbmtoframebuffer(bm,x,y,0,0,999999,999999);
+  free(bm.image);
+}
+void FB_put_image_scale(const unsigned char *data,int x, int y,double scale,int sx,int sy,unsigned int sw, unsigned int sh) {
+  if(x>screen.width||y>screen.height) return;
+  if(x<screen.clip_x||y<screen.clip_y) return;
+  STANDARDBITMAP bm=bmp2stdbm(data);
+  if(scale!=1 && scale>0) {
+    STANDARDBITMAP bm2;
+    bm2.w=(int)((double)bm.w*scale);
+    bm2.h=(int)((double)bm.h*scale);
+    bm2.image=malloc(4*bm2.w*bm2.h);
+    bitmap_scale(bm.image,32,bm.w,bm.h,bm2.image,bm2.w,bm2.h);
+    free(bm.image);
+    bm=bm2;
+  }
+  stdbmtoframebuffer(bm,x,y,sx,sy,sw,sh);
+  free(bm.image);
 }
 
 

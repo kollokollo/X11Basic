@@ -67,8 +67,8 @@ extern int is_bytecode;
 int programbufferlen;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer;
-const char version[]="1.23"; /* Version Number. Put some useful information here */
-const char vdate[]="2015-01-01";   /* Creation date.  Put some useful information here */
+const char version[]="1.24"; /* Version Number. Put some useful information here */
+const char vdate[]="2015-09-01";   /* Creation date.  Put some useful information here */
 char **program={"compiled by xb2c"};    /* Other comments. Put some useful information here */
 int prglen=sizeof(program)/sizeof(char *);
 extern int datapointer;

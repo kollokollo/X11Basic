@@ -73,7 +73,7 @@ typedef struct {
   unsigned short fill_rule;
   unsigned short fill_style;
   unsigned short *fill_pat;
-  
+  unsigned short fcolor,bcolor;
 } G_CONTEXT;
 
 #define CharWidth1632 16
@@ -154,6 +154,7 @@ extern int CharHeight;
       int x_root;
       int y_root;
       int state;
+      int time;
     } xbutton;
     struct {
       int x;
@@ -161,6 +162,7 @@ extern int CharHeight;
       int x_root;
       int y_root;
       int state;
+      int time;
     } xmotion;
     struct {
       int x;
@@ -171,6 +173,7 @@ extern int CharHeight;
       int keycode;
       int ks;
       char buf[4];
+      int time;
     } xkey;
   } XEvent;
   #define ExposureMask 3
@@ -194,7 +197,14 @@ extern int CharHeight;
   #define CirculateRequest 0
   #define ConfigureRequest 0
   #define ResizeRequest    0
-
+  #define ResizeRedirectMask  0
+  #define FocusChangeMask  0
+  #define SubstructureRedirectMask 0
+  #define VisibilityChangeMask 0
+  #define TerminateEventLoop 0xffff
+//  #define   0
+//  #define   0
+  
   extern int global_mousex,global_mousey,global_mousek,global_mouses;
 #endif
 void Fb_Open();
@@ -214,13 +224,13 @@ void FB_pbox(int x1,int y1,int x2,int y2);
 void FB_Arc(int x1, int y1, int w, int h, int a1, int da);
 void FB_pArc(int x1, int y1, int w, int h, int a1, int da);
 
-unsigned char *FB_get_image(int x, int y, int w,int h, int *len);
+unsigned char *FB_get_image(int x, int y, int w,int h, int *len,int usealpha,int bcolor);
 void FB_put_image(unsigned char *,int, int);
-void FB_put_image_scale(const unsigned char *data,int x, int y,double scale);
+void FB_put_image_scale(const unsigned char *data,int x, int y,double scale,int sx,int sy,unsigned int sw,unsigned int sh);
 void FB_get_geometry(int *x, int *y, unsigned int *w, unsigned int *h, int *b, unsigned int *d);
 void FB_mtext(int x, int y, char *t);
 
-void FB_DrawString(int x, int y, const char *t,int len);
+void FB_DrawString(int x, int y, const char *t,int len, unsigned short, unsigned short);
 void FB_DrawLine(int x0, int y0, int x1, int y1,unsigned short color);
 void Fb_inverse(int x, int y,int w,int h);
 void FillBox (int x, int y, int w, int h, unsigned short color);

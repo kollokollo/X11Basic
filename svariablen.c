@@ -23,6 +23,7 @@
 #include "variablen.h"
 #include "parser.h"
 #include "xbasic.h"
+#include "type.h"
 #include "parameter.h"
 #include "svariablen.h"
 #include "io.h"

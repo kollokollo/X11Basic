@@ -28,10 +28,8 @@
 
 void io_error(int,char *);
 
-#if 0
 char *lineinput( FILE *n, char *line,int size) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
   int c; int i=0;
- 
   while((c=fgetc(n))!=EOF) {
       if(c==(int)'\n') {
 	  line[i]=(int)'\0';
@@ -43,7 +41,6 @@ char *lineinput( FILE *n, char *line,int size) {   /* liest eine ganze Zeile aus
     line[i]='\0';
     return line;
 }
-#endif
 
 char *input( FILE *n, char *line,int size) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
   int c; 

@@ -16,9 +16,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef HAVE_PNG_H
-#include <png.h>
-#endif
 #ifdef HAVE_JPEGLIB_H
 #include <jpeglib.h>
 #endif
@@ -31,9 +28,6 @@
 #endif
 #ifdef WINDOWS
   #include <windows.h>
-  #include "Windows.extension/fnmatch.h"
-#else
-  #include <fnmatch.h>
 #endif
 
 #include "aes.h"
@@ -48,104 +42,110 @@ void memdump(unsigned char *adr,int l);
 /*             Bitmaps.            (c) Markus hoffmann               */
 /*-------------------------------------------------------------------*/
 
-
-#ifdef USE_X11
-
-/* swap some long ints.  (n is number of BYTES, not number of longs) */
-static void swapdws (unsigned char *bp, unsigned int n) {
-  register unsigned char c;
-  register unsigned char *ep = bp + n;
-  register unsigned char *sp;
-
-  while (bp<ep) {
-    sp=bp+3;
-    c=*sp;*sp=*bp; *bp++=c; sp=bp+1;
-    c=*sp;*sp=*bp; *bp++=c; bp+=2;
-  }
+/* We need these because ARM has 32 Bit alignment (and the compiler has a bug)*/
+static void writeint(unsigned char *p,unsigned int n) {
+  *p++=(unsigned char)(n&0xff);
+  *p++=(unsigned char)((n&0xff00)>>8);
+  *p++=(unsigned char)((n&0xff0000)>>16);
+  *p++=(unsigned char)((n&0xff000000)>>24);
+}
+static void writeshort(unsigned char *p,unsigned short n) {
+  *p++=(unsigned char)(n&0xff);
+  *p++=(unsigned char)((n&0xff00)>>8);
 }
 
-unsigned char *imagetoxwd(XImage *image,Visual *visual,XColor *pixc, int *len) {
-    XWDFileHeader *data;
-    unsigned long swaptest = 1;
-    char image_name[]="X11-BASIC Grafik";
-    int header_len=sizeof(XWDFileHeader)+((strlen(image_name)+1+7) & -8);
-    int colortable_len,ncolors=0,i;
-    XWDColor *color;
-    if(image->depth==8) ncolors=256;
-    colortable_len=ncolors*sizeof(XWDColor);
-    *len=header_len+colortable_len+image->height*image->bytes_per_line;
-    data=malloc(header_len+colortable_len+image->height*image->bytes_per_line);
-    color=(XWDColor *)((long)data+header_len);
-    memcpy((void *)((long)data+header_len+colortable_len),image->data,image->height*image->bytes_per_line);
-    memcpy((void *)((long)data+sizeof(XWDFileHeader)),image_name,strlen(image_name));
-    data->header_size=(CARD32)header_len;
-    data->file_version=(CARD32)XWD_FILE_VERSION;
-    data->pixmap_format=(CARD32)image->format;
-    data->pixmap_depth=(CARD32)image->depth;
-    data->pixmap_width=(CARD32)image->width;
-    data->pixmap_height=(CARD32)image->height;
-    data->xoffset=(CARD32)image->xoffset;
-    data->byte_order=(CARD32)image->byte_order;
-    data->bitmap_unit=(CARD32)image->bitmap_unit;
-    data->bitmap_bit_order=(CARD32)image->bitmap_bit_order;
-    data->bitmap_pad=image->bitmap_pad;
-    data->bits_per_pixel=image->bits_per_pixel;
-    data->bytes_per_line=image->bytes_per_line;
-
-      data->colormap_entries = ncolors;
-      data->ncolors          = ncolors;
-
-    data->visual_class   = (CARD32)visual->class;
-    data->red_mask       = (CARD32)visual->red_mask;
-    data->green_mask     = (CARD32)visual->green_mask;
-    data->blue_mask      = (CARD32)visual->blue_mask;
-    data->bits_per_rgb   = (CARD32)visual->bits_per_rgb;
-
-    data->window_width=(CARD32)image->width;
-    data->window_height=(CARD32)image->height;
-    data->window_x        = 0;
-    data->window_y        = 0;
-    data->window_bdrwidth = 0;
-    if(ncolors){  /* Farbtabelle */
-      for(i=0;i<ncolors;i++)  {
-        color[i].pixel = (CARD32)i;
-        color[i].red   = (CARD16)(pixc+i)->red;
-        color[i].green = (CARD16)(pixc+i)->green;
-        color[i].blue  = (CARD16)(pixc+i)->blue;
-        color[i].flags = (CARD8)(DoRed | DoGreen | DoBlue);
-        color[i].pad   = (CARD8)0;
+#ifdef USE_X11
+STANDARDBITMAP imagetostdbm(XImage *image,Visual *visual,XColor *pixc,int usealpha, int bcolor) {
+  STANDARDBITMAP ret;
+  ret.w=(unsigned int)image->width;
+  ret.h=(unsigned int)image->height;
+  ret.image=malloc(ret.w*ret.h*4);
+  int i,j,p;
+  unsigned char r=0,g=0,b=0,a;
+  unsigned char *buf=ret.image;
+  for(i=0;i<image->height;i++) {
+    for(j=0;j<image->width;j++) {
+      p=XGetPixel(image, j, i);
+      if(usealpha && bcolor==p) {r=b=g=a=0;}
+      else {
+        a=255;
+        if(image->depth==8) {
+          r=(CARD16)(pixc+p)->red;
+	  g=(CARD16)(pixc+p)->green;
+	  b=(CARD16)(pixc+p)->blue;
+        } else if(image->depth==16) {
+	  // TODO
+	} else {
+          b=p&0xff;
+          g=(p&0xff00)>>8;
+          r=(p&0xff0000)>>16;
+	}
       }
-    }
-    if (*(char *) &swaptest)    swapdws((unsigned char *)data, sizeof(XWDFileHeader));
-    return((unsigned char *)data);
+      *buf++=r;
+      *buf++=g;
+      *buf++=b;
+      *buf++=a;
+    }    
+  }
+  return(ret);
 }
 #endif
 
-/* this function returns 1 if an alpha mask is present,
-   0 on normal success and
-   <0 for errors */
-
-int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int bw,unsigned int bh,unsigned int depth, unsigned char *mask) {
-  unsigned short *ptr1  = (unsigned short*)fbp;
-  int r=0,g=0,b=0,a,i,j,w,h,offset,d,ib=0,ic=0;
-  int usealpha=0;
-  unsigned int compression,ncol;
-  const unsigned char *buf2,*buf3;
-  
-  if(data==NULL) return(0);
-  ptr1+=x;
+unsigned char *stdbmtobmp(STANDARDBITMAP bmp, int *len) {
+  int l=BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN+bmp.h*bmp.w*4;
+  unsigned char *data=malloc(l);
   BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
   BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
+  header->bfType=BF_TYPE;
+  writeint((unsigned char *)&data[10],BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
+  writeint((unsigned char *)&(iheader->biSize),BITMAPINFOHEADERLEN);
+  writeint((unsigned char *)&(iheader->biWidth),bmp.w);
+  writeint((unsigned char *)&(iheader->biHeight),bmp.h);
+  writeshort((unsigned char *)&(iheader->biPlanes),1);
+  writeshort((unsigned char *)&(iheader->biBitCount),32);
+  writeint((unsigned char *)&(iheader->biCompression),BI_RGB);
+  writeint((unsigned char *)&(iheader->biSizeImage),0);
+  writeint((unsigned char *)&(iheader->biXPelsPerMeter),0);
+  writeint((unsigned char *)&(iheader->biYPelsPerMeter),0);
+  writeint((unsigned char *)&(iheader->biClrUsed),0);
+  writeint((unsigned char *)&(iheader->biClrImportant),0);
+  unsigned char *buf2=data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
+  unsigned char *buf3=buf2;
+  unsigned char *scanline;
+  int i,j;
+  for(i=bmp.h-1;i>=0;i--) {
+    scanline=(unsigned char *)bmp.image+i*bmp.w*4;
+    for(j=0;j<bmp.w;j++) {
+      *buf2++=scanline[2];  /*  B  */
+      *buf2++=scanline[1];  /*  G  */
+      *buf2++=scanline[0];  /*  R  */
+      *buf2++=scanline[3];  /*  A  */
+      scanline+=4;
+    }    
+    buf2=(unsigned char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
+  }
+  l=(buf2-buf3)+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
+  writeint(&data[2],l);
+  if(len) *len=l;
+  return(data);
+}
 
-  if(header->bfType!=BF_TYPE) {
+
+STANDARDBITMAP bmp2stdbm(const unsigned char *data) {
+  STANDARDBITMAP ret;
+  BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
+  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
+  if(data==NULL || header->bfType!=BF_TYPE) {
     printf("Put-Image: Error: wrong bitmap format!\n");
-    memdump((unsigned char *)data,64);
-    return(-1);
+    ret.w=0;
+    ret.h=0;
+    ret.image=malloc(4);
+    return(ret);
   }
   /* diese komische Akrobatik muss wohl sein (jedenfalls fuer den ARM-linux compiler */
-  compression=data[30]| (data[31]<<8) | (data[32]<<16)| (data[33]<<24); 
-
+  unsigned int compression=data[30]| (data[31]<<8) | (data[32]<<16)| (data[33]<<24);
   if(compression!=BI_RGB && compression!=BI_BITFIELDS) {
+#if DEBUG
     printf("\033[H BITMAPINFOHEADERLEN=%d  \n",BITMAPINFOHEADERLEN);
     printf("&iheader-data      =%d\n",   (int)((long)iheader-(long)data));
     printf("bisize-data        =%d %d\n",(int)((long)(&(iheader->biSize))-       (long)data),iheader->biSize);
@@ -154,9 +154,15 @@ int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int 
     printf("biPlanes-data      =%d %d\n",(int)((long)(&(iheader->biPlanes))-     (long)data),iheader->biPlanes);
     printf("biBitCount-data    =%d %d\n",(int)((long)(&(iheader->biBitCount))-   (long)data),iheader->biBitCount);
     printf("biCompression-data =%d %d\n",(int)((long)(&(iheader->biCompression))-(long)data),iheader->biCompression);
+#endif
     printf("Put-Image: Compressed Bitmaps (%d) are not supported !\n",iheader->biCompression);
+#if DEBUG
     memdump((unsigned char *)data,64);
-    return(-1);
+#endif
+    ret.w=0;
+    ret.h=0;
+    ret.image=malloc(4);
+    return(ret);
   }
 #if DEBUG
   if(compression==BI_BITFIELDS) {
@@ -169,35 +175,33 @@ int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int 
   
   }
 #endif
-  ncol=iheader->biClrUsed;
-  RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-  
-  w=iheader->biWidth;
-  h=iheader->biHeight;
- /* d=iheader->biBitCount;  */
-  d=data[28]| (data[29]<<8); 
-
-  if(d==0) {
+  unsigned int ncol=iheader->biClrUsed;
+  int w=iheader->biWidth;
+  int h=iheader->biHeight;
+  /* d=iheader->biBitCount;  */
+  int d=data[28]| (data[29]<<8); 
+  if(d==0 || w<=0 || h<=0) {
     printf("BITMAP: %d colors d=%d, w=%d, h=%d : something is wrong!\n",ncol,d,w,h);
-    return(0);
+    ret.w=0;
+    ret.h=0;
+    ret.image=malloc(4);
+    return(ret);
   }
-  offset=(data[10]&0xff)| ((data[11]&0xff)<<8) | 
-         ((data[12]&0xff)<<16)| ((data[13]&0xff)<<24); 
+  if(d==16) {printf("ERROR: Bitmap depth not supported!\n");}
+  int offset=(data[10]&0xff)| ((data[11]&0xff)<<8) | ((data[12]&0xff)<<16)| ((data[13]&0xff)<<24); 
 // printf("offset=%d\n",offset);
-  if(w<=0||h<=0|| x+w>bw||h>bh) return(-2);
+  const unsigned char *buf2,*buf3;
   buf3=buf2=data+offset;
+  RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
+  ret.w=w;
+  ret.h=h;
+  unsigned char *ptr1=ret.image=malloc(4*w*h);
   
-  if((depth!=24 && depth!=16&& depth!=32)||d==16) {printf("Bitmap-Konvertierung nicht moeglich!\n");}
-  
-  if(d==32 && mask) usealpha=1; 
-  
+  int r=0,g=0,b=0,a=0xff,i,j,ib=0,ic=0;
   for(i=h-1;i>=0;i--) {
     for(j=0;j<w;j++) {
-      a=0xff; /*this is the default*/
       if(d==24) {
-          b=*buf2++;g=*buf2++;r=*buf2++;
-      } else if(d==16) {
-          
+        b=*buf2++;g=*buf2++;r=*buf2++;
       } else if(d==8) {
         b=(*buf2++ & 0xff);
 	if(b<ncol) {
@@ -247,23 +251,15 @@ int bmp2bitmap(const unsigned char *data,unsigned char *fbp,int x, unsigned int 
        // printf("bummer\n");
         r=255*(i&4);b=255*(i&4);g=255*(j&4);
       }
-      if(usealpha) mask[j+i*bw]=a;
-      if(depth==16) ptr1[j+i*bw]=
-        ((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f));
-      else if(depth==24) {
-        ((char *)ptr1)[j*3+0+i*bw*3]=r;
-        ((char *)ptr1)[j*3+1+i*bw*3]=g;
-        ((char *)ptr1)[j*3+2+i*bw*3]=b;
-      } else if(depth==32) {
-        ((char *)ptr1)[j*4+0+i*bw*4]=b;
-        ((char *)ptr1)[j*4+1+i*bw*4]=g;
-        ((char *)ptr1)[j*4+2+i*bw*4]=r;
-        ((char *)ptr1)[j*4+3+i*bw*4]=a;
-      }
+
+      ((char *)ptr1)[j*4+0+i*w*4]=r;
+      ((char *)ptr1)[j*4+1+i*w*4]=g;
+      ((char *)ptr1)[j*4+2+i*w*4]=b;
+      ((char *)ptr1)[j*4+3+i*w*4]=a;
     }    
     buf2=(unsigned char *)(((((long)buf2-(long)buf3)+3)&0xfffffffc)+(long)buf3); /* align to 4 */
   }
-  return(usealpha);  
+  return(ret);  
 }
 
 
@@ -315,202 +311,94 @@ static void extend_mask16(const unsigned char *a, unsigned char *b, int n, unsig
     }
   }
 }
-XImage *xwdtoximage(unsigned char *data,Visual *visual, int depth, XImage **XMask, int tres, double scale) {
-  unsigned char *adr;
-  unsigned char *mask;
-  unsigned char *mask2;
-  int usemask=0;
- // memdump(data,32);
-  /* Pruefen, ob es sich um eine BMP Datei handelt. */
 
-  if(*((unsigned short int *)data)==BF_TYPE) {
-#if DEBUG 
-    printf("BMP-File!\n");
-#endif
-    int bpl;
-    
- //   BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
-    BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
-    // int ncol=iheader->biClrUsed;
- //   RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-    int w=iheader->biWidth;
-    int h=iheader->biHeight;
-   // int dd=iheader->biBitCount;
+XImage *stdbmtoximage(STANDARDBITMAP bmp,Visual *visual, int depth, XImage **XMask) {
+  int bpl;
+  if(depth==24) bpl=bmp.w*4; 
+  else bpl=bmp.w*depth/8; 
 
-    if(iheader->biCompression!=BI_RGB && iheader->biCompression!=BI_BITFIELDS) {
-      printf("Put-Image: Compressed Bitmaps are not supported! compression=%d\n",iheader->biCompression);
-    }
-   // int o=*((int *)(data+10));
-    if(depth==24) bpl=w*4; 
-    else bpl=w*depth/8; 
-#if DEBUG 
-    printf("w=%d, h=%d, d=%d, depth=%d bpl=%d\n",w,h,dd,depth,bpl);
-#endif
-
-
-    adr=malloc(h*bpl);
-    mask=malloc(h*w);
-    if(depth==24) {
-      usemask=bmp2bitmap(data,adr,0,w,h,32,mask);
-    } else {
-      usemask=bmp2bitmap(data,adr,0,w,h,depth,mask);
-    }
-  //  printf("Usemask=%d\n",usemask);
+  /* Extrahiere aus dem Alpha-Channel eine Maske*/
+  unsigned char *adr=malloc(bmp.h*bpl);
+  unsigned char *mask=malloc(bmp.h*bmp.w);
+  int i,usemask=0;
+  for(i=0;i<bmp.h*bmp.w;i++) mask[i]=bmp.image[i*4+3];
   
-    if(usemask) {
-      if(scale!=1.0) {
-        unsigned char *omask=mask;
-	unsigned char *oadr=adr;
-	int oh=h;
-	int ow=w;
-	h=(int)((double)h*scale);
-	w=(int)((double)w*scale);
-	
-        if(depth==24) bpl=w*4; 
-        else bpl=w*depth/8; 
-	mask=malloc(h*w);
-	adr=malloc(h*bpl);
-        bitmap_scale(omask,8,ow,oh,mask,w,h);
-        bitmap_scale(oadr,bpl/w*8,ow,oh,adr,w,h);
-        free(omask);
-	free(oadr);
-
-      }
-      mask2=malloc(h*bpl);
-    //  memdump(mask,32);
-      if(depth==24 || depth==32) extend_mask(mask,mask2,h*w,32);
-      else extend_mask16(mask,mask2,h*w,32);
-      free(mask);
-      *XMask=XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)mask2,w,h,8,bpl);
-    } else {
-       free(mask);
-      if(XMask) *XMask=NULL;
-      if(scale!=1.0) {
- 	int oh=h;
-	int ow=w;
-	unsigned char *oadr=adr;
-	h=(int)((double)h*scale);
-	w=(int)((double)w*scale);
-        if(depth==24) bpl=w*4; 
-        else bpl=w*depth/8; 
-	adr=malloc(h*bpl);
-        bitmap_scale(oadr,bpl/w*8,ow,oh,adr,w,h);
-	free(oadr);
-      }
+  for(i=0;i<bmp.h*bmp.w;i++) {
+    if(mask[i]!=0xff) {
+      usemask=1;
+      break;
     }
-    return(XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)adr,w,h,8,bpl));
-  } else {
-    unsigned long swaptest = 1;
-   if(XMask) *XMask=NULL;
-    if (*(char *) &swaptest)    swapdws(data, sizeof(XWDFileHeader));
-#if DEBUG
-    printf("xwd-Name: %s\n",data+sizeof(XWDFileHeader));
-    printf("Version: %d\n",((XWDFileHeader *)data)->file_version);
-    printf("pixmap_format: %d\n",((XWDFileHeader *)data)->pixmap_format);
-    printf("pixmap_depth: %d\n",((XWDFileHeader *)data)->pixmap_depth);
-    printf("ncolors: %d\n",((XWDFileHeader *)data)->ncolors);
-    printf("xoffset: %d\n",((XWDFileHeader *)data)->xoffset);
-    printf("pixmap_width: %d\n",((XWDFileHeader *)data)->pixmap_width);
-    printf("pixmap_height: %d\n",((XWDFileHeader *)data)->pixmap_height);
-    printf("bitmap_pad: %d\n",((XWDFileHeader *)data)->bitmap_pad);
-    printf("bytes_per_line: %d\n",((XWDFileHeader *)data)->bytes_per_line);
-#endif
-    if(((XWDFileHeader *)data)->file_version!=(CARD32)XWD_FILE_VERSION) {
-      printf("Achtung: Falsche XWD Version: %d\n",(int)((XWDFileHeader *)data)->file_version);
-      adr=malloc(32*32*depth/8);
-      return(XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)adr,32,32,8,32*depth/8));  
-    } else {
-      adr=malloc(((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
-      memcpy(adr,data+((XWDFileHeader *)data)->header_size+((XWDFileHeader *)data)->ncolors*sizeof(XWDColor),((XWDFileHeader *)data)->pixmap_height*((XWDFileHeader *)data)->bytes_per_line);
-    }
-    return(XCreateImage(window[usewindow].display,visual,
-    ((XWDFileHeader *)data)->pixmap_depth,
-    ((XWDFileHeader *)data)->pixmap_format,
-    ((XWDFileHeader *)data)->xoffset,
-    (char *)adr,
-    ((XWDFileHeader *)data)->pixmap_width,
-    ((XWDFileHeader *)data)->pixmap_height,
-    ((XWDFileHeader *)data)->bitmap_pad,
-    ((XWDFileHeader *)data)->bytes_per_line));
   }
+  if(usemask) {
+    unsigned char *mask2=malloc(bmp.h*bpl);
+    if(depth==24 || depth==32) extend_mask(mask,mask2,bmp.h*bmp.w,32);
+    else extend_mask16(mask,mask2,bmp.h*bmp.w,32);
+    if(XMask) *XMask=XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)mask2,bmp.w,bmp.h,8,bpl);
+    else free(mask2);
+  } else {
+    if(XMask) *XMask=NULL;
+  }
+  free(mask);
+  for(i=0;i<bmp.h*bmp.w;i++) {
+    adr[i*4+2]=bmp.image[i*4];
+    adr[i*4+1]=bmp.image[i*4+1];
+    adr[i*4+0]=bmp.image[i*4+2];
+  }
+  return(XCreateImage(window[usewindow].display,visual,depth,ZPixmap,0,(char *)adr,bmp.w,bmp.h,8,bpl));
 }
 #endif
-#if 0
-SDL_Surface *bpmtosurface(const char *data, double scale) {
-  SDL_Surface *ret;
+
+#include "lodepng.h"
+
+STRING pngtobmp(unsigned char *pngdata,size_t pngsize) {
+  STANDARDBITMAP stdbmp;
+  STRING ergebnis;
+  unsigned int error = lodepng_decode32(&stdbmp.image, &stdbmp.w, &stdbmp.h,pngdata,pngsize);
+  if(error) printf("PNGDECODE: error %u\n", error);
+  ergebnis.pointer=(char *)stdbmtobmp(stdbmp,(int *)&ergebnis.len);
+  free(stdbmp.image);
+  return(ergebnis);
+}
+
+STRING bmptopng(unsigned char *data) {
+  STRING ergebnis;
+  STANDARDBITMAP bm;
+  unsigned char* png;
+  size_t pngsize;
   /* Pruefen, ob es sich um eine BMP Datei handelt. */
   if(*((unsigned short int *)data)==BF_TYPE) {
-    int dd,w,o,h,bpl;
-    char *adr;
-    
-    BITMAPFILEHEADER *header=(BITMAPFILEHEADER *)data;
-    BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(data+BITMAPFILEHEADERLEN);
-   // ncol=iheader->biClrUsed;
-    RGBQUAD *coltable=(RGBQUAD *)(data+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN);
-    w=iheader->biWidth;
-    h=iheader->biHeight;
-    dd=iheader->biBitCount;
-
-    if(iheader->biCompression!=BI_RGB && iheader->biCompression!=BI_BITFIELDS) {
-      printf("Put-Image: Compressed Bitmaps are not supported! compression=%d\n",iheader->biCompression);
-    }
-    o=*((int *)(data+10));
-    bpl=w*dd/8; 
-#if DEBUG
-    printf("w=%d, h=%d, d=%d, depth=%d bpl=%d\n",w,h,dd,0,bpl);
-#endif
-    adr=malloc(h*bpl);
-    bmp2bitmap(data,adr,0,w,h,dd,NULL);
-    
-  //  printf("Usemask=%d\n",usemask);
-   ret=SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,w,h,dd, 0,0,0,0);
-
-      if(scale!=1.0) {
- 	int oh=h;
-	int ow=w;
-	h=(int)((double)h*scale);
-	w=(int)((double)w*scale);
-        bitmap_scale(adr,dd,ow,oh,ret->pixels,w,h);
-	free(adr);
-      } else {
-//        memcpy(ret->pixels,adr,h*bpl); free(adr);
-      free(ret->pixels);
-      ret->pixels=adr;
-      }
-      
+    bm=bmp2stdbm(data);
   } else {
-    printf("ERROR: PUT, wrong file format.\n");
-    ret=SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, 16, 16, 32, 0,0,0,0);
-
+    printf("ERROR: PNGENCODE, wrong data format.\n");
+    bm.w=0;
+    bm.h=0;
+    bm.image=malloc(16);
   }
-  return(ret);
+  unsigned error = lodepng_encode32(&png, &pngsize, bm.image, bm.w, bm.h);
+  if(error) printf("ERROR encoding bitmap to PNG.\n");
+  free(bm.image);
+  ergebnis.pointer=(char *)png;
+  ergebnis.len=(int)pngsize;
+  return(ergebnis);
 }
-#endif
+
 #ifdef USE_SDL
 
-/*
-* Return the pixel value at (x, y)
-* NOTE: The surface must be locked before calling this!
-*/
+/** Return the pixel value at (x, y)
+* NOTE: The surface must be locked before calling this!*/
+
 Uint32 sdl_getpixel(SDL_Surface *surface, int x, int y) {
   int bpp = surface->format->BytesPerPixel;
   /* Here p is the address to the pixel we want to retrieve */
-  Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+  Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
   switch(bpp) {
-  case 1:
-    return *p;
-  case 2:
-    return *(Uint16 *)p;
+  case 1:   return *p;
+  case 2:   return *(Uint16 *)p;
   case 3:
-  if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-    return (p[0] << 16 | p[1] << 8 | p[2]);
-  else
-    return (p[0] | p[1] << 8 | p[2] << 16);
-  case 4:
-    return (*(Uint32 *)p)<<8|0xff;
-  default:
-    return 0; /* shouldn\u2019t happen, but avoids warnings */
+    if(SDL_BYTEORDER==SDL_BIG_ENDIAN)  return(p[0]<<16|p[1]<<8|p[2]);
+    else                               return(p[0]|p[1]<<8|p[2]<<16);
+  case 4:   return (*(Uint32 *)p)<<8|0xff;
+  default:  return 0; /* shouldn't happen, but avoids warnings */
   }
 }
-
 #endif

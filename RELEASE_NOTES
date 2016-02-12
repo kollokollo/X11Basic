@@ -1,16 +1,3 @@
-Release notes for Version 1.23 (July 2014 --Mar 2015)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- New data type: complex numbers a#
-- New data type: arbitrary precision integers a& (experimental)
-- LAPACK functions (e.g. SOLVE(), INVERT() etc.) now work in Android version
-- New functions LCM() and GCD()
-- fixed bugs in compiler (PRINT)
-- fixed bug in MID$()
-- compiled an ATARI ST (MINT) version of X11-Basic
-- Fixed bug in LOAD / Screen rotation
-- Again modified MID$
-- Crashfix: clear_variable
-- Fixed unavail Basedir in Android
-- fixed bug in EVAL, HELP, RND(), SGET, GET
-- increased speed of assignment in interpreter
-- workaround for TTS crash (Android)
+Release notes for Version 1.24 (Sept 2015 -- )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Improved USB-Support

@@ -13,6 +13,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "type.h"
 #include "variablen.h"
 #include "parser.h"
 #include "array.h"

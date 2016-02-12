@@ -50,6 +50,9 @@ char *do_gets (char *);
 
 const char version[]=VERSION;        /* Programmversion          */
 const char vdate[]=VERSION_DATE;
+#ifndef ANDROID
+static
+#endif
 int loadfile=FALSE;
 #ifdef GERMAN
 char ifilename[100]="neu.bas";       /* Standartfile             */
@@ -64,7 +67,7 @@ char *programbuffer=NULL;
 char **program=NULL;
 
 #ifdef ANDROID
-void intro() {
+static void intro() {
   putchar(27);
   printf("c");
   printf("*************************************\n"
@@ -76,7 +79,7 @@ void intro() {
 	     xbasic_name,libversion,libvdate);
 }
 #else
-void intro() {
+static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
          "*                       by Markus Hoffmann 1997-2015 (c) *\n"
@@ -94,7 +97,7 @@ void intro() {
 
 #endif
 
-void usage() {
+static void usage() {
   printf(
 #ifdef GERMAN
     "Bedienung: %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n"
@@ -114,6 +117,28 @@ void usage() {
     ,xbasic_name,ifilename);
 }
 
+#ifdef WINDOWS
+static void show_embedded_docu(char *filename) {
+  if(exist(filename)) {
+    printf("Embedded documentation of the X11-Basic program %s:\n\n",filename);
+    char line[256];
+    FILE *dptr=fopen(filename,"r");
+    while(!myeof(dptr)) {
+      lineinput(dptr,line,255);
+      if(*line=='#' && line[1]=='#') puts(line);
+    }
+    fclose(dptr);
+  } else {
+    intro();
+  }
+  simple_gets("Press RETURN to close the window.");
+  quit_x11basic(0);
+}
+#endif
+
+#ifndef ANDROID
+static
+#endif
 void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
 
@@ -144,6 +169,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
 	free(buffer);
       } else usage();
       quitflag=1;
+#ifdef WINDOWS
+    } else if (strncmp(argumente[count],"-doc_",5)==FALSE) {
+      show_embedded_docu(argumente[count]+5);
+#endif
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
       intro();
       daemonf=1;
@@ -177,7 +206,7 @@ int main(int anzahl, char *argumente[]) {
   x11basicStartup();   /* initialisieren   */
 
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
-  atexit(reset_input_mode);
+  (void) atexit(reset_input_mode);
   param_anzahl=anzahl;
   param_argumente=argumente;
 
