@@ -169,6 +169,17 @@ SEE ALSO: IF, ELSE, ELSE IF
 
 ##############################################################################
 
+Command:    ENDPROCEDURE
+Syntax:     ENDPROCEDURE
+
+DESCRIPTION:
+
+	Terminates a user defined procedure. It has the same effect as 
+	RETURN.
+
+SEE ALSO:   RETURN, ENDFUNCTION
+##############################################################################
+
 Command:    ENDSELECT
 Syntax:     ENDSELECT
 

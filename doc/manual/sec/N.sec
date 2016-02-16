@@ -69,6 +69,22 @@ EXAMPLE:
 SEE ALSO: GCD()
 ##############################################################################
 
+Function:  NLINK()
+Syntax:    m%=NLINK(filename$)
+
+DESCRIPTION:
+
+	Return the number of (hard) links to the file or directory.
+
+COMMENT: 
+	May not work on WINDOWS systems.
+
+EXAMPLES:
+  PRINT NLINK(".") ---> Result: 2
+
+SEE ALSO:  INODE(), EXIST(), MODE()
+##############################################################################
+
 Command:  NOP, NOOP
 Syntax:   NOP
 	  NOOP

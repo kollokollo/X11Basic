@@ -86,9 +86,9 @@ EXAMPLE:
 t$="Hallo, this is a string..."
 i=varptr(t$)-2000
 DO
-  PRINT "$";HEX$(i,8,8)'
+  PRINT "$";HEX$(i,8)'
   FOR iu=0 TO 15
-    PRINT HEX$(PEEK(i+iu) and 255,2,2)'
+    PRINT HEX$(PEEK(i+iu) and 255,2)'
   NEXT iu
   PRINT '
   FOR iu=0 TO 15
@@ -354,6 +354,24 @@ EXAMPLE:
 	PRINT PRED(0.6)      Result: 0 
 	PRINT PRED(-0.5)     Result: -1 
 	PRINT PRED(0)        Result: -1 
+##############################################################################
+Function:  PRIMORIAL()
+Syntax:    w&=PRIMORIAL(i%)
+
+DESCRIPTION:
+
+	Returns the promorial of i%, i.e. the product of all positive prime 
+	numbers <=i%.
+
+COMMENT: 
+	This function works only in the interpreter and only when used in 
+	a direct assignment to a big integer variable.
+	The function is not implemented in some of the X11-Basic versions.
+
+EXAMPLES:
+  w&=LUCNUM(100)  --> Result: 2305567963945518424753102147331756070
+
+SEE ALSO: FIB(), LUCNUM()
 	
 ##############################################################################
 Function:  PRG$()

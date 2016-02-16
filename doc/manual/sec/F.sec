@@ -30,6 +30,23 @@ DESCRIPTION:
 
 SEE ALSO: TRUE
 ##############################################################################
+Variable:   FATAL
+Syntax:     FATAL
+  	  
+DESCRIPTION:
+
+	Returns the value 0 or -1 according to the type of
+        error.
+        On normal errors the function returns 0. The value -1
+        is returned on all errors where the address of the
+        last executed command is no longer known.
+        In this case a RESUME is not possible anymore.
+
+COMMENT:
+	This variable is currently not used in X11-Basic.
+
+SEE ALSO:  RESUME
+##############################################################################
 Command: FFT
 Syntax:  FFT a()[,flag%]
   	  
@@ -127,6 +144,22 @@ EXAMPLE:
 	    PRINT a$
 	  ENDIF
 	LOOP
+##############################################################################
+Function:  FIB()
+Syntax:    w&=FIB(i%)
+
+DESCRIPTION:
+
+	Returns the i'th Fibonacci number.
+
+COMMENT: 
+	This function works only in the interpreter and only when used in 
+	a direct assignment to a big integer variable.
+
+EXAMPLES:
+  w&=FIB(100)  --> Result: 354224848179261915075
+
+SEE ALSO: LUCNUM()
 
 ##############################################################################
 

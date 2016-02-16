@@ -218,6 +218,22 @@ DESCRIPTION:
 
 SEE ALSO:  DIV, MOD
 ##############################################################################
+
+Function:  MODE()
+Syntax:    m%=MODE(filename$)
+
+DESCRIPTION:
+
+	Return the file permissions of the file or directory.
+
+COMMENT: 
+	May not work on WINDOWS systems.
+
+EXAMPLES:
+  PRINT OCT$(MODE(".")) ---> Result: 40750
+
+SEE ALSO:  INODE(), EXIST()
+##############################################################################
 Command: MOTIONEVENT
 Syntax:  MOTIONEVENT x,y,xroot,yroot,s
 

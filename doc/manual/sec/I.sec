@@ -105,7 +105,22 @@ EXAMPLE:
 	PUT_BITMAP sym$,92,92,16,16
 
 SEE ALSO:  PUT_BITMAP
+##############################################################################
 
+Function:   INODE()
+Syntax:     a%=INODE$(filename$)
+
+DESCRIPTION:
+
+	Returns the inode number associated with a file or directory on 
+	disk.
+	Each inode stores the attributes and disk block location(s) of the 
+	filesystem object's data.
+
+COMMENT: 
+	Works only on Unix-Style file systems.
+
+SEE ALSO:  EXIST()
 ##############################################################################
 
 Function:   INP(), INP\%(), INP\&()

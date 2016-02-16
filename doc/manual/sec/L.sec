@@ -317,3 +317,19 @@ DESCRIPTION:
 
 SEE ALSO: LTEXT
 ##############################################################################
+Function:  LUCNUM()
+Syntax:    w&=LUCNUM(i%)
+
+DESCRIPTION:
+
+	Returns the i'th Lucas number.
+
+COMMENT: 
+	This function works only in the interpreter and only when used in 
+	a direct assignment to a big integer variable.
+
+EXAMPLES:
+  w&=LUCNUM(100)  --> Result: 792070839848372253127
+
+SEE ALSO: FIB(), PRIMORIAL()
+##############################################################################
