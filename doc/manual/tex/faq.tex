@@ -58,7 +58,7 @@ sourcecode, you will need to follow the GNU public license.
      FUNCTION utf8$(unicode%)
        IF unicode%<0x80
          RETURN CHR$(unicode%)
-       ELSE IF unicode%<0x2000
+       ELSE IF unicode%<0x800
          RETURN CHR$(0xc0+(unicode%/64 AND 0x1f))+CHR$(0x80+(unicode% AND 0x3f))
        ELSE
          RETURN CHR$(0xe0+(unicode%/64/64 AND 0xf))+CHR$(0x80+(unicode%/64 AND 0x3f))+CHR$(0x80+(unicode% AND 0x3f))  
