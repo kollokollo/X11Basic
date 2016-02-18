@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=34
+RELEASE=35
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -293,8 +293,9 @@ EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
 	  $(EXAMPLES_GAMES) $(EXAMPLES_MATHEMATICS) $(EXAMPLES_ATARI_ST) \
         ../examples2/RELEASE-NOTES 
 
-DIST= ../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS \
-      ../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
+DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+	../doc/ACKNOWLEGEMENTS \
+	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
       ../doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss \
       config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
@@ -312,10 +313,11 @@ DIST= ../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS \
 	../examples/tests/* \
 	../examples/graphics/* 
 
-BINDIST=../README INSTALL ../COPYING ../doc/man-pages/*.1 ../doc/ACKNOWLEGEMENTS \
-      ../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
-      ../doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c x11basic.h xb2csol.h \
-      x11basic.a libx11basic.so \
+BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY \
+	../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
+	../doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c \
+	x11basic.h xb2csol.h x11basic.a libx11basic.so \
       ../examples/compiler/xbc.bas.in \
       ../examples/compiler/inline.bas \
       ../examples/compiler/bas2x11basic.bas \
