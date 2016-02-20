@@ -14,3 +14,4 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - added gfalist binary to Android Version (see gfalist.bas)
 - fixed subarry assignment
 - improved DUMP, added DUMP c$,#n, also PLIST #n
+- fixed Crash (SIGABRT) in Android version.

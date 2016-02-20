@@ -1847,24 +1847,19 @@ while(queueptr==queueptrlow) usleep(10000);
 }
 
 
+/* l"osche einen Event an der STelle r in der Schlange und lasse den rest aufr"ucken.*/
+
 static void remove_event(int r) {
-  int i,e;
+  int e;
  /*Event entfernen*/
-    if(r==queueptrlow) {
-      queueptrlow++;
-      if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
-    } else {
-      i=r;
-      queueptrlow++;
-      if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
-   
-      while(i!=queueptrlow) {
-        e=i-1;
-        if(e<0) e+=MAXQUEUELEN;
-        eque[i]=eque[e];
-        i=e;
-      }
-    }
+  while(r!=queueptrlow) {
+    e=r-1;
+    if(e<0) e+=MAXQUEUELEN;
+    eque[r]=eque[e];
+    r=e;
+  }
+  queueptrlow++;
+  if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
 }
 
 /*Event am Ende der Schlange anfügen*/
@@ -1872,7 +1867,12 @@ static void remove_event(int r) {
 void FB_put_event(XEvent *event) {
   eque[queueptr++]=*event;
   if(queueptr>=MAXQUEUELEN) queueptr=0;
-  if(queueptrlow==queueptr) printf("Event-queue is full!\n");
+  if(queueptrlow==queueptr) {
+   //  backlog("Event-queue is full!");
+    /*"altestes Event "uberschreiben.*/
+    queueptrlow++;
+    if(queueptrlow>=MAXQUEUELEN) queueptrlow=0;
+  }
 }
 
 /*Event am Anfang der Schlange einfügen*/
@@ -1881,7 +1881,7 @@ void FB_putback_event(XEvent *event) {
   queueptrlow--;
   if(queueptrlow<0) queueptrlow+=MAXQUEUELEN;
   if(queueptrlow!=queueptr) eque[queueptrlow]=*event;
-  else printf("Event-queue is full!\n");
+  // else backlog("Event-queue is full!\n");
 }
 int FB_check_event(int mask, XEvent *event) {
   int e,i,r=-1;

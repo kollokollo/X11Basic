@@ -44,8 +44,14 @@ extern int usewindow;
 
 extern int loadfile;
 
+/* Globale Referenz zu Java environment. Diese wird in der Regel auch lokal zu den 
+   JNICALL routinen übergeben, jedoch benötigt der Crash-Randler eine möglichst aktuelle
+   Referenz. Und zwar diese aus dem UI thread. Wir ermitteln diese am Anfang bei OnLoad und hoffen,
+   dass sie sich im laufe des Programmablaufs nicht ändert.
+   Zur Sicherheit speichern wir die env-Referenz bei jeder Bildschirmausgabe nochmal neu an. Das ist aber
+   dennoch nicht wirklich sicher....*/
 
-static JNIEnv *env;   /*Java environment*/
+static JNIEnv *globalenv;   /*Java environment*/
 static JavaVM *m_vm;
 static jobject x11basicActivity=NULL;
 static jobject x11basicView=NULL;
@@ -97,34 +103,40 @@ JNIEXPORT  jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   jclass cls, godcls;
   NLOG("OnLoad.");
 
-  if((*vm)->GetEnv(vm, (void **)&env, JNI_VERSION_1_4)) return JNI_ERR; /* JNI version not supported */
+  /* Globale Referenz um Java Environment ermitteln und abspeichern. Wird bei SIGNAL Handler benötigt, 
+     da dieser dies sonst nicht ermitteln kann und dann auch nicht den Crash-Handler starten kann.
+   */
+  
+  if((*vm)->GetEnv(vm, (void **)&globalenv, JNI_VERSION_1_4)) return JNI_ERR; /* JNI version not supported */
   m_vm = vm;
 
-  cls=(*env)->FindClass(env,"net/sourceforge/x11basic/X11basicView"); 
+  cls=(*globalenv)->FindClass(globalenv,"net/sourceforge/x11basic/X11basicView"); 
   if (cls == NULL) return JNI_ERR;
-  godcls=(*env)->FindClass(env,"net/sourceforge/x11basic/X11BasicActivity"); 
+  godcls=(*globalenv)->FindClass(globalenv,"net/sourceforge/x11basic/X11BasicActivity"); 
   if (godcls == NULL) return JNI_ERR;
   
   
+  /* Referenzen zu den Java-Proceduren ermitteln und abspeichern.*/
   
-  nativeCrashed      =(*env)->GetMethodID(env,cls, "nativeCrashed", "(I)V");
-  redrawMethod       =(*env)->GetMethodID(env,cls, "redraw",        "()V");
+  nativeCrashed      =(*globalenv)->GetMethodID(globalenv,cls, "nativeCrashed", "(I)V");
+  redrawMethod       =(*globalenv)->GetMethodID(globalenv,cls, "redraw",        "()V");
   
-  beepMethod         =(*env)->GetMethodID(env,cls, "beep",          "()V");
-  getlocationMethod  =(*env)->GetMethodID(env,cls, "get_location",  "()V");
-  playsoundfileMethod=(*env)->GetMethodID(env,cls, "playsoundfile", "(Ljava/lang/String;)V");
-  runaudioMethod     =(*env)->GetMethodID(env,cls, "RunAudioThreads","()V");
-  playtoneMethod     =(*env)->GetMethodID(env,cls, "playtone",      "(FFI)V");
-  speekMethod        =(*env)->GetMethodID(env,cls, "speek",         "(Ljava/lang/String;FFI)V");
-  gpsonoffMethod     =(*env)->GetMethodID(env,cls, "gps_onoff",     "(I)V");
-  sensoronoffMethod  =(*env)->GetMethodID(env,cls, "sensor_onoff",  "(I)V");
-  callintentMethod   =(*env)->GetMethodID(env,cls, "call_intent",   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+  beepMethod         =(*globalenv)->GetMethodID(globalenv,cls, "beep",          "()V");
+  getlocationMethod  =(*globalenv)->GetMethodID(globalenv,cls, "get_location",  "()V");
+  playsoundfileMethod=(*globalenv)->GetMethodID(globalenv,cls, "playsoundfile", "(Ljava/lang/String;)V");
+  runaudioMethod     =(*globalenv)->GetMethodID(globalenv,cls, "RunAudioThreads","()V");
+  playtoneMethod     =(*globalenv)->GetMethodID(globalenv,cls, "playtone",      "(FFI)V");
+  speekMethod        =(*globalenv)->GetMethodID(globalenv,cls, "speek",         "(Ljava/lang/String;FFI)V");
+  gpsonoffMethod     =(*globalenv)->GetMethodID(globalenv,cls, "gps_onoff",     "(I)V");
+  sensoronoffMethod  =(*globalenv)->GetMethodID(globalenv,cls, "sensor_onoff",  "(I)V");
+  callintentMethod   =(*globalenv)->GetMethodID(globalenv,cls, "call_intent",   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 
   
   
   
   /* Use weak global ref to allow C class to be unloaded */
-  // mcls = (*env)->NewWeakGlobalRef(env, cls);
+
+  // mcls = (*globalenv)->NewWeakGlobalRef(globalenv, cls);
   // if(mcls==NULL) return JNI_ERR;
 
   // Try to catch crashes...
@@ -174,19 +186,19 @@ JNIEXPORT  jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   Programm geladen. 
 */
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Init(JNIEnv *_env, jobject _obj, jlong  time_ms, jstring arguments) {
+#define CHECKENV() if(globalenv!=env) {NLOG("/#/");}
+
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Init(JNIEnv *env, jobject _obj, jlong  time_ms, jstring arguments) {
   static char *commandline=NULL;
-  env=_env;
+  CHECKENV();
   param_anzahl=0;
   if(!param_argumente) param_argumente=(char **)malloc(128*sizeof(char *));
   NLOG("vInit.");
 /* evtl hier eine Kommandozeile behandeln ....*/
   const char *n = (*env)->GetStringUTFChars(env, arguments, 0);//Get the native string from javaString
   if(commandline) free(commandline);
-  commandline=strdup(n);
-  char *a=commandline;
-     //DON'T FORGET THIS LINE!!!
-  (*env)->ReleaseStringUTFChars(env, arguments, n);
+  char *a=commandline=strdup(n);
+  (*env)->ReleaseStringUTFChars(env, arguments, n);   //DON'T FORGET THIS LINE!!!
 
   while (isspace(*a)) ++a;
   while (*a) {
@@ -200,21 +212,16 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Init(JNIEnv *_
 #if 0
   /* Pseudo-Terminal nutzen */
   fdm = posix_openpt(O_RDWR);
-  if (fdm < 0) {
-    LOGE("Error %d on posix_openpt()\n", errno);
-  } else {
+  if (fdm<0) LOGE("Error %d on posix_openpt()\n", errno);
+  else {
     rc = grantpt(fdm);
     if (rc != 0) {
     LOGE( "Error %d on grantpt()\n", errno);
   }
-  rc = unlockpt(fdm);
-  if (rc != 0) {
-    LOGE("Error %d on unlockpt()\n", errno);
-  }
-  // Open the slave PTY
-  fds = open(ptsname(fdm), O_RDWR);
-  /* Stdout umleiten*/
-  dup2(fds,STDOUT_FILENO);
+  rc=unlockpt(fdm);
+  if(rc!=0) LOGE("Error %d on unlockpt()\n", errno);
+  fds = open(ptsname(fdm), O_RDWR); /* Open the slave PTY  */
+  dup2(fds,STDOUT_FILENO);          /* Stdout umleiten*/
   set_terminal_fd(fdm);
 }
 #endif
@@ -242,10 +249,10 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Init(JNIEnv *_
    oder die Bitmap verlagert wurde....
  */
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_InitScreen(JNIEnv *_env, jobject  obj, jobject bitmap) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_InitScreen(JNIEnv *env, jobject  obj, jobject bitmap) {
     int                ret;
     static int         init=0; 
-    env=_env;
+    CHECKENV();
     NLOG("i.");
     if ((ret = AndroidBitmap_getInfo(env, bitmap, &screen_info)) < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
@@ -274,46 +281,49 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_InitScreen(JNI
     Fehler kommen kann.
 */
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setObject(JNIEnv *_env, jobject  obj, jobject _x11basicView) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setObject(JNIEnv *env, jobject  obj, jobject _x11basicView) {
   NLOG("setObject.");
-  env=_env;
+  CHECKENV();
+  globalenv=env;   /* Vielleicht nicht nötig ?*/
   if(x11basicView) (*env)->DeleteGlobalRef(env,x11basicView);
   x11basicView = (*env)->NewGlobalRef(env, _x11basicView);
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setHomeDir(JNIEnv *_env, jobject  obj, jstring in) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setHomeDir(JNIEnv *env, jobject  obj, jstring in) {
   const char *n = (*env)->GetStringUTFChars(env,in, 0);
   NLOG("setHomeDir.");
+  CHECKENV();
   chdir(n);
-  (*env)->ReleaseStringUTFChars(env,in, n);//DON'T FORGET THIS LINE!!!
+  (*env)->ReleaseStringUTFChars(env,in, n);
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_terminalfontsize(JNIEnv *_env, jobject  obj, jint n) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_terminalfontsize(JNIEnv *env, jobject  obj, jint n) {
   font_behaviour=n;
   NLOG("Fntsize.");
 }
 
-JNIEXPORT jstring JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdout(JNIEnv *_env, jobject  obj) {
-  env=_env;
+JNIEXPORT jstring JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdout(JNIEnv *env, jobject  obj) {
   NLOG("Stdout.");
+  CHECKENV();
+  globalenv=env;  /* Vielleicht nicht nötig */
   fflush(stdout);
   return  (*env)->NewStringUTF(env,flush_terminal());
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdin(JNIEnv *_env, jobject  obj, jstring in) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdin(JNIEnv *env, jobject  obj, jstring in) {
   const char *n = (*env)->GetStringUTFChars(env,in, 0);    //Get the native string from javaString
   NLOG("Stdin.");
+  CHECKENV();
+  globalenv=env;  /* Vielleicht nicht nötig */
   if(android_init) write(in_pipe[1],n,strlen(n));
   (*env)->ReleaseStringUTFChars(env,in, n);                //DON'T FORGET THIS LINE!!!
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_queueKeyEvent(JNIEnv *_env, jclass c, jint key, jint state) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_queueKeyEvent(JNIEnv *env, jclass c, jint key, jint state) {
   NLOG("queueKeyEvent.");
   //  if(queueKeyEvent) queueKeyEvent(key, state); 
   LOGE("Que Key event %d ...",key);  
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Putchar(JNIEnv *_env, jobject  obj, jint n) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Putchar(JNIEnv *env, jobject  obj, jint n) {
+  NLOG("p.");
+  CHECKENV();
+  globalenv=env;  /* Vielleicht nicht nötig */
   char nn=(char)n;
   NLOG("p.");
   write(in_pipe[1],&nn,1);
@@ -328,21 +338,20 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Putchar(JNIEnv
 }
 
 extern int lin, CharHeight;
-JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_getFocuscursor(JNIEnv *_env, jobject  obj) {
-  env=_env;
+JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_getFocuscursor(JNIEnv *env, jobject  obj) {
   return(CharHeight*lin);   /* Soll cursor(y)position zur�eckgeben....*/
 }
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setLocation(JNIEnv *_env, jobject  obj, jdouble lat,jdouble lon,jdouble alt) {
-  env=_env;
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setLocation(JNIEnv *env, jobject  obj, jdouble lat,jdouble lon,jdouble alt) {
   gps_alt=alt;
   gps_lon=lon;
   gps_lat=lat;
-  NLOG("setLocation.");
+  NLOG("setLoc.");
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setLocationInfo(JNIEnv *_env, jobject  obj, 
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setLocationInfo(JNIEnv *env, jobject  obj, 
   jfloat bar,jfloat acu,jfloat speed,jlong time, jstring prov) {
-  env=_env;
+  NLOG("setLocationInfo.");
+  CHECKENV();
   gps_bearing=(double)bar;
   gps_accuracy=(double)acu;
   gps_speed=(double)speed;
@@ -352,26 +361,25 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setLocationInf
   printf("acu=%g\n",(double)acu);
   printf("spe=%g\n",(double)speed);
 */
-  NLOG("setLocationInfo.");
   const char *n  = (*env)->GetStringUTFChars(env,prov, 0);
   gps_provider=realloc(gps_provider,strlen(n)+1);
   strcpy(gps_provider,n);
-  (*env)->ReleaseStringUTFChars(env,prov, n);
+  (*env)->ReleaseStringUTFChars(env,prov,n);
 }
 JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_setSensorValues(
-  JNIEnv *_env, jobject  obj, jint offset,jint nval,jfloat a0,jfloat a1,jfloat a2) {
+  JNIEnv *env, jobject  obj, jint offset,jint nval,jfloat a0,jfloat a1,jfloat a2) {
   NLOG("setSensorValues."); 
-  env=_env;
+  CHECKENV();
   if(nval>=1) sensordata[offset]=(double)a0;
   if(nval>=2) sensordata[offset+1]=(double)a1;
   if(nval>=3) sensordata[offset+2]=(double)a2;
 }
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouse(JNIEnv *_env, jobject  obj, jint x,jint y,jint k) {
-  char lbuf[100];
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouse(JNIEnv *env, jobject  obj, jint x,jint y,jint k) {
+ // char lbuf[100];
   XEvent e;
-  NLOG("setMouse.");
-  env=_env;
+  NLOG("setM{");
+  CHECKENV();
   if(k==0) {
     e.type=ButtonPress;
     e.xbutton.button=1;
@@ -400,17 +408,21 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouse(JNIEn
     e.xmotion.state=0;
   }
   FB_put_event(&e);
+  NLOG("E");
   FB_hide_mouse();
+  NLOG("H");
   screen.mouse_x=x;
   screen.mouse_y=y;
   FB_show_mouse();
+  NLOG("S");
   invalidate_screen();
+  NLOG("}.");
 }
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouseMotion(JNIEnv *_env, jobject  obj, jint dx,jint dy) {
-  NLOG("setMouseMotion.");
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouseMotion(JNIEnv *env, jobject  obj, jint dx,jint dy) {
+  NLOG("setMM{");
   XEvent e;
-  env=_env;
+  CHECKENV();
   e.type=MotionNotify;
   e.xmotion.x=screen.mouse_x+dx;
   e.xmotion.y=screen.mouse_y+dy;
@@ -418,11 +430,12 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouseMotion
   e.xmotion.y_root=screen.mouse_y+dy;
   e.xmotion.state=0;
   FB_put_event(&e);
+  NLOG("}.");
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyPressEvent(JNIEnv *_env, jobject  obj, jint kk,jint a, jint hi) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyPressEvent(JNIEnv *env, jobject  obj, jint kk,jint a, jint hi) {
   NLOG("kpe."); 
   XEvent e;
-  env=_env;
+  CHECKENV();
   e.type=KeyPress;
   e.xkey.keycode=(char)kk;
   e.xkey.ks=a&255|(hi<<8);
@@ -431,10 +444,10 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyPressEve
   
   FB_put_event(&e);
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyReleaseEvent(JNIEnv *_env, jobject  obj, jint kk,jint a, jint hi) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyReleaseEvent(JNIEnv *env, jobject  obj, jint kk,jint a, jint hi) {
   NLOG("kre.");
   XEvent e;
-  env=_env;
+  CHECKENV();
   e.type=KeyRelease;
   e.xkey.keycode=(char)kk;
   e.xkey.ks=a&255|(hi<<8);
@@ -443,12 +456,12 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetKeyReleaseE
   FB_put_event(&e);
 }
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_AudioFillStreamBuffer(JNIEnv* _env, void* reserved, jshortArray location, jint size) {
-  NLOG("audio.");
-  env=_env;
-    // Get the short* pointer from the Java array
-    jboolean isCopy = JNI_TRUE;
-    jshort* dst = (*env)->GetShortArrayElements(env,location, &isCopy);
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_AudioFillStreamBuffer(JNIEnv *env, void* reserved, jshortArray location, jint size) {
+  NLOG("audio{");
+  CHECKENV();
+  /* Get the short* pointer from the Java array  */
+  jboolean isCopy = JNI_TRUE;
+  jshort* dst = (*env)->GetShortArrayElements(env,location, &isCopy);
 /*
    ---> gAudioManager.FillStreamBuffer(dst, size);
 --> sollte als rueckgabe ein flag haben, ob ueberhaupt noch 
@@ -456,6 +469,7 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_AudioFillStrea
      aber voraus, dass jeder SOUND befehl das wieder in Gang setzt. (erstmal
      lassen)
 */
+  NLOG("m");
   mixeAudio(dst, size);
 //int i=0;
 //for(i=0;i<size/4;i++) {
@@ -463,41 +477,32 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_AudioFillStrea
 //  dst[2*i+1]=0x000+(short)(32000.0*sin(500.0/44100*2*3.141592*i));
 // // if(i<5) printf("--> %d\n",dst[2*i]);
 //}
-    // Release the short* pointer
-    (*env)->ReleaseShortArrayElements(env,location, dst, 0);
+  NLOG("f");
+  (*env)->ReleaseShortArrayElements(env,location, dst, 0);   /* Release the short* pointer */
+  NLOG("}.");
 }
-
-
-
-
-
-
-
 
 
 extern void c_new(char *n),c_cont(),c_stop();
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_New(JNIEnv *_env, jobject  obj) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_New(JNIEnv *env, jobject  obj) {
   NLOG("New.");
-  env=_env;
   c_new("");
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_StopCont(JNIEnv *_env, jobject  obj) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_StopCont(JNIEnv *env, jobject  obj) {
   NLOG("StopCont.");
-  env=_env;
   if(batch==0) c_cont();
   else c_stop();
 
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Stop(JNIEnv *_env, jobject  obj) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Stop(JNIEnv *env, jobject  obj) {
   NLOG("Stop.");
-  env=_env;
+  CHECKENV();
   puts("** PROGRAM-STOP");
   c_stop();
 }
-JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Batch(JNIEnv *_env, jobject  obj) {
+JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Batch(JNIEnv *env, jobject  obj) {
   NLOG("Batch.");
-  env=_env;
   return(batch);
 }
 
@@ -508,9 +513,9 @@ static void send_terminate_event() {
 }
 
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Load(JNIEnv *_env, jobject  obj, jstring filename) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Load(JNIEnv *env, jobject  obj, jstring filename) {
   NLOG("Load.");
-  env=_env;
+  CHECKENV();
   const char *n = (*env)->GetStringUTFChars(env,filename, 0);
   strcpy(ifilename,n);
   if(exist(ifilename)) {
@@ -526,17 +531,17 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Load(JNIEnv *_
     backlog("load done."); 
     invalidate_screen();
   } else LOGE("ERROR: %s not found !",ifilename);
-  (*env)->ReleaseStringUTFChars(env,filename, n);   //DON'T FORGET THIS LINE!!!
+  (*env)->ReleaseStringUTFChars(env,filename, n);
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Run(JNIEnv *_env, jobject  obj) {
+
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Run(JNIEnv *env, jobject  obj) {
   NLOG("Run.");
-  env=_env;
   graphics_setdefaults();
   do_run();
 }
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Loadandrun(JNIEnv *_env, jobject  obj, jstring filename) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Loadandrun(JNIEnv *env, jobject  obj, jstring filename) {
   NLOG("Load+run.");
-  env=_env;
+  CHECKENV();
   const char *n = (*env)->GetStringUTFChars(env,filename, 0);
   strcpy(ifilename,n);
   if(exist(ifilename)) {
@@ -552,12 +557,13 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Loadandrun(JNI
     graphics_setdefaults();
     do_run();
   } else LOGE("ERROR: %s not found !",ifilename);
-  (*env)->ReleaseStringUTFChars(env,filename, n);
+  (*env)->ReleaseStringUTFChars(env,filename,n);
 }
 
-JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Programmlauf(JNIEnv *_env, jobject _obj) {
+JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Programmlauf(JNIEnv *env, jobject _obj) {
   NLOG("Programmlauf.");
-  env=_env;
+  CHECKENV();
+  globalenv=env;
 #if 0
   /* Das ganze sollte in eigenem Thread gestartet werden.  */
   pthread_t thread1;
@@ -577,11 +583,12 @@ int donops=0;
 int docomments=0;
 STRING bcpc;
 
-JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Compile(JNIEnv *_env, jobject  obj,jstring filename) {
+JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Compile(JNIEnv *env, jobject  obj,jstring filename) {
   bcpc.pointer=malloc(MAX_CODE);
   int status=0;
-  NLOG("Compile.");
-  env=_env; 
+  NLOG("Compile{");
+  CHECKENV();
+  globalenv=env;
   if(prglen>0) {
         int ret;
         const char *ofilename = (*env)->GetStringUTFChars(env,filename, 0);
@@ -597,6 +604,7 @@ backlog("compile start");
        invalidate_screen();
   } else status=-1;
   free(bcpc.pointer);
+  NLOG("}.");
   return(status);
 }
 
@@ -717,12 +725,9 @@ void ANDROID_init_sound() {
     (*env)->CallVoidMethod(env,x11basicView,runaudioMethod);
     (*env)->ExceptionClear(env);
   }
-
-
-
 }
 void ANDROID_sound(int c,double freq, double volume, int duration) {
-  NLOG(">sound.");
+  NLOG(">sound{");
 
   JNIEnv *env;
   int status = (*m_vm)->AttachCurrentThread(m_vm,&env, NULL);
@@ -734,7 +739,7 @@ void ANDROID_sound(int c,double freq, double volume, int duration) {
     (*env)->CallVoidMethod(env,x11basicView,playtoneMethod,f,p,duration);
     (*env)->ExceptionClear(env);
   }
-
+  NLOG("}.");
 }
 
 void ANDROID_call_intent(const char *action,char *data, char *extra) {
@@ -768,32 +773,33 @@ int ANDROID_waitfor_intentresult() {
    also PRINT */
 void invalidate_screen() { 
   JNIEnv *env;
-  NLOG(">*.");
+  NLOG(">*{");
   /* first flush the stdoutput*/
   fflush(stdout);
   flush_terminal();
-  // LOGE("invalidate screen.");
-  int status = (*m_vm)->AttachCurrentThread(m_vm,&env, NULL);
-  if(status<0) {
-        LOGE("invalidate screen: ERROR, no env.");
-  } else
-  if(redrawMethod == NULL) {
-    LOGE("Error: Can't find Java method void redraw()");
-  } else {
+  int status=(*m_vm)->AttachCurrentThread(m_vm,&env, NULL);
+  if(status<0)                  LOGE("invalidate screen: ERROR, no env.");
+  else if(redrawMethod == NULL) LOGE("Error: Can't find Java method void redraw()");
+  else {
     (*env)->CallVoidMethod(env,x11basicView, redrawMethod);
     (*env)->ExceptionClear(env);
   }
-} 
+  NLOG("}.");
+ } 
 
 
 void android_sigaction(int signum, siginfo_t *info, void *reserved) {
   NLOG(">~.");
   LOGE("Signal received.... CRASH");
-  if(nativeCrashed == NULL) {
-    LOGE("Error: Can't find Java method ()");
-  } else {
-    (*env)->CallVoidMethod(env,x11basicView, nativeCrashed,signum);
-    (*env)->ExceptionClear(env);
+  char buf[MAXSTRLEN+sizeof(int)];
+  ringbufout(buf,MAXSTRLEN);
+  *((int *)(&buf[MAXSTRLEN]))=signum;
+  bsave("x11basic.crash",buf,sizeof(buf));
+  if(nativeCrashed == NULL) {LOGE("Error: Can't find Java method ()");} 
+  else {
+    /* Hier muessen wir uns drauf verlassen, dass globalenv noch gueltig ist.*/
+    (*globalenv)->CallVoidMethod(globalenv,x11basicView, nativeCrashed,signum);
+    (*globalenv)->ExceptionClear(globalenv);
   }
   signal(signum,(sighandler_t)android_sigaction);
   old_sa[signum].sa_handler(signum);
@@ -833,7 +839,7 @@ char *flush_terminal() {
       gg_outs(n);
       l=read(out_pipe[0],n,200);
     }
-  } else n[0]=0;
+  } else *n=0;
   return(n);
 }
 void thread_function(void *ptr) {
