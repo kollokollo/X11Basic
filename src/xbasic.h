@@ -169,6 +169,7 @@
 #define F_SRET       0x07000
 #define F_ANYIRET    0x08000
 #define F_NRET       0x09000
+#define F_ARET       0x0a000
 
 #define F_CONST      0x10000
 

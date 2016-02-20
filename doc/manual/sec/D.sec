@@ -410,7 +410,7 @@ SEE ALSO: LINE, PLOT
 ##############################################################################
 
 Command: DUMP
-Syntax:  DUMP [t$]
+Syntax:  DUMP [t$][,#n]
 
 DESCRIPTION:
 
@@ -422,6 +422,16 @@ DESCRIPTION:
         DUMP "#"                -- list of open Files
         DUMP "K"                -- list of all X11-Basic commands
         DUMP "F"                -- list of all X11-Basic functions
+	
+	If a open file channel is giveb, DUMP outputs to that file. 
+
+EXAMPLE: 
+	OPEN "O",#1,"debug.txt"
+	PRINT #1,"Variables:"
+	DUMP "",#1
+	PRINT #1,"Labels:"
+	DUMP ":",#1
+	CLOSE #1
 
 SEE ALSO: LIST, PLIST, HELP
 ##############################################################################

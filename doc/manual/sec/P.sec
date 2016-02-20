@@ -183,11 +183,13 @@ EXAMPLE:
 SEE ALSO: SOUND, PLAYSOUND
 ##############################################################################
 Command:  PLIST 
-Syntax:   PLIST
+Syntax:   PLIST [#n]
 
 DESCRIPTION:
 
         Outputs a formatted listing of the actual program in memory.
+        If an open file channel is given, the listing will be dumped into that
+	file.
         Also the internal tokens are printed ans some internal 
         Information. This is intended for internal use only.
 
@@ -212,7 +214,7 @@ EXAMPLE:
   14: $0008ff |   0,0 |=?=> 2303
 
         
-SEE ALSO: LIST
+SEE ALSO: LIST, DUMP
 ##############################################################################
 Command:  PLOT
 Syntax:   PLOT x,y

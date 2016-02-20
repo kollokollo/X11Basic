@@ -831,26 +831,33 @@ static char *plist_zeile(P_CODE *code) {
   }
   return(ergebnis);
 }
-static int plist_printzeile(P_CODE *code, int level) {
+static int plist_printzeile(FILE *dptr,P_CODE *code, int level) {
   int j;
   char *zeile=plist_zeile(code);
   if(code->opcode & P_LEVELOUT) level--;
-  for(j=0;j<level;j++) printf("  ");
-  printf("%s\n",zeile);
+  for(j=0;j<level;j++) fprintf(dptr,"  ");
+  fprintf(dptr,"%s\n",zeile);
   if(code->opcode & P_LEVELIN) level++;
   free(zeile);
   return(level);
 }
 
-static void c_plist(const char *n) {
+/*  PLIST [#n] */
+
+static void c_plist(PARAMETER *plist, int e) {
+  FILEINFO fff=get_fileptr(-4);  /* stdout */
+  if(e>0) {
+    fff=get_fileptr(plist->integer);
+    if(fff.typ==0) {xberror(24,""); /* File nicht geoeffnet */return;}
+  }
   int i,f=0;
   for(i=0;i<prglen;i++) { 
-    printf("%4d: $%06x |",i,(unsigned int)pcode[i].opcode);
+    fprintf(fff.dptr,"%4d: $%06x |",i,(unsigned int)pcode[i].opcode);
   #if DEBUG
-    printf(" (%5d) |",ptimes[i]);
+    fprintf(fff.dptr," (%5d) |",ptimes[i]);
   #endif
-    printf(" %3d,%d |",pcode[i].integer,pcode[i].panzahl);
-    f=plist_printzeile(&pcode[i],f);
+    fprintf(fff.dptr," %3d,%d |",pcode[i].integer,pcode[i].panzahl);
+    f=plist_printzeile(fff.dptr,&pcode[i],f);
   }
 }
 
@@ -1373,74 +1380,94 @@ char *dump_arr(int typ) {/*  dump arrays */
   return(ret);
 }
 
-#define OUTPRINT(a) fputs(a,stdout)
 
-static void print_pliste(const unsigned short *pl,int pmin, int pmax) {
+static char *print_pliste(const unsigned short *pl,int pmin, int pmax) {
   int j;
+  char *ret=malloc(pmax*32+32);
+  char *p=ret;
+  *p=0;
   for(j=pmin;j<pmax;j++) {
     switch(pl[j]) {
-      case PL_INT: printf("i%%"); break;
-      case PL_FLOAT: printf("a"); break;
-      case PL_COMPLEX: printf("z#"); break;
-      case PL_ARBINT: printf("i&"); break;
-      case PL_FILENR: printf("#n"); break;
-      case PL_STRING: printf("t$"); break;
-      case PL_ARRAY:  printf("arr()"); break;
+      case PL_INT:     strcpy(p,"i%"); break;
+      case PL_FLOAT:   strcpy(p,"a"); break;
+      case PL_COMPLEX: strcpy(p,"z#"); break;
+      case PL_ARBINT:  strcpy(p,"i&"); break;
+      case PL_FILENR:  strcpy(p,"#n"); break;
+      case PL_STRING:  strcpy(p,"t$"); break;
+      case PL_ARRAY:   strcpy(p,"arr()"); break;
       case PL_CFAI:
       case PL_CF:
-      case PL_NUMBER: printf("num"); break;
-      case PL_ANYVALUE: printf("value"); break;
-      case PL_SVAR: printf("var$"); break;
-      case PL_IVAR: printf("var%%"); break;
-      case PL_CVAR: printf("var#"); break;
-      case PL_NVAR: printf("nvar"); break;
-      case PL_ARRAYVAR: printf("anyarrayvar()"); break;
-      case PL_IARRAYVAR: printf("arrayvar%%()"); break;
-      case PL_FARRAYVAR: printf("arrayvar()"); break;
-      case PL_AIARRAYVAR: printf("arrayvar&()"); break;
-      case PL_CARRAYVAR: printf("arrayvar#()"); break;
-      case PL_SARRAYVAR: printf("arrayvar$()"); break;
-      case PL_ALLVAR: printf("var"); break;
-      case PL_KEY: printf("KEY"); break;
-      case PL_FARRAY: printf("a()"); break;
-      case PL_IARRAY: printf("h%%()"); break;
-      case PL_SARRAY: printf("f$()"); break;
-      case PL_LABEL: printf("<label>"); break;
-      case PL_PROC: printf("<procedure>"); break;
-      case PL_FUNC: printf("<function>"); break;
-      default: printf("??? -%x-",pl[j]);
+      case PL_NUMBER:   strcpy(p,"num"); break;
+      case PL_ANYVALUE: strcpy(p,"value"); break;
+      case PL_SVAR: strcpy(p,"var$"); break;
+      case PL_IVAR: strcpy(p,"var%"); break;
+      case PL_CVAR: strcpy(p,"var#"); break;
+      case PL_NVAR: strcpy(p,"nvar"); break;
+      case PL_ARRAYVAR:   strcpy(p,"anyarrayvar()"); break;
+      case PL_IARRAYVAR:  strcpy(p,"arrayvar%()"); break;
+      case PL_FARRAYVAR:  strcpy(p,"arrayvar()"); break;
+      case PL_AIARRAYVAR: strcpy(p,"arrayvar&()"); break;
+      case PL_CARRAYVAR:  strcpy(p,"arrayvar#()"); break;
+      case PL_SARRAYVAR:  strcpy(p,"arrayvar$()"); break;
+      case PL_ALLVAR: strcpy(p,"var"); break;
+      case PL_KEY:    strcpy(p,"KEY"); break;
+      case PL_FARRAY: strcpy(p,"a()"); break;
+      case PL_IARRAY: strcpy(p,"h%()"); break;
+      case PL_SARRAY: strcpy(p,"f$()"); break;
+      case PL_NARRAY: strcpy(p,"n()"); break;
+      case PL_CFARRAY: strcpy(p,"c()"); break;
+      case PL_LABEL:  strcpy(p,"<label>"); break;
+      case PL_PROC:   strcpy(p,"<procedure>"); break;
+      case PL_FUNC:   strcpy(p,"<function>"); break;
+      default: sprintf(p,"??? -%x-",pl[j]);
     }
-    if(j<pmax-1) printf(",");
+    p+=strlen(p);
+    if(j<pmax-1) *p++=',';
   }
+  return(ret);
+}
+#define OUTPRINT(a) fputs(a,fff.dptr)
+
+static char *do_explain(int opcode, const char *name,const char *suffix,const char *efix,const unsigned short *pliste, int pmin, int pmax) {
+  char *ret=malloc(256);
+  char *p=ret;
+  switch(opcode&FM_RET) {
+  case F_IRET:    strcpy(p,"i%="); break;
+  case F_AIRET:   strcpy(p,"i&="); break;
+  case F_CRET:    strcpy(p,"c#="); break;
+  case F_NRET:    strcpy(p,"n= "); break;
+  case F_ANYRET:  strcpy(p,"v= "); break;
+  case F_ANYIRET: strcpy(p,"k&="); break;
+  case F_DRET:    strcpy(p,"a= "); break;
+  case F_SRET:    strcpy(p,"t$="); break;
+  case F_ARET:    strcpy(p,"a()="); break;
+  default: *p=0;
+  }
+  p+=strlen(p);
+  sprintf(p,"%s%s",name,suffix);
+  p+=strlen(p);
+  if(pmin) {char *pp=print_pliste(pliste,0,pmin); strcpy(p,pp);free(pp); p+=strlen(p);}
+  if(pmin>0 && (pmax>pmin || pmax==-1)) {strcpy(p,"[,");p+=strlen(p);}
+  else if(pmax>pmin || pmax==-1) {strcpy(p,"[");p+=strlen(p);}
+  if(pmax==-1) {strcpy(p,"...");p+=strlen(p);}
+  else {char *pp=print_pliste(pliste,pmin,pmax);strcpy(p,pp);free(pp); p+=strlen(p);}
+  if(pmax>pmin || pmax==-1) {strcpy(p,"]");p+=strlen(p);}
+  strcpy(p,efix);p+=strlen(p);
+  return(ret);
 }
 
-static void do_explain(int opcode, const char *name,const char *suffix,const char *efix,const unsigned short *pliste, int pmin, int pmax) {
-  switch(opcode&FM_RET) {
-  case F_IRET: printf("i%%="); break;
-  case F_AIRET: printf("i&="); break;
-  case F_CRET: printf("c#="); break;
-  case F_NRET: printf("n= "); break;
-  case F_ANYRET: printf("v= "); break;
-  case F_ANYIRET: printf("k&="); break;
-  case F_DRET: printf("a= "); break;
-  case F_SRET: printf("t$="); break;
-  
-  }
-  printf("%s%s",name,suffix);
-  if(pmin) print_pliste(pliste,0,pmin);
-  if(pmin>0 && (pmax>pmin || pmax==-1)) printf("[,");
-  else if(pmax>pmin || pmax==-1) printf("[");
-  if(pmax==-1) printf("...");
-  else print_pliste(pliste,pmin,pmax);
-  if(pmax>pmin || pmax==-1) printf("]");
-  puts(efix);
-}
+/*  DUMP [""][,#n]*/
 
 void c_dump(PARAMETER *plist,int e) {
   int i;
   char kkk=0;
-  
-  if(e) kkk=((char *)plist->pointer)[0];
+  FILEINFO fff=get_fileptr(-4);  /* stdout */
+  if(e>0 && plist->typ!=PL_LEER) kkk=((char *)plist->pointer)[0];
+  if(e>1) {
+    fff=get_fileptr(plist[1].integer);
+    if(fff.typ==0) {xberror(24,""); /* File nicht geoeffnet */return;}
+  }
+
 
   if(kkk==0 || kkk=='%') {/*  dump ints */
     char *p=dump_var(INTTYP);OUTPRINT(p);free(p);
@@ -1475,39 +1502,49 @@ void c_dump(PARAMETER *plist,int e) {
   }
   if(kkk==':') {/*  dump Labels */
     for(i=0;i<anzlabels;i++) {
-      printf("%s: [%d]\n",labels[i].name,labels[i].zeile);
+      fprintf(fff.dptr,"%s: [%d]\n",labels[i].name,labels[i].zeile);
     }
   }
   if(kkk=='@') {/*  dump Procedures */
     for(i=0;i<anzprocs;i++) {
-      printf("%d|%s [%d]\n",procs[i].typ,procs[i].name,procs[i].zeile);
+      fprintf(fff.dptr,"%d|%s [%d]\n",procs[i].typ,procs[i].name,procs[i].zeile);
     }
   }
   if(kkk=='#') {                   /*  dump Channels */
     for(i=0;i<ANZFILENR;i++) {
-      if(filenr[i].typ==FT_FILE)        printf("#%d: %s [%s]\n",i,"","FILE");
-      else if(filenr[i].typ==FT_DEV)    printf("#%d: %s [%s]\n",i,"","DEVICE");
-      else if(filenr[i].typ==FT_DLL)    printf("#%d: %s [%s]\n",i,"","SHARED OBJECT");
-      else if(filenr[i].typ==FT_USB)    printf("#%d: %s [%s]\n",i,"","USB CONNECTION");
-      else if(filenr[i].typ==FT_SOCKET) printf("#%d: %s [%s]\n",i,"","SOCKET");
-      else if(filenr[i].typ==FT_PIPE)   printf("#%d: %s [%s]\n",i,"","PIPE");
-      else if(filenr[i].typ)            printf("#%d: %s [%s]\n",i,"","other");
+      if(filenr[i].typ==FT_FILE)        fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","FILE");
+      else if(filenr[i].typ==FT_DEV)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","DEVICE");
+      else if(filenr[i].typ==FT_DLL)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","SHARED OBJECT");
+      else if(filenr[i].typ==FT_USB)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","USB CONNECTION");
+      else if(filenr[i].typ==FT_SOCKET) fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","SOCKET");
+      else if(filenr[i].typ==FT_PIPE)   fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","PIPE");
+      else if(filenr[i].typ)            fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","other");
     }
   }
   if(kkk=='C' || kkk=='K'|| kkk=='c'|| kkk=='k') { /*  dump commands */
+    char *p;
     for(i=0;i<anzcomms;i++) {
-      printf("%3d: [%08x] ",i,(unsigned int)comms[i].opcode);
-      do_explain(-1,comms[i].name," ","",comms[i].pliste,comms[i].pmin,comms[i].pmax);
+      p=do_explain(-1,comms[i].name," ","",comms[i].pliste,comms[i].pmin,comms[i].pmax);
+      fprintf(fff.dptr,"%3d: [%08x] %s\n",i,(unsigned int)comms[i].opcode,p);
+      free(p);
     }
   }
   if(kkk=='F' || kkk=='f') { /*  dump functions */
+    char *p;
     for(i=0;i<anzpfuncs;i++) {
-      printf("%3d: [%08x] ",i,(unsigned int) pfuncs[i].opcode);
-      do_explain(pfuncs[i].opcode,pfuncs[i].name,"(",")",pfuncs[i].pliste,pfuncs[i].pmin,pfuncs[i].pmax);
+      p=do_explain(pfuncs[i].opcode,pfuncs[i].name,"(",")",pfuncs[i].pliste,pfuncs[i].pmin,pfuncs[i].pmax);
+      fprintf(fff.dptr,"%3d: [%08x] %s\n",i,(unsigned int) pfuncs[i].opcode,p);
+      free(p);
     }    
     for(i=0;i<anzpsfuncs;i++) {
-      printf("%3d: [%08x] ",i,(unsigned int)psfuncs[i].opcode);  
-      do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
+      p=do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
+      fprintf(fff.dptr,"%3d: [%08x] %s\n",i,(unsigned int)psfuncs[i].opcode,p);  
+      free(p);
+    }
+    for(i=0;i<anzpafuncs;i++) {
+      p=do_explain(pafuncs[i].opcode|F_ARET,pafuncs[i].name,"(",")",pafuncs[i].pliste,pafuncs[i].pmin,pafuncs[i].pmax);
+      fprintf(fff.dptr,"%3d: [%08x] %s\n",i,(unsigned int)pafuncs[i].opcode,p);  
+      free(p);
     }
   }
 }
@@ -2567,14 +2604,14 @@ const COMMAND comms[]= {
  { P_REM,       "!"         , NULL       , 0, 0},
  { P_PLISTE,    "?"         , c_print    , 0,-1,(unsigned short []){PL_EVAL}},
 
- { P_PLISTE,   "ABSOLUTE" , c_absolute   , 2, 2,(unsigned short []){PL_ANYVAR,PL_INT}},
- { P_PLISTE,   "ADD"      , c_add        , 2, 2,(unsigned short []){PL_ANYVAR,PL_ANYVALUE}},
- { P_PLISTE,   "AFTER"    , c_after      , 2, 2,(unsigned short []){PL_INT,PL_PROC}},
+ { P_PLISTE,    "ABSOLUTE"  , c_absolute , 2, 2,(unsigned short []){PL_ANYVAR,PL_INT}},
+ { P_PLISTE,    "ADD"       , c_add      , 2, 2,(unsigned short []){PL_ANYVAR,PL_ANYVALUE}},
+ { P_PLISTE,    "AFTER"     , c_after    , 2, 2,(unsigned short []){PL_INT,PL_PROC}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "ALERT"    , c_alert    , 5, 6,(unsigned short []){PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
+ { P_PLISTE,    "ALERT"     , c_alert    , 5, 6,(unsigned short []){PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
 #endif
- { P_PLISTE,   "ARRAYCOPY", c_arraycopy  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}}, /*zweiter parameter muesste "PL_ARRAY sein, nicht ARRAYVAR*/
- { P_PLISTE,   "ARRAYFILL", c_arrayfill  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ANYVALUE}},
+ { P_PLISTE,    "ARRAYCOPY", c_arraycopy  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}}, /*zweiter parameter muesste "PL_ARRAY sein, nicht ARRAYVAR*/
+ { P_PLISTE,    "ARRAYFILL", c_arrayfill  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ANYVALUE}},
 
  { P_SIMPLE,     "BEEP"     , c_beep      ,0, 0},
  { P_SIMPLE,     "BELL"     , c_beep      ,0, 0},
@@ -2662,7 +2699,7 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,(unsigned short []){PL_INT,PL_INT}},
 #endif
- { P_PLISTE,   "DUMP"     , c_dump ,0,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,   "DUMP"     , c_dump ,0,2,(unsigned short []){PL_STRING,PL_FILENR}},
 
  { P_PLISTE,   "ECHO"     , c_echo ,1,1,(unsigned short []){PL_KEY}},
  { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
@@ -2802,7 +2839,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "PIPE" , c_pipe,   2,2,(unsigned short []){PL_FILENR,PL_FILENR}},
  { P_PLISTE,     "PLAYSOUND",     c_playsound, 2,4,(unsigned short []){PL_INT,PL_STRING,PL_FLOAT,PL_FLOAT}},
  { P_PLISTE,     "PLAYSOUNDFILE",     c_playsoundfile, 1,1,(unsigned short []){PL_STRING}},
- { P_SIMPLE,     "PLIST"    , c_plist,      0,0},
+ { P_PLISTE,     "PLIST"    , c_plist,      0,1,(unsigned short []){PL_FILENR}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PLOT"     , c_plot,       2,2,(unsigned short []){PL_INT,PL_INT}},
 #endif
