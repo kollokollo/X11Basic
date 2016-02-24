@@ -1,2 +1,3 @@
 Release notes for Version 1.25 (Sept 2016 -- )
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- HASH()/SHA1 and MD5 now work also without libgcrypt

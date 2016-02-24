@@ -1095,6 +1095,7 @@ static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
   static int gcrypt_init=0;
 #else
   #include "md5.h"
+  #include "sha1.h"
 #endif
 static STRING f_hashs(PARAMETER *plist,int e) {
   STRING ergebnis;
@@ -1117,7 +1118,7 @@ static STRING f_hashs(PARAMETER *plist,int e) {
   ergebnis.pointer=malloc(ergebnis.len+1);
   gcry_md_hash_buffer(typ,ergebnis.pointer, plist[0].pointer, plist[0].integer);
 #else
-  if(typ==1) {
+  if(typ==1) {    /*  MD5 */
     MD5_CTX ctx;
     MD5_Init(&ctx);
     MD5_Update(&ctx, plist->pointer, plist->integer);
@@ -1125,6 +1126,14 @@ static STRING f_hashs(PARAMETER *plist,int e) {
     ergebnis.pointer=malloc(ergebnis.len+1);
     ergebnis.pointer[MD5_DIGEST_LENGTH]=0;
     MD5_Final((unsigned char *)ergebnis.pointer, &ctx);
+  } else if(typ==2) {    /*  SHA1 */
+    sha1_context ctx;
+    sha1_starts(&ctx);
+    sha1_update(&ctx, plist->pointer, plist->integer);
+    ergebnis.len=SHA1_DIGEST_LENGTH;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    ergebnis.pointer[SHA1_DIGEST_LENGTH]=0;
+    sha1_finish(&ctx, (unsigned char *)ergebnis.pointer);
   } else {
     printf("The %s function is not implemented \n"
     " in this version of X11-Basic because the GCRYPT library \n"

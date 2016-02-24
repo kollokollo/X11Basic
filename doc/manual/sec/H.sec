@@ -28,8 +28,9 @@ DESCRIPTION:
 	HASH$() returns a string which contains the hash value in binary form.
 
 COMMENT: 
-	The default HASH$(), which is MD5, is always available. The other 
-	hash algorithms are only available if libgcrypt was compiled in.
+	The default HASH$(), which is MD5, and HASH typ%=2, which is SHA1, are 
+	always available. The other hash algorithms are only available if 
+	libgcrypt was compiled in.
 
 EXAMPLE: 
 	h$=HASH$("Calculate a MD5 sum from this text.",1)
