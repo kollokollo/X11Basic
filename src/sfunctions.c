@@ -1145,26 +1145,13 @@ static STRING f_hashs(PARAMETER *plist,int e) {
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
-static STRING f_signs(PARAMETER *plist,int e) {
-  STRING ergebnis;
-#ifdef HAVE_GCRYPT
-#else
-  printf("The %s function is not implemented \n"
-  " in this version of X11-Basic because the GCRYPT library \n"
-  " was not present at compile time.\n","SIGN$()");
-#endif
-  ergebnis.pointer=malloc(1);
-  ergebnis.len=0;
-  (ergebnis.pointer)[ergebnis.len]=0; 
-  return(ergebnis);
-}
 
 
-static STRING f_encrypts(PARAMETER *plist,int e) {
+
+
+static STRING do_encrypt(STRING *message, STRING *key, int typ) {
   STRING ergebnis;
 #ifdef HAVE_GCRYPT
-  int typ=4;  /*  Default is BLOWFISH */
-  if(e>2) typ=plist[2].integer;
   if(!gcrypt_init) {
     if(!gcry_check_version(GCRYPT_VERSION)) {
       puts("ERROR: libgcrypt version mismatch\n");
@@ -1179,29 +1166,67 @@ static STRING f_encrypts(PARAMETER *plist,int e) {
   size_t keyLength = gcry_cipher_get_algo_keylen(typ);
   gcry_cipher_hd_t hd;
   
-  if(plist[1].integer<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
-  if(plist[0].integer%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
-  int len=(plist[0].integer-1)/blkLength+1;
+  if(key->len<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
+  if(message->len%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
+  int len=(message->len-1)/blkLength+1;
   
     ergebnis.len=len*blkLength;
     ergebnis.pointer=malloc(ergebnis.len+1);
     gcry_cipher_open(&hd, typ, GCRY_CIPHER_MODE_CBC, 0);
-    gcry_cipher_setkey(hd,plist[1].pointer, keyLength);
+    gcry_cipher_setkey(hd,key->pointer, keyLength);
    // gcry_cipher_setiv(hd, iniVector, blkLength);
-    int ret=gcry_cipher_encrypt(hd, ergebnis.pointer,ergebnis.len, plist[0].pointer,len*blkLength);
+    int ret=gcry_cipher_encrypt(hd, ergebnis.pointer,ergebnis.len, message->pointer,len*blkLength);
     if(ret) printf("cipher failed:  %s/%s\n",gcry_strsource(ret),gcry_strerror(ret));
     gcry_cipher_close(hd);
 #else
   printf("The %s function is not implemented \n"
   " in this version of X11-Basic because the GCRYPT library \n"
   " was not present at compile time.\n","ENCRYPT$()");
-  ergebnis.len=plist[0].integer;
+  ergebnis.len=message->len;
   ergebnis.pointer=malloc(ergebnis.len+1);
-  memcpy(ergebnis.pointer,plist[0].pointer,plist[0].integer);
+  memcpy(ergebnis.pointer,message->pointer,ergebnis.len);
 #endif
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
+static STRING f_encrypts(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  int typ=4;  /*  Default is BLOWFISH */
+  if(e>2) typ=plist[2].integer;
+   ergebnis=do_encrypt((STRING *)&(plist[0].integer),(STRING *)&(plist[1].integer),typ);
+  return(ergebnis);
+}
+
+/* 
+   SIGN$(message$,key$,typ)
+   Wie soll das ueberhaupt gehen?
+   1. Wir berechnen einen Hash der Message z.B. mit SHA1
+   2. der Hash wird nun mit dem privaten Schluessel verschluesselt
+   3. der verschluesselte Hash als Signatur zurueckgeliefert.
+   
+   Es fehlt dann noch die Umkehrfunktion VERYFY(message$, signature$, pubkey$)
+   
+   */
+
+static STRING f_signs(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  STRING tmp;
+  int typ=4;  /*  Default is BLOWFISH */
+  if(e>2) typ=plist[2].integer;
+  /* ALso erst einen SHA1 Hash berechnen....*/
+    sha1_context ctx;
+    sha1_starts(&ctx);
+    sha1_update(&ctx, plist->pointer, plist->integer);
+    tmp.len=SHA1_DIGEST_LENGTH;
+    tmp.pointer=malloc(tmp.len+1);
+    tmp.pointer[SHA1_DIGEST_LENGTH]=0;
+    sha1_finish(&ctx, (unsigned char *)tmp.pointer);
+  /* Jetzt verschluesseln (geht noch nicht)*/  
+    ergebnis=do_encrypt(&tmp,(STRING *)&(plist[1].integer),typ);
+    free_string(&tmp);
+  return(ergebnis);
+}
+
 static STRING f_decrypts(PARAMETER *plist,int e) {
   STRING ergebnis;
 #ifdef HAVE_GCRYPT
