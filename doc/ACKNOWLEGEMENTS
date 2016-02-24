@@ -63,8 +63,8 @@ For details, see: http://www.netlib.org/lapack/
 X11-Basic uses the lodepng code for the PNG bitmap graphics support.
 Copyright (c) 2005-2013 Lode Vandevenne
 
-
-
+X11-Basic uses a md5 algorithm 
+Copyright (c) 2001 by Alexander Peslyak (public domain).
 
 So I would like to thank every people involved in the following projects:
 

@@ -1093,6 +1093,8 @@ static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
 }
 #ifdef HAVE_GCRYPT
   static int gcrypt_init=0;
+#else
+  #include "md5.h"
 #endif
 static STRING f_hashs(PARAMETER *plist,int e) {
   STRING ergebnis;
@@ -1115,11 +1117,21 @@ static STRING f_hashs(PARAMETER *plist,int e) {
   ergebnis.pointer=malloc(ergebnis.len+1);
   gcry_md_hash_buffer(typ,ergebnis.pointer, plist[0].pointer, plist[0].integer);
 #else
-  printf("The %s function is not implemented \n"
-  " in this version of X11-Basic because the GCRYPT library \n"
-  " was not present at compile time.\n","HASH$()");
-  ergebnis.len=plist[0].integer;
-  ergebnis.pointer=malloc(ergebnis.len+1);
+  if(typ==1) {
+    MD5_CTX ctx;
+    MD5_Init(&ctx);
+    MD5_Update(&ctx, plist->pointer, plist->integer);
+    ergebnis.len=MD5_DIGEST_LENGTH;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+    ergebnis.pointer[MD5_DIGEST_LENGTH]=0;
+    MD5_Final((unsigned char *)ergebnis.pointer, &ctx);
+  } else {
+    printf("The %s function is not implemented \n"
+    " in this version of X11-Basic because the GCRYPT library \n"
+    " was not present at compile time.\n","HASH$()");
+    ergebnis.len=plist[0].integer;
+    ergebnis.pointer=malloc(ergebnis.len+1);
+  }
 #endif
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);

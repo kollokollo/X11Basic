@@ -73,7 +73,7 @@ LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o s
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
 	sysVstuff.o aes.o graphics.o sound.o number.o decode.o \
-	virtual-machine.o type.o lodepng.o
+	virtual-machine.o type.o lodepng.o md5.o
 
 # these are objects which are compiled to binary
 
@@ -106,7 +106,7 @@ HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        mathematics.h number.h options.h parameter.h parser.h raw_mouse.h \
        sfunctions.h sound.h svariablen.h sysVstuff.h \
        terminal.h type.h variablen.h virtual-machine.h \
-       window.h wort_sep.h x11basic.h xb2csol.h xbasic.h lodepng.h
+       window.h wort_sep.h x11basic.h xb2csol.h xbasic.h lodepng.h md5.h
 
 EXAMPLES_TESTS= \
 	../examples/tests/*.bas \
