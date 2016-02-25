@@ -324,6 +324,7 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
     case PL_FLOAT:  /* Float  */
     case PL_COMPLEX:/* Complex */
     case PL_ARBINT: /* Big Int */
+    case PL_ARBFLOAT: /* Arbitrary prec float */
     case PL_NUMBER: /* Integer or FLOAT or COMPLEX or ARBINT */
     case PL_CFAI:
     case PL_CF:
@@ -373,7 +374,8 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
 	  free_parameter(pret);
           pret->typ=PL_COMPLEX;
 	  break;
-	case PL_ARBINT:  /* Complex */
+	case PL_ARBFLOAT:  /* Arb float, treat as integer */
+	case PL_ARBINT:  /* Big integer */
 	  { ARBINT a;
 	  mpz_init(a);
 	  eval2parnumtype(n,pret,typ); 

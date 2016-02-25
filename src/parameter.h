@@ -300,13 +300,15 @@ static inline void eval2parnum(char *n, PARAMETER *pret) {
   case COMPLEXTYP:
     *(COMPLEX *)&(pret->real)=complex_parser(n);
     break;
+  case ARBFLOATTYP: /*behandeln wir erstmal wie ARBINT*/
+    pret->typ=(PL_CONSTGROUP|ARBINTTYP);
   case ARBINTTYP: 
     pret->pointer=malloc(sizeof(ARBINT));
     mpz_init(*((ARBINT *)pret->pointer));
     arbint_parser(n,*((ARBINT *)pret->pointer));
     break;
   default: 
-    printf("Error: line %d eval2par: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
+    printf("Error: line %d eval2parnum: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
   }
 }
 static inline void eval2parnumtype(char *n, PARAMETER *pret,int typ) {
@@ -322,13 +324,15 @@ static inline void eval2parnumtype(char *n, PARAMETER *pret,int typ) {
   case COMPLEXTYP:
     *(COMPLEX *)&(pret->real)=complex_parser(n);
     break;
+  case ARBFLOATTYP: /*behandeln wir erstmal wie ARBINT*/
+    pret->typ=(PL_CONSTGROUP|ARBINTTYP);
   case ARBINTTYP: 
     pret->pointer=malloc(sizeof(ARBINT));
     mpz_init(*((ARBINT *)pret->pointer));
     arbint_parser(n,*((ARBINT *)pret->pointer));
     break;
   default: 
-    printf("Error: line %d eval2par: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
+    printf("Error: line %d eval2parnumtype: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
   }
 }
 /* Erstellt eine Liste mit Parametertypen aus parameterliste einer 
