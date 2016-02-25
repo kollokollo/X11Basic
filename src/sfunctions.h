@@ -9,3 +9,4 @@
 /*Standard Funktionstyp */
 
 
+int do_verify(STRING *,STRING *,STRING *, int);

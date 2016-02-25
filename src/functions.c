@@ -30,6 +30,7 @@
 #include "parameter.h"
 #include "gkommandos.h"
 #include "functions.h"
+#include "sfunctions.h"
 #include "afunctions.h"
 #include "array.h"
 #include "wort_sep.h"
@@ -197,6 +198,7 @@
 #define f_swap NULL
 #define f_symadr NULL
 #define f_tally NULL
+#define f_vrfy NULL
 #define f_tan NULL
 #define f_tanh NULL
 #define f_tinesize NULL
@@ -1166,6 +1168,11 @@ static int f_tally(PARAMETER *plist,int e) {
     }
   }
 }
+static int f_vrfy(PARAMETER *plist,int e) {
+  int typ=4;
+  if(e>3) typ=plist[3].integer-1;
+  return(do_verify((STRING *)&(plist[0].integer),(STRING *)&(plist[1].integer),(STRING *)&(plist[2].integer),typ));
+}
 
 /*On android the meaning of the bits of flags is different than on standard 
   linuxes.... (bits 1 and 2 exchanged)*/
@@ -1600,6 +1607,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK|F_IRET, "VAL?"       ,(pfunc) f_valf ,1,1   ,{PL_STRING}},
  { F_CONST|F_PLISTE|F_IRET, "VARIAT"    , (pfunc)f_variat ,2,2     ,{PL_INT,PL_INT}},
  { F_PLISTE|F_IRET,         "VARPTR"    , (pfunc)f_varptr ,1,1     ,{PL_ALLVAR}},
+ { F_CONST|F_PLISTE|F_IRET, "VRFY"      ,(pfunc) f_vrfy ,3,4   ,{PL_STRING,PL_STRING,PL_STRING,PL_INT}},
 
  { F_CONST|F_IQUICK|F_IRET, "WORD"     , (pfunc)f_word ,1,1     ,{PL_INT}},
  { F_PLISTE|F_IRET,         "WORT_SEP" , (pfunc)f_wort_sep ,3,5 ,{PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
