@@ -536,8 +536,8 @@ xbasic.static : x11basic.a main.o
 xbasic.debug :	main.c $(LIBCSRC)
 	$(CCDEBUG) $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRC) $(LIBS) $(XLIBS)
 	
-
 static : xbasic.static	xbbc.static xbvm.static xb2c.static
+
 debug  : xbasic.debug	xbbc.debug xb2c.debug xbvm.debug
 strip  : xbasic xbbc xbvm xb2c
 	strip xbasic

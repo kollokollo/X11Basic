@@ -18,7 +18,7 @@ DESCRIPTION:
 
 	RADIX$() returns a string containing the representation of the integer
 	number x% in base base%. A minimal length of the string can be 
-	specified with len%. If len% is bigger then necessary, preceiding Zeros 
+	specified with len%. If len% is bigger than necessary, preceiding zeros 
 	will be used to fill in. The base% can be between 2 and 62 inclusive. 
 	If base% is not specified it defaults to 62. The symbols used are
 	digits from 0 to 9 then capital letters A to Z and then lowercase 

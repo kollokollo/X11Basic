@@ -535,7 +535,6 @@ static STRING f_radixs(PARAMETER *plist, int e) {
     int value=plist->integer;
     int sign=1;
     if(value<0) {sign=-1;value=-value;}
-
   /*Predict length of string*/
   
     if(value) plen=(log(value)/(double)log(base))+1;
@@ -557,7 +556,7 @@ static STRING f_radixs(PARAMETER *plist, int e) {
   if(!s) printf("ERROR in RADIX() base=%d\n",base);
   else plen=strlen(s);
   int len=plen;
-  if(e>1) len=max(plen,plist[2].integer);
+  if(e>2) len=max(plen,plist[2].integer);
   if(plen>=len) {
     ergebnis.pointer=s;
     ergebnis.len=plen;
