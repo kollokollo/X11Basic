@@ -473,18 +473,28 @@ int	ff_in_queue(FF_QUEUE *,int,int,int);
 
 
 void  ffill(int x0,int y0,int fill_color, int border_color) {
-  int y=y0,x,xl=x0,xr=x0,xln,xrn;
+  int y,x,xl,xr,xln,xrn;
   int qp,bcd;
   int scan_type;
   struct tagParams ff_buf1[QUEUESIZE];
   struct tagParams ff_buf2[QUEUESIZE];
   FF_QUEUE Qup,Qdn,*Q;
+  /* Check that we are inside the screen 
+     maybe better: return if not inside.
+  */
+  if(x0<window[usewindow].x) x0=window[usewindow].x;
+  if(y0<window[usewindow].y) y0=window[usewindow].y;
+  if(x0>window[usewindow].x+window[usewindow].w) x0=window[usewindow].x+window[usewindow].w-1;
+  if(y0>window[usewindow].y+window[usewindow].h) y0=window[usewindow].y+window[usewindow].h-1;
+
+  xr=xl=x=x0;y=y0;
 
    /* do nothing if the seed pixel is a border pixel */
   if(border_color==-1)  {
     border_color=get_point(x0,y0);
     scan_type=SCAN_WHILE;
   } else  scan_type=SCAN_UNTIL;
+
   if(scan_type==SCAN_UNTIL) {
     if(get_point(x0,y0)==border_color) return;
   } else {

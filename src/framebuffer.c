@@ -728,7 +728,7 @@ void Fb_BlitBitmap(int x, int y,unsigned int w, unsigned int h,unsigned short aC
   register unsigned short *endp  = ptr+h*screen.width;
   int i;
   register const unsigned char *dptr=bdata;
-  unsigned char d;
+  unsigned char d=0;
   while(ptr<endp) {
   
     for(i=0;i<w;i++) {
@@ -1373,29 +1373,30 @@ static void DrawCircle(int x, int y, int r, unsigned short color) {
     }
   }
 }
+
+#if 0
+/*  Routine mit Problemen / overflow in int, need to use 64bit long long*/
+
 static void DrawEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
-  int hh = ry * ry;
-  int ww = rx * rx;
-  int hhww = hh * ww;
-  int x00 = rx;
-  int dx = 0;
-  int y,x1;
-  int oldx=0,oldy;
+  long long hh=ry*ry;
+  long long ww=rx*rx;
+  long long hhww=hh*ww;
+  int x00=rx;
+  int dx=0;
+  int y,x1,oldx=0,oldy=0;
 
   /* do the horizontal diameter */
   FB_PutPixel(x0-rx,y0,color);
   FB_PutPixel(x0+rx,y0,color);
-  oldy=0;
 
   // now do both halves at the same time, away from the diameter
   for(y=1;y<=ry;y++) {
-    x1 = x00 - (dx - 1);  // try slopes of dx - 1 or more
+    x1=x00-(dx-1);          /* try slopes of dx - 1 or more  */
     for ( ; x1 > 0; x1--) {
-        if (x1*x1*hh + y*y*ww <= hhww)
-            break;
+        if(x1*x1*hh+y*y*ww<=hhww) break;
     }
-    dx = x00 - x1;  // current approximation of the slope
-    x00 = x1;
+    dx=x00-x1;  // current approximation of the slope
+    x00=x1;
     while(oldx-x00>0) {
       FB_PutPixel(x0-oldx,y0+oldy,color);
       FB_PutPixel(x0+oldx,y0+oldy,color);
@@ -1411,6 +1412,50 @@ static void DrawEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
     oldy=y;
   }
 }
+#else
+
+/* Besenhams algorithm  for drawing ellipses.... 
+   I think this is the better one.*/
+
+static void DrawEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
+   int x1=x0+rx;
+   int y1=y0+ry;
+   x0-=rx;
+   y0-=ry;
+   /*  Durchmesser berechnen */
+   long long a=abs(rx<<1);
+   long long b=abs(ry<<1), b1 = b&1; /* Ungerade pixel... */
+   /*  Fehler-Vektor */
+   long long dx=4*(1-a)*b*b;
+   long long dy=4*(b1+1)*a*a; 
+   /* Anfangsfehler, erster Schritt */
+   long long err=dx+dy+b1*a*a, e2;
+
+   if(x0>x1) {x0=x1;x1+=a;} /* if called with swapped points */
+   if(y0>y1) y0=y1; /* .. exchange them */
+   y0+=(b+1)/2; /* starting pixel */
+   y1=y0-b1;    /* starting pixel */
+   a*=(a<<3); 
+   b1=8*b*b;
+
+   do {
+       FB_PutPixel(x1, y0,color); /*   1. Quadrant */
+       FB_PutPixel(x0, y0,color); /*   2. Quadrant */
+       FB_PutPixel(x0, y1,color); /*   3. Quadrant */
+       FB_PutPixel(x1, y1,color); /*   4. Quadrant */
+       e2=2*err;
+       if(e2<=dy) {y0++;y1--;err+=dy+=a;}  /* y step */ 
+       if(e2>=dx || 2*err>dy) {x0++;x1--;err+=dx+=b1; } /* x step */
+   } while(x0<=x1);
+   
+   while(y0-y1<b) {  /* too early stop of flat ellipses a=1 */
+       FB_PutPixel(x0-1, y0  ,color); /* -> finish tip of ellipse */
+       FB_PutPixel(x1+1, y0++,color); 
+       FB_PutPixel(x0-1, y1  ,color);
+       FB_PutPixel(x1+1, y1--,color); 
+   }
+}
+#endif
 
 #include <math.h>
 
@@ -1453,25 +1498,22 @@ void FB_Arc(int x1, int y1, int w, int h, int a1, int da) {
 
 
 static void FillEllipse(int x0, int y0, int rx,int ry, unsigned short color) {
-  int hh = ry * ry;
-  int ww = rx * rx;
-  int hhww = hh * ww;
+  long long hh=ry*ry;
+  long long ww=rx*rx;
+  long long hhww=hh*ww;
   int x00 = rx;
   int dx = 0;
   int y,x1;
 
   fillLine(x0-rx, x0+rx, y0, color);/* do the horizontal diameter */
 
-
   // now do both halves at the same time, away from the diameter
   for(y=1;y<=ry;y++) {
-    x1 = x00 - (dx - 1);  // try slopes of dx - 1 or more
-    for ( ; x1 > 0; x1--)
-        if (x1*x1*hh + y*y*ww <= hhww)
-            break;
-    dx = x00 - x1;  // current approximation of the slope
-    x00 = x1;
-
+    x1=x00-(dx-1);  // try slopes of dx - 1 or more
+    for ( ; x1>0; x1--)
+        if(x1*x1*hh+y*y*ww<=hhww) break;
+    dx=x00-x1;  // current approximation of the slope
+    x00=x1;
     fillLine(x0-x00, x0+x00, y0+y, color);
     fillLine(x0-x00, x0+x00, y0-y, color);
   }
