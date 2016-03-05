@@ -33,14 +33,12 @@ char *display_name = NULL;  /* NULL: Nimm Argument aus setenv DISPLAY */
 
 unsigned char marker_typ;
 int marker_size=1;
-int boundary=-1;
 double ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
 int ltextpflg=0;
 
 /* Set default values */
 void graphics_setdefaults() {
   marker_size=1;
-  boundary=-1;
   ltextwinkel=0,ltextxfaktor=0.3,ltextyfaktor=0.5;
   ltextpflg=0;
 #ifdef FRAMEBUFFER
@@ -105,6 +103,14 @@ int get_point(int x, int y) {
 #endif
     return(r);
 }
+
+
+void set_boundary(int n) {
+  /* currently has no effect.*/
+}
+
+
+
 
 #if defined USE_X11 || defined USE_SDL
 int global_graphmode=GRAPHMD_REPLACE;

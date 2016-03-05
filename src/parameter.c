@@ -717,6 +717,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
   case PL_AIARRAYVAR: /* Variable */
   case PL_ALLVAR:  /* Varname */    
     pret->typ=ip;
+    if(ip==PL_LEER) break;  /* bei leerem Parameter: fertig */
     vnr=pret->integer=pin->integer;
     if(pin->pointer==NULL) {
       if(pin->panzahl) {

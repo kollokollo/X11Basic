@@ -143,7 +143,6 @@ extern int global_graphmode;
 
 extern unsigned char marker_typ;
 extern int marker_size;
-extern int boundary;
 extern double ltextwinkel,ltextxfaktor,ltextyfaktor;
 extern int ltextpflg;
 
@@ -152,6 +151,7 @@ void mybox(int x1,int y1,int x2, int y2);
 void pbox(int x1,int y1,int x2, int y2);
 void draw_string(int x, int y, char *text,int len);
 int get_point(int x, int y);
+void set_boundary(int n);
 void set_graphmode(int n);
 void set_font(char *name);
 void set_fill(int c);

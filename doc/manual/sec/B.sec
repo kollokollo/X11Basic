@@ -127,7 +127,10 @@ Syntax:    BOUNDARY flag%
 DESCRIPTION:
 
 	Switch off (or on) borders  on filled shapes (PBOX, PCIRCLE ..). 
-	If flag% is zero - no border will be drawn.
+	If flag% is zero - no border will be drawn (which is the default).
+
+COMMENT: 
+	Currently this command has no effect.
 
 EXAMPLE:
   BOUNDARY FALSE

@@ -738,9 +738,9 @@ void c_screen(PARAMETER *plist,int e) {
 #endif
 }
 
-void c_boundary (PARAMETER *plist,int e) { boundary=plist->integer; }
-void c_graphmode(PARAMETER *plist,int e) { graphics();  set_graphmode(plist->integer); }
-void c_setfont  (PARAMETER *plist,int e) { graphics();  set_font(plist->pointer);      }
+void c_boundary (PARAMETER *plist,int e) { graphics(); set_boundary(plist->integer);  }
+void c_graphmode(PARAMETER *plist,int e) { graphics(); set_graphmode(plist->integer); }
+void c_setfont  (PARAMETER *plist,int e) { graphics(); set_font(plist->pointer);      }
 
 void c_scope(char *n) {                                      /* SCOPE y()[,sy[,oy,[,mod]]]   */
   char w1[strlen(n)+1],w2[strlen(n)+1];                      /* oder                         */
