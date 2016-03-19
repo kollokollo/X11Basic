@@ -206,13 +206,15 @@ STATIC int vm_pow(PARAMETER *sp) {    /* binaer potenzieren */
   VERBOSE("vm_pow ");
   sp--;
   int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
-  if(rt==PL_INT) rt=PL_FLOAT;  /*  Naja ...*/
-  if(rt==PL_ARBINT) cast_to_x(sp,PL_INT);  /*  Hm ...*/
-  else cast_to_x(sp,rt);
-  cast_to_x(sp-1,rt);
+  if(rt!=PL_INT) { /* Bei Int sind exponent und operand beide int*/
+    if(rt==PL_ARBINT) cast_to_x(sp,PL_INT);  /*  Hm ...*/
+    else cast_to_x(sp,rt);
+    cast_to_x(sp-1,rt);
+  }
   switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
   case PL_COMPLEX: *((COMPLEX *)&(sp[-1].real))=complex_pow(*((COMPLEX *)&(sp[-1].real)),*((COMPLEX *)&(sp[0].real)));break;
   case PL_FLOAT:   sp[-1].real=pow((sp-1)->real,sp->real);       break;
+  case PL_INT:   sp[-1].integer=(int)pow((sp-1)->integer,sp->integer);       break;
   case PL_ARBINT:  mpz_pow_ui(*(ARBINT *)(sp-1)->pointer,*(ARBINT *)(sp-1)->pointer,sp->integer);  break;
   default: TYPEMISMATCH("POW");
   }
