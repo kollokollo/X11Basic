@@ -180,6 +180,7 @@ STATIC int vm_mul(PARAMETER *sp) {    /* binaer multiplikation */
   int rt=(PL_CONSTGROUP|combine_type(sp[-1].typ&PL_BASEMASK,sp[0].typ&PL_BASEMASK,'+'));
   cast_to_x(sp,rt);
   cast_to_x(sp-1,rt);
+ 
   switch(rt) {   /* Jetzt gibt es nur noch zwei gleiche typen.*/
   case PL_INT:     sp[-1].integer*=sp->integer; break;
   case PL_COMPLEX: *((COMPLEX *)&(sp[-1].real))=complex_mul(*((COMPLEX *)&(sp[-1].real)),*((COMPLEX *)&(sp[0].real)));break;
@@ -401,6 +402,7 @@ STATIC int vm_dup(PARAMETER *sp) {    /* dupliziere Parameter */
     memcpy(sp[0].pointer,sp[-1].pointer,sp[0].integer+1);
     break;
   case PL_ARBINT:
+    sp->pointer=malloc(sizeof(ARBINT));
     mpz_init(*(ARBINT *)sp->pointer);
     mpz_set(*(ARBINT *)sp->pointer,*(ARBINT *)(sp-1)->pointer);
     break;
