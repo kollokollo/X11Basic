@@ -1,16 +1,8 @@
 4. FAQ frequently asked questions
 =================================
 
-Q: Why can't I compile X11Basic on my Computer with Zintorola 86060 processor 
-   and Sluggix 0.8 Beta O.S.?
-A: If you have GNU-C and X11R5/6 for this system, and X11Basic still won't 
-   compile, please let me know as soon as possible, I will try to fix it.
-
 Q: How do I leave the interpreter `gently'?
 A: type quit or press ctrl-c (twice)
-
-Q: What do all the warnings mean?
-A: Well, isn't proper ported to your (any?) system. 
 
 Q: Why do the graphics look funny?
 A: Some X-Servers do not clean newly allocated Pixmaps. So rubbish is displayed 
@@ -44,9 +36,6 @@ A: Die müssen noch angepasst werden. Es gibt kleinere Unterschiede in der
    Für Programme, an denen man nichts mehr machen will, empfehle ich dann
    doch lieber STonX oder sowas.
 
-Q: Program XXX doesn't run, what should I do?
-A: Well this question is too difficult to answer. 
-
 Q: Can I use X11-Basic as a shell ? 
 A: Yes, simply copy the xbasic executable to /usr/bin .
    The basic programs then should have in their first line
@@ -59,12 +48,7 @@ A: Yes, start xbasic with the option -daemon .
 
 Q: Can X11-Basic generate stand-alone programs, which may run 
    without the xbasic executable ?
-A: Yes and No. X11-Basic does not translate its input into assembly, you 
-   always need the xbasic executable. On the other hand: the xbasic 
-   executable is rather small (< 200 kB), so you might spread it around 
-   with your X11-Basic programs. If you really need stand alone programs 
-   try the pseudo-compiler (xbc). It can link the x11basic-library to your 
-   programs. The result is a stand alone binary.
+A: Yes. This is done by the X11-Basic compiler.
    
 Q: May I charge for my X11-Basic programs ?
 A: Yes, you may. But you should state clearly, that xbasic itself is available 

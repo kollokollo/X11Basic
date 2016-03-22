@@ -115,7 +115,23 @@ EXAMPLE:
 	VOID FORM_ALERT(1,"[1][Hello][OK]")
 
 ##############################################################################
-
+Function:   VRFY()
+Syntax:     flag%=VRFY(message$,signature$,key$[,type])
+ 
+DESCRIPTION:
+ 
+ 	Returns TRUE (-1) if the digital signature in signature$ matches 
+ 	the message in message$ and the (public) key in key$. 
+ 	Otherwise FALSE (0) is returned.
+ 	signature$ must be a valid signature produced by SIGN$().
+ 
+COMMENT: 
+ 	This function is only available in X11-Basic if encryption is 
+ 	compiled in (libgcrypt was present at compile time).
+ 
+ 
+SEE ALSO: SIGN$()
+##############################################################################
 Command:  VSYNC
 Syntax:   VSYNC
 

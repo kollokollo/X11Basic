@@ -1,24 +1,4 @@
 ##############################################################################
-Command: HELP
-Syntax:  HELP <string-pattern>
-
-DESCRIPTION:
-
-	Gives information of built in commands and functions.
-
-EXAMPLE:
-	HELP CL*
-
-	Result:
-
-	CLEAR [,...]
-	CLEARW [,i%]
-	CLOSE [,...]
-	CLOSEW [,i%]
-	CLR [,...]
-	CLS	 
-
-##############################################################################
 Function: HASH$()
 Syntax:   h$=HASH$(t$[,typ%])
 
@@ -53,8 +33,33 @@ COMMENT:
 EXAMPLE: 
 	h$=HASH$("Calculate a MD5 sum from this text.",1)
         PRINT LEN(h$)     ! Result: 16
-	
+	PRINT "MD5=";
+	FOR i=1 TO 16
+	  PRINT RIGHT$(HEX$(ASC(MID$(h$,i))),2);
+	NEXT i
+	PRINT
+	' --> Result: 754975185BF0D1B78141D36C2E60E7D1
 SEE ALSO: CRC()
+##############################################################################
+Command: HELP
+Syntax:  HELP <string-pattern>
+
+DESCRIPTION:
+
+	Gives information of built in commands and functions.
+
+EXAMPLE:
+	HELP CL*
+
+	Result:
+
+	CLEAR [,...]
+	CLEARW [,i%]
+	CLOSE [,...]
+	CLOSEW [,i%]
+	CLR [,...]
+	CLS	 
+
 ##############################################################################
 Function: HEX$()
 Syntax:   h$=HEX$(d%[,n%])

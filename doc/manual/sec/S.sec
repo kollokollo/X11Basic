@@ -573,6 +573,21 @@ EXAMPLE:
 
 SEE ALSO: SHL(), ROR(), ROL()
 ##############################################################################
+Function: SIGN$()
+Syntax:   s$=SIGN$(message$,key$[,type])
+
+DESCRIPTION:
+	SIGN$() returns a digital signature based on message$ and a (private)
+	key key$. The type parameter determines, which algorithm is to be used.
+	Default: type=0. 
+	The returned signature can be used to verify (the same) message and
+	its authenticity with VRFY() and the corresponding (public) key.
+	
+COMMENT: 
+	This function is only available if libgcrypt was compiled in.
+
+SEE ALSO: ENCRYPT$(), HASH$(), VRFY()
+##############################################################################
 
 Function: SIN()
 Syntax:   <num-result>=SIN(<num-expression>)
