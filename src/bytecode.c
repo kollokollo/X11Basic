@@ -1322,7 +1322,7 @@ static void bc_pushanyparameter(PARAMETER *p) {
 static void bc_print_arg(const char *ausdruck,char *code) {
   char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
-  // printf("bc_print_arg: >%s<  code=<%s>\n",ausdruck,code);
+ // printf("bc_print_arg: <%s>  code=<%s>\n",ausdruck,code);
   int e=arg2(ausdruck,TRUE,w1,w2);
   while(e) {
    // printf("Teilausdruck: <%s>  e=%d\n",w1,e);
@@ -1723,7 +1723,7 @@ Hier ist also noch ziemlicher Bahnhof ! */
     if((pcode[i].opcode&PM_COMMS)==find_comm("PRINT") || 
        (pcode[i].opcode&PM_COMMS)==find_comm("?")) {
       if(pcode[i].panzahl>0) {
-      //  printf("PRINT Sonderbehandlung: \n");
+       // printf("PRINT Sonderbehandlung: \n");
       //  printf("%d parameter:\n",pcode[i].panzahl);
       //  dump_parameterlist(pcode[i].ppointer,pcode[i].panzahl);
 	/* Im Wesendlichen wollen wir hier den ganzen PRINT-Austruck in einen OUT STRING ausdruck umwandeln.*/
@@ -1764,9 +1764,22 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	    plist_to_stack(p+j,(short *)comms[find_comm("PRINT")].pliste,1,0,-1);
 	  }
 	}
-	// printf("Codezeile: <%s>\n",code);
 	if(TL!=PL_LEER && TL!=PL_FILENR) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
-	bc_parser(code);
+	if(*code) bc_parser(code);
+	else { /* offenbar war der ganze Ausdruck leer, also PRINT ohne Argumente */
+          // printf("PRINT leerer Ausdruck ....\n");
+	 /* Wenn hier der String leer ist, bzw. auf dem Typstack ein LEER liegt, 
+	 sollten wir an dieser Stelle ein String mit chr$(10) machen.
+	 */
+
+	  STRING str;
+	  str.len=1;
+	  str.pointer=malloc(2);
+	  str.pointer[0]='\n';
+	  str.pointer[1]=0;
+	  bc_push_string(str);
+	  free(str.pointer);
+	}
 	if(TL!=PL_STRING) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
         /* Hier muessen 2 Parameter auf dem Stack liegen: 
 	   1. Filenr oder leer
