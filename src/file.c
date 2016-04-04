@@ -1,14 +1,14 @@
 /* file.c  (c) Markus Hoffmann   */
-/* Erweiterungen fuer die Datei Ein- und Ausgabe ....   */
+/* Extensions for the standard file i/o operations.
+   Erweiterungen fuer die Datei Ein- und Ausgabe ....   */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+ * ================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
- 
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +17,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
 
 #include "file.h"
 
@@ -61,14 +60,18 @@ char *input( FILE *n, char *line,int size) {   /* liest bis Komma oder Zeilenend
 /* Returns the length of the open file n */
 
 size_t lof(FILE *n) {	
-  size_t laenge,position;
-	
-  position=ftell(n);
-  if(fseek(n,0,2)==0){
-    laenge=ftell(n);
-    if(fseek(n,position,0)==0)  return(laenge);
+  long position=ftell(n);
+  if(position==-1) {
+    io_error(errno,"lof");
+    return(0);
   }
-  return(-1);
+  if(fseek(n,0,SEEK_END)==0) {
+    long laenge=ftell(n);
+    if(laenge<0) io_error(errno,"ftell");
+    if(fseek(n,position,0)<0) io_error(errno,"fseek"); 
+    return(laenge);
+  } else io_error(errno,"fseek");
+  return(0);
 }
 
 
@@ -104,9 +107,7 @@ int bsave(const char *name, char *adr, size_t len) {
    */
 
 size_t bload(const char *name, char *adr, size_t len) {	
-  FILE *fdis;
-	
-  fdis=fopen(name,"rb");
+  FILE *fdis=fopen(name,"rb");
   if(fdis==NULL) return(0);
   if(len==-1) len=lof(fdis);
   if(len>0) len=fread(adr,1,len,fdis);
@@ -117,8 +118,8 @@ size_t bload(const char *name, char *adr, size_t len) {
 /* Checks if a give file name exists */
 
 #if 0
-int exist(const char *name ) {	/* This is a save but slow implementation */
-  int   fdis=open(name,0x8000);
+int exist(const char *name ) {	/* This is a safe but slow implementation */
+  int fdis=open(name,0x8000);
   if (fdis==-1) return(FALSE);
   close(fdis);
   return(TRUE);

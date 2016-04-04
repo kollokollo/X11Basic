@@ -224,13 +224,34 @@ Syntax:    m%=MODE(filename$)
 
 DESCRIPTION:
 
-	Return the file permissions of the file or directory.
-
+	Return the file permissions and the file type of the file or directory
+	given. With these values one can find out what kind the file is of.
+	The bits of the returned integer have the following meaning:
+	
+	xxxx xxxx xxxx xxxx
+	        | |||| |rwx-- permission for others (read, write, excecute)
+	        | ||rw x----- permissions for group
+		r wx--------- permissions for user
+	       s------------- sticky bit
+	      g-------------- set group id bit
+	     u--------------- set user id bit
+	++++----------------- file type:
+                              0 -- regular file
+			      1 -- fifo
+			      2 -- charackter device
+                              4 -- directory
+	                      6 -- block device
+                              8 -- regular file
+                             10 -- symbolic link
+			     12 -- socket
+			     
 COMMENT: 
 	May not work on WINDOWS systems.
 
 EXAMPLES:
   PRINT OCT$(MODE(".")) ---> Result: 40750
+  DEFFN isdir(f$)=(MODE(f$) AND 0x4000)>0
+
 
 SEE ALSO:  INODE(), EXIST()
 ##############################################################################

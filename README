@@ -12,7 +12,7 @@
     
                        VERSION 1.24
 
-            (C) 1997-2015 by Markus Hoffmann
+            (C) 1997-2016 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
@@ -31,21 +31,13 @@ Description :
   The structure of the language is similar to the ATARI-ST GFA-BASIC.
  
   This package includes the basic interpreter named xbasic and a set of
-  different  compilers. The interpreter can be used as a shell, and can so run
-  basic-scripts. You can make excecutable scripts p.ex. *.cgi-Scripts for
-  handling web-input. 
-
-  A compiler (xbc) is included which makes stand alone binaries out of the
-  scripts, which run more than 10 times faster than the interpreted code. The
-  compiler can either pseudo-compile the X11-Basic  sources by attaching the
-  source to a run-only interpreter (in which case the  program will not run
-  faster than is the interpreter is used, but you have everything in one
-  excecutable file), or the compiler can do a real compilation of the BASIC
-  source into bytecode, then C, and finally machine language. This way the code
-  excecutes  about 10 times faster.
+  different compilers.  
+  A compiler manager (xbc) is included which makes stand alone binaries out of 
+  the BASIC programs, which run more than 10 times faster than the interpreted 
+  code. 
 
   X11-Basic programs can also be compiled into a bytecode (see xbbc). This
-  bytecode  can be interpreted by a virtual machine (see xbvm). Finally, the
+  bytecode can be interpreted by a virtual machine (see xbvm). Finally, the
   bytecode can be  converted to C sourcefiles (see xb2c) which can be compiled
   with the gnu C compiler (or the tiny C compiler) to native excecutables.
 
@@ -54,9 +46,11 @@ Description :
 
   You will find the compiler sourcecode and some other sample programs in 
   /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-  can be found in X11-Basic-examples-1.24.zip, which you can download from the 
-  homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version 
-  of the manual can be found there.
+  can be found in an X11-Basic examples repository on gitlab
+  (https://gitlab.com/kollo/X11-Basic_examples/tree/master) or in a package
+  X11-Basic-examples-1.24.zip, which you can download from the homepage
+  (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version  of the
+  manual can be found there.
 
   Please read the file ./doc/X11-Basic-manual.txt for further information.
 
@@ -73,9 +67,9 @@ ADDITIONAL CONFIGURATION OPTIONS
 ================================
 
 After generating the Makefile, look at the file `options.h' (sparsely
-commented) and see if there is anything you want to change.  The only option
+commented) and see if there is anything you want to change. The only option
 that you might need to change is GERMAN, which should be defined if you
-like to have a german version of X11-Basic. The default language is english. 
+like to have a german version of X11-Basic. The default language is English. 
 
 COMPILING a standalone excecutable
 ==================================
@@ -90,7 +84,7 @@ library and does not need the x11basic framework to be installed.
 After X11Basic has been compiled and linked successfully, you can start it
 by typing
 
-	./xbasic
+	./xbasic.static
 
 The command-line options can be listed with the `-h' option (`./xbasic -h').
 INSTALLING the standalone excecutable
@@ -136,8 +130,8 @@ make xbcinstall
 		  man-page
 
 
-After doing all this, you will also find a xbasic.dyn executabe. This is the 
-interpreter, dynamically linked and much shorter.
+After doing all this, you will also find an executabe called xbasic. This is
+the interpreter, dynamically linked and much shorter than the static one.
 
 regards and have fun
      Markus Hoffmann
