@@ -1631,8 +1631,10 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   TEDINFO tedinfo[4+ANZSHOW]={
   {btitel,"","",FONT_BIGIBM,0,TE_CNTR,0x1200,0,0,0,0},
   {mask,"","",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
-  {feld1,"__________________________________________________","XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
-  {auswahl,"____________________","XXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
+  {feld1,  "__________________________________________________",
+           "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
+  {auswahl,"__________________________________________________",
+           "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
   };
  // int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
   OBJECT objects[18+2*ANZSHOW]={
@@ -1665,13 +1667,13 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 /*10*/  {15,-1,-1,G_BOXTEXT, SELECTABLE|EXIT, NORMAL, {(LONG)&tedinfo[1]},       2,0,FWW-2,1},
 #ifdef GERMAN
 /*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Pfad:"}, 2,3,2,1},
-/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Auswahl:"}, 32,5,2,1},
+/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Auswahl:"}, 2,5,2,1},
 #else
 /*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Directory:"}, 2,3,2,1},
-/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Selection:"}, 32,5,2,1},
+/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Selection:"}, 2,5,2,1},
 #endif
 /*13*/  {14,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[2]}, 2,4,50,1},
-/*14*/  {0,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[3]}, 32,6,20,1},
+/*14*/  {0,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[3]}, 2,6,50,1},
 /*15*/  {17,16,16,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1459}, FWW,2,2,ANZSHOW-2},
 /*16*/  {15,-1,-1,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1100}, 0,0,2,2},
 /*17*/  {5,18,17+2*ANZSHOW,G_BOX, NONE, NORMAL, {0x00ff1100}, 0,1,FWW,ANZSHOW}

@@ -20,3 +20,4 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - fixed bug in FILL and ELLIPSE/PELLIPSE (for big screens)
 - fixed power operator in compiler for integer operands
 - little bugfix in compiler (PRINT #)
+- improved FILESELECT
