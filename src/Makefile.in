@@ -89,7 +89,6 @@ LIBCSRC=$(LIBOBJS:.o=.c)
 FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
 LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
 
-WINLIBOBJS= $(LIBOBJS) WINDOWS/fnmatch.o 
 
 
 
@@ -453,11 +452,10 @@ libx11basic.dll : x11basic.lib
 
 # Make the (static) library for MS WINDOWS
 
-x11basic.lib : $(WINLIBOBJS)
+x11basic.lib : $(LIBCSRC) WINDOWS/fnmatch.c $(HSRC) WINDOWS/fnmatch.h
 	rm -f *.o
-	$(WINCC) -DWINDOWS -c $(DIST2) $(WININC) 
-	$(WINCC) -DWINDOWS -c mathematics.c $(WININC)
-	i586-mingw32msvc-ar -ru $@ $(WINLIBOBJS) 
+	$(WINCC) -DWINDOWS -c $(LIBCSRC) WINDOWS/fnmatch.c $(WININC) 
+	i586-mingw32msvc-ar -ru $@ $(LIBOBJS) fnmatch.o
 	rm -f *.o
 
 # Make the exe for MS WINDOWS
@@ -716,9 +714,9 @@ X11-Basic-examples-$(LIBNO).tar.gz:
 
 # Fuer die Control System Varianten
 
-tineexe: $(WINLIBOBJS) main.o 
+tineexe: $(LIBOBJS) main.o fnmatch.o 
 	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
-	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(WINLIBOBJS) main.o \
+	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(LIBOBJS) main.o \
 		 rpclib.lib $(WINLIBS)
 tinexbasic.dyn : $(LIBOBJS) main.o 
 	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine $(XLIBS)

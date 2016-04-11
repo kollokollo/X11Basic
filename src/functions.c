@@ -1169,11 +1169,21 @@ static int f_tally(PARAMETER *plist,int e) {
   }
 }
 
+/*On android the meaning of the bits of flags is different than on standard 
+  linuxes.... (bits 1 and 2 exchanged)*/
+
 static int f_glob(PARAMETER *plist,int e) {
-  int flags=FNM_NOESCAPE;
-  if(e>2) flags^=plist[2].integer;
-  flags=fnmatch(plist[1].pointer,plist->pointer,flags);
-  if(flags==0) return(-1);
+  int flags=0;
+  int of=0;
+  if(e>2) of=plist[2].integer;
+  if(of&1) flags|=FNM_PATHNAME;
+  if(of&2) flags|=FNM_NOESCAPE;
+  if(of&4) flags|=FNM_PERIOD;
+  if(of&8) flags|=FNM_LEADING_DIR;
+  if(of&16) flags|=FNM_CASEFOLD;
+  flags^=FNM_NOESCAPE;
+  
+  if(fnmatch(plist[1].pointer,plist->pointer,flags)==0) return(-1);
   return(0);
 }
 
