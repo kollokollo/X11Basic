@@ -9,7 +9,6 @@ Section: DOOCS Basic Interpreter (1)<BR>Updated: 10-Aug-2007<BR><A HREF="#inde
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-<P>
 doocsxbasic - Basic interpreter for DOOCS (Distributed oo Control System)
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
@@ -89,28 +88,28 @@ print help on topic
 
 daemon mode
 <P>
-For detailed help and description of the implemented basic commands take a 
-look at the README file which comes with the X11Basic package. There is also a 
-full users manual available as *.pdf file on the homepage.
+For detailed help and description of the implemented basic commands take a look
+at the README file which comes with the X11Basic package. There is also a full
+users manual available as *.pdf file on the homepage.
 <P>
 <A NAME="lbAN">&nbsp;</A>
 <H2>INTERACTIVE USE</H2>
 
+<P>
 If no options are given on the command line, 
 <B>doocsxbasic</B>
 
 will run interactivly.
 <P>
-A Prompt will be displayed and any command can be typed in. It will be
-excecuted immediately after pressing return or enter. The interpreter uses the 
+A Prompt will be displayed and any command can be typed in. It will be excecuted
+immediately after pressing return or enter. The interpreter uses the 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3) </B>
 
 library. So the input is buffered and can be edited using the up and down 
-arrows on the keyboard.
-Readline offers editing capabilities while the user is
-entering the line. By default, the line editing commands
-are similar to those of emacs. 
-<BR>&nbsp;
+arrows on the keyboard. Readline offers editing capabilities while the user is
+entering the line. By default, the line editing commands are similar to those of
+emacs. 
+<P>
 <B>To quit program</B>
 
 simply enter 
@@ -132,8 +131,8 @@ doocsxbasic --help &quot;*doocs*&quot;
 <P>
 You can find many sample programs in the X11-Basic packages. For a description
 of the X11-Basic language please also see the X11-Basic documentation and or
-man-pages. Her we will only describe the modifications of doocsxbasic compared to
-the regular x11basic interpreter (Note that all 
+man-pages. Her we will only describe the modifications of doocsxbasic compared
+to the regular x11basic interpreter (Note that all 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3) </B>
 
 functions are also includes in doocsxbasic. So Please also refer to the 
@@ -171,9 +170,9 @@ Servers.
 <H3>DOOCS facility,device,location,property name convention</H3>
 
 <P>
-Die Zugriffe zu den Parametern erfolgen ueber einen eindeutigen Namen, 
-der aus Facilitynamen (Beschleuniger bz. Subkomponente), Devicename, Location 
-und Propertyname besteht. Die Syntax ist wie folgt:
+Die Zugriffe zu den Parametern erfolgen ueber einen eindeutigen Namen, der aus
+Facilitynamen (Beschleuniger bz. Subkomponente), Devicename, Location und
+Propertyname besteht. Die Syntax ist wie folgt:
 <P>
 <PRE>
 FACILITY/DEVICE/LOCATION/Property
@@ -222,7 +221,7 @@ t$()=DOOCSVGET$(p$)  -- get a vector/array if strings (client)
 <H3>DOOCS system variable</H3>
 
 <PRE>
-a=CCSERR           -- DOOCS or TINE error code in case of errors
+a=CCSERR   -- DOOCS or TINE error code in case of errors
 </PRE>
 
 <P>
@@ -231,18 +230,18 @@ a=CCSERR           -- DOOCS or TINE error code in case of errors
 <H3>Client application</H3>
 
 <P>
-Data acquistion can either be synchronous (e.g. doocsget)  where execution is
-blocked until a call completes, or asynchronous  (e.g. doocsmonitor) where the
-results of a call are given to a callback routine upon completion.  Data  can
-also be 'monitored' asynchronously either at a supplied polling rate or  upon
-data change.  
+Data acquistion can either be synchronous (e.g. doocsget) where execution is
+blocked until a call completes, or asynchronous (e.g. doocsmonitor) where the
+results of a call are given to a callback routine upon completion. Data can
+also be 'monitored' asynchronously either at a supplied polling rate or upon
+data change. 
 <P>
 <B>Get the value of a Propery from a server</B>
 
 <P>
 <PRE>
-<I>a=doocsget(&lt;Parameter&gt;)</I>
-<I>a$=doocsget$(&lt;Parameter&gt;) </I>
+<I>a=DOOCSGET(&lt;Parameter&gt;)</I>
+<I>a$=DOOCSGET$(&lt;Parameter&gt;) </I>
 </PRE>
 
 <P>
@@ -254,38 +253,37 @@ is returned (or the string &quot;&lt;ERROR&gt;&quot;).
 
 <P>
 <PRE>
-<I>a()=doocsvget(&lt;Parameter&gt; [, &lt;number of values&gt;[,&lt;offset&gt;]])</I>
-<I>b$()=doocsvget$(&lt;Parameter&gt; [, &lt;number of values&gt;[,&lt;offset&gt;]])</I>
+<I>a()=DOOCSVGET(&lt;Parameter&gt; [, &lt;number of values&gt;[,&lt;offset&gt;]])</I>
+<I>b$()=DOOCSVGET$(&lt;Parameter&gt; [, &lt;number of values&gt;[,&lt;offset&gt;]])</I>
 </PRE>
 
 <P>
-The specified number of values is returned as an array.
-If an offset was specified, the array starts at this index.
-Das Ergebnis wird einem Feld zugewiesen, welches ggf. umdimensioniert wird. 
-Wird die Anzahl der Werte nicht angegeben, so wird der gesamte Vektor gelesen.
-Der erste Eintrag des Property-Vektors findet sich dann in a(0). Der letzte in
-a(n-1).
+The specified number of values is returned as an array. If an offset was
+specified, the array starts at this index. Das Ergebnis wird einem Feld
+zugewiesen, welches ggf. umdimensioniert wird.  Wird die Anzahl der Werte nicht
+angegeben, so wird der gesamte Vektor gelesen. Der erste Eintrag des
+Property-Vektors findet sich dann in a(0). Der letzte in a(n-1).
 <P>
 <P>
 <B>Write a value to a Parameter</B>
 
 <P>
 <PRE>
-<I>doocsput Parameter$, value</I>
-<I>doocsput Parameter$, text$</I>
-<I>doocsput Parameter$, array()</I>
+<I>DOOCSPUT Parameter$, value</I>
+<I>DOOCSPUT Parameter$, text$</I>
+<I>DOOCSPUT Parameter$, array()</I>
 </PRE>
 
 <P>
 If write access to the parameter is granted, the parameter is set to 
-(overwritten with)  the specific value.
+(overwritten with) the specific value.
 <P>
 <B>Parameter-Vektor setzen</B>
 
 <P>
 <PRE>
-<I>doocsvput Parameter$, Werte()[,n[,o]] </I>
-<I>doocsvput Parameter$, Werte$()[,n[,o]]</I>
+<I>DOOCSVPUT Parameter$, Werte()[,n[,o]] </I>
+<I>DOOCSVPUT Parameter$, Werte$()[,n[,o]]</I>
 </PRE>
 
 <P>
@@ -296,7 +294,7 @@ setzenden Werte, o=Offset.
 <B>Query maximal number of values of a parameter </B>
 
 <P>
-<I>s=doocssize(&lt;Parameter&gt;)</I>
+<I>s=DOOCSSIZE(&lt;Parameter&gt;)</I>
 
 <P>
 Return value is the number of values in this parameter.
@@ -310,39 +308,39 @@ is set.
 <B>Queryn type of a parameter </B>
 
 <P>
-<I>s=doocstyp(&lt;Parameter&gt;)</I>
+<I>s=DOOCSTYP(&lt;Parameter&gt;)</I>
 
 <P>
 Return value is the type of the parameter.
 Following Values are possible:
 <PRE>
-  0 --- DATA_NULL        0
-  1 --- DATA_INT         1
-  2 --- DATA_FLOAT       2
-  3 --- DATA_STRING      3
-  4 --- DATA_BOOL        4
-  5 --- DATA_STRING16    5
- 10 --- DATA_YT         10
- 11 --- DATA_XYT        11
- 12 --- DATA_TDS        12
- 13 --- DATA_XY         13
- 14 --- DATA_IIII       14
- 15 --- DATA_IFFF       15
- 16 --- DATA_USTR       16
- 17 --- DATA_FIS        17
- 18 --- DATA_TTII       18
- 19 --- DATA_SPECTRUM   19
- 20 --- DATA_XML        20
- 21 --- DATA_XYZS       21
-100 --- DATA_A_FLOAT   100
-101 --- DATA_A_TDS     101
-102 --- DATA_A_XY      102
-103 --- DATA_A_USTR    103
-104 --- DATA_A_FIS     104
-105 --- DATA_A_INT     105
-106 --- DATA_A_BYTE    106
-107 --- DATA_A_TDSi    107
-108 --- DATA_A_XYZS    108
+  0 --- DATA_NULL     0
+  1 --- DATA_INT      1
+  2 --- DATA_FLOAT    2
+  3 --- DATA_STRING   3
+  4 --- DATA_BOOL     4
+  5 --- DATA_STRING16 5
+ 10 --- DATA_YT      10
+ 11 --- DATA_XYT     11
+ 12 --- DATA_TDS     12
+ 13 --- DATA_XY      13
+ 14 --- DATA_IIII    14
+ 15 --- DATA_IFFF    15
+ 16 --- DATA_USTR    16
+ 17 --- DATA_FIS      17
+ 18 --- DATA_TTII     18
+ 19 --- DATA_SPECTRUM 19
+ 20 --- DATA_XML      20
+ 21 --- DATA_XYZS     21
+100 --- DATA_A_FLOAT 100
+101 --- DATA_A_TDS  101
+102 --- DATA_A_XY   102
+103 --- DATA_A_USTR 103
+104 --- DATA_A_FIS  104
+105 --- DATA_A_INT  105
+106 --- DATA_A_BYTE 106
+107 --- DATA_A_TDSi 107
+108 --- DATA_A_XYZS 108
 109 --- DATA_MDA_FLOAT 109
 </PRE>
 
@@ -354,7 +352,7 @@ is set.
 <B>Query timestamp of latest parameter change </B>
 
 <P>
-<I>s=doocstimestamp(&lt;Parameter&gt;)</I>
+<I>s=DOOCSTIMESTAMP(&lt;Parameter&gt;)</I>
 
 <P>
 Return value is the unix-timestamp of the parameters latest change.
@@ -367,7 +365,7 @@ is set.
 <B>Query parameter information</B>
 
 <P>
-<I>a$=doocsinfo$(&lt;Parameter&gt;)</I>
+<I>a$=DOOCSINFO$(&lt;Parameter&gt;)</I>
 
 <P>
 Return value is a string which contains some useful information about this parameter.
@@ -379,7 +377,7 @@ is set.
 <B>Query parameter names</B>
 
 <P>
-<I>nam$()=doocsnames$(pattern$)</I>
+<I>nam$()=DOOCSNAMES$(pattern$)</I>
 
 <P>
 Returns a string array with a list of names which match the pattern. 
@@ -392,17 +390,17 @@ The only wildcard allowed is the &quot;*&quot;,
 A simple DOOCS server can look like this:
 <P>
 <PRE>
-doocsexport a,b,c
-doocsserver &quot;MYSERVER&quot;
-do
+DOOCSEXPORT a,b,c
+DOOCSSERVER &quot;MYSERVER&quot;
+DO
   oa=a
-  pause 0.1
-  if a&lt;&gt;oa
-    print &quot;Variable has changd: &quot;,a
-  endif
-  exit if a=13
-loop
-quit
+  PAUSE 0.1
+  IF a&lt;&gt;oa
+    PRINT &quot;Variable has changd: &quot;,a
+  ENDIF
+  EXIT IF a=13
+LOOP
+QUIT
 </PRE>
 
 <P>
@@ -424,7 +422,7 @@ Registers the server under the location name name$ at the equipment name server.
 <P>
 Bestimmt, welche X11-Basic Variablen vom Server exportiert werden sollen. 
 Der Inhalt dieser Variablen kann dann von den Clients gelesen oder veraendert
-werden.  
+werden. 
 <P>
 <I>DOOCSCALLBACK &lt;var&gt;,callback</I>
 
@@ -433,17 +431,17 @@ Sets a callback procedure which will be called after the variable var has
 been changed by a client.
 <P>
 <PRE>
-doocsexport a,b,c
-doocsserver &quot;MYSERVER&quot;
-doocscallback a,calback
-do
-  pause 0.1
-  exit if a=13
-loop
-quit
-procedure callback
-  print &quot;Variable has changd: &quot;,a
-return
+DOOCSEXPORT a,b,c
+DOOCSSERVER &quot;MYSERVER&quot;
+DOOCSCALLBACK a,calback
+DO
+  PAUSE 0.1
+  EXIT IF a=13
+LOOP
+QUIT
+PROCEDURE callback
+  PRINT &quot;Variable has changd: &quot;,a
+RETURN
 </PRE>
 
 <P>
@@ -464,27 +462,27 @@ The interpretation of these error codes is as follows:
 <PRE>
   0 ERR_NONE
 100 ERR_RPC
-101 ERR_ILL_SERVICE  
-102 ERR_RPC_TO       
-103 ERR_ENS          
-104 ERR_ILL_MON      
+101 ERR_ILL_SERVICE 
+102 ERR_RPC_TO  
+103 ERR_ENS   
+104 ERR_ILL_MON  
 105 ERR_ILL_PROTOCOL 
-106 ERR_EPICS_CALL   
-107 ERR_EPICS_UNSUP  
-108 ERR_NO_EPICS     
+106 ERR_EPICS_CALL 
+107 ERR_EPICS_UNSUP 
+108 ERR_NO_EPICS  
 109 ERR_EPICS_UNSUP_DAT 
-110 ERR_UNSUP_DAT    
-111 ERR_DIFF_DAT     
-112 ERR_OPT          
-113 ERR_RO_OPT       
-114 ERR_ILL_TYPE     
-115 ERR_STALE_DATA   
-116 ERR_OFFLINE      
-117 ERR_TMO          
-118 ERR_NO_DATA      
-119 ERR_ENS_NO_DATA  
+110 ERR_UNSUP_DAT 
+111 ERR_DIFF_DAT  
+112 ERR_OPT   
+113 ERR_RO_OPT  
+114 ERR_ILL_TYPE  
+115 ERR_STALE_DATA 
+116 ERR_OFFLINE  
+117 ERR_TMO   
+118 ERR_NO_DATA  
+119 ERR_ENS_NO_DATA 
 120 ERR_FAULTY_CHANS 
-121 ERR_SHMEM        
+121 ERR_SHMEM  
 </PRE>
 
 <P>
@@ -507,8 +505,8 @@ hold information. The Location of the files are set by Environment variables.
 <H2>ENVIRONMENT</H2>
 
 <P>
-If csv files are used to configure a tine server (normally the case) then  the
-server application must know where to look for the relevant files.  Client
+If csv files are used to configure a tine server (normally the case) then the
+server application must know where to look for the relevant files. Client
 applications as well as server applications need to find the equipment name
 server(s). The address of the configured equipment name server is typically
 contained in a csv file named 'cshosts.csv'. The application will look in the
@@ -534,57 +532,50 @@ man page)
 
 man page)
 <P>
-<P>
 <A NAME="lbBB">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.14
+<P>
 <A NAME="lbBC">&nbsp;</A>
 <H2>BUG REPORTS</H2>
 
 <P>
-If you find a bug in the X11-Basic interpreter or the DOOCS-Implementation, 
-you should report it. But first, you should make sure that it really is
-a bug, and that it appears in the latest version of the
-DOOCS-X11-Basic package that you have.
+If you find a bug in the X11-Basic interpreter or the DOOCS-Implementation, you
+should report it. But first, you should make sure that it really is a bug, and
+that it appears in the latest version of the DOOCS-X11-Basic package that you
+have.
 <P>
-Once you have determined that a bug actually exists, mail a
-bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
-you are welcome to mail that as well! Suggestions may 
-be mailed to the X11-Basic mailing list on 
-<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the X11-Basic bug tracking system.
 <P>
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+Comments and bug reports concerning this manual page should be directed to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<P>
 <A NAME="lbBD">&nbsp;</A>
-<H2>BUGS</H2>
-
-Still some bugs
-<A NAME="lbBE">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
-<A NAME="lbBF">&nbsp;</A>
+<P>
+<A NAME="lbBE">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2007 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-This program is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation;
-either version 2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 <P>
-This program is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. See the GNU General Public License for more
-details.
-<A NAME="lbBG">&nbsp;</A>
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+<P>
+<A NAME="lbBF">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
-<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?3+doocs">doocs</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3),  <A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1)
+<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?3+doocs">doocs</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1)
 <P>
 
 <HR>
@@ -622,15 +613,14 @@ details.
 <DT><A HREF="#lbBA">FILES</A><DD>
 <DT><A HREF="#lbBB">VERSION</A><DD>
 <DT><A HREF="#lbBC">BUG REPORTS</A><DD>
-<DT><A HREF="#lbBD">BUGS</A><DD>
-<DT><A HREF="#lbBE">AUTHOR</A><DD>
-<DT><A HREF="#lbBF">COPYRIGHT</A><DD>
-<DT><A HREF="#lbBG">SEE ALSO</A><DD>
+<DT><A HREF="#lbBD">AUTHOR</A><DD>
+<DT><A HREF="#lbBE">COPYRIGHT</A><DD>
+<DT><A HREF="#lbBF">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 10:08:17 GMT, August 21, 2007
+Time: 08:51:50 GMT, April 19, 2016
 </BODY>
 </HTML>

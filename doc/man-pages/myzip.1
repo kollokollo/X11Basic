@@ -1,6 +1,6 @@
 .TH myzip 1 19-Sep-2005 "Version 1.01" "Lossless file compression and encryption utility"
 .SH NAME
-myzip, myunzip  \- Lossless file compression and encryption utility
+myzip, myunzip \- Lossless file compression and encryption utility
 .SH SYNOPSIS
 .B myzip
 .RI "[ " option " ] " <filename>
@@ -12,67 +12,55 @@ myzip, myunzip  \- Lossless file compression and encryption utility
 .SH DESCRIPTION
 .I myzip
 compresses files using the internal COMPRESS$() function of the X11-Basic 
-library.
-Compression is
-generally considerably better than that achieved by more conventional
-LZ77/LZ78-based compressors, and approaches the performance of the bzip2
-compressor.
+library. Compression is generally considerably better than that achieved by more
+conventional LZ77/LZ78-based compressors, and approaches the performance of the
+bzip2 compressor.
 
-An optional encryption can be applied giving a passphrase which can be as long as
-up to 16 characters (corresponding to 128 Bit). For details of the encryption 
-algorithm see the x11basic(1) manual for ENCRYPT$().
+An optional encryption can be applied giving a passphrase which can be as long
+as up to 16 characters (corresponding to 128 Bit). For details of the
+encryption algorithm see the x11basic(1) manual for ENCRYPT$().
 
-The command-line options are deliberately very similar to 
-those of 
+The command-line options are deliberately very similar to those of 
 .I GNU gzip, 
 but they are not identical.
 
 .I myzip
-expects a list of file names to accompany the
-command-line flags.  Each file is replaced by a compressed version of
-itself, with the name "original_name.myz".  
-Each compressed file
-has the same modification date, permissions, and, when possible,
-ownership as the corresponding original, so that these properties can
-be correctly restored at decompression time.  File name handling is
-naive in the sense that there is no mechanism for preserving original
-file names, permissions, ownerships or dates in filesystems which lack
-these concepts, or have serious file name length restrictions, such as
-MS-DOS.
+expects a list of file names to accompany the command-line flags. Each file is
+replaced by a compressed version of itself, with the name "original_name.myz". 
+Each compressed file has the same modification date, permissions, and, when
+possible, ownership as the corresponding original, so that these properties can
+be correctly restored at decompression time. File name handling is naive in the
+sense that there is no mechanism for preserving original file names,
+permissions, ownerships or dates in filesystems which lack these concepts, or
+have serious file name length restrictions, such as MS-DOS.
 
 .I myzip
 and
 .I myunzip
 will by default not overwrite existing
-files.  If you want this to happen, specify the \-f flag.
+files. If you want this to happen, specify the \-f flag.
 
 .I myunzip
-decompresses all
-specified files.  Files which were not created by 
+decompresses all specified files. Files which were not created by 
 .I myzip
-will be detected and ignored, and a warning issued.  
+will be detected and ignored, and a warning issued. 
 
-Compression is always performed, even if the compressed 
-file is slightly
-larger than the original.  Files of less than about one hundred bytes
-tend to get larger, since the compression mechanism has a constant
-overhead in the region of 50 bytes.  Random data (including the output
-of most file compressors) is coded at about 8.1 bits per byte, giving
-an expansion of around 1%.
+Compression is always performed, even if the compressed file is slightly larger
+than the original. Files of less than about one hundred bytes tend to get
+larger, since the compression mechanism has a constant overhead in the region of
+50 bytes. Random data (including the output of most file compressors) is coded
+at about 8.1 bits per byte, giving an expansion of around 1%.
 
 As a self-check for your protection, 
 .I myzip
-uses 32-bit CRCs to
-make sure that the decompressed version of a file is identical to the
-original.  This guards against corruption of the compressed data, and
-against undetected bugs in
+uses 32-bit CRCs to make sure that the decompressed version of a file is
+identical to the original. This guards against corruption of the compressed
+data, and against undetected bugs in
 .I myzip
-(hopefully very unlikely).  The
-chances of data corruption going undetected is microscopic, about one
-chance in four billion for each file processed.  Be aware, though, that
-the check occurs upon decompression, so it can only tell you that
-something is wrong.  It can't help you 
-recover the original uncompressed
+(hopefully very unlikely). The chances of data corruption going undetected is
+microscopic, about one chance in four billion for each file processed. Be
+aware, though, that the check occurs upon decompression, so it can only tell you
+that something is wrong. It can't help you recover the original uncompressed
 data.
 
 
@@ -91,10 +79,10 @@ If you do not specify `\|\c
 \&\|' (for myzip) and the original name stored in the .myz file (for myunzip)
 .TP
 .B \-f --force
-Force overwrite of output files.  Normally,
+Force overwrite of output files. Normally,
 .I myzip 
 will not overwrite
-existing output files.  Also forces 
+existing output files. Also forces 
 .I myzip 
 to break hard links
 to files, which it otherwise wouldn't do.
@@ -104,7 +92,7 @@ Keep (don't delete) input files during compression
 or decompression.
 .TP
 .B \-q --quiet
-Suppress non-essential warning messages.  Messages pertaining to
+Suppress non-essential warning messages. Messages pertaining to
 I/O errors and other critical events will not be suppressed.
 .TP
 .B \-v --verbose
@@ -118,59 +106,56 @@ shows version, program and other information and exits
 .SS -h --help
 print a short help
 
-For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+For detailed help and description of the implemented basic commands take a look
+at the README file. 
 
 
 .SH EXAMPLES
 .nf
 myzip Example.tar
-    produces an output file Example.tar.myz
+ produces an output file Example.tar.myz
 
 myunzip Example.tar.myz
-    recovers the file Example.tar
+ recovers the file Example.tar
 
 .fi
 
 .SH The lossless file compression and encryption utility
-Actually this converter is not yet complete. Further improvenents may 
-be applied in future. 
+
+Actually this converter is not yet complete. Further improvenents may be
+applied in future. 
 
 .SH VERSION
 Page was created for V.1.01
 .SH BUG REPORTS 
 
 If you find a bug in the Lossless file compression and encryption utility, 
-you should report it. But first,  you  should make sure that it really is
+you should report it. But first, you should make sure that it really is
 a bug, and that it appears in the latest version of the
 X11-Basic package that you have.
 
-Once  you have determined that a bug actually exists, mail a
-bug report to kollo@users.sourceforge.net. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-www.sourceforge.net/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the X11-Basic bug tracking system.
 
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to kollo@users.sourceforge.net.
-.SH BUGS
-Still some bugs
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
+
 .SH COPYRIGHT
 Copyright (C) 1997-2005 Markus Hoffmann <kollo@users.sourceforge.net>
 
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free 
+Software Foundation; either version 2 of the License, or (at your option) any
 later version.
 
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 details.
+
 .SH SEE ALSO
 xbasic(1)

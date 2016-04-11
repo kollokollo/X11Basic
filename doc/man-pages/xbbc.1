@@ -1,6 +1,6 @@
-.TH XBBC 1 09-Aug-2014 "Version 1.23" "X11-Basic bytecode compiler"
+.TH XBBC 1 09-Aug-2015 "Version 1.24" "X11-Basic bytecode compiler"
 .SH NAME
-xbbc  \- X11-Basic bytecode compiler 
+xbbc \- X11-Basic bytecode compiler 
 .SH SYNOPSIS
 .B xbbc
 .RI "[ " option " ] " <filename>
@@ -35,7 +35,7 @@ but you can specify alternate names with the -o option.
 .BI "\-o " file
 Place output in file \c
 .I file\c
-\&.  
+\&. 
 If you do not specify `\|\c
 .B \-o\c
 \&\|', the default is to produce a file `\|\c
@@ -46,70 +46,66 @@ shows version, program and other information and exits
 .SS -h --help
 print a short help.
 
-For detailed help and description of the implemented basic commands take a 
-look at the README file which ships with the X11-Basic package.
+For detailed help and description of the implemented basic commands take a look
+at the README file which ships with the X11-Basic package.
 
 
 .SH EXAMPLES
 .nf
 xbbc testme.bas
-    produces a bytecode file b.b
+ produces a bytecode file b.b
 xbbc testme.bas -o testme.b 
-    produces a bytecode file testme.b
+ produces a bytecode file testme.b
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 .SH The bytecode compiler
-Xbbc is a compiler. It compiles the BASIC source code into a 
-bytecode of a virtual stack machine. This virtual stack machine 
-needs to be emulated on each different operating system platform, but the 
-bytecode itself is still portable.  The bytecode is very compact  and
-similar to machine code, but still it is independant of the  actual 
-processor hardware.  With  an additional  small  step it can be compiled to 
-native assembler or machine code.  (For linux this is done by the 
+
+Xbbc is a compiler. It compiles the BASIC source code into a bytecode of a
+virtual stack machine. This virtual stack machine needs to be emulated on each
+different operating system platform, but the bytecode itself is still portable.
+The bytecode is very compact and similar to machine code, but still it is
+independant of the actual processor hardware. With an additional small step it
+can be compiled to native assembler or machine code. (For linux this is done by
+the 
 .I xb2c(1) 
 translator and 
 .I gcc(1)
-, for other operating systems such a translator has not yet been  created).
+, for other operating systems such a translator has not yet been created).
 
 There is no way to recreate the source code from the bytecode. 
 
 .SH VERSION
 Page was created for V.1.18
-.SH BUG REPORTS       
 
-If you find a bug in the X11-Basic bytecode compiler, you should
-report it. But first,  you  should make sure that it really is
-a bug, and that it appears in the latest version of the
-X11-Basic package that you have.
+.SH BUG REPORTS  
 
-Once  you have determined that a bug actually exists, mail a
-bug report to kollo@users.sourceforge.net. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-www.sourceforge.net/projects/x11-basic  or posted to the bug
-tracking system.
+If you find a bug in the X11-Basic bytecode compiler, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in the
+latest version of the X11-Basic package that you have.
 
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to kollo@users.sourceforge.net.
-.SH BUGS
-Still some bugs
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the x11-basic bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
+
 .SH COPYRIGHT
-Copyright (C) 1997-2015 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2016 Markus Hoffmann <kollo@users.sourceforge.net>
 
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
-details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 .SH SEE ALSO
 xbasic(1), xbvm(1), xbc(1), xb2c(1)

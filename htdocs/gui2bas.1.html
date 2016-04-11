@@ -9,7 +9,7 @@ Section: GUI-File to X11-Basic converter (1)<BR>Updated: 19-Sep-2004<BR><A HRE
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-gui2bas  - GUI-File to X11-Basic converter
+gui2bas - GUI-File to X11-Basic converter
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
@@ -27,18 +27,19 @@ capability that integrates features like shell scripting, cgi-Programming and
 full graphical visualisation into the easy to learn basic language on modern 
 computers.
 <P>
-X11-Basic uses a Graphics User Interface which is very similar to the ATARI ST
-TOS/GEM  implementation. The *.gui file format, which is basically an ASCII
-representation of the ATARI ST recource files (*.rsc), can be converted to
-X11-Basic code, which then can handle message boxes and forms. For conversion
-of ATARI ST recource files to *.gui Files see
+X11-Basic uses a graphical user interface (GUI) which is very similar to the
+ATARI ST TOS/GEM implementation. The *.gui file format, which is basically an
+ASCII representation of the ATARI ST recource files (*.rsc), can be converted to
+X11-Basic code, which then can handle message boxes and forms. For conversion of
+ATARI ST recource files to *.gui Files see
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+rsc2gui">rsc2gui</A>(1).</I>
 
 <P>
 <I>gui2bas</I>
 
+<P>
 can be used to make X11-Basic template programs out of gui Files, which
-represent the  Object structure of the Graphical User Interface which is
+represent the Object structure of the Graphical User Interface which is
 implemented into X11-Basic..
 <P>
 <B>For a desciption of the X11-basic language and usage of the interpreter see</B>
@@ -57,14 +58,13 @@ The generic Format of such an object is:
 <P>
 label: TYPE(variables)
 <P>
-The label is optional and gives the object a name. 
-Depending on TYPE of the object, one or more variables are given as a comma 
-separated list in brackets. 
+The label is optional and gives the object a name. Depending on TYPE of the
+object, one or more variables are given as a comma separated list in brackets. 
 <P>
-Each Object may start a block with '{' at the end of the line. Inside this block 
-there might be one or more objects given which then are considered as sub-objects 
-of the one whichopened the block. The block will be closed by a '}' in a single line.
-<P>
+Each Object may start a block with '{' at the end of the line. Inside this
+block there might be one or more objects given which then are considered as
+sub-objects of the one whichopened the block. The block will be closed by a '}'
+in a single line.
 <P>
 Example:
 <P>
@@ -77,12 +77,12 @@ BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTM
     STRING(X=35,Y=4,W=7,H=1, TEXT=&quot;bis&quot;, FONT=3, JUST=2, COLOR=4209)
     STRING(X=35,Y=5,W=7,H=1, TEXT=&quot;bis&quot;, FONT=3, JUST=2, COLOR=4209)
   devtext: FTEXT(X=20,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;/dev/ttyS0&quot;, PTMP=&quot;_______________________________________&quot;,PVALID=&quot;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
-  br1:    FTEXT(X=20,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;N59:00:00.00&quot;, PTMP=&quot;____________&quot;,PVALID=&quot;XXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
-  br2:    FTEXT(X=40,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;N59:00:00.00&quot;, PTMP=&quot;____________&quot;,PVALID=&quot;XXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
-  lon1:   FTEXT(X=20,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;E009:00:00.00&quot;, PTMP=&quot;_____________&quot;,PVALID=&quot;XXXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
-  lon2:   FTEXT(X=40,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;E009:00:00.00&quot;, PTMP=&quot;_____________&quot;,PVALID=&quot;XXXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
-  ok:     BUTTON(X=65,Y=4,W=7,H=4, TEXT=&quot;OK&quot;, FLAGS=SELECTABLE+DEFAULT+EXIT)
-  cancel: BUTTON(X=65,Y=9,W=7,H=4, TEXT=&quot;CANCEL&quot;, FLAGS=SELECTABLE+EXIT+LASTOB)
+  br1:     FTEXT(X=20,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;N59:00:00.00&quot;, PTMP=&quot;____________&quot;,PVALID=&quot;XXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
+  br2:     FTEXT(X=40,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;N59:00:00.00&quot;, PTMP=&quot;____________&quot;,PVALID=&quot;XXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
+  lon1:    FTEXT(X=20,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;E009:00:00.00&quot;, PTMP=&quot;_____________&quot;,PVALID=&quot;XXXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
+  lon2:    FTEXT(X=40,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT=&quot;E009:00:00.00&quot;, PTMP=&quot;_____________&quot;,PVALID=&quot;XXXXXXXXXXXXX&quot;, FLAGS=EDITABLE)
+  ok:      BUTTON(X=65,Y=4,W=7,H=4, TEXT=&quot;OK&quot;, FLAGS=SELECTABLE+DEFAULT+EXIT)
+  cancel:  BUTTON(X=65,Y=9,W=7,H=4, TEXT=&quot;CANCEL&quot;, FLAGS=SELECTABLE+EXIT+LASTOB)
 }
 </PRE>
 
@@ -92,8 +92,8 @@ Comments are indicated by a '#' at the beginning of a line.
 <H2>Filenames</H2>
 
 <P>
-gui2bas processes input files with extention .gui. The default 
-output filename is b.bas.
+gui2bas processes input files with extention .gui. The default output filename
+is b.bas.
 <P>
 <A NAME="lbAG">&nbsp;</A>
 <H2>OPTIONS</H2>
@@ -102,7 +102,7 @@ output filename is b.bas.
 <DT><B>-o </B><I>file</I>
 
 <DD>
-Place output in file <I>file</I>.  
+Place output in file <I>file</I>. 
 <P>
 
 If you do not specify `<B>-o</B>', the default is to use
@@ -118,8 +118,8 @@ shows version, program and other information and exits
 
 print a short help
 <P>
-For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+For detailed help and description of the implemented basic commands take a look
+at the README file. 
 <P>
 <P>
 <A NAME="lbAJ">&nbsp;</A>
@@ -127,7 +127,7 @@ look at the README file.
 
 <PRE>
 gui2bas demo.gui
-    produces an output file b.bas
+ produces an output file b.bas
 
 </PRE>
 
@@ -142,49 +142,41 @@ be applied in future.
 <H2>VERSION</H2>
 
 Page was created for V.1.11
+<P>
 <A NAME="lbAM">&nbsp;</A>
 <H2>BUG REPORTS</H2>
 
 <P>
-If you find a bug in the GUI-File to X11-Basic converter, you should
-report it. But first,  you  should make sure that it really is
-a bug, and that it appears in the latest version of the
-X11-Basic package that you have.
+If you find a bug in the GUI-File to X11-Basic converter, you should report it.
+But first, you should make sure that it really is a bug, and that it appears in
+the latest version of the X11-Basic package that you have.
 <P>
-Once  you have determined that a bug actually exists, mail a
-bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the x11-basic bug tracking system.
 <P>
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+Comments and bug reports concerning this manual page should be directed to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<P>
 <A NAME="lbAN">&nbsp;</A>
-<H2>BUGS</H2>
-
-Still some bugs
-<A NAME="lbAO">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
-<A NAME="lbAP">&nbsp;</A>
+<A NAME="lbAO">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2004 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 <P>
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
-details.
-<A NAME="lbAQ">&nbsp;</A>
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+<P>
+<A NAME="lbAP">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+rsc2gui">rsc2gui</A>(1)
@@ -207,15 +199,14 @@ details.
 <DT><A HREF="#lbAK">The GUI File to X11-Basic converter</A><DD>
 <DT><A HREF="#lbAL">VERSION</A><DD>
 <DT><A HREF="#lbAM">BUG REPORTS</A><DD>
-<DT><A HREF="#lbAN">BUGS</A><DD>
-<DT><A HREF="#lbAO">AUTHOR</A><DD>
-<DT><A HREF="#lbAP">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAQ">SEE ALSO</A><DD>
+<DT><A HREF="#lbAN">AUTHOR</A><DD>
+<DT><A HREF="#lbAO">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAP">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 22:02:54 GMT, January 15, 2016
+Time: 08:51:50 GMT, April 19, 2016
 </BODY>
 </HTML>

@@ -87,6 +87,7 @@ by typing
 	./xbasic.static
 
 The command-line options can be listed with the `-h' option (`./xbasic -h').
+
 INSTALLING the standalone excecutable
 =====================================
 
@@ -98,8 +99,8 @@ remove the installation with
 sudo make uninstall
 
 
-make the pseudo-compiler work, libraries:
-=========================================
+make the compiler work, libraries:
+===================================
 
 If you want to use the compilers included in this package, you have to
 make both the static and dynamic libraries.
@@ -128,10 +129,6 @@ make xbc
 make xbcinstall
 	          to install the compiler in /usr/local/bin/ and the compiler 
 		  man-page
-
-
-After doing all this, you will also find an executabe called xbasic. This is
-the interpreter, dynamically linked and much shorter than the static one.
 
 regards and have fun
      Markus Hoffmann

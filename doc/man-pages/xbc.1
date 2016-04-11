@@ -1,6 +1,6 @@
-.TH XBC 1 21-Aug-2014 "Version 1.23" "Linux Basic Compiler"
+.TH XBC 1 21-Aug-2015 "Version 1.24" "X11-Basic Compiler Manager"
 .SH NAME
-xbc  \- X11-Basic compiler 
+xbc \- X11-Basic compiler manager
 .SH SYNOPSIS
 .B xbc
 .RI "[ " option " ] " <filename>
@@ -13,22 +13,21 @@ full graphical visualisation into the easy to learn basic language on modern
 computers.
 
 .IR xbc
-can be used to make stand-alone-binaries out of *.bas script-Files.
+can be used to make stand-alone-binaries out of *.bas script files.
 
 .B For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
 
-Xbc process input files
-through one or more of three stages: preprocessing, compilation, translation 
-and linking.  Source filename suffixes identify the source
-language.
+Xbc process input files through one or more of three stages: 
+preprocessing, compilation, translation and linking. 
+Source filename suffixes identify the source language.
 
 Suffixes of source file names indicate the kind of
 processing to be done:
 .nf
-.ta \w'\fB.cxx\fP  'u
+.ta \w'\fB.cxx\fP 'u
 \&\fB.bas\fP	Basic source; preprocess, compile, link
 \&\fB.b\fP	bytecode file; translate to C, then compile to native code
 \&\fB.o\fP	Object file; link
@@ -45,7 +44,7 @@ process).
 .SH OPTIONS
 .TP
 .B \-b
-Precompile the source files, but do not compile nor link.  The compiler
+Precompile the source files, but do not compile nor link it. The compiler
 output is a *.c file corresponding to the source file. These *.c files can
 be compiled with e.g. the GNU project C Compiler.
 
@@ -54,12 +53,12 @@ the suffix `\|\c
 .B .bas\c
  with
 .B .o\c
-\&\|'.  Use
+\&\|'. Use
 .B \-o\c
 \& to select another name.
 .TP
 .B \-c
-Precompile and compile the source files, but do not link.  The compiler
+Precompile and compile the source files, but do not link. The compiler
 output is an object file corresponding to each source file.
 
 By default, xbc makes the object file name for a source file by replacing
@@ -67,33 +66,31 @@ the suffix `\|\c
 .B .bas\c
  with `\|\c
 .B .o\c
-\&\|'.  Use
+\&\|'. Use
 .B \-o\c
 \& to select another name.
 .TP
 .B \-l
-Precompile and compile the source files, but do not link.  The compiler
-output is an object file corresponding to each source file. The source files 
-are compiled 
-in a way that they can (and will have to) be linked to other object files. With these
-object files it is possible to create a library from your basic routines, which can be 
-executed from another program.
+Precompile and compile the source files, but do not link. The compiler output is
+an object file corresponding to each source file. The source files are compiled
+in a way that they can (and will have to) be linked to other object files. With
+these object files it is possible to create a library from your basic routines,
+which can be executed from another program.
 
 By default, xbc makes the object file name for a source file by replacing
 the suffix `\|\c
 .B .bas\c
  with `\|\c
 .B .o\c
-\&\|'.  Use
+\&\|'. Use
 .B \-o\c
 \& to select another name.
 .TP
 .BI "\-o " file
 Place output in file \c
 .I file\c
-\&.  This applies regardless to whatever
-sort of output xbc is producing, whether it be an executable file, a *.c file or
-an object file.
+\&. This applies regardless to whatever sort of output xbc is producing, 
+whether it be an executable file, a *.c file or an object file.
 
 Since only one output file can be specified, it does not make sense to
 use `\|\c
@@ -131,7 +128,7 @@ The excecutable will be linked dynamically against the X11-Basic library.
 .SS \-shared
 This option is passed to the linker and tells it, that it should produce a shared
 object file which can then be linked with other objects to
-form an executable.  Not all systems support this option. 
+form an executable. Not all systems support this option. 
 Usually the extention should be 
 .B .so\c
 .
@@ -141,7 +138,7 @@ if it was used together with the
  option.
 
 .SS \-C
-Do not discard comments.  All comments are passed through to the
+Do not discard comments. All comments are passed through to the
 output file.
 
 .SS \-s --strip
@@ -166,75 +163,63 @@ look at the README file.
 .SH EXAMPLES
 .nf
 xbc testme.bas
-    produces an excecutable file b.out
+ produces an excecutable file b.out
 xbc testme.bas -o testme --dynamic
-    produces an excecutable file testme
+ produces an excecutable file testme
 xbc testme.bas -c 
-    produces testme.o
+ produces testme.o
 xbc testme.bas -b
-    produces testme.c or 11.c or b.b
+ produces testme.c or 11.c or b.b
 xbc testme.bas -virtualm --dynamic -o b.out
-    produces b.out, which excecutes really fast!
+ produces b.out, which excecutes really fast!
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
-.SH The pseudo compiler
-Actually xbc is only a real compiler, if used with the -virtualm option.
-The default behaviour is
-such, that the source code is still interpreted on runtime 
-(so to say, only a pseudo-compiler). But the
-source code is linked to the X11-Basic library so there results one 
+
+.SH The Compiler Manager
+
+Actually xbc is a real compiler, if used with the -virtualm option. However, the
+default behaviour is such, that the source code is still interpreted on runtime.
+But the source code is linked to the X11-Basic library so there results one 
 independant executable. Another advantage is that it is quite hard to extract a
-full running *.bas File from this binary since the code is compressd in a way. 
+full running *.bas file from this binary since the code is compressd in a way. 
+
 Why is this the default? Well the compiler can pseudo-compile all BASIC 
 programs, which run in the interpreter. The real compiler has some restrictions 
-on the BASIC code, because it cannot compile every constructs (e.g. jumps/GOTO out 
-of a procedure). The compiler relies on gcc. The compiler for the MS WINDOWS 
-version behaves different (since no gcc is available): Here the BASIC program 
-is compiled into bytecode, which is packed together with a virtual machine into 
-an excecutable file. The bytecode is then interpreted on runtime, but anyway this
-is much faster than the interpreted code. Of course, you can always translate the 
-bytecode to a C source and crosscompile this for any platform. On MS windows it is
-worth looking for tcc, the tiny c compiler. It installs really quick and does the 
-job.
-
+on the BASIC code, because it cannot compile every constructs (e.g. jumps/GOTO
+out of a procedure).
 
 .SH VERSION
-Page was created for V.1.20
-.SH BUG REPORTS       
+Page was created for V.1.24
 
-If you find a bug in the X11-Basic compiler xbc, you should
-report it. But first,  you  should make sure that it really is
-a bug, and that it appears in the latest version of the
-X11-Basic package that you have.
+.SH BUG REPORTS 
 
-Once  you have determined that a bug actually exists, mail a
-bug report to kollo@users.sourceforge.net. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-www.sourceforge.net/projects/x11-basic  or posted to the bug
-tracking system.
+If you find a bug in the X11-Basic compiler xbc, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in the
+latest version of the X11-Basic package that you have.
 
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to kollo@users.sourceforge.net.
-.SH BUGS
-Still some bugs
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to 
+kollo@users.sourceforge.net.
+
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
+
 .SH COPYRIGHT
-Copyright (C) 1997-2015 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2016 Markus Hoffmann <kollo@users.sourceforge.net>
 
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
-details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 .SH SEE ALSO
 xbasic(1), gcc(1), ld(1), xbbc(1), xb2c(1), xbvm(1)

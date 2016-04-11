@@ -3,13 +3,13 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of XBBC</TITLE>
 </HEAD><BODY>
 <H1>XBBC</H1>
-Section: X11-Basic bytecode compiler (1)<BR>Updated: 09-Aug-2014<BR><A HREF="#index">Index</A>
+Section: X11-Basic bytecode compiler (1)<BR>Updated: 09-Aug-2015<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-xbbc (X11-Basic bytecode compiler) - X11-Basic bytecode compiler 
+xbbc - X11-Basic bytecode compiler 
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
@@ -60,7 +60,7 @@ but you can specify alternate names with the -o option.
 <DT><B>-o </B><I>file</I>
 
 <DD>
-Place output in file <I>file</I>.  
+Place output in file <I>file</I>. 
 If you do not specify `<B>-o</B>', the default is to produce a file `<B>b.b</B><BR>&nbsp;.
 </DL>
 <A NAME="lbAG">&nbsp;</A>
@@ -72,8 +72,8 @@ shows version, program and other information and exits
 
 print a short help.
 <P>
-For detailed help and description of the implemented basic commands take a 
-look at the README file which ships with the X11-Basic package.
+For detailed help and description of the implemented basic commands take a look
+at the README file which ships with the X11-Basic package.
 <P>
 <P>
 <A NAME="lbAI">&nbsp;</A>
@@ -81,9 +81,9 @@ look at the README file which ships with the X11-Basic package.
 
 <PRE>
 xbbc testme.bas
-    produces a bytecode file b.b
+ produces a bytecode file b.b
 xbbc testme.bas -o testme.b 
-    produces a bytecode file testme.b
+ produces a bytecode file testme.b
 </PRE>
 
 <P>
@@ -93,19 +93,20 @@ You can find many sample programs in
 <A NAME="lbAJ">&nbsp;</A>
 <H2>The bytecode compiler</H2>
 
-Xbbc is a compiler. It compiles the BASIC source code into a 
-bytecode of a virtual stack machine. This virtual stack machine 
-needs to be emulated on each different operating system platform, but the 
-bytecode itself is still portable.  The bytecode is very compact  and
-similar to machine code, but still it is independant of the  actual 
-processor hardware.  With  an additional  small  step it can be compiled to 
-native assembler or machine code.  (For linux this is done by the 
+<P>
+Xbbc is a compiler. It compiles the BASIC source code into a bytecode of a
+virtual stack machine. This virtual stack machine needs to be emulated on each
+different operating system platform, but the bytecode itself is still portable.
+The bytecode is very compact and similar to machine code, but still it is
+independant of the actual processor hardware. With an additional small step it
+can be compiled to native assembler or machine code. (For linux this is done by
+the 
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1) </I>
 
 translator and 
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+gcc">gcc</A>(1)</I>
 
-, for other operating systems such a translator has not yet been  created).
+, for other operating systems such a translator has not yet been created).
 <P>
 There is no way to recreate the source code from the bytecode. 
 <P>
@@ -113,49 +114,42 @@ There is no way to recreate the source code from the bytecode.
 <H2>VERSION</H2>
 
 Page was created for V.1.18
+<P>
 <A NAME="lbAL">&nbsp;</A>
-<H2>BUG REPORTS       </H2>
+<H2>BUG REPORTS  </H2>
 
 <P>
-If you find a bug in the X11-Basic bytecode compiler, you should
-report it. But first,  you  should make sure that it really is
-a bug, and that it appears in the latest version of the
-X11-Basic package that you have.
+If you find a bug in the X11-Basic bytecode compiler, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in the
+latest version of the X11-Basic package that you have.
 <P>
-Once  you have determined that a bug actually exists, mail a
-bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the x11-basic bug tracking system.
 <P>
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+Comments and bug reports concerning this manual page should be directed to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<P>
 <A NAME="lbAM">&nbsp;</A>
-<H2>BUGS</H2>
-
-Still some bugs
-<A NAME="lbAN">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
-<A NAME="lbAO">&nbsp;</A>
+<P>
+<A NAME="lbAN">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
-Copyright (C) 1997-2015 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+Copyright (C) 1997-2016 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 <P>
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
-details.
-<A NAME="lbAP">&nbsp;</A>
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+<P>
+<A NAME="lbAO">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1)
@@ -176,16 +170,15 @@ details.
 <DT><A HREF="#lbAI">EXAMPLES</A><DD>
 <DT><A HREF="#lbAJ">The bytecode compiler</A><DD>
 <DT><A HREF="#lbAK">VERSION</A><DD>
-<DT><A HREF="#lbAL">BUG REPORTS       </A><DD>
-<DT><A HREF="#lbAM">BUGS</A><DD>
-<DT><A HREF="#lbAN">AUTHOR</A><DD>
-<DT><A HREF="#lbAO">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAP">SEE ALSO</A><DD>
+<DT><A HREF="#lbAL">BUG REPORTS  </A><DD>
+<DT><A HREF="#lbAM">AUTHOR</A><DD>
+<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAO">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 22:02:54 GMT, January 15, 2016
+Time: 08:51:50 GMT, April 19, 2016
 </BODY>
 </HTML>

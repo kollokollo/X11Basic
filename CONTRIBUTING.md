@@ -1,8 +1,8 @@
 Guide to contributing to X11-Basic
 ==================================
 
-X11-Basic exists for quite a while now. Therefore I consider  it to be in a
-quite mature state. I am planning not to extend the language much,  e.g. I do
+X11-Basic exists for quite a while now. Therefore I consider it to be in a
+quite mature state. I am planning not to extend the language much, e.g. I do
 not want to add many more commands or functions. The language as it is should
 stay much the same as it is now. 
 
@@ -34,11 +34,13 @@ X11-Basic. Does anybody have an idea what could be the problem?
 
 More things left to do:
 =======================
+- test the thing and find more bugs,
 - Optimize a bit more, improve performance
 - The WINDOWS-Version needs more work
-- Fix the bugs
 - work on the sound system
 - work on the SDL-Graphics implementation (fill styles etc...)
 - documentation needs more work
-- find someone who can port it to apple mac/ipad/iphone
+- port it to apple mac/ipad/iphone
 (etc. etc.)
+
+So you are welcome to help.

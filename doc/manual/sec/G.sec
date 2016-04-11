@@ -176,8 +176,8 @@ Syntax:   <bool>=GLOB(name$,pattern$[,flags%])
 
 DESCRIPTION:
 
-GLOB() checks if name$ matches the wildcard pattern pattern$ 
-       and gives -1 (TRUE), else 0 (FALSE). 
+	GLOB() checks if name$ matches the wildcard pattern pattern$ 
+	and gives -1 (TRUE), else 0 (FALSE). 
        
        A wildcard pattern typically contains one or more of the characters
        "?", "*" or "[". 
@@ -248,7 +248,7 @@ GLOB(".testme.bas","*.bas",1)       -1
 GLOB(".testme.bas","*.bas",1+4)      0
 GLOB(".testme.bas",".*.bas",1+4)    -1
 
-SEE ALSO: INSTR(), WORT_SEP
+SEE ALSO: INSTR(), RINSTR(), SPLIT
 
 ##############################################################################
 Command: GOSUB      Abbrev.  @

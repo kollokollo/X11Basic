@@ -9,7 +9,7 @@ Section: Lossless file compression and encryption utility (1)<BR>Updated: 19-S
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-myzip, myunzip  - Lossless file compression and encryption utility
+myzip, myunzip - Lossless file compression and encryption utility
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
@@ -31,35 +31,29 @@ myzip, myunzip  - Lossless file compression and encryption utility
 <I>myzip</I>
 
 compresses files using the internal COMPRESS$() function of the X11-Basic 
-library.
-Compression is
-generally considerably better than that achieved by more conventional
-LZ77/LZ78-based compressors, and approaches the performance of the bzip2
-compressor.
+library. Compression is generally considerably better than that achieved by more
+conventional LZ77/LZ78-based compressors, and approaches the performance of the
+bzip2 compressor.
 <P>
-An optional encryption can be applied giving a passphrase which can be as long as
-up to 16 characters (corresponding to 128 Bit). For details of the encryption 
-algorithm see the <A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1) manual for ENCRYPT$().
+An optional encryption can be applied giving a passphrase which can be as long
+as up to 16 characters (corresponding to 128 Bit). For details of the
+encryption algorithm see the <A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1) manual for ENCRYPT$().
 <P>
-The command-line options are deliberately very similar to 
-those of 
+The command-line options are deliberately very similar to those of 
 <I>GNU gzip, </I>
 
 but they are not identical.
 <P>
 <I>myzip</I>
 
-expects a list of file names to accompany the
-command-line flags.  Each file is replaced by a compressed version of
-itself, with the name &quot;original_name.myz&quot;.  
-Each compressed file
-has the same modification date, permissions, and, when possible,
-ownership as the corresponding original, so that these properties can
-be correctly restored at decompression time.  File name handling is
-naive in the sense that there is no mechanism for preserving original
-file names, permissions, ownerships or dates in filesystems which lack
-these concepts, or have serious file name length restrictions, such as
-MS-DOS.
+expects a list of file names to accompany the command-line flags. Each file is
+replaced by a compressed version of itself, with the name &quot;original_name.myz&quot;. 
+Each compressed file has the same modification date, permissions, and, when
+possible, ownership as the corresponding original, so that these properties can
+be correctly restored at decompression time. File name handling is naive in the
+sense that there is no mechanism for preserving original file names,
+permissions, ownerships or dates in filesystems which lack these concepts, or
+have serious file name length restrictions, such as MS-DOS.
 <P>
 <I>myzip</I>
 
@@ -67,39 +61,33 @@ and
 <I>myunzip</I>
 
 will by default not overwrite existing
-files.  If you want this to happen, specify the -f flag.
+files. If you want this to happen, specify the -f flag.
 <P>
 <I>myunzip</I>
 
-decompresses all
-specified files.  Files which were not created by 
+decompresses all specified files. Files which were not created by 
 <I>myzip</I>
 
-will be detected and ignored, and a warning issued.  
+will be detected and ignored, and a warning issued. 
 <P>
-Compression is always performed, even if the compressed 
-file is slightly
-larger than the original.  Files of less than about one hundred bytes
-tend to get larger, since the compression mechanism has a constant
-overhead in the region of 50 bytes.  Random data (including the output
-of most file compressors) is coded at about 8.1 bits per byte, giving
-an expansion of around 1%.
+Compression is always performed, even if the compressed file is slightly larger
+than the original. Files of less than about one hundred bytes tend to get
+larger, since the compression mechanism has a constant overhead in the region of
+50 bytes. Random data (including the output of most file compressors) is coded
+at about 8.1 bits per byte, giving an expansion of around 1%.
 <P>
 As a self-check for your protection, 
 <I>myzip</I>
 
-uses 32-bit CRCs to
-make sure that the decompressed version of a file is identical to the
-original.  This guards against corruption of the compressed data, and
-against undetected bugs in
+uses 32-bit CRCs to make sure that the decompressed version of a file is
+identical to the original. This guards against corruption of the compressed
+data, and against undetected bugs in
 <I>myzip</I>
 
-(hopefully very unlikely).  The
-chances of data corruption going undetected is microscopic, about one
-chance in four billion for each file processed.  Be aware, though, that
-the check occurs upon decompression, so it can only tell you that
-something is wrong.  It can't help you 
-recover the original uncompressed
+(hopefully very unlikely). The chances of data corruption going undetected is
+microscopic, about one chance in four billion for each file processed. Be
+aware, though, that the check occurs upon decompression, so it can only tell you
+that something is wrong. It can't help you recover the original uncompressed
 data.
 <P>
 <P>
@@ -117,11 +105,11 @@ If you do not specify `<B>-o</B>', the default is to use
 <DT><B>-f --force</B>
 
 <DD>
-Force overwrite of output files.  Normally,
+Force overwrite of output files. Normally,
 <I>myzip </I>
 
 will not overwrite
-existing output files.  Also forces 
+existing output files. Also forces 
 <I>myzip </I>
 
 to break hard links
@@ -134,7 +122,7 @@ or decompression.
 <DT><B>-q --quiet</B>
 
 <DD>
-Suppress non-essential warning messages.  Messages pertaining to
+Suppress non-essential warning messages. Messages pertaining to
 I/O errors and other critical events will not be suppressed.
 <DT><B>-v --verbose</B>
 
@@ -156,8 +144,8 @@ shows version, program and other information and exits
 <DD>
 print a short help
 <P>
-For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+For detailed help and description of the implemented basic commands take a look
+at the README file. 
 <P>
 <P>
 <A NAME="lbAH">&nbsp;</A>
@@ -165,10 +153,10 @@ look at the README file.
 
 <PRE>
 myzip Example.tar
-    produces an output file Example.tar.myz
+ produces an output file Example.tar.myz
 
 myunzip Example.tar.myz
-    recovers the file Example.tar
+ recovers the file Example.tar
 
 </PRE>
 
@@ -176,8 +164,9 @@ myunzip Example.tar.myz
 <A NAME="lbAI">&nbsp;</A>
 <H2>The lossless file compression and encryption utility</H2>
 
-Actually this converter is not yet complete. Further improvenents may 
-be applied in future. 
+<P>
+Actually this converter is not yet complete. Further improvenents may be
+applied in future. 
 <P>
 <A NAME="lbAJ">&nbsp;</A>
 <H2>VERSION</H2>
@@ -188,44 +177,38 @@ Page was created for V.1.01
 
 <P>
 If you find a bug in the Lossless file compression and encryption utility, 
-you should report it. But first,  you  should make sure that it really is
+you should report it. But first, you should make sure that it really is
 a bug, and that it appears in the latest version of the
 X11-Basic package that you have.
 <P>
-Once  you have determined that a bug actually exists, mail a
-bug report to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the X11-Basic bug tracking system.
 <P>
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+Comments and bug reports concerning this manual page should be directed to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<P>
 <A NAME="lbAL">&nbsp;</A>
-<H2>BUGS</H2>
-
-Still some bugs
-<A NAME="lbAM">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
-<A NAME="lbAN">&nbsp;</A>
+<P>
+<A NAME="lbAM">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2005 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free 
+Software Foundation; either version 2 of the License, or (at your option) any
 later version.
 <P>
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 details.
-<A NAME="lbAO">&nbsp;</A>
+<P>
+<A NAME="lbAN">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)
@@ -246,15 +229,14 @@ details.
 <DT><A HREF="#lbAI">The lossless file compression and encryption utility</A><DD>
 <DT><A HREF="#lbAJ">VERSION</A><DD>
 <DT><A HREF="#lbAK">BUG REPORTS </A><DD>
-<DT><A HREF="#lbAL">BUGS</A><DD>
-<DT><A HREF="#lbAM">AUTHOR</A><DD>
-<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
+<DT><A HREF="#lbAL">AUTHOR</A><DD>
+<DT><A HREF="#lbAM">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAN">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 08:56:57 GMT, August 25, 2006
+Time: 08:51:50 GMT, April 19, 2016
 </BODY>
 </HTML>

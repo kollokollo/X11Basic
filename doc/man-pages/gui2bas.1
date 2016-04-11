@@ -1,6 +1,6 @@
 .TH gui2bas 1 19-Sep-2004 "Version 1.11" "GUI-File to X11-Basic converter"
 .SH NAME
-gui2bas  \- GUI-File to X11-Basic converter
+gui2bas \- GUI-File to X11-Basic converter
 .SH SYNOPSIS
 .B gui2bas
 .RI "[ " option " ] " <filename>
@@ -12,16 +12,17 @@ capability that integrates features like shell scripting, cgi-Programming and
 full graphical visualisation into the easy to learn basic language on modern 
 computers.
 
-X11-Basic uses a Graphics User Interface which is very similar to the ATARI ST
-TOS/GEM  implementation. The *.gui file format, which is basically an ASCII
-representation of the ATARI ST recource files (*.rsc), can be converted to
-X11-Basic code, which then can handle message boxes and forms. For conversion
-of ATARI ST recource files to *.gui Files see
+X11-Basic uses a graphical user interface (GUI) which is very similar to the
+ATARI ST TOS/GEM implementation. The *.gui file format, which is basically an
+ASCII representation of the ATARI ST recource files (*.rsc), can be converted to
+X11-Basic code, which then can handle message boxes and forms. For conversion of
+ATARI ST recource files to *.gui Files see
 .I rsc2gui(1).
 
 .IR gui2bas
+
 can be used to make X11-Basic template programs out of gui Files, which
-represent the  Object structure of the Graphical User Interface which is
+represent the Object structure of the Graphical User Interface which is
 implemented into X11-Basic..
 
 .B For a desciption of the X11-basic language and usage of the interpreter see
@@ -36,14 +37,13 @@ The generic Format of such an object is:
 
 label: TYPE(variables)
 
-The label is optional and gives the object a name. 
-Depending on TYPE of the object, one or more variables are given as a comma 
-separated list in brackets. 
+The label is optional and gives the object a name. Depending on TYPE of the
+object, one or more variables are given as a comma separated list in brackets. 
 
-Each Object may start a block with '{' at the end of the line. Inside this block 
-there might be one or more objects given which then are considered as sub-objects 
-of the one whichopened the block. The block will be closed by a '}' in a single line.
-
+Each Object may start a block with '{' at the end of the line. Inside this
+block there might be one or more objects given which then are considered as
+sub-objects of the one whichopened the block. The block will be closed by a '}'
+in a single line.
 
 Example:
 
@@ -56,27 +56,27 @@ BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTM
     STRING(X=35,Y=4,W=7,H=1, TEXT="bis", FONT=3, JUST=2, COLOR=4209)
     STRING(X=35,Y=5,W=7,H=1, TEXT="bis", FONT=3, JUST=2, COLOR=4209)
   devtext: FTEXT(X=20,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="/dev/ttyS0", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
-  br1:    FTEXT(X=20,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="N59:00:00.00", PTMP="____________",PVALID="XXXXXXXXXXXX", FLAGS=EDITABLE)
-  br2:    FTEXT(X=40,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="N59:00:00.00", PTMP="____________",PVALID="XXXXXXXXXXXX", FLAGS=EDITABLE)
-  lon1:   FTEXT(X=20,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="E009:00:00.00", PTMP="_____________",PVALID="XXXXXXXXXXXXX", FLAGS=EDITABLE)
-  lon2:   FTEXT(X=40,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="E009:00:00.00", PTMP="_____________",PVALID="XXXXXXXXXXXXX", FLAGS=EDITABLE)
-  ok:     BUTTON(X=65,Y=4,W=7,H=4, TEXT="OK", FLAGS=SELECTABLE+DEFAULT+EXIT)
-  cancel: BUTTON(X=65,Y=9,W=7,H=4, TEXT="CANCEL", FLAGS=SELECTABLE+EXIT+LASTOB)
+  br1:     FTEXT(X=20,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="N59:00:00.00", PTMP="____________",PVALID="XXXXXXXXXXXX", FLAGS=EDITABLE)
+  br2:     FTEXT(X=40,Y=4,W=12,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="N59:00:00.00", PTMP="____________",PVALID="XXXXXXXXXXXX", FLAGS=EDITABLE)
+  lon1:    FTEXT(X=20,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="E009:00:00.00", PTMP="_____________",PVALID="XXXXXXXXXXXXX", FLAGS=EDITABLE)
+  lon2:    FTEXT(X=40,Y=5,W=13,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="E009:00:00.00", PTMP="_____________",PVALID="XXXXXXXXXXXXX", FLAGS=EDITABLE)
+  ok:      BUTTON(X=65,Y=4,W=7,H=4, TEXT="OK", FLAGS=SELECTABLE+DEFAULT+EXIT)
+  cancel:  BUTTON(X=65,Y=9,W=7,H=4, TEXT="CANCEL", FLAGS=SELECTABLE+EXIT+LASTOB)
 }
 .fi
 Comments are indicated by a '#' at the beginning of a line.
 
 .SH Filenames
 
-gui2bas processes input files with extention .gui. The default 
-output filename is b.bas.
+gui2bas processes input files with extention .gui. The default output filename
+is b.bas.
 
 .SH OPTIONS
 .TP
 .BI "\-o " file
 Place output in file \c
 .I file\c
-\&.  
+\&. 
 
 .Sp
 If you do not specify `\|\c
@@ -91,14 +91,14 @@ shows version, program and other information and exits
 .SS -h --help
 print a short help
 
-For detailed help and description of the implemented basic commands take a 
-look at the README file. 
+For detailed help and description of the implemented basic commands take a look
+at the README file. 
 
 
 .SH EXAMPLES
 .nf
 gui2bas demo.gui
-    produces an output file b.bas
+ produces an output file b.bas
 
 .fi
 
@@ -108,39 +108,33 @@ be applied in future.
 
 .SH VERSION
 Page was created for V.1.11
+
 .SH BUG REPORTS
 
-If you find a bug in the GUI-File to X11-Basic converter, you should
-report it. But first,  you  should make sure that it really is
-a bug, and that it appears in the latest version of the
-X11-Basic package that you have.
+If you find a bug in the GUI-File to X11-Basic converter, you should report it.
+But first, you should make sure that it really is a bug, and that it appears in
+the latest version of the X11-Basic package that you have.
 
-Once  you have determined that a bug actually exists, mail a
-bug report to kollo@users.sourceforge.net. If you have a fix,
-you  are  welcome  to  mail that as well!  Suggestions  may 
-be  mailed  to the x11-basic mailing list on 
-www.sourceforge.net/projects/x11-basic  or posted to the bug
-tracking system.
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the x11-basic bug tracking system.
 
-Comments and  bug  reports  concerning  this  manual  page
-should be directed to kollo@users.sourceforge.net.
-.SH BUGS
-Still some bugs
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
 Copyright (C) 1997-2004 Markus Hoffmann <kollo@users.sourceforge.net>
 
-This program is free software;  you  can  redistribute  it
-and/or modify it under the terms of the GNU General Public
-License as published  by  the  Free  Software  Foundation;
-either  version  2 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
 
-This program is distributed in the hope that  it  will  be
-useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
-PURPOSE.   See  the  GNU  General  Public License for more
-details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 .SH SEE ALSO
 xbasic(1), rsc2gui(1)
