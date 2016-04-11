@@ -328,16 +328,17 @@ BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
       ../examples/tests/* \
       ../examples/graphics/* 
 
-WINDIST=Windows-Installer/old/setup.exe WINDOWS/lib/SDL.dll \
+WINDIST=WINDOWS/lib/SDL.dll \
         WINDOWS/lib/libusb0.dll \
         WINDOWS/lib/README-libusb.txt \
         WINDOWS/lib/README-SDL.txt \
         WINDOWS/lib/README-GMP.txt \
         WINDOWS/lib/README-LAPACK.txt \
-        Windows-Installer/readme.txt Windows-Installer/old/demo.bas \
 	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
+        Windows-Installer/readme.txt Windows-Installer/old/demo.bas \
 	Windows-Installer/x11basic.ico Windows-Installer/old/x11bver.txt \
-	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico
+	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico \
+	Windows-Installer/old/setup.exe
 
 TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp ATARI-ST/AUTO/VT100EMU.PRG \
         ATARI-ST/readme.txt ATARI-ST/demo.bas ../RELEASE_NOTES \
@@ -626,7 +627,11 @@ $(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp To
 TomTom: $(DIR33).zip
 
 
-windows: $(WINDIST) xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe
+# Make the Windows distribution in form of a .zip file including an installer
+# this is depreciated. Better use Inno-Setup to create a self installing
+# .exe file
+
+windows: $(WINDIST) 
 	rm -f X11-Basic-@version@-$(RELEASE)-win.zip
 	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-win.zip $(WINDIST)
 
@@ -637,74 +642,10 @@ tos: $(TOSDIST) xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp
 	zip -j -D  -o X11-Basic-@version@-st.zip $(TOSDIST)
 
 
-examples: X11-Basic-examples-$(LIBNO)-$(RELEASE).zip X11-Basic-examples-$(LIBNO).tar.gz \
-	X11-Basic-examples-featuretests-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-tomtom-$(LIBNO).zip \
-	X11-Basic-examples-fragments-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-GPS-Earth-$(LIBNO).zip \
-	X11-Basic-examples-cgi-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-3d-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-console-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-utility-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-astronomy-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-physics-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-mathematics-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-animation-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-games-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-Atari-ST-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-all-$(LIBNO)-$(RELEASE).zip 
+examples: X11-Basic-examples-$(LIBNO)-$(RELEASE).zip \
+	X11-Basic-examples-$(LIBNO).tar.gz 
 	
 	
-
-# Hier die Beispielprogramme zum Veroeffentlichen, nur ausgewaehlte
-
-X11-Basic-examples-all-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES)
-
-X11-Basic-examples-featuretests-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_TESTS)
-	zip -r $@ $(EXAMPLES_TESTS)
-
-X11-Basic-examples-tomtom-$(LIBNO).zip:  $(EXAMPLES_TOMTOM)
-	zip -r $@ $(EXAMPLES_TOMTOM)
-
-X11-Basic-examples-GPS-Earth-$(LIBNO).zip:  $(EXAMPLES_GPS_EARTH)
-	zip -r $@ $(EXAMPLES_GPS_EARTH)
-
-X11-Basic-examples-fragments-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_FRAGMENTS)
-	zip -r $@ $(EXAMPLES_FRAGMENTS)
-
-X11-Basic-examples-cgi-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_CGI)
-	zip -r $@ $(EXAMPLES_CGI)
-
-X11-Basic-examples-console-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_CONSOLE)
-	zip -r $@ $(EXAMPLES_CONSOLE)
-
-X11-Basic-examples-3d-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_3D_GRAPHICS)
-	zip -r $@ $(EXAMPLES_3D_GRAPHICS)
-
-X11-Basic-examples-utility-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_UTILITY)
-	zip -r $@ $(EXAMPLES_UTILITY)
-
-X11-Basic-examples-astronomy-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_ASTRONOMY)
-	zip -r $@ $(EXAMPLES_ASTRONOMY)
-
-X11-Basic-examples-physics-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_PHYSICS)
-	zip -r $@ $(EXAMPLES_PHYSICS)
-
-X11-Basic-examples-mathematics-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_MATHEMATICS)
-	zip -r $@ $(EXAMPLES_MATHEMATICS)
-
-X11-Basic-examples-animation-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_ANIMATION)
-	zip -r $@ $(EXAMPLES_ANIMATION)
-
-X11-Basic-examples-games-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_GAMES)
-	zip -r $@ $(EXAMPLES_GAMES)
-
-X11-Basic-examples-Atari-ST-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES_ATARI_ST)
-	zip -r $@ $(EXAMPLES_ATARI_ST)
-
-X11-Basic-examples-all-$(LIBNO)-$(RELEASE).zip:  $(EXAMPLES)
-	zip -r $@ $(EXAMPLES)
-
 # Das hier sind wirklich alle Beispielprogramme, zu Archivierungszwecken
 X11-Basic-examples-$(LIBNO)-$(RELEASE).zip:
 	cd .. ; zip -r  src/X11-Basic-examples-$(LIBNO)-$(RELEASE).zip examples2/
@@ -714,10 +655,6 @@ X11-Basic-examples-$(LIBNO).tar.gz:
 
 # Fuer die Control System Varianten
 
-tineexe: $(LIBOBJS) main.o fnmatch.o 
-	$(WINCC) -DTINE -DWINDOWS -c $(DIST2)
-	$(WINCC) -DTINE -DWINDOWS $(OPT) $(WINLINKFLAGS) -o tinexbasic.exe $(LIBOBJS) main.o \
-		 rpclib.lib $(WINLIBS)
 tinexbasic.dyn : $(LIBOBJS) main.o 
 	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine $(XLIBS)
 	strip $@
@@ -733,17 +670,6 @@ doocsxbasic : $(LIBOBJS) main.o  doocs-wrapper.o
 	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
 	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS)
 	strip $@
-
-csxbasic : $(LIBOBJS) 
-	$(CC) -DCONTROL $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS) $(XLIBS)
-	strip $@
-
-libtinex11basic.so : $(LIBOBJS)
-	$(CC) $(OPT) $(LINKFLAGS) -shared -o $@ $(LIBOBJS)
-
-tinex11basic.a : $(LIBOBJS)
-	 ar -ru $@ $(LIBOBJS)  
-
 
 lib:	libx11basic.so x11basic.a
 
@@ -855,16 +781,7 @@ dist :	$(DIST2)
 	mv /tmp/$(DIR).tar.gz .
 bindist : $(DIR3).zip
 
-tinedist : $(DIST2)
-	rm -rf /tmp/$(TINEDIR)
-	mkdir /tmp/$(TINEDIR)
-	(cd ..; tar cf - $(TINEDIST))|(cd /tmp/$(TINEDIR); tar xpf -)
-	(cd /tmp; tar cf - $(TINEDIR)|gzip -9 > $(TINEDIR).tar.gz)
-doocsdist : $(DIST2)
-	rm -rf /tmp/$(DOOCSDIR)
-	mkdir /tmp/$(DOOCSDIR)
-	(cd ..; tar cf - $(DOOCSDIST))|(cd /tmp/$(DOOCSDIR); tar xpf -)
-	(cd /tmp; tar cf - $(DOOCSDIR)|gzip -9 > $(DOOCSDIR).tar.gz)
+
 rpm :	$(DIR).tar.gz x11basic.spec
 	cp $(DIR).tar.gz $(HOME)/rpmbuild/SOURCES/
 #	rpm --buildroot /usr/src/packages/SOURCES/ -ba --clean x11basic.spec
