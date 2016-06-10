@@ -91,6 +91,10 @@
 #include <netdb.h>
 #endif
 
+#ifdef __APPLE__
+#define NAME_MAX FILENAME_MAX
+#endif
+
 double sensordata[ANZSENSORS];
 
 /* fuer Dynamisches Linken von shared Object-Files   */
@@ -129,10 +133,12 @@ static int make_UDP_socket(unsigned short int port);
   #define UTIME_OMIT     ((1l << 30) - 2l) 
 #ifndef ANDROID
 #ifndef ATARI
+#ifndef __APPLE__
   struct timespec {
         time_t tv_sec;        /* seconds */
         long   tv_nsec;       /* nanoseconds */
   };
+#endif
 #endif
 #endif
 #endif
@@ -1242,6 +1248,8 @@ void c_close(PARAMETER *plist,int e) {
 }
 
 #ifndef HAVE_EXECVPE
+
+extern char **environ;
 int execvpe(const char *program, char **argv, char **envp) {
     char **saved = environ;
     int rc;

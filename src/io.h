@@ -18,6 +18,9 @@
 #define ioctlsocket(a,b,c) ioctl(a,b,c)
 #endif
 
+#ifdef __APPLE__
+  /* stuff for OSX */
+#endif
 
 /*  File handling structures */
 

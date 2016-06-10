@@ -28,7 +28,7 @@ extern int cum_freq[];  /* Cumulative symbol frequencies            */
 void start_model();
 void update_model(int symbol);
 int decode_symbol( int cum_freq[] );
-inline int input_bit();
+int input_bit();
 void encode_symbol(int symbol,int cum_freq[] );
 void bit_plus_follow( int bit );
 

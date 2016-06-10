@@ -31,6 +31,10 @@
 #else
 #define key_t int
 #endif
+#ifdef __APPLE__
+#define key_t int
+#endif
+
 
 #define FALSE 0
 #define TRUE (!FALSE)

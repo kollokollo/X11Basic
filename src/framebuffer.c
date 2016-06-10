@@ -32,8 +32,10 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #ifndef ANDROID
+#ifndef __APPLE__
 #include <linux/fb.h>
 #include <linux/ioctl.h>
+#endif
 #else
 #include <android/bitmap.h>
 #endif

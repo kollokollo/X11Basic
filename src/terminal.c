@@ -12,7 +12,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <termios.h>
+#ifndef __APPLE__
 #include <linux/fb.h>
+#endif
 #include <sys/ioctl.h>
 
 #include "terminal.h"

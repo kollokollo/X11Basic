@@ -19,6 +19,7 @@
 
 #ifdef HAVE_READLINE
 #include <readline/readline.h>
+#include <readline/history.h>
 #endif
 #ifdef ANDROID
   #include "terminal.h"
@@ -196,8 +197,6 @@ char *readline(char *prompt) {
 
   return(line_read);
 }
-#else
-  extern void add_history(const char *line);
 #endif
 
 

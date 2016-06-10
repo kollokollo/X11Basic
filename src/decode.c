@@ -33,7 +33,7 @@ long bits_to_follow;            /* Number of opposite bits to output after  */
 unsigned char *put_pointer;
 int put_size;
 
-inline int input_bit() {
+int input_bit() {
   int t;
     if (bits_to_go==0) {                        /* Read the next byte if no */
         if(put_size>0) {

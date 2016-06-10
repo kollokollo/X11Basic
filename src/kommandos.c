@@ -1659,8 +1659,12 @@ static void gotolabel(int pc2,int type) {
       batch=1;
       // TODO:
     } else {
+#ifndef __APPLE__
       void *func=(void *)pc2;
       goto *func;
+#else
+      printf("ERROR/Macintosh MacOS X\nSee Bug 18658 Bugzilla.\nGOTO not possible.\n");
+#endif
     }
   }
 }
