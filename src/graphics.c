@@ -582,6 +582,7 @@ void  ffill(int x0,int y0,int fill_color, int border_color) {
 }
 int ff_scan_left(int xl,int y, int ucPixel, int f ) {
 /*  printf("Scan-left: x=%d,y=%d  ",xl,y);*/
+#ifndef NOGRAPHICS
   if(f==SCAN_UNTIL)  {
     if(get_point(xl,y)==ucPixel) return -1;
     do {
@@ -593,12 +594,14 @@ int ff_scan_left(int xl,int y, int ucPixel, int f ) {
       if(--xl<window[usewindow].x) break;
     } while (get_point(xl,y)==ucPixel);
   }
+#endif
   return ++xl;
 }
 
 
 int ff_scan_right(int xr,int y,int ucPixel,int f) {
 /*  printf("Scan-right: x=%d,y=%d  ",xr,y); */
+#ifndef NOGRAPHICS
   if(f==SCAN_UNTIL) {
     if(get_point(xr,y)==ucPixel) return -1;
     do {
@@ -610,6 +613,7 @@ int ff_scan_right(int xr,int y,int ucPixel,int f) {
       if(++xr>=window[usewindow].x+window[usewindow].w) break;
     } while(get_point(xr,y)==ucPixel);
   }
+#endif
   return --xr;
 }
 
@@ -640,8 +644,9 @@ void  ff_add_queue(FF_QUEUE *Q,int xl,int xr,int y,int f) {
 }
 
 int ff_next_branch(int xl,int xr,int y,int border_color,int scan_type) {
-  int xln;
+  int xln=-1;
 /*  printf("Next Branch: x=[%d,%d] y=%d   %d %d\n",xl,xr,y,window[usewindow].y,window[usewindow].h);*/
+#ifndef NOGRAPHICS
   if((y<window[usewindow].y)||(y>=window[usewindow].y+window[usewindow].h)) return(-1);
   xln=ff_scan_left(xl,y,border_color,scan_type);
   if(xln==-1) {
@@ -649,6 +654,7 @@ int ff_next_branch(int xl,int xr,int y,int border_color,int scan_type) {
     if(xln<xr) xln++ ;
     else xln=-1;
   }
+#endif
   return xln;
 }
 int ff_in_queue(FF_QUEUE *Q, int xl, int xr, int y) {

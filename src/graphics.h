@@ -116,7 +116,7 @@
 #define XDrawArc(a,b,c,d,e,f,g,h,i) ;
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;
 #define XQueryPointer(a,b,c,d,e,f,g,h,i) ;
-#else
+#elif defined USE_X11
 #define SetFillRule(c)   XSetFillRule(window[usewindow].display, window[usewindow].gc,c)
 #define SetFillStyle(c)  XSetFillStyle(window[usewindow].display, window[usewindow].gc,c)
 #define SetForeground(c) XSetForeground(window[usewindow].display,window[usewindow].gc,c),window[usewindow].fcolor=c
@@ -127,6 +127,20 @@
 #define DrawLine(a,b,c,d)  XDrawLine(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)
 #define DrawPoint(a,b)     XDrawPoint(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b)
 #define CopyArea(a,b,c,d,e,f) XCopyArea(window[usewindow].display,window[usewindow].pix,window[usewindow].pix,window[usewindow].gc,a,b,c,d,e,f)
+#else
+#define SetFillRule(c)   ;
+#define SetFillStyle(c)  ;
+#define SetForeground(c) ;
+#define SetBackground(c) ;
+#define FillRectangle(a,b,c,d)  ;
+#define DrawRectangle(a,b,c,d)  ;
+#define DrawString(a,b,c,d) ;
+#define DrawLine(a,b,c,d)  ;
+#define DrawPoint(a,b) ;
+#define CopyArea(a,b,c,d,e,f) ;
+#define XDrawArc(a,b,c,d,e,f,g,h,i) ;
+#define XFillArc(a,b,c,d,e,f,g,h,i) ;
+#define XQueryPointer(a,b,c,d,e,f,g,h,i) ;
 #endif
 #endif
 
