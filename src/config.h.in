@@ -12,7 +12,9 @@
 /* If X11-Basic for some reason will not compile on your system 
    you may want do uncomment some of the defines    */
      
+/* Size of Pointer */
 
+#undef SIZEOF_VOID_P
 
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM

@@ -35,6 +35,9 @@
 #endif
 #define DEFAULTWINDOW 1
 
+
+
+/* Hier nehmen wir in jedem Fall 8 Bytes an.*/
 #define INTSIZE sizeof(double)
 
 #ifdef min

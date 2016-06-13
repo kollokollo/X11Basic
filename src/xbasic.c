@@ -90,6 +90,11 @@ int everytime=0,alarmpc=-1,alarmpctype=0;
 int stack[STACKSIZE];
 
 
+#if defined ENVIRONMENT64
+void *pointerbase=NULL;
+#endif
+
+
 /* fuer die Dateiverwaltung     */
 FILEINFO filenr[ANZFILENR];
 static int *linetable=NULL;   /* for correctly count splitted lines*/

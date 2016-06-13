@@ -223,7 +223,9 @@ def="$def -DUSE_ON_EXIT=1"],
 def="$def -DNO_ATEXIT=1"
 echo "You need either atexit() or on_exit() for X11Basic to work correctly!")])
 
+#### Sizes
 
+AC_CHECK_SIZEOF([void *])
 
 
 #### SYSTEM

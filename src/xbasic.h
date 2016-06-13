@@ -283,6 +283,35 @@ void free_pcode(int l);
 
 /*Funktionen für die Umwandlung */
 
+#if SIZEOF_VOID_P == 4
+  #define POINTER2INT(a) ((unsigned int)(a))
+  #define INT2POINTER(a) ((char *)(a))
+#elif SIZEOF_VOID_P == 8
+extern void *pointerbase;
+static inline unsigned int catchpointerbase(void *a) {
+  unsigned long long pb2;
+ // printf("Pointer:     %p\nPointerbase: %p\n",a,pointerbase);
+  pb2=((unsigned long long)a&0xffffffff00000000ULL);
+  if(pb2!=(unsigned long long)pointerbase) printf("WARNING: 64bit pointer base has changed!\n");
+  pointerbase=pb2;
+  return((unsigned int)((unsigned long long)a&0xffffffffULL));
+}
+static inline void *i2p(unsigned int a) {
+ // printf("Pointer:     %x ",a);
+  void *p=(void *)((unsigned long long)pointerbase+(unsigned long long)a);
+ // printf("--> %p\n",p);
+  return(p);
+}
+  #define POINTER2INT(a) catchpointerbase(a)
+  #define INT2POINTER(a) i2p(a)
+#else
+  #error Sizeof pointer unknown.
+#endif
+
+
+
+
+
 static inline void WSWAP(char *adr) {
   char a=*adr;
   *adr=adr[1];
@@ -359,10 +388,6 @@ inline static int labelzeile(char *n) {
     free(procs[anzprocs].parameterliste); \
   } \
 }
-
-
-
-
 
 
 int original_line(int);

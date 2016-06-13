@@ -46,8 +46,6 @@
   " in this version of X11-Basic because the COMPLEXMATH library \n" \
   " was not present at compile time.\n",a)
 
-
-
 #ifdef DUMMY_LIST
 #define cimag NULL
 #define creal NULL
@@ -733,7 +731,7 @@ static int    f_cvi(STRING n)   {return((int)(*((short *)n.pointer))); }
 static int    f_cvl(STRING n)   {return((int)(*((long *)n.pointer))); }
 static double f_deg(double d)   {return(d/PI*180);}
 static int    f_device(STRING n) {return(stat_device(n.pointer)); }
-static int    f_dpeek(int adr)  {return((int)(*(short *)adr));}
+static int    f_dpeek(int adr)  {return((int)(*(short *)INT2POINTER(adr)));}
 static double f_eval(STRING n)  {return(parser(n.pointer));}
 static int    f_exist(STRING n) {return(-exist(n.pointer)); }
 static double f_frac(double b)  {return(b-((double)((int)b)));}
@@ -742,7 +740,7 @@ static double f_frac(double b)  {return(b-((double)((int)b)));}
 //static double f_real(COMPLEX b) {return(b.r);}
 static int    f_inode(STRING n) {return(stat_inode(n.pointer)); }
 static int    f_len(STRING n)   {return(n.len); }
-static int    f_lpeek(int adr)  {return((int)(*(long *)adr));}
+static int    f_lpeek(int adr)  {return((int)(*(long *)INT2POINTER(adr)));}
 static double f_ltextlen(STRING n) {return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
 static int    f_malloc(int size) {return((int)malloc((size_t)size));}
 static int    f_mshrink(int adr,int size) {return(0);} /*always return zero*/
@@ -773,7 +771,7 @@ static int    f_even(PARAMETER *plist,int e)      {
     return(plist->integer&1 ? 0:-1);
   }
 }
-static int    f_peek(int adr)   {return((int)(*(char *)adr));}
+static int    f_peek(int adr)   {return((int)(*(char *)INT2POINTER(adr)));}
 #ifndef NOGRAPHICS
 static int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
 #endif
@@ -1282,8 +1280,6 @@ static int f_listselect(PARAMETER *plist,int e) {
 #endif
 
 
-
-
 static int f_varptr(PARAMETER *p,int e) {
   switch(p->typ) {
   case PL_IVAR:
@@ -1293,12 +1289,12 @@ static int f_varptr(PARAMETER *p,int e) {
   case PL_IARRAYVAR: /* Variable */
   case PL_FARRAYVAR: /* Variable */
   case PL_AIARRAYVAR: /* Variable */
-    return((int)p->pointer);
+    return(POINTER2INT(p->pointer));
   case PL_SVAR:
-    return((int)((STRING *)p->pointer)->pointer);
+    return(POINTER2INT(((STRING *)p->pointer)->pointer));
   case PL_SARRAYVAR: /* Variable */
-    if(p->panzahl>0) return((int)((STRING *)p->pointer)->pointer);
-    else return((int)p->pointer);
+    if(p->panzahl>0) return(POINTER2INT(((STRING *)p->pointer)->pointer));
+    else return(POINTER2INT(p->pointer));
   case PL_VAR:   /* Variable */
   case PL_ARRAYVAR: /* Variable */
   case PL_ALLVAR:  /* Varname */
@@ -1306,9 +1302,9 @@ static int f_varptr(PARAMETER *p,int e) {
   {
     int typ=variablen[p->integer].typ;
     if(typ==ARRAYTYP) typ=variablen[p->integer].pointer.a->typ;
-    if(typ==STRINGTYP) return((int)((STRING *)p->pointer)->pointer);
-    else if(typ==ARRAYTYP) return((int)((ARRAY *)p->pointer)->pointer);
-    else return((int)p->pointer);
+    if(typ==STRINGTYP) return(POINTER2INT(((STRING *)p->pointer)->pointer));
+    else if(typ==ARRAYTYP) return(POINTER2INT(((ARRAY *)p->pointer)->pointer));
+    else return(POINTER2INT(p->pointer));
     }
   }  
 }

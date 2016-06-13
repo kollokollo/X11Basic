@@ -2510,15 +2510,15 @@ static void c_getlocation(PARAMETER *plist,int e) {
 
 
 static void c_poke(PARAMETER *plist,int e) {
-  char *adr=(char *)(plist->integer);
+  char *adr=(char *)INT2POINTER(plist->integer);
   *adr=(char)plist[1].integer;
 }
 static void c_dpoke(PARAMETER *plist,int e) {
-  short *adr=(short *)(plist[0].integer);
+  short *adr=(short *)INT2POINTER(plist->integer);
   *adr=(short)plist[1].integer;
 }
 static void c_lpoke(PARAMETER *plist,int e) {
-  long *adr=(long *)plist[0].integer;
+  long *adr=(long *)INT2POINTER(plist->integer);
   *adr=(long)plist[1].integer;
 }
 
