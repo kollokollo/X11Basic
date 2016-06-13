@@ -70,7 +70,7 @@ X11-BASICVERSION  1.24
 
                  (see  http://x11-basic.sourceforge.net/)
 
-                                              Latest revision: April 12, 2016
+                                              Latest revision: June 13, 2016
     __________________________________________________________________________________________________________________________
 
 
@@ -379,57 +379,57 @@ ii
 
      7.8.    G    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   308
 
-     7.9.    H    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   327
+     7.9.    H    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   328
 
-     7.10.   I   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   334
+     7.10.   I   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   335
 
-     7.11.   J  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   353
+     7.11.   J  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   354
 
-     7.12.   K    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   356
+     7.12.   K    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   357
 
-     7.13.   L  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   359
+     7.13.   L  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   360
 
-     7.14.   M   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   387
+     7.14.   M   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   388
 
-     7.15.   N    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   412
+     7.15.   N    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   413
 
-     7.16.   O    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   422
+     7.16.   O    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   423
 
-     7.17.   P  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   440
+     7.17.   P  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   441
 
-     7.18.   Q    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   479
+     7.18.   Q    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   480
 
-     7.19.   R .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   481
+     7.19.   R .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   482
 
-     7.20.   S  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   517
+     7.20.   S  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   518
 
-     7.21.   T  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   576
+     7.21.   T  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   578
 
-     7.22.   U    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   595
+     7.22.   U    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   597
 
-     7.23.   V    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   608
+     7.23.   V    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   610
 
-     7.24.   W   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   617
+     7.24.   W   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   620
 
-     7.25.   X    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   628
-
-
-
-8.   Frequently asked Questions                                                                 635
+     7.25.   X    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   631
 
 
 
-9.   Compatibility                                                                                       638
-
-     9.1.    General remarks .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   638
-
-     9.2.    GFA-Basic compatibility   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   641
-
-     9.3.    Ideas for future releases of X11-Basic   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   648
+8.   Frequently asked Questions                                                                 637
 
 
 
-A.   GNU License                                                                                        653
+9.   Compatibility                                                                                       640
+
+     9.1.    General remarks .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   640
+
+     9.2.    GFA-Basic compatibility   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   643
+
+     9.3.    Ideas for future releases of X11-Basic   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   650
+
+
+
+A.   GNU License                                                                                        655
 
 
 
@@ -438,7 +438,7 @@ iv
 
 
 
-Index                                                                                                        659
+Index                                                                                                        661
 
 
 
@@ -953,6 +953,7 @@ x11basic`1.24-1`amd64.deb.
 Other Linux and UNIX distributions
 
 
+
 The author currently provides only 32bit and 64bit debian binary packages for linux
 
 (speciocally Ubuntu linux).  A rpm package can be made out of the debian packet
@@ -977,33 +978,42 @@ for some reason, you can also install X11-Basic from any ole browser taping on i
 
 and compile the sources.  This should work for all Linux distributions, and probably
 
-with little modiocations also for HP-UX (Hewlett-Packard UniX), for DEC/alpha,
+with little modiocations also for HP-UX (Hewlett-Packard UniX), for DEC/alpha, for
 
-for  MAC/OSX,  for  SUN/SOLARIS  and  FreeBSD  and  maybe  others.   Also  X11-
+MAC/OSX, for SUN/SOLARIS and FreeBSD and maybe others.  Also X11-Basic
 
-Basic compiles on Cygwin, and on ARM-Linuxes like the one often used together
+compiles on Cygwin, and on ARM-Linuxes like the one often used together with the
 
-with the Raspberry Pi.  Please note that X11-Basic is designed for 32-bit operating
+Raspberry Pi.  Please note that X11-Basic is designed for 32-bit operating systems.
 
-systems.  X11-Basic will also compile on 64 bit systems.  But some of the functions
+X11-Basic will also compile on 64 bit systems.  But some of the functions may not
 
-may not work, especially pointer aritmetric (VARPTR(), etc.)  will probably lead to
+work,  especially pointer aritmetric (VARPTR(),  PEEK(),  POKE, etc.)  will probably
 
-segmentation faults when using huge amounts of memory.
+lead to segmentation faults when using huge amounts of memory.1
+
+    ___________________________________________________
+  1In X11-Basic all pointers to memory adresses are stored in 32bit integer variables.  The upper 32bits of the adresses
+
+    are stored internally fur further use.  So if you calculate VARPTR(a), you would be able to POKE to the adress
+    immediately after without error, because the upper part of the adresses was stored intenally from the previous call to
+    VARPTR. X11-Basic will emmit a warning, pointer base has changed, whenever this part is dioeerent from what it was
+    before. This way, pointer aritmetrics can be used with care, even on 64 bit operating systems.
+
+
+
+8
+    ______________________________________________________________________________2.1.__Installing_X11-Basic__________________
 
 
 
 Compiling X11-Basic from its sources under UNIX like systems
 
 
+
 If you have a binary package of X11-Basic, you can safely skip this section.
 
     In order to compile X11-Basic, you will need the following:
-
-
-
-8
-    ______________________________________________________________________________2.1.__Installing_X11-Basic__________________
 
 
 
@@ -1021,7 +1031,7 @@ If you have a binary package of X11-Basic, you can safely skip this section.
 
 
 
-   These will suOEce to get you started. If one or more of these libraries are not present
+    These will suOEce to get you started. If one or more of these libraries are not present
 
 on your system, the configure and make scripts will try to compile a version, which
 
@@ -1061,11 +1071,16 @@ That's all you will have to do (for more detailed installation instructions read
 
 INSTALL, which comes with the package.).
 
-   If  the  `conogure'  script  fails,  please  contact  me  (kollo@users.sourceforge.
+    If  the  `conogure'  script  fails,  please  contact  me  (kollo@users.sourceforge.
 
 net) and send me the output it generated (config.log).  I am going to try to help
 
 you to ox the problem.
+
+
+
+                                                                                                                    9
+2.  Usage_____________________________________________________________________________________________________________________
 
 
 
@@ -1088,13 +1103,7 @@ everything you need to make the Raspberry pi interact with and display to the us
 
 
 
-                                                                                                                    9
-2.  Usage_____________________________________________________________________________________________________________________
-
-
-
 Cross-compiling other Versions of X11Basic
-
 
 
 The  Makeole  allows  you  to  also  produce  the  compiler  (make  xbc),  the  bytecode
@@ -1124,7 +1133,6 @@ mingw cross-compiler is needed).
 Support
 
 
-
 If you have trouble with X11-Basic, you may send me a mail. Please understand that I
 
 need to ond time to answer your mails. On http://sourceforge.net/projects/
@@ -1151,6 +1159,11 @@ problem, containing:
 
 
 
+10
+    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
+
+
+
       #  Which operating system are you using: Windows or UNIX, Linux, Android?
 
       #  How does the program behave on your computer? What did you expect?
@@ -1166,11 +1179,6 @@ problem, containing:
 There are several ways to start the X11-Basic interpreter depending on the operating
 
 system you are using it.
-
-
-
-10
-    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
 
 
 
@@ -1223,6 +1231,14 @@ i=1
 WHILE LEN(PARAM$(i))
    inputfile$=PARAM$(i)
    INC i
+
+
+
+                                                                                                                  11
+2.  Usage_____________________________________________________________________________________________________________________
+
+
+
 WEND
 CLR flag,count
 IF NOT EXIST(inputfile$)
@@ -1237,14 +1253,6 @@ WHILE NOT EOF(#1)
    IF GLOB(t$,"%%Page: *") AND NOT GLOB(t$,"%%Page: 1 1*")
      IF flag
         PRINT "grestore"
-
-
-
-                                                                                                                  11
-2.  Usage_____________________________________________________________________________________________________________________
-
-
-
      ENDIF
      flag=1
      PRINT t$
@@ -1294,6 +1302,13 @@ folder C:""x11basic. All oles you need for using X11-Basic are located there:
 
     xb2c.exe           --  bytecode  to  C  translator
 
+
+
+12
+    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
+
+
+
     xbasic.exe       --  The  X11-Basic  interpreter
 
     xbc.exe             --  The  X11-Basic  compiler
@@ -1302,7 +1317,7 @@ folder C:""x11basic. All oles you need for using X11-Basic are located there:
 
 
 
-    X11-Basic can be invoked in the following three ways:
+   X11-Basic can be invoked in the following three ways:
 
 
 
@@ -1314,13 +1329,6 @@ folder C:""x11basic. All oles you need for using X11-Basic are located there:
                 compile into .exe,
 
          DEMO       : Opens and rund the demo.bas example program,
-
-
-
-12
-    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
-
-
 
          DOCU       : Opens the X11-Basic User Manual,
 
@@ -1375,14 +1383,20 @@ right mouse button.  Clicking on an icon of a X11-Basic program as well opens th
 context menu with following options:
 
 
-
 Execute       will invoke the X11-Basic interpreter to execute your program.  The same
 
          happens, if you doubleclick on the icon.
 
+
+
+                                                                                                                  13
+2.  Usage_____________________________________________________________________________________________________________________
+
+
+
 Edit    invokes notepad, allowing you to edit your program.
 
-View docu        opens a window which shows the embedded documentation of your pro-
+View docu         opens a window which shows the embedded documentation of your pro-
 
          gram if there is any. Embedded documentation within a .bas ole are comments,
 
@@ -1397,24 +1411,17 @@ A version of X11-Basic ready to be installed on Android smartphones and tablets 
 
 available on the Android Market (also called Google Play).
 
-
-
-                                                                                                                  13
-2.  Usage_____________________________________________________________________________________________________________________
-
-
-
-   Unlike the other versions of X11-Basic, the interpreter and virtual machine is em-
+    Unlike the other versions of X11-Basic, the interpreter and virtual machine is em-
 
 bedded in a little IDE (=Integrated Development Environment) which allows the user
 
 to load, run, edit and compile the programs.
 
-   The app registers itself as a viewer to .bas and .b oles on the system. So from any
+    The app registers itself as a viewer to .bas and .b oles on the system. So from any
 
 ole browser, basic programs can be started with a single touch.
 
-   If  you  open  the  X11-Basic  app  itself,  you  can  directly  type  in  commands  with
+    If  you  open  the  X11-Basic  app  itself,  you  can  directly  type  in  commands  with
 
 the virtual keyboard. Pressing the MENU button gives you the option to load and run
 
@@ -1461,31 +1468,31 @@ Android devices usually have a BACK button, a HOME button and a MENU button.
 
          press the BACK button again, the X11-Basic interpreter quits.
 
-      #  The MENU button opens a menu with following options:  About, LOAD pro-
-
-         gram,  RUN  program,  STOP/CONT  program,  NEW,  Keyboard,  Paste  from
-
-         clipboard, Info/Settings, Editor, Compile and Quit.
-
-
-         About     shows information about the current version of X11-Basic, news and
-
-                impressum.
-
-         Load ...    opens a oleselector which displays all .bas and all .b programs in the
-
-                directory /mnt/sdcard/bas.  The selected program will be loaded into
-
-                memory.  A program eventually stored there before will be overwritten.
-
-                You can display the sourcecode by entering LIST.
-
 
 
 14
 ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
 
 
+
+  #  The MENU button opens a menu with following options:  About, LOAD pro-
+
+     gram,  RUN  program,  STOP/CONT  program,  NEW,  Keyboard,  Paste  from
+
+     clipboard, Info/Settings, Editor, Compile and Quit.
+
+
+     About      shows information about the current version of X11-Basic, news and
+
+            impressum.
+
+     Load ...     opens a oleselector which displays all .bas and all .b programs in the
+
+            directory /mnt/sdcard/bas.  The selected program will be loaded into
+
+            memory.  A program eventually stored there before will be overwritten.
+
+            You can display the sourcecode by entering LIST.
 
      Run     will simply start the execution of a program which has been loaded be-
 
@@ -1545,28 +1552,30 @@ Android devices usually have a BACK button, a HOME button and a MENU button.
 
      Editor     will execute a 3rd-party text editor (e.g. Ted or Jota or 920 Text Editor if
 
-            installed) to edit the program currently loaded. If no program was loaded,
-
-            the default ole name will be new.bas. After having saved and closed the
-
-            text editor, the modioed program will be automatically reloaded into the
-
-            X11-Basic interpreter.
-
-     Compile       will compile the basic source code into bytecode which can be ex-
-
-            ecuted about 20 times faster (but cannot be edited or merged anymore).
-
-            The bytecode will be saved with .b extension in the bas/ folder.
-
-     Help    will open a window in which you can search the command reference.
-
-     Quit    will terminate the X11-Basic interpreter.
-
 
 
                                                                                                               15
 2.  Usage_____________________________________________________________________________________________________________________
+
+
+
+                installed) to edit the program currently loaded. If no program was loaded,
+
+                the default ole name will be new.bas. After having saved and closed the
+
+                text editor, the modioed program will be automatically reloaded into the
+
+                X11-Basic interpreter.
+
+         Compile       will compile the basic source code into bytecode which can be ex-
+
+                ecuted about 20 times faster (but cannot be edited or merged anymore).
+
+                The bytecode will be saved with .b extension in the bas/ folder.
+
+         Help    will open a window in which you can search the command reference.
+
+         Quit    will terminate the X11-Basic interpreter.
 
 
 
@@ -1627,6 +1636,13 @@ should do as well as automatic reload in X11-Basic.
 
 plenty around, e.g.  920 Text Editor or Ted (tiny text editor).  Install them from the
 
+
+
+16
+    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
+
+
+
 Android market. You can install multiple editors. Then you are asked which one you
 
 like to use every time you call the editor.
@@ -1643,17 +1659,9 @@ or .b) to load.  If you touch the olename long you get another menu with advance
 functions:
 
 
-
 LOAD       ~ load the program.
 
 MERGE        ~ merge the program to the one already loaded (works only with .bas oles).
-
-
-
-16
-    ______________________________________________________________2.2.__Using_the_X11-Basic_Interpreter_______________________
-
-
 
 LOAD + RUN           ~ load the program and immediately run it.
 
@@ -1670,8 +1678,7 @@ delete     ~ delete the selected ole (you will be asked to conorm).
 CANCEL         ~ return to the ole menu.
 
 
-
-   These functions are here for convenience only. You probably want to use LOAD+RUN
+    These functions are here for convenience only. You probably want to use LOAD+RUN
 
 or compile+RUN more often.
 
@@ -1713,6 +1720,11 @@ desktop.
 
 
 
+                                                                                                                  17
+2.  Usage_____________________________________________________________________________________________________________________
+
+
+
 Updates of example programs
 
 
@@ -1730,11 +1742,6 @@ execution of X11-Basic.
 
 
 
-                                                                                                                  17
-2.  Usage_____________________________________________________________________________________________________________________
-
-
-
 Troubleshooting the Android Version
 
 
@@ -1747,11 +1754,9 @@ SCREEN REFRESH PROBLEM:                         (Was  reported  sometimes  on  S
          Basic runs a program. CURE: you should check the system settings:
 
 
-
          Developer  settings  -->    deactivate  Hardware  overlays:  ON
 
                                           -->    force  Gpu:  OFF
-
 
 
 Characters typed are not visible                 If the whole line appears after you pressed EN-
@@ -1796,6 +1801,11 @@ mand line parameters. It takes the following ones:
 
 
 
+18
+    __________________________________________________________________2.3.__Editing_X11-Basic_programs________________________
+
+
+
 xbasic <olename>                         run Basic program [input.bas]
 
 -l                                                load only, don't execute
@@ -1807,13 +1817,6 @@ xbasic <olename>                         run Basic program [input.bas]
 ~daemon                                       switch ooe prompting and echoing
 
 -h  ~help                                     print a short help
-
-
-
-18
-    __________________________________________________________________2.3.__Editing_X11-Basic_programs________________________
-
-
 
 ~help  <topic>                            print help on a specioc topic
 
@@ -1869,18 +1872,6 @@ installed more than one editor, this is no problem, you will be asked which one 
 
 every time, the editor is invoked.
 
-    Besides  from  the  basic  editing  features  I  recommend  to  use  a  text  editor  with
-
-syntax  highlighting.   Currently  X11-Basic  syntax  deonitions  are  available  for  the
-
-Nirvana  Editor  (nedit,  available  for  Linux,  UNIX  and  WINDOWS)  and  for  the
-
-920  Text  Editor and Jota, available for Android.
-
-    X11-Basic can support foreign language characters.  Therefor the basic program
-
-may  be  coded  in  UTF-8  which  is  compatible  to  ASCII  but  has  the  ability  to  use
-
 
 
                                                                                                                   19
@@ -1894,11 +1885,23 @@ Figure 2.1   :The Nirvana Editor with syntax high-
 
 
 
+     Besides  from  the  basic  editing  features  I  recommend  to  use  a  text  editor  with
+
+  syntax  highlighting.   Currently  X11-Basic  syntax  deonitions  are  available  for  the
+
+  Nirvana  Editor  (nedit,  available  for  Linux,  UNIX  and  WINDOWS)  and  for  the
+
+  920  Text  Editor and Jota, available for Android.
+
+     X11-Basic can support foreign language characters.  Therefor the basic program
+
+  may  be  coded  in  UTF-8  which  is  compatible  to  ASCII  but  has  the  ability  to  use
+
   and encode any Unicode character. Such characters can be used in X11-Basic string
 
   constants, but may not be used in variable names. Currently only the standard output
 
-  (console) supports the full UTF-8 character sets.1
+  (console) supports the full UTF-8 character sets.2
 
 
 
@@ -1906,9 +1909,9 @@ Figure 2.1   :The Nirvana Editor with syntax high-
 
 
 
-  NEdit, the full featured, plain text Nirvana editor2 is a GUI style text editor for work-
+  NEdit, the full featured, plain text Nirvana editor3 is a GUI style text editor for work-
 
-  stations with the X Window System.  Also a MS Windows port is available3 .  NEdit
+  stations with the X Window System.  Also a MS Windows port is available1 .  NEdit
 
   provides all of the standard menu, dialog, editing, mouse support, macro extension
 
@@ -1918,26 +1921,25 @@ Figure 2.1   :The Nirvana Editor with syntax high-
 
   Unfortunately nedit does not support UTF-8.
 
-
       If you like to use nedit as your favorite editor,  a nedit.defs ole comes with
 
-  this package. This enables syntax highlighting for X11-Basic programs in nedit (see
-
-  og. 2.1).
-
-
-
       ___________________________________________________
-    1LTEXT will accept some of the special characters (currently only german), TEXT will work with UTF-8 only on
+    2LTEXT will accept some of the special characters (currently only german), TEXT will work with UTF-8 only on
 
       Android devices (all latin, greek, cyrillic).
-    2http://nedit.org/
-    3http://nedit.gmxhome.de/winport.html
+    3http://nedit.org/
+    1http://nedit.gmxhome.de/winport.html
 
 
 
   20
     _______________________________________2.4.__The_Bytecode_Compiler_and_the_Virtual_Machine________________________________
+
+
+
+this package. This enables syntax highlighting for X11-Basic programs in nedit (see
+
+og. 2.1).
 
 
 
@@ -2011,18 +2013,15 @@ macro translation step, the bytecode is in a way readable. Here is an example:
 
 
 
-...
-     PUSH2;                 /* 2   */
-     ZUWEIS(2);             /* I= */
-LBL`38:   PUSHV(2);        /* I */
-
-
-
                                                                                                                   21
 2.  Usage_____________________________________________________________________________________________________________________
 
 
 
+...
+     PUSH2;                 /* 2   */
+     ZUWEIS(2);             /* I= */
+LBL`38:   PUSHV(2);        /* I */
      X2I;
      PUSHARRAYELEM(3,1); /* F(.) */
      X2I;
@@ -2069,15 +2068,9 @@ LBL`91:   PUSHV(2);        /* I */
      JUMPIFZERO LBL`38;   /* BEQ`s(-104); */
 ...
 
+
+
 This is bytecode made out of the (X11-Basic) lines:
-
-
-
-...
-FOR i=2 TO s
-   IF f(i)
-     IF 2*i<s
-        FOR k=2*i TO s STEP i
 
 
 
@@ -2086,6 +2079,11 @@ FOR i=2 TO s
 
 
 
+...
+FOR i=2 TO s
+   IF f(i)
+     IF 2*i<s
+        FOR k=2*i TO s STEP i
           CLR f(k)
         NEXT k
         FLUSH
@@ -2151,18 +2149,18 @@ should be a bytecode ole produced by xbbc).  The default output ole name is 11.c
 
 but you can specify alternate names with the -o option.
 
-    Actually xb2c is not a real compiler, but rather a translator.  The compilation is
-
-already  done  by  the  bytecode  compiler.   xb2c  itself  does  a  one  to  one  translation
-
-of  the  bytecode  (currently  only  into  C).  This  translation  process  is  not  yet  highly
-
 
 
                                                                                                                   23
 2.  Usage_____________________________________________________________________________________________________________________
 
 
+
+   Actually xb2c is not a real compiler, but rather a translator.  The compilation is
+
+already  done  by  the  bytecode  compiler.   xb2c  itself  does  a  one  to  one  translation
+
+of  the  bytecode  (currently  only  into  C).  This  translation  process  is  not  yet  highly
 
 optimized, but quite robust and portable. There is no way to recreate the .bas source
 
@@ -2185,11 +2183,13 @@ xb2c  b.b  -o  11.c
 gcc    11.c  -lm  -lX11  -lx11basic  -lasound  -lreadline  -lgmp  -llapack  -o  a.out
 
 
+
     For convinience, a
 
 
 
 xbc  -virtualm  myprogram.bas  -o  a.out
+
 
 
 will exactly do the same.
@@ -2207,6 +2207,7 @@ stand-alone binaries out of X11-Basic source code.  It also can produce .o objec
 oles, shared objects (or DLLs) and bytecode.
 
     There are three methods on how the compilation can be done:
+
 
 
 1. The pseudo method:               The sourcecode is bundled together with the X11-Basic in-
@@ -2231,6 +2232,13 @@ oles, shared objects (or DLLs) and bytecode.
 
          preted source code.  However,  some restrictions to the compiled sourcecode
 
+
+
+24
+    __________________________________________________2.7.__The_ANSI-Basic_to_X11-Basic_converter_____________________________
+
+
+
          apply, e.g. GOTOs across procedures are not possible, as well as ON ERROR
 
          and ON BREAK will currently not work. So some obscure code will probably
@@ -2238,13 +2246,6 @@ oles, shared objects (or DLLs) and bytecode.
          not compile correctly. However, this method is recommended as the preferred
 
          method and it is the default on MS WINDOWS.
-
-
-
-24
-    __________________________________________________2.7.__The_ANSI-Basic_to_X11-Basic_converter_____________________________
-
-
 
 3. The independent method:                  The sourcecode is compiled to bytecode and then trans-
 
@@ -2312,16 +2313,16 @@ For details on the compatibility to other dialects of BASIC, please read chapter
 
 
 
+                                                                                                                  25
+2.  Usage_____________________________________________________________________________________________________________________
+
+
+
 xbasic  bas2x11basic.bas  ansibasic.bas  -o  newname.bas
 
 
 
     For further options try
-
-
-
-                                                                                                                  25
-2.  Usage_____________________________________________________________________________________________________________________
 
 
 
@@ -4690,7 +4691,7 @@ inserted every three digits to the left of the decimal point.  Or, you want to p
 
 numbers in scientioc notation. PRINT  USING provides a way to print numbers in this
 
-and almost any other form1 .
+and almost any other form2 .
 
    The generic syntax is
 
@@ -4710,7 +4711,7 @@ a quoted string, or a more general string expression.
 
 left justioed.
 
-   The function USING$() duplicates the PRINT USING statement almost exactly2
+   The function USING$() duplicates the PRINT USING statement almost exactly1
 
 but returns the result as a string rather than printing it on the screen.
 
@@ -4755,10 +4756,10 @@ x=      _PRINT  x_  PRINT  x  USING  "###"
 
 1       _  1         _      1
     ___________________________________________________
-  1There are also other built-in commands for formatting data on output. X11-Basic ooeers e.g. STR$(). Please refer to the
+  2There are also other built-in commands for formatting data on output. X11-Basic ooeers e.g. STR$(). Please refer to the
 
     sections on functions for details on the syntax of STR$().
-  2only numbers can be formatted, no strings.
+  1only numbers can be formatted, no strings.
 
 
 
@@ -7269,7 +7270,7 @@ boxes and the ole selector are examples of dialog boxes.
 
 ply construct an OBJECT tree with at least one EXIT or TOUCHEXIT object and call
 
-form`do()1 .  All interaction with the dialog like editable oelds, radio buttons, and
+form`do()0 .  All interaction with the dialog like editable oelds, radio buttons, and
 
 selectable objects will be maintained by the X11-Basic library until the user strikes
 
@@ -7315,7 +7316,7 @@ one which opened the block. The block will be closed by a '"' in a single line.
 
 
     ___________________________________________________
-  1Before you should display the dialog box using the objc`draw() function. Maybe you also want to center the dialog
+  0Before you should display the dialog box using the objc`draw() function. Maybe you also want to center the dialog
 
     with form`center() and save and redraw the background with form`dial().
 
@@ -8407,41 +8408,41 @@ is dioeerent from any command or keyword, it's usable as name.
 
          int    FALSE                     constant: 0                                                p.280
 
-         int    GPS?                      TRUE if GPS is available, else 0                           p.322
+         int    GPS?                      TRUE if GPS is available, else 0                           p.323
 
-         AEt    GPS`ALT                   Altitude in m received from GPS                            p.323
+         AEt    GPS`ALT                   Altitude in m received from GPS                            p.324
 
-         AEt    GPS`LAT                   latitude in degrees received from GPS                      p.324
+         AEt    GPS`LAT                   latitude in degrees received from GPS                      p.325
 
-         AEt    GPS`LON                   longitude in degrees received from GPS                     p.324
+         AEt    GPS`LON                   longitude in degrees received from GPS                     p.325
 
-         int    MOUSEK                    mouse button state                                         p.405
+         int    MOUSEK                    mouse button state                                         p.406
 
-         int    MOUSES                    state of the shift, alt, ctrl, caps keys                   p.405
+         int    MOUSES                    state of the shift, alt, ctrl, caps keys                   p.406
 
-         int    MOUSEX                    x coordinate of mouse position                             p.405
+         int    MOUSEX                    x coordinate of mouse position                             p.406
 
-         int    MOUSEY                    y coordinate of mouse position                             p.405
+         int    MOUSEY                    y coordinate of mouse position                             p.406
 
-         int    PC                        program counter                                            p.444
+         int    PC                        program counter                                            p.445
 
-         AEt    PI                        constant: 3.14159265359...                                 p.448
+         AEt    PI                        constant: 3.14159265359...                                 p.449
 
-         int    ROWS                      number of rows of the text terminal                        p.513
+         int    ROWS                      number of rows of the text terminal                        p.514
 
-         int    SENSOR?                   TRUE if sensor phalanx is available                        p.530
+         int    SENSOR?                   TRUE if sensor phalanx is available                        p.531
 
-         int    SP                        internal stack pointer                                     p.556
+         int    SP                        internal stack pointer                                     p.558
 
-         int    STIMER                    integer system timer                                       p.564
+         int    STIMER                    integer system timer                                       p.566
 
-         AEt    TIMER                     Unix system timer, AEoat                                   p.584
+         AEt    TIMER                     Unix system timer, AEoat                                   p.586
 
-         int    TRUE                      constant: -1                                               p.592
+         int    TRUE                      constant: -1                                               p.594
 
-         int    UNIX?                     TRUE if OS is UNIX like (Linux, BSD)                       p.599
+         int    UNIX?                     TRUE if OS is UNIX like (Linux, BSD)                       p.601
 
-         int    WIN32?                    TRUE if OS is MS WINDOWS 32 bit                            p.623
+         int    WIN32?                    TRUE if OS is MS WINDOWS 32 bit                            p.626
 
                 DATE$                     current date                                               p.220
 
@@ -8454,13 +8455,13 @@ is dioeerent from any command or keyword, it's usable as name.
 
                 FILEEVENT$                get events about oles                                      p.284
 
-                INKEY$                    content of the keyboard-buoeer                             p.340
+                INKEY$                    content of the keyboard-buoeer                             p.341
 
-                TERMINALNAME$             device name of the standard terminal                       p.580
+                TERMINALNAME$             device name of the standard terminal                       p.582
 
-                TIME$                     current time                                               p.583
+                TIME$                     current time                                               p.585
 
-                TRACE$                    current program code line                                  p.588
+                TRACE$                    current program code line                                  p.590
 
 
 
@@ -8504,11 +8505,11 @@ Precedence is deoned as follows (highest orst):
 
 4. -  +                                         ()
 
-5. MOD  DIV                                  (modulus, ...)            p.400,238
+5. MOD  DIV                                  (modulus, ...)            p.401,238
 
 6. <  >  =  <>  <=  >=                      (comparison operators)
 
-7. AND  OR  XOR  NOT  EQV  IMP        (logical operators)     p.143,437, 421,259,337
+7. AND  OR  XOR  NOT  EQV  IMP        (logical operators)     p.143,438, 422,259,338
 
 
 
@@ -8531,13 +8532,13 @@ QUIT.
 
 
                               ___________________________________________________________
-                              |  '  REM                                        p.493  |
+                              |  '  REM                                        p.494  |
                               |                                                       |
-                              |  ?  PRINT                                      p.466  |
+                              |  ?  PRINT                                      p.467  |
                               |                                                       |
-                              |  @  GOSUB                                      p.318  |
+                              |  @  GOSUB                                      p.319  |
                               |                                                       |
-                              |  "  VOID                                       p.615  |
+                              |  "  VOID                                       p.617  |
                               |                                                       |
                               |  !  comment at the end of a line                        |
                               |                                                         |
@@ -8570,25 +8571,25 @@ ECHO  ON/OFF                same as TRON * TROFF                                
 
 EDIT                            call default editor to edit program                          p.247
 
-HELP  <expr>                prints short help on expr                                       p.329
+HELP  <expr>                prints short help on expr                                       p.330
 
-LIST  [s,e]                  List program code (from line s to e)                       p.370
+LIST  [s,e]                  List program code (from line s to e)                       p.371
 
-LOAD  file$                  load program                                                      p.372
+LOAD  file$                  load program                                                      p.373
 
-NEW                              clear all variables, erase program and stop               p.414
+NEW                              clear all variables, erase program and stop               p.415
 
-PLIST                           formatted listing                                                  p.452
+PLIST                           formatted listing                                                  p.453
 
-PROGRAM options            set title and compiler options                                 p.473
+PROGRAM options            set title and compiler options                                 p.474
 
-QUIT                            quits the X11-BASIC-Interpreter                           p.480
+QUIT                            quits the X11-BASIC-Interpreter                           p.481
 
-REM comment                remark in program                                               p.493
+REM comment                remark in program                                               p.494
 
-RUN                              start program                                                      p.516
+RUN                              start program                                                      p.517
 
-STOP                            stop program                                                       p.565
+STOP                            stop program                                                       p.567
 
 
 
@@ -8597,17 +8598,17 @@ STOP                            stop program                                    
 
 
 
-SAVE  [file$]              writes the BASIC-program into ole                        p.518
+SAVE  [file$]              writes the BASIC-program into ole                        p.519
 
-TROFF                           Trace mode ooe                                                    p.590
+TROFF                           Trace mode ooe                                                    p.592
 
-TRON                            Trace mode on (for debugging)                              p.591
+TRON                            Trace mode on (for debugging)                              p.593
 
-VERSION                       shows X11-Basic version number and date              p.614
+VERSION                       shows X11-Basic version number and date              p.616
 
-XLOAD                           select and load a program                                     p.629
+XLOAD                           select and load a program                                     p.632
 
-XRUN                            select, load and run a program                               p.632
+XRUN                            select, load and run a program                               p.635
 
 
 
@@ -8653,19 +8654,19 @@ FOR  *  NEXT                  For Next loop                                     
 
 FUNCTION  *  ENDFUNC   deone function                                                    p.306
 
-GOSUB  proc(...)         call subroutine                                                    p.318
+GOSUB  proc(...)         call subroutine                                                    p.319
 
-GOTO  label                  goto label                                                           p.319
+GOTO  label                  goto label                                                           p.320
 
-IF  *  ELSE  *  ENDIF     conditional blocks                                               p.335
+IF  *  ELSE  *  ENDIF     conditional blocks                                               p.336
 
-LOOP                            DO * LOOP                                                       p.380
+LOOP                            DO * LOOP                                                       p.381
 
-NEXT                            FOR * NEXT                                                      p.415
+NEXT                            FOR * NEXT                                                      p.416
 
-ON  BREAK  GOSUB  proc  deone procedure on break                                     p.432
+ON  BREAK  GOSUB  proc  deone procedure on break                                     p.433
 
-ON  ERROR  GOSUB  proc  deone procedure on error                                      p.433
+ON  ERROR  GOSUB  proc  deone procedure on error                                      p.434
 
 
 
@@ -8674,21 +8675,21 @@ ON  ERROR  GOSUB  proc  deone procedure on error                                
 
 
 
-ON  *  GOSUB  proc1,...excecute subroutine depending on value                 p.430
+ON  *  GOSUB  proc1,...excecute subroutine depending on value                 p.431
 
-ON  *  GOTO  label1,...branch to dioeerent labels depending on value          p.431
+ON  *  GOTO  label1,...branch to dioeerent labels depending on value          p.432
 
-REPEAT                         REPEAT * UNTIL                                              p.495
+REPEAT                         REPEAT * UNTIL                                              p.496
 
-RESUME                         resume program after error                                   p.498
+RESUME                         resume program after error                                   p.499
 
-RETURN                         deone the end of a PROCEDURE                          p.499
+RETURN                         deone the end of a PROCEDURE                          p.500
 
-SELECT  expr                SELECT * CASE * DEFAULT * ENDSELECT      p.525
+SELECT  expr                SELECT * CASE * DEFAULT * ENDSELECT      p.526
 
-UNTIL  exp                   REPEAT * UNTIL                                              p.603
+UNTIL  exp                   REPEAT * UNTIL                                              p.605
 
-SPAWN  procedure         Spawn new thread                                               p.558
+SPAWN  procedure         Spawn new thread                                               p.560
 
 
 
@@ -8704,27 +8705,27 @@ CLS                              clear (text)screen                             
 
 FLUSH                           AEush output                                                        p.293
 
-HOME                            textcursor home                                                   p.332
+HOME                            textcursor home                                                   p.333
 
-INPUT  "text";varlistread values for variables                                       p.345
+INPUT  "text";varlistread values for variables                                       p.346
 
-LINEINPUT  t$              read entire line from channel/ole/console                p.367
+LINEINPUT  t$              read entire line from channel/ole/console                p.368
 
-LOCATE  row,column     Place cursor on column and row                            p.375
+LOCATE  row,column     Place cursor on column and row                            p.376
 
-PRINT  a;b$                  console output                                                     p.466
+PRINT  a;b$                  console output                                                     p.467
 
-PRINT  AT(x,y);           locate textcursor at row y and column x                  p.467
+PRINT  AT(x,y);           locate textcursor at row y and column x                  p.468
 
-PRINT  COLOR(x,y);     change text color                                                 p.468
+PRINT  COLOR(x,y);     change text color                                                 p.469
 
 PRINT  TAB(x);            locate textcursor at column x                                 p.??
 
 PRINT  SPC(x);            move textcursor x columns                                   p.??
 
-PRINT  a  USING  f$       print number with formatter                                  p.470
+PRINT  a  USING  f$       print number with formatter                                  p.471
 
-PUTBACK  a                   put back a char to console                                     p.477
+PUTBACK  a                   put back a char to console                                     p.478
 
 
 
@@ -8755,33 +8756,33 @@ CLOSE  [[#]n]              close ole, I/O channel or link                       
 
 FLUSH  [#n]                  AEush output                                                        p.293
 
-KILL  file$                  delete a ole                                                         p.358
+KILL  file$                  delete a ole                                                         p.359
 
 MAP                              maps a ole into memory                                       p.??
 
-UNMAP                           unmaps memory                                                  p.602
+UNMAP                           unmaps memory                                                  p.604
 
-MKDIR  path$                create a directory                                                 p.398
+MKDIR  path$                create a directory                                                 p.399
 
-OPEN  m$,#n,file$       open a ole or socket for input and/or output             p.434
+OPEN  m$,#n,file$       open a ole or socket for input and/or output             p.435
 
-OUT  #n,a                     out byte a to channel n                                         p.439
+OUT  #n,a                     out byte a to channel n                                         p.440
 
-PRINT  #n;                   output to channel/ole                                           p.466
+PRINT  #n;                   output to channel/ole                                           p.467
 
-PUTBACK  [#n,]a           put back a char to channel/ole/console                    p.477
+PUTBACK  [#n,]a           put back a char to channel/ole/console                    p.478
 
-RELSEEK  #n,d              Place olepointer on new relative position                p.492
+RELSEEK  #n,d              Place olepointer on new relative position                p.493
 
-RENAME  file$,dst$     rename and move a ole                                         p.494
+RENAME  file$,dst$     rename and move a ole                                         p.495
 
-RMDIR  path$                remove an empty directory                                    p.506
+RMDIR  path$                remove an empty directory                                    p.507
 
-SEEK  #n,d                   place olepointer to absolute position                      p.524
+SEEK  #n,d                   place olepointer to absolute position                      p.525
 
-TOUCH  #n                     update timestamps of ole                                      p.587
+TOUCH  #n                     update timestamps of ole                                      p.589
 
-WATCH  file$                monitor ole changes                                             p.618
+WATCH  file$                monitor ole changes                                             p.621
 
 
 
@@ -8803,17 +8804,17 @@ DIM                              declare and create array                       
 
 ERASE  a()[,...]         erase arrays                                                         p.260
 
-INC  a                           increments variable a                                           p.338
+INC  a                           increments variable a                                           p.339
 
-LET  a=b                       enforces assignment                                             p.364
+LET  a=b                       enforces assignment                                             p.365
 
-LOCAL  var[,...]         declare local variables in a procedure or function     p.374
+LOCAL  var[,...]         declare local variables in a procedure or function     p.375
 
-SORT  a(),n[,b()]       Sort array                                                           p.552
+SORT  a(),n[,b()]       Sort array                                                           p.554
 
-SWAP  a,b                     Swap variables                                                    p.571
+SWAP  a,b                     Swap variables                                                    p.573
 
-VAR  vars                     declare arguments to be passed "by reference"         p.611
+VAR  vars                     declare arguments to be passed "by reference"         p.613
 
 
 
@@ -8834,17 +8835,17 @@ DPOKE  adr,word           write short int word to adr                           
 
 FREE  adr%                   Frees a previously allocated memory block.            p.301
 
-LPOKE  adr,long           writes long int value to pointer adr                         p.383
+LPOKE  adr,long           writes long int value to pointer adr                         p.384
 
-MFREE  adr%                  Frees a previously allocated memory block.            p.395
+MFREE  adr%                  Frees a previously allocated memory block.            p.396
 
-MSYNC  adr%,l              AEushes changes map memory back to disk              p.408
+MSYNC  adr%,l              AEushes changes map memory back to disk              p.409
 
-POKE  adr,byte            write byte to pointer adr                                       p.457
+POKE  adr,byte            write byte to pointer adr                                       p.458
 
-SHM`DETACH  adr%         detaches the shared memory segment                     p.540
+SHM`DETACH  adr%         detaches the shared memory segment                     p.541
 
-SHM`FREE  adr%            frees the shared memory segment                          p.541
+SHM`FREE  adr%            frees the shared memory segment                          p.542
 
 
 
@@ -8872,13 +8873,13 @@ FIT`POLY  x(),y(),dy(),n%,a(),m%
 
                                    ot a polynom to datapoints                                    p.290
 
-INC  var                       same as var=var+1 but faster                                 p.338
+INC  var                       same as var=var+1 but faster                                 p.339
 
-MUL  a,b                       same as a=a*b but faster                                       p.411
+MUL  a,b                       same as a=a*b but faster                                       p.412
 
-SORT  a(),n[,b()]       sorts n values of a() to incrementing order               p.552
+SORT  a(),n[,b()]       sorts n values of a() to incrementing order               p.554
 
-SUB  a,b                       same as a=a-b but faster                                        p.568
+SUB  a,b                       same as a=a-b but faster                                        p.570
 
 
 
@@ -8907,57 +8908,57 @@ EXEC  adr[,var,...]      call a C subroutine at pointer adr.                    
 
 GET`LOCATION  ,,,,,,,  returns the position of the device                         p.315
 
-GPS  ON/OFF                    turns GPS device on/ooe                                     p.321
+GPS  ON/OFF                    turns GPS device on/ooe                                     p.322
 
-LINK  #n,t$                    load shared object ole t$                                    p.369
+LINK  #n,t$                    load shared object ole t$                                    p.370
 
-UNLINK  #n                      unload shared object ole                                    p.601
+UNLINK  #n                      unload shared object ole                                    p.603
 
-MERGE  f$                        Merges bas-ole to actual program code                p.394
+MERGE  f$                        Merges bas-ole to actual program code                p.395
 
-NOP                                 no operation do nothing                                     p.418
+NOP                                 no operation do nothing                                     p.419
 
-NOOP                               no operation do nothing                                     p.418
+NOOP                               no operation do nothing                                     p.419
 
-PAUSE  sec                      pauses sec seconds                                            p.442
+PAUSE  sec                      pauses sec seconds                                            p.443
 
-PIPE  #l,#k                    links two ole channels                                       p.449
+PIPE  #l,#k                    links two ole channels                                       p.450
 
-PLAYSOUND  c,s$             plays a WAV sample                                          p.450
+PLAYSOUND  c,s$             plays a WAV sample                                          p.451
 
-PLAYSOUNDFILE  file$    plays a sound ole                                              p.451
+PLAYSOUNDFILE  file$    plays a sound ole                                              p.452
 
-PROCEDURE  proc(p1,...)PROCEDURE * RETURN                                 p.471
+PROCEDURE  proc(p1,...)PROCEDURE * RETURN                                 p.472
 
-RANDOMIZE  [seed]          Sets seed for random generator                           p.486
+RANDOMIZE  [seed]          Sets seed for random generator                           p.487
 
-READ  var                        reads constant from DATA statement                   p.488
+READ  var                        reads constant from DATA statement                   p.489
 
-RECEIVE  #n,t$               receive a message from a socket                          p.491
+RECEIVE  #n,t$               receive a message from a socket                          p.492
 
-RESTORE  [label]           (re)sets pointer for READ-statement to label         p.497
+RESTORE  [label]           (re)sets pointer for READ-statement to label         p.498
 
-RETURN  expr                  return value from FUNCTION                            p.499
+RETURN  expr                  return value from FUNCTION                            p.500
 
-RSRC`LOAD  file$           loads GEM rsc-File (ATARI ST)                         p.515
+RSRC`LOAD  file$           loads GEM rsc-File (ATARI ST)                         p.516
 
-RSRC`FREE                      frees GEM rsc-File                                            p.514
+RSRC`FREE                      frees GEM rsc-File                                            p.515
 
-SEND  #n,t$                    send a message to a socket                                 p.527
+SEND  #n,t$                    send a message to a socket                                 p.528
 
-SENSOR  ON/OFF               turns SENSORs on/ooe                                       p.531
+SENSOR  ON/OFF               turns SENSORs on/ooe                                       p.532
 
-SETENV  t$=a$                 Sets environmentvar t$ using value a$                  p.532
+SETENV  t$=a$                 Sets environmentvar t$ using value a$                  p.533
 
-SOUND  freq                    Sound the internal speaker                                  p.554
+SOUND  freq                    Sound the internal speaker                                  p.556
 
-SPLIT  t$,d$,mode,a$,b$splits t$ by deliminator d$ into a$ and b$             p.560
+SPLIT  t$,d$,mode,a$,b$splits t$ by deliminator d$ into a$ and b$             p.562
 
-SHELL  t$                        execute ole as shell                                           p.537
+SHELL  t$                        execute ole as shell                                           p.538
 
-SPEAK  t$                        Text to speach                                                   p.559
+SPEAK  t$                        Text to speach                                                   p.561
 
-SYSTEM  t$                      execute shell with command t$                           p.574
+SYSTEM  t$                      execute shell with command t$                           p.576
 
 
 
@@ -8966,13 +8967,13 @@ SYSTEM  t$                      execute shell with command t$                   
 
 
 
-UNLINK  #n                      un-links shared object #n                                   p.601
+UNLINK  #n                      un-links shared object #n                                   p.603
 
-VOID  a                           calculates expression a and discard result             p.615
+VOID  a                           calculates expression a and discard result             p.617
 
-WAVE  c,f,                      control the sound synthesizer                              p.619
+WAVE  c,f,                      control the sound synthesizer                              p.622
 
-WORT`SEP                        same as SPLIT                                                 p.627
+WORT`SEP                        same as SPLIT                                                 p.630
 
 
 
@@ -9016,25 +9017,25 @@ FILL  x,y                        AEood oll                                      
 
 GET  x,y,w,h,g$             store a portion of the screen bitmap in g$             p.312
 
-GPRINT                           like PRINT, but the output goes to the graphic windowp.320
+GPRINT                           like PRINT, but the output goes to the graphic windowp.321
 
-GRAPHMODE  mode             set graphic-mode                                              p.325
+GRAPHMODE  mode             set graphic-mode                                              p.326
 
-LINE  x1,y1,x2,y2          draw a line                                                       p.366
+LINE  x1,y1,x2,y2          draw a line                                                       p.367
 
-LTEXT  x,y,t$                 Linegraphic-Text                                               p.384
+LTEXT  x,y,t$                 Linegraphic-Text                                               p.385
 
-PBOX    x1,y1,x2,y2        draw olled box                                                  p.443
+PBOX    x1,y1,x2,y2        draw olled box                                                  p.444
 
-PCIRCLE  x,y,r[,a1,a2] draw olled circle                                               p.445
+PCIRCLE  x,y,r[,a1,a2] draw olled circle                                               p.446
 
-PELLIPSE  x,y,a,b[,a1,a2]draw olled ellipse                                              p.447
+PELLIPSE  x,y,a,b[,a1,a2]draw olled ellipse                                              p.448
 
-PLOT  x,y                        draw point                                                        p.453
+PLOT  x,y                        draw point                                                        p.454
 
-POLYLINE  n,x(),y()      draw polygon in (x(),y())                                    p.459
+POLYLINE  n,x(),y()      draw polygon in (x(),y())                                    p.460
 
-POLYFILL  n,x(),y()      draw olled polygon                                           p.458
+POLYFILL  n,x(),y()      draw olled polygon                                           p.459
 
 
 
@@ -9043,29 +9044,29 @@ POLYFILL  n,x(),y()      draw olled polygon                                     
 
 
 
-POLYMARK  n,x(),y()      draw polygon points                                          p.460
+POLYMARK  n,x(),y()      draw polygon points                                          p.461
 
-PRBOX  x1,y1,x2,y2        draw olled rounded box                                     p.462
+PRBOX  x1,y1,x2,y2        draw olled rounded box                                     p.463
 
-PUT  x,y,g$                    map graphic at position                                      p.475
+PUT  x,y,g$                    map graphic at position                                      p.476
 
-PUT`BITMAP  t$,i,i,i,i map bitmap                                                      p.478
+PUT`BITMAP  t$,i,i,i,i map bitmap                                                      p.479
 
-RBOX  x1,y1,x2,y2          draws a rounded box                                          p.487
+RBOX  x1,y1,x2,y2          draws a rounded box                                          p.488
 
-SCOPE  a(),typ,ys,yo    fast plot of data a()                                            p.521
+SCOPE  a(),typ,ys,yo    fast plot of data a()                                            p.522
 
-SCOPE  y(),x(),typ,ys,yo,xs,xofast 2D plot of data                                            p.521
+SCOPE  y(),x(),typ,ys,yo,xs,xofast 2D plot of data                                            p.522
 
-SETFONT  f$                    set bitmap font                                                  p.533
+SETFONT  f$                    set bitmap font                                                  p.534
 
-SETMOUSE  x,y                 set mouse cursor                                               p.534
+SETMOUSE  x,y                 set mouse cursor                                               p.535
 
-SGET  screen$                 capture graphic and store it in screen$                  p.535
+SGET  screen$                 capture graphic and store it in screen$                  p.536
 
-SPUT  screen$                 maps graphic to window/screen                          p.561
+SPUT  screen$                 maps graphic to window/screen                          p.563
 
-TEXT  x,y,t$                  draw text (bitmap font)                                      p.582
+TEXT  x,y,t$                  draw text (bitmap font)                                      p.584
 
 
 
@@ -9083,33 +9084,33 @@ GET`GEOMETRY  ,,,,        returns the size of the window or screen              
 
 GET`SCREENSIZE  ,,,,    returns the size of the screen                               p.316
 
-INFOW  n,t$                    set window information                                     p.339
+INFOW  n,t$                    set window information                                     p.340
 
-MOVEW  n,x,y                  move window                                                   p.406
+MOVEW  n,x,y                  move window                                                   p.407
 
-OPENW  n                         open window                                                    p.436
+OPENW  n                         open window                                                    p.437
 
-ROOTWINDOW                    draw on screen background                                p.509
+ROOTWINDOW                    draw on screen background                                p.510
 
-NOROOTWINDOW                 switch back to normal output                              p.420
+NOROOTWINDOW                 switch back to normal output                              p.421
 
-SAVESCREEN  file$          save screen bitmap into a ole                              p.519
+SAVESCREEN  file$          save screen bitmap into a ole                              p.520
 
-SAVEWINDOW  file$          save window bitmap into a ole                            p.520
+SAVEWINDOW  file$          save window bitmap into a ole                            p.521
 
-SCREEN  n                        select Screen mode                                            p.523
+SCREEN  n                        select Screen mode                                            p.524
 
-SHOWPAGE                        perform pending graphic operations                     p.544
+SHOWPAGE                        perform pending graphic operations                     p.545
 
-SIZEW  n,w,h                  size window                                                     p.549
+SIZEW  n,w,h                  size window                                                     p.551
 
-TITLEW  n,t$                  set window title                                                p.585
+TITLEW  n,t$                  set window title                                                p.587
 
-TOPW  n                           move window to front                                        p.586
+TOPW  n                           move window to front                                        p.588
 
-USEWINDOW  #n                 direct graphics output to window n                      p.605
+USEWINDOW  #n                 direct graphics output to window n                      p.607
 
-VSYNC                             same as SHOWPAGE                                        p.616
+VSYNC                             same as SHOWPAGE                                        p.619
 
 
 
@@ -9128,39 +9129,39 @@ EVENT  ,,,,,,,,             Waits until an event occurs                         
 
 FILESELECT  tit$,path$,dflt$,f$display a oleselector-box                                    p.286
 
-HIDEM                             hide the mouse cursor                                        p.331
+HIDEM                             hide the mouse cursor                                        p.332
 
-KEYEVENT  a,b                 Waits until key is pressed                                   p.357
+KEYEVENT  a,b                 Waits until key is pressed                                   p.358
 
-LISTSELECT  tit$,list$()display a selector-box                                        p.371
+LISTSELECT  tit$,list$()display a selector-box                                        p.372
 
-MENUDEF  m$(),proc        read menu titles and items from m$()                   p.391
+MENUDEF  m$(),proc        read menu titles and items from m$()                   p.392
 
-MENUKILL                        deletes menu                                                    p.392
+MENUKILL                        deletes menu                                                    p.393
 
-MENUSET  n,x                  change menu-point #n with value x                     p.393
+MENUSET  n,x                  change menu-point #n with value x                     p.394
 
 MENU  STOP                      switch ooe the menu                                           p.??
 
 ONMENU                           execute the menu and                                        p.??
 
-MENU                               wait for menu-events                                         p.390
+MENU                               wait for menu-events                                         p.391
 
-MOUSE  x,y,k                  gets position and state of mouse                          p.403
+MOUSE  x,y,k                  gets position and state of mouse                          p.404
 
-MOUSEEVENT  ,,,             wait for mouse event                                         p.404
+MOUSEEVENT  ,,,             wait for mouse event                                         p.405
 
-MOTIONEVENT  ,,,           wait for mouse movement                                  p.402
+MOTIONEVENT  ,,,           wait for mouse movement                                  p.403
 
-OBJC`ADD  t%,o%,c%        add object to tree                                              p.423
+OBJC`ADD  t%,o%,c%        add object to tree                                              p.424
 
-OBJC`DELETE  t%,o%        delete object from tree                                       p.424
+OBJC`DELETE  t%,o%        delete object from tree                                       p.425
 
-RSRC`LOAD  file$           loads a GEM resource ole                                  p.515
+RSRC`LOAD  file$           loads a GEM resource ole                                  p.516
 
-RSRC`FREE                      unloads a GEM resource                                    p.514
+RSRC`FREE                      unloads a GEM resource                                    p.515
 
-SHOWM                             show the mouse cursor                                       p.543
+SHOWM                             show the mouse cursor                                       p.544
 
 
 
@@ -9180,11 +9181,11 @@ a$=FSFIRST$(path$,,)searches for the orst ole in a olesystem                   p
 
 a$=FSNEXT$()              searches for the next ole                                       p.304
 
-c=INP(#n)                   reads a byte from channel/ole.                               p.343
+c=INP(#n)                   reads a byte from channel/ole.                               p.344
 
-c=INP?(#n)                  number of bytes which can be read                        p.344
+c=INP?(#n)                  number of bytes which can be read                        p.345
 
-a=INP&(#n)                  reads a word (2 Bytes) from channel/ole.                p.343
+a=INP&(#n)                  reads a word (2 Bytes) from channel/ole.                p.344
 
 
 
@@ -9193,21 +9194,21 @@ a=INP&(#n)                  reads a word (2 Bytes) from channel/ole.            
 
 
 
-i=INP%(#n)                  reads a long (4 Bytes) from channel/ole.                 p.343
+i=INP%(#n)                  reads a long (4 Bytes) from channel/ole.                 p.344
 
-t$=INPUT$(#n,num)     reads num bytes from ole/channel n                       p.346
+t$=INPUT$(#n,num)     reads num bytes from ole/channel n                       p.347
 
-ret=IOCTL(#n,d%,)     performs settings on channel/ole.                           p.351
+ret=IOCTL(#n,d%,)     performs settings on channel/ole.                           p.352
 
-t$=LINEINPUT$(#n)     reads a line from ole/channel n                              p.367
+t$=LINEINPUT$(#n)     reads a line from ole/channel n                              p.368
 
-p=LOC(#n)                   Returns value of ole position indicator                    p.373
+p=LOC(#n)                   Returns value of ole position indicator                    p.374
 
-l=LOF(#n)                   length of ole                                                       p.376
+l=LOF(#n)                   length of ole                                                       p.377
 
-l%=SIZE(file$)           returns the size of a ole                                        p.548
+l%=SIZE(file$)           returns the size of a ole                                        p.550
 
-t$=TERMINALNAME$(#n)returns device name of terminal connected to #n      p.580
+t$=TERMINALNAME$(#n)returns device name of terminal connected to #n      p.582
 
 
 
@@ -9231,37 +9232,37 @@ a$=ENCLOSE$(t$[,p$])encloses a string                                           
 
 f=GLOB(a$,b$[,flags])TRUE if a$ matches pattern b$                              p.317
 
-t$=HEX$(a[,n])           a as hexadecimal number                                      p.330
+t$=HEX$(a[,n])           a as hexadecimal number                                      p.331
 
-t$=INLINE$(a$)           6-bit ASCII to 8-bit binary conversion                    p.341
+t$=INLINE$(a$)           6-bit ASCII to 8-bit binary conversion                    p.342
 
-a=INSTR(s1$,s2$[,n])tests if s2$ is contained in s1$                               p.347
+a=INSTR(s1$,s2$[,n])tests if s2$ is contained in s1$                               p.348
 
-a=TALLY(t$,s$)           returns the number of occurrences of s$ in t$           p.577
+a=TALLY(t$,s$)           returns the number of occurrences of s$ in t$           p.579
 
-b%=INT(a)                   convert to integer                                                 p.348
+b%=INT(a)                   convert to integer                                                 p.349
 
-t$=LEFT$(a$[,n])       extracts n bytes from string a$ from the left             p.361
+t$=LEFT$(a$[,n])       extracts n bytes from string a$ from the left             p.362
 
-t$=LEFTOF$(a$,b$)     returns left part of a$ split at b$                             p.362
+t$=LEFTOF$(a$,b$)     returns left part of a$ split at b$                             p.363
 
-l=LEN(t$)                   length of string                                                    p.363
+l=LEN(t$)                   length of string                                                    p.364
 
-u$=LOWER$(t$)            converts t$ to lower case                                       p.381
+u$=LOWER$(t$)            converts t$ to lower case                                       p.382
 
-l=LTEXTLEN(t$)           size of text                                                          p.385
+l=LTEXTLEN(t$)           size of text                                                          p.386
 
-m$=MID$(t$,s[,l])     extracts l bytes from string t$ from position s          p.396
+m$=MID$(t$,s[,l])     extracts l bytes from string t$ from position s          p.397
 
-t$=MKA$(a())              convert a whole array into a string                          p.399
+t$=MKA$(a())              convert a whole array into a string                          p.400
 
-t$=MKI$(i)                  convert integer to 2-byte string                              p.399
+t$=MKI$(i)                  convert integer to 2-byte string                              p.400
 
-t$=MKL$(i)                  convert integer to 4-byte string                              p.399
+t$=MKL$(i)                  convert integer to 4-byte string                              p.400
 
-t$=MKF$(a)                  convert AEoat to 4 byte string                                  p.399
+t$=MKF$(a)                  convert AEoat to 4 byte string                                  p.400
 
-t$=MKD$(a)                  convert AEoat to 8 byte string                                  p.399
+t$=MKD$(a)                  convert AEoat to 8 byte string                                  p.400
 
 
 
@@ -9270,41 +9271,41 @@ t$=MKD$(a)                  convert AEoat to 8 byte string                      
 
 
 
-o$=OCT$(d,n)              convert integer d to string with octal number           p.428
+o$=OCT$(d,n)              convert integer d to string with octal number           p.429
 
-t$=REPLACE$(a$,s$,r$)replace s$ by r$ in a$                                           p.496
+t$=REPLACE$(a$,s$,r$)replace s$ by r$ in a$                                           p.497
 
-t$=REVERSE$(a$)         Return the reverses of a string                               p.500
+t$=REVERSE$(a$)         Return the reverses of a string                               p.501
 
-t$=RIGHT$(a$[,n])     returns right n characters of a$                              p.501
+t$=RIGHT$(a$[,n])     returns right n characters of a$                              p.502
 
-t$=RIGHTOF$(a$,b$)   returns right part of a$ split at b$                           p.502
+t$=RIGHTOF$(a$,b$)   returns right part of a$ split at b$                           p.503
 
-a=RINSTR(s1$,s2$[,n])tests from right if s2$ is contained in s1$                p.503
+a=RINSTR(s1$,s2$[,n])tests from right if s2$ is contained in s1$                p.504
 
-t$=SPACE$(i)              returns string consisting of i spaces                        p.557
+t$=SPACE$(i)              returns string consisting of i spaces                        p.559
 
-t$=STR$(a[,b,c])       convert number to string                                       p.566
+t$=STR$(a[,b,c])       convert number to string                                       p.568
 
-t$=STRING$(i,w$)       returns string consisting of i copies of w$               p.567
+t$=STRING$(i,w$)       returns string consisting of i copies of w$               p.569
 
-u$=TRIM$(t$)              trim t$                                                                p.589
+u$=TRIM$(t$)              trim t$                                                                p.591
 
-u$=XTRIM$(t$)            trim t$                                                                p.633
+u$=XTRIM$(t$)            trim t$                                                                p.636
 
-u$=UCASE$(t$)            converts t$ to upper case                                       p.597
+u$=UCASE$(t$)            converts t$ to upper case                                       p.599
 
-u$=UPPER$(t$)            converts t$ to upper case                                       p.604
+u$=UPPER$(t$)            converts t$ to upper case                                       p.606
 
-u$=USING$(a,f$)         formats a number                                                p.606
+u$=USING$(a,f$)         formats a number                                                p.608
 
-a=VAL(t$)                   converts String/ASCII to number                           p.609
+a=VAL(t$)                   converts String/ASCII to number                           p.611
 
-i=VAL?(t$)                  returns number of chars which are part of a number  p.609
+i=VAL?(t$)                  returns number of chars which are part of a number  p.611
 
-adr%=VARPTR(v)           returns pointer to variable                                     p.613
+adr%=VARPTR(v)           returns pointer to variable                                     p.615
 
-u$=WORD$(b$,n)           returns n th word of b$                                         p.625
+u$=WORD$(b$,n)           returns n th word of b$                                         p.628
 
 e=WORT`SEP(t$,d$,m,a$,b$)splits t$ into parts                                                p.??
 
@@ -9324,7 +9325,7 @@ b$=BWTE$(a$)              Burrows-Wheeler transform                             
 
 c$=COMPRESS$(a$)       lossless compression on the string                          p.203
 
-c$=UNCOMPRESS$(a$)   lossless uncompression on the string                      p.598
+c$=UNCOMPRESS$(a$)   lossless uncompression on the string                      p.600
 
 c%=CRC(t$[,oc])         32 bit checksum                                                  p.210
 
@@ -9332,9 +9333,9 @@ e$=ENCRYPT$(t$,key$)encrypts a message                                          
 
 t$=DECRYPT$(e$,key$)decrypts a message                                              p.223
 
-b$=MTFD$(a$)              Move To Front decoding                                       p.409
+b$=MTFD$(a$)              Move To Front decoding                                       p.410
 
-b$=MTFE$(a$)              Move To Front encoding                                       p.410
+b$=MTFE$(a$)              Move To Front encoding                                       p.411
 
 b()=CVA(a$)                returns array reconstructed from the string              p.214
 
@@ -9355,13 +9356,13 @@ b=CVF(a$)                   convert 4-byte string to AEoat                      
 
 b=CVD(a$)                   convert 8-byte string to double                              p.215
 
-t$=INLINE$(a$)           6-bit ASCII to 8-bit binary conversion                    p.341
+t$=INLINE$(a$)           6-bit ASCII to 8-bit binary conversion                    p.342
 
-t$=REVERSE$(a$)         return the reverses of a string                                 p.500
+t$=REVERSE$(a$)         return the reverses of a string                                 p.501
 
-b$=RLD$(a$)                run length decoding                                             p.504
+b$=RLD$(a$)                run length decoding                                             p.505
 
-b$=RLE$(a$)                run length encoding                                             p.505
+b$=RLE$(a$)                run length encoding                                             p.506
 
 
 
@@ -9373,23 +9374,23 @@ adr%=ARRPTR(b())       pointer to array descriptors                             
 
 i%=DPEEK(adr%)           read word from pointer adr                                   p.241
 
-b%=LPEEK(adr%)           reads long (4 Bytes) from address                          p.382
+b%=LPEEK(adr%)           reads long (4 Bytes) from address                          p.383
 
-adr%=MALLOC(n%)         allocates size bytes of memory                              p.388
+adr%=MALLOC(n%)         allocates size bytes of memory                              p.389
 
-adr%=MSHRINK(adr%,n%)reduces the size of a storage area                           p.407
+adr%=MSHRINK(adr%,n%)reduces the size of a storage area                           p.408
 
-d%=PEEK(a%)                reads Byte from address a                                     p.446
+d%=PEEK(a%)                reads Byte from address a                                     p.447
 
-adr%=REALLOC(oadr%,n%)changes the size of a storage area                           p.490
+adr%=REALLOC(oadr%,n%)changes the size of a storage area                           p.491
 
-adr%=SHM`ATTACH(id)  attaches the shared memory segment                      p.539
+adr%=SHM`ATTACH(id)  attaches the shared memory segment                      p.540
 
-id=SHM`MALLOC(size,key)returns the identioer of the shared memory segment p.542
+id=SHM`MALLOC(size,key)returns the identioer of the shared memory segment p.543
 
-adr%=SYM`ADR(#n,s$)  return pointer to symbol from shared object ole       p.573
+adr%=SYM`ADR(#n,s$)  return pointer to symbol from shared object ole       p.575
 
-adr%=VARPTR(v)           returns pointer to variable                                     p.613
+adr%=VARPTR(v)           returns pointer to variable                                     p.615
 
 
 
@@ -9399,13 +9400,13 @@ adr%=VARPTR(v)           returns pointer to variable                            
 
 c%=AND(a%,b%)            same as c=(a AND b)                                           p.143
 
-c%=OR(a%,b%)              same as c=(a OR b)                                              p.437
+c%=OR(a%,b%)              same as c=(a OR b)                                              p.438
 
-c%=XOR(a%,b%)            same as c=(a XOR b)                                           p.630
+c%=XOR(a%,b%)            same as c=(a XOR b)                                           p.633
 
 c%=EQV(a%,b%)            same as c=(a EQV b)                                           p.259
 
-c%=IMP(a%,b%)            same as c=(a IMP b)                                            p.337
+c%=IMP(a%,b%)            same as c=(a IMP b)                                            p.338
 
 b%=BCHG(x%,bit%)       changes the bit of x from 0 to 1 or from 1 to 0         p.160
 
@@ -9426,19 +9427,19 @@ b%=BYTE(x%)                same as b=x AND 255                                  
 
 b%=CARD(x%)                same as b=x AND 0xoeoe                                       p.180
 
-b%=WORD(x%)                same as b=x AND 0xoeoe                                       p.624
+b%=WORD(x%)                same as b=x AND 0xoeoe                                       p.627
 
 b%=EVEN(d)                  TRUE if d is an even number                                p.266
 
-b%=ODD(d)                   TRUE if d is an odd number                                  p.429
+b%=ODD(d)                   TRUE if d is an odd number                                  p.430
 
-b%=GRAY(a)                  Gray code. if a<0: inverse Gray code                     p.326
+b%=GRAY(a)                  Gray code. if a<0: inverse Gray code                     p.327
 
-b%=SHL(a)                   Shift bits to left                                                   p.538
+b%=SHL(a)                   Shift bits to left                                                   p.539
 
-b%=SHR(a)                   Shift bits to right                                                 p.545
+b%=SHR(a)                   Shift bits to right                                                 p.546
 
-b%=SWAP(a)                  Swaps High and Low words of a                            p.571
+b%=SWAP(a)                  Swaps High and Low words of a                            p.573
 
 
 
@@ -9503,35 +9504,35 @@ b=FRAC(a)                   fractional (non-integer) part of a                  
 
 y=GAMMA(x)                  gamma function y =   (x)                                     p.309
 
-y=LGAMMA(x)                logarithm ofpgamma_function_y = jln   (x)j              p.365
+y=LGAMMA(x)                logarithm ofpgamma_function_y = jln   (x)j              p.366
 
-a=HYPOT(x,y)              returns a =    x2 + y2                                              p.333
+a=HYPOT(x,y)              returns a =    x2 + y2                                              p.334
 
-b=INT(a)                     convert to integer                                                 p.348
+b=INT(a)                     convert to integer                                                 p.349
 
-b()=INV(a())              calculate inverse of a square matrix                        p.349
+b()=INV(a())              calculate inverse of a square matrix                        p.350
 
-i=SGN(a)                     sign of a (-1,0,1)p__                                               p.536
+i=SGN(a)                     sign of a (-1,0,1)p__                                               p.537
 
-b=SQR(a)                     square root b =p  _a_                                             p.562
+b=SQR(a)                     square root b =p  _a_                                             p.564
 
-b=SQRT(a)                   square root b =    a                                              p.562
+b=SQRT(a)                   square root b =    a                                              p.564
 
-b=TRUNC(a)                  truncate number                                                  p.593
+b=TRUNC(a)                  truncate number                                                  p.595
 
-b=LN(a)                       base e logarithm (natural log)                                p.377
+b=LN(a)                       base e logarithm (natural log)                                p.378
 
-b=LOG(a)                     base e logarithm (natural log)                                p.377
+b=LOG(a)                     base e logarithm (natural log)                                p.378
 
-b=LOG10(a)                  base 10 logarithm                                                p.377
+b=LOG10(a)                  base 10 logarithm                                                p.378
 
-b=LOGB(x)                   base 2 logarithm                                                  p.378
+b=LOGB(x)                   base 2 logarithm                                                  p.379
 
-b=LOG1P(x)                  b = log  (1 + x) accurate near zero                          p.379
+b=LOG1P(x)                  b = log  (1 + x) accurate near zero                          p.380
 
-c=MOD(a,b)                  same as c=(a MOD b)                                          p.400
+c=MOD(a,b)                  same as c=(a MOD b)                                          p.401
 
-c=MUL(a,b)                  multiply c = a   b                                                 p.411
+c=MUL(a,b)                  multiply c = a   b                                                 p.412
 
 b=EXP(a)                     exponential function b = ex (e to the x)                   p.276
 
@@ -9539,13 +9540,13 @@ b=EXPM1(a)                  exponential function minus 1 b = ex   1             
 
 b=FACT(a)                   factorial b = a!                                                    p.279
 
-a=PRED(x)                   returns the preceding integer of x                           p.463
+a=PRED(x)                   returns the preceding integer of x                           p.464
 
-a=SUCC(x)                   returns the next higher integer                               p.570
+a=SUCC(x)                   returns the next higher integer                               p.572
 
-b()=SOLVE(a(),x())   solve linear equation system                                  p.550
+b()=SOLVE(a(),x())   solve linear equation system                                  p.552
 
-z=VARIAT(n,k)            number of permutations of n elements                    p.612
+z=VARIAT(n,k)            number of permutations of n elements                    p.614
 
 
 
@@ -9557,7 +9558,7 @@ Angles are always radians, for both, arguments and return values.
 
 
 
-b=RAD(a)                     convert degrees to radians                                     p.482
+b=RAD(a)                     convert degrees to radians                                     p.483
 
 b=DEG(a)                     convert radians to degrees                                     p.231
 
@@ -9572,11 +9573,11 @@ b=DEG(a)                     convert radians to degrees                         
 
 
 
-b=SIN(a)                     sine                                                                   p.546
+b=SIN(a)                     sine                                                                   p.548
 
 b=COS(a)                     cosine                                                                p.208
 
-b=TAN(a)                     tangent                                                               p.578
+b=TAN(a)                     tangent                                                               p.580
 
 b=ASIN(a)                   arc-sine                                                              p.153
 
@@ -9588,11 +9589,11 @@ b=ATN(a)                     arc-tangent                                        
 
 b=ATAN2(a,c)              extended arc-tangent                                            p.156
 
-b=SINH(a)                   hyperbolic sine                                                    p.547
+b=SINH(a)                   hyperbolic sine                                                    p.549
 
 b=COSH(a)                   hyperbolic cosine                                                p.208
 
-b=TANH(a)                   hyperbolic tangent                                               p.579
+b=TANH(a)                   hyperbolic tangent                                               p.581
 
 b=ASINH(a)                  hyperbolic arc-sine                                              p.153
 
@@ -9608,13 +9609,13 @@ b=ATANH(a)                  hyperbolic arc-tangent                              
 
 a=GASDEV(dummy)         random number Gauss distribution                         p.310
 
-a=RAND(dummy)            random integer number                                        p.484
+a=RAND(dummy)            random integer number                                        p.485
 
-a=RANDOM(n)                random integer number between 0 and n                 p.485
+a=RANDOM(n)                random integer number between 0 and n                 p.486
 
-a=RND(dummy)              random number between 0 and 1                           p.507
+a=RND(dummy)              random number between 0 and 1                           p.508
 
-a=SRAND(seed)            same as RANDOMIZE                                        p.563
+a=SRAND(seed)            same as RANDOMIZE                                        p.565
 
 
 
@@ -9639,21 +9640,21 @@ i%=FORK()                   creates a child process                             
 
 
 
-d$=JULDATE$(a)           date$ by Julian day a                                            p.354
+d$=JULDATE$(a)           date$ by Julian day a                                            p.355
 
-a=JULIAN(date$)         Julian day                                                           p.355
+a=JULIAN(date$)         Julian day                                                           p.356
 
-a$=PARAM$(i)              i'th word from the commandline                            p.441
+a$=PARAM$(i)              i'th word from the commandline                            p.442
 
-t$=PRG$(i)                  program line                                                       p.465
+t$=PRG$(i)                  program line                                                       p.466
 
-a=SENSOR(i)                get the value from the i th sensor                           p.531
+a=SENSOR(i)                get the value from the i th sensor                           p.532
 
-t$=SYSTEM$(n$)           execute shell with command n$                             p.574
+t$=SYSTEM$(n$)           execute shell with command n$                             p.576
 
-t$=UNIXTIME$(i)         give time$ from TIMER value                               p.600
+t$=UNIXTIME$(i)         give time$ from TIMER value                               p.602
 
-d$=UNIXDATE$(i)         give date$ from TIMER value                               p.600
+d$=UNIXDATE$(i)         give date$ from TIMER value                               p.602
 
 
 
@@ -9675,15 +9676,15 @@ a=FORM`DO(i)                 do dialog                                          
 
 c=GET`COLOR(r,g,b)      allocate color by rgb value                                  p.313
 
-d=OBJC`DRAW(,,,,)        draw object tree                                                p.425
+d=OBJC`DRAW(,,,,)        draw object tree                                                p.426
 
-ob=OBJC`FIND(tree,x,y)return object number by coordinates                    p.426
+ob=OBJC`FIND(tree,x,y)return object number by coordinates                    p.427
 
-a=OBJC`OFFSET(t%,o,x,y)calculate absolute object coordinates                   p.427
+a=OBJC`OFFSET(t%,o,x,y)calculate absolute object coordinates                   p.428
 
-c=POINT(x,y)                 returns color of pixel of graphic in window           p.456
+c=POINT(x,y)                 returns color of pixel of graphic in window           p.457
 
-c=PTST(x,y)                  returns color of pixel of graphic in window           p.474
+c=PTST(x,y)                  returns color of pixel of graphic in window           p.475
 
 a=RSRC`GADDR(typ,nr)  get pointer to object tree                                     p.??
 
@@ -9695,11 +9696,11 @@ a=RSRC`GADDR(typ,nr)  get pointer to object tree                                
 
 a=EVAL(t$)                  evaluate expression contained in t$                        p.264
 
-m=MAX(a,b,c,...)       returns biggest value                                            p.389
+m=MAX(a,b,c,...)       returns biggest value                                            p.390
 
 m=MAX(f())                  not implemented yet
 
-m=MIN(a,b,c,...)       returns smallest value                                           p.397
+m=MIN(a,b,c,...)       returns smallest value                                           p.398
 
 m=MIN(array())           not implemented yet
 
@@ -17384,7 +17385,7 @@ GLOB(".testme.bas",".*.bas",1+4)     -1
 
 
 
-SEE ALSO:        INSTR(), WORT"`SEP
+SEE ALSO:        INSTR(), RINSTR(), SPLIT
 
 
 
@@ -30331,4 +30332,4 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - fixed power operator in compiler for integer operands
 - little bugfix in compiler (PRINT #)
 - improved FILESELECT
-          Last change to this file:  Di 19. Apr 10:50:46 CEST 2016
+          Last change to this file:  Mo 13. Jun 16:25:23 CEST 2016

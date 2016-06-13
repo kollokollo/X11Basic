@@ -135,8 +135,18 @@ FreeBSD and maybe others.  Also X11-Basic compiles on Cygwin, and on
 ARM-Linuxes like the one often used together with the {\it Raspberry Pi}. 
 Please note that X11-Basic is designed for 32-bit operating systems. 
 X11-Basic will also compile on 64 bit systems. But some of the
-functions may not work, especially pointer aritmetric (\verb|VARPTR()|, etc.)
-will probably lead to segmentation faults when using huge amounts of memory. 
+functions may not work, especially pointer aritmetric (\verb|VARPTR()|, 
+\verb|PEEK()|, \verb|POKE|, etc.)
+will probably lead to segmentation faults when using huge amounts of 
+memory.\footnote{In X11-Basic all pointers to memory adresses are stored in 
+32bit integer variables. The upper 32bits of the adresses are stored internally
+fur further use. So if you calculate VARPTR(a), you would be able to 
+POKE to the adress immediately after without error, because the upper part of 
+the adresses was stored intenally from the previous call to VARPTR. 
+X11-Basic will emmit a warning, 
+pointer base has changed, whenever this part is different from what it 
+was before. This way, pointer aritmetrics can be used with care, even on 64 bit 
+operating systems.} 
 
 \subsection*{Compiling X11-Basic from its sources under UNIX like systems}
 
