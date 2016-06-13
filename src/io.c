@@ -305,7 +305,7 @@ void c_msync(PARAMETER *plist,int e) {
   if(e>=2) {
   #ifndef WINDOWS
   #ifndef ATARI
-      if(msync((void *)plist[0].integer, plist[1].integer,MS_SYNC|MS_INVALIDATE))
+      if(msync((void *)INT2POINTER(plist->integer), plist[1].integer,MS_SYNC|MS_INVALIDATE))
         io_error(errno,"msync"); 
   #endif
   #endif
@@ -315,7 +315,7 @@ void c_unmap(PARAMETER *plist,int e) {
   if(e>=2) {
    #ifndef WINDOWS
    #ifndef ATARI 
-      if(munmap((void *)plist[0].integer, plist[1].integer))
+      if(munmap((void *)INT2POINTER(plist->integer), plist[1].integer))
         io_error(errno,"munmap"); 
    #endif
    #endif
@@ -1141,11 +1141,10 @@ void c_receive(PARAMETER *plist, int e) {
   if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
   else if(fff.typ==FT_USB) {
     STRING str;
-    int ret;
     if(fff.blk_len<=0) fff.blk_len=64;
     str.pointer=malloc(fff.blk_len+1);
 #ifdef HAVE_USB
-    ret=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
+    int ret=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
     if(e>2) varcastint(plist[2].integer,plist[2].pointer,ret);
     if(ret<0) {
       printf("usb_bulk_read failed with code %i: %s\n", ret, usb_strerror());
@@ -1342,7 +1341,7 @@ int f_exec(PARAMETER *plist,int e) {
 void c_call(PARAMETER *plist,int e) { f_call(plist,e);}
 int f_call(PARAMETER *plist,int e) {
   typedef struct  {int feld[20];} GTT;
-  int (*adr)(GTT)=(int (*)())plist->integer;
+  int (*adr)(GTT)=(int (*)())INT2POINTER(plist->integer);
   // printf("call 0x%x mit %d args.\n",plist->integer,e);
   if(e>20) xberror(45,"CALL"); /* Zu viele Parameter */
   else if(adr==NULL) xberror(29,"CALL"); /* illegal address */
@@ -1377,26 +1376,26 @@ int f_call(PARAMETER *plist,int e) {
 void c_bload(PARAMETER *plist,int e) {
   int len=-1;
   if(e>2) len=plist[2].integer;
-  if(bload(plist->pointer,(char *)plist[1].integer,len)==-1) io_error(errno,"BLOAD");
+  if(bload(plist->pointer,(char *)INT2POINTER(plist[1].integer),len)==-1) io_error(errno,"BLOAD");
 }
 
 void c_bsave(PARAMETER *plist,int e) {
-  if(bsave(plist->pointer,(char *)plist[1].integer,plist[2].integer)==-1) io_error(errno,"BSAVE");
+  if(bsave(plist->pointer,(char *)INT2POINTER(plist[1].integer),plist[2].integer)==-1) io_error(errno,"BSAVE");
 }
 void c_bget(PARAMETER *plist,int e) {
   int i=plist->integer;
   if(filenr[i].typ) {
-    e=fread((char *)plist[1].integer,1,plist[2].integer,filenr[i].dptr);
+    e=fread((char *)INT2POINTER(plist[1].integer),1,plist[2].integer,filenr[i].dptr);
     if(e<plist[2].integer) xberror(26,""); /* Fileende erreicht EOF */
   } else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_bput(PARAMETER *plist,int e) {
   int i=plist->integer;
-  if(filenr[i].typ) fwrite((char *)plist[1].integer,1,plist[2].integer,filenr[i].dptr);
+  if(filenr[i].typ) fwrite((char *)INT2POINTER(plist[1].integer),1,plist[2].integer,filenr[i].dptr);
   else xberror(24,""); /* File nicht geoeffnet */
 }
 void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
-  memmove((char *)plist[1].integer,(char *)plist[0].integer,(size_t)plist[2].integer);
+  memmove((char *)INT2POINTER(plist[1].integer),(char *)INT2POINTER(plist[0].integer),(size_t)plist[2].integer);
 }
 void c_pipe(PARAMETER *plist,int e) {
   int i=plist[0].integer;
@@ -2122,7 +2121,7 @@ int f_ioctl(PARAMETER *plist,int e) {
 #else
   if(e==2) ret=ioctl(sock,plist[1].integer);
 #endif
-  else ret=ioctl(sock,plist[1].integer,(void *)plist[2].integer);
+  else ret=ioctl(sock,plist[1].integer,(void *)INT2POINTER(plist[2].integer));
   if(ret==-1) 
 #endif
     io_error(errno,"ioctl");

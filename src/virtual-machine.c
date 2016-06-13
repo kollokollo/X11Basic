@@ -704,8 +704,11 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
     if(sp->typ==PL_STRING) {
       a.len=sp->integer;
       a.pointer=sp->pointer;
-    } else 
-    xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
+    } else {
+      a.len=0;
+      a.pointer=NULL;
+      xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
+    }
 //    printf("Got a string: <%s>\n",a.pointer);
     if((pfuncs[i].opcode&FM_RET)==F_IRET) {
       sp->integer=((int (*)())pfuncs[i].routine)(a);
@@ -1037,21 +1040,21 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_LOADi:
       CP4(&a,&bcpc.pointer[i],i);
-      opstack->integer=*((int *)a);
+      opstack->integer=*((int *)INT2POINTER(a));
       opstack->typ=PL_INT;
       opstack++;
       VERBOSE("[$%x].i ",a);
       break;
     case BC_LOADf:
       CP4(&a,&bcpc.pointer[i],i);
-      opstack->real=*((double *)a);
+      opstack->real=*((double *)INT2POINTER(a));
       opstack->typ=PL_FLOAT;
       opstack++;
       VERBOSE("[$%x].d ",a);
       break;
     case BC_LOADc:
       CP4(&a,&bcpc.pointer[i],i);
-      opstack->real=*((double *)a);
+      opstack->real=*((double *)INT2POINTER(a));
       opstack->imag=0;
       opstack->typ=PL_COMPLEX;
       opstack++;
@@ -1319,7 +1322,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       opstack+=vm_exch(opstack);
       break;
     case BC_CLEAR:
-      a=((int)opstack-(int)osp)/sizeof(PARAMETER);
+      a=(opstack-osp); /* a=((int)opstack-(int)osp)/sizeof(PARAMETER); */
       if(a) {
         opstack=osp;
 	for(j=0;j<a;j++)  free_parameter(&opstack[j]);
@@ -1327,7 +1330,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("vm_clear ");
       break;
     case BC_COUNT:
-      a=((int)opstack-(int)osp)/sizeof(PARAMETER);
+      a=(opstack-osp); /* a=((int)opstack-(int)osp)/sizeof(PARAMETER); */
       opstack->integer=a;
       opstack->typ=PL_INT;
       opstack++;
@@ -1433,7 +1436,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       opstack++;
       break;
     default:
-      VMERROR("BC_ILLEGAL instruction %2x at %p",(int)cmd,(void *)i);
+      VMERROR("BC_ILLEGAL instruction %2x at %p",(int)cmd,(void *)INT2POINTER(i));
       memdump((unsigned char *)&(bcpc.pointer[i]),16);
       xberror(104,""); /* Illegal Instruction */
     }
@@ -1443,7 +1446,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
 #ifdef ANDROID
   backlog("Virtual machine exited.");
 #endif
-  *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  
+  *npar=(opstack-osp); /* *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  */
   return(osp);
 }
 
@@ -1473,8 +1476,8 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
 //  va_list arguments=*arg;
 //#endif
     switch(typ) {
-    case 'a': a=va_arg ( arguments, ARRAY );  *((ARRAY *)(opstack->integer))=double_array(&a); opstack->typ=PL_ARRAY; opstack++; break;
-    case 's': s=va_arg ( arguments, STRING ); *((STRING *)(opstack->integer))=double_string(&s); opstack->typ=PL_STRING; opstack++; break;
+    case 'a': a=va_arg ( arguments, ARRAY );  *((ARRAY *)INT2POINTER(opstack->integer))=double_array(&a); opstack->typ=PL_ARRAY; opstack++; break;
+    case 's': s=va_arg ( arguments, STRING ); *((STRING *)INT2POINTER(opstack->integer))=double_string(&s); opstack->typ=PL_STRING; opstack++; break;
     case 'f': f=va_arg ( arguments, double ); opstack->real=f; opstack->typ=PL_FLOAT; opstack++;  break;
     case 'i': i=va_arg ( arguments, int );    opstack->integer=i; opstack->typ=PL_INT; opstack++;    break;
     case '.':   va_arg ( arguments, int );  /*parameter abraeumen*/

@@ -90,7 +90,7 @@ static ARRAY f_einsmat(PARAMETER *plist, int e) {
 /*Determinante berechnen*/
 
 PARAMETER f_det(PARAMETER *plist, int e) {
-  PARAMETER ret;
+  PARAMETER ret; bzero(&ret,sizeof(ret));
   ret.typ=PL_FLOAT;  /*   TODO !!!*/
   ret.real=array_det((ARRAY *)&(plist->integer));   
   return(ret);

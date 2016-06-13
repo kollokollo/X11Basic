@@ -90,7 +90,7 @@ int everytime=0,alarmpc=-1,alarmpctype=0;
 int stack[STACKSIZE];
 
 
-#if defined ENVIRONMENT64
+#if SIZEOF_VOID_P == 8
 void *pointerbase=NULL;
 #endif
 

@@ -312,7 +312,7 @@ static void translate() {
     fflush(optr);
     
     redo=0;
-    fprintf(optr,"/* %02x / %02x */",i,i+sizeof(BYTECODE_HEADER));
+    fprintf(optr,"/* %02x / %02x */",i,i+(unsigned int)sizeof(BYTECODE_HEADER));
     if((b=havesymbol(i,STT_LABEL))>=0) 
       fprintf(optr,"%s:  ",&strings[symtab[b].name]);
     else if((b=havesymbol(i,0))>=0) {
@@ -755,30 +755,30 @@ WSWAP((char *)&bytecode->version);
       bytecode=(BYTECODE_HEADER *)p;
     }
     
-    fprintf(optr,"txt:    $%08x %d\n",sizeof(BYTECODE_HEADER),(int)bytecode->textseglen);
-    fprintf(optr,"rodata: $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"txt:    $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER),(int)bytecode->textseglen);
+    fprintf(optr,"rodata: $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                       (unsigned int)bytecode->textseglen,(int)bytecode->rodataseglen);
     rodata=p+sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen;
-    fprintf(optr,"sdata:  $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"sdata:  $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                       (unsigned int)bytecode->textseglen+
 				      (unsigned int)bytecode->rodataseglen,(int)bytecode->sdataseglen);
-    fprintf(optr,"data:   $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"data:   $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                     (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen,(int)bytecode->dataseglen);
     datasec=(unsigned char *)&p[sizeof(BYTECODE_HEADER)+(unsigned int)bytecode->textseglen+
     bytecode->rodataseglen];
-    fprintf(optr,"bss:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"bss:    $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                     (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen+
 				    (unsigned int)bytecode->dataseglen,(int)bytecode->bssseglen);
-    fprintf(optr,"str:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"str:    $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                    (unsigned int)bytecode->textseglen+
 				   (unsigned int)bytecode->rodataseglen+
 				   (unsigned int) bytecode->sdataseglen+
 				   (unsigned int)bytecode->dataseglen,(int)bytecode->stringseglen);
-    fprintf(optr,"sym:    $%08x %d\n",sizeof(BYTECODE_HEADER)+
+    fprintf(optr,"sym:    $%08x %d\n",(unsigned int)sizeof(BYTECODE_HEADER)+
                                    (unsigned int)bytecode->textseglen+
 				    (unsigned int)bytecode->rodataseglen+
 				    (unsigned int)bytecode->sdataseglen+

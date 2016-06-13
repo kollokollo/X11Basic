@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
+#include "defs.h"
+#include "x11basic.h"
+#include "xbasic.h"
 #if defined WINDOWS || defined ANDROID
 #define EX_OK 0
 #else
@@ -311,13 +315,13 @@ int shm_malloc(size_t segsize, key_t key) {
 }
 
 int shm_attach(int shmid) {
-  int r=(int)shmat(shmid,0,0);
+  int r=POINTER2INT(shmat(shmid,0,0));
   if(r==-1) io_error(errno,"SHM_ATTACH");    /* shm_attach error.*/ 
   return(r);
 }
 
-int shm_detatch(int shmaddr) {
-  if(shmdt((void *)shmaddr)==-1) return(errno);
+int shm_detatch(const void *shmaddr) {
+  if(shmdt(shmaddr)==-1) return(errno);
   return(0);
 }
 

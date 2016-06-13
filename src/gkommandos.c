@@ -512,7 +512,7 @@ void c_line(PARAMETER *plist,int e) {
 }
 /* Kubische Bezier curve*/
 void c_curve(PARAMETER *plist,int e) {
-  int granul=3,t=0,x=0,y=0,ox,oy;
+  int granul=3,t=0,x=0,y=0,ox=0,oy=0;
   #define px0 plist[0].integer
   #define py0 plist[1].integer
   #define px1 plist[2].integer
@@ -2148,7 +2148,7 @@ void c_menu(char *n) {
 	} else {
 	  // TODO:
 	  void (*func)();	  
-	  func=(void *)menuaction;
+	  func=(void *)INT2POINTER(menuaction);
 	  func();
 	}
     }
@@ -2208,10 +2208,10 @@ void c_rsrc_free(char *n) {
   if(rsrc_free()) xberror(73,"");  /*  Fehler bei RSRC_FREE*/
 }
 void c_objc_add(PARAMETER *plist,int e) {
-  objc_add((OBJECT *)plist[0].integer,plist[1].integer,plist[2].integer);
+  objc_add((OBJECT *)INT2POINTER(plist->integer),plist[1].integer,plist[2].integer);
 }
 void c_objc_delete(PARAMETER *plist,int e) {
-  objc_delete((OBJECT *)plist[0].integer,plist[1].integer);
+  objc_delete((OBJECT *)INT2POINTER(plist->integer),plist[1].integer);
 }
 void c_xload(char *n) {
   char *name=fileselector("Load X11-Basic program:","./*.bas","");

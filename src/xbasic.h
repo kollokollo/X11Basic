@@ -293,7 +293,7 @@ static inline unsigned int catchpointerbase(void *a) {
  // printf("Pointer:     %p\nPointerbase: %p\n",a,pointerbase);
   pb2=((unsigned long long)a&0xffffffff00000000ULL);
   if(pb2!=(unsigned long long)pointerbase) printf("WARNING: 64bit pointer base has changed!\n");
-  pointerbase=pb2;
+  pointerbase=(void *)pb2;
   return((unsigned int)((unsigned long long)a&0xffffffffULL));
 }
 static inline void *i2p(unsigned int a) {

@@ -85,23 +85,22 @@ void mybox(int x1,int y1,int x2, int y2) {
 #endif
 }
 int get_point(int x, int y) {
-    int r;
 #if defined WINDOWS_NATIVE
-  r=0;
+  return(0);  /*  TODO */
 #elif defined USE_SDL
-  r=sdl_getpixel(window[usewindow].display,x,y);
+  return(sdl_getpixel(window[usewindow].display,x,y));
 #elif defined FRAMEBUFFER
-  r=FB_point(x,y);
+  return(FB_point(x,y));
 #elif defined USE_X11
     XImage *Image;
     graphics();
     int d=XDefaultDepthOfScreen(XDefaultScreenOfDisplay(window[usewindow].display));
     Image=XGetImage(window[usewindow].display,window[usewindow].win,
                 x, y, 1, 1, AllPlanes,(d==1) ?  XYPixmap : ZPixmap);
-    r=XGetPixel(Image, 0, 0);
-    XDestroyImage(Image);
-#endif
+    int r=XGetPixel(Image, 0, 0);
+    XDestroyImage(Image); 
     return(r);
+#endif
 }
 
 
@@ -299,8 +298,8 @@ int mousex() {
 }
 int mousey() {
 #if defined ANDROID || defined FRAMEBUFFER
-   graphics(); 
- return(screen.mouse_y);
+  graphics(); 
+  return(screen.mouse_y);
 #elif defined  WINDOWS_NATIVE
   return(global_mousey);
 #endif

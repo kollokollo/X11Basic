@@ -18,6 +18,7 @@
 #include <gem.h>
 #endif
 #include "x11basic.h"
+#include "xbasic.h"
 #include "graphics.h"
 #include "aes.h"
 #include "file.h"
@@ -243,24 +244,6 @@ void load_GEMFONT(int n) {
     gfxPrimitivesSetFont(asciiTable,window[usewindow].chw,window[usewindow].chh); 	
   }
 #endif
-}
-static inline void WSWAP(char *adr) {
-  char a=*adr;
-  *adr=adr[1];
-  adr[1]=a;
-}
-static void LSWAP(short *adr) {
-  short a=*adr;
-  *adr=adr[1];
-  adr[1]=a;
-}
-static void LWSWAP(short *adr) {
-  short a;
-  WSWAP((char *)&adr[0]);
-  WSWAP((char *)&adr[1]);
-  a=*adr;
-  *adr=adr[1];
-  adr[1]=a;
 }
 /* -------------------------------- AES-Implementationen ------------------*/
 
@@ -786,19 +769,19 @@ if (drawbg) {
     SetForeground(gem_colors[(bit->bi_color) & 0xf]);
     SetBackground(gem_colors[WHITE]);
 
-    put_bitmap((char *)adr,obx,oby,bit->bi_wb*8,bit->bi_hl);
+    put_bitmap((char *)INT2POINTER(adr),obx,oby,bit->bi_wb*8,bit->bi_hl);
    }
     break;
   case G_ICON:
     {ICONBLK *bit=tree[idx].ob_spec.iconblk;
     char *helper=(char *)&bit->ib_pmask;
     unsigned int adr=*((LONG *)helper);
-    char *maskdata=(char *)adr;
+    char *maskdata=(char *)INT2POINTER(adr);
     helper=(char *)&bit->ib_pdata;
     adr=*((LONG *)helper);
-    char *bitdata=(char *)adr;
+    char *bitdata=(char *)INT2POINTER(adr);
     helper=(char *)&bit->ib_ptext;
-    char *text=(char *)adr;
+    char *text=(char *)INT2POINTER(adr);
     SetForeground(gem_colors[WHITE]);
     put_bitmap(maskdata,obx,oby,bit->ib_wicon,bit->ib_hicon);
     FillRectangle(obx+bit->ib_xtext,oby+bit->ib_ytext,bit->ib_wtext,bit->ib_htext);
@@ -954,7 +937,7 @@ static void fix_bitblk() {
   int anzahl=rsrc->rsh_nbb;
   if(anzahl) {
    // printf("FIX_BITBLK: Anzahl=$%04x\n",anzahl);
-    for(i =0; i < anzahl; i++) {
+    for(i=0; i<anzahl; i++) {
       // if(rsrc->rsh_vrsn==0) {
 	for(j=0;j<sizeof(BITBLK)/2;j++) {
           WSWAP((char *)((long)&base[i]+2*j));
@@ -970,17 +953,17 @@ static void fix_bitblk() {
 	  printf("w=%d h=%d x=%d y=%d c=%d\n",base[i].bi_wb,base[i].bi_hl,base[i].bi_x,base[i].bi_y,base[i].bi_color);
 #endif
 	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
-            WSWAP((char *)(k+2*j));
+            WSWAP((char *)INT2POINTER(k+2*j));
           }
 	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
 	    n=0;
-            l=((WORD *)(k+2*j))[0];
+            l=((WORD *)INT2POINTER(k+2*j))[0];
 	    for(m=0;m<16;m++) {
 	      n=n<<1;
 	      n|=(l & 1);
 	      l=l>>1;	
 	    }
-	   *((WORD *)(k+2*j))=n;
+	   *((WORD *)INT2POINTER(k+2*j))=n;
         }
       // }
     }
@@ -995,7 +978,7 @@ static void fix_iconblk() {
     for(i =0; i < anzahl; i++) {
     //  if(rsrc->rsh_vrsn==0) {
 	    for(j=0;j<sizeof(ICONBLK)/2;j++) {
-              WSWAP((char *)((long)&base[i]+2*j));
+              WSWAP((char *)INT2POINTER((long)&base[i]+2*j));
             }
 	    LSWAP((short *)&(base[i].ib_pmask));
 	    LSWAP((short *)&(base[i].ib_pdata));
@@ -1016,32 +999,32 @@ static void fix_iconblk() {
             k=*helper;  /*(LONG *)&base[i].ib_pmask*/
 
 	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-              WSWAP((char *)(k+2*j));
+              WSWAP((char *)INT2POINTER(k+2*j));
             }
 	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
 	      n=0;
-              l=((WORD *)(k+2*j))[0];
+              l=((WORD *)INT2POINTER(k+2*j))[0];
 	      for(m=0;m<16;m++) {
 	        n=n<<1;
 	        n|=(l & 1);
 	        l=l>>1;
 	      }
-	      *((WORD *)(k+2*j))=n;
+	      *((WORD *)INT2POINTER(k+2*j))=n;
             }
             k=*helper2;   /*(LONG *)&base[i].ib_pdata;*/
 	
 	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-           WSWAP((char *)(k+2*j));
+           WSWAP((char *)INT2POINTER(k+2*j));
          }
 	 for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
 	   n=0;
-           l=((WORD *)(k+2*j))[0];
+           l=((WORD *)INT2POINTER(k+2*j))[0];
 	   for(m=0;m<16;m++) {
 	     n=n<<1;
 	     n|=(l & 1);
 	     l=l>>1;
 	   }
-	   *((WORD *)(k+2*j))=n;
+	   *((WORD *)INT2POINTER(k+2*j))=n;
         }
       //}
     }

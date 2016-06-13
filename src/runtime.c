@@ -205,7 +205,7 @@ static void timer_handler( int signum) {
      } else {
      // TODO:
      	  void (*func)();	  
-	  func=(void *)alarmpc;
+	  func=(void *)INT2POINTER(alarmpc);
 	  func();
      }
   }

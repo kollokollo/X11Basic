@@ -122,7 +122,7 @@ unsigned char *stdbmtobmp(STANDARDBITMAP bmp, int *len) {
       *buf2++=scanline[3];  /*  A  */
       scanline+=4;
     }    
-    buf2=(unsigned char *)(((((int)buf2-(int)buf3)+3)&0xfffffffc)+(int)buf3); /* align to 4 */
+    buf2=buf3+(((buf2-buf3)+3)&0xfffffffc); /* align to 4 */
   }
   l=(buf2-buf3)+BITMAPFILEHEADERLEN+BITMAPINFOHEADERLEN;
   writeint(&data[2],l);

@@ -742,7 +742,7 @@ static int    f_inode(STRING n) {return(stat_inode(n.pointer)); }
 static int    f_len(STRING n)   {return(n.len); }
 static int    f_lpeek(int adr)  {return((int)(*(long *)INT2POINTER(adr)));}
 static double f_ltextlen(STRING n) {return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
-static int    f_malloc(int size) {return((int)malloc((size_t)size));}
+static int    f_malloc(int size) {return(POINTER2INT(malloc((size_t)size)));}
 static int    f_mshrink(int adr,int size) {return(0);} /*always return zero*/
 static int    f_mode(STRING n)  {return(stat_mode(n.pointer)); }
 static int    f_nlink(STRING n) {return(stat_nlink(n.pointer)); }
@@ -776,7 +776,7 @@ static int    f_peek(int adr)   {return((int)(*(char *)INT2POINTER(adr)));}
 static int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
 #endif
 static double f_rad(double d)   {return(d*PI/180);}
-static int    f_realloc(int adr,int size) {return((int)realloc((char *)adr,(size_t)size));}
+static int    f_realloc(int adr,int size) {return(POINTER2INT(realloc((char *)INT2POINTER(adr),(size_t)size)));}
 static double f_rnd(double d)   {return((double)rand()/RAND_MAX);}
 
 static int    f_size(STRING n)  {return(stat_size(n.pointer)); }
@@ -1193,7 +1193,7 @@ static int f_form_center(PARAMETER *plist,int e) {
   short x,y,w,h,ret;
   graphics();
   gem_init();
-  ret=form_center((OBJECT *)plist->integer,&x,&y,&w,&h);
+  ret=form_center((OBJECT *)INT2POINTER(plist->integer),&x,&y,&w,&h);
   if(e>4) {
     if(plist[1].typ!=PL_LEER) varcastint(plist[1].integer,plist[1].pointer,x);
     if(plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,y);
@@ -1214,18 +1214,18 @@ static int f_form_do(PARAMETER *plist,int e) {
   if(e>1) startob=plist[1].integer;
   graphics();
   gem_init();
-  return(form_do((OBJECT *)plist->integer,startob));
+  return(form_do((OBJECT *)INT2POINTER(plist->integer),startob));
 }
 static int f_objc_draw(PARAMETER *plist,int e) {
   graphics();
   gem_init();
   /*TODO: Clipping */
   
-  return(objc_draw((OBJECT *)plist->integer,plist[1].integer,plist[2].integer,
+  return(objc_draw((OBJECT *)INT2POINTER(plist->integer),plist[1].integer,plist[2].integer,
   0,0,plist[5].integer,plist[6].integer));
 }
 static int f_objc_find(PARAMETER *plist,int e) {
-    return(objc_find((OBJECT *)plist[0].integer,0,7,plist[1].integer,plist[2].integer));
+    return(objc_find((OBJECT *)INT2POINTER(plist->integer),0,7,plist[1].integer,plist[2].integer));
 }
 static int f_objc_offset(PARAMETER *plist,int e) {
   short x,y,ret;
@@ -1244,7 +1244,7 @@ static int f_objc_offset(PARAMETER *plist,int e) {
     if(typ==INTTYP) y=*((int *)plist[3].pointer);
     else if(typ==FLOATTYP) y=(int)*((double *)plist[3].pointer);
   }
-  ret=objc_offset((OBJECT *)plist->integer,plist[1].integer,&x,&y);
+  ret=objc_offset((OBJECT *)INT2POINTER(plist->integer),plist[1].integer,&x,&y);
 
   if(e>2 && plist[2].typ!=PL_LEER) varcastint(plist[2].integer,plist[2].pointer,x);
   if(e>3 && plist[3].typ!=PL_LEER) varcastint(plist[3].integer,plist[3].pointer,y);
@@ -1265,7 +1265,7 @@ static int f_color_rgb(PARAMETER *plist,int e) {
 static int f_rsrc_gaddr(PARAMETER *plist,int e) {
   char *ptr;
   int i=rsrc_gaddr(plist->integer,plist[1].integer,&ptr);
-  if(i>0) return((int)ptr);
+  if(i>0) return((int)POINTER2INT(ptr));
   else return(-1);
 }
 

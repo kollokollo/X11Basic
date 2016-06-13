@@ -271,7 +271,7 @@ static int saveprg(char *fname) {
 }
 
 static void c_memdump(PARAMETER *plist,int e) {
-  memdump((unsigned char *)plist[0].integer,plist[1].integer);
+  memdump((unsigned char *)INT2POINTER(plist->integer),plist[1].integer);
 }
 
 static void stringdump(const char *s,int l,char *d) {
@@ -651,7 +651,7 @@ static void c_list(PARAMETER *plist, int e) {
            "  Size of   Data-Segment: %d\n",(int)h->textseglen,(int)h->rodataseglen,(int)h->sdataseglen);
     printf("  Size of    bss-Segment: %d\n"
            "  Size of String-Segment: %d\n",(int)h->bssseglen,(int)h->stringseglen);
-    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h->symbolseglen,(int)h->symbolseglen/sizeof(BYTECODE_SYMBOL));
+    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h->symbolseglen,(int)(h->symbolseglen/sizeof(BYTECODE_SYMBOL)));
   } else {
     if(o<=prglen) for(i=a;i<o;i++) puts(program[i]);
   }
@@ -1645,7 +1645,7 @@ static void gosubproc(int pc2,int type) {
       sp--;
     } else {
       void (*func)();
-      func=(void *)pc2;
+      func=(void *)INT2POINTER(pc2);
       func();
     }
   }
@@ -1660,7 +1660,7 @@ static void gotolabel(int pc2,int type) {
       // TODO:
     } else {
 #ifndef __APPLE__
-      void *func=(void *)pc2;
+      void *func=(void *)INT2POINTER(pc2);
       goto *func;
 #else
       printf("ERROR/Macintosh MacOS X\nSee Bug 18658 Bugzilla.\nGOTO not possible.\n");
@@ -1737,7 +1737,7 @@ static void c_absolute(PARAMETER *plist,int e) {
   int vnr=plist->integer;
   erase_variable(&variablen[vnr]);
   variablen[vnr].flags=V_STATIC;
-  variablen[vnr].pointer.i=(int *)plist[1].integer;
+  variablen[vnr].pointer.i=(int *)INT2POINTER(plist[1].integer);
 }
 
 
@@ -2096,9 +2096,9 @@ void do_help(const char *w) {
     }
 }
 static void c_error(PARAMETER *plist,int e) {xberror(plist->integer,"");}
-static void c_free(PARAMETER *plist,int e)  {free((char *)plist->integer);}
+static void c_free(PARAMETER *plist,int e)  {free((char *)INT2POINTER(plist->integer));}
 static void c_detatch(PARAMETER *plist,int e) {
-  int r=shm_detatch(plist->integer);
+  int r=shm_detatch(INT2POINTER(plist->integer));
   if(r!=0) io_error(r,"DETATCH");
 }
 static void c_shm_free(PARAMETER *plist,int e) {shm_free(plist->integer);}

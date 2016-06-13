@@ -11,6 +11,6 @@
 #endif
 
 void shm_free(int shmid);
-int shm_detatch(int shmaddr);
+int shm_detatch(const void *);
 int shm_attach(int shmid);
 int shm_malloc(size_t segsize, key_t key);
