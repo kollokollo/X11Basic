@@ -1602,8 +1602,7 @@ void c_clearw(PARAMETER *plist,int e) {
       XCopyGC(window[winnr].display, window[winnr].gc,GCForeground , sgc); 
       XGetGeometry(window[winnr].display,window[winnr].win,&root,&x,&y,&w,&h,&b,&d); 
       XSetForeground(window[winnr].display,window[winnr].gc,window[winnr].bcolor);
-      XFillRectangle(window[winnr].display,window[winnr].pix,window[winnr].gc,x,y,w,h); 
-
+      XFillRectangle(window[winnr].display,window[winnr].pix,window[winnr].gc,0,0,w,h);
       /* XClearWindow(window[winnr].display,window[winnr].win); */
       
       XCopyGC(window[winnr].display,sgc,GCForeground, window[winnr].gc);
