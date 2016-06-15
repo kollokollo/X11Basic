@@ -21,5 +21,7 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - fixed power operator in compiler for integer operands
 - little bugfix in compiler (PRINT #)
 - improved FILESELECT
+- little fixes in GLOB()
 - improved the MAC-OSX version of X11-Basic
+- improved 64bit version of X11-Basic
 - fixed bug in CLEARW

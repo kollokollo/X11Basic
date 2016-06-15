@@ -40,7 +40,7 @@ More things left to do:
 - work on the sound system
 - work on the SDL-Graphics implementation (fill styles etc...)
 - documentation needs more work
-- port it to apple mac/ipad/iphone
+- port it to apple ipad/iphone
 (etc. etc.)
 
 So you are welcome to help.

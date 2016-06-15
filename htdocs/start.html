@@ -20,21 +20,19 @@ UNIX, interpreter, compiler, embedded">
 <h2>X11-BASIC V.1.24</h2>
 <img src="3Dxbasic2.png" align=right>
 
-X11-Basic is a dialect of the BASIC programming language with graphics.
-It integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers and handheld devices.
+X11-Basic is a dialect of the BASIC programming language with graphics and 
+sound for personal computers and handheld devices.
 
 <p>
 The syntax is most similar to GFA-Basic on the ATARI-ST. It is a
 structured dialect with no line numbers. X11-Basic supports big 
-integers and big integer arithmetrics. You can do any data manipulation and
-you may use external functions and libraries. 
+integers and big integer arithmetrics.  
 
 <p>
-X11-Basic is available for UNIX workstations, Linux, Android, as well as for
-MS-WINDOWS.  It is also available for the ATARI ST, TomTom car navigation 
-systems and the Raspberry Pi.
+
+X11-Basic is available for UNIX workstations, Linux, Android, MAC-OSX, as well
+as for MS-WINDOWS.  It is also available for the ATARI ST, TomTom car
+navigation  systems and the Raspberry Pi.
 
 <p> A BASIC compiler is included so that you can make stand-alone
 binaries out of your programs (on all platforms except for Android). 
@@ -42,83 +40,39 @@ binaries out of your programs (on all platforms except for Android).
 At least the X11-Basic interpreter is fast and small.
 
 <hr>
-
-<h2>Utilities</h2>
-
-gfalist - A Program which converts *.gfa Files to ASCII ((C) 2001 by Peter Backes) <p>
-<a href="download/gfalist_0.01-1_i386.deb">gfalist_0.01-1_i386.deb</a> (22 KBytes)(deb), 
-<a href="https://github.com/mmuman/gfalist" TARGET="_top">(sources)</a><p>
-<p>
-bas2x11basic -- A Program which converts ANSI Basic code (with line numbers) to X11-Basic <p>
-<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/compiler/bas2x11basic.bas">bas2x11basic.bas</a> (5 KBytes)(x11basic) <p>
-
-<p>
-rsc2gui -- A Program which converts ATARI-ST *.RSC Files to *.gui (ASCII) Files<p>
-<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/Atari-ST/rsc2gui.bas">rsc2gui.bas</a> (5 KBytes)(x11basic) <p>
-
-<p>
-gui2bas -- A Program which converts *.gui Graphic User Interface Forms to executable x11basic
-subroutines. (<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/demo.gui">demo.gui</a>--&lt; 
-<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/screenshots/guidemo.png">Screenshot</a>)<p>
-<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/gui2bas.bas">gui2bas.bas</a> (5 KBytes)(x11basic) <p>
-
-<p>
-inline.bas -- A Program which converts any binary file into X11-Basic sourcecode. This is useful, if you 
-want to include Graphics files (pictures, icons, etc..) or any other data, directly into your program. 
-This way, you need not load these files on runtime.
-(<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/compiler/inline.bas">inline.bas</a>)<p>
-
-
-</font>
-<h3>Screenshots</h3>
-
 <ul>
 <li> <A href="screenshots/screenshot.png"> Desk with X11-Basic Programs </A>
 <li> <A href="screenshots/console.png"> X11-Basic interpreter running in a
 console window </A>
-
 </ul>
-<p>							
-<pre>
-Group       : Development/Languages        
-License     : GPL
-Packager    : Markus Hoffmann 
-URL         : http://x11-basic.sourceforge.net/
-Summary     : Basic Interpreter with graphics capabilities
-Description :
-
-  X11-Basic is a dialect of the BASIC programming language with graphics. This
-  package includes the interpreter, the compiler and a bytecode interpreter. 
-
-  The structure of the language is similar to the ATARI-ST GFA-BASIC.
-  GFA-Basic programs should run with only few changes.
-
-The interpreter (xbasic) can be used as a shell, and can so run basic-scripts.
-You can make excecutable scripts p.ex. *.cgi-Scripts for handling web-input. 
-
-The compiler (xbc) makes stand alone binaries out of the BASIC programs, which 
+<hr>
+The interpreter (<tt>xbasic</tt>) can be used as a shell, and can so run
+basic-scripts. You can make excecutable scripts p.ex. *.cgi-Scripts for handling
+web-input. 
+<p>
+The compiler (<tt>xbc</tt>) makes stand alone binaries out of the BASIC programs, which 
 run much faster than the interpreted code. 
-
+<p>
 Where no C compiler is available, X11-Basic programs can be compiled into 
-bytecode (see xbbc). This bytecode  can be interpreted by a virtual 
-machine (see xbvm), where it also can be attached to to make a standalone 
+bytecode (see <tt>xbbc</tt>). This bytecode  can be interpreted by a virtual 
+machine (see <tt>xbvm</tt>), where it also can be attached to to make a standalone 
 excecutable. 
-
+<p>
 Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
-with the bas2x11basic program (see the man page bas2x11basic(1) ).
-
+with the <tt>bas2x11basic</tt> program (see below).
+<p>
 A variety of example X11-Basic programs can be found in 
-X11-Basic-examples-1.24.zip, which you can download from the download section.
-
+<tt>X11-Basic-examples-1.24.zip</tt>, which you can download from the 
+download section.
+<p>
   X11BASIC is free software and comes with NO WARRANTY - read the file
   COPYING for details
- 
+ <p>
 (Basically that means, free, open source, use and modify as you like, don't
 incorporate it into non-free software, no warranty of any sort, don't blame me
 if it doesn't work.)
-
-Authors:
---------
+<p>
+Author:
 </pre>
 <script type="text/javascript">
 <!--
@@ -127,7 +81,26 @@ document.write(ename + '@' + domain + '</a>');
 // --> 
 </script>
 
-
+<h2>Utilities</h2>
+... you might also want to install: 
+<ul>
+<li><a href="download/gfalist_0.01-1_i386.deb">gfalist_0.01-1_i386.deb</a> (22 KBytes)(deb) 
+-- A Program which converts *.gfa Files to ASCII ((C) 2001 by Peter Backes) 
+<a href="https://github.com/mmuman/gfalist" TARGET="_top">(sources)</a>
+<li><a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/compiler/bas2x11basic.bas">bas2x11basic.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts ANSI Basic code (with line numbers) to X11-Basic
+<li><a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/Atari-ST/rsc2gui.bas">rsc2gui.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts ATARI-ST *.RSC Files to *.gui (ASCII) Files
+<li><a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/gui2bas.bas">gui2bas.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts *.gui Graphic User Interface Forms to executable x11basic
+subroutines. (<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/demo.gui">demo.gui</a>--&lt; 
+<a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/GUI/screenshots/guidemo.png">Screenshot</a>)
+<li><a href="https://gitlab.com/kollo/X11-Basic_examples/raw/master/All/compiler/inline.bas">inline.bas</a>
+-- A Program which converts any binary file into X11-Basic sourcecode. This is useful, if you 
+want to include Graphics files (pictures, icons, etc..) or any other data, directly into your program. 
+This way, you need not load these files on runtime.
+</ul>
+</font>
 <hr>
 <font size=1>
 Donations can be made via 
