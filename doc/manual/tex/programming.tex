@@ -1879,3 +1879,13 @@ LOOP
 
 Please note that the \verb|EXIT IF| statement has no \verb|ENDIF| or the like.
 It just terminates the loop and continues your program behind the loop end.
+
+\section{Diagnostics}
+
+Some errors can be caught by the user program using the \verb|ON ERROR GOTO| or
+\verb|ON ERROR GOSUB| command. If no error trapping routine has been supplied
+then program execution is terminated and a message is printed with the
+corresponding line number. The error messages are standardized. Each error 
+message has a corresponding number which can be referenced by the system variable 
+\verb|ERR|. A list of standard error messages by number can be found in chapter
+\ref{errors}.

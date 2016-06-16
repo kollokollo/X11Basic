@@ -70,7 +70,7 @@ X11-BASICVERSION  1.24
 
                  (see  http://x11-basic.sourceforge.net/)
 
-                                              Latest revision: June 13, 2016
+                                              Latest revision: June 16, 2016
     __________________________________________________________________________________________________________________________
 
 
@@ -122,13 +122,13 @@ X11-BasicContents
 
      2.1.    Installing X11-Basic   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .       6
 
-     2.2.    Using the X11-Basic Interpreter   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     10
+     2.2.    Using the X11-Basic Interpreter   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     11
 
              2.2.1.      Using the X11-Basic Interpreter under UNIX, Linux   .  .  .  .     11
 
              2.2.2.      Using the WINDOWS Version of X11-Basic   .  .  .  .  .  .  .  .     12
 
-             2.2.3.      The Android Version of X11-Basic    .  .  .  .  .  .  .  .  .  .  .  .  .     13
+             2.2.3.      The Android Version of X11-Basic    .  .  .  .  .  .  .  .  .  .  .  .  .     14
 
              2.2.4.      The TomTom Version of X11-Basic   .  .  .  .  .  .  .  .  .  .  .  .  .     18
 
@@ -217,31 +217,33 @@ X11-BasicContents
 
               3.11.1.    Conditional and endless loops   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     64
 
-      3.12.   Address Spaces   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
+      3.12.   Diagnostics   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     65
 
-      3.13.   Graphics: Drawing and Painting   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
+      3.13.   Address Spaces   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
 
-      3.14.   Reading from and Writing to Files   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
+      3.14.   Graphics: Drawing and Painting   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
 
-      3.15.   Internet connections, special oles and sockets   .  .  .  .  .  .  .  .  .  .  .  .     67
+      3.15.   Reading from and Writing to Files   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     66
 
-              3.15.1.    Local inter process communication: Pipes  .  .  .  .  .  .  .  .  .  .     67
+      3.16.   Internet connections, special oles and sockets   .  .  .  .  .  .  .  .  .  .  .  .     67
 
-              3.15.2.    World-Wide communication: Sockets   .  .  .  .  .  .  .  .  .  .  .  .     68
+              3.16.1.    Local inter process communication: Pipes  .  .  .  .  .  .  .  .  .  .     67
 
-      3.16.   Accessing USB devices  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     72
+              3.16.2.    World-Wide communication: Sockets   .  .  .  .  .  .  .  .  .  .  .  .     68
 
-      3.17.   Data within the program   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     72
+      3.17.   Accessing USB devices  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     72
 
-      3.18.   Dynamic-link libraries   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     73
+      3.18.   Data within the program   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     72
 
-              3.18.1.    Using shared libraries and C functions  .  .  .  .  .  .  .  .  .  .  .  .     74
+      3.19.   Dynamic-link libraries   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     73
 
-      3.19.   Memory management  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     75
+              3.19.1.    Using shared libraries and C functions  .  .  .  .  .  .  .  .  .  .  .  .     74
 
-              3.19.1.    Allocating memory  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     76
+      3.20.   Memory management  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     75
 
-      3.20.   Other features  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     76
+              3.20.1.    Allocating memory  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     76
+
+      3.21.   Other features  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     76
 
 
 
@@ -263,14 +265,14 @@ X11-BasicContents
 
      5.1.    What is CGI?   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     93
 
-             5.1.1.      Conoguration  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     93
-
 
 
 ii
     _____________________________________________________________________________________________________Contents_____________
 
 
+
+              5.1.1.     Conoguration  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     93
 
       5.2.    How it works   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .     95
 
@@ -346,14 +348,14 @@ ii
 
      6.22.   Graphic functions  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   122
 
-     6.23.   Other functions   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   122
-
 
 
                                                                                                                    iii
 Contents______________________________________________________________________________________________________________________
 
 
+
+      6.23.   Other functions   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   122
 
       6.24.   Subroutines and Functions   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .   123
 
@@ -429,12 +431,12 @@ ii
 
 
 
-A.   GNU License                                                                                        655
-
-
-
 iv
     _____________________________________________________________________________________________________Contents_____________
+
+
+
+A.   GNU License                                                                                        655
 
 
 
@@ -1901,7 +1903,7 @@ Figure 2.1   :The Nirvana Editor with syntax high-
 
   constants, but may not be used in variable names. Currently only the standard output
 
-  (console) supports the full UTF-8 character sets.2
+  (console) supports the full UTF-8 character sets.1
 
 
 
@@ -1909,9 +1911,9 @@ Figure 2.1   :The Nirvana Editor with syntax high-
 
 
 
-  NEdit, the full featured, plain text Nirvana editor3 is a GUI style text editor for work-
+  NEdit, the full featured, plain text Nirvana editor2 is a GUI style text editor for work-
 
-  stations with the X Window System.  Also a MS Windows port is available1 .  NEdit
+  stations with the X Window System.  Also a MS Windows port is available3 .  NEdit
 
   provides all of the standard menu, dialog, editing, mouse support, macro extension
 
@@ -1924,11 +1926,11 @@ Figure 2.1   :The Nirvana Editor with syntax high-
       If you like to use nedit as your favorite editor,  a nedit.defs ole comes with
 
       ___________________________________________________
-    2LTEXT will accept some of the special characters (currently only german), TEXT will work with UTF-8 only on
+    1LTEXT will accept some of the special characters (currently only german), TEXT will work with UTF-8 only on
 
       Android devices (all latin, greek, cyrillic).
-    3http://nedit.org/
-    1http://nedit.gmxhome.de/winport.html
+    2http://nedit.org/
+    3http://nedit.gmxhome.de/winport.html
 
 
 
@@ -4691,7 +4693,7 @@ inserted every three digits to the left of the decimal point.  Or, you want to p
 
 numbers in scientioc notation. PRINT  USING provides a way to print numbers in this
 
-and almost any other form2 .
+and almost any other form1 .
 
    The generic syntax is
 
@@ -4711,7 +4713,7 @@ a quoted string, or a more general string expression.
 
 left justioed.
 
-   The function USING$() duplicates the PRINT USING statement almost exactly1
+   The function USING$() duplicates the PRINT USING statement almost exactly2
 
 but returns the result as a string rather than printing it on the screen.
 
@@ -4756,10 +4758,10 @@ x=      _PRINT  x_  PRINT  x  USING  "###"
 
 1       _  1         _      1
     ___________________________________________________
-  2There are also other built-in commands for formatting data on output. X11-Basic ooeers e.g. STR$(). Please refer to the
+  1There are also other built-in commands for formatting data on output. X11-Basic ooeers e.g. STR$(). Please refer to the
 
     sections on functions for details on the syntax of STR$().
-  1only numbers can be formatted, no strings.
+  2only numbers can be formatted, no strings.
 
 
 
@@ -5417,7 +5419,7 @@ LOOP
 
 
 64
-    ______________________________________________________________________________________3.11.__Flow_Control_________________
+    ________________________________________________________________________________________3.12.__Diagnostics________________
 
 
 
@@ -5478,12 +5480,30 @@ the loop and continues your program behind the loop end.
 
 
 
+3.12.        Diagnostics
+
+
+
+Some errors can be caught by the user program using the ON  ERROR  GOTO or ON  ERROR  GOSUB
+
+command.  If no error trapping routine has been supplied then program execution is
+
+terminated and a message is printed with the corresponding line number.  The error
+
+messages are standardized.  Each error message has a corresponding number which
+
+can be referenced by the system variable ERR. A list of standard error messages by
+
+number can be found in chapter 6.25.
+
+
+
                                                                                                                   65
 3.  Programming_in_X11-Basic__________________________________________________________________________________________________
 
 
 
-3.12.        Address  Spaces
+3.13.        Address  Spaces
 
 
 
@@ -5499,7 +5519,7 @@ segmentation fault on trying this.
 
 
 
-3.13.        Graphics:  Drawing  and  Painting
+3.14.        Graphics:  Drawing  and  Painting
 
 
 
@@ -5535,7 +5555,7 @@ created icons can be used. Transparency and alpha channels are supported.
 
 
 
-3.14.        Reading  from  and  Writing  to  Files
+3.15.        Reading  from  and  Writing  to  Files
 
 
 
@@ -5556,11 +5576,11 @@ a binary block with BLOAD.
 
 
 66
-    _________________________________________3.15.__Internet_connections,_special_oles_and_sockets____________________________
+    _________________________________________3.16.__Internet_connections,_special_oles_and_sockets____________________________
 
 
 
-3.15.        Internet  connections,  special  oles  and  sockets
+3.16.        Internet  connections,  special  oles  and  sockets
 
 
 
@@ -5580,7 +5600,7 @@ Pipes. Pipes are special oles which are created in the local olesystem.
 
 
 
-3.15.1.       Local inter process communication:  Pipes
+3.16.1.       Local inter process communication:  Pipes
 
 
 
@@ -5636,7 +5656,7 @@ memory segment.
 
 
 
-3.15.2.       World-Wide communication:  Sockets
+3.16.2.       World-Wide communication:  Sockets
 
 
 
@@ -5707,7 +5727,7 @@ tocol), which is a reliable, stream oriented protocol, and datagram sockets use 
 
 
 68
-    _________________________________________3.15.__Internet_connections,_special_oles_and_sockets____________________________
+    _________________________________________3.16.__Internet_connections,_special_oles_and_sockets____________________________
 
 
 
@@ -5871,7 +5891,7 @@ own socket.
 
 
 70
-    _________________________________________3.15.__Internet_connections,_special_oles_and_sockets____________________________
+    _________________________________________3.16.__Internet_connections,_special_oles_and_sockets____________________________
 
 
 
@@ -5973,7 +5993,7 @@ by adding a checksum to the data before transmission.
 
 
 
-3.16.        Accessing  USB  devices
+3.17.        Accessing  USB  devices
 
 
 
@@ -6007,7 +6027,7 @@ work).
 
 
 
-3.17.        Data  within  the  program
+3.18.        Data  within  the  program
 
 
 
@@ -6030,7 +6050,7 @@ within the sourcecode of a basic program:
 
 
 72
-    _________________________________________________________________________3.18.__Dynamic-link_libraries____________________
+    _________________________________________________________________________3.19.__Dynamic-link_libraries____________________
 
 
 
@@ -6084,7 +6104,7 @@ sourcecode.
 
 
 
-3.18.        Dynamic-link  libraries
+3.19.        Dynamic-link  libraries
 
 
 
@@ -6127,7 +6147,7 @@ parameters.
 
 
 
-3.18.1.       Using shared libraries and C functions
+3.19.1.       Using shared libraries and C functions
 
 
 Before an application can use a function from a .so (if you want to use your own
@@ -6191,7 +6211,7 @@ void  binit(int  n,int  dn,double  *x,double  *data)  -
 
 
 74
-    __________________________________________________________________________3.19.__Memory_management________________________
+    __________________________________________________________________________3.20.__Memory_management________________________
 
 
 
@@ -6257,7 +6277,7 @@ string.
 
 
 
-3.19.        Memory  management
+3.20.        Memory  management
 
 
 
@@ -6276,7 +6296,7 @@ situations when a programmer wants to allocate additional memory.
 
 
 
-3.19.1.       Allocating memory
+3.20.1.       Allocating memory
 
 
 If  an  application  needs  to  store  small  amounts  of  memory,  it  should  use  strings.
@@ -6311,7 +6331,7 @@ FREE  Ptr%
 
 
 
-3.20.        Other  features
+3.21.        Other  features
 
 
 
@@ -7270,7 +7290,7 @@ boxes and the ole selector are examples of dialog boxes.
 
 ply construct an OBJECT tree with at least one EXIT or TOUCHEXIT object and call
 
-form`do()0 .  All interaction with the dialog like editable oelds, radio buttons, and
+form`do()1 .  All interaction with the dialog like editable oelds, radio buttons, and
 
 selectable objects will be maintained by the X11-Basic library until the user strikes
 
@@ -7316,7 +7336,7 @@ one which opened the block. The block will be closed by a '"' in a single line.
 
 
     ___________________________________________________
-  0Before you should display the dialog box using the objc`draw() function. Maybe you also want to center the dialog
+  1Before you should display the dialog box using the objc`draw() function. Maybe you also want to center the dialog
 
     with form`center() and save and redraw the background with form`dial().
 
@@ -30332,4 +30352,8 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - fixed power operator in compiler for integer operands
 - little bugfix in compiler (PRINT #)
 - improved FILESELECT
-          Last change to this file:  Mo 13. Jun 16:25:23 CEST 2016
+- little fixes in GLOB()
+- improved the MAC-OSX version of X11-Basic
+- improved 64bit version of X11-Basic
+- fixed bug in CLEARW
+          Last change to this file:  Do 16. Jun 15:27:54 CEST 2016
