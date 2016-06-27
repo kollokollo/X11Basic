@@ -277,9 +277,9 @@ static void DrawHorizontalLine(int X, int Y, int width, unsigned short color) {
     w=screen.clip_x+screen.clip_w-X;
 
   if(screen.alpha==255) {
-    while(w-->0) FB_PutPixel_noclip(X++,Y,color);
+    while(w-->=0) FB_PutPixel_noclip(X++,Y,color);
   } else {
-    while(w-->0) FB_PutPixel_noclip_alpha(X++,Y,color,screen.alpha);
+    while(w-->=0) FB_PutPixel_noclip_alpha(X++,Y,color,screen.alpha);
   }
 }
 
@@ -309,12 +309,12 @@ static void DrawHorizontalLinePatt(int X, int Y, int width, unsigned short color
     w=screen.clip_x+screen.clip_w-X;
 
   if(screen.alpha==255) {
-    while(w-->0) {
+    while(w-->=0) {
       if((pat>>(X&0xf))&1) FB_PutPixel_noclip(X,Y,color);
       X++;
     }
   } else {
-    while(w-->0) {
+    while(w-->=0) {
       if((pat>>(X&0xf))&1) FB_PutPixel_noclip_alpha(X,Y,color,screen.alpha);
       X++;
     }
@@ -335,13 +335,13 @@ static void DrawHorizontalLinePattBg(int X, int Y, int width, unsigned short col
     w=screen.clip_x+screen.clip_w-X;
 
   if(screen.alpha==255) {
-    while(w-->0) {
+    while(w-->=0) {
       if((pat>>(X&0xf))&1) FB_PutPixel_noclip(X,Y,color);
       else FB_PutPixel_noclip(X,Y,bgcolor);
       X++;
     }
   } else {
-    while(w-->0) {
+    while(w-->=0) {
       if((pat>>(X&0xf))&1) FB_PutPixel_noclip_alpha(X,Y,color,screen.alpha);
       X++;
     }
