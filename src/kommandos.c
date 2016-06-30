@@ -507,9 +507,11 @@ static void dodim(const char *w) {
 //  printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
 
     vnr=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
-    ARRAY arr=*(variablen[vnr].pointer.a);
-    *(variablen[vnr].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
-    free_array(&arr); /*Alten Inhalt freigeben*/
+    if(vnr>=0) {
+      ARRAY arr=*(variablen[vnr].pointer.a);
+      *(variablen[vnr].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
+      free_array(&arr); /*Alten Inhalt freigeben*/
+    }
     free(r);
   }
 }
