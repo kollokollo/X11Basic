@@ -105,7 +105,6 @@ inline static void cast_to_arbint(PARAMETER *sp) {
 
 
 void free_parameter(PARAMETER *p);
-int add_variable_adr(char *name, unsigned char  typ, char *adr);
   /* Initialize the x11basic-library */
 #define MAIN_INIT  programbufferlen=0; programbuffer=NULL; x11basicStartup(); set_input_mode(1,0); \
   atexit(reset_input_mode); \
