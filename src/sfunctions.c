@@ -396,8 +396,13 @@ static STRING f_strs(PARAMETER *plist,int e) {         /* STR$(a[,b[,c[,d]]])   
     break;
   case PL_COMPLEX: {
     char *formatter2=malloc(48);
-    sprintf(formatter2,"(%s+%si)",formatter,formatter);
-    sprintf(ergebnis.pointer,formatter2,plist->real,plist->imag);
+    if(plist->imag>=0) {
+      sprintf(formatter2,"(%s+%si)",formatter,formatter);
+      sprintf(ergebnis.pointer,formatter2,plist->real,plist->imag);
+    } else {
+      sprintf(formatter2,"(%s%si)",formatter,formatter);
+      sprintf(ergebnis.pointer,formatter2,plist->real,plist->imag);
+    }
     free(formatter2);
     }
     break;
