@@ -10,7 +10,7 @@
    x11basic shared library. Also ohers are required as follos:
 
 gcc -fomit-frame-pointer -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
-    -lreadline -lncurses  -lasound -lX11 testme.c library.o
+    -lreadline  -lasound -lX11 testme.c library.o
 
 */
 
@@ -26,10 +26,9 @@ char ifilename[]="dummy";     /* Program name.   Put some useful information her
 char *programbuffer=NULL;
 const char version[]="dummy"; /* Version Number. Put some useful information here */
 const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
-char *program[]={"Hallo"};    /* Other comments. Put some useful information here */
-int prglen=sizeof(program)/sizeof(char *);
+char **program=NULL;
+int prglen=0;
 int verbose=0;
-
 
 /* Here your c program starts */
 
@@ -54,9 +53,9 @@ main(int anzahl, char *argumente[]) {
   kommando("SHOWPAGE");
   kommando("KEYEVENT");
   /* ... */
-/* If you know the internals of libx11basic, you can also use the c-versions of the functions:*/
+
+  /* If you know the internals of libx11basic, you can also use the c-versions of the functions:*/
   graphics();
   i=form_alert(1,strdup("[1][Hi I am X11-Basic.][ OK ]"));
   printf("You pressed button %d\n",i);
-
 }

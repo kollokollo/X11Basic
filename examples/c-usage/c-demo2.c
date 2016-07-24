@@ -13,7 +13,7 @@ xbc -l -virtualm library.bas
 gcc -DNOMAIN -c library.c 
 
 gcc -fomit-frame-pointer -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
-    -lreadline -lncurses  -lasound -lX11 c-demo2.c library.o
+    -lreadline -lasound -lX11 c-demo2.c library.o
 
 */
 
@@ -48,7 +48,6 @@ int main(int anzahl, char *argumente[]) {
   STRING str;
   int i;
   MAIN_INIT;
-printf("Hallo\n");
 
   /* Initialize Variables used by the main program */
   double VARf_MX;  
@@ -61,8 +60,8 @@ printf("Hallo\n");
   /* Initialize Variables used by the main program */
 
 
-  add_variable_adr("MX",FLOATTYP,(char *)&VARf_MX);
-  add_variable_adr("MY",FLOATTYP,(char *)&VARf_MY);
+  add_variable("MX",FLOATTYP,0,V_STATIC,(char *)&VARf_MX);
+  add_variable("MY",FLOATTYP,0,V_STATIC,(char *)&VARf_MY);
 
 
 

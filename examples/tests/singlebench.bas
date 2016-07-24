@@ -1,7 +1,7 @@
 ac=5000000
 
-print "empty FOR loop with ";ac;" iterations:"
-t=ctimer
+PRINT "empty FOR loop with ";ac;" iterations:"
+t=CTIMER
 for i=0 to ac
 next i
 ref=(ctimer-t)/ac
@@ -26,7 +26,6 @@ t=ctimer
 for i=0 to ac
 
 next i
-ref=(ctimer-t)/ac
-print "Ref=",str$(ref*1000,5,5);" ms"
-
-quit
+ref=(CTIMER-t)/ac
+PRINT "Ref=",STR$(ref*1000,5,5);" ms"
+QUIT

@@ -18,15 +18,14 @@ MKDIR "/tmp/ttt"
 RMDIR "/tmp/ttt"
 SYSTEM "touch /tmp/ttt"
 SYSTEM "rm -f /tmp/ttt"
-print "now open a file browser (or a terminal window), go"
-print "to the /tmp directory and do something..."
-do
-  a$=fileevent$
-  if len(a$)
-    print a$
+PRINT "now open a file browser (or a terminal window), go"
+PRINT "to the /tmp directory and do something..."
+DO
+  a$=FILEEVENT$
+  IF LEN(a$)
+    PRINT a$
   ELSE 
     PAUSE 0.3
   ENDIF
 LOOP
-
 QUIT

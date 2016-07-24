@@ -5,13 +5,14 @@
 '
 if WIN32?
   a$=FSFIRST$("C:\","*.dat")
-else
+  PRINT "looks for *.dat files in C:\"
+ELSE
   a$=FSFIRST$("/tmp","*.dat")
-endif
-WHILE len(a$)
-  print a$
-  name$=word$(a$,2)
-  
+  PRINT "looks for *.dat files in /tmp/"
+ENDIF
+WHILE LEN(a$)
+  PRINT a$
+  name$=WORD$(a$,2)    ! This is the filename only
   a$=FSNEXT$()
 WEND
 END

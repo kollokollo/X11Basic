@@ -1,5 +1,8 @@
-' This is an example, how to produce .o linkabel object files and
-' shared object files (.so) under linux with X11-Basic:
+' library.bas -- demonstration for X11-Basic (c) Markus Hoffmann
+'
+'
+' This is an example how to produce .o linkabel object files and
+' shared object files (.so) under linux (UNIX or MAC-OSX) with X11-Basic:
 '
 ' Do a 
 ' xbc -l -c library.bas
@@ -11,23 +14,21 @@
 '
 ' You can link multiple .o files together with normal (C) .o files.
 
-
-
-procedure pa
-  print "This is procedure a"
-  alert 1,"Hello, this is a message|from your X11-Basic program library.bas",1," Wow! ",dummy
-return
-procedure b
-  print "This is procedure b"
-return
-procedure c(x,y)
-  print "This is procedure c with parameters: x=";x,"y=";y
-return
-function d(x,y)
-  print "This is function d with parameters: x=";x,"y=";y
-  return x+y
-endfunction
-function greeting$(n%)
-  print "This is function greeting with parameter: n%=";n%
-  return date$+" "+time$+" Hello!!!! "+str$(n%)
-endfunction
+PROCEDURE pa
+  PRINT "This is procedure a"
+  ALERT 1,"Hello, this is a message|from your X11-Basic program library.bas",1," Wow! ",dummy
+RETURN
+PROCEDURE b
+  PRINT "This is procedure b"
+RETURN
+PROCEDURE c(x,y)
+  PRINT "This is procedure c with parameters: x=";x,"y=";y
+RETURN
+FUNCTION d(x,y)
+  PRINT "This is function d with parameters: x=";x,"y=";y
+  RETURN x+y
+ENDFUNCTION
+FUNCTION greeting$(n%)
+  PRINT "This is function greeting with parameter: n%=";n%
+  RETURN DATE$+" "+TIME$+" Hello!!!! "+STR$(n%)
+ENDFUNCTION

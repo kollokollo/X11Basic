@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=41
+RELEASE=42
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -166,12 +166,12 @@ EXAMPLES_CONSOLE= \
 	../examples2/RELEASE-NOTES
 
 EXAMPLES_UTILITY= \
-	../examples/compiler/bas2x11basic.bas \
-	../examples/compiler/gui2bas.bas \
-	../examples/compiler/inline.bas \
-	../examples/compiler/xbc.bas \
-	../examples/compiler/xbc-st.bas \
-	../examples/compiler/xbc-win.bas \
+	examples/compiler/bas2x11basic.bas \
+	examples/compiler/gui2bas.bas \
+	examples/compiler/inline.bas \
+	examples/compiler/xbc.bas \
+	examples/compiler/xbc-st.bas \
+	examples/compiler/xbc-win.bas \
 	../examples2/utils/a2ov2.bas \
 	../examples2/utils/ans2bas.bas \
 	../examples2/utils/draftit \
@@ -295,38 +295,38 @@ EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
 DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
-      ../doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss \
+      ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
       config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
-        bitmaps/* ../logo/x11basic.png \
-        ../examples/compiler/xbc.bas.in \
-        ../examples/compiler/inline.bas \
-        ../examples/compiler/bas2x11basic.bas \
-        ../examples/compiler/gui2bas.bas \
-        ../examples/compiler/xbc-win.bas \
-        ../examples/compiler/xbc-st.bas \
-        ../examples/c-usage/c-demo.c \
-        ../examples/c-usage/c-demo2.c \
-        ../examples/c-usage/library.bas \
-        ../examples/c-usage/Makefile \
-	../examples/tests/* \
-	../examples/graphics/* 
+        bitmaps/* logo/x11basic.png \
+        examples/compiler/xbc.bas.in \
+        examples/compiler/inline.bas \
+        examples/compiler/bas2x11basic.bas \
+        examples/compiler/gui2bas.bas \
+        examples/compiler/xbc-win.bas \
+        examples/compiler/xbc-st.bas \
+        examples/c-usage/c-demo.c \
+        examples/c-usage/c-demo2.c \
+        examples/c-usage/library.bas \
+        examples/c-usage/Makefile \
+	examples/tests/* \
+	examples/graphics/* 
 
 BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY \
 	../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
 	../doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c \
 	x11basic.h xb2csol.h x11basic.a libx11basic.so \
-      ../examples/compiler/xbc.bas.in \
-      ../examples/compiler/inline.bas \
-      ../examples/compiler/bas2x11basic.bas \
-      ../examples/compiler/gui2bas.bas \
-      ../examples/c-usage/c-demo.c \
-      ../examples/c-usage/c-demo2.c \
-      ../examples/c-usage/library.bas \
-      ../examples/c-usage/Makefile \
-      ../examples/tests/* \
-      ../examples/graphics/* 
+      examples/compiler/xbc.bas.in \
+      examples/compiler/inline.bas \
+      examples/compiler/bas2x11basic.bas \
+      examples/compiler/gui2bas.bas \
+      examples/c-usage/c-demo.c \
+      examples/c-usage/c-demo2.c \
+      examples/c-usage/library.bas \
+      examples/c-usage/Makefile \
+      examples/tests/* \
+      examples/graphics/* 
 
 WINDIST=WINDOWS/lib/SDL.dll \
         WINDOWS/lib/libusb0.dll \
@@ -417,8 +417,8 @@ xbasic : libx11basic.so main.o
 
 # Make th X11-Basic compiler manager xbc
 
-xbc : xbasic libx11basic.so ../examples/compiler/xbc.bas
-	LD_LIBRARY_PATH=. ./xbasic ../examples/compiler/xbc.bas --dynamic -o $@ -L .
+xbc : xbasic libx11basic.so examples/compiler/xbc.bas
+	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@ -L .
 	strip $@
 
 # Make the bytecode compiler xbbc
@@ -481,8 +481,8 @@ xbvm.exe: bytecode.h xbvm.c $(MYWINLIBS)
 
 # Make th X11-Xasic psydocompiler (for MS WINDOWS)
 
-xbc.exe : xbasic ../examples/compiler/xbc-win.bas xbvm.exe xbbc
-	LD_LIBRARY_PATH=. ./xbasic -q ../examples/compiler/xbc-win.bas -o $@
+xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-win.bas -o $@
 	chmod 755 $@ 
 
 
@@ -500,8 +500,8 @@ xbvm.prg: x11basic.toslib bytecode.h xbvm.c
 	$(TOSCC) -DATARI $(OPT) $(WINLINKFLAGS) -o $@ xbvm.c \
 	 $(MYTOSLIBS) $(TOSLIBS)
 	m68k-atari-mint-strip $@
-xbc.prg : xbasic ../examples/compiler/xbc-st.bas xbvm.prg xbbc
-	LD_LIBRARY_PATH=. ./xbasic -q ../examples/compiler/xbc-st.bas -o $@
+xbc.prg : xbasic examples/compiler/xbc-st.bas xbvm.prg xbbc
+	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-st.bas -o $@
 	chmod 755 $@ 
 xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c
 	$(TOSCC) -DATARI -DDUMMY_LIST $(OPT) -o $@ xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c svariablen.c file.c
@@ -677,8 +677,8 @@ lib:	libx11basic.so x11basic.a
 
 # Make the ANSI-Basic to X11-Basic translator
 
-bas2x11basic : xbc ../examples/compiler/bas2x11basic.bas
-	LD_LIBRARY_PATH=. ./xbc ../examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
+bas2x11basic : xbc examples/compiler/bas2x11basic.bas
+	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
 	strip $@
 myzip : xbc ../examples2/utils/myzip.bas ../examples2/utils/myunzip.bas
 	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myzip.bas --dynamic -o myzip -L .
@@ -709,11 +709,11 @@ xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o sv
 xb2c.debug : xb2c.c $(LIBCSRC)
 	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)
 
-x11basic.tga: ../logo/x11basic-logo-1999.pov
+x11basic.tga: logo/x11basic-logo-1999.pov
 	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
  
-install : xbasic ../logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
-	install -m 644 ../logo/x11basic.png $(ICONDIR)/
+install : xbasic logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+	install -m 644 logo/x11basic.png $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
 	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
@@ -722,8 +722,8 @@ install : xbasic ../logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h
 	install -m 644 x11basic.a $(LIBDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
-	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
-	install -m 644 ../doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
+	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
+	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
 	install -s -m 755 xbc $(BINDIR)/
 	install -s -m 755 xb2c $(BINDIR)/
 	install -s -m 755 xbvm $(BINDIR)/
@@ -732,11 +732,11 @@ install : xbasic ../logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h
 	install -d $(INCDIR)
 	install -m 644 x11basic.h $(INCDIR)/
 	install -m 644 xb2csol.h $(INCDIR)/
-	install -m 644 ../doc/man-pages/xbc.1 $(MANDIR)/man1/
-	install -m 644 ../doc/man-pages/xbbc.1 $(MANDIR)/man1/
-	install -m 644 ../doc/man-pages/xbvm.1 $(MANDIR)/man1/
-	install -m 644 ../doc/man-pages/xb2c.1 $(MANDIR)/man1/
-	install -m 644 ../doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbc.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbbc.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xbvm.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/xb2c.1 $(MANDIR)/man1/
+	install -m 644 doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
 uninstall :
 	rm -f $(ICONDIR)/x11basic.png
 	rm -f $(DESKTOPDIR)/x11basic.desktop

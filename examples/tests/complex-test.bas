@@ -3,10 +3,11 @@
 '
 
 a#=3+4i
-b#=conj#(a#)
-c#=SQRT#(b#)
+b#=CONJ(a#)
+c#=SQRT(b#)
 
-print a#,b#,c#
+PRINT a#,b#,c#
+t$=STR$(b#)
+PRINT ENCLOSE$(t$)
 
-
-quit
+QUIT
