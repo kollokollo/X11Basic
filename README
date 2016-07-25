@@ -24,9 +24,7 @@ Summary     : A Basic interpreter and compiler with graphics capabilities
 Description :
 
   X11-Basic is a dialect of the BASIC programming language with graphics
-  capability that integrates features like shell scripting, cgi-Programming and
-  full graphical visualisation into the easy to learn basic language on modern
-  computers.
+  capability. 
 
   The structure of the language is similar to the ATARI-ST GFA-BASIC.
  
@@ -38,21 +36,21 @@ Description :
 
   X11-Basic programs can also be compiled into a bytecode (see xbbc). This
   bytecode can be interpreted by a virtual machine (see xbvm). Finally, the
-  bytecode can be  converted to C sourcefiles (see xb2c) which can be compiled
+  bytecode can be converted to C sourcefiles (see xb2c) which can be compiled
   with the gnu C compiler (or the tiny C compiler) to native excecutables.
 
   Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
   with the bas2x11basic program (see the man page bas2x11basic(1) ).
 
   You will find the compiler sourcecode and some other sample programs in 
-  /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs 
-  can be found in an X11-Basic examples repository on gitlab
-  (https://gitlab.com/kollo/X11-Basic_examples/tree/master) or in a package
-  X11-Basic-examples-1.24.zip, which you can download from the homepage
-  (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version  of the
+  /usr/share/doc/packages/X11Basic/examples. However, a much bigger variety of 
+  other sample programs can be found in an X11-Basic examples repository on
+  gitlab (https://gitlab.com/kollo/X11-Basic_examples/tree/master) or in a
+  package X11-Basic-examples-1.24.zip, which you can download from the homepage
+  (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version of the
   manual can be found there.
 
-  Please read the file ./doc/X11-Basic-manual.txt for further information.
+  Please read the file X11-Basic-manual.txt for further information.
 
   X11BASIC is free software and comes with NO WARRANTY - read the file
   COPYING for details
@@ -61,75 +59,120 @@ Description :
   incorporate it into non-free software, no warranty of any sort, don't blame me
   if it doesn't work.)
 
-Please read the file INSTALL for compiling instructions.
+  Please read the file INSTALL for compiling instructions.
 
-ADDITIONAL CONFIGURATION OPTIONS
-================================
+  Standard Installation
+  =====================
 
-After generating the Makefile, look at the file `options.h' (sparsely
-commented) and see if there is anything you want to change. The only option
-that you might need to change is GERMAN, which should be defined if you
-like to have a german version of X11-Basic. The default language is English. 
+  Starting from the src/ directory you should do a
+  ./configure
+  make
+  
+  And for a system wide installation
 
-COMPILING a standalone excecutable
-==================================
+  sudo make install
 
-To compile the X11-Basic interpreter (called xbasic), simply type 
+
+  To remove the installation a
+
+  sudo make uninstall
+
+  will do.
+  
+  For further details of the installation process and different install options
+  please read the file INSTALL.
+
+
+  ADDITIONAL CONFIGURATION OPTIONS
+  ================================
+
+  (only if you have special needs or if the standard installation fails)
+
+  1. Language
+  -----------
+    
+  After generating (with ./configure) the Makefile, look at the file 
+  `options.h' (sparsely commented) and see if there is anything you want to 
+  change. The only option that you might need to change is GERMAN, which 
+  should be defined if you like to have a german version of X11-Basic. 
+  The default language is English. 
+
+  2. standalone excecutables (statically linked)
+  ----------------------------------------------
+  
+  a) the interpreter
+  
+  To compile the X11-Basic interpreter (called xbasic), simply type 
 	
 	make static
 
-at the shell prompt. The produced file is independant of the x11basic 
-library and does not need the x11basic framework to be installed.
+  at the shell prompt. The produced file is independant of the x11basic 
+  library and does not need the x11basic framework to be installed.
 
-After X11Basic has been compiled and linked successfully, you can start it
-by typing
+  After X11Basic has been compiled and linked successfully, you can start it
+  by typing
 
 	./xbasic.static
 
-The command-line options can be listed with the `-h' option (`./xbasic -h').
+  The command-line options can be listed with the `-h' option (`./xbasic -h').
 
-INSTALLING the standalone excecutable
-=====================================
-
-Put the executable wherever you like. I have mine in ${HOME}/bin/.
-
-A system wide installation can be done with
-sudo make install
-remove the installation with
-sudo make uninstall
+  INSTALLING the standalone excecutable:
+ 
+  Put the executable wherever you like. I have mine in ${HOME}/bin/.
 
 
-make the compiler work, libraries:
-===================================
+  b) compiler and libraries
 
-If you want to use the compilers included in this package, you have to
-make both the static and dynamic libraries.
+  If you want to use the compilers, you have to make both the static and dynamic
+  libraries.
 
-cd ./src
-make lib              will generate libx11basic.so
-make x11basic.a       will generate x11basic.a
+  cd ./src
+  make lib              will generate libx11basic.so
+  make x11basic.a       will generate x11basic.a
 
--- now you have to be root --
+  -- now you have to be root to install the libraries at a place where the 
+     compiler can use them --
 
-mv libx11basic.so /usr/lib/
-mv x11basic.a /usr/lib/
--- please also check the permissions of the files:
-chmod 755 	/usr/lib/x11basic.a		
-chmod 755       /usr/lib/libx11basic.so 
-rehash
+  mv libx11basic.so /usr/lib/
+  mv x11basic.a /usr/lib/
+  -- please also check the permissions of the files:
+  chmod 755 	/usr/lib/x11basic.a		
+  chmod 755       /usr/lib/libx11basic.so 
+  rehash
 
-make installroot
-                  will generate a dynamic linked binary of the interpreter,
-		  copy it to /bin/, install the libraries in /usr/local/lib/,
-		  install the man-page
------------------------------
-make xbc
-                  will make the X11-basic compiler
-                  You can then (beeing root) do a 
-make xbcinstall
-	          to install the compiler in /usr/local/bin/ and the compiler 
-		  man-page
+  make xbbc.static xbvm.static xb2c.static xbc
+  
+  will produce the statically linkd versions of the compilers.
 
-regards and have fun
+  3. The framebuffer version
+  
+  It is possible to compile a version of X11-Basic and its libraries, which 
+  does not need the X.org framework, but instead uses the systems framebuffer
+  and direct mouse device for graphics in and output. This might be useful on
+  e.g. the Raspberry Pi or for other handheld devices with low resources.
+  
+  make clean fb
+  
+  will produce the framebuffer version of the interpreter called 
+  xbasic.framebuffer
+  
+  4. Crosscompiling for other platforms
+     
+  a) ATARI ST (with m68k-atari-mint)
+     
+     make tos
+
+  b) TomTom (with the ARM linux toolchain)
+  
+     make TomTom
+
+  c) MS WINDOWS (with i586-mingw32msvc-gcc)
+  
+     make windows
+     
+  For details you may want to look into the Makefile. Improvements are welcome.
+
+
+best regards and have fun
      Markus Hoffmann
      
