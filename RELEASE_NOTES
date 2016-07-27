@@ -26,3 +26,4 @@ Release notes for Version 1.24 (Sept 2015 -- )
 - improved 64bit version of X11-Basic
 - fixed bug in CLEARW
 - fixed missing pixel in BOX/HLINE (framebuffer versions)
+- fixed bug in HELP

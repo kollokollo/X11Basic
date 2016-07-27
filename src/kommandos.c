@@ -2072,30 +2072,46 @@ static void c_help(PARAMETER *plist,int e) {
   else do_help(plist->pointer);
 }  
 void do_help(const char *w) {
-    int i;
-    for(i=0;i<anzcomms;i++) {
-      if(fnmatch(w,comms[i].name,FNM_NOESCAPE)==0) do_explain(-1,comms[i].name," ","",comms[i].pliste,comms[i].pmin,comms[i].pmax);
+  int i;
+  char *p=NULL;
+  // printf("HELP: <%s>\n",w);
+  for(i=0;i<anzcomms;i++) {
+    // printf("<%s> -> %d\n",comms[i].name,fnmatch(w,comms[i].name,FNM_NOESCAPE));
+    if(fnmatch(w,comms[i].name,FNM_NOESCAPE)==0) {
+      p=do_explain(-1,comms[i].name," ","",comms[i].pliste,comms[i].pmin,comms[i].pmax);
+      printf("Command: %s\n",p);
+      free(p);
     }
-    for(i=0;i<anzpfuncs;i++) {
-      if(fnmatch(w,pfuncs[i].name,FNM_NOESCAPE)==0) do_explain(pfuncs[i].opcode,pfuncs[i].name,"(",")",pfuncs[i].pliste,pfuncs[i].pmin,pfuncs[i].pmax);
+  }
+  for(i=0;i<anzpfuncs;i++) {
+    if(fnmatch(w,pfuncs[i].name,FNM_NOESCAPE)==0) {
+      p=do_explain(pfuncs[i].opcode,pfuncs[i].name,"(",")",pfuncs[i].pliste,pfuncs[i].pmin,pfuncs[i].pmax);
+      printf("Function: %s\n",p);
+      free(p);
     }
-     for(i=0;i<anzpsfuncs;i++) {
-      if(fnmatch(w,psfuncs[i].name,FNM_NOESCAPE)==0) do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
+  }
+  for(i=0;i<anzpsfuncs;i++) {
+    if(fnmatch(w,psfuncs[i].name,FNM_NOESCAPE)==0) {
+      do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
+      printf("Function: %s\n",p);
+      free(p);
     }
-     for(i=0;i<anzsysvars;i++) {
-      if(fnmatch(w,sysvars[i].name,FNM_NOESCAPE)==0) {
-        if((sysvars[i].opcode&TYPMASK)==INTTYP) printf("int ");
-	else if((sysvars[i].opcode&TYPMASK)==FLOATTYP) printf("flt ");
-	else if((sysvars[i].opcode&TYPMASK)==COMPLEXTYP) printf("cpx ");
-	else printf("??? ");
-        printf("%s\n",sysvars[i].name);          
-      }
+  }
+  for(i=0;i<anzsysvars;i++) {
+    if(fnmatch(w,sysvars[i].name,FNM_NOESCAPE)==0) {
+      printf("Sysvar: ");
+      if((sysvars[i].opcode&TYPMASK)==INTTYP) printf("int ");
+      else if((sysvars[i].opcode&TYPMASK)==FLOATTYP) printf("flt ");
+      else if((sysvars[i].opcode&TYPMASK)==COMPLEXTYP) printf("cpx ");
+      else printf("??? ");
+      printf("%s\n",sysvars[i].name);	       
     }
-      for(i=0;i<anzsyssvars;i++) {
-      if(fnmatch(w,syssvars[i].name,FNM_NOESCAPE)==0) {
-        printf("%s\n",syssvars[i].name);          
-      }
+  }
+  for(i=0;i<anzsyssvars;i++) {
+    if(fnmatch(w,syssvars[i].name,FNM_NOESCAPE)==0) {
+      printf("Sysvar: %s\n",syssvars[i].name);  	
     }
+  }
 }
 static void c_error(PARAMETER *plist,int e) {xberror(plist->integer,"");}
 static void c_free(PARAMETER *plist,int e)  {free((char *)INT2POINTER(plist->integer));}
