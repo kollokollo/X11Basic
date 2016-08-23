@@ -33,14 +33,14 @@ to be installed right away.
 \subsection*{SuSE-Linux and RedHat}
 
 If you have got a Redhat-Package (RPM) e.g. a file named 
-\verb|X11Basic-1.24-1.i386.rpm|, then you can install this package (being
+\verb|X11Basic-1.25-1.i386.rpm|, then you can install this package (being
 root) with 
 \begin{verbatim}
-rpm -i X11Basic-1.24-1.i386.rpm      .
+rpm -i X11Basic-1.25-1.i386.rpm      .
 \end{verbatim}
 
 This is a very convenient way at least for the Linux distributions  {\it
-Feodora}, {\it Mandriva}, {\it SuSE} and {\it RedHat} (and maybe others,
+Feodora}, {\normalfont \itshape Mandriva}, {\normalfont \itshape SuSE} and {\normalfont \itshape RedHat} (and maybe others,
 basically derived distributions\footnote{A list of RPM based Linux distributions
 can be found here:
 \url{http://en.wikipedia.org/wiki/Category:RPM-based_Linux_distributions}}) to
@@ -95,44 +95,44 @@ drwxr-xr-x    1024  examples/            -- few example programs
 
 If your Linux distributions does not use the RedHat package system it is very
 likely that it instead uses the Debian package system. The most popular Debian
-based Linux distributions are {\it Knoppix} and {\it Ubuntu}\footnote{A list of
+based Linux distributions are {\normalfont \itshape Knoppix} and {\normalfont \itshape Ubuntu}\footnote{A list of
 Debian based Linux distributions can be found here:
 \url{http://en.wikipedia.org/wiki/Category:Debian-based_distributions}}. 
 
 X11-Basic also comes in packages called (e.g.)
-\verb|x11basic_1.24-1_i386.deb|. Usually you can very easily install the file
+\verb|x11basic_1.25-1_i386.deb|. Usually you can very easily install the file
 from a file browser with simply double clicking on it. Also a 
 \begin{verbatim}
-dpkg -i x11basic_1.24-1_i386.deb
+dpkg -i x11basic_1.25-1_i386.deb
 \end{verbatim} 
 from a terminal will do. The file system structure should be similar
 to what is described in the previous chapter (explaining the RedHat packages),
 so you should expect to find the same files at the same places. Please note, 
 that you need a special debian package if you want to install it on 64 bit linux
-installations, usually called \verb|x11basic_1.24-1_amd64.deb|. 
+installations, usually called \verb|x11basic_1.25-1_amd64.deb|. 
 
 \subsection*{Other Linux and UNIX distributions}
 
 The author currently provides only 32bit and 64bit debian binary packages for 
-linux (specifically {\it Ubuntu linux}). A
+linux (specifically {\normalfont \itshape Ubuntu linux}). A
 rpm package can be made out of the debian packet with a tool called
 \verb|alien|. 
 
 For exotic linux based devices usually binary distributions come as a zip file
 (like the TomTom version). In these cases they are accompanied by a README or
 other instructions how to install them. The  package for Android comes in a file
-called \verb|X11-Basic-1.24-22.apk| usually  provided by {\it Google Play}
-(formerly known as {\it Android Market}), which also installs it for you. If you
-do not like to use {\it Google Play} for some reason, you can also install
+called \verb|X11-Basic-1.25-44.apk| usually  provided by {\normalfont \itshape Google Play}
+(formerly known as {\normalfont \itshape Android Market}), which also installs it for you. If you
+do not like to use {\normalfont \itshape Google Play} for some reason, you can also install
 X11-Basic from any file browser taping on its \verb|.apk| file, downloaded from
 \verb|sourceforge.net|. 
 
 For all other systems you will have to get the source-package 
-\verb|X11Basic-1.24.tar.gz| and compile the sources. This should work for  all
+\verb|X11Basic-1.25.tar.gz| and compile the sources. This should work for  all
 Linux distributions, and probably with little modifications also for {\it
 HP-UX} (Hewlett-Packard UniX), for DEC/alpha, for MAC/OSX, for SUN/SOLARIS and
 FreeBSD and maybe others.  Also X11-Basic compiles on Cygwin, and on
-ARM-Linuxes like the one often used together with the {\it Raspberry Pi}. 
+ARM-Linuxes like the one often used together with the {\normalfont \itshape Raspberry Pi}. 
 Please note that X11-Basic is designed for 32-bit operating systems. 
 X11-Basic will also compile on 64 bit systems. But some of the
 functions may not work, especially pointer aritmetric (\verb|VARPTR()|, 
@@ -174,11 +174,11 @@ the functionality of X11-Basic.).
 sudo apt-get install libx11-dev libreadline6-dev liblapack-dev libgmp-dev 
 \end{verbatim}
 
-\item Unpack \verb|X11Basic-1.24.tar.gz| with 
+\item Unpack \verb|X11Basic-1.25.tar.gz| with 
 \begin{verbatim}
-tar xzf X11Basic-1.24.tar.gz
+tar xzf X11Basic-1.25.tar.gz
 \end{verbatim}
-\item go into the \verb|X11Basic-1.24| directory and do a 
+\item go into the \verb|X11Basic-1.25| directory and do a 
 \begin{verbatim}
 ./configure
 make
@@ -320,7 +320,7 @@ QUIT
 
 \subsection{Using the WINDOWS Version of X11-Basic}
 
-You should have installed the package \verb|X11-Basic-1.24-1-win.zip| by 
+You should have installed the package \verb|X11-Basic-1.25-1-win.zip| by 
 extracting all files and invoking the  setup program (\verb|setup.exe|). This
 installs X11-Basic into a folder  \verb|C:\\x11basic|.  All files you need for
 using X11-Basic are located there:
@@ -380,7 +380,7 @@ context menu with following options:
 \begin{description}
 \item[Execute] will invoke the X11-Basic interpreter to execute your program. 
 The same happens, if you doubleclick on the icon.
-\item[Edit] invokes {\it notepad}, allowing you to edit your program.
+\item[Edit] invokes {\normalfont \itshape notepad}, allowing you to edit your program.
 \item[View docu] opens a window which shows the embedded documentation 
 of your program if there is any. Embedded documentation within a .bas file are comments, which
 start with a double comment character (\verb|##|).
@@ -389,7 +389,7 @@ start with a double comment character (\verb|##|).
 \subsection{The Android Version of X11-Basic}
 
 A version of X11-Basic ready to be installed on Android smartphones and tablets
-is available on the {\it Android Market} (also called {\it Google Play}). 
+is available on the {\normalfont \itshape Android Market} (also called {\normalfont \itshape Google Play}). 
 
 Unlike the other versions of X11-Basic, the interpreter and virtual machine is
 embedded in a little IDE (=Integrated Development Environment) which allows the
@@ -461,8 +461,8 @@ console font (text mode) as well as the graphics/user-interface appearance.
 \item[Show title] This can be switched off here.
 \item[Show status bar] This can be switched off here.
 \item[Show keyboard at start] This can be switched off here.
-\item[Editor] will execute a 3rd-party text editor (e.g. {\it Ted} or 
-{\it Jota} or {\it 920 Text Editor} if installed) to edit the program currently 
+\item[Editor] will execute a 3rd-party text editor (e.g. {\normalfont \itshape Ted} or 
+{\normalfont \itshape Jota} or {\normalfont \itshape 920 Text Editor} if installed) to edit the program currently 
 loaded. If no program 
 was loaded, the default file name will be \verb|new.bas|. After having saved 
 and closed the text editor, the modified program will be automatically 
@@ -599,13 +599,13 @@ optional command line parameters. It takes the following ones:
 
 \begin{tabbing}
 XXXXXXXXXXXXXXXXXXXX \=\kill\\
-  {\tt \bf xbasic <filename> }  \> run Basic program \verb|[input.bas]|\\
-  {\tt -l                 } \> load only, don't execute\\
-  {\tt -e <command>       }\> execute basic command \\
-  {\tt --eval <expression>}   \> evaluate numerical expression  \\
-  {\tt --daemon           } \> switch off prompting and echoing\\
-  {\tt -h --help          } \> print a short help \\
-  {\tt --help <topic>     } \> print help on a specific topic\\
+  {\normalfont \normalfont \bfseriesfamily \bf xbasic <filename> }  \> run Basic program \verb|[input.bas]|\\
+  {\normalfont \normalfont \bfseriesfamily -l                 } \> load only, don't execute\\
+  {\normalfont \normalfont \bfseriesfamily -e <command>       }\> execute basic command \\
+  {\normalfont \normalfont \bfseriesfamily --eval <expression>}   \> evaluate numerical expression  \\
+  {\normalfont \normalfont \bfseriesfamily --daemon           } \> switch off prompting and echoing\\
+  {\normalfont \normalfont \bfseriesfamily -h --help          } \> print a short help \\
+  {\normalfont \normalfont \bfseriesfamily --help <topic>     } \> print help on a specific topic\\
 \end{tabbing}
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
@@ -620,14 +620,14 @@ XXXXXXXXXXXXXXXXXXXX \=\kill\\
 
 \subsubsection*{X11-Basic as daemon}
 
-The  command line option {\tt --daemon} forces the interpreter to run in
+The  command line option {\normalfont \normalfont \bfseriesfamily --daemon} forces the interpreter to run in
 daemon-mode (with no terminal connected).  No prompt is given and the 
 input is not echoed back. This is useful, if you want to run X11-Basic
 programs as a background service.
   
 %\subsection*{Example:}
 %To run  the X11-Basic interpreter on a tcp-socket on port 1371 create a new 
-%user called {\tt xbasic} and insert
+%user called {\normalfont \normalfont \bfseriesfamily xbasic} and insert
 %{\footnotesize
 % \begin{verbatim}
 %       --- in /etc/inetd.conf: ---
@@ -655,7 +655,7 @@ therefore can be created with any text editor available.
 %notpad2} instead. 
 Users of UNIX like operating systems are fine with every text editor. Simple 
 ones like \verb|pico| or \verb|nano| will do. MS-WINDOWS user can use the simple 
-{\it notepad} text editor.
+{\normalfont \itshape notepad} text editor.
 
 Users of X11-Basic under Android need to install a good text editor. TED (Text
 Editor), \verb|920 Text Editor|, or \verb|Jota| will work fine. Other text
@@ -667,7 +667,7 @@ is invoked.
 
 Besides from the basic editing features I recommend to use a text editor with
 syntax highlighting. Currently X11-Basic syntax definitions are available  for
-the {\it Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS) 
+the {\normalfont \itshape Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS) 
 and for the \verb|920 Text Editor| and \verb|Jota|, available for Android.
 
 X11-Basic can support foreign language characters. Therefor the basic program
@@ -679,9 +679,9 @@ sets.\footnote{LTEXT will accept some of the special characters
 (currently only german), TEXT will work with UTF-8 only on Android
 devices (all latin, greek, cyrillic). }
 
-\subsection*{Using syntax highlighting with {\tt \bf nedit}}
+\subsection*{Using syntax highlighting with {\normalfont \normalfont \bfseriesfamily \bf nedit}}
 
-NEdit, the full featured, plain text {\it Nirvana 
+NEdit, the full featured, plain text {\normalfont \itshape Nirvana 
 editor}\footnote{\url{http://nedit.org/}} is a GUI style text editor for
 workstations with the X Window System.  Also a MS Windows port is
 available\footnote{ \url{http://nedit.gmxhome.de/winport.html}}. NEdit provides
@@ -887,7 +887,7 @@ xbc -virtualm myprogram.bas -o a.out
 \end{mdframed}
 will exactly do the same. 
   
-\section{The X11-Basic compiler manager {\tt \bf xbc}}
+\section{The X11-Basic compiler manager {\normalfont \normalfont \bfseriesfamily \bf xbc}}
 
 The X11-Basic package is shipped with the X11-Basic compiler \verb|xbc|, which
 makes stand-alone binaries out of X11-Basic source code. It also can produce

@@ -173,8 +173,8 @@ C:\x11basic.
 SuSE-Linux and RedHat                                                        
                                                                              
    If you got a Redhat-Package (RPM) e.g. the File                           
-   X11Basic-1.24-1.i386.rpm, then you can install this package (being       
-   root) with rpm -i X11Basic-1.24-1.i386.rpm.                               
+   X11Basic-1.25-1.i386.rpm, then you can install this package (being       
+   root) with rpm -i X11Basic-1.25-1.i386.rpm.                               
                                                                              
    This is a very convenient way at least for the Linux distributions       
    Feodora, SuSE and RedHat (and many others) of installing the interpreter  
@@ -229,9 +229,9 @@ Debian based distributions
   As with Ubuntu Linux the popularity of Debian based Linux distributions  has
   dramatically increases in the recent past. 
   Therefor X11-Basic also comes in packages called (e.g.) 
-  x11basic_1.24-1_i386.deb. Usually you can very easily install the file from 
+  x11basic_1.25-1_i386.deb. Usually you can very easily install the file from 
   a File-Browser with simply double clicking on it. Also a
-  dpkg -i x11basic_1.24-1_i386.deb  will do. 
+  dpkg -i x11basic_1.25-1_i386.deb  will do. 
   The file system structure should be similar to what is  described in the 
   previous chapter (explaining the RedHat packages), so you should expect to 
   find the same files at the same place.
@@ -262,11 +262,11 @@ Other Linux and UNIX distributions
                                                                              
    These will suffice to get you started.                                                               
                                                                              
-   Unpack X11Basic-1.24.tar.gz with                                          
+   Unpack X11Basic-1.25.tar.gz with                                          
                                                                              
- tar xzf X11Basic-1.24.tar.gz                                                
+ tar xzf X11Basic-1.25.tar.gz                                                
                                                                              
-   go into the X11Basic-1.24 directory and do a                              
+   go into the X11Basic-1.25 directory and do a                              
                                                                              
    ./configure
    make

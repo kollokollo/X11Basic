@@ -354,4 +354,34 @@ Release notes for Version 1.23 (July 2014 -- August 2015)
 - fixed SPEAK (Android)
 - fixed crash (Android) on load while program is still running
 
+Release notes for Version 1.24 (Sept 2015 -- Aug 2016)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- added source box to PUT
+- fixed SPEAK (Android)
+- fixed crash (Android) on load while program is still running
+- Improved USB-Support (linux+WINDOWS)
+- New Setup for WINDOWS version (by InnoSetup)
+- Added spanish voice in SPEAK (Android)
+- new feature: screen focus for Android
+- fixed INKEY$ and INP(-2) (Windows)
+- fixed PUT_BITMAP (Android + Windows)
+- fixed bug in PUT (Android)
+- added sqlite3 binary to Android Version (make sqldemo.bas work again)
+- added gfalist binary to Android Version (see gfalist.bas)
+- fixed subarry assignment
+- improved DUMP, added DUMP c$,#n, also PLIST #n
+- fixed Crash (SIGABRT) in Android version.
+- fixed Crashhandler (Android)
+- fixed bug in RADIX() and fixed bug in arbint/arbfloat evaluation
+- fixed bug in FILL and ELLIPSE/PELLIPSE (for big screens)
+- fixed power operator in compiler for integer operands
+- little bugfix in compiler (PRINT #)
+- improved FILESELECT
+- little fixes in GLOB()
+- improved the MAC-OSX version of X11-Basic
+- improved 64bit version of X11-Basic
+- fixed bug in CLEARW
+- fixed missing pixel in BOX/HLINE (framebuffer versions)
+- fixed bug in HELP
+
 --------------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-print "XXXX \=     X11-Basic Error messages:           \kill    \\"
-for i=0 to 255
-  t$=str$(i)+" \> "+err$(i)+"\\"
-  t$=replace$(t$,"%s","")
-  t$=replace$(t$,"#","\#")
-  t$=replace$(t$,"_","\_")
-  if  word$(trim$(err$(i)),2)<>str$(i) and word$(trim$(err$(i)),2)<>str$(i-256)
-    print t$
-  endif
-next i
-quit
+PRINT "XXXX \=     X11-Basic Error messages:           \kill    \\"
+FOR i=0 TO 255
+  t$=STR$(i)+" \> "+err$(i)+"\\"
+  t$=REPLACE$(t$,"%s","")
+  t$=REPLACE$(t$,"#","\#")
+  t$=REPLACE$(t$,"_","\_")
+  IF word$(TRIM$(err$(i)),2)<>str$(i) AND WORD$(TRIM$(err$(i)),2)<>str$(i-256)
+    PRINT t$
+  ENDIF
+NEXT i
+QUIT

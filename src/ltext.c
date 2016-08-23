@@ -361,7 +361,7 @@ double ltext(int x, int y, double s, double t, double wk, int pflg, char *tt) {
     }
   }
   return(bxx);
-} 
+}
 
 
 

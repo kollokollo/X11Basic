@@ -1,5 +1,5 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
-# Version 28.08.2015 modified by Markus Hoffmann
+# Version 28.08.2016 modified by Markus Hoffmann
 
 # This file is part of X11-Basic, the basic interpreter for Unix/X
 # ======================================================================
@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=42
+RELEASE=43
 
 
 # Register variables (-ffixed-reg) -Wall

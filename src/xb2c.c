@@ -53,8 +53,8 @@ FILE *optr;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.24";        /* Programmversion*/
-const char vdate[]="2016-01-01";
+const char version[]="1.25";        /* Programmversion*/
+const char vdate[]="2016-08-01";
 char *programbuffer=NULL;
 char **program=NULL;
 int programbufferlen=0;
@@ -722,7 +722,7 @@ static int loadbcprg(char *filename) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.24\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.25\n"
                  "   (c) Markus Hoffmann 2002-2016\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
