@@ -2,146 +2,145 @@
 '
 count=0
 cc=false
-clr x,y,z
+CLR x,y,z
 
-dim a(10)
+DIM a(10)
 
 t$="(c) Markus Hoffmann"+" 2011"
 
-print t$
+PRINT t$
 
 a$="print 4711"
 &a$
 ~random(3)
 
-
 a(1=2)=4+true
 
-print "Benchmarktest:"
-print
-print "FOR-empty:   ";
-flush
+PRINT "Benchmarktest:"
+PRINT
+PRINT "FOR-empty:   ";
+FLUSH
 ' goto iii
 t=ctimer
-for i=0 to 5000000
+FOR i=0 TO 5000000
   '
-next i
+NEXT i
 dur=ctimer-t
-ff=int(8.31/dur*100)/100
-print dur;" Sekunden. ";ff;" mal."
+ff=INT(8.31/dur*100)/100
+PRINT dur;" Sekunden. ";ff;" mal."
 
-print "FOR-gosub:   ";
-flush
+PRINT "FOR-gosub:   ";
+FLUSH
 t=ctimer
-for i=0 to 500000
-  gosub test
-next i
+FOR i=0 TO 500000
+  GOSUB test
+NEXT i
 dur=ctimer-t
-ff=int(8.51/dur*100)/100
-print dur;" Sekunden. ";ff;" mal."
+ff=INT(8.51/dur*100)/100
+PRINT dur;" Sekunden. ";ff;" mal."
 
-print "WHILE-gosub:  ";
-flush
-t=ctimer
-i=0
-while i<500000
-  gosub test
-  inc i
-wend
-dur=ctimer-t
-ff=int(8.89/dur*100)/100
-print dur;" Sekunden. ";ff;" mal."
-
-print "REPEAT-gosub: ";
-flush
+PRINT "WHILE-gosub:  ";
+FLUSH
 t=ctimer
 i=0
-repeat
-  gosub test
-  inc i
-until i>=500000
-print ctimer-t;" Sekunden. ";int(8.78/(ctimer-t)*100)/100;" mal."
+WHILE i<500000
+  GOSUB test
+  INC i
+WEND
+dur=ctimer-t
+ff=INT(8.89/dur*100)/100
+PRINT dur;" Sekunden. ";ff;" mal."
+
+PRINT "REPEAT-gosub: ";
+FLUSH
+t=ctimer
+i=0
+REPEAT
+  GOSUB test
+  INC i
+UNTIL i>=500000
+PRINT ctimer-t;" Sekunden. ";INT(8.78/(ctimer-t)*100)/100;" mal."
 iii:
-print
+PRINT
 
 t=ctimer
 i=0
-repeat
-  dec i
-until i<=-5000000
-print "REPEAT";i;": DEC  ",ctimer-t;" Sekunden. ";int(16.67/(ctimer-t)*100)/100;" mal."
-print
+REPEAT
+  DEC i
+UNTIL i<=-5000000
+PRINT "REPEAT";i;": DEC  ",ctimer-t;" Sekunden. ";INT(16.67/(ctimer-t)*100)/100;" mal."
+PRINT
 
 t=ctimer
 i=0
-repeat
-  inc i
-until i>=5000000
-print "REPEAT";i;": INC  ",ctimer-t;" Sekunden. ";int(12.69/(ctimer-t)*100)/100;" mal."
+REPEAT
+  INC i
+UNTIL i>=5000000
+PRINT "REPEAT";i;": INC  ",ctimer-t;" Sekunden. ";INT(12.69/(ctimer-t)*100)/100;" mal."
 
 t=ctimer
 i=0
-do
-  inc i
-  exit if i>=5000000
-loop
-print "DO-LOOP";i;": INC  ",ctimer-t;" Sekunden. ";int(13.23/(ctimer-t)*100)/100;" mal."
+DO
+  INC i
+  EXIT if i>=5000000
+LOOP
+PRINT "DO-LOOP";i;": INC  ",ctimer-t;" Sekunden. ";INT(13.23/(ctimer-t)*100)/100;" mal."
 
 t=ctimer
 i=0
-repeat
+REPEAT
   i=i+1
-until i>=500000
-print "REPEAT: zuweis  ",ctimer-t;" Sekunden. ";1.87/(ctimer-t);" mal."
-clr i
+UNTIL i>=500000
+PRINT "REPEAT: zuweis  ",ctimer-t;" Sekunden. ";1.87/(ctimer-t);" mal."
+CLR i
 t=ctimer
-repeat
+REPEAT
   a=sin(cos(exp(1)))+3-4*(2+5-2*3)
-  inc i
-until i>=5000000
-print "REPEAT";i;": const-Formel  ",ctimer-t;" Sekunden. ";int(87.22/(ctimer-t)*100/100);" mal."
-clr i
+  INC i
+UNTIL i>=5000000
+PRINT "REPEAT";i;": const-Formel  ",ctimer-t;" Sekunden. ";INT(87.22/(ctimer-t)*100/100);" mal."
+CLR i
 t=ctimer
-repeat
+REPEAT
   a=sin(cos(exp(i)))+i-4*(2+i-2*3)
-  inc i
-until i>=5000000
-print "REPEAT";i;": Formel2  ",ctimer-t;" Sekunden. ";int(86.32/(ctimer-t)*100)/100;" mal."
+  INC i
+UNTIL i>=5000000
+PRINT "REPEAT";i;": Formel2  ",ctimer-t;" Sekunden. ";INT(86.32/(ctimer-t)*100)/100;" mal."
 '
-clr i
+CLR i
 t=ctimer
-while i<500000
+WHILE i<500000
   a=1
-  inc i
-wend
-print "WHILE-pur";i;": ",ctimer-t;" Sekunden. ";1.79/(ctimer-t);" mal."
+  INC i
+WEND
+PRINT "WHILE-pur";i;": ",ctimer-t;" Sekunden. ";1.79/(ctimer-t);" mal."
 '
-clr i
+CLR i
 t=ctimer
-while i<500000
+WHILE i<500000
   a=@f(x)
-  inc i
-wend
-print "WHILE-DEFFN";i;": ",ctimer-t;" Sekunden. ";int(4.24/(ctimer-t)*100)/100;" mal."
+  INC i
+WEND
+PRINT "WHILE-DEFFN";i;": ",ctimer-t;" Sekunden. ";INT(4.24/(ctimer-t)*100)/100;" mal."
 '
-clr i
+CLR i
 t=ctimer
-while i<500000
+WHILE i<500000
   a=@g(x)
-  inc i
-wend
-print "WHILE-FUNCT";i;": ",ctimer-t;" Sekunden. ";int(4.81/(ctimer-t)*100)/100;" mal."
+  INC i
+WEND
+PRINT "WHILE-FUNCT";i;": ",ctimer-t;" Sekunden. ";INT(4.81/(ctimer-t)*100)/100;" mal."
 
-quit
+QUIT
 
 DEFFN f(x)=2*x+sin(x/40)
 
-function g(x)
-  return 2*x+sin(x/40)
-endfunction
+FUNCTION g(x)
+  RETURN 2*x+sin(x/40)
+ENDFUNCTION
 
 PROCEDURE test
-' Testroutine
+  ' Testroutine
   a=SQRT(x^2+y^2+z^2)
 
   INC count
@@ -149,6 +148,6 @@ PROCEDURE test
     COLOR RANDOM(256)
     PBOX RANDOM(320),RANDOM(200),RANDOM(320),RANDOM(200)
     SHOWPAGE
-    INC cc      
+    INC cc
   ENDIF
 RETURN

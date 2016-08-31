@@ -1,11 +1,11 @@
 ' This example program demonstrates the data fitting
 ' functions of X11-Basic  (c) Markus Hoffmann 2003-2013
-' 
+'
 
 ' Fill the data arrays with 400 values. With the mouse you can modify
 ' the distribution a bit.
 '
-' The data values x() and y() should be small, such that high potences 
+' The data values x() and y() should be small, such that high potences
 ' of them will not overflow.
 '
 n=400
@@ -22,56 +22,55 @@ NEXT i
 ' First do a linear fit
 COLOR COLOR_RGB(1,1,1)
 FIT_LINEAR x(),y(),,a,b,da,db,chi
-print a;"+/-";da
-print b;"+/-";db
-print "chi2=";chi
-print "q=";q
+PRINT a;"+/-";da
+PRINT b;"+/-";db
+PRINT "chi2=";chi
+PRINT "q=";q
 da=da*sqrt(chi/398)
 db=db*sqrt(chi/398)
-line 0,400-a*400,400,400-(a+b)*400
-color color_rgb(0.5,0.5,0.5)
-line 0,400-(a+da)*400,400,400-(a+da+b)*400
-line 0,400-(a-da)*400,400,400-(a-da+b)*400
-line 0,400-(a)*400,400,400-(a+db+b)*400
-line 0,400-(a)*400,400,400-(a-db+b)*400
+LINE 0,400-a*400,400,400-(a+b)*400
+COLOR color_rgb(0.5,0.5,0.5)
+LINE 0,400-(a+da)*400,400,400-(a+da+b)*400
+LINE 0,400-(a-da)*400,400,400-(a-da+b)*400
+LINE 0,400-(a)*400,400,400-(a+db+b)*400
+LINE 0,400-(a)*400,400,400-(a-db+b)*400
 
-vsync
-pause 5
-print
+VSYNC
+PAUSE 5
+PRINT
 ' And now do several polynomial fits with increasing order
-for oo=3 to 500
+FOR oo=3 TO 500
   @fii(oo)
-  if oo>10
-    add oo,5
-  endif
-  if oo>100
-    add oo,50
-  endif
-next oo
+  IF oo>10
+    ADD oo,5
+  ENDIF
+  IF oo>100
+    ADD oo,50
+  ENDIF
+NEXT oo
 ~inp(-2)
-quit
+QUIT
 
-
-procedure fii(oo)
-  dim p(oo)
-  clr ox,oy
-  color color_rgb(0,1,oo/10)
-  text 300,30,"Order: "+str$(oo)+"  "
-  fit_poly x(),y(),e(),400,p(),oo
-  for i=0 to oo-1
-    if p(i)>0.0005
-    print i,p(i) 
-    endif
-  next i
-  for x=0 to 400
+PROCEDURE fii(oo)
+  DIM p(oo)
+  CLR ox,oy
+  COLOR color_rgb(0,1,oo/10)
+  TEXT 300,30,"Order: "+STR$(oo)+"  "
+  FIT_POLY x(),y(),e(),400,p(),oo
+  FOR i=0 TO oo-1
+    IF p(i)>0.0005
+      PRINT i,p(i)
+    ENDIF
+  NEXT i
+  FOR x=0 TO 400
     y=0
-    for i=0 to oo-1
-      add y,p(i)*(x/400)^i
-    next i
-    line ox,400-oy*400,x,400-y*400
+    FOR i=0 TO oo-1
+      ADD y,p(i)*(x/400)^i
+    NEXT i
+    LINE ox,400-oy*400,x,400-y*400
     ox=x
     oy=y
-  next x
+  NEXT x
   SHOWPAGE
   PAUSE 0.3
   PRINT

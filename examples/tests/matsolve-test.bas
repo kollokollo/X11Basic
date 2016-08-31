@@ -2,8 +2,8 @@
 ' works only, if X11-Basic was compiled to use LAPACK.
 '
 ' The matrix a() need not be square. The algorithm finds a solution
-' in nearly any case. Even if there is no (exact) solution to the 
-' equation system. 
+' in nearly any case. Even if there is no (exact) solution to the
+' equation system.
 '
 ' The returned vector is the one, which minimizes the error |a*x-b|
 '
@@ -22,14 +22,14 @@ b(1)=2
 b(2)=300
 PRINT "solve:"
 FOR i=0 TO r-1
-    PRINT i;": (";
-    FOR j=0 TO c-1
-      PRINT a(i,j);
-      IF j<c-1 
-        PRINT ", ";
-      ENDIF
-    NEXT j
-    PRINT ")(x)=(";b(i);")"
+  PRINT i;": (";
+  FOR j=0 TO c-1
+    PRINT a(i,j);
+    IF j<c-1
+      PRINT ", ";
+    ENDIF
+  NEXT j
+  PRINT ")(x)=(";b(i);")"
 NEXT i
 PRINT
 er()=SOLVE(a(),b())

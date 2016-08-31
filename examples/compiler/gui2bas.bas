@@ -22,7 +22,7 @@ OPEN "I",#1,inputfile$
 WHILE NOT eof(#1)
   LINEINPUT #1,t$
   t$=TRIM$(t$)
-  if LEN(t$)
+  IF LEN(t$)
     iz$(anziz)=t$
     INC anziz
   ENDIF
@@ -51,15 +51,15 @@ WHILE count<anziz
     ENDIF
     SPLIT t$," ",1,typ$,t$
     IF UPPER$(typ$)="TREE"
-       IF t$="{"
-         @dotree(name$)
-       ENDIF
+      IF t$="{"
+        @dotree(name$)
+      ENDIF
     ELSE IF UPPER$(typ$)="FREESTR"
       @dofreestr(t$)
     ELSE IF UPPER$(typ$)="RSC"
-       IF t$="{"
-         @dorsc(name$)
-       ENDIF 
+      IF t$="{"
+        @dorsc(name$)
+      ENDIF
     ELSE
       DEC count
       @dotree("FREETREE_"+name$)
@@ -103,15 +103,15 @@ PROCEDURE dotree(n$)
   ENDIF
   PRINT "PROCEDURE formular"+STR$(anztree)
   PRINT "  LOCAL ret,x,y,w,h"
-    ~@doit2(-1)
- ' while count<anziz
- '   t$=iz$(count)
- '   inc count
- '   exit if t$="}"
- '   ~@doit2(-1)
- '   print t$
- ' wend
- @addtree(aobj,anzobj-1)
+  ~@doit2(-1)
+  ' while count<anziz
+  '   t$=iz$(count)
+  '   inc count
+  '   exit if t$="}"
+  '   ~@doit2(-1)
+  '   print t$
+  ' wend
+  @addtree(aobj,anzobj-1)
   PRINT "RETURN"
   INC anztree
 RETURN
@@ -130,14 +130,14 @@ PROCEDURE dofreestr(b$)
   LOCAL text$
   text$=@getval$(b$,"STRING")
   IF LEFT$(text$)=CHR$(34)
-    text$=DECLOSE$(text$)  
+    text$=DECLOSE$(text$)
   ENDIF
   fSTR$(anzfreestring)=text$
   INC anzfreestring
 RETURN
 FUNCTION doit2(parent)
   LOCAL t$,klammer,idx,typ$,label$,obnext,obtail,obhead,parameter$
- ' print "'# DOIT2: ",parent,count
+  ' print "'# DOIT2: ",parent,count
   idx=-1
   WHILE count<anziz
     t$=iz$(count)
@@ -149,7 +149,7 @@ FUNCTION doit2(parent)
       idx=anzobj
       INC anzobj
       IF RIGHT$(t$)="{"
-        klammer=1 
+        klammer=1
         t$=TRIM$(LEFT$(t$,LEN(t$)-1))
       ELSE
         klammer=0
@@ -167,12 +167,12 @@ FUNCTION doit2(parent)
       IF klammer=1
         obhead=anzobj
         obtail=@doit2(idx)
-	IF obtail=-1
-	  obhead=-1
-	ENDIF
+        IF obtail=-1
+          obhead=-1
+        ENDIF
       ELSE
         obtail=-1
-	obhead=-1
+        obhead=-1
       ENDIF
       IF iz$(count)="}" OR count=anziz
         obnext=parent
@@ -185,7 +185,7 @@ FUNCTION doit2(parent)
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
     ENDIF
   WEND
- '  print "'# END DOIT2: ",parent,count
+  '  print "'# END DOIT2: ",parent,count
   RETURN idx
 ENDFUNC
 
@@ -195,35 +195,35 @@ FUNCTION doit(par1,par2,countee)
   t$=iz$(countee)
   PRINT "# DOIT ",par1,par2,t$
   IF RIGHT$(t$)="{"
-    klammer=1 
+    klammer=1
     t$=TRIM$(LEFT$(t$,LEN(t$)-1))
   ELSE
     klammer=0
   ENDIF
   SPLIT t$,":",1,label$,t$
-  if LEN(t$)
-  else
+  IF LEN(t$)
+  ELSE
     t$=label$
     label$=""
   ENDIF
   SPLIT t$,"(",1,typ$,t$
   typ$=TRIM$(typ$)
-  if RIGHT$(t$)=")"
+  IF RIGHT$(t$)=")"
     t$=LEFT$(t$,LEN(t$)-1)
-  endif
+  ENDIF
   idx=anzobj
   INC anzobj
 
   obhead=anzobj
   parameter$=t$
   IF klammer=1
-    ss=@suchende(countee+1,idx)   
+    ss=@suchende(countee+1,idx)
     obtail=anzobj-1
   ELSE
     obhead=-1
-    obtail=-1  
+    obtail=-1
   ENDIF
- 
+
   IF par1=1
     obnext=par2
   ELSE
@@ -267,7 +267,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
   IF UPPER$(a$)="FREESTR"
     text$=@getval$(b$,"STRING")
     IF LEFT$(text$)=CHR$(34)
-      text$=DECLOSE$(text$)  
+      text$=DECLOSE$(text$)
     ENDIF
     fSTR$(anzfreestring)=text$
     INC anzfreestring
@@ -296,42 +296,42 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       bgcol=VAL(@getval$(b$,"BGCOL"))
       pattern=VAL(@getval$(b$,"PATTERN"))
       textmode=VAL(@getval$(b$,"TEXTMODE"))
-      obspec=cvl(chr$(16*(bgcol and 15)+2*(pattern and 7)+(textmode and 1))+chr$((framecol and 15)+16*(textcol and 15))+chr$(frame)+chr$(char))
-      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(";obspec;")";
-     ELSE IF UPPER$(a$)="TEXT" OR UPPER$(a$)="FTEXT" OR UPPER$(a$)="BOXTEXT"
+      obspec=cvl(CHR$(16*(bgcol AND 15)+2*(pattern AND 7)+(textmode AND 1))+CHR$((framecol AND 15)+16*(textcol AND 15))+CHR$(frame)+CHR$(char))
+      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(";obspec;")";
+    ELSE IF UPPER$(a$)="TEXT" OR UPPER$(a$)="FTEXT" OR UPPER$(a$)="BOXTEXT"
       obtype=21*abs(UPPER$(a$)="TEXT")+29*abs(UPPER$(a$)="FTEXT")+22*abs(UPPER$(a$)="BOXTEXT")
       text$=@getval$(b$,"TEXT")
-      if left$(text$)=chr$(34)
-        text$=DECLOSE$(text$) 
-      endif
+      IF left$(text$)=CHR$(34)
+        text$=DECLOSE$(text$)
+      ENDIF
       ptmp$=@getval$(b$,"PTMP")
-      if left$(ptmp$)=chr$(34)
-        ptmp$=DECLOSE$(ptmp$)  
-      endif
+      IF left$(ptmp$)=CHR$(34)
+        ptmp$=DECLOSE$(ptmp$)
+      ENDIF
       pvalid$=@getval$(b$,"PVALID")
-      if left$(pvalid$)=chr$(34)
-        pvalid$=DECLOSE$(pvalid$)  
-      endif
+      IF left$(pvalid$)=CHR$(34)
+        pvalid$=DECLOSE$(pvalid$)
+      ENDIF
       font=VAL(@getval$(b$,"FONT"))
-      if @getval$(b$,"FONT")=""
+      IF @getval$(b$,"FONT")=""
         font=3
-      endif
+      ENDIF
       just=VAL(@getval$(b$,"JUST"))
       color=VAL(@getval$(b$,"COLOR"))
       border=VAL(@getval$(b$,"BORDER"))
       @addtedinfo(text$,ptmp$,pvalid$,font,just,color,border)
-      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(tedinfo";anztedinfo-1;"$))";
+      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(tedinfo";anztedinfo-1;"$))";
     ELSE IF UPPER$(a$)="STRING" OR UPPER$(a$)="TITLE" OR UPPER$(a$)="BUTTON"
       obtype=28*abs(UPPER$(a$)="STRING")+32*abs(UPPER$(a$)="TITLE")+26*abs(UPPER$(a$)="BUTTON")
       text$=@getval$(b$,"TEXT")
-      if left$(text$)=chr$(34)
-        text$=DECLOSE$(text$)  
-      endif
+      IF left$(text$)=CHR$(34)
+        text$=DECLOSE$(text$)
+      ENDIF
       @addstring(text$)
-      print "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      print "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(string";anzstring-1;"$))";
+      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
+      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(string";anzstring-1;"$))";
     ELSE IF UPPER$(a$)="IMAGE"
       data$=@getval$(b$,"DATA")
       iw=VAL(@getval$(b$,"IW"))
@@ -358,7 +358,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       wtext=VAL(@getval$(b$,"WTEXT"))
       htext=VAL(@getval$(b$,"HTEXT"))
       IF LEFT$(text$)=CHR$(34)
-        text$=DECLOSE$(text$)  
+        text$=DECLOSE$(text$)
       ENDIF
 
       @addiconblk(data$,mask$,text$,char,xchar,ychar,xicon,yicon,wicon,hicon,xtext,ytext,wtext,htext)
@@ -383,7 +383,7 @@ PROCEDURE addtree(aob,oobj)
         PRINT SPACE$(spaces*2)+t$
         t$="tree"+STR$(anztree)+"$=tree"+STR$(anztree)+"$+"
       ELSE
-	t$=t$+"+"
+        t$=t$+"+"
       ENDIF
     ENDIF
   NEXT i
@@ -450,14 +450,14 @@ FUNCTION doflags(t$)
   LOCAL ret,a$
   ret=0
   IF LEFT$(t$)="("
-    t$=RIGHT$(t$,LEN(t$)-1)  
+    t$=RIGHT$(t$,LEN(t$)-1)
   ENDIF
   IF RIGHT$(t$)=")"
-    t$=LEFT$(t$,LEN(t$)-1)  
+    t$=LEFT$(t$,LEN(t$)-1)
   ENDIF
   SPLIT t$,"+",1,a$,t$
   WHILE LEN(a$)
-    if a$="NONE"
+    IF a$="NONE"
     ELSE IF a$="SELECTABLE"
       ret=ret OR 1
     ELSE IF a$="DEFAULT"
@@ -487,10 +487,10 @@ FUNCTION dostate(t$)
   LOCAL ret,a$
   ret=0
   IF LEFT$(t$)="("
-    t$=RIGHT$(t$,LEN(t$)-1)  
+    t$=RIGHT$(t$,LEN(t$)-1)
   ENDIF
   IF RIGHT$(t$)=")"
-    t$=LEFT$(t$,LEN(t$)-1)  
+    t$=LEFT$(t$,LEN(t$)-1)
   ENDIF
   SPLIT t$,"+",1,a$,t$
   WHILE LEN(a$)

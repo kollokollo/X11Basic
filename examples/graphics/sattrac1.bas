@@ -1,59 +1,59 @@
 ' Seltsamer Attraktor von Henon
 mmm=10000
-dim dx(mmm+1)
-dim dy(mmm+1)
-schwarz=get_color(0,0,0)
-weiss=get_color(65535,65535,65535)
-clearw
+DIM dx(mmm+1)
+DIM dy(mmm+1)
+schwarz=GET_COLOR(0,0,0)
+weiss=GET_COLOR(65535,65535,65535)
+CLEARW
 x=0.5
 y=0.5
 c=0
-color weiss
-for c=0 to mmm
+COLOR weiss
+FOR c=0 TO mmm
   ox=x
   x=y+1-1.4*x^2
   y=0.3*ox
   dx(c)=x
   dy(c)=y
-next c
+NEXT c
 sx=320
 sy=200
 px=320
 py=200
-defmouse 3
-do
-  clearw
-  scope dy(),dx(),1,sy,py,sx,px
-  text 100,50,"Drag the image with the mouse... LEFT=move, MIDDLE=scale"
+DEFMOUSE 3
+DO
+  CLEARW
+  SCOPE dy(),dx(),1,sy,py,sx,px
+  TEXT 100,50,"Drag the image with the mouse... LEFT=move, MIDDLE=scale"
   SHOWPAGE
   ox=x
   oy=y
   ok=k
-  if mousek=0
-    mouseevent x,y,k
+  IF mousek=0
+    MOUSEEVENT x,y,k
     ox=x
     oy=y
-  else
-    REPEAT  
+  ELSE
+    REPEAT
       MOTIONEVENT x,y,k
-    UNTIL EVENT?(64)=FALSE OR k=1  ! clear all pending motion events
-  endif
+    UNTIL EVENT?(64)=FALSE OR k=1 ! clear all pending motion events
+  ENDIF
 
-  print ox,oy,ok
-  if ok
-    if ok=4
-      sub py,16
-      pause 0.3
-    else if ok=5
-      add py,16
-      pause 0.3
-    else   
-      if k=2 and abs(x-ox)<10 and abs(y=oy)<10
-        add sx,x-ox
-        add sy,y-oy
-      else if k=1 and abs(x-ox)<10 and abs(y=oy)<10
-        add px,x-ox
-        add py,y-oy
+  PRINT ox,oy,ok
+  IF ok
+    IF ok=4
+      SUB py,16
+      PAUSE 0.3
+    ELSE if ok=5
+      ADD py,16
+      PAUSE 0.3
+    ELSE
+      IF k=2 AND abs(x-ox)<10 AND abs(y=oy)<10
+        ADD sx,x-ox
+        ADD sy,y-oy
+      ELSE if k=1 AND abs(x-ox)<10 AND abs(y=oy)<10
+        ADD px,x-ox
+        ADD py,y-oy
       ENDIF
     ENDIF
   ENDIF

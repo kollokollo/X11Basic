@@ -1,4 +1,4 @@
-' Little Animations with graphic elements. 
+' Little Animations with graphic elements.
 ' The images are taken from WESNOTH, but they do not contain an alpha channel.
 ' So the background needs to be cleared separately.
 
@@ -6,7 +6,7 @@
 ' BMP Windows 3.x format, , 8 Bit (palette).
 ' 2011-04-04
 
-' output of inline.bas for X11-Basic 
+' output of inline.bas for X11-Basic
 ' undead-flag-1.bmp 5726 Bytes. (compressed: 717 Bytes, 12%)
 ' PC bitmap, Windows 3.x format, 72 x 72 x 8
 undead_flag_1$=""
@@ -183,7 +183,6 @@ gryphon_master_flying_2$=gryphon_master_flying_2$+"*+aNOV-WPUAF=%]RW7)Z*G-.DM-K(
 gryphon_master_flying_2$=gryphon_master_flying_2$+"6/21]<:FF_N?FS)cVOc]1X<2=.5VaccL+*JVE>>K,RZ>Q'NW)N)b@:HEPV:9.3@Q"
 gryphon_master_flying_2$=gryphon_master_flying_2$+"`4@/H6MPB]63DN,;(TF/>5%H/3`Z-78b.\0$"
 gryphon_master_flying_2_bmp$=UNCOMPRESS$(INLINE$(gryphon_master_flying_2$))
-
 
 ' gryphon-master-flying-3.bmp 14690 Bytes. (compressed: 2027 Bytes, 13%)
 gryphon_master_flying_3$=""

@@ -1,10 +1,10 @@
 
 ' savescreen Test for X11-basic (c) Markus hoffmann 2008
-' 
-' 
+'
+'
 ' In the framebuffer-version (TomTom etc) the file format is
 ' .bmp 24 Bit
-' 
+'
 FOR i=0 TO 32
   FOR j=0 TO 20
     CIRCLE i*20,j*20,8

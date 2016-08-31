@@ -16,7 +16,7 @@ DO
   IF i=0
     PRINT AT(4,1);timer-t;" sek."
     t=TIMER
-  ENDIF  
+  ENDIF
   PLOT i,50*SIN(i/100*2*PI)+bh-40
   PAUSE 0.01
 LOOP

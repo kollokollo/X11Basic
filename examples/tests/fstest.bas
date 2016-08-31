@@ -1,9 +1,9 @@
 ' Demonstration of the use of FSFIRST() and FSNEXT()
 ' To list all files in a directory.
 '
-' X11Basic V.1.22 
+' X11Basic V.1.22
 '
-if WIN32?
+IF WIN32?
   a$=FSFIRST$("C:\","*.dat")
   PRINT "looks for *.dat files in C:\"
 ELSE

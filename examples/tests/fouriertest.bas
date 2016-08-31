@@ -1,4 +1,4 @@
-' Testet die eingebaute Fast-Fourier-Transformation with X11-Basic 
+' Testet die eingebaute Fast-Fourier-Transformation with X11-Basic
 ' (c) by Markus Hoffmann 2000-2013
 '
 ' Demonstrates the use of FFT and SCOPE commands
@@ -16,7 +16,6 @@ FOR i=0 TO l-1
   b(i)=a(i)
 NEXT i
 
-
 FOR c2=c1 TO c1+200 STEP 2
   CLEARW
   COLOR get_color(65535,32000,0)
@@ -27,11 +26,11 @@ FOR c2=c1 TO c1+200 STEP 2
   FOR i=0 TO l-1
     a(i)=a(i)/SQRT(l)
   NEXT i
-  
+
   COLOR COLOR_RGB(0,1,1)
   FOR i=0 TO l STEP 2
     LINE i/2,400,i/2,400-100/SQRT(l)*SQRT(a(i)^2+a(i+1)^2)
-  next i
+  NEXT i
   LINE c1/2,0,c1/2,10
   LINE c2/2,0,c2/2,10
   SHOWPAGE
@@ -45,12 +44,12 @@ FOR c2=c1 TO c1+200 STEP 2
   COLOR COLOR_RGB(0,1/2,1)
   SCOPE a(),0,-10/SQRT(l),300
 
-' open "O",#1,"testme"
-' for i=0 to l
-' f%=a(i)*20000
-' out #1,f%
-' next i
-' close #1
+  ' open "O",#1,"testme"
+  ' for i=0 to l
+  ' f%=a(i)*20000
+  ' out #1,f%
+  ' next i
+  ' close #1
 
   FOR g=1 TO 10
     COLOR COLOR_RGB(1,1,0)
@@ -67,4 +66,4 @@ NEXT c2
 ALERT 0,"Done.",1," OK ",d
 QUIT
 
-DEFFN si(x)=x mod pi
+DEFFN si(x)=x MOD pi

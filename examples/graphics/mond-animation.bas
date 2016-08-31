@@ -379,28 +379,27 @@ plune9$=plune9$+"@P^U0LPcP:5TW3()AO*$6[<MGWTaX&<X@\N9Eb,c]X_:*EVN`2Z52,>H8X/FNUC
 plune9$=plune9$+"CDa.%aA;573ZCO7VDG9>\/7C/RK4;P;,6Ib$0)T;KB:*c*RKSMM[-E4N$4$$"
 plune9_bmp$=UNCOMPRESS$(INLINE$(plune9$))
 
-
 bw%=320
 bh%=200
-sizew ,bw%,bh%
-color 0
+SIZEW ,bw%,bh%
+COLOR 0
 
-pbox 0,0,bw%,bh%
-color get_color(40000,30000,0)
-deftext 1
-text 10,30,"MOON-Phase-Animation with X11-Basic"
+PBOX 0,0,bw%,bh%
+COLOR get_color(40000,30000,0)
+DEFTEXT 1
+TEXT 10,30,"MOON-Phase-Animation with X11-Basic"
 
-do
-for i=1 to 28
-  t$="a$=plune"+str$(i)+"_bmp$"
-  &t$
-  put 100,100,a$,4
-  text 100,180,str$(i)+" "
-  vsync
-  pause 0.1  
-next i
-loop
-quit
+DO
+  FOR i=1 TO 28
+    t$="a$=plune"+STR$(i)+"_bmp$"
+    &t$
+    PUT 100,100,a$,4
+    TEXT 100,180,STR$(i)+" "
+    VSYNC
+    PAUSE 0.1
+  NEXT i
+LOOP
+QUIT
 
 ' nph=0  Neumond
 ' nph=1  1. viertel
@@ -409,20 +408,20 @@ quit
 
 ' Rueckgabe ist julianischer tag
 
-function mondtag(n,nph)
-  local c,t,t2,as,am,jd
+FUNCTION mondtag(n,nph)
+  LOCAL c,t,t2,as,am,jd
   c=n+nph/4
   t=c/1236.85
   as=359.2242+29.105356*c+((1.178e-4)-(1.55e-7)*t)*t^2
   am=306.0253+385.816918*c+0.010730*t^2
   jd=2415020+28*n+7*nph+0.75933+1.53058868*c
-  if nph=0 or nph=2
-    add jd,(0.1734-3.93e-4*t)*sin(rad(as))-0.4068*sin(rad(am))
-  else if nph=1 or nph=3
-    add jd,(0.1721-4e-4*t)*sin(rad(as))-0.6280*sin(rad(am))
-  else
-    return 0
-  endif  
-  return jd
-endfunction
+  IF nph=0 OR nph=2
+    ADD jd,(0.1734-3.93e-4*t)*sin(rad(as))-0.4068*sin(rad(am))
+  ELSE if nph=1 OR nph=3
+    ADD jd,(0.1721-4e-4*t)*sin(rad(as))-0.6280*sin(rad(am))
+  ELSE
+    RETURN 0
+  ENDIF
+  RETURN jd
+ENDFUNCTION
 

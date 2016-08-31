@@ -437,58 +437,58 @@ p01705$=p01705$+"TAT?`Ma6PTI0A,?UP>Eb0W+`7)_'M`bQA54%7WJ9HXW\?8`,LZW'AbL^GHS/U\E
 p01705$=p01705$+"6`:;/?@5Z+.cC%L+NMPOSc/JN:(O+@AVHOcVcOJ&N<,`24]$"
 p01705_bmp$=UNCOMPRESS$(INLINE$(p01705$))
 
-color schwarz
-pbox 0,0,640,400
-for j=0 to 12
-  for i=0 to 19
-    put i*32,j*32,p00225_bmp$
-  next i
-next j
-put 32,32,p01469_bmp$
-color gelb
-deftext 1
-text 100,170,"GET und PUT mit XBASIC V.1.16   (c) Markus Hoffmann"
-text 100,190,"the animation is done with bitmaps from files."
+COLOR schwarz
+PBOX 0,0,640,400
+FOR j=0 TO 12
+  FOR i=0 TO 19
+    PUT i*32,j*32,p00225_bmp$
+  NEXT i
+NEXT j
+PUT 32,32,p01469_bmp$
+COLOR gelb
+DEFTEXT 1
+TEXT 100,170,"GET und PUT mit XBASIC V.1.16   (c) Markus Hoffmann"
+TEXT 100,190,"the animation is done with bitmaps from files."
 num=6
 i=0
-dim dx(num+1),dy(num+1),x(num+1),y(num+1),hinter$(num+1),kugel$(num+1),m(num+1)
-arrayfill m(),1
+DIM dx(num+1),dy(num+1),x(num+1),y(num+1),hinter$(num+1),kugel$(num+1),m(num+1)
+ARRAYFILL m(),1
 m(2)=0.7
-arrayfill dy(),1
-for i=0 to num
-  x(i)=random(600)
-  y(i)=random(350)
-  dx(i)=(random(400)-200)/50
-next i
-for j=0 to num
-  color schwarz
-  pbox 310,0,380,40
+ARRAYFILL dy(),1
+FOR i=0 TO num
+  x(i)=RANDOM(600)
+  y(i)=RANDOM(350)
+  dx(i)=(RANDOM(400)-200)/50
+NEXT i
+FOR j=0 TO num
+  COLOR schwarz
+  PBOX 310,0,380,40
 
-  for i=0 to 10
-    color get_color(i*6553+j*(65535-i*6553)/num,32000+i*6553/2,i*6553)
-    pcircle 350+i/3,20-i/3,m(j)*(20-2*i)
-  next i
-  get 350-m(j)*20,20-m(j)*20,2*m(j)*20,2*m(j)*20,kugel$(j)
-next j
+  FOR i=0 TO 10
+    COLOR get_color(i*6553+j*(65535-i*6553)/num,32000+i*6553/2,i*6553)
+    PCIRCLE 350+i/3,20-i/3,m(j)*(20-2*i)
+  NEXT i
+  GET 350-m(j)*20,20-m(j)*20,2*m(j)*20,2*m(j)*20,kugel$(j)
+NEXT j
 scale=1
-do
-  get 300,dropy,60,70,dh$
-  for i=0 to num
-    x(i)=max(0,min(x(i),599))
-    y(i)=max(0,min(y(i),359))
-    get x(i),y(i),40,40,hinter$(i)
-  next i
+DO
+  GET 300,dropy,60,70,dh$
+  FOR i=0 TO num
+    x(i)=MAX(0,MIN(x(i),599))
+    y(i)=MAX(0,MIN(y(i),359))
+    GET x(i),y(i),40,40,hinter$(i)
+  NEXT i
   scale=1+0.9*sin(timer/10*2*pi)
-  get x(0),y(0),40*scale,40*scale,hinter$(0)
-  put 300,dropy,p01705_bmp$
-  color schwarz
-  for i=1 to num
-    graphmode 1
-    pcircle x(i)+20,y(i)+20,20
-    graphmode 2
-    put x(i),y(i),kugel$(i)
-  next i
-  put x(0),y(0),p01277_bmp$,scale
+  GET x(0),y(0),40*scale,40*scale,hinter$(0)
+  PUT 300,dropy,p01705_bmp$
+  COLOR schwarz
+  FOR i=1 TO num
+    GRAPHMODE 1
+    PCIRCLE x(i)+20,y(i)+20,20
+    GRAPHMODE 2
+    PUT x(i),y(i),kugel$(i)
+  NEXT i
+  PUT x(0),y(0),p01277_bmp$,scale
   SHOWPAGE
   PAUSE 0.05
   GRAPHMODE 1
@@ -514,34 +514,34 @@ do
       IF k<>i
         l=SQRT((x(i)-x(k))^2+(y(i)-y(k))^2)
         r=@pot(l)
-	ADD kraftx,r*(x(k)-x(i))/l
-	ADD krafty,r*(y(k)-y(i))/l
+        ADD kraftx,r*(x(k)-x(i))/l
+        ADD krafty,r*(y(k)-y(i))/l
       ENDIF
     NEXT k
     ADD dx(i),kraftx*m(i)
     ADD dy(i),krafty*m(i)
     dx(i)=dx(i)*0.999
     dy(i)=dy(i)*0.999
-  ' Zusammenstoesse
- '   if i<num
- '     for k=i+1 to num
- '       vx=x(k)-x(i)
- '       vy=y(k)-y(i)
- '       if vx^2+vy^2<40^2
- '         s=vx*dx(k)+vy*dy(k)
- '         s=s/sqrt(vx^2+vy^2)/sqrt(dx(k)^2+dy(k)^2)
- '         w=2*acos(s)
- '     dx(k)=cos(w)*dx(k)+sin(w)*dy(k)
- '     dy(k)=-sin(w)*dx(k)+cos(w)*dy(k)
- '     dx(i)=cos(w)*dx(i)+sin(w)*dy(i)
- '     dy(i)=-sin(w)*dx(i)+cos(w)*dy(i)
- '     dx(i)=-dx(i)
- '     dy(i)=-dy(i)
- '     dx(k)=-dx(k)
- '     dy(k)=-dy(k)
- '   endif
- ' next k
- ' endif
+    ' Zusammenstoesse
+    ' if i<num
+    '   for k=i+1 to num
+    '     vx=x(k)-x(i)
+    '     vy=y(k)-y(i)
+    '     if vx^2+vy^2<40^2
+    '       s=vx*dx(k)+vy*dy(k)
+    '       s=s/sqrt(vx^2+vy^2)/sqrt(dx(k)^2+dy(k)^2)
+    '       w=2*acos(s)
+    '       dx(k)=cos(w)*dx(k)+sin(w)*dy(k)
+    '       dy(k)=-sin(w)*dx(k)+cos(w)*dy(k)
+    '       dx(i)=cos(w)*dx(i)+sin(w)*dy(i)
+    '       dy(i)=-sin(w)*dx(i)+cos(w)*dy(i)
+    '       dx(i)=-dx(i)
+    '       dy(i)=-dy(i)
+    '       dx(k)=-dx(k)
+    '       dy(k)=-dy(k)
+    '     endif
+    '   next k
+    ' endif
   NEXT i
   EXIT IF INP?(-2)
 LOOP

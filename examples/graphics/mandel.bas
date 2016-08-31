@@ -8,16 +8,16 @@ bw=256*2
 bh=256*2
 SIZEW ,bw,bh
 CLEARW
-DIM col(256) 
+DIM col(256)
 col(0)=COLOR_RGB(0,0,0)
 col(255)=COLOR_RGB(1,1,1)
-for i=1 to 254
+FOR i=1 TO 254
   col(i)=COLOR_RGB(RND(),RND(),RND())
-NEXT i 
+NEXT i
 
 GET_GEOMETRY 1,bx,by,bw,bh
-bw=min(512,bw)
-bh=min(512,bh)
+bw=MIN(512,bw)
+bh=MIN(512,bh)
 DIM field(bw+1,bh+1)
 ARRAYFILL field(),0
 
@@ -76,6 +76,6 @@ DO
   EXIT IF INT(100*count/bw/bh)=100
 LOOP
 PRINT "";TIMER-starttime;" seconds."
-print "Press any key..."
+PRINT "Press any key..."
 ~INP(-2)
 END

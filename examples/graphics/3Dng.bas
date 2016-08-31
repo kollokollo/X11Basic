@@ -1,4 +1,4 @@
-' 3D-grafics benchmark (c) Markus Hoffmann, 
+' 3D-grafics benchmark (c) Markus Hoffmann,
 ' die Idee und das Programm kommt noch aus der ATARI-ST Zeit (ca. 1991)
 '
 ' uses polygon and polyfill commands
@@ -22,8 +22,8 @@ CLIP bx%,by%,bw%,bh%
 
 bx%=0.1*bw%
 by%=0.1*bh%
-sub bw%,2*bx%
-sub bh%,2*by%
+SUB bw%,2*bx%
+SUB bh%,2*by%
 
 ' Koordinaten:
 '
@@ -66,10 +66,10 @@ lichtr=50000
 lichtg=65535
 lichtb=65535
 '
-clearw 1
-color grau
-pbox bx%,by%,bw%,bh%
-color weiss
+CLEARW 1
+COLOR grau
+PBOX bx%,by%,bw%,bh%
+COLOR weiss
 pxU(0)=@kx(x1,y2,z1/2)
 pyU(0)=@ky(x1,y2,z1/2)
 pxU(1)=@kx(x2,y2,z1/2)
@@ -79,7 +79,7 @@ pyU(2)=@ky(x2,y2,z2/2)
 pxU(3)=@kx(x1,y2,z2/2)
 pyU(3)=@ky(x1,y2,z2/2)
 POLYFILL 4,pxU(),pyU()
-color schwarz
+COLOR schwarz
 POLYLINE 4,pxU(),pyU()
 pxU(0)=@kx(x1,y2,z1/2)
 pyU(0)=@ky(x1,y2,z1/2)
@@ -89,16 +89,16 @@ pxU(2)=@kx(x1,y1,z2/2)
 pyU(2)=@ky(x1,y1,z2/2)
 pxU(3)=@kx(x1,y1,z1/2)
 pyU(3)=@ky(x1,y1,z1/2)
-color weiss
+COLOR weiss
 POLYFILL 4,pxU(),pyU()
-color blau
-for i=z1/2 to z2/2 step (z2-z1)/12
+COLOR blau
+FOR i=z1/2 TO z2/2 STEP (z2-z1)/12
   LINE @kx(x1,y1,i),@ky(x1,y1,i),@kx(x1,y2,i),@ky(x1,y2,i)
   LINE @kx(x1,y2,i),@ky(x1,y2,i),@kx(x2,y2,i),@ky(x2,y2,i)
-next i
-color gelb
-text bx%+20,by%+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
-color schwarz
+NEXT i
+COLOR gelb
+TEXT bx%+20,by%+20,"3D - Flaechengrafik mit X11-Basic   (c) Markus Hoffmann"
+COLOR schwarz
 LINE @kx(x1,y1,0),@ky(x1,y1,0),@kx(x1,y2,0),@ky(x1,y2,0)
 LINE @kx(x1,y2,0),@ky(x1,y2,0),@kx(x2,y2,0),@ky(x2,y2,0)
 POLYLINE 4,pxU(),pyU()
@@ -112,7 +112,7 @@ FOR y=y2 DOWNTO y1 STEP sy
   ENDIF
   yy=y
   FOR x=x1 TO x2 STEP sx
- ' print x,y
+    ' print x,y
     z=@f(x,y)
     zz=@f(x+sx,y)
     zzz=@f(x,y+sy)
@@ -141,9 +141,9 @@ FOR y=y2 DOWNTO y1 STEP sy
     '   DEFLINE ,0,0
     colorwink=nnx*lichtx+nny*lichty+nnz*lichtz
     IF colorwink<0
-      color schwarz
+      COLOR schwarz
     ELSE
-      color get_color(colorwink*lichtr,colorwink*lichtg,colorwink*lichtb)
+      COLOR get_color(colorwink*lichtr,colorwink*lichtg,colorwink*lichtb)
     ENDIF
     POLYFILL 4,pxU(),pyU()
   NEXT x
@@ -152,12 +152,12 @@ FOR y=y2 DOWNTO y1 STEP sy
 NEXT y
 '
 ' BSAVE "E:\ablage\funktion.doo",XBIOS(3),32000
-print timer-tim;" Sekunden."
-alert 0,"Done !",1," OK |QUIT",balert
-if balert=2
-  quit
-endif
-end
+PRINT timer-tim;" Sekunden."
+ALERT 0,"Done !",1," OK |QUIT",balert
+IF balert=2
+  QUIT
+ENDIF
+END
 '
 '
 DEFFN f(x,y)=0.8*EXP(-2*(x^2+y^2))*COS((x^2+y^2)*10)
@@ -182,12 +182,12 @@ FUNCTION kx(x,y,z)
   '
   '
   ' Neigung:
-'  xx=x
+  '  xx=x
   x=COS(nwink)*x+SIN(nwink)*z
-'  z=-SIN(nwink)*xx+COS(nwink)*z
+  '  z=-SIN(nwink)*xx+COS(nwink)*z
   '
   ' Perspektive:
-'  py=(z-prozz)*(ebene-prozy)/(y-prozy)
+  '  py=(z-prozz)*(ebene-prozy)/(y-prozy)
   px=(x-prozx)*(ebene-prozy)/(y-prozy)
   '
   RETURN bx%+bw%/2+px*bw%/(x2-x1)
@@ -195,8 +195,7 @@ ENDFUNC
 FUNCTION ky(x,y,z)
   LOCAL xx
   '  Verschiebe an den Beobachterstandpunkt
-  
-  
+
   x=x-stx
   y=y-sty
   z=z-stz
@@ -211,10 +210,10 @@ FUNCTION ky(x,y,z)
   '
   ' Neigung:
   xx=x
-'  x=COS(nwink)*x+SIN(nwink)*z
+  '  x=COS(nwink)*x+SIN(nwink)*z
   z=-SIN(nwink)*xx+COS(nwink)*z
   ' persp
   py=(z-prozz)*(ebene-prozy)/(y-prozy)
-'  px=(x-prozx)*(ebene-prozy)/(y-prozy)
+  '  px=(x-prozx)*(ebene-prozy)/(y-prozy)
   RETURN by%+bh%/2-py*bh%/(z2-z1)
 ENDFUNC

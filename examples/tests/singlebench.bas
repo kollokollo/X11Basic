@@ -2,13 +2,13 @@ ac=5000000
 
 PRINT "empty FOR loop with ";ac;" iterations:"
 t=CTIMER
-for i=0 to ac
-next i
+FOR i=0 TO ac
+NEXT i
 ref=(ctimer-t)/ac
-print "Ref=",str$(ref*1000,5,5);" ms"
+PRINT "Ref=",STR$(ref*1000,5,5);" ms"
 
 t=ctimer
-for i=0 to ac
+FOR i=0 TO ac
 
 
 
@@ -19,13 +19,13 @@ for i=0 to ac
 
 
 
-next i
+NEXT i
 mes=(ctimer-t)/ac
-print "Mes=",str$(mes*1000,5,5);" ms"
+PRINT "Mes=",STR$(mes*1000,5,5);" ms"
 t=ctimer
-for i=0 to ac
+FOR i=0 TO ac
 
-next i
+NEXT i
 ref=(CTIMER-t)/ac
 PRINT "Ref=",STR$(ref*1000,5,5);" ms"
 QUIT

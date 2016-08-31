@@ -5,9 +5,9 @@
 ' UNIX/linux
 '
 ' Use it the following way:
-' run the program without commandline arguments to start the 
+' run the program without commandline arguments to start the
 ' display
-' run the program from another commandline with arguments (numbers) 
+' run the program from another commandline with arguments (numbers)
 ' to make the first program display them.
 ' This way two different programs can talk to each other or exchange
 ' chuncks of data
@@ -26,7 +26,7 @@ IF LEN(PARAM$(2))
   t$=MKD$(VAL(PARAM$(2)))
   BMOVE VARPTR(t$),adr,LEN(t$)
 
-' shm_free shmid
+  ' shm_free shmid
 
 ELSE
   PRINT "now let this instance of the progam run and start another"
@@ -60,19 +60,19 @@ ELSE
       BEEP
       @display(a)
     ENDIF
-'endif
-'t$=chr$(200)+" Hallo, ich bins "+time$
-'bmove varptr(t$),adr,len(t$)
-'system "ipcs"
-'pause 5
-'shm_detach adr
-'system "ipcs"
-'pause 5
-  exit if a=4711
-  pause 1
-loop
+    'endif
+    't$=chr$(200)+" Hallo, ich bins "+time$
+    'bmove varptr(t$),adr,len(t$)
+    'system "ipcs"
+    'pause 5
+    'shm_detach adr
+    'system "ipcs"
+    'pause 5
+    EXIT if a=4711
+    PAUSE 1
+  LOOP
 
-shm_free shmid
+  SHM_FREE shmid
 ENDIF
 QUIT
 '

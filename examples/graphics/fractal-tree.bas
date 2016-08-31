@@ -2,9 +2,9 @@
 
 RANDOMIZE TIMER
 
-dim si(10),sx(10),sy(10),st(10)
-dim shf(10),sa(10),sb(10),sh(10)
-dim sd(10)
+DIM si(10),sx(10),sy(10),st(10)
+DIM shf(10),sa(10),sb(10),sh(10)
+DIM sd(10)
 rot=COLOR_RGB(1,0,0)
 SHOWPAGE
 PAUSE 1
@@ -13,12 +13,12 @@ GET_GEOMETRY 1,bx,by,xmax,ymax
 ' TREE DATA
 rand=1
 IF ymax>320
-   ' big screen
-   brafan=ymax/5
-   inpfac=0.75
-   inphf=0.8
-   depth=6
-   density=5
+  ' big screen
+  brafan=ymax/5
+  inpfac=0.75
+  inphf=0.8
+  depth=6
+  density=5
 ELSE
   ' small screen
   brafan=xmax/3.2
@@ -34,7 +34,7 @@ h=ymax/4
 nx=xmax/2
 ny=1
 
-CLEARW 
+CLEARW
 TEXT 0,30,"random tree with X11-Basic"
 flowercolor=COLOR_RGB(1,1,0)
 COLOR rot
@@ -53,8 +53,8 @@ PROCEDURE tree
     PLOT nx,ymax-(ny+3)
     PLOT nx+2,ymax-ny
     PLOT nx,ymax-ny
-   ' oxx=nx
-   ' oyy=ymax-ny
+    ' oxx=nx
+    ' oyy=ymax-ny
     COLOR rot
     SHOWPAGE
   ELSE
@@ -75,7 +75,7 @@ PROCEDURE tree
     y=h*SIN(a*l)
     a=start
     i=1
-500:
+    500:
     nx=nx+x
     ny=ny+y
     LINE oxx,oyy,nx,ymax-ny
@@ -96,7 +96,7 @@ PROCEDURE tree
     oxx=nx
     oyy=ymax-ny
     INC i
-    IF i<=density+1 
+    IF i<=density+1
       GOTO 500
     ENDIF
     DEC stackpointer
@@ -108,7 +108,7 @@ PROCEDURE tree
     brafan=sb(stackpointer)
   ENDIF
 RETURN
- 
+
 PROCEDURE brrand
   sa(stackpointer)=a
   sb(stackpointer)=brafan

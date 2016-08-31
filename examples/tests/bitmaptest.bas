@@ -1,7 +1,6 @@
 ' Bitmaptest for X11-Basic V.1.12
 ' Since version 1.16 there are better ways to use bitmaps....
 
-
 biene$=""
 biene$=biene$+"($$43$%*<(1G,=E5Z&MD%_DVW'b*%H-^,EQ6>VTL$$$$"
 ' output of inline.bas for X11-Basic (compressed) 16.10.2005
@@ -97,35 +96,35 @@ f1$=f1$+"MK^.\DW^81P[?>`A&/9.$:50E1&9O3)>-;Z&*.>0T`/6WJ%IaOPTB[G<]/-HU.?D"
 f1$=f1$+"1S8)%F&7[5K4RN0aXRG^.?EE^B^L<*^HRJ\b?\%'6V6X1cIZ9E0=$D$$"
 
 t$=UNCOMPRESS$(INLINE$(f1$))
-dim rev(256)
-for i=0 to 255
+DIM rev(256)
+FOR i=0 TO 255
   a=0
-  for j=0 to 7
-    if btst(i,j)
+  FOR j=0 TO 7
+    IF btst(i,j)
       a=bset(a,7-j)
-    endif
-  next j
+    ENDIF
+  NEXT j
   rev(i)=a
-next i
-for i=0 to len(t$)/4
-  a=peek(varptr(t$)+i*4) and 255
-  b=peek(varptr(t$)+i*4+1) and 255
-  c=peek(varptr(t$)+i*4+2) and 255
-  d=peek(varptr(t$)+i*4+3) and 255
-  poke varptr(t$)+i*4,rev(a)
-  poke varptr(t$)+i*4+1,rev(b)
-  poke varptr(t$)+i*4+2,rev(c)
-  poke varptr(t$)+i*4+3,rev(d)
-next i
+NEXT i
+FOR i=0 TO LEN(t$)/4
+  a=PEEK(VARPTR(t$)+i*4) and 255
+  b=PEEK(VARPTR(t$)+i*4+1) and 255
+  c=PEEK(VARPTR(t$)+i*4+2) and 255
+  d=PEEK(VARPTR(t$)+i*4+3) and 255
+  POKE varptr(t$)+i*4,rev(a)
+  POKE varptr(t$)+i*4+1,rev(b)
+  POKE varptr(t$)+i*4+2,rev(c)
+  POKE varptr(t$)+i*4+3,rev(d)
+NEXT i
 ttt:
 CLEARW
 COLOR COLOR_RGB(1,1,0)
 PUT_BITMAP t$,0,0,640,400
 t$=inline$(biene$)
-color COLOR_RGB(1,1,1)
-for i=0 to 40
-  put_bitmap t$,i*16,0,16,16
-next i
+COLOR COLOR_RGB(1,1,1)
+FOR i=0 TO 40
+  PUT_BITMAP t$,i*16,0,16,16
+NEXT i
 SHOWPAGE
-alert 0,"fertig",1,"OK",b
-quit
+ALERT 0,"fertig",1,"OK",b
+QUIT

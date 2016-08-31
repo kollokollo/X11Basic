@@ -4,20 +4,20 @@ DEFTEXT 1
 COLOR COLOR_RGB(1,1/6,1/6)
 DEFTEXT ,0.08*0.9,0.16*0.9,0
 'DEFLINE ,2,2,2
-FOR x=0 to 15
-  for y=0 to 15
-    ltext 8*y,16*x,chr$(y+16*x)
-setfont "BIG"
-    text 160+8*y,16*x+16,chr$(y+16*x)
-setfont "MEDIUM"
-    text 300+8*y,16*x+16,chr$(y+16*x)
-setfont "SMALL"
-    text 440+8*y,16*x+16,chr$(y+16*x)
+FOR x=0 TO 15
+  FOR y=0 TO 15
+    LTEXT 8*y,16*x,CHR$(y+16*x)
+    SETFONT "BIG"
+    TEXT 160+8*y,16*x+16,CHR$(y+16*x)
+    SETFONT "MEDIUM"
+    TEXT 300+8*y,16*x+16,CHR$(y+16*x)
+    SETFONT "SMALL"
+    TEXT 440+8*y,16*x+16,CHR$(y+16*x)
     SHOWPAGE
-  next y
-next x
+  NEXT y
+NEXT x
 
-ltext 0,350,"Umlaute: ÄÜÖ äüö ß °C €"
+LTEXT 0,350,"Umlaute: ÄÜÖ äüö ß °C €"
 
 PAUSE 5
 ALERT 0,"Fertig !",1," OK ",dummy

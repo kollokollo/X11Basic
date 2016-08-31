@@ -28,113 +28,112 @@ font5x7$=font5x7$+"/X0\cNY0a)6:*3+X991`<*OFa@39cKUO4BYc7RK$,=1ScT1G?4**AD;M6^I$D
 font5x7$=font5x7$+"BA\JDD,$"
 font5x7_fnt$=UNCOMPRESS$(INLINE$(font5x7$))
 font$=font5x7_fnt$
-clearw
+CLEARW
 @putstring(10,50,"OLED-Font by MH 2011")
 @putstring2(10,250,"This is a smaller variant",2)
 ' color get_color(30000,30000,30000)
 ' box 90,90,250,130
-lauf$=replace$(system$("cat /proc/cpuinfo"),chr$(10)," | ")
+lauf$=REPLACE$(system$("cat /proc/cpuinfo"),CHR$(10)," | ")
 
-clr count
-do
+CLR count
+DO
   d$=time$
-  for g=0 to len(d$)-1
+  FOR g=0 TO LEN(d$)-1
     @putchar(100+23*g,100,peek(varptr(d$)+g))
-  next g
-'print mid$(lauf$,count,60)
+  NEXT g
+  'print mid$(lauf$,count,60)
   @putstring2(10,270,mid$(lauf$,count,60),2)
-  inc count
-  if count>len(lauf$)
-    clr count
-  endif
-  pause 0.2
-loop
+  INC count
+  IF count>len(lauf$)
+    CLR count
+  ENDIF
+  PAUSE 0.2
+LOOP
 ~inp(-2)
-quit
+QUIT
 
-procedure putstring(x,y,s$)
-  local i
-  for i=0 to len(s$)-1
+PROCEDURE putstring(x,y,s$)
+  LOCAL i
+  FOR i=0 TO LEN(s$)-1
     @putchar(x+23*i,y,peek(varptr(s$)+i))
-  next i
-return
-procedure putstring2(x,y,s$,s)
-  local i
-  for i=0 to len(s$)-1
+  NEXT i
+RETURN
+PROCEDURE putstring2(x,y,s$,s)
+  LOCAL i
+  FOR i=0 TO LEN(s$)-1
     @putchar2(x+6*i*s,y,peek(varptr(s$)+i),s)
-  next i
-return
+  NEXT i
+RETURN
 
+PROCEDURE putchar(x,y,c)
+  LOCAL a,a1,i,j
+  bg=GET_COLOR(0,0,0)
+  off=GET_COLOR(10000,15000,15000)
+  shine=GET_COLOR(15000,30000,30000)
+  fg=GET_COLOR(0,60000,65535)
+  a=VARPTR(font$)+5*c
+  COLOR bg
+  PBOX x-1,y-1,x+4*5+1,y+4*7+1
+  FOR j=0 TO 4
+    a1=PEEK(a+j)
+    FOR i=0 TO 6
+      IF btst(a1,i)
+        COLOR shine
+        BOX x+j*4-1,y+i*4-1,x+j*4+3,y+i*4+3
+        COLOR fg
+      ELSE
+        COLOR off
+      ENDIF
+      PBOX x+j*4,y+i*4,x+j*4+2,y+i*4+2
+    NEXT i
+  NEXT j
+  VSYNC
+RETURN
+PROCEDURE putchar2(x,y,c,s)
+  LOCAL a,a1,i,j
+  bg=GET_COLOR(0,0,0)
+  off=GET_COLOR(10000,15000,15000)
+  shine=GET_COLOR(15000,30000,30000)
+  fg=GET_COLOR(0,60000,65535)
+  a=VARPTR(font$)+5*c
+  COLOR bg
+  PBOX x-1,y-1,x+5*s+1,y+7*s+1
+  FOR j=0 TO 4
+    a1=PEEK(a+j)
+    FOR i=0 TO 6
+      IF btst(a1,i)
+        IF s>2
+          COLOR shine
+          CIRCLE x+j*s+2,y+i*s+2,s
+        ENDIF
+        COLOR fg
+      ELSE
+        COLOR off
+      ENDIF
+      PCIRCLE x+j*s+2,y+i*s+2,s-1
+    NEXT i
+  NEXT j
 
-procedure putchar(x,y,c)
-  local a,a1,i,j
-  bg=get_color(0,0,0)
-  off=get_color(10000,15000,15000)
-  shine=get_color(15000,30000,30000)
-  fg=get_color(0,60000,65535)
-  a=varptr(font$)+5*c
-  color bg
-  pbox x-1,y-1,x+4*5+1,y+4*7+1
-  for j=0 to 4
-  a1=peek(a+j)
-  for i=0 to 6
-    if btst(a1,i)
-      color shine
-      box x+j*4-1,y+i*4-1,x+j*4+3,y+i*4+3
-      color fg
-    else
-      color off
-    endif
-    pbox x+j*4,y+i*4,x+j*4+2,y+i*4+2
-  next i
-  next j
-  vsync
-return
-procedure putchar2(x,y,c,s)
-  local a,a1,i,j
-  bg=get_color(0,0,0)
-  off=get_color(10000,15000,15000)
-  shine=get_color(15000,30000,30000)
-  fg=get_color(0,60000,65535)
-  a=varptr(font$)+5*c
-  color bg
-  pbox x-1,y-1,x+5*s+1,y+7*s+1
-  for j=0 to 4
-  a1=peek(a+j)
-  for i=0 to 6
-    if btst(a1,i)
-      if s>2
-        color shine
-        circle x+j*s+2,y+i*s+2,s
-      endif
-      color fg
-    else
-      color off
-    endif
-    pcircle x+j*s+2,y+i*s+2,s-1
-  next i
-  next j
-
-return
-procedure makefont
-  font$=space$(5*256)
+RETURN
+PROCEDURE makefont
+  font$=SPACE$(5*256)
   i=0
-  open "I",#1,"src/5x7.c"
-  while not eof(#1)
-    lineinput #1,t$
-    t$=replace$(t$,","," ")
-    t$=trim$(t$)
-    if left$(t$)="0"
-      poke varptr(font$)+5*i,val(word$(t$,1))
-      poke varptr(font$)+5*i+1,val(word$(t$,2))
-      poke varptr(font$)+5*i+2,val(word$(t$,3))
-      poke varptr(font$)+5*i+3,val(word$(t$,4))
-      poke varptr(font$)+5*i+4,val(word$(t$,5))
-      print i,t$
-      inc i
-      exit if i=256
-    endif
-  wend
+  OPEN "I",#1,"src/5x7.c"
+  WHILE not eof(#1)
+    LINEINPUT #1,t$
+    t$=REPLACE$(t$,","," ")
+    t$=TRIM$(t$)
+    IF left$(t$)="0"
+      POKE varptr(font$)+5*i,VAL(WORD$(t$,1))
+      POKE varptr(font$)+5*i+1,VAL(WORD$(t$,2))
+      POKE varptr(font$)+5*i+2,VAL(WORD$(t$,3))
+      POKE varptr(font$)+5*i+3,VAL(WORD$(t$,4))
+      POKE varptr(font$)+5*i+4,VAL(WORD$(t$,5))
+      PRINT i,t$
+      INC i
+      EXIT if i=256
+    ENDIF
+  WEND
   ' memdump varptr(font$),len(font$)
-  bsave "5x7.fnt",varptr(font$),len(font$)
-return
+  BSAVE "5x7.fnt",VARPTR(font$),LEN(font$)
+RETURN

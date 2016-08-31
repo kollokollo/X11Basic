@@ -4,7 +4,7 @@
 ' WATCH <filename> (or directory name)
 ' watches the file now for events
 '
-' FILEEVENT$ returns a blank separated list of events, each consist of 
+' FILEEVENT$ returns a blank separated list of events, each consist of
 ' an indicator (3 charackters) and a filename.
 ' The charackters can be
 ' 1st character: d if file is a directory, - if regular file
@@ -24,7 +24,7 @@ DO
   a$=FILEEVENT$
   IF LEN(a$)
     PRINT a$
-  ELSE 
+  ELSE
     PAUSE 0.3
   ENDIF
 LOOP

@@ -4,7 +4,7 @@
 ' This is an example how to produce .o linkabel object files and
 ' shared object files (.so) under linux (UNIX or MAC-OSX) with X11-Basic:
 '
-' Do a 
+' Do a
 ' xbc -l -c library.bas
 ' or
 ' xbc -l -c -virtualm library.bas (for faster code)

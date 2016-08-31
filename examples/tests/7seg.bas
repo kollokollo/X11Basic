@@ -18,7 +18,7 @@ t$=""
 
 scale=0.7
 
-' italic=-0.2       ! for slight italic 
+' italic=-0.2       ! for slight italic
 
 bw=640*scale
 bh=400*scale
@@ -45,24 +45,24 @@ DO
   SHOWPAGE
   IF EVENT?(1)
     KEYEVENT a,b,c$
-    IF left$(c$)>="0" and left$(c$)<="9"
+    IF left$(c$)>="0" AND LEFT$(c$)<="9"
       IF clearacu
         acu=0
         clearacu=0
       ENDIF
-      acu=acu*10+(asc(left$(c$))-asc("0"))
-    ELSE if instr("+-/^*",left$(c$))
+      acu=acu*10+(ASC(LEFT$(c$))-asc("0"))
+    ELSE if instr("+-/^*",LEFT$(c$))
       x=acu
       clearacu=true
-      mod$=left$(c$)
-    ELSE if left$(c$)="~"
+      mod$=LEFT$(c$)
+    ELSE if LEFT$(c$)="~"
       acu=-acu
-    ELSE if left$(c$)="p"
+    ELSE if LEFT$(c$)="p"
       acu=pi
       clearacu=true
-    ELSE if left$(c$)="m"
+    ELSE if LEFT$(c$)="m"
       mem=acu
-    ELSE if left$(c$)="="
+    ELSE if LEFT$(c$)="="
       IF mod$="+"
         acu=acu+x
       ELSE if mod$="-"
@@ -80,7 +80,7 @@ DO
       ENDIF
       clearacu=true
     ELSE
-      PRINT at(1,1);a,hex$(b),c$,"   "
+      PRINT at(1,1);a,HEX$(b),c$,"   "
     ENDIF
   ELSE
     PAUSE 0.1
@@ -90,7 +90,7 @@ END
 
 PROCEDURE puts7(x,y,c$)
   LOCAL i
-  FOR i=0 to len(c$)-1
+  FOR i=0 TO LEN(c$)-1
     @put7(x,y,groesse,peek(varptr(c$)+i))
     ADD x,32*groesse
     IF x>640*scale
@@ -104,7 +104,7 @@ PROCEDURE put7(x,y,s,c)
   ' color schwarz
   ' pbox x,y,x+s*32,y+s*64
   d%()=[3,3,29,3;29,3,29,29;3,32,29,32;3,3,3,29;3,32,3,61;3,61,29,61;29,61,29,32;34,64,35,64]
-  FOR i=0 to 7
+  FOR i=0 TO 7
     IF btst(c,i)
       COLOR rot
     ELSE
@@ -130,16 +130,16 @@ FUNCTION conv$(t$)
         a$=CHR$(ziff%(0) OR 0x80)
       ENDIF
     ELSE IF PEEK(VARPTR(t$)+i)=ASC(" ")
-      a$=a$+chr$(0)
-    ELSE if peek(varptr(t$)+i)=ASC("-")
+      a$=a$+CHR$(0)
+    ELSE if PEEK(VARPTR(t$)+i)=ASC("-")
       a$=a$+CHR$(4)
-    ELSE if PEEK(varptr(t$)+i)=ASC("e")
+    ELSE if PEEK(VARPTR(t$)+i)=ASC("e")
       a$=a$+CHR$(0x3d)
-    ELSE if PEEK(varptr(t$)+i)=ASC("E")
+    ELSE if PEEK(VARPTR(t$)+i)=ASC("E")
       a$=a$+CHR$(0x3d)
-    ELSE if PEEK(varptr(t$)+i)=ASC("f")
+    ELSE if PEEK(VARPTR(t$)+i)=ASC("f")
       a$=a$+CHR$(0x1d)
-    ELSE if PEEK(varptr(t$)+i)=ASC("a")
+    ELSE if PEEK(VARPTR(t$)+i)=ASC("a")
       a$=a$+CHR$(0x5f)
     ELSE if PEEK(VARPTR(t$)+i)=ASC(":")
       a$=a$+CHR$(0x04)

@@ -31,7 +31,7 @@ SHOWPAGE
 PAUSE 2
 RUN
 
-' This procedure draws different types of combined polylines, 
+' This procedure draws different types of combined polylines,
 ' which can be used to draw street maps and such.
 ' If flag=1 only the background part is drawn.
 ' If flag=2 only the forground part is draw

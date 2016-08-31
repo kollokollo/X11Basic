@@ -1,6 +1,5 @@
 ' deffill <rule>,<style>,<pattern>
 
-
 weiss=COLOR_RGB(1,1,1)
 rot=COLOR_RGB(1,0.5,0.5)
 schwarz=COLOR_RGB(0,0,0)

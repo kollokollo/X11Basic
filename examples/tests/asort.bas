@@ -13,7 +13,7 @@ DO
   test$(anzdata)=a$
   ? test$(anzdata)
   INC anzdata
-LOOP 
+LOOP
 
 ? anzdata;" Elements."
 
@@ -22,14 +22,14 @@ LOOP
 @asort(test$(),anzdata)
 
 FOR x=0 TO anzdata-1
-    ? test$(x)
+  ? test$(x)
 NEXT x
 
 @usort(test$(),anzdata)
 
 PRINT "Result of USORT:"
 FOR x=0 TO anzdata-1
-    ? test$(x)
+  ? test$(x)
 NEXT x
 END
 '
@@ -48,8 +48,8 @@ PROCEDURE asort(VAR s$(),anz%)
   NEXT k%
   SORT t$(),anz%,i%()
   DIM t2$(DIM?(s$()))
-  FOR k%=0  TO anz%-1
-    t2$(k%)=s$(i%(k%))  
+  FOR k%=0 TO anz%-1
+    t2$(k%)=s$(i%(k%))
   NEXT k%
   s$()=t2$()
 RETURN
@@ -67,13 +67,12 @@ PROCEDURE usort(VAR s$(),anz%)
   NEXT k%
   SORT t$(),anz%,i%()
   DIM t2$(DIM?(s$()))
-  FOR k%=0  TO anz%-1
-    t2$(k%)=s$(i%(k%))  
+  FOR k%=0 TO anz%-1
+    t2$(k%)=s$(i%(k%))
   NEXT k%
   s$()=t2$()
 RETURN
 
-
 DATA "aaa","aac","hot","Hotel","ada","aza","aya","aba","aka","ala","CVB","Hello"
 DATA "Help","helau","a","*"
- 
+

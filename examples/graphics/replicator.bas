@@ -2,77 +2,76 @@
 ' implemented by Markus Hoffmann 2012
 
 nc=4  ! Number of colors
-s=2    ! size of the pixel
+s=2   ! size of the pixel
 sw=48
 sh=48
 bw=3*sw
 bh=3*sh
-dim col(nc)
+DIM col(nc)
 
-sizew ,s*bw,s*bh+16
+SIZEW ,s*bw,s*bh+16
 
-col(0)=get_color(0,0,0)
-col(1)=get_color(65535,0,0)
-col(2)=get_color(0,65535,0)
+col(0)=GET_COLOR(0,0,0)
+col(1)=GET_COLOR(65535,0,0)
+col(2)=GET_COLOR(0,65535,0)
 
-col(nc-1)=get_color(65535,65535,65535)
-  color col(0)
-  pbox 0,0,sw,sh
-  color col(nc-1)
-  ' text 10,10,"Hallo"
-  text bw*s/2,bh*s+12,"replicator with X11-Basic"
-  color col(1)
-  ' text 10,20,"yes"
-  ' box 5,5,sw-1-5,sh-1-5 
-  text sw*s/2,sh*s+16,"initializing"
-  plot sw/2,sh/2
-  color col(2)
-  box 0,0,sw-1,sh-1
+col(nc-1)=GET_COLOR(65535,65535,65535)
+COLOR col(0)
+PBOX 0,0,sw,sh
+COLOR col(nc-1)
+' text 10,10,"Hallo"
+TEXT bw*s/2,bh*s+12,"replicator with X11-Basic"
+COLOR col(1)
+' text 10,20,"yes"
+' box 5,5,sw-1-5,sh-1-5
+TEXT sw*s/2,sh*s+16,"initializing"
+PLOT sw/2,sh/2
+COLOR col(2)
+BOX 0,0,sw-1,sh-1
 '  plot sw/2,sh/2
-vsync
-pause 1
-dim feld(bw,bh),ofeld(bw,bh)
-arrayfill feld(),0
+VSYNC
+PAUSE 1
+DIM feld(bw,bh),ofeld(bw,bh)
+ARRAYFILL feld(),0
 
-   for x=0 to sw-1
-     for y=0 to sh-1
-       ' print point(x,y)
-       for i=0 to nc-1
-          if point(x,y)=col(i)
-	  feld(sw+x,sh+y)=i
-	endif
-	next i
-     next y
-   next x
-do
+FOR x=0 TO sw-1
+  FOR y=0 TO sh-1
+    ' print point(x,y)
+    FOR i=0 TO nc-1
+      IF point(x,y)=col(i)
+        feld(sw+x,sh+y)=i
+      ENDIF
+    NEXT i
+  NEXT y
+NEXT x
+DO
   @showit
   @calcit
-  inc count
-loop
-quit
+  INC count
+LOOP
+QUIT
 
-procedure calcit
-   for x=1 to bw-2
-     for y=1 to bh-2
-        sum=ofeld(x-1,y)+ofeld(x-1,y-1)+ofeld(x,y-1)+ofeld(x+1,y-1)+ofeld(x+1,y)+ofeld(x+1,y+1)+ofeld(x,y+1)+ofeld(x-1,y+1)
-        feld(x,y)=(sum mod nc)
-     next y
-   next x
-return
+PROCEDURE calcit
+  FOR x=1 TO bw-2
+    FOR y=1 TO bh-2
+      sum=ofeld(x-1,y)+ofeld(x-1,y-1)+ofeld(x,y-1)+ofeld(x+1,y-1)+ofeld(x+1,y)+ofeld(x+1,y+1)+ofeld(x,y+1)+ofeld(x-1,y+1)
+      feld(x,y)=(sum MOD nc)
+    NEXT y
+  NEXT x
+RETURN
 
-procedure showit
-  color col(0)
-  pbox 0,0,bw*s,bh*s
-   for x=0 to bw-1
-     for y=0 to bh-1
-        color col(feld(x,y))
-	  pbox x*s,y*s,(x+1)*s-1,(y+1)*s-1
-
-	ofeld(x,y)=feld(x,y)
-     next y
-   next x
-   color col(nc-1)
-   text 20,s*bh+12,str$(count)
-   vsync
-return
+PROCEDURE showit
+  COLOR col(0)
+  PBOX 0,0,bw*s,bh*s
+  FOR x=0 TO bw-1
+    FOR y=0 TO bh-1
+      COLOR col(feld(x,y))
+      PBOX x*s,y*s,(x+1)*s-1,(y+1)*s-1
+      ofeld(x,y)=feld(x,y)
+    NEXT y
+  NEXT x
+  COLOR col(nc-1)
+  TEXT 20,s*bh+12,STR$(count)
+  VSYNC
+RETURN
 

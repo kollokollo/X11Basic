@@ -1,7 +1,7 @@
 ' Demonstration of the INLINE() function in X11-Basic
 ' this is a good way to include any (binary) data in your program.
 ' The encoding is done using inline.bas, which comes with the X11-Basic package
-' 
+'
 ' output of inline.bas for X11-Basic 23.04.2002
 ' demo 104 Bytes.
 demo$=""

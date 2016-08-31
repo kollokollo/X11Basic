@@ -17,11 +17,11 @@ DO
   x=RANDOM(64)
   y=RANDOM(64)
   FOR x=0 TO 63
-    FOR y=0 TO 63 
+    FOR y=0 TO 63
       r=MIN(SQR((rpx-x)^2+(rpy-y)^2),64)
       g=MIN(SQR((gpx-x)^2+(gpy-y)^2),64)
       b=MIN(SQR((bpx-x)^2+(bpy-y)^2),64)
-      c=COLOR_RGB(r/64,g/64,b/64) 
+      c=COLOR_RGB(r/64,g/64,b/64)
       IF c>=0
         COLOR c
       ENDIF

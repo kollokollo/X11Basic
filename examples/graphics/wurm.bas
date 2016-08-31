@@ -2,8 +2,8 @@
 ' (c) Markus Hoffmann V.1.08
 '
 DIM xkreis(25+1), ykreis(25+1)
-xkreis(1)=80/2                 
-ykreis(1)=24/2                 
+xkreis(1)=80/2
+ykreis(1)=24/2
 ri=0
 schwanz=1
 c=1
@@ -12,7 +12,7 @@ bw=320
 bh=200
 SIZEW ,bw,bh
 schwarz=COLOR_RGB(0,0,0)
-CLEARW 
+CLEARW
 go:
 TEXT 0,190,"Krieche wie ein Wurm ... und Du bist glücklich!  (c) Markus Hoffmann"
 DO
@@ -28,7 +28,7 @@ DO
     ADD ri,0.1745
   ELSE
     SUB ri,0.1745
-  ENDIF   
+  ENDIF
   neux=xkreis(altschwanz)+2*COS(ri)
   neuy=ykreis(altschwanz)+SIN(ri)
   neux=neux MOD bw

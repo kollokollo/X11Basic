@@ -24,50 +24,50 @@ ENDIF
 DO    ! ENGINE
   @render
   @minimap
-  if fadenkreuz%
-  COLOR weiss
-  circle scrw%/2,scrh%/2,20
-  line scrw%/2-30,scrh%/2,scrw%/2+30,scrh%/2
-  line scrw%/2,scrh%/2-30,scrw%/2,scrh%/2+30
-  endif
-keyagain:
+  IF fadenkreuz%
+    COLOR weiss
+    CIRCLE scrw%/2,scrh%/2,20
+    LINE scrw%/2-30,scrh%/2,scrw%/2+30,scrh%/2
+    LINE scrw%/2,scrh%/2-30,scrw%/2,scrh%/2+30
+  ENDIF
+  keyagain:
   COLOR gelb,schwarz
   TEXT 130,20,"w=forward, y=back, a=turn left, d=turn right"
   SHOWPAGE
   KEYEVENT a,b,k$
-  IF PX>=MW%-0.4 or Py>=MH%-0.4  ! WIN!
+  IF PX>=MW%-0.4 OR Py>=MH%-0.4  ! WIN!
     ALERT 1,"CONGRATULATIONS!||Play again?",1,"YES|NO",a%
-    IF a%=1 
-      RUN 
+    IF a%=1
+      RUN
     ENDIF
     QUIT
   ENDIF
   ' MOVEMENT
-  IF k$="q" or k$=chr$(27)
+  IF k$="q" OR k$=CHR$(27)
     ALERT 1,"Do you want to Quit?||",1,"YES|NO",a%
     IF a%=1
       QUIT
     ENDIF
   ELSE IF k$=" "
-    fadenkreuz%=not fadenkreuz% 
-  ELSE IF k$="d" 
+    fadenkreuz%=not fadenkreuz%
+  ELSE IF k$="d"
     ADD PLA,RS
-  ELSE IF k$="a" 
+  ELSE IF k$="a"
     SUB PLA,RS
   ELSE IF k$="w"
     IF MAP(PX+DX*2*MS+0.5,PY)=0
-      ADD PX,DX*MS  
+      ADD PX,DX*MS
     ENDIF
     IF MAP(PX,PY+DY*2*MS+0.5)=0
       ADD PY,DY*MS
     ENDIF
-    IF MAP(PX+DX*2*MS+0.5,PY)<>0 and MAP(PX,PY+DY*2*MS+0.5)<>0
+    IF MAP(PX+DX*2*MS+0.5,PY)<>0 AND MAP(PX,PY+DY*2*MS+0.5)<>0
       COLOR weiss
       TEXT scrw%/2-32,scrh%/2+4,"AUTSCH!!!"
       GOTO keyagain
     ENDIF
     ' Do not remove this line until compiler bug is fixed....
-  ELSE IF k$="y" 
+  ELSE IF k$="y"
     IF MAP(PX-DX*2*MS+0.5,PY)=0
       SUB px,DX*MS
     ENDIF
@@ -95,29 +95,29 @@ PROCEDURE render
     RDY=DY+DX*CX
     MX=INT(RX)
     MY=INT(RY)
-    if rdx=0
-      add rdx,0.001
-    endif
+    IF rdx=0
+      ADD rdx,0.001
+    ENDIF
     DDX=SQR(1+(RDY*RDY)/(RDX*RDX))
-    if rdy=0
-      add rdy,0.001
-    endif
+    IF rdy=0
+      ADD rdy,0.001
+    ENDIF
     DDY=SQR(1+(RDX*RDX)/(RDY*RDY))
-    IF RDX<0 
+    IF RDX<0
       STX=-1
-      SDX=(RX-MX)*DDX 
+      SDX=(RX-MX)*DDX
     ELSE
       STX=1
       SDX=(MX+1-RX)*DDX
     ENDIF
-    IF RDY<0 
+    IF RDY<0
       STY=-1
-      SDY=(RY-MY)*DDY 
+      SDY=(RY-MY)*DDY
     ELSE
       STY=1
       SDY=(MY+1-RY)*DDY
     ENDIF
-120:
+    120:
     IF SDX<SDY
       ADD SDX,DDX
       ADD MX,STX
@@ -133,14 +133,14 @@ PROCEDURE render
       OH1=scrh%/2
       OH2=scrh%/2
     ELSE
-      IF MAP(MX,MY)=0 
+      IF MAP(MX,MY)=0
         GOTO 120
       ENDIF
       '  HIT A WALL-WHICH?
-      IF S=0 
+      IF S=0
         PWD=ABS((MX-RX+(1-STX)/2)/RDX)
-        ADD S,2*abs(RDX<0) 
-      ELSE 
+        ADD S,2*abs(RDX<0)
+      ELSE
         PWD=ABS((MY-RY+(1-STY)/2)/RDY)
         ADD S,2*abs(RDY<0)
       ENDIF
@@ -184,43 +184,43 @@ PROCEDURE mazegen
   ' DIM OF=-1,-mw%,1,mw%
   POKE VARPTR(M$)+CC,ASC("0")
   STK$=MKL$(CC)
-340:
+  340:
   NN=0
   FOR N=1 TO 4
-    IF MID$(B$,CC+OF(N)+1)<>"1" 
+    IF MID$(B$,CC+OF(N)+1)<>"1"
       IF MID$(M$,CC+OF(N)*2+1)<>"0"
         NB(nn)=n
         INC NN
       ENDIF
     ENDIF
   NEXT N
-  if nn>1
-    color rot
-  else
-    color gelb
-  endif
-  box 4*(cc mod mw%),4*(cc div mw%),4*(cc mod mw%)+3,4*(cc div mw%)+3
-  showpage
-  IF NN>0 
+  IF nn>1
+    COLOR rot
+  ELSE
+    COLOR gelb
+  ENDIF
+  BOX 4*(cc MOD mw%),4*(cc DIV mw%),4*(cc MOD mw%)+3,4*(cc DIV mw%)+3
+  SHOWPAGE
+  IF NN>0
     O=OF(NB(INT(RANDOM(NN+1))))
-    if cc+o>0 and cc+o<len(m$)
+    IF cc+o>0 AND cc+o<len(m$)
       POKE VARPTR(M$)+CC+O,ASC("0")
-      line 4*(cc mod mw%)+2,4*(cc div mw%)+2,4*((cc+o) mod mw%)+2,4*((cc+o) div mw%)+2
-    endif
-    if cc+o*2>0 and cc+o*2<len(m$)
+      LINE 4*(cc MOD mw%)+2,4*(cc DIV mw%)+2,4*((cc+o) MOD mw%)+2,4*((cc+o) DIV mw%)+2
+    ENDIF
+    IF cc+o*2>0 AND cc+o*2<len(m$)
       POKE VARPTR(M$)+CC+O*2,ASC("0")
-    endif
-    if nn>1 and cc>0
+    ENDIF
+    IF nn>1 AND cc>0
       STK$=MKL$(CC)+STK$
-    endif
-    if cc+2*o>0 and cc+2*o<len(m$)
+    ENDIF
+    IF cc+2*o>0 AND cc+2*o<len(m$)
       ADD CC,O*2   ! new position
       GOTO 340
-    endif
+    ENDIF
   ENDIF
-  IF STK$<>"" 
+  IF STK$<>""
     CC=CVL(STK$)
-    STK$=right$(STK$,len(STK$)-4)
+    STK$=RIGHT$(STK$,LEN(STK$)-4)
     GOTO 340
   ENDIF
   FOR N=0 TO LEN(M$)-1
@@ -233,8 +233,8 @@ PROCEDURE mazegen
   MAP(mw%-1,mh%-2)=0
 RETURN
 PROCEDURE init_palette
-' SET UP PALETTE
-  dim palette(8)
+  ' SET UP PALETTE
+  DIM palette(8)
   rot=COLOR_RGB(1,0,0)
   gelb=COLOR_RGB(1,1,0)
   schwarz=COLOR_RGB(0,0,0)
@@ -259,7 +259,7 @@ PROCEDURE minimap
     FOR fy%=ay% TO MIN(ay%+mmh%,mh%-1)
       IF MAP(fx%,fy%)=0
         COLOR schwarz
-      ELSE 
+      ELSE
         COLOR metallic
       ENDIF
       PBOX (fx%-ax%)*8,(fy%-ay%)*8,(fx%-ax%)*8+7,(fy%-ay%)*8+7

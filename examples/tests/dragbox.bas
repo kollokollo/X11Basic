@@ -4,7 +4,7 @@
 gelb=COLOR_RGB(1,1,0)
 schwarz=COLOR_RGB(0,0,0)
 CLEARW
-do
+DO
   k=0
   TEXT 100,100,"DRAGBOX"
   SHOWPAGE
@@ -14,9 +14,9 @@ do
   ' set the starting point
   EXIT IF k>1   ! if right button was pressed, exit
   ' clear the event queue
-  while event?(64)
+  WHILE event?(64)
     MOTIONEVENT
-  wend
+  WEND
   DO
     MOTIONEVENT x,y,k
     COLOR gelb

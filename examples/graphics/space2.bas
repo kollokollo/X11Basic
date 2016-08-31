@@ -46,7 +46,7 @@ p01277$=p01277$+"%'%Z.LN>`D0@,$$$"
 p01277_bmp$=UNCOMPRESS$(INLINE$(p01277$))
 
 COLOR GET_COLOR(65535,65535,20000)
-CLEARW 
+CLEARW
 TEXT 200,30," S P A C E      von Markus Hoffmann "
 c%=0
 DO
@@ -54,7 +54,7 @@ DO
   COLOR schwarz
   PBOX 0,0,640,400
   COLOR weiss
-  FOR c%=0 to a%-1
+  FOR c%=0 TO a%-1
     z0=360*r%(c%)/1000
     v1=v%(c%)*(SQR((pkx(c%)-320)^2+(pky(c%)-200)^2)+0.1)*0.01
     ADD pkx(c%),SIN(rad(z0))*v1

@@ -2,23 +2,23 @@
 ' for X11-Basic V.1.22    MH 2014
 '
 
-dim a(3,3)
-clr odds,zeros
+DIM a(3,3)
+CLR odds,zeros
 
-for i=0 to 2500000
+FOR i=0 TO 2500000
   'A(0,0)=i AND 255
   'A(0,1)=shr(i,8) AND 255
   'A(1,0)=shr(i,16) AND 255
   'A(1,1)=shr(i,24) AND 255
-A(0,0)=random(256)
-A(0,1)=random(256)
-A(0,2)=random(256)
-A(1,0)=random(256)
-A(1,1)=random(256)
-A(1,2)=random(256)
-A(2,0)=random(256)
-A(2,1)=random(256)
-A(2,2)=random(256)
+  A(0,0)=RANDOM(256)
+  A(0,1)=RANDOM(256)
+  A(0,2)=RANDOM(256)
+  A(1,0)=RANDOM(256)
+  A(1,1)=RANDOM(256)
+  A(1,2)=RANDOM(256)
+  A(2,0)=RANDOM(256)
+  A(2,1)=RANDOM(256)
+  A(2,2)=RANDOM(256)
 
   d=DET(a()) mod 256
 

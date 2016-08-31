@@ -1,7 +1,6 @@
 ' Hier wird gezeigt, wie man externe Programmroutinen verwenden kann
 ' In diesem Fall eine Routine aus der bereits installierten libreadline
 
-
 t$="/usr/lib/i386-linux-gnu/libreadline.so"
 PRINT t$
 IF EXIST(t$)
@@ -13,7 +12,7 @@ IF EXIST(t$)
   WHILE PEEK(r)>0
     PRINT CHR$(PEEK(r));
     INC r
-  WEND 
+  WEND
   PRINT
   UNLINK #1
   FREE adr%

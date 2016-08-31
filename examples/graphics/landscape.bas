@@ -29,7 +29,7 @@ FOR chain=1 TO 6
   NEXT inc
   oldrange=range(0)
   COLOR COLOR_RGB(col/256,col/256,col/256)
-  FOR i= 0 TO 599
+  FOR i=0 TO 599
     LINE i-1,oldrange+lowmount,i,range(i)+lowmount
     LINE i-1,oldrange+lowmount,i-1,600
     oldrange=range(i)
@@ -52,7 +52,6 @@ SHOWPAGE
 KEYEVENT
 QUIT
 
-
 PROCEDURE myRnd
   seed=(221*seed)+2113
   seed=seed-(INT(seed/10000)*10000)
@@ -64,7 +63,7 @@ PROCEDURE perlin
   seed=seed-(INT(seed/10000)*10000)
   a=seed/10000
   pointb=a
-  FOR zz= 1 TO frequency
+  FOR zz=1 TO frequency
     pointa=pointb
     @myRnd
     pointb=a

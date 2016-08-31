@@ -8,7 +8,7 @@ DO
   READ p
   SOUND 1,f
   PAUSE p/700
-LOOP 
+LOOP
 SOUND 1,0
 QUIT
 

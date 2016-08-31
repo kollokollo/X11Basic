@@ -1,34 +1,33 @@
-' test of fork command 
+' test of fork command
 ' X11-Basic Version 1.14 (c) Markus Hoffmann
-' 
+'
 
-pipe #1,#2
-
+PIPE #1,#2
 
 a=fork()
-if a=0    ! Child instance
-  gprint "Hi, I am Child !",b
-  do
-    vsync
-    lineinput #1,t$
-    gprint t$
-  loop
+IF a=0    ! Child instance
+  GPRINT "Hi, I am Child !",b
+  DO
+    VSYNC
+    LINEINPUT #1,t$
+    GPRINT t$
+  LOOP
   ' This instance never ends ...
-else if a=-1  
-  print "ERROR, fork() failed !"
-  quit
-else      ! parent instance
-  do
-  dump
-  alert 1,"Hi, I am Parent. Child PID="+str$(a),1," OK | Kill Child ! ",b
-  dump
-  print #2,system$("date")
-  flush #2
-  if b=2
-    system "kill "+str$(a)
-    alert 1,"Child PID="+str$(a)+" killed !",1," OK ",b
-    quit
-  endif
-  loop
-endif
-quit
+ELSE if a=-1
+  PRINT "ERROR, fork() failed !"
+  QUIT
+ELSE      ! parent instance
+  DO
+    DUMP
+    ALERT 1,"Hi, I am Parent. Child PID="+STR$(a),1," OK | Kill Child ! ",b
+    DUMP
+    PRINT #2,system$("date")
+    FLUSH #2
+    IF b=2
+      SYSTEM "kill "+STR$(a)
+      ALERT 1,"Child PID="+STR$(a)+" killed !",1," OK ",b
+      QUIT
+    ENDIF
+  LOOP
+ENDIF
+QUIT

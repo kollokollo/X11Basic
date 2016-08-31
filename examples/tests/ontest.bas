@@ -1,32 +1,31 @@
-print "test of on x gosub ..."
-print "Input x=";
+PRINT "test of on x gosub ..."
+PRINT "Input x=";
 a=0
-input a
+INPUT a
 
-on a+1 gosub hallo,ja(1.3),hier,auch
-on a+1 goto 1,2,3,4
+ON a+1 gosub hallo,ja(1.3),hier,auch
+ON a+1 goto 1,2,3,4
 
-quit
+QUIT
 1:
-print "1"
+PRINT "1"
 2:
-print "2"
+PRINT "2"
 3:
-print "3"
+PRINT "3"
 4:
-print "4"
-quit
+PRINT "4"
+QUIT
 
-
-procedure hallo
-  print "Hallo"
-return
-procedure ja(n)
-  print "Ja "+str$(n)
-return
-procedure hier
-  print "hier"
-return
-procedure auch
-  print "auch"
-return
+PROCEDURE hallo
+  PRINT "Hallo"
+RETURN
+PROCEDURE ja(n)
+  PRINT "Ja "+STR$(n)
+RETURN
+PROCEDURE hier
+  PRINT "hier"
+RETURN
+PROCEDURE auch
+  PRINT "auch"
+RETURN

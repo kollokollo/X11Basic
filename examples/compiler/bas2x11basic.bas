@@ -38,9 +38,9 @@ WHILE LEN(PARAM$(i))
   ENDIF
   INC i
 WEND
-if (WIN32? or ANDROID?) and (len(inputfile$)=0 or inputfile$="bas2x11basic.bas")
-  fileselect "Load ANSI basic program","./*.bas","ANSI.bas",inputfile$
-endif
+IF (WIN32? OR ANDROID?) AND (LEN(inputfile$)=0 OR inputfile$="bas2x11basic.bas")
+  FILESELECT "Load ANSI basic program","./*.bas","ANSI.bas",inputfile$
+ENDIF
 IF LEN(inputfile$)
   rumpf$=inputfile$
   WHILE LEN(rumpf$)
@@ -55,7 +55,7 @@ IF LEN(inputfile$)
     ELSE
       @convert
     ENDIF
-  ELSE 
+  ELSE
     PRINT f$+": file not recognized: File format not recognized"
   ENDIF
 ELSE
@@ -78,10 +78,10 @@ PROCEDURE convert
   anzprocs=0
   anzline=0
   OPEN "O",#2,outputfilename$
-  ! xxx original header:
-#  PRINT #2,"' bas2x11basic V.1.10 ("+f$+")"
-#  PRINT #2,"'	   (c) Markus Hoffmann "+date$+" "+time$
-  ! xxx new suggested header:
+  ' xxx original header:
+  '  PRINT #2,"' bas2x11basic V.1.10 ("+f$+")"
+  '  PRINT #2,"'	   (c) Markus Hoffmann "+date$+" "+time$
+  ' xxx new suggested header:
   PRINT #2,"' "+outputfilename$
   PRINT #2,"' ";@iso_time$()
   PRINT #2,"' Automatic conversion of "+f$+" to X11-Basic"
@@ -112,10 +112,10 @@ PROCEDURE convert
   PRINT #2,"' ";anzlabel;" labels."
   PRINT #2,"' ";anzprocs;" procs."
   PRINT #2,"' ----- Start of program -----"
- ' PASS 2
+  ' PASS 2
   PRINT "PASS 2"
   pass=2
-  
+
   FOR i=0 TO anzline-1
     flag=0
     lln=linenr(i)
@@ -169,10 +169,10 @@ PROCEDURE processline(t$)
 RETURN
 PROCEDURE processifline(t$)
   LOCAL ifauf,a$,b$
-' xxx why is this in the original?, it seems debugging code:
-'  IF pass<>1
-'    PRINT #2,"' "+t$
-'  ENDIF
+  ' xxx why is this in the original?, it seems debugging code:
+  ' IF pass<>1
+  '   PRINT #2,"' "+t$
+  ' ENDIF
   t$=REPLACE$(t$,", ",",")
   WHILE LEN(t$)
     WORT_SEP t$,":",1,b$,t$
@@ -192,34 +192,34 @@ PROCEDURE processifline(t$)
     IF UPPER$(b$)="IF"
       WORT_SEP a$,"THEN ",1,a$,c$
       IF LEN(c$)=0
-	WORT_SEP a$," ",1,a$,c$
+        WORT_SEP a$," ",1,a$,c$
       ENDIF
       IF pass<>1
-        PRINT #2,"IF "+a$ 
+        PRINT #2,"IF "+a$
       ENDIF
-      
+
       IF LEN(c$)
-	WORT_SEP c$,"ELSE ",1,c$,d$
-	IF c$=STR$(VAL(c$))
+        WORT_SEP c$,"ELSE ",1,c$,d$
+        IF c$=STR$(VAL(c$))
           @processcommand("GOTO "+c$)
-	ELSE
+        ELSE
           @processcommand(c$)
         ENDIF
-	IF LEN(d$)
-	  IF pass<>1
-	    PRINT #2,"ELSE"
-	  ENDIF
-	  IF d$=STR$(VAL(d$))
+        IF LEN(d$)
+          IF pass<>1
+            PRINT #2,"ELSE"
+          ENDIF
+          IF d$=STR$(VAL(d$))
             @processcommand("GOTO "+d$)
-	  ELSE
+          ELSE
             @processcommand(d$)
           ENDIF
-	ENDIF
+        ENDIF
         ifauf=1
-      ENDIF	  
+      ENDIF
     ELSE
       @processcommand(b$+" "+a$)
-    ENDIF	
+    ENDIF
   WEND
   IF ifauf
     IF pass<>1
@@ -238,7 +238,7 @@ PROCEDURE processcommand(b$)
       labeling(anzlabel)=VAL(a$)
       INC anzlabel
     ELSE
-      PRINT #2,b$;" L";a$+" "+c$         
+      PRINT #2,b$;" L";a$+" "+c$
     ENDIF
   ELSE IF UPPER$(b$)="GOSUB"
     WORT_SEP a$," ",1,a$,c$
@@ -246,36 +246,36 @@ PROCEDURE processcommand(b$)
       procs(anzprocs)=VAL(a$)
       INC anzprocs
     ELSE
-      PRINT #2,"@P";a$+" "+c$         
+      PRINT #2,"@P";a$+" "+c$
     ENDIF
   ELSE IF UPPER$(b$)="IF"
-#    PRINT #2,"' ERROR: No if here !" ! xxx original
+    '    PRINT #2,"' ERROR: No if here !" ! xxx original
     @processifline(b$+" "+a$) ! xxx new
   ELSE
     IF pass>1
       PRINT #2,b$;" ";a$
-    ENDIF	
+    ENDIF
   ENDIF
 RETURN
 
-function yyyymmddhhmmss$() ! xxx new, only for debugging
-  local year$,month$,day$,hour$,minute$,second$
-  year$=right$(date$,4)
-  month$=left$(date$,2)
-  day$=mid$(date$,4,2)
-  hour$=left$(time$,2)
-  minute$=mid$(time$,4,2)
-  second$=right$(time$,2)
-  return year$+month$+day$+hour$+minute$+second$
-endfunction
+FUNCTION yyyymmddhhmmss$() ! xxx new, only for debugging
+  LOCAL year$,month$,day$,hour$,minute$,second$
+  year$=RIGHT$(date$,4)
+  month$=LEFT$(date$,2)
+  day$=MID$(date$,4,2)
+  hour$=LEFT$(time$,2)
+  minute$=MID$(time$,4,2)
+  second$=RIGHT$(time$,2)
+  RETURN year$+month$+day$+hour$+minute$+second$
+ENDFUNCTION
 
-function iso_time$() ! xxx new, just a suggestion
-  local year$,month$,day$,hour$,minute$,second$
-  year$=right$(date$,4)
-  month$=left$(date$,2)
-  day$=mid$(date$,4,2)
-  hour$=left$(time$,2)
-  minute$=mid$(time$,4,2)
-  second$=right$(time$,2)
-  return year$+"-"+month$+"-"+day$+" "+hour$+":"+minute$+":"+second$
-endfunction
+FUNCTION iso_time$() ! xxx new, just a suggestion
+  LOCAL year$,month$,day$,hour$,minute$,second$
+  year$=RIGHT$(date$,4)
+  month$=LEFT$(date$,2)
+  day$=MID$(date$,4,2)
+  hour$=LEFT$(time$,2)
+  minute$=MID$(time$,4,2)
+  second$=RIGHT$(time$,2)
+  RETURN year$+"-"+month$+"-"+day$+" "+hour$+":"+minute$+":"+second$
+ENDFUNCTION

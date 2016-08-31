@@ -7,39 +7,39 @@ a()=[0,1,2,3;4,5,6;7,8,9;10,11,12,13,14,15, \
 PRINT "Assign a string constant to b$():"
 b$()=["Hallo","Das","ist","ein","Test";"1Hallo","1Das";"Jajaj"]
 
-dump
-print "b$()="
-for i=0 to 2
-  for j=0 to 4
-    print enclose$(b$(i,j));" ";
-  next j
-  print
-next i
+DUMP
+PRINT "b$()="
+FOR i=0 TO 2
+  FOR j=0 TO 4
+    PRINT enclose$(b$(i,j));" ";
+  NEXT j
+  PRINT
+NEXT i
 
-print "a()="
-for i=0 to 3
-  for j=0 to 15
-    print a(i,j);" ";
-  next j
-  print
-next i
+PRINT "a()="
+FOR i=0 TO 3
+  FOR j=0 TO 15
+    PRINT a(i,j);" ";
+  NEXT j
+  PRINT
+NEXT i
 
-print
+PRINT
 ' Redimension without altering the content
-dim a(6,6,100)
-print "a()="
+DIM a(6,6,100)
+PRINT "a()="
 a(4,5,0)=-1
-for i=0 to 5
-  for j=0 to 5
-    print a(i,j,0);" ";
-  next j
-  print
-next i
-dim a(6)
-print
-print "a()="
-  for j=0 to 5
-    print a(j);" ";
-  next j
-print
-quit
+FOR i=0 TO 5
+  FOR j=0 TO 5
+    PRINT a(i,j,0);" ";
+  NEXT j
+  PRINT
+NEXT i
+DIM a(6)
+PRINT
+PRINT "a()="
+FOR j=0 TO 5
+  PRINT a(j);" ";
+NEXT j
+PRINT
+QUIT

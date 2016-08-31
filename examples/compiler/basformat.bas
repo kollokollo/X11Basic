@@ -69,19 +69,19 @@ PROCEDURE convert
     CLR comcount
     CLR comment$
     ' Leerzeichen vorne und hinten entfernen.
-    WHILE left$(t$)=" " OR left$(t$)=CHR$(9)
+    WHILE left$(t$)=" " OR LEFT$(t$)=CHR$(9)
       t$=RIGHT$(t$,LEN(t$)-1)
     WEND
-    WHILE right$(t$)=" " OR right$(t$)=CHR$(9)
+    WHILE right$(t$)=" " OR RIGHT$(t$)=CHR$(9)
       t$=LEFT$(t$,LEN(t$)-1)
     WEND
-    IF left$(t$)<>"'" AND left$(t$)<>"#" AND left$(t$)<>"!"
+    IF left$(t$)<>"'" AND LEFT$(t$)<>"#" AND LEFT$(t$)<>"!"
       ' Nach Kommentaren hinter der Zeile suchen.
       SPLIT t$,"!",1,w1$,w2$    ! Hier ist ein Kommentar hinter der Zeile
       IF len(w2$)
         ' Zaehle die Leerzeichen vor dem Kommentar
         t$=w1$
-        WHILE right$(t$)=" " OR right$(t$)=CHR$(9)
+        WHILE right$(t$)=" " OR RIGHT$(t$)=CHR$(9)
           IF right$(t$)=CHR$(9)
             ADD comcount,7
           ENDIF
@@ -95,16 +95,16 @@ PROCEDURE convert
       @lineout(t$)     !  Kommentar rausschreiben
     ENDIF
     IF len(t$)
-      IF left$(t$)="#" OR left$(t$)="'" OR left$(t$)="!"
+      IF left$(t$)="#" OR LEFT$(t$)="'" OR LEFT$(t$)="!"
       ELSE
-        IF left$(t$)="&" OR left$(t$)="@" OR left$(t$)="~"
+        IF left$(t$)="&" OR LEFT$(t$)="@" OR LEFT$(t$)="~"
           @lineout(t$)
         ELSE
           SPLIT t$," ",TRUE,a$,t$
-          IF len(t$) AND left$(t$)="="
+          IF len(t$) AND LEFT$(t$)="="
             a$=a$+t$
           ENDIF
-          IF upper$(a$)="REM" OR upper$(a$)="DATA"
+          IF upper$(a$)="REM" OR UPPER$(a$)="DATA"
             @lineout(upper$(a$)+" "+t$)
           ELSE
             FOR i=0 TO DIM?(levelin$())-1
@@ -119,11 +119,11 @@ PROCEDURE convert
                 BREAK
               ENDIF
             NEXT i
-            IF upper$(a$)="RETURN" AND len(t$)
+            IF upper$(a$)="RETURN" AND LEN(t$)
               INC level
             ENDIF
             IF len(t$)=0
-              IF INSTR(a$,"=") OR right$(a$)=":"
+              IF INSTR(a$,"=") OR RIGHT$(a$)=":"
                 @lineout(@rep$(a$))
               ELSE
                 @lineout(UPPER$(a$))

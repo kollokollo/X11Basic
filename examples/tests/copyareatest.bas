@@ -3,20 +3,20 @@ CLEARW 1
 COLOR COLOR_RGB(1,1,0)
 PCIRCLE 400,10,10
 COLOR COLOR_RGB(1,0,0)
-FOR i=0 to 5
-  pcircle i*20+10,4,4
-  line i*20+10,4,i*20+10-2*i,20
-  line i*20+10,4,i*20+10+2*i,20
-  copyarea i*20,0,20,20,(10-i)*20,0
-  print i
-next i
+FOR i=0 TO 5
+  PCIRCLE i*20+10,4,4
+  LINE i*20+10,4,i*20+10-2*i,20
+  LINE i*20+10,4,i*20+10+2*i,20
+  COPYAREA i*20,0,20,20,(10-i)*20,0
+  PRINT i
+NEXT i
 
 COLOR COLOR_RGB(1,1,0)
 LINE 150,4,150,0
-FOR i=0 to 10
-  color get_color(i*6553,32000+i*6553/2,i*6553)
-  pcircle 350+i/3,20-i/3,20-2*i
-next i
+FOR i=0 TO 10
+  COLOR get_color(i*6553,32000+i*6553/2,i*6553)
+  PCIRCLE 350+i/3,20-i/3,20-2*i
+NEXT i
 COPYAREA 330,0,40,40,200,200
 TEXT 100,170,"Copyarea mit XBASIC V.1.03   (c) Markus Hoffmann"
 i=0

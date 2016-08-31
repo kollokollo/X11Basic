@@ -1,9 +1,9 @@
 ' savescreen Test for X11-basic (c) Markus hoffmann 2008-01-19
-' 
+'
 ' In the framebuffer-version (TomTom, Android, etc.) the file format is
 ' .bmp 24 Bit, under linux/UNIX it is XWD
-' 
-' demonstrates the use of SGET, SPUT, GET, PUT, SAVEWINDOW, SAVESCREEN 
+'
+' demonstrates the use of SGET, SPUT, GET, PUT, SAVEWINDOW, SAVESCREEN
 '
 ' Following files are produced:
 '  small.bmp      -- a 100x100 area of the graphics window
@@ -24,7 +24,7 @@ GET 0,0,100,100,a$
 BSAVE "small.bmp",VARPTR(a$),LEN(a$)
 PUT 200,200,a$
 SHOWPAGE
-pause 3
+PAUSE 3
 SGET b$
 BSAVE "sget.bmp",VARPTR(b$),LEN(b$)
 

@@ -1,10 +1,10 @@
-' It's taken from some javascript code here: 
+' It's taken from some javascript code here:
 ' http://www.playfuljs.com/realistic-terrain-in-130-lines/
 '
-' Though I've modified it somewhat; 
+' Though I've modified it somewhat;
 '
 ' Automatic conversion of tg.bas (SpecBAS) to X11-Basic
-' by bas2x11basic V.1.11 
+' by bas2x11basic V.1.11
 
 ' ----- Start of program -----
 REM TERRAIN GENERATOR by ZXDUNNY
@@ -17,20 +17,20 @@ FOR F%=0 TO 255
   palette%(f%)=COLOR_RGB(f%/256,f%/256,f%/256)
   waterpalette%(f%)=COLOR_RGB(f%/600,f%/400,f%/200)
 NEXT f%
-showpage
-pause 0.4
+SHOWPAGE
+PAUSE 0.4
 GET_GEOMETRY 1,bx%,by%,bw%,bh%
-print bx%,by%,bw%,bh%
+PRINT bx%,by%,bw%,bh%
 x0%=bw%/2
 y0%=bh%/2
 GOTO L200
 PROCEDURE L30
   CLR N,p%
-  IF x%>=s% AND y%>=s% 
+  IF x%>=s% AND y%>=s%
     ADD N,L(x%-s%,y%-s%)
     INC p%
   ENDIF
-  IF x%+s%<=mx% AND y%>s% 
+  IF x%+s%<=mx% AND y%>s%
     ADD N,L(x%+s%,y%-s%)
     INC p%
   ENDIF
@@ -38,23 +38,23 @@ PROCEDURE L30
     ADD N,L(x%+s%,y%+s%)
     INC p%
   ENDIF
-  IF x%>=s% AND y%+s%<=mx% 
+  IF x%>=s% AND y%+s%<=mx%
     ADD N,L(x%-s%,y%+s%)
     INC p%
   ENDIF
   L(x%,y%)=(N/p%)+O
-RETURN 
+RETURN
 PROCEDURE L80
   CLR N,p%
   IF y%>=s%
     ADD N,L(x%,y%-s%)
     INC p%
   ENDIF
-  IF x%+s%<=mx% 
+  IF x%+s%<=mx%
     ADD N,L(x%+s%,y%)
     INC p%
   ENDIF
-  IF y%+s%<=mx% 
+  IF y%+s%<=mx%
     ADD N,L(x%,y%+s%)
     INC p%
   ENDIF
@@ -63,7 +63,7 @@ PROCEDURE L80
     INC p%
   ENDIF
   L(x%,y%)=(N/p%)+O
-RETURN 
+RETURN
 PROCEDURE DIVIDE(sz%)
   IF sz%<2
     RETURN
@@ -117,7 +117,7 @@ FOR x%=0 TO mx%
   NEXT y%
 NEXT x%
 WL=(mxp%-mn%)*WATER
-print "Terrain: [";mn%;":";mxp%;"] Water: ";WL
+PRINT "Terrain: [";mn%;":";mxp%;"] Water: ";WL
 FOR x%=0 TO mx%
   FOR y%=0 TO mx%
     SUB L(x%,y%),mn%
@@ -144,7 +144,7 @@ FOR y%=0 TO m%
     @L370
     BRX=RX+1
     BRY=RY
-    IF TLY>BRY 
+    IF TLY>BRY
       GOTO L350
     ENDIF
     i%=16+(16*(y%=m%))
@@ -163,7 +163,7 @@ FOR y%=0 TO m%
   SHOWPAGE
 NEXT y%
 GOTO L200
-STOP 
+STOP
 PROCEDURE L370
   PX=(sz%+tx%-ty%)/2
   PY=(tx%+ty%)/2
@@ -172,7 +172,7 @@ PROCEDURE L370
   Y1=(sz%-PY)*0.010+1
   RX=x0%+X1/Y1
   RY=y0%+Z/Y1
-RETURN 
+RETURN
 ' ----- End of program -----
 PROCEDURE status
   PRINT AT(3,1);INT((pct%/mxp%)*100);"% Completed"

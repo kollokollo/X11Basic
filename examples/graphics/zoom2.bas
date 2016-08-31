@@ -8,15 +8,15 @@ posy=200
 s=sin(winkel)*faktor
 c=cos(winkel)*faktor
 
-for x=0 to 639 
-  for y=0 to 399
+FOR x=0 TO 639
+  FOR y=0 TO 399
     ox=c*x+s*y+posx
     oy=-s*x+c*y+posy
-    rootwindow
+    ROOTWINDOW
     a=point(ox,oy)
-    usewindow 1
-    color a
-    plot x,y
-  next y
-  vsync
-next x
+    USEWINDOW 1
+    COLOR a
+    PLOT x,y
+  NEXT y
+  VSYNC
+NEXT x

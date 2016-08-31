@@ -20,4 +20,4 @@ DEFLINE 0,5
 CIRCLE 320,200,190
 ALERT 2,"ALERT-Test 2",1,"but1|but2",a%
 PRINT "ALERT-BOX 2  return value =";a%
-quit
+QUIT

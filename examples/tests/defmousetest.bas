@@ -13,7 +13,7 @@ i=0
 COLOR gelb,schwarz
 DO
   DEFMOUSE i
-  TEXT 190,160,str$(i)+" "
+  TEXT 190,160,STR$(i)+" "
   SHOWPAGE
   MOUSEEVENT x,y,k
   IF k=1

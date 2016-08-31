@@ -13,7 +13,7 @@ weiss=COLOR_RGB(1,1,1)
 t=TIMER
 zc=0
 COLOR GET_COLOR(65535,65535,20000)
-CLEARW 
+CLEARW
 TEXT 200,30," S P A C E      von Markus Hoffmann "
 c%=0
 bw=640
@@ -46,7 +46,7 @@ DO
     v%(c%)=RANDOM(5)+3
   ENDIF
   INC c%
- ' print c%,a%,zc
+  ' print c%,a%,zc
   IF c%>a%
     INC zc
     SHOWPAGE

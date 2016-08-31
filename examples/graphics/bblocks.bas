@@ -1,4 +1,4 @@
-' sinecube 2006 mennonite 
+' sinecube 2006 mennonite
 ' public domain
 ' 2015-08-20 begin Smb translation
 ' converted to X11-Basic 2015
@@ -26,11 +26,11 @@ FOR l=8*32 TO 1 STEP -8
   FOR y%=4 TO 4*32 STEP 4
     h2%=y%+l+4
     FOR x=8*32 TO 1 STEP -8
-      IF 1=SGN(SIN(x*y%*l*3.14))           ! not PI !
+      IF 1=SGN(SIN(x*y%*l*3.14)) ! not PI !
         h1%=x+y%-3
         FOR by%=0 TO 10
           FOR bx%=0 TO 10
-	    a%=ASC(MID$(b$,by%*11+bx%+1))
+            a%=ASC(MID$(b$,by%*11+bx%+1))
             IF a%<>ASC(".")
               COLOR colors(a% MOD 16+(y% MOD 2))
               PLOT bx%+h1%,by%+h2%

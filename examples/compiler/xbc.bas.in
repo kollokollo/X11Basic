@@ -31,63 +31,63 @@ docomments=FALSE
 librarypath$="@prefix@/lib"
 CLR inputfile$,dyn,collect$
 outputfilename$="b.out"
-WHILE LEN(param$(i))
-  IF LEFT$(param$(i))="-"
-    IF param$(i)="--help" OR param$(i)="-h"
+WHILE LEN(PARAM$(i))
+  IF LEFT$(PARAM$(i))="-"
+    IF param$(i)="--help" OR PARAM$(i)="-h"
       @intro
       @using
-    ELSE IF param$(i)="--version"
+    ELSE IF PARAM$(i)="--version"
       @intro
       QUIT
-    ELSE IF param$(i)="--dynamic"
+    ELSE IF PARAM$(i)="--dynamic"
       dyn=TRUE
-    ELSE IF param$(i)="--pseudo"
+    ELSE IF PARAM$(i)="--pseudo"
       virtualm=false
       bytecode=false
-    ELSE IF param$(i)="-win32"
+    ELSE IF PARAM$(i)="-win32"
       win32=TRUE
-      if outputfilename$="b.out"
+      IF outputfilename$="b.out"
         outputfilename$="b.exe"
-      endif
-    ELSE IF param$(i)="--win32"
+      ENDIF
+    ELSE IF PARAM$(i)="--win32"
       win32=TRUE
-      if outputfilename$="b.out"
+      IF outputfilename$="b.out"
         outputfilename$="b.exe"
-      endif
-    ELSE IF param$(i)="--bytecode"
+      ENDIF
+    ELSE IF PARAM$(i)="--bytecode"
       bytecode=true
-    ELSE IF param$(i)="-bytecode"
+    ELSE IF PARAM$(i)="-bytecode"
       bytecode=true
-    ELSE IF param$(i)="--virtualm"
+    ELSE IF PARAM$(i)="--virtualm"
       virtualm=true
-    ELSE IF param$(i)="-virtualm"
+    ELSE IF PARAM$(i)="-virtualm"
       virtualm=true
-    ELSE IF param$(i)="-b"
+    ELSE IF PARAM$(i)="-b"
       precomponly=TRUE
       compileonly=TRUE
-    ELSE IF param$(i)="-c"
+    ELSE IF PARAM$(i)="-c"
       compileonly=TRUE
-    ELSE IF param$(i)="-C"
+    ELSE IF PARAM$(i)="-C"
       docomments=TRUE
-    ELSE IF param$(i)="-l"
+    ELSE IF PARAM$(i)="-l"
       lflag=TRUE
-    ELSE IF param$(i)="-s"
+    ELSE IF PARAM$(i)="-s"
       dostrip=TRUE
-    ELSE IF param$(i)="-L"
+    ELSE IF PARAM$(i)="-L"
       INC i
-      IF LEN(param$(i))
-        librarypath$=param$(i)
+      IF LEN(PARAM$(i))
+        librarypath$=PARAM$(i)
       ENDIF
-    ELSE IF param$(i)="-o"
+    ELSE IF PARAM$(i)="-o"
       INC i
-      IF LEN(param$(i))
-        outputfilename$=param$(i)
+      IF LEN(PARAM$(i))
+        outputfilename$=PARAM$(i)
       ENDIF
-    else 
-      collect$=collect$+param$(i)+" " 
+    ELSE
+      collect$=collect$+PARAM$(i)+" "
     ENDIF
   ELSE
-    inputfile$=param$(i)
+    inputfile$=PARAM$(i)
     IF NOT EXIST(inputfile$)
       PRINT "xbc: "+inputfile$+": file or path not found"
       CLR inputfile$
@@ -97,23 +97,23 @@ WHILE LEN(param$(i))
 WEND
 IF LEN(inputfile$)
   rumpf$=inputfile$
-  while len(rumpf$)
+  WHILE len(rumpf$)
     SPLIT rumpf$,"/",1,a$,rumpf$
-  wend
+  WEND
   f$=a$
   rumpf$=a$
   SPLIT a$,".",1,rumpf$,typ$
-  if typ$="o"
+  IF typ$="o"
     @link
-  else if typ$="b"
+  ELSE if typ$="b"
     @compilevm
-    if not compileonly
+    IF not compileonly
       @link
     ENDIF
-  ELSE IF typ$="bas" or typ$="xbas"
+  ELSE IF typ$="bas" OR typ$="xbas"
     IF virtualm OR bytecode
       @dobytecode
-    ENDIF  
+    ENDIF
     IF virtualm
       @compilevm
     ELSE
@@ -122,7 +122,7 @@ IF LEN(inputfile$)
     IF NOT compileonly
       @link
     ENDIF
-  ELSE 
+  ELSE
     PRINT f$+": file not recognized: File format not recognized"
   ENDIF
 ELSE
@@ -130,7 +130,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2013"
+  PRINT "X11-Basic Compiler V.@version@ (c) Markus Hoffmann 2002-2016"
   VERSION
 RETURN
 PROCEDURE using
@@ -155,39 +155,39 @@ PROCEDURE using
   PRINT "  -o <file>                Place the output into <file>"
 RETURN
 PROCEDURE dobytecode
-  local extra$
-  clr extra$
-  if docomments
+  LOCAL extra$
+  CLR extra$
+  IF docomments
     extra$=extra$+"-c "
-  endif
-  if dostrip AND NOT virtualm
+  ENDIF
+  IF dostrip AND NOT virtualm
     extra$=extra$+"-s "
-  endif
+  ENDIF
   SYSTEM "xbbc "+extra$+" -o "+rumpf$+".b"+" "+inputfile$
 RETURN
 PROCEDURE compilevm
-  if lflag
-    system "xb2c -l -o "+rumpf$+".c"+" "+rumpf$+".b"
-  else
-    system "xb2c -o "+rumpf$+".c"+" "+rumpf$+".b"
-  endif
+  IF lflag
+    SYSTEM "xb2c -l -o "+rumpf$+".c"+" "+rumpf$+".b"
+  ELSE
+    SYSTEM "xb2c -o "+rumpf$+".c"+" "+rumpf$+".b"
+  ENDIF
   IF NOT precomponly
-    if win32
-      system "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
-    else
-      if lflag
-        system "@CC@ @copt@ -DNOMAIN -c "+rumpf$+".c"
-      else
-        system "@CC@ @copt@ -c "+rumpf$+".c"
-      endif
-    endif
+    IF win32
+      SYSTEM "i686-pc-mingw32-gcc @copt@ -c "+rumpf$+".c"
+    ELSE
+      IF lflag
+        SYSTEM "@CC@ @copt@ -DNOMAIN -c "+rumpf$+".c"
+      ELSE
+        SYSTEM "@CC@ @copt@ -c "+rumpf$+".c"
+      ENDIF
+    ENDIF
     KILL rumpf$+".c"
     KILL rumpf$+".b"
   ENDIF
 RETURN
 
 PROCEDURE compile
-  local linecount
+  LOCAL linecount
   linecount=0
   OPEN "O",#2,rumpf$+".c"
   PRINT #2,"/* PSEUDO-Code.c ("+f$+")"
@@ -222,18 +222,18 @@ PROCEDURE compile
       IF LEFT$(t$)<>"'"
         SPLIT t$," !",1,t$,b$
         IF LEFT$(t$,6)="PRINT "
-          t$="? "+right$(t$,len(t$)-6)
+          t$="? "+RIGHT$(t$,LEN(t$)-6)
         ELSE IF LEFT$(t$,6)="GOSUB "
-          t$="@"+right$(t$,len(t$)-6)
+          t$="@"+RIGHT$(t$,LEN(t$)-6)
         ELSE IF LEFT$(t$,5)="VOID "
-          t$="~"+right$(t$,len(t$)-5)
+          t$="~"+RIGHT$(t$,LEN(t$)-5)
         ENDIF
-        t$=REPLACE$(t$,chr$(34),"##AN"+"F##")
+        t$=REPLACE$(t$,CHR$(34),"##AN"+"F##")
         t$=REPLACE$(t$,"\","##BACKS"+"LASH##")
         t$=REPLACE$(t$,"##A"+"NF##","\042")
         t$=REPLACE$(t$,"##BACK"+"SLASH##","\\")
         PRINT #2,ENCLOSE$(t$)+","
-	inc linecount
+        INC linecount
       ENDIF
     ENDIF
   WEND
@@ -251,18 +251,18 @@ PROCEDURE compile
     PRINT #2,"init_program(prglen);c_run("");c_gosub(n);programmlauf();"
     PRINT #2,"program=oldprogram;prglen=oldprglen;"
     PRINT #2,"return(returnvalue.f);}"
-  ELSE 
+  ELSE
     ' PRINT #2,"int prglen=sizeof(program)/sizeof(char *);"
-    PRINT #2,"int prglen="+str$(linecount)+";"
+    PRINT #2,"int prglen="+STR$(linecount)+";"
     IF win32
       PRINT #2,"#include <windows.h>"
-      print #2,"HINSTANCE hInstance;"
+      PRINT #2,"HINSTANCE hInstance;"
     ENDIF
     PRINT #2,"main(int anzahl, char *argumente[]){"
     IF win32
       PRINT #2,"hInstance=GetModuleHandle(NULL);"
     ENDIF
-    PRINT #2,"x11basicStartup(); set_input_mode(1,0);" 
+    PRINT #2,"x11basicStartup(); set_input_mode(1,0);"
     PRINT #2,"atexit(reset_input_mode);"
     PRINT #2,"param_anzahl=anzahl;"
     PRINT #2,"param_argumente=argumente;"
@@ -293,7 +293,7 @@ PROCEDURE link
       SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o "+librarypath$+"/x11basic.a @X_LIBS@ @libs@"
     ENDIF
   ENDIF
-  if dostrip
-    system "strip "+outputfilename$
-  endif  
+  IF dostrip
+    SYSTEM "strip "+outputfilename$
+  ENDIF
 RETURN

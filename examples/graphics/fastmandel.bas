@@ -13,18 +13,18 @@ DO
   IF RANDOM(300)=50
     SHOWPAGE
   ENDIF
-L3:
+  L3:
   im2=im*im
   IF iter%
-    im=2*re*im+((x% DIV bw%)/150-1.3) 
-    re=re*re-im2+((x% MOD bw%)/150-2.1) 
+    im=2*re*im+((x% DIV bw%)/150-1.3)
+    re=re*re-im2+((x% MOD bw%)/150-2.1)
   ENDIF
   INC iter%
   IF im2>4 OR iter%>254
-    color iter%*1234567
+    COLOR iter%*1234567
     PLOT x% MOD bw%, x% DIV bw%
-  ELSE 
-    GOTO L3 
+  ELSE
+    GOTO L3
   ENDIF
 LOOP
 SHOWPAGE

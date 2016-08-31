@@ -1,16 +1,16 @@
-' ZOOM-Funktion 
+' ZOOM-Funktion
 
 faktor=3
 
-for x=0 to 639 step faktor
-  for y=0 to 399 step faktor
+FOR x=0 TO 639 STEP faktor
+  FOR y=0 TO 399 STEP faktor
     ox=x/faktor
     oy=y/faktor
-    rootwindow
+    ROOTWINDOW
     a=point(ox,oy)
-    usewindow 1
-    color a
-    pbox x,y,x+faktor,y+faktor
-  next y
-  vsync
-next x
+    USEWINDOW 1
+    COLOR a
+    PBOX x,y,x+faktor,y+faktor
+  NEXT y
+  VSYNC
+NEXT x

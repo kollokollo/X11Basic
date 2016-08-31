@@ -13,38 +13,38 @@ sy=-1.5
 sw=2
 sh=2
 
-sizew ,bw,bh
-text 0,bh/2,"Drawing a fractal. Be patient..."
+SIZEW ,bw,bh
+TEXT 0,bh/2,"Drawing a fractal. Be patient..."
 t=timer
-while y<bh
+WHILE y<bh
 
   gx=(x-bx)/bw*sw+sx
   gy=(y-by)/bh*sh+sy
   zx=gx
   zy=gy
   c=0
-  while c<256
+  WHILE c<256
     nzx=zx^2-zy^2+gx
     zy=2*zx*zy+gy
     zx=nzx
-    if zx^2+zy^2>4
-      goto out
-    endif  
+    IF zx^2+zy^2>4
+      GOTO out
+    ENDIF
     c=c+1
-  wend
-out:
-  if c<256
-    color get_color(c*256,c*512,c*1024)
-    plot x,y
-  endif
+  WEND
+  out:
+  IF c<256
+    COLOR get_color(c*256,c*512,c*1024)
+    PLOT x,y
+  ENDIF
   x=x+1
-  if x=bw
+  IF x=bw
     x=0
     y=y+1
-    showpage
-    print y;"  ";chr$(13);
-    flush
-  endif    
-wend
-print timer-t;" Seconds.  ";86/(timer-t);" times."
-end
+    SHOWPAGE
+    PRINT y;"  ";CHR$(13);
+    FLUSH
+  ENDIF
+WEND
+PRINT timer-t;" Seconds.  ";86/(timer-t);" times."
+END

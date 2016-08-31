@@ -5,9 +5,9 @@
 
 CLS
 PRINT "How many particles do you want (200 - 2000 is a good number)";
-input particles
+INPUT particles
 
-CLEARW 
+CLEARW
 yellow=COLOR_RGB(1,1,0)
 blue=COLOR_RGB(0,1/2,1)
 DIM screen%(640,400)
@@ -20,7 +20,7 @@ th=90
 COLOR COLOR_RGB(1,1/2,0)
 ' uncomment following line if you dont want a circle in the middle.
 'goto skip
-color yellow
+COLOR yellow
 FOR i=0 TO 179 STEP 0.5
   x1=320+COS(RAD(th+i))*10
   y1=200+SIN(RAD(th+i))*10
@@ -45,21 +45,21 @@ PRINT TIMER-tttt;" Seconds."
 QUIT
 
 PROCEDURE feed
-  ' place a particle in a random position on  the periphery of a circle
+  ' place a particle in a random position on the periphery of a circle
   ' of radius r
-new_particle:
+  new_particle:
   PRINT ".";
   FLUSH
-try_again:
+  try_again:
   fi=RAD(RANDOM(360))
   r=15+radd%
   x=INT(320+r*COS(fi))
   y=INT(200+r*SIN(fi))
-  IF screen%(x,y)=1 
-    GOto try_again
+  IF screen%(x,y)=1
+    GOTO try_again
   ENDIF
-'Check if the feed particle falls near an occupied place. It shouldn't happen but better safe than sorry. 
-  IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1 
+  'Check if the feed particle falls near an occupied place. It shouldn't happen but better safe than sorry.
+  IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1
     screen%(x,y)=1
     GOTO new_particle
   ENDIF
@@ -70,73 +70,73 @@ PROCEDURE fractal
   ' a check is being performed for the existance of a neigbouring particle.
   ' If such a particle exists then the particle sticks and a new one is being
   ' released
-	 
+
   DO
     IF RANDOM(2)=1
       INC x
-    else
-      dec x
-    endif
-    IF x<320-2*r 
-	 x=(320-r)
-    else IF x>320+2*r 
-	x=320+r
+    ELSE
+      DEC x
     ENDIF
- '   IF screen%(x,y)=1 
-'	GOSUB fractal
-'    ENDIF
-    if screen2%(x,y)=0
-    'Checking for neighbouring particle after motion on the x-axis 
-      IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1 
-	screen%(x,y)=1
-	color yellow
-	PLOT x,y
-	SHOWPAGE
-'	insert=1
-'	IF insert=1
-	  inc counter
-	 ' precalc&(counter,0)=x
-	 ' precalc&(counter,1)=y
-	  GOSUB feed
-'	ENDIF
+    IF x<320-2*r
+      x=(320-r)
+    ELSE IF x>320+2*r
+      x=320+r
+    ENDIF
+    ' IF screen%(x,y)=1
+    '	GOSUB fractal
+    ' ENDIF
+    IF screen2%(x,y)=0
+      'Checking for neighbouring particle after motion on the x-axis
+      IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1
+        screen%(x,y)=1
+        COLOR yellow
+        PLOT x,y
+        SHOWPAGE
+        ' insert=1
+        ' IF insert=1
+        INC counter
+        ' precalc&(counter,0)=x
+        ' precalc&(counter,1)=y
+        GOSUB feed
+        ' ENDIF
       ENDIF
       screen2%(x,y)=1
-    endif
-    if RANDOM(2)=1
-	inc y
-    else 
-	dec y    
-    endif
+    ENDIF
+    IF RANDOM(2)=1
+      INC y
+    ELSE
+      DEC y
+    ENDIF
 
-    IF y<200-1.5*r 
- 	y=200-r
-    else IF y>200+1.5*r 
- 	y=200+r
+    IF y<200-1.5*r
+      y=200-r
+    ELSE IF y>200+1.5*r
+      y=200+r
     ENDIF
-    'Checking for neighbouring particle after motion on the y-axis 	
-    if screen2%(x,y)=0
-      IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1 
-	screen%(x,y)=1
-	color blue	
-	PLOT x,y
-	SHOWPAGE
-'	insert=1
-'	IF insert=1
-	  inc counter
-	'  precalc&(counter,0)=x
-	' precalc&(counter,1)=y
-	@feed
-'	ENDIF
+    'Checking for neighbouring particle after motion on the y-axis
+    IF screen2%(x,y)=0
+      IF screen%(x-1,y-1)=1 OR screen%(x-1,y)=1 OR screen%(x-1,y+1)=1 OR screen%(x,y-1)=1 OR screen%(x,y+1)=1 OR screen%(x+1,y-1)=1 OR screen%(x+1,y)=1 OR screen%(x+1,y+1)=1
+        screen%(x,y)=1
+        COLOR blue
+        PLOT x,y
+        SHOWPAGE
+        ' insert=1
+        ' IF insert=1
+        INC counter
+        ' precalc&(counter,0)=x
+        ' precalc&(counter,1)=y
+        @feed
+        ' ENDIF
       ENDIF
       screen2%(x,y)=1
-    endif
-   ' PRINT AT(1,1);x,y,counter,r,particles
-    exit IF counter>particles
+    ENDIF
+    ' PRINT AT(1,1);x,y,counter,r,particles
+    EXIT IF counter>particles
     radd%=sqrt((x-320)^2+(y-200)^2)
   LOOP
   SHOWPAGE
 RETURN
 PROCEDURE saving
   'BSAVE "precalc.chr",V:precalc&(0,0),4000*2*2
-  savewindow "fractal.bmp"
+  SAVEWINDOW "fractal.bmp"
 RETURN

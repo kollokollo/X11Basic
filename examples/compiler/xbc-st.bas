@@ -23,35 +23,35 @@ IF NOT EXIST("xbvm.prg")
   QUIT
 ENDIF
 
-WHILE LEN(param$(i))
-  IF LEFT$(param$(i))="-"
-    IF param$(i)="--help" OR param$(i)="-h"
+WHILE LEN(PARAM$(i))
+  IF LEFT$(PARAM$(i))="-"
+    IF param$(i)="--help" OR PARAM$(i)="-h"
       @intro
       @using
-    ELSE IF param$(i)="--version"
+    ELSE IF PARAM$(i)="--version"
       @intro
       QUIT
-    ELSE IF param$(i)="--dynamic"
+    ELSE IF PARAM$(i)="--dynamic"
       dyn=TRUE
-    ELSE IF param$(i)="-b"
+    ELSE IF PARAM$(i)="-b"
       precomponly=TRUE
       compileonly=TRUE
-    ELSE IF param$(i)="-c"
+    ELSE IF PARAM$(i)="-c"
       compileonly=TRUE
-    ELSE IF param$(i)="-l"
+    ELSE IF PARAM$(i)="-l"
       lflag=TRUE
-    ELSE IF param$(i)="-q"
+    ELSE IF PARAM$(i)="-q"
       qflag=TRUE
-    ELSE IF param$(i)="-o"
+    ELSE IF PARAM$(i)="-o"
       INC i
-      IF LEN(param$(i))
-        outputfilename$=param$(i)
+      IF LEN(PARAM$(i))
+        outputfilename$=PARAM$(i)
       ENDIF
     ELSE
-      collect$=collect$+param$(i)+" " 
+      collect$=collect$+PARAM$(i)+" "
     ENDIF
   ELSE
-    inputfile$=param$(i)
+    inputfile$=PARAM$(i)
     IF NOT EXIST(inputfile$)
       PRINT "xbc: "+inputfile$+": file or path not found"
       CLR inputfile$
@@ -85,7 +85,7 @@ IF LEN(inputfile$)
   t$=t$+"3. only produce the bytecode,|"
   t$=t$+"4. pseudo compile, then use tcc.|"
   t$=t$+"|Option 1 is recommended.|For options 2 and 4 tcc needs to be installed.|"
-  
+
   t$=t$+"][ 1 | 2 | 3 | 4 |CANCEL]"
   IF qflag=0
     COLOR weiss,schwarz
@@ -103,7 +103,7 @@ IF LEN(inputfile$)
       ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.ttp not found.][CANCEL]")
       PRINT "xbc: ERROR: xb2c.ttp not found."
       QUIT
-    ENDIF 
+    ENDIF
     SYSTEM "xb2c "+bfile$+" -o "+cfile$
     IF EXIST(cfile$)
       IF qflag=0
@@ -122,7 +122,7 @@ IF LEN(inputfile$)
   ELSE
     QUIT
   ENDIF
-  ' Now compilation should have been successful  
+  ' Now compilation should have been successful
   IF qflag=0
     IF EXIST(outputfilename$)
       a=FORM_ALERT(1,"[0][done.| |The program was stored under:|"+outputfilename$+".|Do you want to run it?][RUN|QUIT]")
@@ -134,7 +134,7 @@ IF LEN(inputfile$)
         ENDIF
       ENDIF
     ELSE
-     ~FORM_ALERT(1,"[3][Ups...|compilation was not successful!][ OH ]")
+      ~FORM_ALERT(1,"[3][Ups...|compilation was not successful!][ OH ]")
     ENDIF
   ENDIF
 ELSE
@@ -191,7 +191,6 @@ PROCEDURE make_bytecode(file$,bfile$)
   ENDIF
 RETURN
 
-
 PROCEDURE packvm(bfile$)
   LOCAL t$,l,lb,p,u$
   OPEN "I",#1,"xbvm.prg"
@@ -205,15 +204,15 @@ PROCEDURE packvm(bfile$)
   PRINT p
   MEMDUMP VARPTR(t$)+p-1,16
   IF p=0
-      IF qflag=0
-        ~FORM_ALERT(1,"[3][xbc: FATAL ERROR: something is wrong.][CANCEL]")
-      ENDIF
-      PRINT "xbc: FATAL ERROR: something is wrong."
-      QUIT
+    IF qflag=0
+      ~FORM_ALERT(1,"[3][xbc: FATAL ERROR: something is wrong.][CANCEL]")
+    ENDIF
+    PRINT "xbc: FATAL ERROR: something is wrong."
+    QUIT
   ENDIF
   PRINT "poking"
   u$=using$(LEN(t$),"#######")
-  print u$,p
+  PRINT u$,p
   FOR i=0 TO LEN(u$)-1
     POKE VARPTR(t$)+p-1+i,PEEK(VARPTR(u$)+i)
   NEXT i
@@ -227,11 +226,11 @@ PROCEDURE packvm(bfile$)
   t$=t$+SPACE$(lb)
   BLOAD bfile$,VARPTR(t$)+l
   MEMDUMP VARPTR(t$)+l,lb
-oagain:
-  if qflag=0
-    default$=right$(inputfile$,len(inputfile$)-rinstr(inputfile$,"/"))
-    default$=right$(default$,len(default$)-rinstr(default$,"\"))
-    default$=replace$(default$,".bas",".prg")
+  oagain:
+  IF qflag=0
+    default$=RIGHT$(inputfile$,LEN(inputfile$)-rinstr(inputfile$,"/"))
+    default$=RIGHT$(default$,LEN(default$)-rinstr(default$,"\"))
+    default$=REPLACE$(default$,".bas",".prg")
     FILESELECT "select filename to write to","./*.prg",default$,outputfilename$
     IF LEN(outputfilename$)=0
       QUIT
@@ -283,18 +282,18 @@ PROCEDURE pseudo
       IF LEFT$(t$)<>"'"
         SPLIT t$," !",1,t$,b$
         IF LEFT$(t$,6)="PRINT "
-          t$="? "+right$(t$,len(t$)-6)
+          t$="? "+RIGHT$(t$,LEN(t$)-6)
         ELSE IF LEFT$(t$,6)="GOSUB "
-          t$="@"+right$(t$,len(t$)-6)
+          t$="@"+RIGHT$(t$,LEN(t$)-6)
         ELSE IF LEFT$(t$,5)="VOID "
-          t$="~"+right$(t$,len(t$)-5)
+          t$="~"+RIGHT$(t$,LEN(t$)-5)
         ENDIF
-        t$=REPLACE$(t$,chr$(34),"##AN"+"F##")
+        t$=REPLACE$(t$,CHR$(34),"##AN"+"F##")
         t$=REPLACE$(t$,"\","##BACKS"+"LASH##")
         t$=REPLACE$(t$,"##A"+"NF##","\042")
         t$=REPLACE$(t$,"##BACK"+"SLASH##","\\")
         PRINT #2,ENCLOSE$(t$)+","
-	INC linecount
+        INC linecount
       ENDIF
     ENDIF
   WEND
@@ -312,18 +311,18 @@ PROCEDURE pseudo
     PRINT #2,"init_program(prglen);c_run("");c_gosub(n);programmlauf();"
     PRINT #2,"program=oldprogram;prglen=oldprglen;"
     PRINT #2,"return(returnvalue.f);}"
-  ELSE 
+  ELSE
     ' PRINT #2,"int prglen=sizeof(program)/sizeof(char *);"
-    PRINT #2,"int prglen="+str$(linecount)+";"
+    PRINT #2,"int prglen="+STR$(linecount)+";"
     IF win32
       PRINT #2,"#include <windows.h>"
-      print #2,"HINSTANCE hInstance;"
+      PRINT #2,"HINSTANCE hInstance;"
     ENDIF
     PRINT #2,"main(int anzahl, char *argumente[]){"
     IF win32
       PRINT #2,"hInstance=GetModuleHandle(NULL);"
     ENDIF
-    PRINT #2,"x11basicStartup(); set_input_mode(1,0);" 
+    PRINT #2,"x11basicStartup(); set_input_mode(1,0);"
     PRINT #2,"atexit(reset_input_mode);"
     PRINT #2,"param_anzahl=anzahl;"
     PRINT #2,"param_argumente=argumente;"
@@ -331,7 +330,6 @@ PROCEDURE pseudo
   ENDIF
   CLOSE #2
 RETURN
-
 
 PROCEDURE usetcc
   IF qflag=0

@@ -1,8 +1,6 @@
 ' Calculates a determinant
 
-
-
-dim n%(3,3)
+DIM n%(3,3)
 n%(0,0)=0
 n%(0,1)=1
 n%(0,2)=2
@@ -13,14 +11,14 @@ n%(2,0)=1
 n%(2,1)=1
 n%(2,2)=0
 
-print det(n%())
-print n%(0,0)
+PRINT det(n%())
+PRINT n%(0,0)
 
-dim b(3)
+DIM b(3)
 b(0)=3
-print det(b())
+PRINT det(b())
 
-dim a(4,4)
+DIM a(4,4)
 a(0,0)=3
 a(0,1)=7
 a(0,2)=3
@@ -38,27 +36,24 @@ a(3,1)=6
 a(3,2)=4
 a(3,3)=-1
 
-
 c()=inv(a())
 @matprint(a())
-print "Determinant: ";det(a())
-print "inverse:"
+PRINT "Determinant: ";det(a())
+PRINT "inverse:"
 @matprint(c())
-print "Determinant: ";det(c());"--> 1/";1/det(c())
+PRINT "Determinant: ";det(c());"--> 1/";1/det(c())
 
 d()=a()*c()
-print "product:"
+PRINT "product:"
 @matprint(d())
 
-
-
-quit
-procedure matprint(a())
-  local i,j
-  for i=0 to 3
-    for j=0 to 3
-      print a(i,j) using "##.###",
-    next j
-    print
-  next i
-return
+QUIT
+PROCEDURE matprint(a())
+  LOCAL i,j
+  FOR i=0 TO 3
+    FOR j=0 TO 3
+      PRINT a(i,j) using "##.###",
+    NEXT j
+    PRINT
+  NEXT i
+RETURN

@@ -4,7 +4,7 @@
 ' Markus Hoffmann +  Joachim Wiedemann-Heinzelmann Jan 2013
 '
 ' Anleitung f"ur Android:
-' das binary sqlite3 ist in der X11-Basic app enthalten und 
+' das binary sqlite3 ist in der X11-Basic app enthalten und
 ' ist im Ordner bas/ abgelegt für drei Prozessor-Architekturen:
 '
 '
@@ -69,7 +69,6 @@ WEND
 END
 QUIT
 
-
 PROCEDURE sql_exec(filename$,command$)
   LOCAL t$
   PRINT "-->"+command$
@@ -85,14 +84,14 @@ PROCEDURE sql_exec(filename$,command$)
     OPEN "I",#1,tmp$
     t$=INPUT$(#1,lof(#1))
     IF LEN(t$)
-       PRINT "Fehlermeldung: "+t$
+      PRINT "Fehlermeldung: "+t$
     ENDIF
     CLOSE #1
     IF ANDROID?
       SYSTEM "/system/bin/rm -f "+tmp$
     ELSE IF WIN32?
       SYSTEM "del "+tmp$
-    ELSE 
+    ELSE
       SYSTEM "rm -f "+tmp$
     ENDIF
   ENDIF
@@ -105,14 +104,14 @@ FUNCTION sql_query$(filename$,command$)
     OPEN "I",#1,tmp$
     t$=INPUT$(#1,LOF(#1))
     IF LEN(t$)
-       PRINT "Fehlermeldung: "+t$
+      PRINT "Fehlermeldung: "+t$
     ENDIF
     CLOSE #1
     IF ANDROID?
       SYSTEM "/system/bin/rm -f "+tmp$
     ELSE IF WIN32?
       SYSTEM "del "+tmp$
-    ELSE 
+    ELSE
       SYSTEM "rm -f "+tmp$
     ENDIF
   ENDIF
@@ -128,7 +127,7 @@ PROCEDURE android_install
     t$=INPUT$(#1,LOF(#1))
     CLOSE #1
     BSAVE sqls$,VARPTR(t$),LEN(t$)
-' PRINT system$("cp /mnt/sdcard/bas/sqlite3 "+sqls$+" 2>&1")
+    ' PRINT system$("cp /mnt/sdcard/bas/sqlite3 "+sqls$+" 2>&1")
     PRINT "change mode..."
     FLUSH
     PRINT SYSTEM$("/system/bin/chmod 755 "+sqls$+" 2>&1")
@@ -139,4 +138,4 @@ PROCEDURE android_install
     END
   ENDIF
 RETURN
-  
+
