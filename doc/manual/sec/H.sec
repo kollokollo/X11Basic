@@ -81,6 +81,19 @@ EXAMPLES:
 
 SEE ALSO: STR$(), BIN$(), OCT$(), RADIX$()
 ##############################################################################
+Command: HIDEK
+Syntax:  HIDEK
+
+DESCRIPTION:
+
+	Hide the virtual keyboard. (It will be invisible.)
+
+COMMENT: 
+	Works only on Android. On other platforms this command has currently 
+	no effect.
+
+SEE ALSO:  SHOWK
+##############################################################################
 Command: HIDEM
 Syntax:  HIDEM
 
@@ -89,7 +102,7 @@ DESCRIPTION:
 	Hide the mouse cursor. (It will be invisible.)
 
 COMMENT: 
-	Works only on the framebuffer (Android). On other platforms
+	Works only on the framebuffer (Android) and on ATARI-MINT. On other platforms
 	this command has no effect.
 
 SEE ALSO:  SHOWM, DEFMOUSE

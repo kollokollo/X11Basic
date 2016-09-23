@@ -537,7 +537,19 @@ DESCRIPTION:
 
 SEE ALSO: SHM_FREE, SHM_ATTACH()
 ##############################################################################
+Command:  SHOWK
+Syntax:   SHOWK
 
+DESCRIPTION:
+
+	Show the vitual keyboard (make it visible) and activate it for input.
+
+COMMENT: 
+	This command works currently only on Android. An other platforms it 
+	has no effect.
+
+SEE ALSO: HIDEK
+##############################################################################
 Command:  SHOWM
 Syntax:   SHOWM
 

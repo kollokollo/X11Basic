@@ -61,6 +61,8 @@ AndroidBitmapInfo  screen_info;
 static jmethodID nativeCrashed;
 static jmethodID redrawMethod;
 static jmethodID beepMethod;
+static jmethodID hidekMethod;
+static jmethodID showkMethod;
 static jmethodID getlocationMethod;
 static jmethodID playsoundfileMethod;
 static jmethodID playtoneMethod; 
@@ -115,6 +117,8 @@ JNIEXPORT  jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   redrawMethod       =(*env)->GetMethodID(env,cls, "redraw",        "()V");
   
   beepMethod         =(*env)->GetMethodID(env,cls, "beep",	    "()V");
+  hidekMethod         =(*env)->GetMethodID(env,cls, "hidek",	    "()V");
+  showkMethod         =(*env)->GetMethodID(env,cls, "showk",	    "()V");
   getlocationMethod  =(*env)->GetMethodID(env,cls, "get_location",  "()V");
   playsoundfileMethod=(*env)->GetMethodID(env,cls, "playsoundfile", "(Ljava/lang/String;)V");
   runaudioMethod     =(*env)->GetMethodID(env,cls, "RunAudioThreads","()V");
@@ -629,6 +633,28 @@ void ANDROID_beep() {
   else if(beepMethod == NULL) LOGE("Error: Can't find Java method void beep()");
   else {
     (*env)->CallVoidMethod(env,x11basicView,beepMethod);
+    (*env)->ExceptionClear(env);
+  }
+}
+void ANDROID_hidek() {
+  NLOG(">hidek.");
+  JNIEnv *env;
+  int status = (*m_vm)->AttachCurrentThread(m_vm,&env, NULL);
+  if(status < 0) LOGE("hidek: ERROR, no env.");
+  else if(hidekMethod == NULL) LOGE("Error: Can't find Java method void hidek()");
+  else {
+    (*env)->CallVoidMethod(env,x11basicView,hidekMethod);
+    (*env)->ExceptionClear(env);
+  }
+}
+void ANDROID_showk() {
+  NLOG(">showk.");
+  JNIEnv *env;
+  int status = (*m_vm)->AttachCurrentThread(m_vm,&env, NULL);
+  if(status < 0) LOGE("showk: ERROR, no env.");
+  else if(showkMethod == NULL) LOGE("Error: Can't find Java method void showk()");
+  else {
+    (*env)->CallVoidMethod(env,x11basicView,showkMethod);
     (*env)->ExceptionClear(env);
   }
 }

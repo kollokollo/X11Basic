@@ -197,6 +197,7 @@
 #define c_setfont NULL
 #define c_setmouse NULL
 #define c_sget NULL
+#define c_showk NULL
 #define c_showm NULL
 #define c_vsync NULL
 #define c_sizew NULL
@@ -222,6 +223,7 @@
 #define  c_gprint NULL
 #define  c_graphmode NULL
 #define  c_hidem NULL
+#define  c_hidek NULL
 #define  c_infow NULL
 #define  c_input NULL
 #define  c_keyevent NULL
@@ -2779,6 +2781,7 @@ const COMMAND comms[]= {
 #endif
  { P_PLISTE,   "HELP"    , c_help,0,1,(unsigned short []){PL_KEY}},
 #ifndef NOGRAPHICS
+ { P_SIMPLE,     "HIDEK"     , c_hidek,0,0},
  { P_SIMPLE,     "HIDEM"     , c_hidem,0,0},
 #endif
  { P_SIMPLE,     "HOME"     , c_home,0,0},
@@ -2933,6 +2936,7 @@ const COMMAND comms[]= {
  { P_PLISTE,  "SHM_DETACH"      , c_detatch,1,1,(unsigned short []){PL_INT}},
  { P_PLISTE,    "SHM_FREE" , c_shm_free,1,1,(unsigned short []){PL_INT}},
 #ifndef NOGRAPHICS
+ { P_SIMPLE,     "SHOWK"     , c_showk,0,0},
  { P_SIMPLE,     "SHOWM"     , c_showm,0,0},
  { P_SIMPLE,	 "SHOWPAGE" , c_vsync,      0,0},
  { P_PLISTE,	 "SIZEW"    , c_sizew,      3,3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},

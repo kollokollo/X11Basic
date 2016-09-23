@@ -98,6 +98,20 @@ void c_showm(char *n) {
 #endif
 }
 
+/* Show and hide virtual Keyboard, 
+especially for Android.
+TODO....*/
+void c_hidek(char *n) {
+  #ifdef ANDROID
+  ANDROID_hidek();
+  #endif
+}
+void c_showk(char *n) {
+  #ifdef ANDROID
+  ANDROID_showk();
+  #endif
+}
+
 
 void c_plot(PARAMETER *plist,int e) {
     graphics();
