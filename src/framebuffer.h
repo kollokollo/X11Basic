@@ -269,7 +269,7 @@ void Fb_BlitBitmap(int x, int y,unsigned int w, unsigned int h,unsigned short aC
 void FB_copyarea(int x,int y,int w, int h, int tx,int ty);
 int FB_get_color(unsigned char r, unsigned char g, unsigned char b);
 void FB_setgraphmode(int n);
-inline void Fb_Scroll(int target_y, int source_y, int height);
+void Fb_Scroll(int target_y, int source_y, int height);
 void Fb_Clear2(int y, int h, unsigned short color);
 
 #endif

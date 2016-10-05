@@ -48,6 +48,7 @@
 #include "framebuffer.h"
 #include "consolefont.h"
 #include "raw_mouse.h"
+#include "raw_keyboard.h"
 
 #ifndef ANDROID
 extern struct fb_var_screeninfo vinfo;
@@ -67,6 +68,12 @@ G_CONTEXT screen;
 void textscreen_redraw(int x, int y, int w,int h);
 extern int bigfont;
 
+/*TODO: 
+  Evtl. moechte man verschiedene framebufferdevices ansprechen, z.B.
+  beim sense Hat für Raspberry Pi (/dev/fb1)
+  Momentan muss FB_DEVICENAME dafuer geaendert werden.
+  */
+
 void Fb_Open() {
 #ifndef ANDROID 
   fbfd=open(FB_DEVICENAME, O_RDWR);
@@ -75,13 +82,6 @@ void Fb_Open() {
     perror(FB_DEVICENAME);
     exit(EX_OSFILE);
   }
-#if DEBUG
-  printf("Framebuffer device now opened.\n");
-#endif
-#else 
-  fbfd=1;
-#endif
-#ifndef ANDROID
   // Get fixed screen information
   if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
     perror("ERROR: Could not get fixed screen information.");
@@ -97,6 +97,7 @@ void Fb_Open() {
   screen.clip_w=screen.width=vinfo.xres;
   screen.clip_h=screen.height=vinfo.yres;
 #else
+  fbfd=1;
   screen.bpp=16;
   screen.clip_w=screen.width=screen_info.width;
   screen.clip_h=screen.height=screen_info.height;
@@ -157,6 +158,7 @@ void Fb_Close() {
   FB_hide_mouse();
 #ifndef ANDROID
   FB_close_mouse();
+  FB_close_keyboard();
 #endif
   fbfd = -1;
 }
@@ -226,23 +228,15 @@ inline void FB_PutPixel(int x, int y, unsigned short color) {
 
 
 
-inline void Fb_Scroll(int target_y, int source_y, int height) {
+void Fb_Scroll(int target_y, int source_y, int height) {
   memmove(screen.pixels+target_y*screen.scanline,
           screen.pixels+source_y*screen.scanline,height*screen.scanline);
 }
 
-void FB_set_color(unsigned short color) {
-  screen.fcolor=color;
-}
-void FB_set_bcolor(unsigned short color) {
-  screen.bcolor=color;
-}
-void FB_set_alpha(unsigned char alpha) {
-  screen.alpha=alpha;
-}
-void FB_set_textmode(unsigned int mode) {
-  screen.textmode=mode;
-}
+void FB_set_color(unsigned short color)  {screen.fcolor=color; }
+void FB_set_bcolor(unsigned short color) {screen.bcolor=color; }
+void FB_set_alpha(unsigned char alpha)   {screen.alpha=alpha;  }
+void FB_set_textmode(unsigned int mode)  {screen.textmode=mode;}
 
 void FB_set_clip(G_CONTEXT *screen,int x,int y,int w,int h) {
   screen->clip_x=x;

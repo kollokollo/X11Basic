@@ -4,3 +4,4 @@ Release notes for Version 1.25 (Sept 2016 -- )
 - new Commands: HIDEK, SHOWK (Android)
 - fixed bug in MERGE and FILESELECT
 - new function VRFY()
+- added raw keyboard support for framebuffer version (e.g. Raspberry pi + sense hat)

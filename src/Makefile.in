@@ -79,14 +79,14 @@ LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o s
 
 MAINOBJS= main.o xbbc.o xbvm.o xb2c.o
 
-EXTRAOBJS= bytecode.o ccs.o framebuffer.o raw_mouse.o spat-a-fnt.o 5x7.o consolefont.o \
+EXTRAOBJS= bytecode.o ccs.o framebuffer.o raw_mouse.o raw_keyboard.o spat-a-fnt.o 5x7.o consolefont.o \
 	   unifont.o unifont57.o terminal.o 8x16.o
 
 # Sources for libx11basic
 
 LIBCSRC=$(LIBOBJS:.o=.c)
 
-FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
+FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o raw_keyboard.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
 LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
 
 
@@ -103,7 +103,7 @@ DEPSRC=  $(CSRC)
 HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        consolefont.h decode.h defs.h fft.h file.h framebuffer.h functions.h \
        gkommandos.h graphics.h io.h kommandos.h \
-       mathematics.h number.h options.h parameter.h parser.h raw_mouse.h \
+       mathematics.h number.h options.h parameter.h parser.h raw_mouse.h raw_keyboard.h \
        sfunctions.h sound.h svariablen.h sysVstuff.h \
        terminal.h type.h variablen.h virtual-machine.h \
        window.h wort_sep.h x11basic.h xb2csol.h xbasic.h lodepng.h md5.h sha1.h

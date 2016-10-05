@@ -30,6 +30,7 @@
 #ifdef FRAMEBUFFER
   #include "framebuffer.h"
   #include "raw_mouse.h"
+  #include "raw_keyboard.h"
 #elif defined USE_GEM
   #include <osbind.h>
   #include <gem.h>
@@ -1271,6 +1272,9 @@ void c_keyevent(PARAMETER *plist,int e) {
   if(e>4 && plist[4].typ!=PL_LEER)  varcastint(plist[4].integer,plist[4].pointer,global_mousex);
   if(e>5 && plist[5].typ!=PL_LEER)  varcastint(plist[5].integer,plist[5].pointer,global_mousey);
 #endif
+#ifdef FRAMEBUFFER
+   FB_keyboard_events(1);
+#endif
 #if defined USE_X11 || defined FRAMEBUFFER
    XEvent event;   
    graphics();
@@ -1331,6 +1335,9 @@ void c_keyevent(PARAMETER *plist,int e) {
   if(e>2 && plist[2].typ!=PL_LEER)  varcaststring(plist[2].integer,plist[2].pointer,str);
   if(e>3 && plist[3].typ!=PL_LEER)  varcastint(plist[3].integer,plist[3].pointer,event.key.keysym.mod);
   if(e>4 && plist[4].typ!=PL_LEER)  varcastint(plist[4].integer,plist[4].pointer,event.key.state);
+#endif
+#ifdef FRAMEBUFFER
+   FB_keyboard_events(0);
 #endif
 }
 
@@ -1399,6 +1406,7 @@ void c_allevent(PARAMETER *plist,int e) {
    graphics();
 #ifdef FRAMEBUFFER
    FB_mouse_events(1);
+   FB_keyboard_events(1);
 #endif
     
  //   printf("EVENT e=%d vnr=%d pointer=%x\n",e,plist->integer,plist->pointer);
@@ -1498,6 +1506,7 @@ void c_allevent(PARAMETER *plist,int e) {
   
 #if defined FRAMEBUFFER
    FB_mouse_events(0);
+   FB_keyboard_events(0);
 #endif
  
 #elif defined USE_SDL

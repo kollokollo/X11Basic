@@ -1144,7 +1144,7 @@ void c_receive(PARAMETER *plist, int e) {
     if(fff.blk_len<=0) fff.blk_len=64;
     str.pointer=malloc(fff.blk_len+1);
 #ifdef HAVE_USB
-    int ret=usb_bulk_read(fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
+    int ret=usb_bulk_read((usb_dev_handle *)fff.dptr,fff.ep_in,str.pointer,fff.blk_len,TIMEOUT);
     if(e>2) varcastint(plist[2].integer,plist[2].pointer,ret);
     if(ret<0) {
       printf("usb_bulk_read failed with code %i: %s\n", ret, usb_strerror());

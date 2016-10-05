@@ -29,6 +29,7 @@
 #include "aes.h"
 #ifdef FRAMEBUFFER
 #include "raw_mouse.h"
+#include "raw_keyboard.h"
 #endif
 
 
@@ -276,6 +277,7 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
   Fb_Open();
   #ifndef ANDROID
     Fb_Mouse_Open();
+    Fb_Keyboard_Open();
   #endif
   window[nummer].x=window[nummer].y=0;
   window[nummer].w=screen.width;
@@ -790,7 +792,7 @@ void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
   SDL_FreeSurface(image);
 #elif defined FRAMEBUFFER
 
-  Fb_BlitBitmap(x,y,w,h,window[usewindow].fcolor, window[usewindow].bcolor, window[usewindow].screen->graphmode, adr);
+  Fb_BlitBitmap(x,y,w,h,window[usewindow].fcolor, window[usewindow].bcolor, window[usewindow].screen->graphmode, (unsigned char *)adr);
 
 #endif
 }
@@ -950,6 +952,7 @@ short form_do(OBJECT *tree,short startob) {
 #if defined FRAMEBUFFER
   FB_clear_events();
   FB_mouse_events(1);
+  FB_keyboard_events(1);
 #endif
     /* erstes editierbare Objekt finden */
 
@@ -1237,6 +1240,7 @@ short form_do(OBJECT *tree,short startob) {
   } /* while */
 #ifdef FRAMEBUFFER
   FB_mouse_events(0);
+  FB_keyboard_events(0);
 #endif
   return(sbut);
 }
