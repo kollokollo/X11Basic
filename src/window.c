@@ -1686,7 +1686,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 #endif
 
   if(titel!=NULL) strncpy(btitel,titel,60);
-  else strcpy(btitel,"FILESELCT");
+  else strcpy(btitel,"FILESELECT");
 #ifdef DEBUG
   printf("**2fsel_input: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
 #endif
@@ -1729,7 +1729,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   objects[18+2*ANZSHOW-1].ob_next=17;
   objects[objccount-1].ob_flags|=LASTOB;
   graphics();
-  gem_init();
+  gem_init();  /*Fonts und Farben*/ 
   for(i=0;i<objccount;i++){
     objects[i].ob_x*=window[usewindow].chw;
     objects[i].ob_y*=window[usewindow].chh;
