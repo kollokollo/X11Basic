@@ -310,6 +310,8 @@ COMMENTS:
              l%=IOCTL(#1,16,VARPTR(t$))
              error$=LEFT$(t$,l%)
 
+COMMENT:
+	The interface to Bluetooth devices is not yet defined. 
 
 SEE ALSO:   OPEN, CLOSE
 EXAMPLE:
@@ -317,7 +319,7 @@ EXAMPLE:
         frequency=300
         tone=1190000/frequency
         KIOCSOUND=19247
-        PRINT ioctl(#1,KIOCSOUND,tone)  ! Sounds the speaker
+        PRINT IOCTL(#1,KIOCSOUND,tone)  ! Sounds the speaker
         CLOSE #1
        	Result: 0
 

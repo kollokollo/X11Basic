@@ -28,6 +28,25 @@ ISDIR(d$)  --> STAT ?  --> geht mit user-funktion...
 * Event, wenn sound zuende (oder testfunktionen)
 * Einzelne Toene auf Kanal spielen (ok)
 
+---- bluetooth ----
+
+FSFIRST$() and FSNEXT$() can be used to scan for bluetooth devices.
+
+with OPEN "UB" you can open a RFCOMM connection
+with OPEN "UP" cou can open a L2CAP connection.
+
+you can use SEND/RECEIVE/CLOSE on L2CAP connections.
+you can use PRINT/INPUT/OUT/INP()/CLOSE on RFCOMM connections.
+
+you can as well setup a server and open a listening socket with OPEN, 
+much the same as you would do it with normal internet connections. 
+
+
+---- USB support ----
+
+FSFIRST$() and FSNEXT$() can be used to scan for USB devices.
+
+
 
 -------encryption---------------
 

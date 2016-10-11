@@ -159,7 +159,7 @@ DESCRIPTION:
 	RECEIVE is used to receive messages t$ from a socket or USB-device 
 	#n, which has been opened with OPEN before. If a is given, this
 	variable will take the host address of the sender (IPv4 32 bit
-	format).
+	format) or the bluetooth device ID.
 
 	
 SEE ALSO: OPEN, SEND

@@ -223,18 +223,20 @@ Syntax:  SEND #n,msg$[,adr%,port%]
 
 DESCRIPTION:
 	
-       SEND is used to transmit a message via fast UDP datagrams to  another
+       SEND is used to transmit a message via fast UDP datagrams to another
        socket which may be on another host. Or, send is used to send a data
-       packet to a previously opened USB device. Send with only two 
-       parameters may be used only when the socket is in a connected state
-       (see CONNECT), otherwise the destination address and the port has to
-       be specified.
+       packet to a previously opened USB device. Or, send is used to transmit 
+       a data packet to to a previously opened BLUETOOTH L2CAP connection.
+
+       Send with only two  parameters may be used only when the socket is in a 
+       connected state (see CONNECT), otherwise the destination address and the 
+       port has to be specified.
 
        The address of the target is given by adr%, which usually contains a 
        IP4 address (e.g. cvl(chr$(127)+chr$(0)+chr$(0)+chr$(1)) which
        corresponds to 127.0.0.1). msg$ can be an arbitrary message with any
-       data in it. The length of the  message  must not exceed 1500 Bytes.  If 
-       the  message is too long to pass atomically through the underlying
+       data in it. The length of the  message  must not exceed 1500 Bytes. If 
+       the  message is too long to pass automically through the underlying
        protocol, an error occurs, and the message is not transmitted.
 
        No indication of failure to deliver is implicit in a send.
@@ -242,6 +244,10 @@ DESCRIPTION:
        When the message does not fit into the send buffer of the socket, send
        blocks. The OUT?() function may be used to determine when it is
        possible to send more data.
+
+COMMENT: 
+       SEND is currently working for USB and Bluetooth devices only in 
+       connected state. 
 
 EXAMPLE:
 
@@ -356,16 +362,29 @@ DESCRIPTION:
 	
 	Loads and sets a font for graphical text commands. 
 	t$ may be 
-	"SMALL" or "5x7"   for a small font
-	"MEDIUM or "8x8    for a medium sized font
-	"BIG" or "8x16"    for a big font.
-	"LARGE" or "16x32" for an even bigger font.
-	"HUGE" or "24x48"  for an even bigger font.
+	"SMALL" or "5x7"   for a small font,
+	"MEDIUM or "8x8    for a medium sized font,
+	"BIG" or "8x16"    for a big font,
+	"LARGE" or "16x32" for an even bigger font,
+	"HUGE" or "24x48"  for an even bigger font,
 	"GIANT" or "32x64" for a gigantic font size.
+	
+	This setting affects the text style and size of the commands TEXT 
+	and GPRINT.
 
-	With UNIX and the X-WINDOW system, the font name may be any valid
+	With UNIX and the X-WINDOW system, the font name t$ may be any valid
 	font name or pattern. On other platforms true-type font filenames can
 	be used. This way, also proportional fonts can be  used.
+
+COMMENT: 
+	The support for true-type .TTF fonts is not usable at the moment. You
+	should prefer the standard names given obove instead of platform dependant
+	names to stay platform independant.
+	
+	Currently the font setting is overwritten by ALERT, FILESELCT and others
+	every time they are used. It is planned to have this independant and also
+	have a way to independantly change the font sizes and style of the GUI
+	functions, but this is work in progress.
 
 EXAMPLE:
 	SETFONT "BIG"

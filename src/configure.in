@@ -189,6 +189,12 @@ AC_DEFINE(HAVE_USB,1,[usb_open in lusb])
 #AC_DEFINE(HAVE_LIBUSB,1,[libusb_control_transfer in lusb-1.0])
 #],,[$libs])
 
+# `-lbluetooth':
+AC_CHECK_LIB([bluetooth], [hci_get_route], [
+libs="$libs -lbluetooth"
+AC_DEFINE(HAVE_BLUETOOTH,1,[hci_get_route in lbluetooth])
+],,[$libs])
+
 # `-lgcrypt':
 #AC_CHECK_LIB([gcrypt], [gcry_check_version], [
 #libs="$libs -lgcrypt"

@@ -493,19 +493,25 @@ DESCRIPTION:
 
 	Initiate a connection on a socket.
 
-	The file number #n must refer to a socket. If the socket is of type "U"
+	The file number #n must refer to a socket, which must have been created by 
+	OPEN. If the socket is of type "U" or "V"
 	then the server$ address is the address to which packets are sent by
 	default, and the only address from which packets are received. If the
-	socket is of type "S","A","C", this call attempts to make a connection
-	to another socket. The other socket is specified by  server$, which is
-	an address in the communications space of the socket. 
+	socket is of type "S","A","C","B" or "Z", this call attempts to make a 
+	connection to another socket. The other socket is specified by server$, 
+	which is an address in the communications space of the socket 
+	(usually an IP address or a Bluetooth device address). 
 
 	Generally, connection-based protocol sockets may successfully connect
 	only once; connectionless protocol sockets may use connect multiple
 	times to change their association.
 
-SEE ALSO:   OPEN, CLOSE, SEND, RECEIVE       
+COMMENT: 
+	This function does work with internet connections, however it is not fully
+	documented and the implementation for Bluetooth and USB devices is not
+	yet finished. Please refer to the example programs.
 
+SEE ALSO:   OPEN, CLOSE, SEND, RECEIVE
 #############################################################################
 
 Command: CONTINUE

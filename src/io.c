@@ -43,6 +43,15 @@
 #define TIMEOUT 5000
 #endif
 
+#ifdef HAVE_BLUETOOTH
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
+#include <bluetooth/rfcomm.h>
+#include <bluetooth/l2cap.h>
+#endif
+
+
 #include "x11basic.h"
 #include "xbasic.h"
 #include "type.h"
@@ -225,6 +234,16 @@ static char fspath[NAME_MAX+1];
 static char fspattern[NAME_MAX+1];
 static char fsattr[32];
 static DIR *dp=NULL;
+#ifdef HAVE_BLUETOOTH
+static int bt_sock=-1;
+static int num_rsp;
+inquiry_info *bt_ii=NULL;
+#endif
+
+
+/*TODO: FSFIRST und FSNEXT könnte man auch zum Scannen der 
+  BLUETOOTH-Umgebung benutzen. Genauso zum suchen nach USB devices....
+  */
 
 STRING f_fsfirsts(PARAMETER *plist,int e) {
 #ifdef WINDOWS
@@ -235,35 +254,82 @@ STRING f_fsfirsts(PARAMETER *plist,int e) {
   if(e>2)  strncpy(fsattr,plist[2].pointer,min(plist[2].integer,31));
   else strcpy(fsattr,"f");
   // printf("FSFIRST: path=<%s>, pattern=<%s>, attr=<%s>\n",plist->pointer,fspattern,fsattr);
-  if(dp) closedir(dp);
-  dp=opendir(plist->pointer);
+  if(dp) { 
+    closedir(dp);
+    dp=NULL;
+  }
+  if(*fsattr=='b') {
+#ifdef HAVE_BLUETOOTH
+  int dev_id = hci_get_route(NULL);
+  if(dev_id<0) {
+    io_error(errno,"FSFIRST: Bluetooth device");
+    return(create_string("<ERROR>"));
+  }
+  if(bt_sock>=0) close(bt_sock);
+  bt_sock = hci_open_dev( dev_id );
+  if(bt_sock<0) {
+    io_error(errno,"FSFIRST: Bluetooth device socket");
+    return(create_string("<ERROR>"));
+  }
+  bt_ii=(inquiry_info *) realloc(bt_ii,255*sizeof(inquiry_info));
+  num_rsp=hci_inquiry(dev_id,8,255, NULL, &bt_ii,IREQ_CACHE_FLUSH);
+  if(num_rsp<0) {
+    io_error(errno,"FSFIRST: Bluetooth scan");
+    return(create_string("<ERROR>"));
+  }
+#else
+    printf("Bluetooth support not yet ready.\n");
+    xberror(9,"Bluetooth support");
+#endif
+  } else if (*fsattr=='u') {
+    printf("USB support not yet ready.\n");
+    xberror(9,"USB support");
+  } else dp=opendir(plist->pointer);
   // printf("OPENDIR: <%s> --> %p\n",plist->pointer,dp);
   return(f_fsnexts());
 }
 STRING f_fsnexts() {
   STRING ergebnis;
-  struct dirent *ep;
-  if(dp==NULL) {
-    io_error(errno,"fsfirst/fsnext");
-    ergebnis.pointer=malloc(1);
-    ergebnis.len=0;
-    ergebnis.pointer[ergebnis.len]=0;
-    return(ergebnis);
-  } 
-//  printf("FSNEXT: pattern=<%s>, attr=<%s>\n",fspattern,fsattr);
-  while(1) {
-    ep=readdir(dp);
- //   printf("READDIR: --> %p\n",ep);
-    if(!ep) {
+  if(*fsattr=='b') {
+#ifdef HAVE_BLUETOOTH
+    if(num_rsp>0) {
+      num_rsp--;
+      ergebnis.pointer=malloc(248);
+      ba2str(&(bt_ii+num_rsp)->bdaddr, ergebnis.pointer);
+      ergebnis.pointer[17]=' ';
+      if(hci_read_remote_name(bt_sock, &(bt_ii+num_rsp)->bdaddr, 248-18,ergebnis.pointer+18, 0)<0)
+        strcpy(ergebnis.pointer+18, "[unknown]");
+      ergebnis.len=strlen(ergebnis.pointer);
+#else
+      if(0) { ;
+#endif
+    } else {
+      ergebnis.pointer=malloc(1);
+      ergebnis.len=0;
+    }
+  } else {
+    struct dirent *ep;
+    if(dp==NULL) {
+      io_error(errno,"fsfirst/fsnext");
       ergebnis.pointer=malloc(1);
       ergebnis.len=0;
       ergebnis.pointer[ergebnis.len]=0;
       return(ergebnis);
+    } 
+//  printf("FSNEXT: pattern=<%s>, attr=<%s>\n",fspattern,fsattr);
+    while(1) {
+      ep=readdir(dp);
+ //   printf("READDIR: --> %p\n",ep);
+      if(!ep) {
+        ergebnis.pointer=malloc(1);
+        ergebnis.len=0;
+        ergebnis.pointer[ergebnis.len]=0;
+        return(ergebnis);
+      }
+      if(fnmatch(fspattern,ep->d_name,FNM_NOESCAPE|FNM_PERIOD|FNM_FILE_NAME)==0) break;
     }
-    if(fnmatch(fspattern,ep->d_name,FNM_NOESCAPE|FNM_PERIOD|FNM_FILE_NAME)==0) break;
-  }
   
-  ergebnis.pointer=malloc(3+strlen(ep->d_name));
+    ergebnis.pointer=malloc(3+strlen(ep->d_name));
 #ifdef WINDOWS
   char filename[NAME_MAX];
   sprintf(filename,"%s/%s",fspath,ep->d_name);
@@ -282,10 +348,11 @@ STRING f_fsnexts() {
   else if(ep->d_type==DT_LNK) ergebnis.pointer[0]='s';
   else 
 #endif
-  ergebnis.pointer[0]='-';    
-  ergebnis.pointer[1]=' ';
-  strcpy(ergebnis.pointer+2,ep->d_name);
-  ergebnis.len=2+strlen(ep->d_name);
+    ergebnis.pointer[0]='-';    
+    ergebnis.pointer[1]=' ';
+    strcpy(ergebnis.pointer+2,ep->d_name);
+    ergebnis.len=2+strlen(ep->d_name);
+  }
   ergebnis.pointer[ergebnis.len]=0;
   return(ergebnis);
 }
@@ -571,7 +638,10 @@ static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned
 }
 
 /* Connect #n,"polarfrost.homenet.al",5556
- connect  socket to server and port */
+ connect  socket to server and port 
+ 
+ TODO: kann auch füer bluetooth verbindungen genutzt werden....
+ */
 
 void c_connect(PARAMETER *plist,int e) {
   FILEINFO fff=get_fileptr(plist->integer);
@@ -589,9 +659,8 @@ void c_connect(PARAMETER *plist,int e) {
   }
 }
 static int make_socket(unsigned short int port) {
-  int sock;
   struct sockaddr_in name;
-  sock=socket(PF_INET, SOCK_STREAM,0);
+  int sock=socket(PF_INET, SOCK_STREAM,0);
   if(sock<0) return(-1);
   name.sin_family=AF_INET;
   name.sin_port=htons(port);
@@ -600,10 +669,8 @@ static int make_socket(unsigned short int port) {
   return(sock);
 }
 static int make_UDP_socket(unsigned short int port) {
-  int sock;
   struct sockaddr_in name;
-
-  sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+  int sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
   if(sock<0) return(-1);
   memset((void*)&name, 0, sizeof(name));
   name.sin_family=AF_INET;
@@ -612,6 +679,34 @@ static int make_UDP_socket(unsigned short int port) {
   if(bind(sock,(struct sockaddr *) &name, sizeof(name))<0) return(-1);
   return(sock);
 }
+
+#if defined HAVE_BLUETOOTH
+static int make_btrc_socket(unsigned short int port) {
+  struct sockaddr_rc loc_addr = { 0 };
+  int sock=socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+  if(sock<0) return(-1);
+  /* bind socket to port 1 of the first available 
+    local bluetooth adapter  */
+  loc_addr.rc_family = AF_BLUETOOTH;
+  loc_addr.rc_bdaddr = *BDADDR_ANY;
+  loc_addr.rc_channel = (uint8_t) 1;
+  if(bind(sock, (struct sockaddr *)&loc_addr, sizeof(loc_addr))<0) return(-1);
+  return(sock);
+}
+static int make_btl2_socket(unsigned short int port) {
+  struct sockaddr_l2 loc_addr = { 0 };
+  int sock=socket(AF_BLUETOOTH,SOCK_SEQPACKET, BTPROTO_L2CAP);
+  if(sock<0) return(-1);
+  /* bind socket to port 0x1001 of the first available 
+     bluetooth adapter */
+  loc_addr.l2_family = AF_BLUETOOTH;
+  loc_addr.l2_bdaddr = *BDADDR_ANY;
+  loc_addr.l2_psm = htobs(0x1001);
+  if(bind(sock, (struct sockaddr *)&loc_addr, sizeof(loc_addr))<0) return(-1);
+  return(sock);
+}
+#endif
+
 
 #if defined HAVE_USB && defined DEBUG
 
@@ -757,6 +852,75 @@ static FILE *create_socket(int port, const char *modus2) {
   if(listen(sock,1)<0) { io_error(errno,"listen");      return(NULL); }
   return(fdopen(sock,modus2));
 }
+
+static FILE *create_btrc_socket(int port, const char *modus2) {
+#ifdef DEBUG
+   printf("Create Socket: modus=%s port=%d\n",modus2,port);
+#endif
+#ifdef HAVE_BLUETOOTH
+  int sock=make_btrc_socket(port);
+  if(sock<0)           { io_error(errno,"make_socket"); return(NULL); }
+  if(listen(sock,1)<0) { io_error(errno,"listen");      return(NULL); }
+  return(fdopen(sock,modus2));
+#else
+  return(NULL);
+#endif
+}
+static FILE *create_btl2_socket(int port, const char *modus2) {
+#ifdef DEBUG
+   printf("Create Socket: modus=%s port=%d\n",modus2,port);
+#endif
+#ifdef HAVE_BLUETOOTH
+  int sock=make_btl2_socket(port);
+  if(sock<0)           { io_error(errno,"make_socket"); return(NULL); }
+  if(listen(sock,1)<0) { io_error(errno,"listen");      return(NULL); }
+  return(fdopen(sock,modus2));
+#else
+  return(NULL);
+#endif
+}
+
+
+static FILE *connect_bluetooth_L2CAP(int port, const char *modus2, const char *filename) { 
+  printf("Open Bluetooth: modus=%s adr=%s port=%d\n",modus2,filename, port);
+#ifdef HAVE_BLUETOOTH
+  int sock=socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+  if(sock<0) { io_error(errno,"socket");        return(NULL); }
+  struct sockaddr_l2 addr = { 0 };
+  /* set the connection parameters (who to connect to) */
+  addr.l2_family = AF_BLUETOOTH;
+  addr.l2_psm = htobs(0x1001);
+  str2ba(filename, &addr.l2_bdaddr);
+  /* connect to server  */
+  int status=connect(sock, (struct sockaddr *)&addr, sizeof(addr));
+  if(status<0) { io_error(errno,"connect");  return(NULL); }
+  return(fdopen(sock,modus2));
+#else
+  xberror(9,"Bluetooth support");
+  return(NULL);
+#endif
+}
+static FILE *connect_bluetooth_RFCOMM(int port, const char *modus2, const char *filename) { 
+  printf("Open Bluetooth: modus=%s adr=%s port=%d\n",modus2,filename, port);
+#ifdef HAVE_BLUETOOTH
+  int sock=socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+  if(sock<0)                                     { io_error(errno,"socket");        return(NULL); }
+  struct sockaddr_rc addr = { 0 };
+  /* set the connection parameters (who to connect to) */
+  addr.rc_family = AF_BLUETOOTH;
+  addr.rc_channel = (uint8_t) 1;
+  str2ba(filename, &addr.rc_bdaddr);
+  /* connect to server  */
+  int status=connect(sock, (struct sockaddr *)&addr, sizeof(addr));
+  if(status<0) { io_error(errno,"connect");  return(NULL); }
+  return(fdopen(sock,modus2));
+#else
+  xberror(9,"Bluetooth support");
+  return(NULL);
+#endif
+}
+
+
 static FILE *connect_socket(int port, const char *modus2, const char *filename) { 
   struct sockaddr_in servername;
 #ifdef DEBUG	 
@@ -772,15 +936,42 @@ static FILE *accept_socket(int port, const char *modus2) {
 #ifdef DEBUG
       printf("Accept Socket #%d: modus=%s adr=%s port=%d\n",number,modus2,filename, port);
 #endif
-  if(filenr[port].typ==0) {printf("Socket %d nicht geoeffnet.\n",port); io_error(errno,"accept_sockadr");  return(NULL); }
+  if(filenr[port].typ==FT_NONE) {printf("Socket %d nicht geoeffnet.\n",port); io_error(errno,"accept_sockadr");  return(NULL); }
   int sock=fileno(filenr[port].dptr);
-  struct sockaddr_in clientname;
-  socklen_t size=sizeof(clientname);
-  int sock2=accept(sock,(struct sockaddr *) &clientname,&size);
-  if(sock2<0) { io_error(errno,"accept"); return(NULL); }
-#ifdef DEBUG	   
-  printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), ntohs(clientname.sin_port),sock2);
+  int sock2=-1;
+  socklen_t size;
+#ifdef HAVE_BLUETOOTH
+  if(filenr[port].typ==FT_BTRC) {  /* Bluetooth verbindung*/
+    struct sockaddr_rc rem_addr = { 0 };
+    size = sizeof(rem_addr);
+    sock2=accept(sock,(struct sockaddr *)&rem_addr, &size);
+    if(sock2<0) { io_error(errno,"accept"); return(NULL); }
+#if DEBUG
+    char buf[1024] = { 0 };
+    ba2str( &rem_addr.rc_bdaddr, buf );
+    printf("accepted connection from %s\n", buf);
 #endif
+  } else if(filenr[port].typ==FT_BTL2) {  /* Bluetooth verbindung*/
+    struct sockaddr_l2 rem_addr = { 0 };
+    size = sizeof(rem_addr);
+    sock2=accept(sock,(struct sockaddr *)&rem_addr, &size);
+    if(sock2<0) { io_error(errno,"accept"); return(NULL); }
+#if DEBUG
+    char buf[1024] = { 0 };
+    ba2str( &rem_addr.l2_bdaddr, buf );
+    printf("accepted connection from %s\n", buf);
+#endif
+  } else 
+#endif
+  {
+    struct sockaddr_in clientname;
+    size=sizeof(clientname);
+    sock2=accept(sock,(struct sockaddr *) &clientname,&size);
+    if(sock2<0) { io_error(errno,"accept"); return(NULL); }
+#ifdef DEBUG	   
+    printf("Verbindung von %s auf Port $%hd an %d\n",inet_ntoa(clientname.sin_addr), ntohs(clientname.sin_port),sock2);
+#endif
+  }
   return(fdopen(sock2,modus2));
 }
 
@@ -1067,10 +1258,14 @@ void c_open(PARAMETER *plist, int e) {
 
   /*  Sockets  */
   if(special=='C')      filenr[number].dptr=connect_socket(port,modus2,filename);   /* Connect */
+  else if(special=='B') filenr[number].dptr=connect_bluetooth_RFCOMM(port,modus2,filename);   /* Connect */
   else if(special=='S') filenr[number].dptr=create_socket(port,modus2);             /* serve */
   else if(special=='A') filenr[number].dptr=accept_socket(port,modus2);             /* accept */
   else if(special=='U') filenr[number].dptr=create_udp_socket(port,modus2);         /* UDP socket*/
+  else if(special=='L') filenr[number].dptr=connect_bluetooth_L2CAP(port,modus2,filename);   /* Connect */
   else if(special=='Y') filenr[number].dptr=(FILE *) open_USB_device(filename,port);     /* USB devices */
+  else if(special=='Z') filenr[number].dptr=create_btrc_socket(port,modus2);             /* serve */
+  else if(special=='V') filenr[number].dptr=create_btl2_socket(port,modus2);             /* serve */
   else                  filenr[number].dptr=fopen(filename,modus2);                 /* Normal File */
     
   if(filenr[number].dptr==NULL) {io_error(errno,"OPEN");return;}
@@ -1080,6 +1275,8 @@ void c_open(PARAMETER *plist, int e) {
     set_terminal_flags(&(filenr[number]),plist->pointer,port); /* Fuer Serielle Devices !  */
     filenr[number].typ=FT_DEV;
   } else if(special=='Y') filenr[number].typ=FT_USB;
+  else if(special=='Z') filenr[number].typ=FT_BTRC;
+  else if(special=='V') filenr[number].typ=FT_BTL2;
   else filenr[number].typ=FT_FILE;
 }
 
@@ -1105,9 +1302,12 @@ void c_link(PARAMETER *plist, int e) {
     } 
   }
 }
+
+
+
 void c_send(PARAMETER *plist, int e) {
   FILEINFO fff=get_fileptr(plist->integer);
-  if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */ 
+  if(fff.typ==FT_NONE) xberror(24,""); /* File nicht geoeffnet */ 
   else if(fff.typ==FT_USB) {
 #ifdef HAVE_USB
     int ep_out=fff.ep_out;
@@ -1118,6 +1318,14 @@ void c_send(PARAMETER *plist, int e) {
       xberror(-1,"SEND"); /* IO-ERROR */
     }
 #endif
+  } else if(fff.typ==FT_BTRC) {
+    int sock=fileno(fff.dptr);
+    if(send(sock,plist[1].pointer,plist[1].integer,0)<0)  io_error(errno,"send()");
+    /*  TODO: an anderen Port senden....*/
+  } else if(fff.typ==FT_BTL2) {
+    int sock=fileno(fff.dptr);
+    if(send(sock,plist[1].pointer,plist[1].integer,0)<0)  io_error(errno,"send()");
+    /*  TODO: an anderen Port senden....*/
   } else {
     int sock=fileno(fff.dptr);
     if(e>=4) {
@@ -1136,6 +1344,7 @@ void c_send(PARAMETER *plist, int e) {
     }	
   }
 }
+/*TODO: bluetooth*/
 void c_receive(PARAMETER *plist, int e) {
   FILEINFO fff=get_fileptr(plist->integer);
   if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */    
@@ -1168,6 +1377,9 @@ void c_receive(PARAMETER *plist, int e) {
     STRING str;  
     str.pointer=malloc(1500);
     memset((void*)&host_address,0,sizeof(host_address));
+    
+    /*TODO: Bluetooth*/
+    
     host_address.sin_family=AF_INET;
     host_address_size=sizeof(host_address);
     if((str.len=recvfrom(fdes,str.pointer,1500,0,(struct sockaddr*)&host_address,
@@ -1185,64 +1397,56 @@ address_holder=(unsigned char*)&host_address.sin_addr.s_addr;
 }
 
 
-/* Schliesse alle Files (und sockets und USB verbindungen). macht kein UNLINK. (evtl. TODO)*/
-void close_all_files() {
-  int i;
-  for(i=0;i<ANZFILENR;i++) {
-    if(filenr[i].typ==FT_FILE || filenr[i].typ==FT_SOCKET|| filenr[i].typ==FT_PIPE) {
-      if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
-      else filenr[i].typ=FT_NONE;
-    } else if(filenr[i].typ==FT_DEV) {
+
+static void do_close(int i) {
+  if(i>=ANZFILENR || i<0) return;
+  switch(filenr[i].typ) {
+    case FT_DEV: 
       #if defined(TIOCM_DTR) && defined(TIOCMGET)
         RS232_disable(fileno(filenr[i].dptr),TIOCM_DTR|TIOCM_RTS);
       #endif
 #ifdef WINDOWS
 	CloseHandle(filenr[i].cport);        
 #endif
-
+       /*  kein break !*/      
+    case FT_FILE:
+    case FT_SOCKET:
+    case FT_PIPE:
+    case FT_BTRC:
+    case FT_BTL2: 
       if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
-      else filenr[i].typ=FT_NONE;         
-    } else if(filenr[i].typ==FT_USB) {
+      else filenr[i].typ=FT_NONE;
+     /* kein break; */
+    case FT_NONE:
+      break;     
+    case FT_USB:
 #ifdef HAVE_USB
         usb_close((struct usb_dev_handle *)filenr[i].dptr);
 #endif
-    }
-  }
-}
-
-
-void c_close(PARAMETER *plist,int e) {
-  int i;
-  if(e) {
-    while(--e>=0) {
-      i=plist[e].integer;
-      if(filenr[i].typ==FT_FILE) { 
-        if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
-        else filenr[i].typ=FT_NONE;
-      } else if(filenr[i].typ==FT_DEV) {
-#if defined(TIOCM_DTR) && defined(TIOCM_RTS)
-        RS232_disable(fileno(filenr[i].dptr),TIOCM_DTR|TIOCM_RTS);
-#endif
-        if(fclose(filenr[i].dptr)==EOF) io_error(errno,"CLOSE");
-        else filenr[i].typ=FT_NONE; 
-#ifdef WINDOWS
-	CloseHandle(filenr[i].cport);        
-#endif
-      } else if(filenr[i].typ==FT_DLL) { 
-#ifdef WINDOWS
+      break;
+    case FT_DLL:    /* UNLINK */
+ #ifdef WINDOWS
         if(FreeLibrary(filenr[i].dptr)==0) io_error(GetLastError(),"UNLINK");
         else filenr[i].typ=FT_NONE;
 #elif defined HAVE_DLOPEN
         if(dlclose(filenr[i].dptr)==EOF) io_error(errno,"UNLINK");
         else filenr[i].typ=FT_NONE;
 #endif
-      } else if(filenr[i].typ==FT_USB) {
-#ifdef HAVE_USB
-        usb_close((struct usb_dev_handle *)filenr[i].dptr);
-#endif
-        filenr[i].typ=FT_NONE;
-      } else xberror(24,""); /* File nicht geoeffnet...*/
-    }
+      break;
+  }
+}
+
+
+/* Schliesse alle Files (und sockets und USB verbindungen). macht kein UNLINK. (evtl. TODO)*/
+void close_all_files() {
+  int i;
+  for(i=0;i<ANZFILENR;i++) if(filenr[i].typ!=FT_DLL) do_close(i);
+}
+
+/* CLOSE und UNLINK */
+void c_close(PARAMETER *plist,int e) {
+  if(e) {
+    while(--e>=0) do_close(plist[e].integer);
   } else close_all_files();
 }
 

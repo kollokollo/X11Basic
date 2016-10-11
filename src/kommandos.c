@@ -1522,6 +1522,8 @@ void c_dump(PARAMETER *plist,int e) {
       else if(filenr[i].typ==FT_USB)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","USB CONNECTION");
       else if(filenr[i].typ==FT_SOCKET) fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","SOCKET");
       else if(filenr[i].typ==FT_PIPE)   fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","PIPE");
+      else if(filenr[i].typ==FT_BTRC)   fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","BLUETOOTH RFCOMM");
+      else if(filenr[i].typ==FT_BTL2)   fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","BLUETOOTH L2CAP");
       else if(filenr[i].typ)            fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","other");
     }
   }

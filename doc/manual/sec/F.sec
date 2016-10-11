@@ -345,6 +345,7 @@ EXAMPLE:
 	ELSE
 	  PRINT "I am parent. My child is PID=";a
 	ENDIF
+
 SEE ALSO: SPAWN
 ##############################################################################
 
@@ -510,15 +511,24 @@ DESCRIPTION:
 	pattern$ can be a file name mask; default is "*".  
 	attr$ can be "d" for only list directories, 
 	             "a" also list hidden files, 
-		     "f" list regular files.  
-	The attributes can be combined. default is "df". If found, the
-	filename and attributes are returned in a$. When path$ is empty, an
-	empty string is returned. Otherwise the returned string consists of
-	two words. E.g. "- filename.dat". The  first word lists the
+		     "f" list regular files,
+		     "u" list usb devices, 
+		     "b" list visible bluetooth devices nearby.
+		     
+	The attributes "d" and "f" can be combined ("df") so directories
+	as well as normal files are listed. If no attributes are give, 
+	the default is "df". 
+	
+	If found, the filename and attributes are returned in a$. 
+	If no file can be found, an empty string is returned. 
+	When path$ is empty, an empty string is returned. 
+	Otherwise the returned string consists of two words. 
+	E.g. "- filename.dat". The  first word lists the
 	attributes, the second word is the filename. Attributes can be "d" is
 	a directory, "s" symbolic link, "-" a regular file.
 
 EXAMPLE:
+        ' list files and directories in /tmp/
 	a$=FSFIRST$("/tmp","*.dat")
 	WHILE LEN(a$)
 	  PRINT WORD$(a$,2)
@@ -527,6 +537,40 @@ EXAMPLE:
  	  ENDIF
 	  a$=FSNEXT$()
 	WEND
+
+COMMENT:
+	FSFIRST$() can also be used to scan for BLUETOOTH or USB devices.
+	When scanning USB or Bluetooth devices additional information is returned. 
+	The attributes "u" and "b" cannot be combined with other attributes.
+
+EXAMPLE:
+	' Scan for USB devies around:
+        a$=FSFIRST$("","*","u")
+        WHILE LEN(a$)
+          PRINT a$
+          @decode(a$)
+          a$=FSNEXT$()
+        WEND
+        QUIT
+	PROCEDURE decode(a$)
+	  PRINT " USB bus/device:	    ";WORD$(a$,1)
+	  PRINT " USB vendor-ID/product-ID: ";WORD$(a$,2)
+	  PRINT " Manufacturer: 	    ";WORD$(a$,3)
+	  PRINT " Product:		    ";WORD$(a$,4)
+	  PRINT " Serial-Nr:		    ";WORD$(a$,5)
+	  PRINT " Number of configurations: ";WORD$(a$,6)
+	RETURN
+
+EXAMPLE:
+	' Scan for bluetooth devies around:
+	a$=FSFIRST$("","*","b")
+	WHILE LEN(a$)
+	  PRINT a$
+	  PRINT "Adress: ";WORD$(a$,1)
+	  PRINT "Name:   ";WORD$(a$,1)
+	  a$=FSNEXT$()
+	WEND
+
 
 SEE ALSO: FSNEXT$()
 

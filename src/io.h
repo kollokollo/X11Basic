@@ -31,6 +31,8 @@
 #define FT_SOCKET 4
 #define FT_USB    5
 #define FT_PIPE   6
+#define FT_BTRC   7
+#define FT_BTL2   8
 
 typedef struct {
   int typ;
