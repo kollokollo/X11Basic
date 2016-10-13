@@ -9,10 +9,31 @@
 '
 ' (c) by Markus Hoffmann 2015
 ' X11-Basic Version >= 1.24
+' improved for use with X11-Basic >=1.25  2016-10 MH
 '
 '
 debug=0     ! set to 1 if you want verbose information
 protocol=1  ! for VDL101T
+
+' First check if the logger is connected
+print "searching for VDL101T logger..."
+found=FALSE
+a$=FSFIRST$("","*","u")
+WHILE LEN(a$)
+  IF UPPER$(WORD$(a$,2))="10C4/EA61"
+    found=TRUE
+  ENDIF
+  a$=FSNEXT$()
+WEND
+IF NOT found
+  PRINT "Sorry, the logger VDL101T could not be found."
+  PRINT "Is ist plugged in?"
+  QUIT
+ENDIF
+PRINT "logger found. Connecting..."
+PRINT "NOTE: If this step causes problems, try to unload the (wrong) kernel driver"
+PRINT "sudo rmmod cp210x"
+PRINT "and try to run this program as root."
 
 ' Open the USB-Device by Product and Vendor Number
 OPEN "UY",#1,"0x10c4:0xea61"

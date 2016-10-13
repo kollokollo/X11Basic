@@ -55,7 +55,7 @@ int input_bit() {
     bits_to_go--;
     return t;
 }
-inline void output_bit(int bit){
+static void output_bit(int bit){
   buffer>>=1;
   if (bit) buffer |= 0x80;
     bits_to_go--;

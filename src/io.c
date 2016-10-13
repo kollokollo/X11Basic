@@ -226,7 +226,59 @@ int f_freefile() {
   }
   return(-1);
 }
+#ifdef HAVE_USB
 
+static void print_usb_endpoint(char *ret,struct usb_endpoint_descriptor *endpoint) {
+  sprintf(ret,"(0x%02x 0x%02x %d %d %d %d)",endpoint->bEndpointAddress, 
+                                             endpoint->bmAttributes, 
+					     endpoint->wMaxPacketSize, 
+					     endpoint->bInterval, 
+					     endpoint->bRefresh, 
+					     endpoint->bSynchAddress);
+}
+
+
+
+void print_usb_altsetting(char *ret,struct usb_interface_descriptor *interface) {
+  int i;
+  sprintf(ret,"(%d %d %d %d %d %d %d)",interface->bInterfaceNumber, 
+                                       interface->bAlternateSetting, 
+				       interface->bNumEndpoints, 
+				       interface->bInterfaceClass, 
+				       interface->bInterfaceSubClass, 
+				       interface->bInterfaceProtocol, 
+				       interface->iInterface);
+  if(interface->bNumEndpoints>0) {
+    strcat(ret,"{");
+    for(i=0;i<interface->bNumEndpoints;i++)
+      print_usb_endpoint(ret+strlen(ret),&interface->endpoint[i]);
+    strcat(ret,"}");
+  }
+}
+
+static void print_usb_interface(char *ret,struct usb_interface *interface) {
+  int i;
+  if(interface->num_altsetting>0) {
+    strcat(ret,"{");
+    for (i=0;i<interface->num_altsetting;i++)
+      print_usb_altsetting(ret+strlen(ret),&interface->altsetting[i]);
+    strcat(ret,"}");
+  }
+}
+
+static void print_usb_configuration(char *ret,struct usb_config_descriptor *config) {
+  int i;
+  sprintf(ret,"(%d %d %d %d 0x%02x %d)",config->wTotalLength,config->bNumInterfaces,
+                                     config->bConfigurationValue,config->iConfiguration,
+				     config->bmAttributes,config->MaxPower);
+  if(config->bNumInterfaces>0) {
+    strcat(ret,"{");
+    for(i=0;i<config->bNumInterfaces; i++)
+      print_usb_interface(ret+strlen(ret),&config->interface[i]); 
+    strcat(ret,"}");
+  }
+}
+#endif
 
 #ifdef WINDOWS
 static char fspath[NAME_MAX+1];
@@ -239,8 +291,10 @@ static int bt_sock=-1;
 static int num_rsp;
 inquiry_info *bt_ii=NULL;
 #endif
-
-
+#ifdef HAVE_USB
+  struct usb_bus *usbbus;
+  struct usb_device *usbdev;
+#endif
 /*TODO: FSFIRST und FSNEXT könnte man auch zum Scannen der 
   BLUETOOTH-Umgebung benutzen. Genauso zum suchen nach USB devices....
   */
@@ -278,16 +332,27 @@ STRING f_fsfirsts(PARAMETER *plist,int e) {
     return(create_string("<ERROR>"));
   }
 #else
-    printf("Bluetooth support not yet ready.\n");
+    printf("Bluetooth support not compiled in.\n");
     xberror(9,"Bluetooth support");
 #endif
   } else if (*fsattr=='u') {
-    printf("USB support not yet ready.\n");
+#ifdef HAVE_USB
+    usb_init();
+    usb_find_busses();
+    usb_find_devices();
+    usbbus=usb_busses;
+    usbdev=NULL;
+    if(usbbus) usbdev=usbbus->devices;
+#else
+    printf("USB support not compiled in.\n");
     xberror(9,"USB support");
+#endif
   } else dp=opendir(plist->pointer);
   // printf("OPENDIR: <%s> --> %p\n",plist->pointer,dp);
   return(f_fsnexts());
 }
+
+
 STRING f_fsnexts() {
   STRING ergebnis;
   if(*fsattr=='b') {
@@ -307,6 +372,70 @@ STRING f_fsnexts() {
       ergebnis.pointer=malloc(1);
       ergebnis.len=0;
     }
+  } else if(*fsattr=='u') {
+#ifdef HAVE_USB
+  while(usbbus && !usbdev) {
+    usbbus=usbbus->next;
+    if(usbbus) usbdev=usbbus->devices;
+  }
+  if(usbbus) {
+    if(usbdev) {
+      ergebnis.pointer=malloc(256*4);
+      sprintf(ergebnis.pointer,"%s/%s %04X/%04X",usbbus->dirname,usbdev->filename,
+        usbdev->descriptor.idVendor, usbdev->descriptor.idProduct);
+      ergebnis.len=strlen(ergebnis.pointer);
+      usb_dev_handle *udev;
+      udev = usb_open(usbdev);
+      if(udev) {
+	char string[256];
+	int ret;
+        if(usbdev->descriptor.iManufacturer) {
+          ret=usb_get_string_simple(udev,usbdev->descriptor.iManufacturer,string, sizeof(string));
+          if(ret>0) sprintf(ergebnis.pointer+ergebnis.len," \"%s\"", string);
+          else sprintf(ergebnis.pointer+ergebnis.len," \"\"");
+        } else sprintf(ergebnis.pointer+ergebnis.len," ~");
+	ergebnis.len=strlen(ergebnis.pointer);
+	
+	if(usbdev->descriptor.iProduct) {
+          ret=usb_get_string_simple(udev,usbdev->descriptor.iProduct, string, sizeof(string));
+          if(ret>0) sprintf(ergebnis.pointer+ergebnis.len," \"%s\"", string);
+          else sprintf(ergebnis.pointer+ergebnis.len," \"\"");
+        } else sprintf(ergebnis.pointer+ergebnis.len," ~");
+	ergebnis.len=strlen(ergebnis.pointer);
+
+	if(usbdev->descriptor.iSerialNumber) {
+          ret=usb_get_string_simple(udev,usbdev->descriptor.iSerialNumber, string, sizeof(string));
+          if(ret>0) sprintf(ergebnis.pointer+ergebnis.len," \"%s\"", string);
+          else sprintf(ergebnis.pointer+ergebnis.len," \"\"");
+        } else sprintf(ergebnis.pointer+ergebnis.len," ~");
+	ergebnis.len=strlen(ergebnis.pointer);
+      } else {
+        sprintf(ergebnis.pointer+ergebnis.len," -");
+	ergebnis.len=strlen(ergebnis.pointer);
+      }
+      sprintf(ergebnis.pointer+ergebnis.len," %d",usbdev->descriptor.bNumConfigurations);
+      ergebnis.len=strlen(ergebnis.pointer);
+      if(usbdev->descriptor.bNumConfigurations>0) {
+        sprintf(ergebnis.pointer+ergebnis.len," {");
+	ergebnis.len=strlen(ergebnis.pointer);
+        int i;
+        for(i=0;i<usbdev->descriptor.bNumConfigurations;i++) {
+	  print_usb_configuration(ergebnis.pointer+ergebnis.len,&usbdev->config[i]);
+	  ergebnis.len=strlen(ergebnis.pointer);
+        }
+        sprintf(ergebnis.pointer+ergebnis.len,"}");
+	ergebnis.len=strlen(ergebnis.pointer);
+      }
+      usbdev=usbdev->next;
+    } else printf("internal error.\n");
+  } else {
+      ergebnis.pointer=malloc(1);
+      ergebnis.len=0;
+  }
+#else
+    ergebnis.pointer=malloc(1);
+    ergebnis.len=0;
+#endif
   } else {
     struct dirent *ep;
     if(dp==NULL) {
@@ -707,54 +836,6 @@ static int make_btl2_socket(unsigned short int port) {
 }
 #endif
 
-
-#if defined HAVE_USB && defined DEBUG
-
-
-static void print_endpoint(struct usb_endpoint_descriptor *endpoint) {
-  printf(" bEndpointAddress: %02xh\n", endpoint->bEndpointAddress);
-  printf(" bmAttributes: %02xh\n", endpoint->bmAttributes);
-  printf(" wMaxPacketSize: %d\n", endpoint->wMaxPacketSize);
-  printf(" bInterval: %d\n", endpoint->bInterval);
-  printf(" bRefresh: %d\n", endpoint->bRefresh);
-  printf(" bSynchAddress: %d\n", endpoint->bSynchAddress);
-}
-
-static void print_altsetting(struct usb_interface_descriptor *interface) {
-  int i;
-
-  printf(" bInterfaceNumber: %d\n", interface->bInterfaceNumber);
-  printf(" bAlternateSetting: %d\n", interface->bAlternateSetting);
-  printf(" bNumEndpoints: %d\n", interface->bNumEndpoints);
-  printf(" bInterfaceClass: %d\n", interface->bInterfaceClass);
-  printf(" bInterfaceSubClass: %d\n", interface->bInterfaceSubClass);
-  printf(" bInterfaceProtocol: %d\n", interface->bInterfaceProtocol);
-  printf(" iInterface: %d\n", interface->iInterface);
-
-  for (i = 0; i < interface->bNumEndpoints; i++)
-    print_endpoint(&interface->endpoint[i]);
-}
-
-
-static void print_interface(struct usb_interface *interface) {
-  int i;
-  for (i = 0; i < interface->num_altsetting; i++)
-    print_altsetting(&interface->altsetting[i]);
-}
-
-static void print_configuration(struct usb_config_descriptor *config) {
-  int i;
-
-  printf(" wTotalLength: %d\n", config->wTotalLength);
-  printf(" bNumInterfaces: %d\n", config->bNumInterfaces);
-  printf(" bConfigurationValue: %d\n", config->bConfigurationValue);
-  printf(" iConfiguration: %d\n", config->iConfiguration);
-  printf(" bmAttributes: %02xh\n", config->bmAttributes);
-  printf(" MaxPower: %d\n", config->MaxPower);
-  for (i = 0; i < config->bNumInterfaces; i++) print_interface(&config->interface[i]);
-}
-#endif
-
 /* Universelle OPEN-Funktion. Oeffnet Files, Devices, und sockets   */
 /* OPEN "I",#1,filename$[,port]   */
 
@@ -826,12 +907,6 @@ static struct usb_dev_handle *open_USB_device(const char *filename, int idx) {
 #ifdef DEBUG
   if(dev->descriptor.bNumConfigurations) printf("%d Configurations.\n",dev->descriptor.bNumConfigurations);
   if(!dev->config) printf(" Couldn't retrieve descriptors\n");
-  else {
-    int i;
-    for(i=0;i<dev->descriptor.bNumConfigurations;i++) {
-      print_configuration(&dev->config[i]);
-    }
-  }
 #endif
   return(dev_hdl);
 #else
