@@ -80,6 +80,10 @@ void gem_init() {
 /* Passende Zeichengroesse ermitteln.*/
 
 #ifdef FRAMEBUFFER
+
+/*TODO: Es ist vielleicht ungünstig, das an den Terminalfont zu binden.
+*/
+
   /*Das Ziel ist hier, dass ungefaehrr 60 bis 80 Zeichen in eine Zeile passen*/
   if(font_behaviour==0) { /* Auto */
     if(window[usewindow].w>=1200) load_GEMFONT(FONT_LARGE);

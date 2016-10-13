@@ -123,10 +123,12 @@ void Fb_Open() {
   screen.pixels = (char *)screen_pixels;
 #endif
 
-  if(font_behaviour==0) {
-    if(screen.width/8<20) change_fontsize(0);
-    else if(screen.width/8<=40) change_fontsize(1);
-    else change_fontsize(2);
+  if(font_behaviour==0) { /* This means: auto  */
+    if(screen.width<200) change_fontsize(0);  /*5x7 font*/
+    else if(screen.width<=480) change_fontsize(1); /*8x16 font*/
+    else if(screen.width<=960) change_fontsize(2); /*16x32 font*/
+    else if(screen.width<=1200) change_fontsize(3); /*24x48 font*/
+    else change_fontsize(3);  /*32x64 font*/
   } else change_fontsize(font_behaviour-1);
 
   /* Now set the padding to zero, otherwise it can happen that nothing is visible
