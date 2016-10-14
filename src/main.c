@@ -83,7 +83,15 @@ static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
          "*                       by Markus Hoffmann 1997-2016 (c) *\n"
+#ifdef NOGRAPHICS
+         "*    ====> Version without graphics support <====        *\n"
+#elif defined USE_SDL
+         "* sdl                                                    *\n"
+#elif defined FRAMEBUFFER
+         "* fb                                                     *\n"
+#else
          "*                                                        *\n"
+#endif
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"
          "* Library V. %s vom     %30s *\n"

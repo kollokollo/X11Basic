@@ -4,6 +4,9 @@
 AC_INIT([X11-Basic], [1.25], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
+# for debugging we want all warnings
+regs=-Wall
+
 AC_REVISION($Revision: 0.12 $)
 AC_SUBST(version)
 AC_CONFIG_HEADERS([config.h])
@@ -41,6 +44,83 @@ then
 fi
 
 
+# enable the arguments for different flavors of X11-Basic
+
+AC_ARG_ENABLE(cryptography, AS_HELP_STRING([--enable-cryptography],
+              [enable cryptographic features @<:@default=no@:>@]), [with_crypto=$enableval], [with_crypto=no])
+
+AC_ARG_ENABLE(static, AS_HELP_STRING([--enable-static],
+              [only produce static libraries @<:@default=no@:>@]), [with_static=$enableval], [with_static=no])
+
+AC_ARG_ENABLE(smallram, AS_HELP_STRING([--enable-smallram],
+              [make version siutable for systems with small RAM @<:@default=no@:>@]), [with_smallram=$enableval], [with_smallram=no])
+
+AC_ARG_ENABLE(german, AS_HELP_STRING([--enable-german],
+              [make german version  @<:@default=no@:>@]), [with_german=$enableval], [with_german=no])
+
+AC_ARG_WITH(bluetooth, AS_HELP_STRING([--with-bluetooth],
+              [support blutooth @<:@default=yes@:>@]), [with_bluetooth=$withval], [with_bluetooth=yes])
+
+AC_ARG_WITH(usb, AS_HELP_STRING([--with-usb],
+              [support USB @<:@default=yes@:>@]), [with_usb=$withval], [with_usb=yes])
+
+AC_ARG_WITH(readline, AS_HELP_STRING([--with-readline],
+              [support readline library @<:@default=yes@:>@]), [with_readline=$withval], [with_readline=yes])
+
+AC_ARG_WITH(framebuffer, AS_HELP_STRING([--with-framebuffer],
+              [support framebuffer @<:@default=no@:>@]), [with_framebuffer=$withval], [with_framebuffer=no])
+
+AC_ARG_WITH(sdl, AS_HELP_STRING([--with-sdl],
+              [support SDL library @<:@default=no@:>@]), [with_sdl=$withval], [with_sdl=no])
+	      
+AC_ARG_WITH(x, AS_HELP_STRING([--with-x],
+              [use the X Window System  @<:@default=yes@:>@]), [with_x=$withval], [with_x=yes])
+
+echo
+echo "Configuring X11-Basic with following features:"
+echo "Install prefix:                 " $prefix
+echo "Cryptographic features        = " $with_crypto
+echo "Small RAM version             = " $with_smallram
+echo "German version                = " $with_german
+echo "Produce only static libraries = " $with_static
+echo "Use X Window system           = " $with_x
+echo "Use SDL library               = " $with_sdl
+echo "Use framebuffer               = " $with_framebuffer
+echo "Use readline library          = " $with_readline
+echo "Support USB                   = " $with_usb
+echo "Support bluetooth             = " $with_bluetooth
+echo
+
+if test "n$with_sdl" = nno && test "n$with_x" = nno && test "n$with_framebuffer" = nno; then
+cat <<'EOF'
+WARNING: You seem to have specified no graphics engine! So a version of X11-Basic will be
+produced, which only uses the commandline and no graphics at all. Please note that this version
+will be incompatible in bytecode to other versions since the graphics commands are completely
+taken out and will result in a syntax error. 
+
+EOF
+fi
+
+
+
+
+if test "n$with_smallram" = nyes; then
+def="$def -DSAVE_RAM"
+fi
+if test "n$with_framebuffer" = nyes; then
+def="$def -DFRAMEBUFFER"
+fi
+if test "n$with_sdl" = nyes; then
+def="$def -DUSE_SDL"
+fi
+if test "n$with_x" = nyes; then
+def="$def -DUSE_X11"
+fi
+if test "n$with_german" = nyes; then
+def="$def -DGERMAN"
+fi
+
+
 
 #### PROGRAMS
 # Checks for programs.
@@ -54,7 +134,7 @@ xbasic -e version
 fi
 
 AC_PROG_CC
-#AC_PROG_INSTALL
+# AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CPP
 
@@ -87,21 +167,37 @@ EOF
 fi
 
 #### LIBRARIES
+
+if test "n$with_x" = nyes || test "n$with_sdl" = nyes; then
 AC_PATH_XTRA
+
 if test "x$no_x" = yes; then
 	echo "Sorry, I can't find any trace of the X Window installation (X11) on your"
 	echo "system! Please use --x-includes=DIR and --x-libraries=DIR if you have them."
 	exit 1
 fi
+fi
+
+
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/kd.h complex.h png.h jpeglib.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h])
+AC_CHECK_HEADERS([sys/kd.h complex.h png.h jpeglib.h pty.h errno.h limits.h sys/file.h sys/param.h  sys/timeb.h utime.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h termios.h unistd.h utmp.h])
 
 
 
 # Checks for libraries.
+
+
+if test "n$with_x" = nyes || test "n$with_sdl" = nyes; then
 # `-lX11':
-AC_CHECK_LIB([X11], [XOpenDisplay], xlibs="${xlibs} -lX11",,[$X_LIBS])
+AC_CHECK_LIB([X11], [XOpenDisplay], [
+xlibs="$xlibs -lX11"
+AC_DEFINE(HAVE_X11,1,[X11lib])
+])
+fi
+
+
 # `-ldl':
 AC_CHECK_LIB([dl], [dlopen], [
 libs="$libs -ldl"
@@ -152,12 +248,13 @@ libs="$libs -lutil"
 AC_DEFINE(HAVE_FORKPTY,1,[forkpty in libutil])
 ],,[$libs])
 
+if test "n$with_readline" = nyes; then
 # `-lreadline':
 AC_CHECK_LIB([readline], [readline], [
 libs="$libs -lreadline"
 AC_DEFINE(HAVE_READLINE,1,[readline in readline])
 ],,[$libs])
-
+fi
 
 # `-llapack':
 AC_CHECK_LIB([lapack], [dgelss_], [
@@ -177,45 +274,55 @@ libs="$libs -lgmp"
 AC_DEFINE(HAVE_PRIMORIAL_UI,1,[mpz_primorial_ui in gmp])
 ],,[$libs])
 
+if test "n$with_usb" = nyes; then
 # `-lusb':
 AC_CHECK_LIB([usb], [usb_open], [
 libs="$libs -lusb"
 AC_DEFINE(HAVE_USB,1,[usb_open in lusb])
 ],,[$libs])
-
 # `-lusb-1.0':
 #AC_CHECK_LIB([usb-1.0], [libusb_control_transfer], [
 #libs="$libs -lusb-1.0"
 #AC_DEFINE(HAVE_LIBUSB,1,[libusb_control_transfer in lusb-1.0])
 #],,[$libs])
+fi
 
+if test "n$with_bluetooth" = nyes; then
 # `-lbluetooth':
 AC_CHECK_LIB([bluetooth], [hci_get_route], [
 libs="$libs -lbluetooth"
 AC_DEFINE(HAVE_BLUETOOTH,1,[hci_get_route in lbluetooth])
 ],,[$libs])
+fi
 
+if test "n$with_crypto" = nyes; then
 # `-lgcrypt':
-#AC_CHECK_LIB([gcrypt], [gcry_check_version], [
-#libs="$libs -lgcrypt"
-#AC_DEFINE(HAVE_GCRYPT,1,[gcry_check_version in lgcrypt])
-#],,[$libs])
+AC_CHECK_LIB([gcrypt], [gcry_check_version], [
+libs="$libs -lgcrypt"
+AC_DEFINE(HAVE_GCRYPT,1,[gcry_check_version in lgcrypt])
+],,[$libs])
+fi
 
-
+if test "n$with_sdl" = nyes; then
 # `-lSDL':
-AC_CHECK_LIB([SDL], [SDL_MapRGB], AC_DEFINE(HAVE_SDL,1,[Simple Direct Media present]))
-AC_CHECK_LIB([SDL_gfx], [hlineRGBA], AC_DEFINE(HAVE_SDL_GFX,1,[Simple Direct Media GFX]))
+AC_CHECK_LIB([SDL], [SDL_MapRGB], [
+libs="$libs -lSDL"
+AC_DEFINE(HAVE_SDL,1,[Simple Direct Media present])
+])
+AC_CHECK_LIB([SDL_gfx], [hlineRGBA], [
+libs="$libs -lSDL_gfx"
+AC_DEFINE(HAVE_SDL_GFX,1,[Simple Direct Media GFX])
+])
+fi
 
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])
 # `-ltine':
-AC_CHECK_LIB([tine], [_SystemCycle],AC_DEFINE(HAVE_TINE,1,[_SystemCycle in dynamical TINE lib]),,[ -lm])
+#AC_CHECK_LIB([tine], [_SystemCycle],AC_DEFINE(HAVE_TINE,1,[_SystemCycle in dynamical TINE lib]),,[ -lm])
 # `-lDOOCSclient':
-AC_CHECK_LIB([DOOCSclient], [eq_int],AC_DEFINE(HAVE_DOOCS,1,[eq_int in dynamical DOOCS lib]),,[ -lm -lpthread -ltine])
+#AC_CHECK_LIB([DOOCSclient], [eq_int],AC_DEFINE(HAVE_DOOCS,1,[eq_int in dynamical DOOCS lib]),,[ -lm -lpthread -ltine])
 # `-lvgagl -lvga':
-AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
-
-libs="$libs $xlibs"
+#AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
 
 AC_SUBST(inc)
 AC_SUBST(X_CFLAGS)
@@ -401,11 +508,15 @@ AC_FUNC_FORK
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
+AC_FUNC_MMAP
+AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
-AC_CHECK_FUNCS([nanosleep inotify_init alarm atexit getcwd gethostbyname gettimeofday inet_ntoa]) 
-AC_CHECK_FUNCS([memmove memfrob select socket strchr strdup strstr utime execvp execvpe futimens])
+AC_CHECK_FUNCS([nanosleep inotify_init memfrob utime execvp execvpe futimens])
+AC_CHECK_FUNCS([alarm atexit bzero dup2 getcwd gethostbyname gettimeofday]) 
+AC_CHECK_FUNCS([inet_ntoa localtime_r memmove memset mkdir munmap rmdir select]) 
+AC_CHECK_FUNCS([socket strchr strdup strerror strstr])
 
 
 # Versioning
@@ -417,6 +528,7 @@ AC_SUBST(mandir)
 AC_SUBST(regs)
 AC_SUBST(def)
 AC_SUBST(libs)
+AC_SUBST(xlibs)
 AC_SUBST(xtra)
 AC_SUBST(copt)
 AC_SUBST(static)

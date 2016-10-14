@@ -12,10 +12,6 @@
 #include "config.h"
 #include "options.h"
 
-#ifdef SMALL
-  #define SAVE_RAM 1
-#endif
-
 #ifdef SAVE_RAM
   #define MAXSTRLEN   1024   /* in Bytes */
   #define MAXLINELEN  1024   /* in Bytes */

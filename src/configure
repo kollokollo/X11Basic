@@ -627,6 +627,7 @@ ac_subst_vars='LTLIBOBJS
 static
 copt
 xtra
+xlibs
 libs
 def
 regs
@@ -692,6 +693,15 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_cryptography
+enable_static
+enable_smallram
+enable_german
+with_bluetooth
+with_usb
+with_readline
+with_framebuffer
+with_sdl
 with_x
 '
       ac_precious_vars='build_alias
@@ -1324,9 +1334,25 @@ if test -n "$ac_init_help"; then
    esac
   cat <<\_ACEOF
 
+Optional Features:
+  --disable-option-checking  ignore unrecognized --enable/--with options
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-cryptography   enable cryptographic features [default=no]
+  --enable-static         only produce static libraries [default=no]
+  --enable-smallram       make version siutable for systems with small RAM
+                          [default=no]
+  --enable-german         make german version [default=no]
+
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-bluetooth        support blutooth [default=yes]
+  --with-usb              support USB [default=yes]
+  --with-readline         support readline library [default=yes]
+  --with-framebuffer      support framebuffer [default=no]
+  --with-sdl              support SDL library [default=no]
+  --with-x                use the X Window System [default=yes]
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -2349,6 +2375,9 @@ $as_echo "$as_me: creating cache $cache_file" >&6;}
   >$cache_file
 fi
 
+as_fn_append ac_header_list " stdlib.h"
+as_fn_append ac_header_list " unistd.h"
+as_fn_append ac_header_list " sys/param.h"
 as_fn_append ac_header_list " utime.h"
 # Check that the precious variables saved in the cache have kept the same
 # value.
@@ -2420,6 +2449,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 version=$PACKAGE_VERSION
 vdate=`date`
+# for debugging we want all warnings
+regs=-Wall
+
 
 
 ac_config_headers="$ac_config_headers config.h"
@@ -2444,6 +2476,139 @@ $as_echo "using prefix $prefix" >&6; }
       prefix=$ac_default_prefix
     ;;
   esac
+fi
+
+
+# enable the arguments for different flavors of X11-Basic
+
+# Check whether --enable-cryptography was given.
+if test "${enable_cryptography+set}" = set; then :
+  enableval=$enable_cryptography; with_crypto=$enableval
+else
+  with_crypto=no
+fi
+
+
+# Check whether --enable-static was given.
+if test "${enable_static+set}" = set; then :
+  enableval=$enable_static; with_static=$enableval
+else
+  with_static=no
+fi
+
+
+# Check whether --enable-smallram was given.
+if test "${enable_smallram+set}" = set; then :
+  enableval=$enable_smallram; with_smallram=$enableval
+else
+  with_smallram=no
+fi
+
+
+# Check whether --enable-german was given.
+if test "${enable_german+set}" = set; then :
+  enableval=$enable_german; with_german=$enableval
+else
+  with_german=no
+fi
+
+
+
+# Check whether --with-bluetooth was given.
+if test "${with_bluetooth+set}" = set; then :
+  withval=$with_bluetooth; with_bluetooth=$withval
+else
+  with_bluetooth=yes
+fi
+
+
+
+# Check whether --with-usb was given.
+if test "${with_usb+set}" = set; then :
+  withval=$with_usb; with_usb=$withval
+else
+  with_usb=yes
+fi
+
+
+
+# Check whether --with-readline was given.
+if test "${with_readline+set}" = set; then :
+  withval=$with_readline; with_readline=$withval
+else
+  with_readline=yes
+fi
+
+
+
+# Check whether --with-framebuffer was given.
+if test "${with_framebuffer+set}" = set; then :
+  withval=$with_framebuffer; with_framebuffer=$withval
+else
+  with_framebuffer=no
+fi
+
+
+
+# Check whether --with-sdl was given.
+if test "${with_sdl+set}" = set; then :
+  withval=$with_sdl; with_sdl=$withval
+else
+  with_sdl=no
+fi
+
+
+
+# Check whether --with-x was given.
+if test "${with_x+set}" = set; then :
+  withval=$with_x; with_x=$withval
+else
+  with_x=yes
+fi
+
+
+echo
+echo "Configuring X11-Basic with following features:"
+echo "Install prefix:                 " $prefix
+echo "Cryptographic features        = " $with_crypto
+echo "Small RAM version             = " $with_smallram
+echo "German version                = " $with_german
+echo "Produce only static libraries = " $with_static
+echo "Use X Window system           = " $with_x
+echo "Use SDL library               = " $with_sdl
+echo "Use framebuffer               = " $with_framebuffer
+echo "Use readline library          = " $with_readline
+echo "Support USB                   = " $with_usb
+echo "Support bluetooth             = " $with_bluetooth
+echo
+
+if test "n$with_sdl" = nno && test "n$with_x" = nno && test "n$with_framebuffer" = nno; then
+cat <<'EOF'
+WARNING: You seem to have specified no graphics engine! So a version of X11-Basic will be
+produced, which only uses the commandline and no graphics at all. Please note that this version
+will be incompatible in bytecode to other versions since the graphics commands are completely
+taken out and will result in a syntax error.
+
+EOF
+fi
+
+
+
+
+if test "n$with_smallram" = nyes; then
+def="$def -DSAVE_RAM"
+fi
+if test "n$with_framebuffer" = nyes; then
+def="$def -DFRAMEBUFFER"
+fi
+if test "n$with_sdl" = nyes; then
+def="$def -DUSE_SDL"
+fi
+if test "n$with_x" = nyes; then
+def="$def -DUSE_X11"
+fi
+if test "n$with_german" = nyes; then
+def="$def -DGERMAN"
 fi
 
 
@@ -3285,7 +3450,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-#AC_PROG_INSTALL
+# AC_PROG_INSTALL
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ln -s works" >&5
 $as_echo_n "checking whether ln -s works... " >&6; }
 LN_S=$as_ln_s
@@ -3538,6 +3703,8 @@ EOF
 fi
 
 #### LIBRARIES
+
+if test "n$with_x" = nyes || test "n$with_sdl" = nyes; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for X" >&5
 $as_echo_n "checking for X... " >&6; }
@@ -4222,11 +4389,15 @@ fi
 
 fi
 
+
 if test "x$no_x" = yes; then
 	echo "Sorry, I can't find any trace of the X Window installation (X11) on your"
 	echo "system! Please use --x-includes=DIR and --x-libraries=DIR if you have them."
 	exit 1
 fi
+fi
+
+
 ac_header_dirent=no
 for ac_hdr in dirent.h sys/ndir.h sys/dir.h ndir.h; do
   as_ac_Header=`$as_echo "ac_cv_header_dirent_$ac_hdr" | $as_tr_sh`
@@ -4644,7 +4815,20 @@ fi
 done
 
 
-for ac_header in sys/kd.h complex.h png.h jpeglib.h pty.h errno.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/timeb.h termios.h unistd.h utime.h
+for ac_header in sys/kd.h complex.h png.h jpeglib.h pty.h errno.h limits.h sys/file.h sys/param.h  sys/timeb.h utime.h
+do :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+for ac_header in fcntl.h inttypes.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h termios.h unistd.h utmp.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -4661,6 +4845,9 @@ done
 
 
 # Checks for libraries.
+
+
+if test "n$with_x" = nyes || test "n$with_sdl" = nyes; then
 # `-lX11':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XOpenDisplay in -lX11" >&5
 $as_echo_n "checking for XOpenDisplay in -lX11... " >&6; }
@@ -4668,7 +4855,7 @@ if ${ac_cv_lib_X11_XOpenDisplay+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lX11 $X_LIBS $LIBS"
+LIBS="-lX11  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4699,8 +4886,16 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_X11_XOpenDisplay" >&5
 $as_echo "$ac_cv_lib_X11_XOpenDisplay" >&6; }
 if test "x$ac_cv_lib_X11_XOpenDisplay" = xyes; then :
-  xlibs="${xlibs} -lX11"
+
+xlibs="$xlibs -lX11"
+
+$as_echo "#define HAVE_X11 1" >>confdefs.h
+
+
 fi
+
+fi
+
 
 # `-ldl':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
@@ -5283,6 +5478,7 @@ $as_echo "#define HAVE_FORKPTY 1" >>confdefs.h
 fi
 
 
+if test "n$with_readline" = nyes; then
 # `-lreadline':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for readline in -lreadline" >&5
 $as_echo_n "checking for readline in -lreadline... " >&6; }
@@ -5329,7 +5525,7 @@ $as_echo "#define HAVE_READLINE 1" >>confdefs.h
 
 fi
 
-
+fi
 
 # `-llapack':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dgelss_ in -llapack" >&5
@@ -5472,6 +5668,7 @@ $as_echo "#define HAVE_PRIMORIAL_UI 1" >>confdefs.h
 fi
 
 
+if test "n$with_usb" = nyes; then
 # `-lusb':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for usb_open in -lusb" >&5
 $as_echo_n "checking for usb_open in -lusb... " >&6; }
@@ -5518,13 +5715,14 @@ $as_echo "#define HAVE_USB 1" >>confdefs.h
 
 fi
 
-
 # `-lusb-1.0':
 #AC_CHECK_LIB([usb-1.0], [libusb_control_transfer], [
 #libs="$libs -lusb-1.0"
 #AC_DEFINE(HAVE_LIBUSB,1,[libusb_control_transfer in lusb-1.0])
 #],,[$libs])
+fi
 
+if test "n$with_bluetooth" = nyes; then
 # `-lbluetooth':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hci_get_route in -lbluetooth" >&5
 $as_echo_n "checking for hci_get_route in -lbluetooth... " >&6; }
@@ -5571,14 +5769,58 @@ $as_echo "#define HAVE_BLUETOOTH 1" >>confdefs.h
 
 fi
 
+fi
 
+if test "n$with_crypto" = nyes; then
 # `-lgcrypt':
-#AC_CHECK_LIB([gcrypt], [gcry_check_version], [
-#libs="$libs -lgcrypt"
-#AC_DEFINE(HAVE_GCRYPT,1,[gcry_check_version in lgcrypt])
-#],,[$libs])
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gcry_check_version in -lgcrypt" >&5
+$as_echo_n "checking for gcry_check_version in -lgcrypt... " >&6; }
+if ${ac_cv_lib_gcrypt_gcry_check_version+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgcrypt $libs $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char gcry_check_version ();
+int
+main ()
+{
+return gcry_check_version ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_gcrypt_gcry_check_version=yes
+else
+  ac_cv_lib_gcrypt_gcry_check_version=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gcrypt_gcry_check_version" >&5
+$as_echo "$ac_cv_lib_gcrypt_gcry_check_version" >&6; }
+if test "x$ac_cv_lib_gcrypt_gcry_check_version" = xyes; then :
+
+libs="$libs -lgcrypt"
+
+$as_echo "#define HAVE_GCRYPT 1" >>confdefs.h
 
 
+fi
+
+fi
+
+if test "n$with_sdl" = nyes; then
 # `-lSDL':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_MapRGB in -lSDL" >&5
 $as_echo_n "checking for SDL_MapRGB in -lSDL... " >&6; }
@@ -5618,7 +5860,10 @@ fi
 $as_echo "$ac_cv_lib_SDL_SDL_MapRGB" >&6; }
 if test "x$ac_cv_lib_SDL_SDL_MapRGB" = xyes; then :
 
+libs="$libs -lSDL"
+
 $as_echo "#define HAVE_SDL 1" >>confdefs.h
+
 
 fi
 
@@ -5660,136 +5905,23 @@ fi
 $as_echo "$ac_cv_lib_SDL_gfx_hlineRGBA" >&6; }
 if test "x$ac_cv_lib_SDL_gfx_hlineRGBA" = xyes; then :
 
+libs="$libs -lSDL_gfx"
+
 $as_echo "#define HAVE_SDL_GFX 1" >>confdefs.h
+
 
 fi
 
+fi
 
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])
 # `-ltine':
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for _SystemCycle in -ltine" >&5
-$as_echo_n "checking for _SystemCycle in -ltine... " >&6; }
-if ${ac_cv_lib_tine__SystemCycle+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ltine  -lm $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char _SystemCycle ();
-int
-main ()
-{
-return _SystemCycle ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_tine__SystemCycle=yes
-else
-  ac_cv_lib_tine__SystemCycle=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_tine__SystemCycle" >&5
-$as_echo "$ac_cv_lib_tine__SystemCycle" >&6; }
-if test "x$ac_cv_lib_tine__SystemCycle" = xyes; then :
-
-$as_echo "#define HAVE_TINE 1" >>confdefs.h
-
-fi
-
+#AC_CHECK_LIB([tine], [_SystemCycle],AC_DEFINE(HAVE_TINE,1,[_SystemCycle in dynamical TINE lib]),,[ -lm])
 # `-lDOOCSclient':
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for eq_int in -lDOOCSclient" >&5
-$as_echo_n "checking for eq_int in -lDOOCSclient... " >&6; }
-if ${ac_cv_lib_DOOCSclient_eq_int+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lDOOCSclient  -lm -lpthread -ltine $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char eq_int ();
-int
-main ()
-{
-return eq_int ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_DOOCSclient_eq_int=yes
-else
-  ac_cv_lib_DOOCSclient_eq_int=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_DOOCSclient_eq_int" >&5
-$as_echo "$ac_cv_lib_DOOCSclient_eq_int" >&6; }
-if test "x$ac_cv_lib_DOOCSclient_eq_int" = xyes; then :
-
-$as_echo "#define HAVE_DOOCS 1" >>confdefs.h
-
-fi
-
+#AC_CHECK_LIB([DOOCSclient], [eq_int],AC_DEFINE(HAVE_DOOCS,1,[eq_int in dynamical DOOCS lib]),,[ -lm -lpthread -ltine])
 # `-lvgagl -lvga':
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lvga" >&5
-$as_echo_n "checking for main in -lvga... " >&6; }
-if ${ac_cv_lib_vga_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lvga $VGA_LIBS $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_vga_main=yes
-else
-  ac_cv_lib_vga_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_vga_main" >&5
-$as_echo "$ac_cv_lib_vga_main" >&6; }
-if test "x$ac_cv_lib_vga_main" = xyes; then :
-  vgalibs="-lvgagl -lvga"
-fi
-
-
-libs="$libs $xlibs"
+#AC_CHECK_LIB([vga], [main],vgalibs="-lvgagl -lvga",,[$VGA_LIBS])
 
 
 
@@ -6721,6 +6853,274 @@ test $ac_cv_func_memcmp_working = no && case " $LIBOBJS " in
 esac
 
 
+
+
+
+  for ac_header in $ac_header_list
+do :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
+"
+if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+
+
+
+
+
+
+for ac_func in getpagesize
+do :
+  ac_fn_c_check_func "$LINENO" "getpagesize" "ac_cv_func_getpagesize"
+if test "x$ac_cv_func_getpagesize" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETPAGESIZE 1
+_ACEOF
+
+fi
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for working mmap" >&5
+$as_echo_n "checking for working mmap... " >&6; }
+if ${ac_cv_func_mmap_fixed_mapped+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "$cross_compiling" = yes; then :
+  ac_cv_func_mmap_fixed_mapped=no
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$ac_includes_default
+/* malloc might have been renamed as rpl_malloc. */
+#undef malloc
+
+/* Thanks to Mike Haertel and Jim Avera for this test.
+   Here is a matrix of mmap possibilities:
+	mmap private not fixed
+	mmap private fixed at somewhere currently unmapped
+	mmap private fixed at somewhere already mapped
+	mmap shared not fixed
+	mmap shared fixed at somewhere currently unmapped
+	mmap shared fixed at somewhere already mapped
+   For private mappings, we should verify that changes cannot be read()
+   back from the file, nor mmap's back from the file at a different
+   address.  (There have been systems where private was not correctly
+   implemented like the infamous i386 svr4.0, and systems where the
+   VM page cache was not coherent with the file system buffer cache
+   like early versions of FreeBSD and possibly contemporary NetBSD.)
+   For shared mappings, we should conversely verify that changes get
+   propagated back to all the places they're supposed to be.
+
+   Grep wants private fixed already mapped.
+   The main things grep needs to know about mmap are:
+   * does it exist and is it safe to write into the mmap'd area
+   * how to use it (BSD variants)  */
+
+#include <fcntl.h>
+#include <sys/mman.h>
+
+#if !defined STDC_HEADERS && !defined HAVE_STDLIB_H
+char *malloc ();
+#endif
+
+/* This mess was copied from the GNU getpagesize.h.  */
+#ifndef HAVE_GETPAGESIZE
+# ifdef _SC_PAGESIZE
+#  define getpagesize() sysconf(_SC_PAGESIZE)
+# else /* no _SC_PAGESIZE */
+#  ifdef HAVE_SYS_PARAM_H
+#   include <sys/param.h>
+#   ifdef EXEC_PAGESIZE
+#    define getpagesize() EXEC_PAGESIZE
+#   else /* no EXEC_PAGESIZE */
+#    ifdef NBPG
+#     define getpagesize() NBPG * CLSIZE
+#     ifndef CLSIZE
+#      define CLSIZE 1
+#     endif /* no CLSIZE */
+#    else /* no NBPG */
+#     ifdef NBPC
+#      define getpagesize() NBPC
+#     else /* no NBPC */
+#      ifdef PAGESIZE
+#       define getpagesize() PAGESIZE
+#      endif /* PAGESIZE */
+#     endif /* no NBPC */
+#    endif /* no NBPG */
+#   endif /* no EXEC_PAGESIZE */
+#  else /* no HAVE_SYS_PARAM_H */
+#   define getpagesize() 8192	/* punt totally */
+#  endif /* no HAVE_SYS_PARAM_H */
+# endif /* no _SC_PAGESIZE */
+
+#endif /* no HAVE_GETPAGESIZE */
+
+int
+main ()
+{
+  char *data, *data2, *data3;
+  const char *cdata2;
+  int i, pagesize;
+  int fd, fd2;
+
+  pagesize = getpagesize ();
+
+  /* First, make a file with some known garbage in it. */
+  data = (char *) malloc (pagesize);
+  if (!data)
+    return 1;
+  for (i = 0; i < pagesize; ++i)
+    *(data + i) = rand ();
+  umask (0);
+  fd = creat ("conftest.mmap", 0600);
+  if (fd < 0)
+    return 2;
+  if (write (fd, data, pagesize) != pagesize)
+    return 3;
+  close (fd);
+
+  /* Next, check that the tail of a page is zero-filled.  File must have
+     non-zero length, otherwise we risk SIGBUS for entire page.  */
+  fd2 = open ("conftest.txt", O_RDWR | O_CREAT | O_TRUNC, 0600);
+  if (fd2 < 0)
+    return 4;
+  cdata2 = "";
+  if (write (fd2, cdata2, 1) != 1)
+    return 5;
+  data2 = (char *) mmap (0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0L);
+  if (data2 == MAP_FAILED)
+    return 6;
+  for (i = 0; i < pagesize; ++i)
+    if (*(data2 + i))
+      return 7;
+  close (fd2);
+  if (munmap (data2, pagesize))
+    return 8;
+
+  /* Next, try to mmap the file at a fixed address which already has
+     something else allocated at it.  If we can, also make sure that
+     we see the same garbage.  */
+  fd = open ("conftest.mmap", O_RDWR);
+  if (fd < 0)
+    return 9;
+  if (data2 != mmap (data2, pagesize, PROT_READ | PROT_WRITE,
+		     MAP_PRIVATE | MAP_FIXED, fd, 0L))
+    return 10;
+  for (i = 0; i < pagesize; ++i)
+    if (*(data + i) != *(data2 + i))
+      return 11;
+
+  /* Finally, make sure that changes to the mapped area do not
+     percolate back to the file as seen by read().  (This is a bug on
+     some variants of i386 svr4.0.)  */
+  for (i = 0; i < pagesize; ++i)
+    *(data2 + i) = *(data2 + i) + 1;
+  data3 = (char *) malloc (pagesize);
+  if (!data3)
+    return 12;
+  if (read (fd, data3, pagesize) != pagesize)
+    return 13;
+  for (i = 0; i < pagesize; ++i)
+    if (*(data + i) != *(data3 + i))
+      return 14;
+  close (fd);
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  ac_cv_func_mmap_fixed_mapped=yes
+else
+  ac_cv_func_mmap_fixed_mapped=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_mmap_fixed_mapped" >&5
+$as_echo "$ac_cv_func_mmap_fixed_mapped" >&6; }
+if test $ac_cv_func_mmap_fixed_mapped = yes; then
+
+$as_echo "#define HAVE_MMAP 1" >>confdefs.h
+
+fi
+rm -f conftest.mmap conftest.txt
+
+for ac_header in stdlib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_stdlib_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STDLIB_H 1
+_ACEOF
+
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GNU libc compatible realloc" >&5
+$as_echo_n "checking for GNU libc compatible realloc... " >&6; }
+if ${ac_cv_func_realloc_0_nonnull+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "$cross_compiling" = yes; then :
+  ac_cv_func_realloc_0_nonnull=no
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#if defined STDC_HEADERS || defined HAVE_STDLIB_H
+# include <stdlib.h>
+#else
+char *realloc ();
+#endif
+
+int
+main ()
+{
+return ! realloc (0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  ac_cv_func_realloc_0_nonnull=yes
+else
+  ac_cv_func_realloc_0_nonnull=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_realloc_0_nonnull" >&5
+$as_echo "$ac_cv_func_realloc_0_nonnull" >&6; }
+if test $ac_cv_func_realloc_0_nonnull = yes; then :
+
+$as_echo "#define HAVE_REALLOC 1" >>confdefs.h
+
+else
+  $as_echo "#define HAVE_REALLOC 0" >>confdefs.h
+
+   case " $LIBOBJS " in
+  *" realloc.$ac_objext "* ) ;;
+  *) LIBOBJS="$LIBOBJS realloc.$ac_objext"
+ ;;
+esac
+
+
+$as_echo "#define realloc rpl_realloc" >>confdefs.h
+
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking return type of signal handlers" >&5
 $as_echo_n "checking return type of signal handlers... " >&6; }
 if ${ac_cv_type_signal+:} false; then :
@@ -6865,23 +7265,6 @@ fi
 
 
 
-  for ac_header in $ac_header_list
-do :
-  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
-ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
-"
-if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
-  cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-
-done
-
-
-
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether utime accepts a null argument" >&5
 $as_echo_n "checking whether utime accepts a null argument... " >&6; }
 if ${ac_cv_func_utime_null+:} false; then :
@@ -6931,7 +7314,7 @@ $as_echo "#define HAVE_UTIME_NULL 1" >>confdefs.h
 fi
 rm -f conftest.data
 
-for ac_func in nanosleep inotify_init alarm atexit getcwd gethostbyname gettimeofday inet_ntoa
+for ac_func in nanosleep inotify_init memfrob utime execvp execvpe futimens
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
@@ -6943,7 +7326,31 @@ _ACEOF
 fi
 done
 
-for ac_func in memmove memfrob select socket strchr strdup strstr utime execvp execvpe futimens
+for ac_func in alarm atexit bzero dup2 getcwd gethostbyname gettimeofday
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
+
+for ac_func in inet_ntoa localtime_r memmove memset mkdir munmap rmdir select
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
+
+for ac_func in socket strchr strdup strerror strstr
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
@@ -6970,6 +7377,7 @@ _ACEOF
 
 
 #libs=$LIBS
+
 
 
 

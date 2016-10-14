@@ -28,7 +28,7 @@ RELEASE=46
 
 
 # Register variables (-ffixed-reg) -Wall
-REGS= @regs@ -Wall 
+REGS= @regs@  
 
 # Optimization and debugging options
 OPT=@copt@
@@ -38,8 +38,7 @@ INC=@X_CFLAGS@ -I.
 WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP
 TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
-# X11 library path
-XLIBS=@X_LIBS@ @X_EXTRA_LIBS@
+# defines for special flavours
 
 DEF= @def@ 
 
@@ -360,11 +359,11 @@ DOOCSDIST=$(DIST) src/Extensions/doocs-wrapper.cc ../doc/doocs-xbasic.html \
 LINKFLAGS =
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  @libs@ @xtra@
+LIBS =  @libs@ @xlibs@ @xtra@
+# fuer Version ohne X
 LIBS1 =  @libs@
 LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
 
-CONSOLELIBS= @libs@ @xtra@
 
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
 TOSLIBS = -lm  -lgem
@@ -400,8 +399,8 @@ config.h: config.h.in
 libx11basic.so: libx11basic.so.$(LIBNO)
 	ln -s -f $< libx11basic.so.1
 	ln -s -f libx11basic.so.1 libx11basic.so
-libx11basic.so.$(LIBNO) : $(LIBCSRC)
-	$(CCSHARED) $(OPT)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) $(XLIBS)
+libx11basic.so.$(LIBNO) : $(LIBCSRC) Makefile
+	$(CCSHARED) $(OPT) $(DEF)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) 
 	strip $@
 
 # Make the (static) library
@@ -412,7 +411,7 @@ x11basic.a : $(LIBOBJS)
 # Make the (dynamically linked) X11-Basic excecutable
 
 xbasic : libx11basic.so main.o
-	$(CC) -L. $(LINKFLAGS) -o $@ main.o $(LIBS) -lx11basic $(XLIBS)
+	$(CC) -L. $(LINKFLAGS) -o $@ main.o $(LIBS) -lx11basic 
 	strip $@
 
 # Make th X11-Basic compiler manager xbc
@@ -424,24 +423,24 @@ xbc : xbasic libx11basic.so examples/compiler/xbc.bas
 # Make the bytecode compiler xbbc
 
 xbbc : bytecode.h bytecode.o xbbc.o
-	$(CC) -o $@ xbbc.o bytecode.o  -L . $(LIBS) -lx11basic  -L /usr/X11/lib/ -lX11 
+	$(CC) -o $@ xbbc.o bytecode.o  -L . $(LIBS) -lx11basic 
 	strip $@
 xbbc.static : xbbc.o bytecode.o x11basic.a
-	$(CC) -o $@ xbbc.o bytecode.o x11basic.a -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
+	$(CC) -o $@ xbbc.o bytecode.o x11basic.a $(LIBS)		
 	strip $@
 xbbc.debug : xbbc.c bytecode.c $(LIBCSRC) 
-	$(CCDEBUG) -o $@ xbbc.c bytecode.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)		
+	$(CCDEBUG) -o $@ xbbc.c bytecode.c  $(LIBCSRC) $(LIBS)		
 
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c 
-	$(CC) -o $@ xbvm.c  -L . $(LIBS)  -lx11basic -L /usr/X11/lib/ -lX11 	
+	$(CC) -o $@ xbvm.c  -L . $(LIBS)  -lx11basic 
 	strip $@
 xbvm.static : xbvm.o x11basic.a
-	$(CC) -o $@ xbvm.o x11basic.a -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
+	$(CC) -o $@ xbvm.o x11basic.a $(LIBS)
 	strip $@
 xbvm.debug : xbvm.c  $(LIBCSRC) 
-	$(CCDEBUG) -o $@ xbvm.c $(LIBCSRC) -lm -L /usr/X11/lib/ $(LIBS) -lX11 	
+	$(CCDEBUG) -o $@ xbvm.c $(LIBCSRC) $(LIBS) 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -530,10 +529,10 @@ xbasic.framebuffer : main.c $(LIBCSRCFB)
 # therefor can be used without the .so file
 
 xbasic.static : x11basic.a main.o
-	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) $(XLIBS)
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) 
 	strip $@
 xbasic.debug :	main.c $(LIBCSRC)
-	$(CCDEBUG) $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRC) $(LIBS) $(XLIBS)
+	$(CCDEBUG) $(OPT) $(LINKFLAGS) -o $@ main.c $(DEF) $(LIBCSRC) $(LIBS) 
 	
 static : xbasic.static	xbbc.static xbvm.static xb2c.static
 
@@ -656,19 +655,19 @@ X11-Basic-examples-$(LIBNO).tar.gz:
 # Fuer die Control System Varianten
 
 tinexbasic.dyn : $(LIBOBJS) main.o 
-	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine $(XLIBS)
+	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine 
 	strip $@
 tinexbasic : $(LIBOBJS) main.o 
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  /usr/lib/libtine.a $(XLIBS)
+	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  /usr/lib/libtine.a 
 	strip $@
 doocsxbasic.dyn : $(LIBOBJS) main.o  doocs-wrapper.o
 	$(CC) -DTINE -DDOOCS  $(LINKFLAGS) -o $@ $(AOBJS) doocs-wrapper.o \
-		$(LIBS) $(XLIBS) -ltine -lDOOCSclient -lDOOCSserver 
+		$(LIBS)  -ltine -lDOOCSclient -lDOOCSserver 
 	strip $@
 doocsxbasic : $(LIBOBJS) main.o  doocs-wrapper.o
 	g++ -DTINE -DDOOCS $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
 	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
-	/usr/lib/libDOOCSserver.a doocs-wrapper.o $(XLIBS)
+	/usr/lib/libDOOCSserver.a doocs-wrapper.o 
 	strip $@
 
 lib:	libx11basic.so x11basic.a
@@ -701,13 +700,13 @@ xb2c_d.o: xb2c.c
 
 # make the X11-Basic to C translator
 xb2c :  xb2c.o
-	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic -L /usr/X11/lib/ -lX11
+	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic 
 	strip $@
 xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o
-	$(CC) -o $@ xb2c_d.o functions_d.o tools.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o  -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+	$(CC) -o $@ xb2c_d.o functions_d.o tools.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o $(LIBS)
 	strip $@
 xb2c.debug : xb2c.c $(LIBCSRC)
-	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) -lm -L /usr/X11/lib/ -lX11 $(LIBS)
+	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) $(LIBS)
 
 x11basic.tga: logo/x11basic-logo-1999.pov
 	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
