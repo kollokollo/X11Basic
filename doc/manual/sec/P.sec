@@ -38,16 +38,20 @@ Syntax:   PAUSE <sec>
 
 DESCRIPTION:
         
-        pauses <sec> seconds. 
-        The resolution of this command is microseconds (in theory). 
+        Pauses <sec> seconds. 
+        The resolution of this command is microseconds (in theory).
+        
+COMMENT:
+        PAUSE can be interrupted by AFTER and EVERY.
 
+SEE ALSO: DELAY, AFTER, EVERY
 ##############################################################################
 Command:  PBOX
 Syntax:   PBOX  x1,y1,x2,y2 
 
 DESCRIPTION:
 
-        Draws a filled box with corners x1,y1 and x2,y2.
+        Draws a filled box with coordinates x1,y1 and x2,y2.
         
 SEE ALSO: BOX, RBOX, DEFFILL, COLOR
 ##############################################################################
@@ -388,7 +392,8 @@ COMMENT: This does not work in compiled programs.
 SEE ALSO: TRON, TRACE, TRACE$, PC
 ##############################################################################
 Command: PRINT 
-Syntax:  PRINT [[AT(),TAB(),SPC(),COLOR()]a$|b|const|USING|...{;',}]
+Syntax:  PRINT [[AT(),TAB(),SPC(),COLOR()]a${;',}]
+         PRINT [#n,]a$;b;const;... USING ... {;',}
 
 DESCRIPTION:
 
@@ -405,13 +410,17 @@ DESCRIPTION:
 	   of the text and the position of the text on the screen. Namely 
 	   AT(), TAB(), SPC() and COLOR(). Also a powerful formatting is possible
 	   with PRINT USING.
+           
+           If a file channel of an opened file is given (n), the output is written
+           to that file instead.
 
 EXAMPLE: 
 	   PRINT "Hello ",a$," !"
 	   PRINT "Please enter your Name:";
 	   ? "A short form..."
 
-SEE ALSO:  PRINT AT(), PRINT COLOR(), PRINT TAB(), PRINT SPC(), PRINT USING
+SEE ALSO:  PRINT AT(), PRINT COLOR(), PRINT TAB(), PRINT SPC(), 
+           PRINT USING
 *#############################################################################
 Command:   PRINT AT()
 Syntax:    PRINT AT(line,row)[;...]
@@ -456,18 +465,18 @@ DESCRIPTION:
 
            The COLOR statement s can be of three types depending on their
 	   number range. Their meaning is:
+----*
+  Text Mode:           Text color:       Background color:
 
-           Text Mode:           Text color:              Background color: \\
-
-           0  default setting   30  black                40  black \\
-           1  intensive         31  red                  41  red \\
-           2  dark              32  green                42  green \\
-                                33  yellow               43  yellow \\
-           4  underline         34  blue                 44  blue \\
-           5  blink             35  magenta              45  magenta \\
-                                36  cyan                 46  cyan \\
-           7  reverse           37  white                47  white \\
-	   
+  0  default setting   30  black         40  black
+  1  intensive         31  red           41  red
+  2  dark              32  green         42  green
+                       33  yellow        43  yellow
+  4  underline         34  blue          44  blue
+  5  blink             35  magenta       45  magenta
+                       36  cyan          46  cyan
+  7  reverse           37  white         47  white
+*----
 	   You can pass one or more arguments to the COLOR() function to
 	   combine the attributes and colors.
 
@@ -553,12 +562,12 @@ DESCRIPTION:
 SEE ALSO: POINT(),PLOT
 ##############################################################################
 Command: PUT
-Syntax:  PUT <x>,<y>,<var$>[,<scale>[,<transparency>[,xs,ys,w,h],angle]]
+Syntax:  PUT x,y,var$[,scale[,trans[,xs,ys,w,h],angle]]
 
 DESCRIPTION:
 
 	Maps a graphic bitmap contained in var$ into the graphic window
-	at  coordinate x,y. The picture can be scaled by <scale> factor
+	at  coordinate x,y. The picture can be scaled by scale factor
 	(default: 1). The file or data format used in var$ is a BMP file
 	format. It can contain uncompressed bitmaps optionally with alpha
 	channel. 
@@ -568,7 +577,7 @@ DESCRIPTION:
 	source image (after scaling).  
 
 	(*not implemented yet: a rotation angle and if transparency is
-	given and the picture has a color table,  this is interpreted as a
+	given (trans) and the picture has a color table,  this is interpreted as a
 	color index, which  will be treated as transparent. If an alpha
 	channel is present, this is used as a threshold for the alpha
 	value (0-255). Default is 32. If the coordinates xs,ys,w,h are

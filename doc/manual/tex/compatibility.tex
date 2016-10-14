@@ -137,11 +137,13 @@ to X11-Basic, they have to be removed or replaced by an alternative routine:
 \paragraph{obsolete, because there is an alternative function in X11-Basic:}
 
 \begin{tabbing}
-XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|==|\>		Comparison operator for approximately equal  --> =\\
-\verb|ARECT, ATEXT, HLINE|\>LINE-A functions--> \verb|LINE, BOX, TEXT|\\
-\verb|ACHAR, ACLIP, ALINE, APOLY TO|\> --> \verb|TEXT,CLIP,LINE,POLY|\\
-\verb|COSQ(),SINQ()|\>	quick cosine/sine using an internal table --> \verb|COS(),SIN()|\\
+\verb|ARECT, ATEXT|\>  LINE-A functions --> \verb|BOX, TEXT|\\
+\verb|ALINE, HLINE|\>  LINE-A functions --> \verb|LINE|\\
+\verb|ACHAR, ACLIP|\> --> \verb|TEXT, CLIP|\\
+\verb|APOLY|       \> --> \verb|POLY|\\
+\verb|COSQ(), SINQ()|\>	quick table based cosine/sine --> \verb|COS(), SIN()|\\
 \verb|DIR|\>		Lists the files on a disc.  --> \verb|SYSTEM "ls"|\\
 \verb|DRAW|\>	      Draws points and lines. --> \verb|PLOT, LINE|\\
 \verb|FILES|\>		Lists the files on a disk.  --> \verb|SYSTEM "ls -l"|\\
@@ -171,7 +173,8 @@ XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 
 For some GFA-Basic commands you can construct replacement functions in 
 X11-Basic like:
-{\linespread{0.8}\footnotesize \begin{verbatim}
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
 ' Get the free memory available (in Bytes)
 ' n=0 physical memory
 ' n=1 Swap space
@@ -198,14 +201,17 @@ FUNCTION fre(n)
     RETURN VAL(a$)
   ENDIF
 ENDFUNCTION
-\end{verbatim}}
+\end{verbatim}
+\end{mdframed}
 or 
-{\linespread{0.8}\footnotesize \begin{verbatim}
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
 DEFFN ob_x(adr%,idx%)=DPEEK(adr%+24*idx%+16)
 DEFFN ob_y(adr%,idx%)=DPEEK(adr%+24*idx%+18)
 DEFFN ob_w(adr%,idx%)=DPEEK(adr%+24*idx%+20)
 DEFFN ob_h(adr%,idx%)=DPEEK(adr%+24*idx%+22)
-\end{verbatim}}
+\end{verbatim}
+\end{mdframed}
 
 \paragraph{obsolete, because TOS-Specific, and no similar function on other OSes exist:}
 
@@ -225,9 +231,9 @@ XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|GDOS?|\>		Returns  TRUE  (-1)  if GDOS is  resident\\
 \verb|GEMDOS()|\>	call the GEMDOS routines.\\
 \verb|GEMSYS|\>		call the AES routine\\
-\verb|GINTIN, GINTOUT|\> Address of the AES Integer input/output block.\\
-\verb|HIMEM |\>         	address of the area of memory which is not allocated by interpreter\\
-\verb|INTIN, INTOUT|\>   Address of the VDI integer Input/output block.\\
+\verb|GINTIN, GINTOUT|\> address of the AES Integer input/output block.\\
+\verb|HIMEM |\>         address of the area of memory which is not allocated\\
+\verb|INTIN, INTOUT|\>   address of the VDI integer Input/output block.\\
 \verb|L~A |\>           	Returns base address of the LINE-A variables.\\
 \verb|MENU_REGISTER()|\> Give a desk accessory a name\\
 \verb|MONITOR|\>        	Calls a monitor resident in memory.\\
@@ -252,7 +258,7 @@ XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 exists on UNIX or SDL platforms:}
 
 \begin{tabbing}
-XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|CHDRIVE|\>	Sets the default disk drive --> \verb|CHDIR|\\
 \verb|DMACONTROL, DMASOUND|\>     Controls the DMA sound (see \verb|PLAYSOUND|)\\
 \verb|INPMID$|\>        	read data from the MIDI port\\
@@ -282,11 +288,13 @@ XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|LPRINT|\>         	prints data on the printer.\\
 \verb|PSAVE |\>         	save with protection\\
 \verb|RCALL |\>    	Calls an assembler routine\\
-\verb|SCRP_READ(), SCRP_WRITE()|\>   communication between GEM programs.\\
+\verb|SCRP_READ()|\>   communication between GEM programs.\\
+\verb|SCRP_WRITE()|\>   "\\
 \verb|SETCOLOR i,r,g,b|\>  set rgb value of color cell (-->GET\_COLOR())\\
 \verb|SETTIME|\>		Sets the time and the date.\\
 \verb|WINDTAB|\>	       	Gives the address of the Window Parameter Table.\\
-\verb|WIND_CALC(), WIND_CLOSE(), WIND_CREATE(), WIND_DELETE(), WIND_FIND(),| \\
+\verb|WIND_CALC(), WIND_CLOSE(),| \\
+\verb|WIND_CREATE(), WIND_DELETE(), WIND_FIND(),| \\
 \verb|WIND_GET(), WIND_OPEN(), | \\
 \verb|WIND_SET(), WIND_UPDATE()|\> \> GEM-Window-Function\\
 \end{tabbing}
@@ -443,7 +451,10 @@ XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXX\=\kill\\
 \item \verb|ON BREAK GOTO| will not work correctly in compiled programs.
 \end{itemize}
 
-\subsubsection*{Differences between UNIX, WINDOWS, TomTom and Android versions}
+%\subsubsection*{Differences between UNIX, WINDOWS, TomTom and Android versions}
+%
+% uff, hier koennten wir nochwas schreiben, aber ich bin zu faul...
+%
 
 \section{Ideas for future releases of X11-Basic}
 
@@ -462,13 +473,13 @@ open "I",#1,"myfile"
 adr%=map("I|O|U",#1,len,offset)
 
 
-msync adr%,len
+MSYNC adr%,len
 
-unmap adr%,len
-close #1
+UNMAP adr%,len
+CLOSE #1
 
-       offset  should  be a multiple of the page size as returned
-       by getpagesize().
+       offset should  be a multiple of the page size 
+       as returned by getpagesize().
 
 "I"   --> PROT_READ MAP_PRIVATE
 "O"   --> PROT_WRITE MAP_SHARED
@@ -493,12 +504,14 @@ KICK procedure()
 
 SPAWN  ....
 
-it must be guaranteed that the program flow control and the access to 
-variables etc, is thread-safe. This might be difficult....
+it must be guaranteed that the program flow control and 
+the access to variables etc, is thread-safe. 
+This might be difficult....
 
 
 =============================================
-USB support:  (not completely done, I need someone who uses this for testing...)
+USB support:  (not completely done, I need someone 
+                who uses this for testing...)
 
 OPEN "UU",#2,devicename%,vid,pid,class,endpoint
 SEND_CONTROL #2,t$
@@ -531,13 +544,11 @@ Support for the gcrypt library.
 -------encryption---------------
 
 LIBGCRYPT:
-    hash$=HASH$(data$[,typ%])
-    sdata$=SIGN$(data$,privkey$)
-    verify%=VERIFY$(sdata$,pubkey$)
-    cdata$=ENCRYPT$(data$,key$[,typ%])
-    data$=DECRYPT$(cdata$,key$[,typ%])
+    hash$=HASH$(data$[,typ%])   (done)
+    sdata$=SIGN$(data$,privkey$)   (done)
+    verify%=VERIFY$(sdata$,pubkey$)   (done)
+    cdata$=ENCRYPT$(data$,key$[,typ%])   (done)
+    data$=DECRYPT$(cdata$,key$[,typ%])   (done)
 
     err=KEYGEN(typ%,pubkey$,privkey$)
-
-
 \end{verbatim}

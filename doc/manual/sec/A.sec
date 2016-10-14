@@ -1,5 +1,4 @@
 ##############################################################################
-
 Function:   ABS()
 Syntax:     a=ABS(b)
             a%=ABS(b%)
@@ -26,16 +25,35 @@ Command:   ABSOLUTE
 Syntax:    ABSOLUTE var,adr%
 DESCRIPTION:
 
-	ABSOLUTE assigns the address adr% to the variable var.
+	ABSOLUTE assigns the address adr% to the variable var. This way you can make
+	the internal reference memory pointer of a X11-Basic variable use a different
+	memory location, for example the one of another variable.
 	
+	You could use this to pass a variable by reference to a PROCEDURE or FUNCTION 
+	(instead of the standard behaviour, which always passes variable by value to 
+	functions and procedures by default).
 
-EXAMPLE:   
-	a=3
-	b=4
-	ABSOLUTE a,VARPTR(b)
-	PRINT a    ! Result: 4  Variables a and b are now identical.
+EXAMPLE:
+       a=3
+       b=4
+       ABSOLUTE a,VARPTR(b)
+       PRINT a    ! Result: 4  Variables a and b are now identical.
+       b=55
+       PRINT a    ! changing b now also affects a (and vice versa)
+
+EXAMPLE:
+       ' pass a variables "by reference" to a X11-Basic PROCEDURE
+       a=12
+       @fillwith4711(VARPTR(a))
+       PRINT a
+
+       PROCEDURE fillwith4711(adr%)
+         LOCAL b
+         ABSOLUTE b,adr%
+         b=4711
+       RETURN
 	
-SEE ALSO:  VAR
+SEE ALSO:  VAR, VARPTR()
 ##############################################################################
 
 Function:   ACOS()
@@ -105,15 +123,15 @@ SEE ALSO: SUB(), MUL(), DIV(), ADD
 ##############################################################################
 
 Command:   AFTER
-Syntax:    AFTER <num-variable>, <procedure-name>
+Syntax:    AFTER <seconds>, <procedure-name>
 	   
 DESCRIPTION:
 
-	Procedures can be called after the expiry of a set time. Time in
-	seconds. 
+	AFTER allows a PROCEDURE to be called after the expiry of a given time. 
+	The time must be specified in seconds. 
 
 COMMENT: 
-	The currecnt implementation uses the alarm mechanism of the kernel of 
+	The current implementation uses the alarm mechanism of the kernel of 
 	the operating system. This means, only one procedure can be scheduled 
 	for trigger at the same time. 
 	Once scheduled, AFTER cannot be canceled anymore.  But you 
@@ -121,27 +139,31 @@ COMMENT:
 	AFTER command before the previous one has triggered the procedure
 	the previous will not be triggered anymore.
 	
-	The procedure is excecuted exactly at the given time, interrupting the
+	The procedure is excecuted exactly after the given time, interrupting the
 	currently running process, even in the middle of a command. 
 	This can lead to a mess in program stack, unpredictible crashes may be
-	caused. Using AFTER (and EVERY) is not safe! 
-	The interrupt procedure should not do complicated things. 
+	caused. Using AFTER (and EVERY) is not safe!
+	Keep the actions inside the intterupt PROCEDURE simple. 
+	The interrupt procedure should not do complicated things, it should not
+	use interactive commands and should not wait for user input.
 	Maybe just assign a constant to a variable. 
 	
-	Maybe also good to know: A PAUSE command will be immediately ended, 
-	when the AFTER procedure is triggered. The procedure will still be 
-	triggered, even when the main program has already ended.
+	Maybe also good to know: 
+	A PAUSE command will be immediately ended, when the AFTER procedure is 
+	triggered, and
+	The procedure will still be triggered, even when the main program has 
+	already ended.
 
 EXAMPLE:
 
-PRINT "You have 10 seconds to enter your name: "
-AFTER 10,alarm
-INPUT name$
-END
-PROCEDURE alarm
-  PRINT "Time out !"
-  QUIT
-RETURN
+      PRINT "You have 10 seconds to enter your name: "
+      AFTER 10,alarm
+      INPUT name$
+      END
+      PROCEDURE alarm
+        PRINT "Time out !"
+        QUIT
+      RETURN
 
 SEE ALSO: EVERY
 ##############################################################################
@@ -204,9 +226,10 @@ Operator:   AND
 Syntax:     <num-expression1> AND <num-expression2>
 DESCRIPTION:
 
-	Used to determine if BOTH conditions are true. If both expression1 AND
-	expression2 are true (non-zero), the result is true. Returns -1 for
-	true, 0 for false.
+        AND calculates the bit-wise logical and-opearation on the values on both
+	sides.
+	It can be used to determine if BOTH conditions are true. If both expression1 AND
+	expression2 are true, the result is true; otherwise 0 is returned for false.
 
 	Also used to compare bits in binary number operations. 1 AND 1 return a
 	1, all other combinations of 0's and 1's produce 0. 
@@ -219,7 +242,7 @@ Print 3>3 AND 5>3        Result:   0 (false)
 PRINT (30>20 AND 20<30)  Result:  -1 (true)
 PRINT (4 AND 255)        Result:   4
 
-SEE ALSO:   NAND, OR, NOT, XOR
+SEE ALSO:   NAND, OR, NOT, XOR, IF
 *##############################################################################
 
 Function:   AND()
@@ -227,6 +250,7 @@ Syntax:     <num-result>=AND(<num-expression>,<num-expression2>)
 
 DESCRIPTION:
 
+           This function returns the result of a bitwise AND operation.
 	   Returns <num-expression> AND <num-expression2>
 
 EXAMPLE:
@@ -288,14 +312,15 @@ DESCRIPTION:
 	compression. 
 
 EXAMPLE: 
-        t$="Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic."
-        b$=arie$(t$)  ! encode it
-        print "The string was compressed to ";round(len(b$)/len(t$)*1000)/10;"%"
-        c$=arid$(b$)  ! decode it
-        print c$
- 	Result:
-	The string was compressed to 88.1%
-        Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic.
+      t$="Hello, this is a test!!!! This shows arithmetric coding and decoding"
+      t$=t$+" with X11-Basic."
+      b$=ARIE$(t$)  ! encode it
+      PRINT "The string was compressed to ";ROUND(LEN(b$)/LEN(t$)*1000)/10;"%"
+      c$=ARID$(b$)  ! decode it
+      PRINT c$
+    Result:
+      The string was compressed to 88.1%
+      Hello, this is a test!!!! This shows arithmetric coding and decodin....
 
 SEE ALSO:  ARIE$()
 
@@ -313,14 +338,15 @@ DESCRIPTION:
 	resulting in fewer bits used in total.
 
 EXAMPLE: 
-        t$="Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic."
-        b$=ARIE$(t$)  ! encode it
-        print "The string was compressed to ";round(len(b$)/len(t$)*1000)/10;"%"
-        c$=arid$(b$)  ! decode it
-        print c$
- 	Result:
-	The string was compressed to 88.1%
-        Hello, this is a test!!!! This shows arithmetric coding and decoding with X11-Basic.
+      t$="Hello, this is a test!!!! This shows arithmetric coding and "
+      t$=t$+"decoding with X11-Basic."
+      b$=ARIE$(t$)  ! encode it
+      print "The string was compressed to ";round(len(b$)/len(t$)*1000)/10;"%"
+      c$=arid$(b$)  ! decode it
+      print c$
+    Result:
+      The string was compressed to 88.1%
+      Hello, this is a test!!!! This shows arithmetric coding and deco....
 
 SEE ALSO:  ARID$()
 
@@ -467,7 +493,7 @@ SEE ALSO:  ACOS(), ASIN(), ATAN2()
 *##############################################################################
 
 Function:   ATAN2()
-Syntax:     <num-result>=ATAN2(<num-expression>,<num-expression>)
+Syntax:     c=ATAN2(a,b)
 DESCRIPTION:
 
 	The ATAN() function has a second form which accepts two arguments:

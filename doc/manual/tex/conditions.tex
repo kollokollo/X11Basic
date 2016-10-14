@@ -41,19 +41,21 @@ If you need more control, you may consider reading and writing one byte at a
 time, using the multi-purpose commands \verb|INP()| and \verb|OUT|, or reading
 the whole file as a binary block with \verb|BLOAD|.
 
-\section{Internet connections, special files and sockets}
+\section{Internet and bluetooth connections, special files and sockets}
 
-X11-Basic allows to connect a program to another Program on a different (or
-the same) host computer via standard internet protocols or pipes. 
+X11-Basic allows to connect a program to another program on a different (or
+the same) host computer via standard internet or bluetooth protocols or pipes. 
 
-Basically there are two methods of connections to other computers on a network: The TCP/IP Based connections 
-via streams and the implementation of a connectionless, unreliable datagram 
-packet service (UDP). 
+Basically there are two methods of connections to other computers on a network: 
+A stream based connections (well known is the TCP/IP protocol for internet connections) 
+and a connectionless, unreliable datagram 
+packet service (UDP, in case of internet connections, and e.g. L2CAP for bluetooth). 
 
-A method of passing data between two applications on the same computer is using Pipes.
-Pipes are special files which are created in the local filesystem. 
+Another method of passing data between two applications on the same computer is using
+so-called  pipes. Pipes are special files which are created in the local filesystem. 
 
 \subsection{Local inter process communication: Pipes}
+
 A pipe is a unidirectional data channel that can be used for interprocess 
 communication. The UNIX kernel usually supports this mechanism. The pipe can
 be used to send information or data from one process to another. Here is a little
@@ -92,8 +94,10 @@ ENDIF
 QUIT
 \end{verbatim} }
 \end{mdframed}
+
 Instad of with pipes, the interprocess communication can also be done using a
-shared memory segment.
+shared memory segment. X11-Basic also supports commands for creating and accessing
+such shared memory segments.
 
 
 \subsection{World-Wide communication: Sockets}
@@ -113,35 +117,39 @@ information.
 When a socket is created, the program has to specify the address domain and the
 socket type. Two processes can communicate with each other only if their
 sockets are of the same type and in the same domain. There are two widely used
-address domains, the Unix domain, in which two processes which share a common
+address domains, the (local) Unix domain, in which two processes which share a common
 file system communicate, and the Internet domain, in which two processes
 running on any two hosts on the Internet communicate. Each of these has its own
-address format.
+address format. Another domain to be mentioned is the bluetooth domain for short range
+radio connections. It works similar to the internet connections, but uses its own 
+address space.
 
 The address of a socket in the Unix domain is a character string which is
-basically an entry in the file system.
+basically an entry in the file system. It can be acced from there like a file. 
+In X11-Basic the normal file i/o commands can be used. 
 
-The address of a socket in the Internet domain consists of the Internet address
-of the host machine (every computer on the Internet has a unique 32 bit
-address, often referred to as its IP address). In addition, each socket needs a
-port number on that host. Port numbers are 16 bit unsigned integers. The lower
-numbers are reserved in Unix for standard services. For example, the port
-number for the FTP server is 21. It is important that standard services be at
-the same port on all computers so that clients will know their addresses.
+The address of a socket in the Internet domain consists of the Internet address of the
+host machine (every computer on the Internet has a unique 32 bit address, often referred
+to as its IP address or the bluetooth id, if we are takling about bluetooth connections).
+In addition, each socket needs a port number on that host. Port numbers are 16 bit
+unsigned integers. The lower numbers are reserved in the internet for standard services.
+For example, the port number for the FTP server is 21. It is important that standard
+services be at the same port on all computers so that clients will know their addresses.
 However, port numbers above 2000 are generally available.
-
 
 \paragraph{Socket Types}
 
+There are two widely used socket types, stream sockets, and datagram sockets. Stream
+sockets treat communications as a continuous stream of characters, while datagram sockets
+have to read entire messages at once. Each uses its own communications protocol. Stream
+sockets for internet connections use TCP (Transmission Control Protocol), which is a
+reliable, stream oriented protocol, and datagram sockets use UDP (Unix Datagram Protocol),
+which is unreliable and message oriented.
 
-There are two widely used socket types, stream sockets, and datagram sockets.
-Stream sockets treat communications as a continuous stream of characters, while
-datagram sockets have to read entire messages at once. Each uses its own
-communications protocol. Stream sockets use TCP (Transmission Control
-Protocol), which is a reliable, stream oriented protocol, and datagram sockets
-use UDP (Unix Datagram Protocol), which is unreliable and message oriented.
+The same applies for bluetooth connections, stream sockets use the so-called RFCOMM
+protocol and datagram sockets use the L2CAP protocol.
 
-
+Sockets in X11-Basic can be crated with the OPEN command.
 
 \paragraph{TCP/IP}
 
@@ -299,7 +307,7 @@ ENDIF
 INP?(\#n) Returns the size of the next pending datagram in bytes, or 0 when no
 datagram is pending.
 
-The Socket should be closed when the connection is not goint to be used any more:
+The Socket should be closed when the connection is not going to be used any more:
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
 \begin{verbatim}
 CLOSE #1
@@ -313,20 +321,212 @@ of the data will be delivered to the destination. UDP does guarantee data
 integrity, and it does this by adding a checksum to the data before
 transmission. 
 
+\section{Bluetooth connections}
+
+Establishing a connection between two devices with a bluetooth adapter is similar to the
+internet connections. Also here you can use a stream based connection (using RFCOMM) 
+or a datagram based one (using L2CAP).
+
+The X11-Basic commands for doing so are also similar. The only noticable difference 
+is that instead of a IP address a bluetooth id need to be used and there is no 
+domain name system which can be asked for the address/id of a device knowing its name. 
+
+That means, if you want to connect to a bluetooth device, you need to know its id before. 
+The id consists of six bytes (instead of four in case of a IPV4 internet address). 
+They are usually noted as a string of the format: hh:hh:hh:hh:hh:hh with all 6 bytes 
+in two-digit hex values separated by colons: e.g. "78:F5:FD:15:4A:3A".
+
+You can either hardcode the id in your program, or you can scan for visible bluetooth
+devices. 
+
+The scan can be done in X11-Basic with the FSFIRST\$() and FSNEXT\$() functions:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+a$=FSFIRST$("","*","b")
+WHILE LEN(a$)
+  PRINT a$
+  PRINT "Adress: ";WORD$(a$,1)
+  PRINT "Name:   ";WORD$(a$,2)
+  adr$=WORD$(a$,1)
+  a$=FSNEXT$()
+WEND
+\end{verbatim}
+\end{mdframed}
+
+\paragraph{RFCOMM}
+
+RFCOMM (Radio frequency communication) provides a simple reliable data stream to the user,
+similar to TCP. 
+
+Many Bluetooth applications use RFCOMM because of its widespread support and 
+publicly available API on most operating systems. Additionally, applications that used 
+a serial port to communicate can be quickly ported to use RFCOMM.
+
+As with TCP/IP establishing a connection via RFCOMM involves the basic construct of a 
+socket.  The two processes (server and client) 
+each establish their own socket.
+
+The steps involved in establishing a socket on the client side are as follows 
+(assuming, that the bluetooth id you ant to connect to is in adr\$):
+
+
+\begin{enumerate}
+   \item Create a socket with the OPEN command providing a port number (TODO??)
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%  OPEN "US",#1,"client",5000 ????????
+%\end{verbatim}\end{mdframed}
+   \item Connect the socket to the address of the server using the CONNECT command
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%  CONNECT #1,adr$,13?????
+%\end{verbatim}\end{mdframed}
+\item Instead of using Steps 1 and 2, you can alternatively use the combined
+ command:
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%  OPEN "UB",#2,adr$,13  ?????
+%\end{verbatim}\end{mdframed}
+   \item Send and receive data. There are a number of ways to do this, but the 
+   simplest is to use the PRINT, SEND, WRITE, READ, RECEIVE INPUT commands. 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  PRINT #2,"Hello"
+  FLUSH #2
+  WHILE INP?(#2)
+    LINEINPUT #2,t$
+    PRINT "got: ";t$
+  WEND
+\end{verbatim}\end{mdframed}
+ \item close the connection with
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #1
+\end{verbatim}\end{mdframed}
+\end{enumerate}
+
+The steps involved in establishing a socket on the server side are as follows:
+
+\begin{enumerate}
+   \item Create a socket with the OPEN command and bind the socket to a port 
+   number on the host machine. (TODO: port number ????)
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%  OPEN "UZ",#1,"server",5000 ?????
+%\end{verbatim}\end{mdframed}
+   \item Listen for connections and
+   \item Accept a connection with this other OPEN command, which opens 
+   a connection to the connected client: 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  OPEN "UA",#2,"",1
+\end{verbatim}\end{mdframed}
+   This call typically blocks until a client connects with the server.
+   \item Send and receive data on the accepted connection
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+  PRINT #2,"Welcome to X11-Basic test-server ..."
+  FLUSH #2
+  DO
+    IF INP?(#2)
+      LINEINPUT #2,t$
+      PRINT "got: ";t$
+    ENDIF
+    EXIT IF t$="quit"
+  LOOP
+  PRINT #2,"goodbye..."
+  FLUSH #2
+\end{verbatim}\end{mdframed}
+ \item close the established connection with
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #2
+\end{verbatim}\end{mdframed} and listen to the next connection (folow step 3) or 
+ \item close the socket if not further needed.
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+ CLOSE #1
+\end{verbatim}\end{mdframed}
+\end{enumerate}
+
+
+\paragraph{L2CAP}
+(Logical link control and adaptation protocol)
+
+First, a socket has to be crated with the OPEN command:
+
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%  OPEN "UV oder L",#1,"sender",5556   ??????
+%\end{verbatim}
+%\end{mdframed}
+
+When a L2CAP socket is created, its local and remote addresses are
+unspecified. Datagrams can be sent immediately using SEND with a valid
+destination address and port as argument:
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%{\footnotesize\linespread{0.8}\begin{verbatim}
+%SEND #1,"This is my message",CVL(CHR$(131)+CHR$(195)+CHR$(15)+CHR$(200)),5000
+%\end{verbatim}}
+%\end{mdframed}
+   
+TODO.... uses the IPv4 address format, so a long integer has to be passed.
+
+When CONNECT is called on the socket the default destination address is set and
+datagrams can now be sent using SEND without specifying an destination address.
+It is still possible to send to other destinations by passing an address to
+SEND.
+
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%CONNECT #1,adr$,5555
+%SEND #1,"This is my message"
+%\end{verbatim}
+%\end{mdframed}
+
+All receive operations return only one packet.
+       
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{verbatim}
+%IF INP?(#1)
+%  RECEIVE #1,t$,adr  <--- TODO:
+%  PRINT "Received Message: ";t$;" from ";HEX$(adr)
+%ENDIF
+%\end{verbatim}
+%\end{mdframed}
+
+INP?(\#n) Returns the size of the next pending datagram in bytes, or 0 when no
+datagram is pending.
+
+The Socket should be closed when the connection is not going to be used any more:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+CLOSE #1
+\end{verbatim}
+\end{mdframed}
+
+The maximum packet size should not exceed 672 bytes.
+
+Bluetooth support is work in progress and may not yet work on Android and WINDOWS. 
+
 \section{Accessing USB devices}
 
-X11-Basic has a builtin USB interface, which allows X11-Basic programs to accedd USB-Devices, which are connected
-to the computer. The interface is on a near hardware level, so the driver for the specific hardware connected must be written in 
-X11-Basic. Hence, it is well possible to use dataloggers and USB-to-RS232 adapters with this methods. In pronciple every USB-Device 
-can be accessed, if the protocol for data transfers and data interpretation is known. 
+X11-Basic has a builtin USB interface, which allows X11-Basic programs to access
+USB-Devices, which are connected to the computer. The interface is on a near hardware
+level, so the driver for the specific hardware connected must be written in X11-Basic.
+Hence, it is well possible to use dataloggers and USB-to-RS232 adapters with this methods.
+In principle every USB-Device can be accessed, if the protocol for data transfers and
+data interpretation is known. 
 
-Please see the example program \verb|usb.bas| for an example, how to readout data from a \verb|VOLTCRAFT VDTL101-T| datalogger.
+Please see the example program \verb|usb-VDL101T.bas| for an example, how to readout data 
+from a \verb|VOLTCRAFT VDL101-T| datalogger.
 
 USB support is work in progress and may not yet work on Android and WINDOWS. 
 
-USB-Devices are opened with the OPEN command. Instead of a filename, a combination if PID/VID is used. 
-Once opened, the commands CLOSE, IOCTL(), SEND and RECEIVE can be used on that device. 
-(PRINT and INPUT currently will not work).
+USB-Devices are opened with the OPEN command. Instead of a filename, a combination if
+PID/VID is used.  Once opened, the commands CLOSE, IOCTL(), SEND and RECEIVE can be used
+on that device.  (PRINT and INPUT currently will not work).
 
 
 \section{Data within the program}
@@ -439,7 +639,8 @@ IF NOT EXIST("./trackit.so")
   SYSTEM "gcc -O3 -shared -o trackit.so trackit.c" 
 ENDIF
 LINK #11,"./trackit.so"
-~EXEC(SYM_ADR(#11,"binit"),L:n,L:200,L:VARPTR(x(0)),L:VARPTR(bins(0)))
+~EXEC(SYM_ADR(#11,"binit"),L:n,L:200,L:VARPTR(x(0)), \
+                                   L:VARPTR(bins(0)))
 \end{verbatim}
 \end{mdframed}
 
@@ -538,9 +739,60 @@ function. An application should always free all memory blocks before
 exiting. For instance:
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
 \begin{verbatim}
-FREE Ptr% 
+FREE ptr% 
 \end{verbatim}
 \end{mdframed}
+
+\subsection{Shared memory}
+
+Memory which has been allocated with \verb|MALLOC()| can only be accessed from  within a
+single process. If you want two different X11-Basic instances or in general two doifferent
+running X11-Basic programs access the same memory (e.g. to share data or to communicate
+with each other), you need to use shared memeory instead.
+
+The shared memory segment needs to be created and allocated first. This should be done 
+only by one of the programs. The creator will also select a key (which is just an integer
+number) and must be known by all other programs who want to access this memory later. For example, the key is choosen to be 4711.
+For instance, to allocate 2000 bytes, you might use:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+id=SHM_MALLOC(2000,4711)
+\end{verbatim}
+\end{mdframed}
+
+Unlike \verb|MALLOC()|, \verb|SHM_MALLOC()| does not return an adress directly. Instead 
+it returns the identifier of the shared memory segment  associated with key. The
+identifier is also just an integer number.  A new shared memory segment is created if no
+shared memory segment corresponding to key exists.
+
+To get an address, which you then can use normally as all other adresses, you need to involke the
+function \verb|SHM_ATTACH()|:
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+adr%=SHM_ATTACH(id)
+\end{verbatim}
+\end{mdframed}
+
+Once the other process knows the key and the size of the shared memory segment (or at
+least once it knows its id), it can attach the same segement also to his address space. It
+eventually will get a different address  (adr\%) but writing to the memory and reading
+from it will now also affect all other processes using this shared segment. 
+
+If not used anymore, the segment should be detached from the adress space  (so that adr\%
+cannot be used anymore) by any of the processes using it.  If the shared memory segment
+should be removed from memory completely (and all its contend sould be discarded), the
+creator of that segment can free it with \verb|SHM_FREE|. 
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+SHM_DETACH adr%
+SHM_FREE id
+\end{verbatim}
+\end{mdframed}
+
+If not freed, the segment resists in memory until the operating system shuts down. 
 
 \section{Other features}
 \begin{itemize}
@@ -736,16 +988,31 @@ Example:
 ' as an example for the use of the gui system
 ' with X11-Basic
 
-BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0, STATE=OUTLINED+) {
-  BOXTEXT(X=2,Y=1,W=70,H=1, TEXT="Select option ...", FONT=3, JUST=2, COLOR=4513, BORDER=253, STATE=SHADOWED+)
-  BOX(X=2,Y=3,W=60,H=10, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0) {
-    FTEXT(X=1,Y=1,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="Line 1", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
-    FTEXT(X=1,Y=2,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
-    FTEXT(X=1,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
-    FTEXT(X=1,Y=4,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", PTMP="_______________________________________",PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
-    BOX(X=2,Y=6,W=50,H=3, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=5, TEXTMODE=0) { 
-      BUTTON(X=2,Y=1,W=4,H=1, TEXT="ON",STATE=SELECTED, FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
-      BUTTON(X=8,Y=1,W=4,H=1, TEXT="OFF",FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
+BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTMODE=0, 
+    STATE=OUTLINED+) {
+  BOXTEXT(X=2,Y=1,W=70,H=1, TEXT="Select option ...", FONT=3, JUST=2, COLOR=4513, 
+          BORDER=253, STATE=SHADOWED+)
+  BOX(X=2,Y=3,W=60,H=10, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, 
+      TEXTMODE=0) {
+    FTEXT(X=1,Y=1,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="Line 1", 
+          PTMP="_______________________________________",
+          PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=2,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", 
+          PTMP="_______________________________________",
+          PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=3,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", 
+          PTMP="_______________________________________",
+          PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    FTEXT(X=1,Y=4,W=30,H=1,COLOR=4513,FONT=3,BORDER=1,TEXT="", 
+          PTMP="_______________________________________",
+          PVALID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", FLAGS=EDITABLE)
+    BOX(X=2,Y=6,W=50,H=3, FRAME=-1, FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=5, 
+          TEXTMODE=0) { 
+      BUTTON(X=2,Y=1,W=4,H=1, TEXT="ON",STATE=SELECTED, 
+             FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, FRAMECOL=1, TEXTCOL=1, 
+             BGCOL=1, PATTERN=0, TEXTMODE=0)
+      BUTTON(X=8,Y=1,W=4,H=1, TEXT="OFF",FLAGS=RADIOBUTTON+SELECTABLE,FRAME=2, 
+             FRAMECOL=1, TEXTCOL=1, BGCOL=1, PATTERN=0, TEXTMODE=0)
     }
   }
   ok:	  BUTTON(X=65,Y=4,W=7,H=4, TEXT="OK", FLAGS=SELECTABLE+DEFAULT+EXIT)
@@ -788,31 +1055,32 @@ DATA "HELP","  online help","--------------","  edifac","  editor","  edilink"
 DATA "  edouard",""
 DATA "***"
 
-grau=get_color(32000,32000,32000)
-color grau
-pbox 0,0,640,400
+grau=GET_COLOR(32000,32000,32000)
+COLOR grau
+PBOX 0,0,640,400
 MENUDEF field$(),menuaction
 DO 
-  pause 0.05
+  PAUSE 0.05
   MENU 
 LOOP
-quit
+QUIT
 
 PROCEDURE menuaction(k)
-  local b
+  LOCAL b
   IF (field$(k)="  Quit") OR (field$(k)="  exit") 
-    quit
+    QUIT
   ELSE IF field$(k)="  online help"
     oh=not oh
     MENUSET k,4*abs(oh)
   ELSE IF field$(k)="  Menutest" 
-    ~form_alert(1,"[0][---- Menutest ----||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
+    ~FORM_ALERT(1,"[0][- Menutest -||(c) Markus Hoffmann 2001|X11-Basic V.1.03][ OK ]")
   ELSE   
     PRINT "MENU selected ";k;" contents: ";field$(k)
-    b=form_alert(1,"[1][--- Menutest ---||You selected item (No. "+str$(k)+"),| for which was no|function defined !][ OK |disable]")
-    if b=2
+    b=FORM_ALERT(1,"[1][--- Menutest ---||You selected item (No. "+str$(k)+ \
+                   "),| for which was no|function defined !][ OK |disable]")
+    IF b=2
       MENUSET k,8
-    endif
+    ENDIF
   ENDIF
 RETURN
 \end{verbatim}
@@ -893,10 +1161,15 @@ When your X11-Basic script is going to return an HTML file, you must have this
 as the very first print statement in order to tell the web server that this is
 an HTML file. There must be two end of line characters (CR+LF) (the additional
 \verb|chr$(13)|) in order for this to work. The flush statement ensures, that
-this statement is sent to the web-server. After that, you usually 
-\verb|print "<HTML><BODY>"| etc.
+this statement is sent to the web-server. After that, you usually do a 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+PRINT "<HTML><BODY>"
+.... and so on ...
+\end{verbatim}
+\end{mdframed}
 
-\item {\bf End your program with \verb|quit|}
+\item {\bf End your program with \verb|QUIT|}
 
 Do not use \verb|END|. Otherwise the cgi-program will remain is the servers 
 memory as a zombie.

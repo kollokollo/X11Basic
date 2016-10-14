@@ -9,10 +9,12 @@ DESCRIPTION:
 	Optional parameters are passed on the stack. (like in C).
 	The default parameter-type is (4-Byte) integer.
 	If you want to specify other types, please use prefixes:
-	
+
+----*
 	D: -- double (8-Bytes)
 	F: -- float  (4-Bytes)
 	L: -- long int, pointer (4-Bytes)
+*----
 
 EXAMPLE:
 	DIM result(100)
@@ -34,10 +36,12 @@ DESCRIPTION:
 	Optional parameters are passed on the stack. (like in C).
 	The default parameter-type is (4-Byte) integer.
 	If you want to specify other types, please use prefixes:
-	
+
+----*
 	D: -- double (8-Bytes)
 	F: -- float  (4-Bytes)
 	L: -- long int, pointer (4-Bytes)
+*----
 
 EXAMPLE:
 	DIM result(100)
@@ -73,17 +77,17 @@ DESCRIPTION:
 
 EXAMPLE:
 
-i=5
-SELECT i
-  CASE 1
-    PRINT 1
-  CASE 2,3,4
-    PRINT "its 2,3, or 4"
-  CASE 5
-    PRINT 5
-  DEFAULT
-    PRINT "default"
-ENDSELECT
+    i=5
+    SELECT i
+      CASE 1
+    	PRINT 1
+      CASE 2,3,4
+    	PRINT "its 2,3, or 4"
+      CASE 5
+    	PRINT 5
+      DEFAULT
+    	PRINT "default"
+    ENDSELECT
 
 SEE ALSO: SELECT, DEFAULT, ENDSELECT
 #############################################################################
@@ -157,22 +161,30 @@ DESCRIPTION:
 	specified in mode, which is a bit mask created by ORing (or adding) 
 	together zero or more of the following:
 
-\begin{verbatim}	
-        -     1 execute/search by others ("search" applies for directories, 
-	    	  and means that entries within the directory can be accessed)
-	-     2 write by others
-	-     4 read by others
-	-     8 execute/search by group
-	- 0x010 write by group
-        - 0x020 read by group
-	- 0x040 execute/search by owner
-        - 0x080 write by owner
-	- 0x100 read by owner
-	- 0x200 sticky bit
-	- 0x400 set-group-ID
-	- 0x800 set-user-ID
-\end{verbatim}
-	
+----*
+    1 execute/search by others ("search" applies for directories, 
+      and means that entries within the directory can be accessed)
+    2 write by others
+    4 read by others
+    8 execute/search by group
+0x010 write by group
+0x020 read by group
+0x040 execute/search by owner
+0x080 write by owner
+0x100 read by owner
+0x200 sticky bit
+0x400 set-group-ID
+0x800 set-user-ID
+*----
+
+On most operating systems, the permissions are grouped into three levels:
+The file owner, the owners group, or all others. So you can specify that this file
+can only be written to by the owner, it can be read but not written to by the 
+owners group, and all other woll have no permission to either read or write to
+or from the file. mode=0x20+0x100+0x80
+
+You can also change the owner of that file (mode=0x800+userid) or the group it
+belongs to (mode=0x400+groupid). userid and groupid my be between 0 and 1023.
 	
 EXAMPLE:
 	CHMOD "/tmp/file",0x1e8
@@ -192,7 +204,7 @@ DESCRIPTION:
 
 Character table
 
-\begin{verbatim}
+----*
      032      048  0    064  @   080  P    096  `   112  p
      033  !   049  1    065  A   081  Q    097  a   113  q
      034  "   050  2    066  B   082  R    098  b   114  r
@@ -209,11 +221,11 @@ Character table
      045  -   061  =    077  M   093  ]    109  m   125  }
      046  .   062  >    078  N   094  ^    110  n   126  ~
      047  /   063  ?    079  O   095  _    111  o   127
-\end{verbatim}
+*----
 
  Control codes
 
-\begin{verbatim}
+----*
      00 NUL	      08 BS   -- Backspace	  16 DLE
      01 SOH	      09 HT   -- horizontal TAB   17 DC1  -- XON
      02 STX	      10 LF   -- Newline	  18 DC2
@@ -230,7 +242,7 @@ Character table
      29 GS
      30 RT
      31 US
-\end{verbatim}
+*----
     
 COMMENT:
 	You should avoid to pass an argument outside of the range 0-255 for
@@ -467,8 +479,10 @@ DESCRIPTION:
 	   the Burrows-Wheeler transform. The result is a better compression 
 	   than p.ex. the algorithm used by gzip. At the moment the 
 	   COMPRESS$() function is identical to following combination:
+----*
 	   b$=ARIE$(RLE$(MTFE$(BWTE$(RLE$(a$)))))
-           
+*----
+      
 SEE ALSO:  UNCOMPRESS$(), BWTE$(), RLE$(), MTFE$()
 ##############################################################################
 
@@ -551,11 +565,11 @@ DESCRIPTION:
 
 	 Copies a rectangular screen sections given by x,y,w,h to
 	 a destination at xd,yd.
-	 
-           x,y    top left corner of source rectangle
-           w,h    width & height  "   "        "
+----*
+           x,y      top left corner of source rectangle
+           w,h      width & height  "   "        "
            xd,yd    destination x and y coordinates
-
+*----
 	This command is very fast compared to the GET and PUT commands because 
 	the whole data transfer takes place on the X-client (this means on the
 	screen directly without datatransfer to the program).
@@ -575,11 +589,11 @@ DESCRIPTION:
 	complex cosine of a complex expression.
 	The complex cosine function is defined as:
 
-           cos#(z) := (exp#(1i*z#)+exp#(-1i*z#))/2
+           cos(z) := (exp(1i*z#)+exp(-1i*z#))/2
 
 EXAMPLE: 
 	PRINT COS(0)        ! Result: 1
-	PRINT COS#(0+1i)    ! Result: 1.543080634815+0i
+	PRINT COS(0+1i)     ! Result: 1.543080634815+0i
 
 SEE ALSO:  SIN(), ASIN()
 *##############################################################################
@@ -641,12 +655,12 @@ COMMENT:
 	approximately every 72 minutes.
 
 EXAMPLE:
-t=CTIMER
-FOR i=0 TO 100000
-  NOOP
-NEXT i
-ref=(CTIMER-t)/100000
-print "Ref=",str$(ref*1000,5,5);" ms"
+   t=CTIMER
+   FOR i=0 TO 100000
+     NOOP
+   NEXT i
+   ref=(CTIMER-t)/100000
+   print "Ref=",str$(ref*1000,5,5);" ms"
 
 SEE ALSO: TIMER, STIMER
 #############################################################################

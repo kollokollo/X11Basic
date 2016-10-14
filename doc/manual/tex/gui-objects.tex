@@ -74,7 +74,7 @@ specifies the object type as follows:
 different flags that can be applied to any object. You may want to apply 
 one ore more flags at once. Just add the values ob\_flags.
 
-\begin{center}\begin{longtable}{|clp{9cm}|}
+\begin{center}\begin{longtable}{|clp{10cm}|}
 \hline
 {\bf ob\_flags} & {\bf Name} & {\bf Description}\\
 \hline
@@ -110,7 +110,7 @@ one ore more flags at once. Just add the values ob\_flags.
 \item[ob\_state] The ob\_state field determines the display state of the object as
 follows:
 
-\begin{center}\begin{longtable}{|clp{9cm}|}
+\begin{center}\begin{longtable}{|clp{10cm}|}
 \hline
 {\bf ob\_state} & {\bf Name} & {\bf Description}\\
 \hline
@@ -129,11 +129,11 @@ follows:
                 will be drawn with a shadow.\\\hline
 \end{longtable}\end{center}
 
-\item[ob\_spec] The Object-Specific Field
+\item[ob\_spec] The object-specific field
 
 The ob\_spec field contains different data depending on the object type
 as indicated in the table below:
-\begin{center}\begin{longtable}{|lp{9cm}|}
+\begin{center}\begin{longtable}{|lp{10cm}|}
 \hline
 G\_BOX &
 The low 16 bits contain a WORD containing color information for the OBJECT. 
@@ -162,7 +162,6 @@ G\_CICON  & The ob\_spec field contains a pointer to a CICONBLK structure.\\\hli
 Almost all objects reference a WORD containing the object color as
 defined below.
 
-{\footnotesize
 \begin{verbatim}
 objc_colorword=bbbbcccctpppcccc
 
@@ -171,7 +170,7 @@ Bits 11-8  contain the text color
 Bit   7    is 1 if opaque or 0 if transparent 
 Bits 6-4   contain the fill pattern index 
 Bits 3-0   contain the fill color 
-\end{verbatim}}
+\end{verbatim}
 
 Available colors for fill patterns, text, and borders are listed
 below:
@@ -224,23 +223,20 @@ overwritten by the user. \verb|te_pvalid| contains validation characters for
 each character the user may enter. The current acceptable validation
 characters are:
 
-\begin{center}
-\begin{tabular}{|cl|}
-\hline
-{\bf Character} &{\bf  Allows}\\
-\hline
-9 & Digits 0-9\\
-A & Uppercase letters A-Z plus space\\
-a & Upper and lowercase letters plus space\\
-N & Digits 0-9, uppercase letters A-Z and space\\
-n & Digits 0-9, upper and lowercase letters A-Z  and space\\
-F & Valid DOS filename characters plus question mark and asterisk \\
-P & Valid DOS pathname characters, backslash, colon, question mark, asterisk \\
-p & Valid DOS pathname characters, backslash and colon\\
-X & All characters\\
-\hline
-\end{tabular}
-\end{center}
+\begin{tabbing}
+XXXXX\=XXXXXXXXXXXX\=\kill\\
+{\bf Char} \> {\bf  Allows}\\
+9 \> Digits 0-9\\
+A \> Uppercase letters A-Z plus space\\
+a \> Upper and lowercase letters plus space\\
+N \> Digits 0-9, uppercase letters A-Z and space\\
+n \> Digits 0-9, upper and lowercase letters A-Z  and space\\
+F \> Valid DOS filename characters plus question mark and asterisk \\
+P \> Valid DOS pathname characters, backslash, colon, \\
+  \> question mark, asterisk \\
+p \> Valid DOS pathname characters, backslash and colon\\
+X \> All characters\\
+\end{tabbing}
 
 \verb|te_font| may be set to any of the following values:
 

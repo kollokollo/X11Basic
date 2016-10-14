@@ -173,10 +173,13 @@ DESCRIPTION:
 
 	TRIM$(a$) returns a modified string taken a$
 
-	1. replace Tabs by space
-	2. replace double spaces by single ones 
-	3. remove leading and trailing spaces
-	4. Parts of the string which are in quotes ("") will not be changed
+	1. replace Tabs by space,
+        
+	2. replace double spaces by single ones ,
+        
+	3. remove leading and trailing spaces.
+        
+	4. Parts of the string which are in quotes ("") will not be changed.
 
 
 SEE ALSO: XTRIM$(), REPLACE$()
@@ -221,8 +224,10 @@ Syntax:   a=TRUNC(x)
 DESCRIPTION:
 
 	TRUNC() rounds x to the nearest integer not larger in absolute
-   	    value.  TRUNC complements FRAC:  TRUNC(x)=x-FRAC(x)
-
+   	    value.  TRUNC complements FRAC:
+----*
+            TRUNC(x)=x-FRAC(x)
+*----
 SEE ALSO: FRAC(), FLOOR(), FIX()
 ##############################################################################
 Function: TYP?()
@@ -231,17 +236,18 @@ Syntax:   a%=TYP?(<var>)
 DESCRIPTION:
 
 	Returns the type of a variable. 
-	 0 -- invalid
-	 1 -- 32 bit integer
-	 2 -- 64 bit floating point
-	 3 -- big integer
-	 4 -- ARBFLOATTYP
-	 5 -- complex 
-	 6 -- ARBCOMPLEXTYP
-	 7 -- String
-	 +8 -- Array of typ 0-7
-	 +32 -- it is a constant of typ 0-7
-	 
+----*
+     0 -- invalid
+     1 -- 32 bit integer
+     2 -- 64 bit floating point
+     3 -- big integer
+     4 -- ARBFLOATTYP
+     5 -- complex 
+     6 -- ARBCOMPLEXTYP
+     7 -- String
+    +8 -- Array of typ 0-7
+   +32 -- it is a constant of typ 0-7
+*---- 
 
 COMMENT: 
 	This function is nearly useless. It only shows internals of X11-Basic.

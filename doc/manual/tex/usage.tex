@@ -30,7 +30,7 @@ But most likely you are reading this manual because you have already got
 X11-Basic installed on your system, or you at least have a package ready 
 to be installed right away.
 
-\subsection*{SuSE-Linux and RedHat}
+\subsection*{SuSE-Linux and RedHat}\index{RPM}
 
 If you have got a Redhat-Package (RPM) e.g. a file named 
 \verb|X11Basic-1.25-1.i386.rpm|, then you can install this package (being
@@ -40,7 +40,7 @@ rpm -i X11Basic-1.25-1.i386.rpm      .
 \end{verbatim}
 
 This is a very convenient way at least for the Linux distributions  {\it
-Feodora}, {\normalfont \itshape Mandriva}, {\normalfont \itshape SuSE} and {\normalfont \itshape RedHat} (and maybe others,
+Feodora}, {\it Mandriva}, {\it SuSE} and {\it RedHat} (and maybe others,
 basically derived distributions\footnote{A list of RPM based Linux distributions
 can be found here:
 \url{http://en.wikipedia.org/wiki/Category:RPM-based_Linux_distributions}}) to
@@ -91,11 +91,11 @@ drwxr-xr-x    1024  examples/            -- few example programs
 \end{verbatim}
 }
 
-\subsection*{Debian based distributions, Ubuntu and Knoppix} 
+\subsection*{Debian based distributions, Ubuntu and Knoppix}\index{Debian}
 
 If your Linux distributions does not use the RedHat package system it is very
 likely that it instead uses the Debian package system. The most popular Debian
-based Linux distributions are {\normalfont \itshape Knoppix} and {\normalfont \itshape Ubuntu}\footnote{A list of
+based Linux distributions are {\it Knoppix} and {\it Ubuntu}\footnote{A list of
 Debian based Linux distributions can be found here:
 \url{http://en.wikipedia.org/wiki/Category:Debian-based_distributions}}. 
 
@@ -114,16 +114,16 @@ installations, usually called \verb|x11basic_1.25-1_amd64.deb|.
 \subsection*{Other Linux and UNIX distributions}
 
 The author currently provides only 32bit and 64bit debian binary packages for 
-linux (specifically {\normalfont \itshape Ubuntu linux}). A
+linux (specifically {\it Ubuntu linux}). A
 rpm package can be made out of the debian packet with a tool called
 \verb|alien|. 
 
 For exotic linux based devices usually binary distributions come as a zip file
 (like the TomTom version). In these cases they are accompanied by a README or
 other instructions how to install them. The  package for Android comes in a file
-called \verb|X11-Basic-1.25-44.apk| usually  provided by {\normalfont \itshape Google Play}
-(formerly known as {\normalfont \itshape Android Market}), which also installs it for you. If you
-do not like to use {\normalfont \itshape Google Play} for some reason, you can also install
+called \verb|X11-Basic-1.25-44.apk| usually  provided by {\it Google Play}
+(formerly known as {\it Android Market}), which also installs it for you. If you
+do not like to use {\it Google Play} for some reason, you can also install
 X11-Basic from any file browser taping on its \verb|.apk| file, downloaded from
 \verb|sourceforge.net|. 
 
@@ -132,7 +132,7 @@ For all other systems you will have to get the source-package
 Linux distributions, and probably with little modifications also for {\it
 HP-UX} (Hewlett-Packard UniX), for DEC/alpha, for MAC/OSX, for SUN/SOLARIS and
 FreeBSD and maybe others.  Also X11-Basic compiles on Cygwin, and on
-ARM-Linuxes like the one often used together with the {\normalfont \itshape Raspberry Pi}. 
+ARM-Linuxes like the one often used together with the {\it Raspberry Pi}. 
 Please note that X11-Basic is designed for 32-bit operating systems. 
 X11-Basic will also compile on 64 bit systems. But some of the
 functions may not work, especially pointer aritmetric (\verb|VARPTR()|, 
@@ -149,6 +149,7 @@ was before. This way, pointer aritmetrics can be used with care, even on 64 bit
 operating systems.} 
 
 \subsection*{Compiling X11-Basic from its sources under UNIX like systems}
+\index{Compiling}
 
 If you have a binary package of X11-Basic, you can safely skip this section.
 
@@ -193,6 +194,7 @@ If the `configure' script fails, please contact me
 (\verb|config.log|). I am going to try to help you to fix the problem.
 
 \subsection*{Special comments on the framebuffer version}
+\index{framebuffer}
 
 Very useful on the Raspberry pi and other low memory/low resources computers 
 is the option not to use X or SDL libraries at all. You can have a full 
@@ -204,6 +206,7 @@ over the screen and mouse and keyboard. Usually everything you need to make the
 Raspberry pi interact with and display to the user. 
 
 \subsection*{Cross-compiling other Versions of X11Basic}
+\index{cross compiling}
 
 The Makefile allows you to also produce the compiler (\verb|make xbc|),  the
 bytecode compiler (\verb|make xbbc|), the virtual  machine (\verb|make xbvm|),
@@ -222,7 +225,7 @@ The MS WINDOWS distribution can be generated with \verb|make windows|. (The
 mingw cross-compiler is needed).
 
 
-\subsection*{Support}
+\subsection*{Support}\index{Support}
 
 If you have trouble with X11-Basic, you may send me a mail. Please understand
 that I need to find time to answer your mails. On 
@@ -249,7 +252,7 @@ description of you problem, containing:
 There are several ways to start the X11-Basic interpreter depending on the
 operating system you are using it.
 
-\subsection{Using the X11-Basic Interpreter under UNIX, Linux}
+\subsection{Using the X11-Basic Interpreter under UNIX, Linux}\index{UNIX}\index{Linux}
 
 The simplest way is to just start it by the command \verb|xbasic| from a
 terminal window or a console. Then you can use the interpreter in interactive
@@ -261,7 +264,7 @@ In Ubuntu or Lubuntu you will also find X11-Basic in the start menu. When you
 select  X11-Basic from the start menu, the interpreter should come up in its own
 terminal window. 
 
-\subsubsection{X11-Basic as a shell}
+\subsubsection{X11-Basic as a shell}\index{shell}
 
 X11-Basic programs can be executed like shell scripts. Make sure that the very
 first line of your X11-Basic program  starts with the characters \verb|'#!'|
@@ -372,7 +375,7 @@ ANSI.SYS  has to be installed and switched on for the console windows.
 Instructions how to install \verb|ANSI.SYS| can be found on the internet. 
 (Also an alternative extension named ANSICON can be used.)
 
-\subsubsection*{The Context Menu}
+\subsubsection*{The Context Menu}\index{context menu}
 
 Every icon unter WINDOWS offers a contect menu when you click on it with the
 right mouse button. Clicking on an icon of a X11-Basic program as well opens this 
@@ -380,20 +383,25 @@ context menu with following options:
 \begin{description}
 \item[Execute] will invoke the X11-Basic interpreter to execute your program. 
 The same happens, if you doubleclick on the icon.
-\item[Edit] invokes {\normalfont \itshape notepad}, allowing you to edit your program.
+\item[Edit] invokes {\it notepad}, allowing you to edit your program.
 \item[View docu] opens a window which shows the embedded documentation 
 of your program if there is any. Embedded documentation within a .bas file are comments, which
 start with a double comment character (\verb|##|).
 \end{description}
 
-\subsection{The Android Version of X11-Basic}
+\subsection{The Android Version of X11-Basic}\index{Android}
 
 A version of X11-Basic ready to be installed on Android smartphones and tablets
-is available on the {\normalfont \itshape Android Market} (also called {\normalfont \itshape Google Play}). 
+is available on the {\it Android Market} (nowadays also called {\it Google Play}). 
+A more recent version usually can be found in the files section of the project 
+pages of X11-Basic on sourceforge. Watch out for a file named 
+\verb|X11-Basic-1.25-44.apk| which contains the app.  Download this file to 
+your Android tablet or smartphone and install it, allowing installation 
+of apps from other sources in the systems settings before if necessary.
 
 Unlike the other versions of X11-Basic, the interpreter and virtual machine is
 embedded in a little IDE (=Integrated Development Environment) which allows the
-user to load, run, edit and compile the programs.
+user to load, run, edit and compile the programs.\index{IDE}
 
 The app registers itself as a viewer to .bas and .b files on the system. So
 from any file browser, basic programs can be started with a single touch. 
@@ -405,7 +413,7 @@ vanished from the screen) and compile basic programs into bytecode. The virtual
 machine is integrated, so bytecode compiled code can be run. Depending on the
 endianess of the processor architecture of the platform, bytecode may or may not
 be compatible with those produced on a Linux PC or WINDOWS machine. Standard
-output is rendered directly into the graphics screen with a VT100 compatible
+output is rendered directly into the graphics screen with a VT100\index{VT100} compatible
 terminal emulation. Not all graphics features have the same result than on a
 X11-Windows installation, the whole screen counts as a single fullscreen
 window. Finally shortcuts to X11-Basic programs can be placed on the desktop,
@@ -461,8 +469,8 @@ console font (text mode) as well as the graphics/user-interface appearance.
 \item[Show title] This can be switched off here.
 \item[Show status bar] This can be switched off here.
 \item[Show keyboard at start] This can be switched off here.
-\item[Editor] will execute a 3rd-party text editor (e.g. {\normalfont \itshape Ted} or 
-{\normalfont \itshape Jota} or {\normalfont \itshape 920 Text Editor} if installed) to edit the program currently 
+\item[Editor] will execute a 3rd-party text editor (e.g. {\it Ted} or 
+{\it Jota} or {\it 920 Text Editor} if installed) to edit the program currently 
 loaded. If no program 
 was loaded, the default file name will be \verb|new.bas|. After having saved 
 and closed the text editor, the modified program will be automatically 
@@ -506,7 +514,7 @@ are plenty around, e.g. {\em 920 Text Editor} or {\em Ted (tiny text editor)}.
 Install them from the Android market. You can install multiple editors. Then you
 are asked which one you like to use every time you call the editor.
 
-\subsubsection*{LOAD file select functions}
+\subsubsection*{LOAD file select functions}\index{LOAD}
 
 To load a program, press menu --> load. You can now select a program file 
 (either .bas or .b) to load. If you touch the filename long you get another 
@@ -535,7 +543,7 @@ again, it brings up the screen output.
 Also: When you rotate the screen the running program should continue to run. It
 needs to find out by using \verb|GET_GEOMETRY| if the screen size has changed. 
 
-\subsubsection*{Desktop shortcuts}
+\subsubsection*{Desktop shortcuts}\index{desktop shortcuts}
 
 You can create desktop shortcuts to your BASIC programs. You can place an
 application shortcut on the home screen by simply pressing anywhere (and hold
@@ -548,7 +556,7 @@ the .bas program and run it.
 You can select any file from the \verb|/sdcard/bas| folder which then is placed in the
 desktop.
 
-\subsubsection*{Updates of example programs}
+\subsubsection*{Updates of example programs}\index{example programs}
 
 The X11-Basic app comes with a small selection of example programs. They are 
 copied into the \verb|/mnt/sdcard/bas/| directory. The X11-Basic app will never
@@ -580,17 +588,17 @@ nothing appears after ENTER, then you probably have the Screen Refresh Problem
 
 \end{description}
 
-\subsection{The TomTom Version of X11-Basic}
+%\subsection{The TomTom Version of X11-Basic}
+%
+%On \url{http://www.opentom.org/X11-Basic} you will find a version of X11-Basic
+%which has been specially compiled for TomTom navigation devices. They run Linux
+%based on the ARM processor. A ready made package as well as installation
+%instructions can be found on that web-site. Currently only versions  1.14, 1.15
+%and 1.18 of X11-basic are available as a ready-made binary package. Since the
+%new versions of TomTom devices do not allow to install any third party apps
+%anymore, the support for TomTom has been given up (in 2011).
 
-On \url{http://www.opentom.org/X11-Basic} you will find a version of X11-Basic
-which has been specially compiled for TomTom navigation devices. They run Linux
-based on the ARM processor. A ready made package as well as installation
-instructions can be found on that web-site. Currently only versions  1.14, 1.15
-and 1.18 of X11-basic are available as a ready-made binary package. Since the
-new versions of TomTom devices do not allow to install any third party apps
-anymore, the support for TomTom has been given up (in 2011).
-
-\subsection{Command line parameters}
+\subsection{Command line parameters}\index{command line parameters}
 
 If you are using X11-Basic under Android, you can skip this section.
 
@@ -599,13 +607,13 @@ optional command line parameters. It takes the following ones:
 
 \begin{tabbing}
 XXXXXXXXXXXXXXXXXXXX \=\kill\\
-  {\normalfont \normalfont \bfseriesfamily \bf xbasic <filename> }  \> run Basic program \verb|[input.bas]|\\
-  {\normalfont \normalfont \bfseriesfamily -l                 } \> load only, don't execute\\
-  {\normalfont \normalfont \bfseriesfamily -e <command>       }\> execute basic command \\
-  {\normalfont \normalfont \bfseriesfamily --eval <expression>}   \> evaluate numerical expression  \\
-  {\normalfont \normalfont \bfseriesfamily --daemon           } \> switch off prompting and echoing\\
-  {\normalfont \normalfont \bfseriesfamily -h --help          } \> print a short help \\
-  {\normalfont \normalfont \bfseriesfamily --help <topic>     } \> print help on a specific topic\\
+  {\bf xbasic <filename> }  \> run Basic program \verb|[input.bas]|\\
+  {\bf -l		  } \> load only, don't execute\\
+  {\bf -e <command>	  }\> execute basic command \\
+  {\bf --eval <expression>}   \> evaluate numerical expression  \\
+  {\bf --daemon 	  } \> switch off prompting and echoing\\
+  {\bf -h --help	  } \> print a short help \\
+  {\bf --help <topic>	  } \> print help on a specific topic\\
 \end{tabbing}
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
@@ -620,14 +628,14 @@ XXXXXXXXXXXXXXXXXXXX \=\kill\\
 
 \subsubsection*{X11-Basic as daemon}
 
-The  command line option {\normalfont \normalfont \bfseriesfamily --daemon} forces the interpreter to run in
+The  command line option {\normalfont \bf --daemon} forces the interpreter to run in
 daemon-mode (with no terminal connected).  No prompt is given and the 
 input is not echoed back. This is useful, if you want to run X11-Basic
 programs as a background service.
   
 %\subsection*{Example:}
 %To run  the X11-Basic interpreter on a tcp-socket on port 1371 create a new 
-%user called {\normalfont \normalfont \bfseriesfamily xbasic} and insert
+%user called {\normalfont \bf xbasic} and insert
 %{\footnotesize
 % \begin{verbatim}
 %       --- in /etc/inetd.conf: ---
@@ -642,8 +650,25 @@ programs as a background service.
 %really be used in that way, because \verb|xbasic| would open several security
 %holes on your system.
 
+\subsubsection*{Additional command line parameters for the framebuffer version}
 
-\section{Editing X11-Basic programs}
+If X11-Basic was compiled to use the framebuffer device for graphics output there are
+threee more options to control which framebuffer device is to be used, which mouse 
+device and which keyboard-device:
+
+\begin{tabbing}
+XXXXXXXXXXXXXXXXXXXX \=\kill\\
+  {\bf --keyboard <device>}   \> set the keyboard device (default: /dev/input/event4)  \\
+  {\bf --mouse <device>}   \> set the mouse device (default: /dev/input/mice)  \\
+  {\bf --framebuffer <device>}   \> set the framebuffer device (default: /dev/fb0)  \\
+\end{tabbing}
+
+For example: The sense hat for the Raspberry Pi uses the framebuffer device
+\verb|/dev/fb1| for its LED matrix. So if you want to draw to the LED matrix 
+display specify this for graphics output.
+
+
+\section{Editing X11-Basic programs}\index{Editor}
 
 X11-Basic programs (source code, \verb|.bas| files) are regular ASCII files and
 therefore can be created with any text editor available.  
@@ -655,7 +680,7 @@ therefore can be created with any text editor available.
 %notpad2} instead. 
 Users of UNIX like operating systems are fine with every text editor. Simple 
 ones like \verb|pico| or \verb|nano| will do. MS-WINDOWS user can use the simple 
-{\normalfont \itshape notepad} text editor.
+{\it notepad} text editor.
 
 Users of X11-Basic under Android need to install a good text editor. TED (Text
 Editor), \verb|920 Text Editor|, or \verb|Jota| will work fine. Other text
@@ -667,7 +692,7 @@ is invoked.
 
 Besides from the basic editing features I recommend to use a text editor with
 syntax highlighting. Currently X11-Basic syntax definitions are available  for
-the {\normalfont \itshape Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS) 
+the {\it Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS) 
 and for the \verb|920 Text Editor| and \verb|Jota|, available for Android.
 
 X11-Basic can support foreign language characters. Therefor the basic program
@@ -679,9 +704,9 @@ sets.\footnote{LTEXT will accept some of the special characters
 (currently only german), TEXT will work with UTF-8 only on Android
 devices (all latin, greek, cyrillic). }
 
-\subsection*{Using syntax highlighting with {\normalfont \normalfont \bfseriesfamily \bf nedit}}
+\subsection*{Using syntax highlighting with {\bf nedit}}\index{syntax highlighting}
 
-NEdit, the full featured, plain text {\normalfont \itshape Nirvana 
+NEdit, the full featured, plain text {\it Nirvana 
 editor}\footnote{\url{http://nedit.org/}} is a GUI style text editor for
 workstations with the X Window System.  Also a MS Windows port is
 available\footnote{ \url{http://nedit.gmxhome.de/winport.html}}. NEdit provides
@@ -700,7 +725,7 @@ If you like to use \verb|nedit| as your favorite editor, a \verb|nedit.defs| fil
 comes  with this package. This enables syntax highlighting for X11-Basic
 programs in {\bf nedit} (see fig.~\ref{nedit}).
 
-\section{The Bytecode Compiler and the Virtual Machine}
+\section{The Bytecode Compiler and the Virtual Machine}\index{bytecode}
 
 If you are using the Android version of X11-Basic, you can skip this chapter.
 All you need to know is that there is the option to compile X11-Basic programs
@@ -709,19 +734,19 @@ All you need to know is that there is the option to compile X11-Basic programs
 Under UNIX, Linux and Windows a seperate program need to be used to compile .bas files and make bytecode files or 
 standalobe .exe files out of it. 
 
-If you are using WINDOWS, the most convinient way to compile  X11-basic programs
+If you are using WINDOWS, the most convinient way to compile X11-Basic programs
 is to execute the compiler \verb|xbc.exe| which has a little use interface. Also
-under UNIX/Linus it is very convinient to use the compiler manager \verb|xbc|
+under UNIX/Linux it is very convinient to use the compiler manager \verb|xbc|
 with appropiate command line options (watch out for the 
 \verb|-virtualm| option). 
 
-Advanced users probably want to deal with the bytecode filed produced in the
+Advanced users probably want to deal with the bytecode files produced in the
 compiling process. For each compilation step there are separate programs which
 do it; namely: \verb|xbbc|, \verb|xb2c| and \verb|xbvm|.
 
-\verb|xbbc| compiles X11-Basic programs (.bas files) to bytecode files (.b).
-\verb|xb2c| can translate bytecode files to C source code.
-\verb|xbvm| is a virtual machine (interpreter for bytecode).
+\verb|xbbc| compiles X11-Basic programs (.bas files) to bytecode files (.b).\index{xbbc}
+\verb|xb2c| can translate bytecode files to C source code.\index{xb2c}
+\verb|xbvm| is a virtual machine (interpreter for bytecode).\index{xbvm}
 
 The idea is to increase the execution speed of X11-Basic programs a lot by 
 compiling it to a bytecode, this still being portable. The bytecode itself is 
@@ -745,6 +770,7 @@ which has been produced by the bytecode to C translator \verb|xb2c|. Implemented
 with an  additional macro translation step, the bytecode is in a way readable.
 Here is an example:
 
+\index{bytecode}
 \begin{mdframed}[hidealllines=true,backgroundcolor=green!20]
 {\footnotesize
 \begin{verbatim}
@@ -838,9 +864,9 @@ xbvm b.b
 \end{verbatim}
 \end{mdframed}
 
-\section{Using the X11-Basic to C translator}
+\section{Using the X11-Basic to C translator}\index{C}
 
-It is possible to translate the bytecode generated by \verb|xbbc| to C source
+It is possible to translate the bytecode generated by \verb|xbbc|\index{xbbc} to C source
 code and finally compile this intermediate C-source to a native executable
 (e.g. with the GNU C compiler \verb|gcc|). This way the program will be a real
 native executable which  --again-- runs even a bit faster  that the bytecode
@@ -875,7 +901,8 @@ Here is how to use it (examples are under linux):
 xbbc myprogram.bas -o b.b
 xbvm b.b
 xb2c b.b -o 11.c
-gcc  11.c -lm -lX11 -lx11basic -lasound -lreadline -lgmp -llapack -o a.out
+gcc  11.c -lm -lX11 -lx11basic -lasound -lreadline -lgmp \
+    -llapack -o a.out 
 \end{verbatim}
 \end{mdframed}
 
@@ -887,9 +914,9 @@ xbc -virtualm myprogram.bas -o a.out
 \end{mdframed}
 will exactly do the same. 
   
-\section{The X11-Basic compiler manager {\normalfont \normalfont \bfseriesfamily \bf xbc}}
+\section{The X11-Basic compiler manager {\bf xbc}}
 
-The X11-Basic package is shipped with the X11-Basic compiler \verb|xbc|, which
+The X11-Basic package is shipped with the X11-Basic compiler \index{xbc}\verb|xbc|, which
 makes stand-alone binaries out of X11-Basic source code. It also can produce
 \verb|.o| object files, shared objects (or DLLs) and bytecode. 
 
@@ -930,7 +957,12 @@ presence of \verb|xbbc| and \verb|xv2c| (for methods 2 and 3).
 You can find the compiler in \verb|examples/compiler/xbc.bas|. 
 Yes, the compiler compiles itself. Just make sure you have built the shared 
 library \verb|libx11basic.so| and the library for static linking before  
-(\verb|make lib; make x11basic.a|) and moved it to \verb|/usr/lib|. Then do
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+  make lib x11basic.a
+\end{verbatim}
+\end{mdframed}
+and moved it to \verb|/usr/lib|. Then do
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
 \begin{verbatim}
   xbasic xbc.bas
@@ -941,11 +973,11 @@ See the man page \verb|xbc(1)| for further information on the compiler.
 
 
 
-\section{The ANSI-Basic to X11-Basic converter}
+\section{The ANSI-Basic to X11-Basic converter}\index{bas2x11basic}
 
 X11-Basic packages come with a simple ANSI-Basic to X11-Basic converter 
-\verb|bas2x11basic|. (The sourcecode \verb|bas2x11basic.bas| of the converter can
-be found in the \verb|examples/compiler/| directory.)
+\verb|bas2x11basic|\footnote{The sourcecode {\tt bas2x11basic.bas} of the 
+converter can be found in the {\tt examples/compiler/} directory.}.
 It helps converting old (real) Basic Programs with line numbers and multiple
 commands per line to the X11-Basic structure.  Because there are so many
 different BASIC versions around, in most cases you will have to edit these
@@ -970,12 +1002,12 @@ and read the man-page \verb|man bas2x11basic|. If you like to improve
 the converter please feel free to do so. You may want to send me the result.
 
 
-\section{Using GFA-BASIC programs}
+\section{Using GFA-BASIC programs}\index{GFA-Basic}
 
 GFA-Basic programs have a tokenized binary format and usually the suffix 
 \verb|.gfa|.
 This binary format has to be decoded to ASCII files before they can be used with
-X11-Basic. This job is done by the utility \verb|gfalist| (sometimes also
+X11-Basic. This job is done by the utility \verb|gfalist|\index{gfalist} (sometimes also
 called  \verb|gfa2lst| or \verb|ons-gfalist|) by Peter 
 Backes\footnote{\url{http://titan.plasma.xg8.de:8080/~rtc/}}.
 

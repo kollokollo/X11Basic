@@ -36,23 +36,59 @@ distribution includes a copy of X11-Basic. However, if you want to distribute or
 modify X11-Basic itself, or if you want to incorporate parts of the X11-Basic 
 sourcecode, you will need to follow the GNU public license. 
 
-\section*{Recently asked question}
+%Speed of X11-Basic
+\section*{How fast is X11-Basic?}
 
-\begin{verbatim}
-  Q: I downloaded the last update to x11-basic but I have a problem 
-     with the UTF-8 character set... I cannot use no more the 
-     ascii set the graphic part of it ...I made a small game that 
-     use them now it is not working no more...there's a way 
-     to fix this problem?
+The answer depends on the way an X11-Basic program is
+run: It depends on if the code is interpreted, run as bytecode in a virtual
+machine, or being compiled to native machine language. Generally we find:
+
+\begin{enumerate}
+\item X11-Basic programs run by the interpreter are slow,
+\item X11-Basic programs compiled to bytecode and then run in the X11-Basic 
+virtual machine (\verb|xbvm|) is fast, but
+\item X11-Basic bytecode compiled natively to real machine language 
+is even faster.
+\item arbitrary precision numbers and calculations are slow, but 
+\item 64bit floating point and complex number calculations as well as 
+32bit integers are very fast.
+\end{enumerate}
+
+Bytecoded programs are always interpreted faster than scripted programming 
+languages. The X11-Basic compiler can translate the X11-Basic bytecode to C, 
+which then can be compiled to native machine language using any C-compiler 
+(preferably \verb|gcc| on UNIX systems). Obviously your programs will be slower
+than optimized C/C++ code but it already comes close.
+
+If you need highest possible speed you can load and link a separate
+DLL/shared object with the time critical part of your code written in another 
+language (e.g. C or Assembler). 
+
+A speed comparison was done with the Whetstone benchmark ($\longrightarrow$
+\verb|Whets.bas|). This shows, that bytecode-programs are about 19 times faster
+than the interpreted code and a natively compiled program can run about 28 times
+faster.
+
+
+
+\section*{UTF-8 character set}
+
+I downloaded the last update to X11-Basic but I have a problem 
+with the UTF-8 character set... I cannot use no more the 
+ascii set, especially the graphic part of it ...
+I made a small game that use them now it is not working no more...
+Is there a way to fix this problem?
+
   A: Yes, there is. All characters are still there, but you cannot 
-     access them with a simple CHR$(). One method is to 
+     access them with a simple \verb|CHR$()|. One method is to 
      copy the characters from a unicode table like this: 
-     [http://de.wikipedia.org/wiki/Unicodeblock\_Rahmenzeichnung Frames] 
+{\footnotesize\begin{verbatim}
+  [http://de.wikipedia.org/wiki/Unicodeblock\_Rahmenzeichnung Frames] 
+\end{verbatim} }
      with the mouse into the editor. 
      You need to use a UTF-8 capable editor, e.g. pico, nano, gedit.
      If this is not working for you, alternatively you can code the 
      character yourself by the unicode number:
-\end{verbatim}
 
   {\footnotesize\begin{verbatim}
      FUNCTION utf8$(unicode%)
@@ -61,7 +97,8 @@ sourcecode, you will need to follow the GNU public license.
        ELSE IF unicode%<0x800
          RETURN CHR$(0xc0+(unicode%/64 AND 0x1f))+CHR$(0x80+(unicode% AND 0x3f))
        ELSE
-         RETURN CHR$(0xe0+(unicode%/64/64 AND 0xf))+CHR$(0x80+(unicode%/64 AND 0x3f))+CHR$(0x80+(unicode% AND 0x3f))  
+         RETURN CHR$(0xe0+(unicode%/64/64 AND 0xf))+CHR$(0x80+(unicode%/64 AND 0x3f))+ \
+                CHR$(0x80+(unicode% AND 0x3f))  
        ENDIF
      ENDFUNCTION
  \end{verbatim} }
@@ -69,24 +106,24 @@ sourcecode, you will need to follow the GNU public license.
      So e.g. the charackter 0x250C can be coded with \verb|@utf8$(0x250C)|.
 
 
-\begin{verbatim}
- Q: Is there a GUI-Designer for the graphical user unterface functions 
-    of X11Basic ?
- A: Well, so far nobody has made a real efford to write a real graphical 
-    GUI\_designer. But the program gui2bas may help creating GUI forms. 
-    The input is a very siple ASCII-File (*.gui) which defines the interface. 
-    So far many GEM object types are supportet (and even Atart ST *.rsc-files 
-    may be converted to *.gui files with the rsc2gui program.) but support for 
-    listboxes, popup-menues and Tooltips may be included in future.
-\end{verbatim}
+\section*{GUI-Designer}
+Is there a GUI-Designer for the graphical user unterface functions of X11-Basic?
 
+ A: Well, so far nobody has made a real efford to write a real graphical  GUI designer.
+    But the program \verb|gui2bas| may help creating GUI forms.  The input is a very siple
+    ASCII-File (*.gui) which defines the interface.  So far many GEM object types are
+    supportet (and even Atart ST \verb|*.rsc|-files  may be converted to \verb|*.gui|
+    files with the \verb|rsc2gui| program.) but support for listboxes, popup-menues and
+    Tooltips may be included in future.
 
+\section*{Others}
 \begin{verbatim}
- Q: My old ANSI Basic Programs (with line-Numbers) produce lots of errors in 
-    the interpreter. How can I run classic (ANSI) Basic programs?
- A: Classic Basic programs have to be converted before they can be run with 
-    X11-Basic. With the bas2x11basic converter program most of this convertion
-    will be done automatically. 
+ Q: My old ANSI Basic Programs (with line-Numbers) produce lots 
+    of errors in the interpreter. How can I run classic 
+    (ANSI) Basic programs?
+ A: Classic Basic programs have to be converted before they can 
+    be run with X11-Basic. With the bas2x11basic converter 
+    program most of this convertion will be done automatically. 
 \end{verbatim}
 
 

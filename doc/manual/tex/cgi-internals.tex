@@ -1,10 +1,10 @@
-\section{How it works}
+\section{How it works}\index{CGI|bb}
 
 When a user activates a link to a gateway script, input is sent to the server.
 The server formats this data into environment variables and checks to see
 whether additional data was submitted via the standard input stream.
 
-\subsection{Environment Variables}
+\subsection{Environment Variables}\index{Environment Variables}
 
 Input to CGI scripts is usually in the form of environment variables. The
 environment variables passed to gateway scripts are associated with the browser
@@ -14,7 +14,7 @@ normally used as described in this section. The standard (and platform
 independent) environment variables are shown in the following table:
 
 \begin{center}
-\begin{longtable}{|l|p{9cm}|}
+\begin{longtable}{|l|p{10cm}|}
 \hline
 {\bf Variable} & {\bf Purpose}\\
 \hline
@@ -44,8 +44,7 @@ The server translates the PATH\_INFO variable into this variable. \\\hline
 \verb|SERVER_NAME| & Identifies the server by its host name, alias, or IP address.\\\hline 
 \verb|SERVER_PORT| & Identifies the port number the server received the request on.\\\hline
 \verb|SERVER_PROTOCOL| & Indicates the protocol of the request sent to the server.\\\hline
-%\verb|SERVER_SOFTWARE| & Identifies the Web server software.
-\\\hline
+%\verb|SERVER_SOFTWARE| & Identifies the Web server software.\\\hline
 \end{longtable}
 \end{center}
 \begin{description}
@@ -86,7 +85,7 @@ variable is set only when attached data is passed using the standard input
 or output stream. The value assigned to the variable identifies the basic MIME
 type and subtype as follows:
 \begin{center}
-\begin{longtable}{|l|p{9cm}|}
+\begin{longtable}{|l|p{10cm}|}
 \hline
 {\bf Type} & {\bf Description}\\
 \hline
@@ -112,7 +111,7 @@ types. You can easily identify extended subtypes because they begin with the
 letter x followed by a hyphen. The following Table lists common MIME types and
 their descriptions.
 \begin{center}
-\begin{longtable}{|l|p{9cm}|}
+\begin{longtable}{|l|p{8cm}|}
 \hline
 {\bf Type/Subtype} & {\bf Description}\\\hline 
 \verb|application/octet-stream| & Binary data that can be executed or used with another application\\\hline 
@@ -183,20 +182,16 @@ The \verb|GATEWAY_INTERFACE| variable indicates which version of the CGI
 specification the server is using. The value assigned to the variable identifies
 the name and version of the specification used as follows:
 
-{\footnotesize
 \begin{verbatim}
  GATEWAY_INTERFACE = name/version
 \end{verbatim}
-}
 
 The version of the CGI specification is 1.1. A server conforming
 to this version would set the \verb|GATEWAY_INTERFACE| variable as follows:
 
-{\footnotesize
 \begin{verbatim}
  GATEWAY_INTERFACE = CGI/1.1
 \end{verbatim}
-}
 
 \item[HTTP\_ACCEPT]
 
@@ -219,7 +214,7 @@ is a virtual or relative path to a resource that the server must interpret.
 
 \item[PATH\_TRANSLATED]
 
-Servers translate the \verb|PATH_INFO| variable into the \verb|PATH_TRANSLATED|
+Servers translate the \verb|PATH_INFO| variable into the {\tt PATH\_TRANSLATED}
 variable by inserting the default Web document's directory path in front of the
 extra path information. 
 
@@ -232,32 +227,25 @@ separated from the URL by a question mark. The user submits all the
 information following the question mark separating the URL from the query
 string. The following is an example:
 
-{\footnotesize
 \begin{verbatim}
  /cgi-bin/doit.cgi?string
 \end{verbatim}
-}
-
 
 When the query string is URL-encoded, the browser encodes key parts of the
 string. The plus sign is a placeholder between words and acts as a
 substitute for spaces:
 
-{\footnotesize
 \begin{verbatim}
  /cgi-bin/doit.cgi?word1+word2+word3
 \end{verbatim}
-}
 
 Equal signs separate keys assigned by the publisher from values entered by
 the user. In the following example, response is the key assigned by the
 publisher, and never is the value entered by the user:
 
-{\footnotesize
 \begin{verbatim}
  /cgi-bin/doit.cgi?response=never
 \end{verbatim}
-}
 
 Ampersand symbols separate sets of keys and values. In the following
 example, response is the first key assigned by the publisher, and
@@ -351,7 +339,7 @@ HTTP/1.0.
 
 \end{description}
 
-\subsection{CGI Standard Input}
+\subsection{CGI Standard Input}\index{CGI Input}
 
 Most input sent to a Web server is used to set environment variables, yet
 not all input fits neatly into an environment variable. When a user
@@ -380,7 +368,7 @@ receives data by the standard input stream, the server assigns the value
 associated with the length of the input stream to the \verb|CONTENT_LENGTH|
 variable.
 
-\subsection{Output from CGI Scripts}
+\subsection{Output from CGI Scripts}\index{CGI Output}
 
 After the script finishes processing the input, the script should return
 output to the server. The server will then return the output to the
@@ -390,7 +378,7 @@ header output is strictly formatted, the body of the output is formatted
 in the manner you specify in the header. For example, the body can contain
 an HTML document for the client to display.
 
-\subsection{CGI Headers}
+\subsection{CGI Headers}\index{CGI Headers}
 
 CGI headers contain directives to the server. Currently, these three
 server directives are valid:
@@ -435,7 +423,7 @@ in a script as follows:
 \end{verbatim}
 
 
-\paragraph{Status}
+\paragraph{Status}\index{Server Status}
 
 The Status field passes a status line to the server for forwarding to the
 client. Status codes are expressed as a three-digit code followed by a

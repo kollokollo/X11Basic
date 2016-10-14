@@ -7,15 +7,16 @@ DESCRIPTION:
 	Waits until a key is pressed (in graphic window).
 	After the key event has occurred, the variables have
 	following content:
-	
-        kc    -- Key-code
-	ks    -- state of Shift/Control/Alt etc.
-	t$    -- corresponding character
-	x     -- x coordinate of mouse pointer relative to window
-	y     -- y coordinate
-	xroot -- x coordinate of mouse pointer relative to screen
-	yroot -- y coordinate
-	k     -- mouse button state
+----*
+   kc    -- Key-code
+   ks    -- state of Shift/Control/Alt etc.
+   t$    -- corresponding character
+   x     -- x coordinate of mouse pointer relative to window
+   y     -- y coordinate
+   xroot -- x coordinate of mouse pointer relative to screen
+   yroot -- y coordinate
+   k     -- mouse button state
+*----
 
 SEE ALSO: MOUSEEVENT
 #############################################################################

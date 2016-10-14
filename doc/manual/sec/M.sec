@@ -1,11 +1,11 @@
 ##############################################################################
 
 Function: MALLOC()
-Syntax:   <int-result:adr>=MALLOC(<num-expression:size>)
+Syntax:   adr%=MALLOC(size%)
 
 DESCRIPTION:
 
-	Allocates size bytes and returns a pointer to the allocated memory. 
+	Allocates size% bytes and returns a pointer to the allocated memory. 
 	The memory is not cleared.
 
 SEE ALSO: FREE(), MFREE(), REALLOC()
@@ -26,11 +26,12 @@ Syntax:   MENU
 
 DESCRIPTION:
 
-	Performs menu check and action.  
-	This  command  handles  EVENTs.   Prior  to  use,  the 
-           required  action should be specified with a MENUDEF 
-           command. For constant supervision of events, 
-           MENU is usually found in a loop.
+	Performs menu check and action.
+        
+	This  command  handles  EVENTs. Prior to use, the 
+        required  action should be specified with a MENUDEF 
+        command. For constant supervision of events, 
+        MENU is usually found in a loop.
 
 EXAMPLE:
 
@@ -52,15 +53,14 @@ DESCRIPTION:
 
 	This command reads text for menu-header from \verb|array$()|  the
 	string-array contains the text for menu-titles and menu-entries
-
-                    - end of row: empty string ""           
-                    - end of menu-text: empty string ""
-		    
+----*
+    - end of row: empty string ""           
+    - end of menu-text: empty string ""
+*----
 	\verb|<procname>|  The  procedure to which control will be passed on 
-		selection of a menu entry is determined. 
-
-	\verb|<procname>| is a procedure with one parameter which is the number
-		of the selected item to call when item was selected.
+	selection of a menu entry. It must be a procedure with one 
+        parameter which is the number
+	of the selected item to call when item was selected.
 
 EXAMPLE:
 
@@ -79,7 +79,7 @@ PROCEDURE menuaction(k)
 RETURN
 
 SEE ALSO: MENU, MENUSET, MENUKILL
-##############################################################################
+*#############################################################################
 Command: MENUKILL                     
 Syntax:  MENUKILL
 
@@ -95,14 +95,14 @@ Syntax:   MENUSET n,x
 DESCRIPTION:
 
 	Change appearance of menu-entry n with value x.
-	       
-                    x=0  ' '  normal, reset marker '^'      
-                    x=1  '^'  set marker                    
-                    x=2  '='  set menu-point non selectable 
-                    x=3  ' '  set menu-point selectable  
-		    x=4  check the menu entry  
-                         '-'  permanent non selectable     
-
+----*
+     x=0  ' '  normal, reset marker '^'      
+     x=1  '^'  set marker                    
+     x=2  '='  set menu-point non selectable 
+     x=3  ' '  set menu-point selectable  
+     x=4  check the menu entry  
+          '-'  permanent non selectable     
+*----
 SEE ALSO: MENU			  
 ##############################################################################
 
@@ -174,32 +174,34 @@ EXAMPLE:
 SEE ALSO: CHDIR, RMDIR
 ##############################################################################
 
-Function: MKI$(), MKL$(), MKS$(), MKF$(), MKD$(), MKA$()
-Syntax:   <string-result>=MKI$(<num-expression>)
-          <string-result>=MKL$(<num-expression>)
-          <string-result>=MKS$(<num-expression>)
-          <string-result>=MKF$(<num-expression>)
-          <string-result>=MKD$(<num-expression>)
-          <string-result>=MKA$(<array-expression>)
+Function: MKI$(), MKL$(), MKS$()
+Function: MKF$(), MKD$(), MKA$()
+Syntax:   a$=MKI$(<num-expression>)
+          a$=MKL$(<num-expression>)
+          a$=MKS$(<num-expression>)
+          a$=MKF$(<num-expression>)
+          a$=MKD$(<num-expression>)
+          a$=MKA$(<array-expression>)
 
 
 DESCRIPTION:
 
-	Transforms a number into a character string.    \\
-        MKI$ 16-bit number into a 2-byte string.        \\
-        MKL$ 32-bit number into a 4-byte string.        \\
-        MKS$ a number into a 4-byte float format.       \\
-        MKF$ same as MKS$().                            \\
-        MKD$ a number into a 8-byte double float format.
-        MKA$() transforms a whole Array into a string. 
-	It can be reversed with CVA().
-
+	These six functions transform a number into a 
+        character string.
+----*
+     MKI$ a 16-bit number into a 2-byte string,
+     MKL$ a 32-bit number into a 4-byte string,
+     MKS$ a number into a 4-byte float format,
+     MKF$ same as MKS$().
+     MKD$ a number into a 8-byte double float format,
+     MKA$() transforms a whole Array into a string.
+            It can be reversed with CVA().
+*----
 SEE ALSO: CVI(), CVF(), CVL(), CVA(), CVS(), CVD()
-
 ##############################################################################
 
 Operator:  MOD 
-Syntax:    <num-result>=<num-expression:x> MOD <num-expression:y>
+Syntax:    a=x MOD y
 
 DESCRIPTION:
 
@@ -210,7 +212,7 @@ SEE ALSO:  DIV, MOD()
 *##############################################################################
 
 Function:  MOD() 
-Syntax:    <num-result>=MOD(<num-expression:x>,<num-expression:y>)
+Syntax:    a=MOD(x,y)
 
 DESCRIPTION:
 
@@ -227,24 +229,25 @@ DESCRIPTION:
 	Return the file permissions and the file type of the file or directory
 	given. With these values one can find out what kind the file is of.
 	The bits of the returned integer have the following meaning:
-	
-	xxxx xxxx xxxx xxxx
-	        | |||| |rwx-- permission for others (read, write, excecute)
-	        | ||rw x----- permissions for group
-		r wx--------- permissions for user
-	       s------------- sticky bit
-	      g-------------- set group id bit
-	     u--------------- set user id bit
-	++++----------------- file type:
-                              0 -- regular file
-			      1 -- fifo
-			      2 -- charackter device
-                              4 -- directory
-	                      6 -- block device
-                              8 -- regular file
-                             10 -- symbolic link
-			     12 -- socket
-			     
+----*
+  xxxx xxxx xxxx xxxx
+          | |||| |rwx-- permission for others
+          | |||| |      (read, write, excecute)
+          | ||rw x----- permissions for group
+          r wx--------- permissions for user
+         s------------- sticky bit
+        g-------------- set group id bit
+       u--------------- set user id bit
+  ++++----------------- file type:
+                        0 -- regular file
+                        1 -- fifo
+                        2 -- charackter device
+                        4 -- directory
+                        6 -- block device
+                        8 -- regular file
+                       10 -- symbolic link
+                       12 -- socket
+*----
 COMMENT: 
 	May not work on WINDOWS systems.
 
@@ -277,12 +280,14 @@ DESCRIPTION:
 	Determines the mouse position (x,y) relative to the origin of the 
 	graphics window and the status of the mouse buttons (k) and the mouse 
 	wheel if present.
-           k=0 no buttons pressed \\
-           k=1 left button     \\
-           k=2 middle button   \\
-           k=4 right button   \\
-	   k=8 wheel up       \\
-	   k=16 wheel down    \\
+----*
+    k=0 no buttons pressed
+    k=1 left button
+    k=2 middle button
+    k=4 right button
+    k=8 wheel up
+    k=16 wheel down
+*----
 	or any combinations.
 	
 SEE ALSO: MOUSEX, MOUSEY, MOUSEK	
@@ -296,26 +301,28 @@ DESCRIPTION:
 	Returns the mouse coordinate (x,y) relative to the window, 
 	the mouse coordinate (xroot,yroot) relative to the screen, 
 	the mouse button (k) and state of the Alt/Shift/Caps keys (s).
-           k=0 no buttons pressed \\
-           k=1 left button     \\
-           k=2 middle button   \\
-           k=3 right button   \\
-	   k=4 wheel up       \\
-	   k=5 wheel down    \\
-	   
-	   s=0 normal   \\
-	   s=1 Shift    \\
-	   s=2 CapsLock \\
-	   s=4 Ctrl     \\
-	   s=8 Alt      \\
-	   s=16 NumLock           \\
-	   s=64 Windows-Key       \\
-	   s=128 AltGr  \\
-
+----*
+          k=0 no buttons pressed
+          k=1 left button
+          k=2 middle button
+          k=3 right button
+          k=4 wheel up
+          k=5 wheel down
+          
+          s=0 normal
+          s=1 Shift
+          s=2 CapsLock
+          s=4 Ctrl
+          s=8 Alt
+          s=16 NumLock
+          s=64 Windows-Key
+          s=128 AltGr
+*----
 SEE ALSO: MOUSE, MOUSEX, MOUSEY, MOUSEK, KEYEVENT
 ##############################################################################
 
-Variable:  MOUSEX, MOUSEY, MOUSEK, MOUSES 
+Variable:  MOUSEX, MOUSEY, MOUSEK
+Variable:  MOUSES 
 Syntax:    x%=MOUSEX
            y%=MOUSEY
            k%=MOUSEK
@@ -325,26 +332,32 @@ DESCRIPTION:
 
 	MOUSEX returns the current horizontal position of the 
 	mouse cursor, or of the last position of a touch on a touch screen.
+
 	MOUSEY holds the vertial position accordingly.
+
 	MOUSEK returns the current status of the mouse buttons:
-           MOUSEK=0 no buttons pressed \\
-           MOUSEK=1 left button     \\
-           MOUSEK=2 middle button   \\
-           MOUSEK=4 right button   \\
-	   MOUSEK=8 wheel up       \\
-	   MOUSEK=16 wheel down    \\
+----*
+          MOUSEK=0 no buttons pressed
+          MOUSEK=1 left button
+          MOUSEK=2 middle button
+          MOUSEK=4 right button
+          MOUSEK=8 wheel up
+          MOUSEK=16 wheel down
+*----
 	or any combinations.
 
         MOUSES returns the current state (state when the touchscreen was last
 	touched) of the SHIFT/CAPSLOCK/CTRL keys.
-	MOUSES=0  no Keys           \\
-	MOUSES=1  Shift\\
-	MOUSES=2  CapsLock          \\
-	MOUSES=4  Control           \\
-	MOUSES=8  Alt               \\
-	MOUSES=16 NumLock           \\
-	MOUSES=64 Windows-Key       \\
-	MOUSES=128 AltGr       \\
+----*
+       MOUSES=0  no Keys
+       MOUSES=1  Shift
+       MOUSES=2  CapsLock
+       MOUSES=4  Control
+       MOUSES=8  Alt
+       MOUSES=16 NumLock
+       MOUSES=64 Windows-Key
+       MOUSES=128 AltGr
+*----
 	or any combination.
 
 SEE ALSO:  MOUSE, SETMOUSE, MOUSEEVENT
@@ -424,7 +437,7 @@ DESCRIPTION:
 SEE ALSO: MTFD$()
 ##############################################################################
 Command:  MUL 
-Syntax:   MUL <num-var>,<num-expression>
+Syntax:   MUL var,n
 
 DESCRIPTION:
 
@@ -433,7 +446,7 @@ DESCRIPTION:
 SEE ALSO: ADD, SUB, MUL(), DIV
 *##############################################################################
 Function:  MUL()
-Syntax:    <num-result>=MUL(<num-expression>,<num-expression>)
+Syntax:    a=MUL(b,c)
 
 DESCRIPTION:
 
@@ -441,4 +454,3 @@ DESCRIPTION:
 
 SEE ALSO: ADD(), SUB(), MUL, DIV()
 ##############################################################################
-

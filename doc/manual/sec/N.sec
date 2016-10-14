@@ -1,6 +1,6 @@
 ##############################################################################
 Operator:   NAND
-Syntax:     <num-expression1> NAND <num-expression2>
+Syntax:     a NAND b
 DESCRIPTION:
 
 	The result of the NAND operator is true, if not both operands are true, 
@@ -96,7 +96,7 @@ DESCRIPTION:
 ##############################################################################
 
 Operator:   NOR
-Syntax:     <num-expression1> NOR <num-expression2>
+Syntax:     a NOR b
 DESCRIPTION:
 
 	The result of the NOR operator is true, if both operands are zero, 

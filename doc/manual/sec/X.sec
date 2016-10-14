@@ -19,17 +19,17 @@ DESCRIPTION:
 	Logical exclusive OR operator. XOR returns FALSE (0) if both
 	arguments have the same logical value. The operator also works 
 	on each bit.
-	
-	Table: 
-	-----------------------	    
-	 A  |  B  |  A XOR B
-	----+-----+------------
-	-1  | -1  |    0
-        -1  |  0  |   -1
-         0  | -1  |   -1
-         0  |  0  |    0
-	-----------------------	    
-
+----*
+       Table: 
+       -----------------------     
+        A  |  B  |  A XOR B
+       ----+-----+------------
+       -1  | -1  |    0
+       -1  |  0  |   -1
+        0  | -1  |   -1
+        0  |  0  |    0
+       -----------------------     
+*----
 EXAMPLE:       
 
 	PRINT 3=3 XOR 4>2	 Result:   0 (false)
@@ -70,9 +70,13 @@ DESCRIPTION:
 	XTRIM$(a$) returns a$ with following modifications:
 
 	1. replace Tab's (CHR$(9)) by space,
+        
 	2. replace double spaces by single ones, 
+        
 	3. remove leading and trailing spaces,
+        
 	4. parts of the string which are in quotes ("") will not be changed,
+        
 	5. convert all parts of the string, which are outside quotes ("")
 	   to upper case.
 

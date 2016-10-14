@@ -6,12 +6,13 @@ DESCRIPTION:
 
 	Adds  an object to a given tree and  pointers  between 
         the existing objects and the new object are created.
-           tree   =  address of the object tree
-           parent =  object number of the parent object
-           child  =  object number of the child to be added.
-
+----*
+    tree   =  address of the object tree
+    parent =  object number of the parent object
+    child  =  object number of the child to be added.
+*----
 SEE ALSO: OBJC_DELETE
-##############################################################################
+*#############################################################################
 Command:       OBJC_DELETE
 Syntax:        OBJC_DELETE tree,object
 
@@ -20,9 +21,10 @@ DESCRIPTION:
 	An  object is deleted from an object tree by  removing  the 
 	pointers.  The object is still there and  can  be  restored by
 	repairing the pointers.
-
+----*
         tree     address of the object tree
         object   Object number of the object to delete.
+*----
 
 SEE ALSO: OBJC_ADD
 ##############################################################################
@@ -37,13 +39,14 @@ DESCRIPTION:
         is limited for that call.
 
         Returns 0 on error.
-        tree     address of the object tree
-        startob  number of the first object to be drawn
-        depth    Number of object levels to be drawn
-        cx,cy    coordinates  of top left corner  of  clipping 
-                 rectangle
-        cw,ch    width & height of clipping rectangle
-
+----*
+      tree     address of the object tree
+      startob  number of the first object to be drawn
+      depth    Number of object levels to be drawn
+      cx,cy    coordinates  of top left corner of clipping 
+               rectangle
+      cw,ch    width & height of clipping rectangle
+*----
 
 SEE ALSO:  OBJC_FIND()
 ##############################################################################
@@ -70,14 +73,16 @@ Syntax:        ret=objc_offset(tree,obj,x,y)
 
 DESCRIPTION:
 
-	Calculates  the  absolute screen  coordinates  of  the 
+	Calculates the absolute screen coordinates of the 
         specified object in a specified tree.  
+
         Returns 0 on error.
+----*
         tree     address of the object tree
         obj      object number 
-        x,y       returns  the  x,y  coordinates  to  these 
-                  variables.
-		  
+        x,y      returns the x,y coordinates to these 
+                 variables.
+*----
 
 SEE ALSO: OBJC_FIND()
 ##############################################################################
@@ -115,7 +120,7 @@ DESCRIPTION:
 	second,  and so on.
 
 SEE ALSO: GOSUB
-##############################################################################
+*#############################################################################
 Command:  ON * GOTO 
 Syntax:   ON a GOTO label1[,label2,...]
 
@@ -138,7 +143,7 @@ DESCRIPTION:
        continue in any case. ON BREAK GOTO jumps to a specified label. 
 
 SEE ALSO:  GOTO, ON ERROR
-##############################################################################
+*#############################################################################
 
 Command:      ON ERROR
 Syntax:       ON ERROR CONT
@@ -193,21 +198,24 @@ mode$	is a character string which indicates the way the file should be
 
 	The second character specifies the type of file which should be opened 
 	or created: 
-	""   default opens regular file
-	"U"  opens a datagram socket connection (UDP)
-        "C"  opens a stream socket as client with connection (TCP)
-        "S"  opens a stream socket as server
-        "A"  Socket accept connection
-        "X"  extra settings for a special device following: 
-        (e.g. speed and parity of transmission via serial ports)
-	"UX:baud,parity,bits,stopbits,flow"
-	"Y"  opens an USB connection. The filename specifies the vendor-ID and
-	     product-ID of the device to be opened.
-	"B"  opens a BLUETOOTH stream socket as client with connection (RFCOMM) 
-	"L"  opens a BLUETOOTH datagram socket as client with connection (L2CAP) 
-	"V"  opens a BLUETOOTH datagram socket as server (L2CAP) 
-	"Z"  opens a BLUETOOTH a stream socket as server (RFCOMM)
-
+----*
+  ""   default, opens a regular file
+  "U"  opens a datagram socket connection (UDP)
+  "C"  opens a stream socket as client with connection (TCP)
+  "S"  opens a stream socket as server
+  "A"  Socket accept connection
+  "X"  extra settings for a special device following: 
+       (e.g. speed and parity of transmission via serial ports)
+       "UX:baud,parity,bits,stopbits,flow"
+  "Y"  opens an USB connection. The filename specifies the
+       vendor-ID and product-ID of the device to be opened.
+  "B"  opens a BLUETOOTH stream socket as client with 
+       connection (RFCOMM) 
+  "L"  opens a BLUETOOTH datagram socket as client with 
+       connection (L2CAP) 
+  "V"  opens a BLUETOOTH datagram socket as server (L2CAP) 
+  "Z"  opens a BLUETOOTH a stream socket as server (RFCOMM)
+*----
 <port-nr> The portnr is used by the OPEN "UC" and OPEN "UU" statement to  
           specify the TCP/IP Port of connection (FTP, WWW, TELNET, MAIL etc.) and also
 	  by the "UB","UL","UV" and "UZ" connection types.
@@ -219,18 +227,19 @@ COMMENTS:
 
 
 EXAMPLES:
-	OPEN "I",#1,"data.dat"      ---- opens file "data.dat" for input
-	OPEN "UC",#1,"localhost",80 ---- opens port 80 of localhost for read and#
-					 write
-	OPEN "UX:9600,N,8,1,XON,CTS,DTR",#1,"/dev/ttyS1"  
-                 ---- open COM2 for input and output with 9600:8:N:1 with
-		      software flow control and hardware flow control and also 
-		      drop DTR line and raise it again.
-	OPEN "UY",#1,"0x1c1e:0x0101" --- opens USB device VID=0x1c1e, PID=0x101 
-	                                 for read and write.
+      OPEN "I",#1,"data.dat"      ---- opens file "data.dat" for input
+      OPEN "UC",#1,"localhost",80 ---- opens port 80 of localhost for read and#
+                                       write
+      OPEN "UX:9600,N,8,1,XON,CTS,DTR",#1,"/dev/ttyS1"  
+               ---- open COM2 for input and output with 9600:8:N:1 with
+                    software flow control and hardware flow control and also 
+                    drop DTR line and raise it again.
+      OPEN "UY",#1,"0x1c1e:0x0101" --- opens USB device VID=0x1c1e, PID=0x101 
+                                       for read and write.
 
-SEE ALSO: CLOSE, EXIST(), INPUT, LINEINPUT, PRINT, SEEK, LOF(), EOF(),
-          LOC(), BLOAD, LINK, FREEFILE(), CONNECT, IOCTL(), SEND, RECEIVE
+SEE ALSO: CLOSE, EXIST(), INPUT, LINEINPUT, PRINT, SEEK, LOF(), 
+          EOF(), LOC(), BLOAD, LINK, FREEFILE(), CONNECT, IOCTL(), SEND, RECEIVE, 
+          IOCTL()
 
 ##############################################################################
 Command:  OPENW
@@ -270,11 +279,11 @@ SEE ALSO:   NAND, AND, NOT, NOR, XOR
 *##############################################################################
 
 Function:   OR()
-Syntax:     <num-result>=OR(<num-expression>,<num-expression2>)
+Syntax:     a=OR(b,c)
 
 DESCRIPTION:
 
-	   Returns <num-expression> OR <num-expression2>
+	   This function returns b OR c
 
 SEE ALSO: AND(), OR, AND
 ##############################################################################

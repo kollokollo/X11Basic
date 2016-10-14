@@ -16,7 +16,7 @@ SEE ALSO: DIM, DIM?(), ARRPTR()
 ##############################################################################
 
 Function: UCASE$()
-Syntax:   <string-result>=UCASE$(<string-expression>) 
+Syntax:   a$=UCASE$(<string-expression>) 
 
 DESCRIPTION:
 
@@ -134,30 +134,32 @@ SEE ALSO: OPENW, ROOTWINDOW
 ##############################################################################
 
 Function: USING$()
-Syntax:   <string-result>=USING$(a,format$) 
+Syntax:   t$=USING$(a,format$) 
 
 DESCRIPTION:
 
 	The function USING$() returns a formatted string made out of a 
-	numeric value a. How the number is formatted can be set by a format$.
-	
-  # 	Denotes a numerical digit (leading spaces). \\
-  0 	Denotes a numerical digit (leading zeros). \\
-  * 	Denotes a numerical digit (leading asterisks). \\
-  $ 	Denotes a numerical digit (single leading Dollar). \\
-  ? 	Denotes a numerical digit (single leading EURO). \\
-^^^^ 	After # digits prints numerical value in exponential e+xx format. 
-        Use ^^^^^ for E+xxx values. The exponent is adjusted with significant 
-	digits left-justified.\\
-  . 	Period sets a number's decimal point position. Digits following 
-        determine rounded value accuracy.\\
-  + 	Plus sign denotes the position of the number's sign. + or - will be 
-        displayed.\\
-  - 	Minus sign (dash) placed before or after the number, displays only a 
-        negative value's sign.\\
-  _ 	Underscore preceding a format symbol prints those symbols as literal 
-        string characters.\\
-
+	numeric value a. How the number is formatted can be set by a format$ 
+        consisting of one or more of the following characters.
+----*
+  #   Denotes a numerical digit (leading spaces),
+  0   Denotes a numerical digit (leading zeros),
+  *   Denotes a numerical digit (leading asterisks),
+  $   Denotes a numerical digit (single leading Dollar),
+  ?   Denotes a numerical digit (single leading EURO).
+^^^^  After # digits prints numerical value in exponential 
+      e+xx format. 
+      Use ^^^^^ for E+xxx values. The exponent is adjusted 
+      with significant digits left-justified.
+  .   Period sets a number's decimal point position. Digits
+      following determine rounded value accuracy.
+  +   Plus sign denotes the position of the number's sign. + 
+      or - will be displayed.
+  -   Minus sign (dash) placed before or after the number, 
+      displays only a negative value's sign.
+  _   Underscore preceding a format symbol prints those symbols 
+      as literal string characters.
+*----
 Note: Any string character not listed above will be printed as a literal text 
 character (useful to add commas or units).
 If the number cannot be expressed with the given format, a series of "*" will 

@@ -5,7 +5,11 @@
 %
 
 %\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{memoir}
-\documentclass[14pt,a4paper,twoside,headsepline,dvips,openany,final]{scrbook}
+%\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{scrbook}
+%\documentclass[11pt,a4paper,twoside,headsepline,openany]{book}
+\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{book}
+%-------------------------------------------------------------------------------
+% verwendete Pakete
 \usepackage{xcolor}
 \definecolor{nicered}{rgb}{.64,.129,.149}
 \definecolor{nicered2}{rgb}{.64,.2,.2}
@@ -14,6 +18,17 @@
 \usepackage{tikz}
 \usepackage{kpfonts}
 \usepackage[explicit]{titlesec}
+
+\usepackage[T1]{fontenc}                    % bessere Trennung
+\usepackage[latin1]{inputenc}               % Für üöäß,ÜÖÄ
+\usepackage{amsmath}                    % Schoenere Formeln
+\usepackage{url}                       % 
+\usepackage{enumitem}                       % Customizing lists
+
+% \usepackage{german}                         % Trennung deutsch
+%\usepackage{times}                          % Schoenere Fonts
+
+
 \newcommand*\chapterlabel{}
 \titleformat{\chapter}
   {\gdef\chapterlabel{}
@@ -37,27 +52,31 @@
   }
 \titlespacing*{\chapter}{0pt}{50pt}{-60pt}
 
+\newcommand*\sectionlabel{}
+\titleformat{\section}
+  {\normalfont\sffamily\Large\bfseries\color{nicered}}
+  {\thesection}{1em}{\sectionlabel#1}
+\newcommand*\subsectionlabel{}
+\titleformat{\subsection}
+  {\normalfont\sffamily\Large\bfseries\color{nicered2}}
+  {\thesubsection}{1em}{\subsectionlabel#1}
+\newcommand*\subsubsectionlabel{}
+\titleformat{\subsubsection}
+  {\normalfont\sffamily\Large\bfseries\color{MidnightBlue}}
+  {\thesubsubsection}{1em}{\subsubsectionlabel#1}
 
+\renewcommand{\familydefault}{\sfdefault}
 
-%\documentclass[12pt,a4paper,twoside,headsepline,dvips,openany,final]{scrbook}
-%\documentclass[11pt,a4paper,twoside,headsepline,openany]{book}
 %-------------------------------------------------------------------------------
 % verwendete Pakete
 
-\usepackage[T1]{fontenc}                    % bessere Trennung
-\usepackage[latin1]{inputenc}               % Für üöäß,ÜÖÄ
-% \usepackage{german}                         % Trennung deutsch
-%\usepackage{times}                          % Schoenere Fonts
 \renewcommand{\sfdefault}{phv}
 \renewcommand{\rmdefault}{ptm}
 %\renewcommand{\ttdefault}{pcr}
 %\usepackage{amsfonts}                       % Blackboard Zeichen
-\usepackage{amsmath}                    % Schoenere Formeln
 % \usepackage{pifont}			% ZapfDingbats
 %\usepackage{here}                           % Fliessobjekte hier !
 %\usepackage{floatflt}                       % Umflossene Bilder
-\usepackage{url}                       % 
-\usepackage{enumitem}                       % Customizing lists
 %\usepackage{rotating}                       % Rotieren von Bildern
 %\usepackage{subfigure}                      % Unterabbildungen (vor caption !)
 \usepackage[small,bf]{caption}              % Schoenere Bildunterschriften
@@ -77,17 +96,20 @@
 
 \newcommand*{\mybox}[2]{\colorbox{#1!30}{\parbox{.98\linewidth}{#2}}}
 
+\usepackage{fancyhdr} 
+%\fancyhf{}
+\cfoot{\thepage}
 
-
-%\setlength{\textwidth}{16.0cm}
+\setlength{\textwidth}{16.0cm}
 %\setlength{\textheight}{23.5cm}
 %\setlength{\topmargin}{-1cm}
 \setlength{\evensidemargin}{-0.55cm}
-\setlength{\oddsidemargin}{-0.55cm}
+%\setlength{\oddsidemargin}{-0.55cm}
 %\setlength{\captionmargin}{20pt}
 %\renewcommand{\floatpagefraction}{0.8}
 
-\pagestyle{headings} 
+%\pagestyle{headings} 
+\pagestyle{fancy} 
  
 \title{X11-BASIC\\}
 \author{VERSION 1.25\\(C) 1997-2016 by Markus Hoffmann\\
@@ -106,6 +128,8 @@
 
 \begin{document} 
 \setlist{noitemsep}
+
+\fontsize{14pt}{16pt}\selectfont
 
 \setcounter{tocdepth}{2}
 \begin{titlepage} 

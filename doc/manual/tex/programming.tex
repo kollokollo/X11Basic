@@ -1,6 +1,8 @@
 
 \chapter{Programming in X11-Basic}
 
+\vspace{0.5cm}
+
 This chapter describes all you need to know to write your own programs
 in X11-Basic.
 
@@ -41,8 +43,9 @@ computer almost as with machine language,
 \item possibility to merge source code for libraries and reuse,  
 \item inline data compression and encryption (disabled in US-versions), 
 \item Unicode (UTF-8) support, 
-\item powerful mathematics (including matrix/equation solving and fast Fourier 
-transformations), and 
+\item support to access USB and bluetooth devices,
+\item powerful mathematics (including complex numbers, matrix/equation solving, 
+big integers, and fast Fourier transformations), and 
 \item a compiler is available.
 \end{itemize}
 
@@ -64,9 +67,9 @@ program, once testing has been finished.
 To write a first X11-Basic program you will need an editor, where you can type
 in the source code. The X11-Basic package does not include an editor, but many
 so-called text editors are readily available nearly everywhere and by chance
-they are already installed on your system. You can use {\normalfont \itshape Notapad2} on MS
-WINDOWS systems, {\normalfont \itshape pico, nano, vi, emacs, nedit, gedit} and many more on
-UNIX and Linux systems, {\normalfont \itshape pico} on the TomTom device, {\normalfont \itshape Ted} or {\normalfont \itshape 920
+they are already installed on your system. You can use {\it Notapad2} on MS
+WINDOWS systems, {\it pico, nano, vi, emacs, nedit, gedit} and many more on
+UNIX and Linux systems, {\it pico} on the TomTom device, {\it Ted} or {\it 920
 text editor} on Android. This is just a small list of possibilities here. 
 
 Open such an editor, and you can start programming.
@@ -137,7 +140,7 @@ xb2c hello.b -o hello.c
 
 produced a translated C-sourcefile \verb|hello.c|.
 
-If you have the {\normalfont \itshape gnu C compiler} available you can compile it to an 
+If you have the {\it gnu C compiler} available you can compile it to an 
 independent executable program called hello with:
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
@@ -440,11 +443,12 @@ of the name is identical) without.
 \begin{verbatim}
 x=10.3        ! this is a number variable (64bit floating point)
 x$="Hello"    ! this is a different character string variable
-x%=5          ! this is a (32bit) integer variable, still different
-x&=79523612688076834923316 ! this is a big integer variable, still different
+x%=5          ! this is a (32bit) integer variable, different
+x&=79523612688076834923316 ! this is a big integer variable, 
+                           ! still different
 x#=3+4i       ! this is a complex number variable, 
-@x            ! this refers to a function or procedure called x
-x()=[1,2,3,4] ! This beast refers to an array.
+@x            ! this refers to a function or procedure x
+x()=[1,2,3,4] ! this beast refers to an array.
 \end{verbatim}
 \end{mdframed}
 
@@ -627,9 +631,10 @@ adding, subtracting, multiplication and division of thouse fractions. Multiple p
 Irrational numbers using a floiting point representation are (currently) not 
 supported. If somebody needs this, please let me know.
 
-Supported operators (for big integers) are + - * / = <> < > MOD DIV ABS() SQRT() 
-NEXTPRIME() FACT() PRIMORIAL() FIB()  LUCNUM() RANDOM() ADD() SUB() MUL() DIV() MOD() 
-POWM() ROOT() GDC() LCM() INVERT()  MIN() MAX(). 
+Supported operators (for big integers) are + - * / = <> < > MOD and DIV.
+Supported functions are ABS(), SQRT(), 
+NEXTPRIME(), FACT(), PRIMORIAL(), FIB(),  LUCNUM(), RANDOM(), ADD(), SUB(), MUL(), DIV(), MOD(), 
+POWM(), ROOT(), GDC(), LCM(), INVERT(), MIN(), MAX() and many more. 
 Also STR\$(), BIN\$(), OCT\$() and HEX\$() work with big integers.
 
 The advantage is, that you can handle big integer numbers without loosing 
@@ -682,7 +687,8 @@ NEXT i
 IF nextprime(a&-1)=a& or a&=1
   PRINT a&
 ELSE
-  ' The number is too big and we cannot be sure that this is a prime
+  ' The number is too big and we cannot be sure 
+  ' that this is a prime
   PRINT "----incomplete test -----";a&
 ENDIF
 END
@@ -1065,8 +1071,9 @@ GOSUB progress(100,i)
 PROCEDURE progress(a,b)
   LOCAL t$
   IF verbose
-    PRINT chr$(13);"[";string$(b/a*32,"-");">";
-    PRINT string$((1.03-b/a)*32,"-");"| ";str$(int(b/a*100),3,3);"% ]";
+    PRINT CHR$(13);"[";STRING$(b/a*32,"-");">";
+    PRINT STRING$((1.03-b/a)*32,"-");"| ";
+    PRINT STR$(INT(b/a*100),3,3);"% ]";
     FLUSH
   ENDIF
 RETURN
@@ -1753,10 +1760,18 @@ terminate FOR-loops in the correct order. If you write \verb|FOR i%=|\dots first
 \verb|FOR j%=|\dots next, make sure to terminate the inner loop first.
 \item You can count
 downwards with the word \verb|DOWNTO| instead of \verb|TO|.
-Try \verb|FOR i%=5 DOWNTO 1|. 
-\item You
-can count in steps not equal 1 with the keyword \verb|STEP|: 
-\verb|FOR i%=1 TO 10 STEP 2|
+Try:
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FOR i%=5 DOWNTO 1
+\end{verbatim}
+\end{mdframed}
+\item You can count in steps not equal 1 with the keyword \verb|STEP|: 
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{verbatim}
+FOR i%=1 TO 10 STEP 2
+\end{verbatim}
+\end{mdframed}
 That will increment i\% in steps of 2 until it reaches 10. 
 \item X11-Basic will
 check for correct loop termination while entering the code into the editor. 

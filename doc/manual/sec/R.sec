@@ -314,7 +314,6 @@ DESCRIPTION:
 	a user defined function. This can not be used in PROCEDURES but in
 	FUNCTIONS. The expression must be of the type the function was. 
 
-SEE ALSO: PROCEDURE, FUNCTION, ENDFUNCTION, RESUME, GOSUB, @, ON ERROR
 EXAMPLE:
         PROCEDURE testroutine
             PRINT "Hello World !"
@@ -322,6 +321,8 @@ EXAMPLE:
         FUNCTION givemefive
             RETURN 5
         ENDFUNCTION
+SEE ALSO: PROCEDURE, FUNCTION, ENDFUNCTION, RESUME, GOSUB, @, 
+          ON ERROR
 ##############################################################################
 
 Function: REVERSE$()

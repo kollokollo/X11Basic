@@ -52,9 +52,15 @@ DESCRIPTION:
 
 	Removes enclosing characters from string t$. De-closing a string, 
 	following pairs are recognized:
+----*
 	"" , '' , <> , () , {} , [], ´`
+*----
 	If the string was not enclosed with one of these pairs of characters, 
 	the string will be returned unmodified.
+
+EXAMPLE: 
+	PRINT DECLOSE$("[Hello]")
+	Result: Hello
 
 SEE ALSO: ENCLOSE$()
 ##############################################################################
@@ -78,6 +84,8 @@ Syntax:  SELECT ... DEFAULT ... ENDSELECT
 	
 DESCRIPTION:
 
+	DEFAULT is a label within the SELECT...ENDSELECT construction. 
+	
 	See SELECT.
 
 SEE ALSO: SELECT
@@ -89,17 +97,20 @@ Syntax:  DEFFILL <col>,<style>,<pattern>
 	
 DESCRIPTION:
 
-	Sets fill color and pattern.
-	<col>     - not used at the moment
-	<style>   - 0=empty, 1=filled, 2=dots, 3=lines, 4=user (not used)
-        <pattern> - 24 dotted patterns and 12 lined can by chosen.
+	Sets the fill color and fill pattern for solid graphics elements like
+	PBOX, PCIRCLE etc...
+----*
+    <col>     - not used at the moment
+    <style>   - 0=empty, 1=filled, 2=dots, 3=lines, 4=user (not used)
+    <pattern> - 24 dotted and 12 lined patterns can by chosen.
+*----
 
-SEE ALSO: DEFLINE, DEFTEXT
+SEE ALSO: DEFLINE, DEFTEXT, PBOX
 
 ##############################################################################
 
 Command:    DEFFN
-Syntax:     DEFFN <function-name>[$][(<variable list>)]=<expression>
+Syntax:     DEFFN <func-name>[$][(<var list>)]=<expression>
 
 DESCRIPTION:
 
@@ -124,28 +135,32 @@ Syntax:     DEFLINE <style>,<thickness>[,<begin_s>,<end_s>]
 DESCRIPTION:
 
 	Sets line style, width and type of line start and end.
-        <style>            -- determines the style of line:
- 			      1 Solid line
- 			      2 Long dashed line
- 			      3 Dotted
- 			      4 Dot-dashed
- 			      5 Dashed
- 			      6 Dash dot dot ..
- 			      7 Long Dash dot dot ..
- 			   0x11-0xffffffff User defined (not used)
-        <thickness>        -- sets line width in pixels.
-        <begin_s>,<end_s>  -- The  start  and  end  symbols  are  defined  
-	                      by  the   last parameter, and can be:
- 			      0 Square
- 			      1 Arrow
- 			      2 Round
+----*
+<style>     -- determines the style of line:
+	    1 Solid line
+	    2 Long dashed line
+	    3 Dotted
+	    4 Dot-dashed
+	    5 Dashed
+	    6 Dash dot dot ..
+	    7 Long Dash dot dot ..
+	 0x11-0xffffffff User defined (not used)
+
+<thickness> -- sets line width in pixels.
+<begin_s>,<end_s>  -- The  start  and  end  symbols  are  defined  
+	              by  the   last parameter, and can be:
+ 		        0 Square
+ 			1 Arrow
+ 			2 Round
+*----
 	The userdefined style of the line defines a dash-pattern in the 
-	nibbles: 
+	nibbles:
+----*
 	  0x11 means: 1 pixel dash, followed by 1 pixel gap.
 	  0x61 means: 1 pixel dash, followed by 6 pixel gap.
 	0x6133 means: 3 pixel dash, followed by 3 pixel gap, followed by a
-		      1 pixel dash followed by a 6 pixel gap.
-
+		      1 pixel dash, followed by 6 pixel gap.
+*----
 
 SEE ALSO: LINE, DEFFILL
 ##############################################################################
@@ -159,16 +174,19 @@ DESCRIPTION:
          marked using the command POLYMARK.
          The color value will be ignored. The color of the points can be
 	 set with the COLOR command. 
+
 	 The following types are possible:
-	   0=point
-           1=dot (circle)
-           2=plus sign
-           3=asterisk
-           4=square
-           5=cross
-           6=hash
-           8=filled circle
-           9=filled square
+----*
+       0=point
+       1=dot (circle)
+       2=plus sign
+       3=asterisk
+       4=square
+       5=cross
+       6=hash
+       8=filled circle
+       9=filled square
+*----
  
 SEE ALSO: POLYMARK, DEFLINE, COLOR
 ##############################################################################
@@ -180,12 +198,13 @@ DESCRIPTION:
 
 	Chooses a pre-defined mouse form.
         The following mouse forms are available :
-
-           0=arrow             1=expanded (rounded) X
-           2=busy bee          3=hand, pointing finger
-           4=open hand         5=thin crosswire
-           6=thick crosswire   7=bordered crosswire
-	   and about 100 other X-Window specific symbols.
+----*
+    0=arrow		1=expanded (rounded) X
+    2=busy bee  	3=hand, pointing finger
+    4=open hand 	5=thin crosswire
+    6=thick crosswire	7=bordered crosswire
+*----
+    and about 100 other X-Window or operating system specific symbols.
 
 SEE ALSO: HIDEM, SHOWM	   
 ##############################################################################
@@ -198,11 +217,12 @@ DESCRIPTION:
 	Defines the style, rotation and size of the line font used
 	by the LTEXT command. COLOR and linestyles (e.g. thickness) 
 	can be set with COLOR and DEFLINE.
-
-        flag% : text style - 0=monospace, 1=normal
-        angle : rotation in degrees 
-        width and height : size of text in % 
-	         (100% corresponds to 100 Pixel font)
+----*
+  flag% : text style - 0=monospace, 1=normal
+  angle : rotation in degrees 
+  width and height : size of text in % 
+  	   (100% corresponds to 100 Pixel font)
+*----
 
 EXAMPLE:
 	DEFTEXT 0,0.05,0.1,0      ! Size of the charackters is approx 10x5 pixels
@@ -264,18 +284,19 @@ DESCRIPTION:
 ##############################################################################
 
 Command: DIM
-Syntax:  DIM <arrayname>(<indexes>)[,<arrayname>(<indexes>),...]
+Syntax:  DIM <arrayname>(<indexes>)[,<arrayn>(<ind>),...]
 
 DESCRIPTION:
 
-	Sets the dimensions of an array or string array. Arrays can be 
+	Sets the dimensions of an array. An array variable can store many values
+	addessed by an index or a tuple of indicies.  Arrays can be 
 	re-dimensioned any time.
 
 COMMENT: 
-	The argument determines the number of Entries in the array. The 
+	The argument determines the number of entries in the array. The 
 	index count starts with 0. So DIM a(10) will produce the 
 	elements a(0), a(1), ... a(8), and a(9) (10 elements). 
-	Note: a(10) does not exist! 
+	Note: a(10) does not exist here!
 
 EXAMPLES:
 	DIM a(10)
@@ -304,28 +325,29 @@ Syntax:  p$=DIR$(0)
 
 DESCRIPTION:
 
-	DIR$() returns the path of the current directory. The otional argument 
+	DIR$() returns the path of the current directory. The optional argument 
 	is ignored. 
 
 SEE ALSO: CHDIR, ENV$()
 ##############################################################################
 
 Command: DIV
-Syntax:  DIV <num-var>,<num-expression>
+Syntax:  DIV var,n
 
 DESCRIPTION:
 
-	Divides the value of var by n. As var=var/n but faster.
+	Divides the value of var by n. Same as var=var/n but faster.
 
 SEE ALSO: ADD, MUL, SUB
 *##############################################################################
 
 Function: DIV()
-Syntax:  <num-result>=DIV(<num-expression>,<num-expression>)
+Syntax:  c=DIV(a,b)
 	
 DESCRIPTION:
 
-	Divides the first value by second. 
+	The function DIV() divides the first value by second and returns 
+	the result. 
 
 SEE ALSO: ADD(), MUL(), SUB()
 
@@ -336,18 +358,18 @@ Syntax:  DO ... LOOP
 	
 DESCRIPTION:
 
-	DO implements an unconditional
-        loop.  The  lines  between the DO line and the LOOP line form the loop
-        body. The unconditional DO...LOOP block  simply  loops
+	DO implements an unconditional loop.  
+	The lines between the DO line and the LOOP line form the loop
+        body. The unconditional DO...LOOP block simply loops
         and the only way out is by EXIT IF or BREAK (or GOTO).
 
-SEE ALSO: LOOP, EXIT IF, BREAK, WHILE
 EXAMPLE:
         DO
-            INPUT a$
-            EXIT IF a$=""
+          INPUT a$
+          EXIT IF a$=""
         LOOP
 
+SEE ALSO: LOOP, EXIT IF, BREAK, WHILE
 
 ##############################################################################
 
@@ -358,7 +380,14 @@ DESCRIPTION:
 
 	Used within a FOR..NEXT loop. DOWNTO indicates that the loop should
 	count backwards.  
-	e.g.: FOR c=100 DOWNTO 1 is the same as FOR c=100 TO 1 STEP -1
+	e.g.: 
+----*
+FOR c=100 DOWNTO 1
+*----
+	is the same as 
+----*
+FOR c=100 TO 1 STEP -1
+*----
 
 EXAMPLE:
   FOR i=10 DOWNTO 0
@@ -398,7 +427,7 @@ SEE ALSO: PEEK(), LPEEK(), POKE, DPEEK(),CVI()
 ##############################################################################
 
 Command: DRAW
-Syntax:  DRAW [<x1>,<y1>][TO <x2>,<y2>][TO <x3>,<y3>][TO ...]
+Syntax:  DRAW [x1,y1][TO x2,y2][TO x3,y3][TO ...]
 	
 DESCRIPTION:
 
@@ -415,14 +444,14 @@ Syntax:  DUMP [t$][,#n]
 DESCRIPTION:
 
 	Query Information about stored Variables, names: 
-
-	DUMP                    -- Lists all used variable names
-        DUMP "@"                -- list of functions and procedures
-        DUMP ":"                -- list of all labels
-        DUMP "#"                -- list of open Files
-        DUMP "K"                -- list of all X11-Basic commands
-        DUMP "F"                -- list of all X11-Basic functions
-	
+----*
+    DUMP             -- Lists all used variable names
+    DUMP "@"         -- list of functions and procedures
+    DUMP ":"         -- list of all labels
+    DUMP "#"         -- list of open Files
+    DUMP "K"         -- list of all X11-Basic commands
+    DUMP "F"         -- list of all X11-Basic functions
+*----
 	If a open file channel is giveb, DUMP outputs to that file. 
 
 EXAMPLE: 

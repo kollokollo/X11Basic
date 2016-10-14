@@ -14,12 +14,12 @@ EXAMPLE:
 SEE ALSO:   GCD()
 ##############################################################################
 Function:   LEFT$()
-Syntax:     <string-result> = LEFT$(<string-expression> [,<characters>]) 
+Syntax:     a$=LEFT$(<string-expression> [,<numchars>]) 
 DESCRIPTION:
 
-	LEFT$() returns the specified  number  of characters  from  its 
-	argument,  beginning  at  its left side. If the number of <characters>
-	is not specified then LEFT$() returns only  the leftmost character.
+	LEFT$() returns the specified number of characters from its 
+	argument,  beginning at its left side. If the number of characters
+	is not specified then LEFT$() returns only the leftmost character.
 
 EXAMPLE:
        PRINT LEFT$("Hello",1)     ! Result: H
@@ -68,9 +68,12 @@ Syntax:     b=LGAMMA(a)
 DESCRIPTION:
 
 	The LGAMMA() function returns the natural logarithm of the absolute
-       	value  of  the  Gamma  function. LGAMMA(x)=ASB(LN(GAMMA(x)))
-	
+       	value of the Gamma function. 
+----*
+    LGAMMA(x)=ASB(LN(GAMMA(x)))
+*----	
 	If x is a NaN, a NaN is returned.
+
 	If x is 1 or 2, +0 is returned.
 
 	If x is positive infinity or negative infinity, positive infinity is
@@ -82,11 +85,10 @@ DESCRIPTION:
        	If the result overflows, a range error occurs, and the function returns
         inf with the correct mathematical sign.
 
-
 SEE ALSO: GAMMA(), SIN()
 ##############################################################################
 Command:  LINE
-Syntax:   LINE <x1>,<y1>,<x2>,<y2>
+Syntax:   LINE x1,y1,x2,y2
 
 DESCRIPTION:
 
@@ -96,7 +98,7 @@ DESCRIPTION:
 SEE ALSO: DRAW, PLOT, DEFLINE
 ##############################################################################
 Command:  LINEINPUT
-Syntax:   LINEINPUT [[#]<device-number>,] <string-variable>
+Syntax:   LINEINPUT [[#]<device-number>,] t$
 
 DESCRIPTION:
 
@@ -120,7 +122,7 @@ DESCRIPTION:
 SEE ALSO: INPUT$(),LINEINPUT
 ##############################################################################
 Command:  LINK
-Syntax:   LINK #<device-nr>,<string-expression:name>
+Syntax:   LINK #<device-nr>,name$
 
 DESCRIPTION:
 

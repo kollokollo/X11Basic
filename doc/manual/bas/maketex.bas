@@ -88,7 +88,9 @@ PROCEDURE doone(f$)
       SPLIT t$,":",1,a$,b$
       b$=XTRIM$(b$)
       PRINT #2,"\begin{mdframed}[hidealllines=true,backgroundcolor=red!20]"
-      PRINT #2,"{\Large \normalfont \bfseries "+a$+":} {\Huge \normalfont \bfseries \hspace{2cm}\verb|"+b$+"|}";
+      PRINT #2,"\begin{tabbing}"
+      PRINT #2,"XXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\"
+      PRINT #2,"{\Large  \bf "+a$+":}  \> {\Huge \bf \verb|"+b$+"|}";
       WHILE len(b$)
         SPLIT b$,",",1,a$,b$
         a$=REPLACE$(REPLACE$(a$,"_","\(UNT)"),"\(UNT)","\_")
@@ -111,29 +113,54 @@ PROCEDURE doone(f$)
         PRINT #2,"\label{"+REPLACE$(a$,"()","")+"}";
         b$=TRIM$(b$)
       WEND
-      PRINT #2,"\\[5ex]"
+      PRINT #2,"\\"
+      PRINT #2,"\end{tabbing}"
       PRINT #2,"\end{mdframed}"
     ELSE if LEFT$(t$,7)="Syntax:"
       PRINT #2,"\begin{mdframed}[hidealllines=true,backgroundcolor=yellow!20]"
       WORT_SEP t$,":",1,a$,b$
-      PRINT #2,"\begin{tabular}{ll}"
-      PRINT #2,"{\Large {\normalfont \itshape Syntax:}} & \verb|"+TRIM$(b$)+"|\\"
+      PRINT #2,"\begin{tabbing}"
+      PRINT #2,"XXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\"
+      PRINT #2,"{\Large {\it Syntax:}} \> \verb|"+TRIM$(b$)+"|\\"
       sflag=1
     ELSE if LEFT$(t$,7)="DESCRIP"
       IF sflag
-        PRINT #2,"\end{tabular}\\[4ex]"
+        PRINT #2,"\end{tabbing}"
         PRINT #2,"\end{mdframed}"
         sflag=0
       ENDIF
       WORT_SEP t$,":",1,a$,b$
-      PRINT #2,"{\Large \normalfont \bfseries DESCRIPTION:}\\[2ex] "+b$+""
+      PRINT #2,"{\Large \bf DESCRIPTION:}"
+      PRINT #2,"\vspace{0.5cm}"
+      PRINT #2
+      PRINT #2,b$
+      PRINT #2
+    ELSE if LEFT$(t$,7)="COMMENT"
+      IF sflag
+        PRINT #2,"\end{tabbing}"
+        PRINT #2,"\end{mdframed}"
+        sflag=0
+      ENDIF
+      IF vflag
+        PRINT #2,"\end{verbatim}}"
+        PRINT #2,"\end{mdframed}"
+        CLR vflag
+      ENDIF
+      WORT_SEP t$,":",1,a$,b$
+      PRINT #2,"\vspace{0.5cm}"
+      PRINT #2,"{\Large \bf Comment:}\\ "+@treat_tex$(b$)
       PRINT #2
     ELSE if LEFT$(t$,7)="EXAMPLE"
+      IF vflag
+        PRINT #2,"\end{verbatim}}"
+        PRINT #2,"\end{mdframed}"
+        CLR vflag
+      ENDIF
       WORT_SEP t$,":",1,a$,b$
       PRINT #2,"\vspace{1cm}"
       PRINT #2,"\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]"
 
-      PRINT #2,"\section*{\normalfont \bfseries "+a$+":} "+b$+""
+      PRINT #2,"\section*{\bf "+a$+":} "+b$+""
       PRINT #2,"{\footnotesize\linespread{0.8}\begin{verbatim}"
       vflag=true
     ELSE if LEFT$(t$,7)="SEE ALS"
@@ -144,45 +171,41 @@ PROCEDURE doone(f$)
         CLR vflag
       ENDIF
       b$=TRIM$(b$)
-      PRINT #2,"\vspace{1cm} {\large \normalfont \bfseries SEE ALSO:}\hspace{1cm} "
+      PRINT #2,"\vspace{0.1cm}"
+      PRINT #2,"\begin{tabbing}"
+      PRINT #2,"XXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\"
+      PRINT #2,"{\large \bf SEE ALSO:}\> ";
       WHILE len(b$)
         e=wort_sep(b$,",",1,a$,b$)
-        a$=REPLACE$(REPLACE$(a$,"_","\(UNT)"),"\(UNT)","\_")
-        a$=REPLACE$(REPLACE$(a$,"$","\(DOLLAR)"),"\(DOLLAR)","\$")
-        PRINT #2,"\index{"+a$+"}\verb|"+a$+"|";
+        aa$=REPLACE$(REPLACE$(a$,"_","\(UNT)"),"\(UNT)","\_")
+        aa$=REPLACE$(REPLACE$(aa$,"$","\(DOLLAR)"),"\(DOLLAR)","\$")
+        PRINT #2,"\index{"+aa$+"}\verb|"+a$+"|";
         IF e=2
-          PRINT #2,",";
+          PRINT #2,", ";
         ENDIF
-        PRINT #2
         b$=TRIM$(b$)
       WEND
+      PRINT #2,"\\"
+      PRINT #2,"\end{tabbing}"
     ELSE
       IF sflag
         IF LEN(TRIM$(t$))
-          PRINT #2," & \verb|"+TRIM$(t$)+"|\\"
+          PRINT #2," \> \verb|"+TRIM$(t$)+"|\\"
         ENDIF
       ELSE
-        IF NOT vflag
-          t$=REPLACE$(t$,"$","\(DOLLAR)")
-          t$=REPLACE$(t$,"[","\(EKA)")
-          t$=REPLACE$(t$,"\(EKA)","$[$")
-          t$=REPLACE$(t$,"]","\(EKZ)")
-          t$=REPLACE$(t$,"\(EKZ)","$]$")
-          t$=REPLACE$(t$,"#","\(ASX)")
-          t$=REPLACE$(t$,"\(ASX)","\#")
-          ' t$=REPLACE$(t$,"{","\(SK1)")
-          ' t$=REPLACE$(t$,"\(SK1)","$\{$")
-          ' t$=REPLACE$(t$,"}","\(SK2)")
-          ' t$=REPLACE$(t$,"\(SK2)","$\}$")
-          t$=REPLACE$(t$,"&","\(ASC)")
-          t$=REPLACE$(t$,"\(ASC)","\&")
-          t$=REPLACE$(t$,"%","\(USC)")
-          t$=REPLACE$(t$,"\(USC)","\%")
-          t$=REPLACE$(t$,"^","\(EXP)")
-          t$=REPLACE$(t$,"\(EXP)","\verb|^|")
-          t$=REPLACE$(t$,"\(DOLLAR)","\$")
-          t$=REPLACE$(t$,"_","\(UNDERS)")
-          t$=REPLACE$(t$,"\(UNDERS)","\_")
+        if trim$(t$)="\begin{verbatim}"
+	  INC vflag
+        else if trim$(t$)="\end{verbatim}" and vflag>0
+	  DEC vflag
+        else if trim$(t$)="----*"
+	  INC vflag
+	  t$="\begin{verbatim}"
+        else if trim$(t$)="*----" and vflag>0
+	  DEC vflag
+	  t$="\end{verbatim}"
+	endif
+        IF vflag=0
+	  t$=@treat_tex$(t$)
         ENDIF
         PRINT #2,t$
       ENDIF
@@ -191,3 +214,26 @@ PROCEDURE doone(f$)
   WEND
   CLOSE #1
 RETURN
+FUNCTION treat_tex$(t$)
+  t$=REPLACE$(t$,"$","\(DOLLAR)")
+  t$=REPLACE$(t$,"[","\(EKA)")
+  t$=REPLACE$(t$,"\(EKA)","$[$")
+  t$=REPLACE$(t$,"]","\(EKZ)")
+  t$=REPLACE$(t$,"\(EKZ)","$]$")
+  t$=REPLACE$(t$,"#","\(ASX)")
+  t$=REPLACE$(t$,"\(ASX)","\#")
+  ' t$=REPLACE$(t$,"{","\(SK1)")
+  ' t$=REPLACE$(t$,"\(SK1)","$\{$")
+  ' t$=REPLACE$(t$,"}","\(SK2)")
+  ' t$=REPLACE$(t$,"\(SK2)","$\}$")
+  t$=REPLACE$(t$,"&","\(ASC)")
+  t$=REPLACE$(t$,"\(ASC)","\&")
+  t$=REPLACE$(t$,"%","\(USC)")
+  t$=REPLACE$(t$,"\(USC)","\%")
+  t$=REPLACE$(t$,"^","\(EXP)")
+  t$=REPLACE$(t$,"\(EXP)","\verb|^|")
+  t$=REPLACE$(t$,"\(DOLLAR)","\$")
+  t$=REPLACE$(t$,"_","\(UNDERS)")
+  t$=REPLACE$(t$,"\(UNDERS)","\_")
+  RETURN t$
+ENDFUNCTION

@@ -36,27 +36,30 @@ DESCRIPTION:
        If c% is omitted or -1, the parameters are set for all channels.
 
        form% specifies the tone generator for the specified channel:
-
-       Tone Generators:
-       0 - silence (default for channels 1-15)
-       1 - sin wave (default for channel 0)
-       2 - square wave
-       3 - triangular wave
-       4 - sawtooth wave
-       5 - white noise 
-       
-       The envelope of the tones are specified using 4 parameters 
-       attack,decay,sustain and release. 
-       attack, decay and release values are specified in seconds.
+----*
+     Tone Generators:
+     0 - silence (default for channels 1-15)
+     1 - sin wave (default for channel 0)
+     2 - square wave
+     3 - triangular wave
+     4 - sawtooth wave
+     5 - white noise 
+*----       
+       The envelope of the tones are specified using 4 parameters:
+       attack, decay, sustain and release. 
+       attack, decay and release values are specified in seconds;
        sustain level values are between 0 and 1.
               
        * "Attack time" is the time taken for initial run-up of level 
          from nil to peak, beginning when the SOUND command is executed.
+         
        * "Decay time" is the time taken for the subsequent run down from the 
          attack level to the designated sustain level, after the attack part of
 	 the envelope is over.
+         
        * "Sustain level" is the level during the main sequence of the sound's 
          duration, until duration time is reached (e.g. 0.8).
+         
        * "Release time" is the time taken for the level to decay from the 
          sustain level to zero after the duration time is over.
 
@@ -67,16 +70,15 @@ DESCRIPTION:
 	trumpet or piano. A realistic sound can only be achieved by also using
 	higher harmonics. To simulate this, you will have to use more than one
 	channel and play them simultaneously.
-
        
 	Volume, frequency and duration for the specified sound channel are set 
 	by the SOUND command.
 
-SEE ALSO:    SOUND, PLAYSOUND
 EXAMPLE:
 	WAVE 1,1,0,,1     ! set sine wave, no attack
 	SOUND 1,500,1     ! play a permanent tone on channel 1
 	
+SEE ALSO:    SOUND, PLAYSOUND
 ##############################################################################
 
 Command:  WHILE
@@ -88,12 +90,12 @@ DESCRIPTION:
 	FALSE (not null). Unlike a REPEAT...UNTIL loop, the loop body 
 	is not necessarily executed at least once. 
 
-SEE ALSO:    WEND, DO
 EXAMPLE:
        WHILE NOT EOF(#1)
            LINEINPUT #1,a$
        WEND  
-	
+
+SEE ALSO:    WEND, DO	
 ##############################################################################
 
 Command:  WEND
@@ -102,12 +104,12 @@ DESCRIPTION:
 
 	WEND terminates a WHILE...WEND loop.
 
-SEE ALSO: WHILE, DO
 EXAMPLE:
        WHILE NOT EOF(#1)
            LINEINPUT #1,a$
        WEND  
 
+SEE ALSO: WHILE, DO
 ##############################################################################
 
 Variable: WIN32?
@@ -161,10 +163,12 @@ DESCRIPTION:
 
 	Splits up string t$ into two parts a$ and b$ concerning a delimiter 
 	string d$. So that t$=a$+d$+b$.
-	
-	mode can be: 0   --   default
-		     1   --   do not search parts of t$ which are in brackets.
 
+	mode can be:
+----*
+        0  --  default
+        1  --  do not search parts of t$ which are in brackets.
+*----
 	Quoted parts of the string are not split up.
 
 EXAMPLE:
@@ -183,15 +187,19 @@ DESCRIPTION:
 	Splits up string t$ into two parts a$ and b$ concerning a delimiter 
 	string d$. So that t$=a$+d$+b$. 
 	
-	mode can be: 0   --   default
-		     1   --   do not search parts of t$ which are in brackets.
-
+	mode can be:
+----*
+        0  --  default
+        1  --  do not search parts of t$ which are in brackets.
+*----
 	Quoted parts of the string are not split up.
 
 	The return value can be:
-		2  -- The string has been split up.
-		1  -- The string did not contain d$, a$=t$, b$=""
-		0  -- The string was empty. a$="",b$=""
+----*
+      2  -- The string has been split up.
+      1  -- The string did not contain d$, a$=t$, b$=""
+      0  -- The string was empty. a$="",b$=""
+*----
 
 SEE ALSO: SPLIT
 #############################################################################

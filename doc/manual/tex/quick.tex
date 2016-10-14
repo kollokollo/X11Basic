@@ -62,7 +62,7 @@ marked with pairs of \verb|""|. Array constants have following format:
 \section{Operators}
 Precedence is defined as follows (highest first):
 \begin{tabbing}
-XXXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXX\=\kill\\
 0. {\tt ()}      \>(brackets)\\
 1. {\tt \verb|^|}      \>(power) \\
 2. {\tt * /}     \>(multiplication, division) \\
@@ -97,7 +97,7 @@ In addition there are abbreviations which are actually alternate commands like:
 \section{Interpreter Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|CLEAR|        \> clear and remove all variables  \> p.\pageref{CLEAR}\\
 \verb|CONT|         \> continue (after STOP)           \> p.\pageref{CONTINUE}\\
 \verb|DUMP|	    \> lists all used variable names   \> p.\pageref{DUMP}\\
@@ -130,7 +130,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Flow Control Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|AFTER n,procedure|\> execute procedure after n seconds  \> p.\pageref{AFTER}\\
 \verb|BREAK|           \> same as EXIT IF TRUE               \> p.\pageref{BREAK}\\
 \verb|CASE const|      \> SELECT * CASE * DEFAULT * ENDSELECT\> p.\pageref{CASE}\\
@@ -171,7 +171,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Console Input/Output Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 {\tt BEEP}\> Beep (on TTY/console)\> p.\pageref{BEEP}\\
 {\tt BELL}\> same as BEEP\> p.\pageref{BELL}\\
 {\tt CLS		}\> clear (text)screen \> p.\pageref{CLS}\\
@@ -195,7 +195,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{File Input/Output Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 {\tt BGET \#f,a,n}\> read n bytes from file \#f to address a\> p.\pageref{BGET}\\
 {\tt BLOAD f\$,a[,l]	}\> reads entire file (given by name) to address a\> p.\pageref{BLOAD}\\
 {\tt BPUT \#f,a,n	}\> writes n bytes from address a to file/channel f\> p.\pageref{BPUT}\\
@@ -223,7 +223,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Variable Manipulation Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \verb|ABSOLUTE x,adr%|\> Assigns the address to the variable x.\> p.\pageref{ABSOLUTE}\\
 {\tt ARRAYCOPY dst(),src() }\> copies array including dimensioning\> p.\pageref{ARRAYCOPY}\\
@@ -243,7 +243,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Memory Manipulation Commands}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \verb|ABSOLUTE x,adr%| \> Assigns the address to the variable x.\> p.\pageref{ABSOLUTE}\\
 {\tt BMOVE q,z,n	}\>	 copies a block of n bytes from address q to z\> p.\pageref{BMOVE}\\
@@ -260,7 +260,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Math commands}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|ADD a,b| 		\> same as a=a+b but faster\> p.\pageref{ADD}\\
 \verb|DEC var| 		\> same as var=var-1 but faster\> p.\pageref{DEC}\\
 \verb|DIV a,b| 		\> same as a=a/b but faster\> p.\pageref{DIV}\\
@@ -277,11 +277,9 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|SUB a,b|		\> same as a=a-b but faster\> p.\pageref{SUB}\\
 \end{tabbing}
 
-
-
 \section{Other Commands}
 \begin{tabbing}
-XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 {\tt CALL adr[,par,...]} \> see EXEC\> p.\pageref{CALL}\\
 \verb|CONNECT #n,t$[,i%]|\> connect a channel \> p.\pageref{CONNECT}\\
@@ -331,7 +329,7 @@ XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Graphic commands}
 \subsection{Drawing and painting}
 \begin{tabbing}
-XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|BOUNDARY f| 	\> switch borders on or off\> p.\pageref{BOUNDARY}\\
 \verb|BOX x1,y1,x2,y2| 	\> draw a frame\> p.\pageref{BOX}\\
 \verb|CIRCLE x,y,r,,|	\> draw a circle\> p.\pageref{CIRCLE}\\
@@ -375,7 +373,7 @@ XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
  \end{tabbing}
 \subsection{Screen/Window commands}
 \begin{tabbing}
-XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|CLEARW [#n]|  	\> clear graphic window\> p.\pageref{CLEARW}\\
 \verb|CLOSEW [#n]|  	\> close graphic window\> p.\pageref{CLOSEW}\\
 \verb|FULLW n| 		\>  make window fullscreen\> p.\pageref{FULLW}\\
@@ -400,7 +398,7 @@ XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
  
 \subsection{GUI/User input commands}
 \begin{tabbing}
-XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|ALERT a,b$,c,d$,var[,ret$]| \> Show Alert/Infobox and wait for user input\> p.\pageref{ALERT}\\
 %\verb||  	\>\> p.\pageref{}\\
 %\verb||  	\>\> p.\pageref{}\\
@@ -431,7 +429,7 @@ XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{File Input/Output functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|d%=DEVICE(file$)|	\>returns the device id of a file \> p.\pageref{DEVICE}\\
 \verb|b=EOF(#n)|	\>TRUE if file pointer reached end of file\> p.\pageref{EOF}\\
 \verb|b=EXIST(fname$)| 	\>TRUE if file fname\$ exist\> p.\pageref{EXIST}\\
@@ -453,7 +451,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Variable/String Manipulation functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|adr%=ARRPTR(b())|  	\> pointer to array descriptors\> p.\pageref{ARRPTR}\\
 \verb|a=ASC(t$)|	\> ASCII code of first letter of string\> p.\pageref{ASC}\\
 \verb|b$=BIN$(a[,n])|  	\> convert to binary number\> p.\pageref{BINS}\\
@@ -502,7 +500,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Data compression and coding functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|b$=ARID$(a$)|  	\> order-0 adaptive arithmetic decoding\> p.\pageref{ARIDS}\\
 \verb|b$=ARIE$(a$)|  	\> order-0 adaptive arithmetic encoding\> p.\pageref{ARIES}\\
 \verb|b$=BWTD$(a$)|  	\>inverse Burrows-Wheeler transform\> p.\pageref{BWTDS}\\
@@ -534,7 +532,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Memory Manipulation functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|adr%=ARRPTR(b())|  	\> pointer to array descriptors\> p.\pageref{ARRPTR}\\
 \verb|i%=DPEEK(adr%)|	\>  read word from pointer adr\> p.\pageref{DPEEK}\\
 \verb|b%=LPEEK(adr%)|  	\>reads long (4 Bytes) from address\> p.\pageref{LPEEK}\\
@@ -551,7 +549,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \section{Logic functions}
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|c%=AND(a%,b%)|	\> same as c=(a AND b)\> p.\pageref{AND}\\
 \verb|c%=OR(a%,b%)|	\> same as c=(a OR b)\> p.\pageref{OR}\\
 \verb|c%=XOR(a%,b%)|	\> same as c=(a XOR b)\> p.\pageref{XOR}\\
@@ -588,7 +586,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
   Some math functions are defined on Vectors and Matrices.
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|b=ABS(a)|		\> absolute value $b=|a|$\> p.\pageref{ABS}\\
 \verb|c=ADD(a,b)|	\> add $c=a+b$\> p.\pageref{ADD}\\
 \verb|b=CBRT(a)|	\> cube root $b=\sqrt[3]{a}$\> p.\pageref{CBRT}\\
@@ -630,14 +628,14 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 Angles are always radians, for both, arguments and return values.
 
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|b=RAD(a)|	\> convert degrees to radians\> p.\pageref{RAD} \\
 \verb|b=DEG(a)|	\> convert radians to degrees\> p.\pageref{DEG}\\
 \end{tabbing}
 
 \subsection{Trigonometric functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|b=SIN(a)|	\>     sine\> p.\pageref{SIN}\\
 \verb|b=COS(a)|	\>     cosine\> p.\pageref{COS}\\
 \verb|b=TAN(a)|	\>     tangent\> p.\pageref{TAN}\\
@@ -671,7 +669,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \subsection{Random numbers}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|a=GASDEV(dummy)| 	\> random number Gauss distribution \> p.\pageref{GASDEV}\\
 \verb|a=RAND(dummy)|	\> random integer number \> p.\pageref{RAND}\\
 \verb|a=RANDOM(n)|	\> random integer number between 0 and n \> p.\pageref{RANDOM}\\
@@ -683,7 +681,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{System functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|ret%=CALL(adr%[,par])|\> Calls a machine code or C subroutine \> p.\pageref{CALL}\\
 \verb|t$=ENV$(n$)|	\>  read value of environment variable n\$\> p.\pageref{ENVS}\\
 \verb|t$=ERR$(i)| \> error message\> p.\pageref{ERRS}\\
@@ -701,7 +699,7 @@ XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Graphic functions}
 \begin{tabbing}
-XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|c=COLOR_RGB(r,g,b[,a])| \> allocate color by rgb(a) value\> p.\pageref{COLORiRGB}\\
 \verb|a=EVENT?(mask%)| \> returns TRUE if a graphics event is pending \> p.\pageref{EVENTf}\\
 %\verb|| \>  \> p.\pageref{}\\
@@ -720,7 +718,7 @@ XXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 
 \section{Other functions}
 \begin{tabbing}
-XXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
+XXXXXXXXXXXXXXXXXXX\=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\=\kill\\
 \verb|a=EVAL(t$)|        \> evaluate expression contained in t\$\> p.\pageref{EVAL}\\
 \verb|m=MAX(a,b,c,...)|  \> returns biggest value               \> p.\pageref{MAX}\\
 \verb|m=MAX(f())| 	 \> not implemented yet\\

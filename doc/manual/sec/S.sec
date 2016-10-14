@@ -48,7 +48,7 @@ SEE ALSO: SAVESCREEN, SGET
 
 Command: SCOPE
 Syntax:  SCOPE a(),typ,yscale,yoffset
-         SCOPE y(),x(),typ,yscale,yoffset,xscale,xoffset
+         SCOPE y(),x(),typ,yscale,yoffs,xscale,xoffs
 
 DESCRIPTION:
 	
@@ -57,11 +57,11 @@ DESCRIPTION:
 	million points and lines at once.
 	
 	The variable typ specifies the type of plot:
-	
-	0 -- draw a polyline
-	1 -- draw points (without lines)
-	2 -- draw impulses 
-	
+----*
+       0 -- draw a polyline
+       1 -- draw points (without lines)
+       2 -- draw impulses 
+*----
 	With xscale, yscale, xoffset and yoffset you can specify a scaling 
 	function to the data.  
 	
@@ -104,12 +104,13 @@ Syntax:  SCREEN n
 
 DESCRIPTION:
 	This commands select the Screen-Resolution in SVGA-Mode. It is only
-	available in the SVGA-Version of X11-Basic and has no effect on the
-	X11-version, the Android or WINDOWS-Version.
+	available in the SVGA-Version of X11-Basic and has no effect on any
+	other versionid X11-Basic.
 	
 	Following Screen modes are supported:
+----*
 	 n   	Mode
-	======================================
+	================================
 	 0   	TEXT-Mode, no graphics
 	 1      320x 200  16 colors
 	 2      640x 200  16 colors
@@ -123,37 +124,29 @@ DESCRIPTION:
 	10      640x 480 256 colors
 	11      800x 600 256 colors
 	12     1024x 768 256 colors
-
 	13     1280x1024 256 colors
-
 	14      320x200 15Bit colors
 	15      320x200 16Bit colors
 	16      320x200 24Bit colors
-
 	17      640x480 15Bit colors
 	18      640x480 16Bit colors
 	19      640x480 24Bit colors
-
 	20      800x600 15Bit colors
 	21      800x600 16Bit colors
 	22      800x600 24Bit colors
-
-	23	1024x768 15Bit colors
-	24	1024x768 16Bit colors
-	25	1024x768 24Bit colors
-
-	26	1280x1024 15Bit colors
-	27	1280x1024 16Bit colors
-	28	1280x1024 24Bit colors
-
-	29	 800x 600 16 colors
-	30	1024x 768 16 colors
-	31	1280x1024 16 colors
-
-	32	720x 348 monochrome  Hercules emulation mode 
-	33-37	32-bit per pixel modes.
-	38-74	additional resolutions         
-	
+	23      1024x768 15Bit colors
+	24      1024x768 16Bit colors
+	25      1024x768 24Bit colors
+	26      1280x1024 15Bit colors
+	27      1280x1024 16Bit colors
+	28      1280x1024 24Bit colors
+	29      800x 600 16 colors
+	30      1024x 768 16 colors
+	31      1280x1024 16 colors
+	32      720x 348 monochrome  Hercules emulation mode 
+	33-37   32-bit per pixel modes.
+	38-74   additional resolutions         
+*----	
 SEE ALSO: VGA-Version of X11-Basic
 ##############################################################################
 Command: SEEK
@@ -183,6 +176,7 @@ DESCRIPTION:
 	ENDSELECT. You must not use GOTO out of the SELECT--ENDSELECT block. 
 	(although in the interpreter this works, the compiler will not compile
 	it correctly.) 
+
 	You can leave the block any time with BREAK.
 
 COMMENT:
@@ -362,13 +356,14 @@ DESCRIPTION:
 	
 	Loads and sets a font for graphical text commands. 
 	t$ may be 
-	"SMALL" or "5x7"   for a small font,
-	"MEDIUM or "8x8    for a medium sized font,
-	"BIG" or "8x16"    for a big font,
-	"LARGE" or "16x32" for an even bigger font,
-	"HUGE" or "24x48"  for an even bigger font,
-	"GIANT" or "32x64" for a gigantic font size.
-	
+----*
+     "SMALL" or  "5x7"   for a small font,
+     "MEDIUM or  "8x8    for a medium sized font,
+     "BIG"   or  "8x16"  for a big font,
+     "LARGE" or "16x32"  for an even bigger font,
+     "HUGE"  or "24x48"  for an even bigger font,
+     "GIANT" or "32x64"  for a gigantic font size.
+*----
 	This setting affects the text style and size of the commands TEXT 
 	and GPRINT.
 
@@ -838,7 +833,7 @@ SEE ALSO:  WAVE, PAUSE, PLAYSOUND
  
 ##############################################################################
 Variable:  SP
-Syntax     i%=SP
+Syntax:    i%=SP
 
 DESCRIPTION:
 
@@ -877,7 +872,6 @@ DESCRIPTION:
 	program this can work as expected.
 
 
-EXAMPLE:
 
 SEE ALSO:  FORK() 
 
@@ -892,13 +886,14 @@ DESCRIPTION:
 	and rate (<1 slow, >1 fast). 
 
 	The locale can be: 
+----*
 	"de" for German  pronunciation,
 	"en" for English pronunciation,
 	"us" for English pronunciation,
 	"fr" for French  pronunciation,
 	"es" for Spanish pronunciation,
 	"it" for Italian pronunciation.
-	
+*----
 COMMENT:	
 	This command is implemented in the Android version of X11-Basic only. 
 	Not all locales might be installed. If a locale is missing, you will 
@@ -993,7 +988,7 @@ PRINT "Result of this algorithm:"'r124
 PRINT "Compare with: sqrt(";z;")=";SQRT(z)
 PRINT "Deviation:"'ABS(SQRT(z)-r124)
 
-SEE ALSO: Operator  ^ 
+
 ##############################################################################
 Function:  SRAND()
 Syntax:    VOID SRAND(b)
@@ -1179,7 +1174,7 @@ SEE ALSO: SYSTEM$()
 *############################################################################
 
 Function: SYSTEM$()
-Syntax:   <string-result>=SYSTEM$(<string-expression>)
+Syntax:   ret$=SYSTEM$(command$)
 
 DESCRIPTION:
 

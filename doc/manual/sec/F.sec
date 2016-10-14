@@ -127,23 +127,26 @@ DESCRIPTION:
        If the string is empty, no events are pending. The events consist of 3 
        characters followed by a blank and optionally followed by a filename. 
        The first three characters have the following meaning:
-       1st: "d" means: the file is a directory
-       2nd: "X" created, "O" OPENed, "C" closed, "M" moved, "D" deleted
-       3rd: "r" read, "w" write, "a" attributes were changed
-
+----*
+    1st: "d" means: the file is a directory
+    2nd: "X" created, "O" OPENed, "C" closed, "M" moved, 
+         "D" deleted
+    3rd: "r" read, "w" write, "a" attributes were changed
+*----
        When  monitoring  a  directory,  the events  above can occur for files in
        the directory,  in  which  case  the  name field  in  the  returned
        string identifies the name of the file within the directory.
 
-SEE ALSO:    WATCH
 EXAMPLE:
-	WATCH "/tmp"
-	DO
-	  a$=FILEEVENT$
-	  IF LEN(a$)
-	    PRINT a$
-	  ENDIF
-	LOOP
+     WATCH "/tmp"
+     DO
+       a$=FILEEVENT$
+       IF LEN(a$)
+         PRINT a$
+       ENDIF
+     LOOP
+
+SEE ALSO:    WATCH
 ##############################################################################
 Function:  FIB()
 Syntax:    w&=FIB(i%)
@@ -164,32 +167,36 @@ SEE ALSO: LUCNUM()
 ##############################################################################
 
 Command:  FILESELECT
-Syntax:   FILESELECT title$,<path$>,<default$>,selectedfile$
+Syntax:   FILESELECT title$,path$,default$,file$
   	  
 DESCRIPTION:
 
-	Opens a fileselect box.
-        title$   gives a short title to be placed in the fileselect box.
-		 Such as "Select a .DOC file to open...".
+	Opens a fileselect box and lets the user browse through the file system
+        and select one file.
 
-	path$    if none specified  then  the  default path is assumed.
-                 The pathname should include a complete path specification 
-		 including a drive letter (except for UNIX file system), 
-		 colon, path, and filemask.
-	         The filemask may (and usually does) include wildcard 
-		 characters.
+title$   gives a short title to be placed in the fileselect box.
+	 Such as "Select a .DOC file to open...".
 
-	<default$>  contains the name of the file to appear  in  the 
-	   selection line. ("" for no default).
+path$    if none specified then the default path is assumed.
+         The pathname should include a complete path specification 
+	 including a drive letter (except for UNIX file system), 
+	 colon, path, and filemask.
+         The filemask may (and usually does) include wildcard 
+	 characters.
 
-	FILESELECT returns the selected filename (including path) in 
-	selectedfile$. If CANCEL is selected an empty string is returned.
+default$  contains the name of the file to appear in the 
+          selection line. ("" for no default).
 
+        FILESELECT returns the selected filename (including path) in 
+        file$. If CANCEL is selected an empty string is returned.
+
+EXAMPLE:
+     FILESELECT "LOAD File",".\*.dat","input.dat",file$
 
 SEE ALSO: XLOAD, XRUN, FSEL_INPUT()
-EXAMPLE:
-	FILESELECT "LOAD File",".\*.dat","input.dat",file$
+
 ###############################################################################
+
 Command:  FILL
 Syntax:   FILL x,y[,bc]
   	  
@@ -205,12 +212,14 @@ DESCRIPTION:
 SEE ALSO: COLOR
 #############################################################################
 Command:  FIT
-Syntax:   FIT x(),y(),yerr???,???[,???,???,???,???,???,???]
+Syntax:   FIT x(),y(),yerr?,??[,??,??,??,??,??,??]
   	  
 DESCRIPTION:
 
         Fits a user defined function to a set of data points, also using
 	errorbars in y.
+
+COMMENT:
 	TODO: The command needs to be described.
 
 SEE ALSO: FIT_LINEAR, FIT_POLY
@@ -251,7 +260,9 @@ DESCRIPTION:
 	FIT_POLY fits a polynom of order m% to n% datapoints given by x() and
 	y(). If present, dy() specifies the errors in y. The polynomial
 	coefficients are returned in a() such that
+----*
 	f(x)=a(0)+a(1)*x+a(2)*x^2+...
+*----
 
 COMMENT:  
 	For higher orders m%>3 of the polynom, the range of x() must be 
@@ -276,7 +287,7 @@ SEE ALSO: INT(), TRUNC(), FRAC(), ROUND()
 ##############################################################################
 
 Function:  FLOOR()
-Syntax:    <num-result>=FLOOR(<num-expression-x>)
+Syntax:    a=FLOOR(x)
   	  
 DESCRIPTION:
 
@@ -299,28 +310,28 @@ SEE ALSO: PRINT
 ##############################################################################
 
 Command: FOR 
-Syntax: FOR <variable>=<expression> TO <expression> [STEP <expression>]
-        FOR <variable>=<expression> DOWNTO <expression> [STEP <iexpression>]
+Syntax: FOR <var>=<sexpr> TO <texpr> [STEP incr]
+        FOR <var>=<sexpr> DOWNTO <texpr> [STEP incr]
 
 DESCRIPTION:
 
-	FOR initiates a FOR...NEXT loop with the specified <variable> 
-	initially set to <start-expression> and incrementing in
-	<increment> steps (default is 1). The statements between FOR and
+	FOR initiates a FOR...NEXT loop with the specified variable var 
+	initially set to <sexpr> and incrementing in
+	incr steps (default is 1). The statements between FOR and
 	NEXT are repeated until the variable value reaches or steps over 
-	<target-expression>. 
+	<texpr>. 
 
-SEE ALSO:  NEXT
 EXAMPLE:         
-	FOR n=2 TO 0 STEP -1
-          PRINT n,
-        NEXT n
-        RESULT: 2  1  0 
+       FOR n=2 TO 0 STEP -1
+         PRINT n,
+       NEXT n
+       RESULT: 2  1  0 
 
+SEE ALSO:  NEXT, DOWNTO, STEP
 ##############################################################################
 
 Function:   FORK()
-Syntax:     <int-result>=FORK()
+Syntax:     a%=FORK()
 
 DESCRIPTION:
 
@@ -350,16 +361,24 @@ SEE ALSO: SPAWN
 ##############################################################################
 
 Function:   FORM_ALERT()
-Syntax:     <num-result>=FORM_ALERT(<default-button>,<string$>)
+Syntax:     ret=FORM_ALERT(button,string$)
+
 DESCRIPTION:
 
-	Creates an alert box.
-           button  = number of the default button (0= none).
-           string$ = string defining the message in the alert.  
-	   Note that the square brackets are part  of  the 
-           string:
+	This function creates an alert box, and returns the number 
+        of the button pressed. Unlike ALERT, it is not possible to 
+        use text inputs here.
+
+        The parameters have the following meaning:
+----*
+ button  = number of the default button (0= none).
+ string$ = string defining the message in the alert. 
+           It needs to have a special format: 
            "[i][Message][Buttons]"
-           where i = the required alert symbol - see ALERT.
+*----
+        Where i is the required alert symbol number. Lines and buttons are
+        separated by the "|" character. --> see ALERT.
+
 	FORM_ALERT returns the number of the selected Button.
 
 EXAMPLE:  
@@ -373,7 +392,9 @@ Syntax:     ~FORM_CENTER(tree%,x,y,w,h)
 DESCRIPTION:
 
 	Centers the object tree and returns its coordinates.
-           INPUT: tree%  - address of the object tree.
+        
+        tree% is the  address of the object tree.
+
            OUTPUTS:
            x,y    coordinates of top left corner
            w,h    form width and height.
@@ -407,17 +428,18 @@ DESCRIPTION:
 	Release (or reserve) a rectangular screen area and draw an 
         expanding/shrinking rectangle.
         Returns 0 if an error occurred.
-           flag=     function
-                0         reserve a display area.
-                1         draw expanding box.
-                2         draw shrinking box.
-                3         release reserved display area.
-           x1,y1  top left corner of rectangle at min size
-           w1,h1  width & height  "    "       "  "    "
-           x2,y2  top left corner of rectangle at max size
-           w2,h2  width & height   "    "      "  "    "
+----*
+flag=     function
+     0         reserve a display area.
+     1         draw expanding box.
+     2         draw shrinking box.
+     3         release reserved display area.
+x1,y1  top left corner of rectangle at min size
+w1,h1  width & height  "    "       "  "    "
+x2,y2  top left corner of rectangle at max size
+w2,h2  width & height   "    "      "  "    "
+*----
 EXAMPLE:
-
 PROCEDURE show_tabelle
   LOCAL ox,oy
   ox=(bx+bw-532)/2
@@ -439,16 +461,18 @@ Syntax:     ret%=FORM_DO(tree%[,obj%])
 
 DESCRIPTION:
 
-	FORM_DO() manages an object tree. It interacts with the user
-	until  an  object with EXIT or TOUCHEXIT status is clicked on.
-        Returns  the number of the object whose clicking or double 
-        clicking  caused the function to end.  If it was a double 
-        click, bit 15 will be set.
-           tree%      = address of the object tree.
-           obj%       = Number of the first editable field (if there is one). 
+	FORM_DO() manages an object tree given by the address tree% and 
+        interacts with the user
+	until an object with EXIT or TOUCHEXIT status is clicked on.
+
+        FORM_DO returns  the number of the object whose clicking or double 
+        clicking caused the function to end. 
+        If it was a double click, bit 15 will be set.
+
+        The optional parameter obj% specifies the number of the first 
+        editable field object (if there is one). 
 
 EXAMPLE:
-
 PROCEDURE info
   LOCAL adr%,x,y,w,h,ret%
   adr%=RSRC_GADDR(0,2)
@@ -509,14 +533,17 @@ DESCRIPTION:
 	FSFIRST$() searches for the first file in a filesystem of a given
 	path path$, given match pattern pattern$ and given attributes.
 	pattern$ can be a file name mask; default is "*".  
-	attr$ can be "d" for only list directories, 
-	             "a" also list hidden files, 
-		     "f" list regular files,
-		     "u" list usb devices, 
-		     "b" list visible bluetooth devices nearby.
+	attr$ can be:
+----*
+   "d" only list directories, 
+   "a" also list hidden files, 
+   "f" list regular files,
+   "u" list usb devices, 
+   "b" list visible bluetooth devices nearby.
+*----
 		     
 	The attributes "d" and "f" can be combined ("df") so directories
-	as well as normal files are listed. If no attributes are give, 
+	as well as normal files are listed. If no attributes are given, 
 	the default is "df". 
 	
 	If found, the filename and attributes are returned in a$. 
@@ -528,15 +555,15 @@ DESCRIPTION:
 	a directory, "s" symbolic link, "-" a regular file.
 
 EXAMPLE:
-        ' list files and directories in /tmp/
-	a$=FSFIRST$("/tmp","*.dat")
-	WHILE LEN(a$)
-	  PRINT WORD$(a$,2)
-	  IF LEFT$(a$)="d"
-            PRINT "is a directory."
- 	  ENDIF
-	  a$=FSNEXT$()
-	WEND
+       ' list files and directories in /tmp/
+       a$=FSFIRST$("/tmp","*.dat")
+       WHILE LEN(a$)
+         PRINT WORD$(a$,2)
+         IF LEFT$(a$)="d"
+           PRINT "is a directory."
+         ENDIF
+         a$=FSNEXT$()
+       WEND
 
 COMMENT:
 	FSFIRST$() can also be used to scan for BLUETOOTH or USB devices.
@@ -544,22 +571,22 @@ COMMENT:
 	The attributes "u" and "b" cannot be combined with other attributes.
 
 EXAMPLE:
-	' Scan for USB devies around:
-        a$=FSFIRST$("","*","u")
-        WHILE LEN(a$)
-          PRINT a$
-          @decode(a$)
-          a$=FSNEXT$()
-        WEND
-        QUIT
-	PROCEDURE decode(a$)
-	  PRINT " USB bus/device:	    ";WORD$(a$,1)
-	  PRINT " USB vendor-ID/product-ID: ";WORD$(a$,2)
-	  PRINT " Manufacturer: 	    ";WORD$(a$,3)
-	  PRINT " Product:		    ";WORD$(a$,4)
-	  PRINT " Serial-Nr:		    ";WORD$(a$,5)
-	  PRINT " Number of configurations: ";WORD$(a$,6)
-	RETURN
+      ' Scan for USB devies around:
+      a$=FSFIRST$("","*","u")
+      WHILE LEN(a$)
+        PRINT a$
+        @decode(a$)
+        a$=FSNEXT$()
+      WEND
+      QUIT
+      PROCEDURE decode(a$)
+        PRINT " USB bus/device:           ";WORD$(a$,1)
+        PRINT " USB vendor-ID/product-ID: ";WORD$(a$,2)
+        PRINT " Manufacturer:             ";WORD$(a$,3)
+        PRINT " Product:                  ";WORD$(a$,4)
+        PRINT " Serial-Nr:                ";WORD$(a$,5)
+        PRINT " Number of configurations: ";WORD$(a$,6)
+      RETURN
 
 EXAMPLE:
 	' Scan for bluetooth devies around:
@@ -571,9 +598,7 @@ EXAMPLE:
 	  a$=FSNEXT$()
 	WEND
 
-
 SEE ALSO: FSNEXT$()
-
 ##############################################################################
 Function: FSNEXT$()
 Syntax:   a$=FSNEXT$()
@@ -588,14 +613,14 @@ DESCRIPTION:
 	by FSFIRST(). 
 
 EXAMPLE:
-	a$=FSFIRST$("/tmp","*.dat")
-	WHILE LEN(a$)
-	  PRINT WORD$(a$,2)
-	  IF LEFT$(a$)="d"
-            PRINT "is a directory."
- 	  ENDIF
-	  a$=FSNEXT$()
-	WEND
+       a$=FSFIRST$("/tmp","*.dat")
+       WHILE LEN(a$)
+         PRINT WORD$(a$,2)
+         IF LEFT$(a$)="d"
+           PRINT "is a directory."
+         ENDIF
+         a$=FSNEXT$()
+       WEND
 
 SEE ALSO: FSFIRST$()
 ##############################################################################
@@ -603,8 +628,7 @@ Command:    FULLW
 Syntax:     FULLW [[#]n]
 
 DESCRIPTION:
-          Enlarges window 'n' to full screen size.
-          'n' is the window number.
+          Enlarges the window with the number n to full screen size.
 
 SEE ALSO: OPENW, CLOSEW, MOVEW, SIZEW, TOPW, BOTTOMW
 ##############################################################################

@@ -1,12 +1,18 @@
 ##############################################################################
 
 Command:    IF
-Syntax:     IF <condition>   [...  ELSE [IF <expression> ...] ... ENDIF
+Syntax:     IF <condition> [...  ELSE [IF <e>] ... ENDIF
 
 DESCRIPTION:
 
 	Divides a program up into different blocks depending
         on how it relates to the 'condition'.
+EXAMPLE:
+  IF a=1
+    PRINT "I found a one!"
+  ELSE
+    PRINT "no one found!"
+  ENDIF
 
 SEE ALSO: ELSE, ENDIF
 
@@ -27,24 +33,25 @@ SEE ALSO:  CONJ(), REAL()
 ##############################################################################
 
 Operator:   IMP
-Syntax:     <num-result>=<num-expression> IMP <num-expression>
+Syntax:     a%=<num-expression> IMP <num-expression>
 
 DESCRIPTION:
 
-	The operator IMP (implication) corresponds to a logical  consequence.
+	The operator IMP (implication) corresponds to a logical consequence.
 	The result is FALSE if a FALSE  expression follows a TRUE one. The
-	sequence of the argument is important.
-
-        Table:	      A  |  B  |  A IMP B
-             	    -----+-----+-----------
- 		     -1  | -1  |   -1
- 		     -1  |  0  |    0
- 		      0  | -1  |   -1
- 		      0  |  0  |   -1
- 
+	sequence of the argument is important. The operator operates on every 
+        bit of the values.
+----*
+ Table:        A  |  B  |  A IMP B
+             -----+-----+-----------
+              -1  | -1  |   -1
+              -1  |  0  |    0
+               0  | -1  |   -1
+               0  |  0  |   -1
+*----
 EXAMPLE:
-           PRINT BIN$((13 IMP 14) AND 15,4) 
-	   Result:  1110
+      PRINT BIN$((13 IMP 14) AND 15,4) 
+      Result:  1110
 
 SEE ALSO: TRUE, FALSE, NOT, XOR, EQV
 ##############################################################################
@@ -53,9 +60,9 @@ Command:    INC
 Syntax:     INC <num-variable>
 DESCRIPTION:
 
-	INC  increments  a  (numeric)  variable.  This command   is  
-	considerably   faster  then  the  equivalent  statement "<variable> =
-	<variable> + 1".
+	INC  increments  a  (numeric)  variable.  This command is  
+	considerably faster than the equivalent statement "<variable> =
+	<variable>+1".
 
 SEE ALSO:  ADD, DEC
 ##############################################################################
@@ -108,7 +115,7 @@ SEE ALSO:  PUT_BITMAP
 ##############################################################################
 
 Function:   INODE()
-Syntax:     a%=INODE$(filename$)
+Syntax:     a%=INODE(filename$)
 
 DESCRIPTION:
 
@@ -124,9 +131,9 @@ SEE ALSO:  EXIST()
 ##############################################################################
 
 Function:   INP(), INP\%(), INP\&()
-Syntax:     <num-result>=INP(<channel-nr>) 
-     	    <num-result>=INP\&(<channel-nr>) 
-            <num-result>=INP\%(<channel-nr>) 
+Syntax:     a=INP(<channel-nr>) 
+     	    a=INP\&(<channel-nr>) 
+            a=INP\%(<channel-nr>) 
 
 DESCRIPTION:
 
@@ -142,55 +149,54 @@ SEE ALSO: OUT, INPUT$()
 ##############################################################################
 
 Function:   INP?()
-Syntax:     <boolean-result>=INP?(<channel-nr>) 
+Syntax:     a=INP?(<channel-nr>) 
 
 DESCRIPTION:
 	Determine the input status of the device.
-	TRUE(-1) is device is ready (chars can be read) otherwise 
-	FALSE(0).
+	The function return TRUE (-1) if the device is ready 
+        (chars can be read) otherwise FALSE (0).
 
 SEE ALSO: INP()
 
 ##############################################################################
 
 Command: INPUT
-Syntax:  INPUT [#<device-number>]|<prompt-expression>], <variable> [, ...]
+Syntax:  INPUT [#<device-number>,] <variable> [, ...]
+         INPUT <prompt-expression>, <variable> [, ...]
 
 DESCRIPTION:
 
-	INPUT gets comma-delimited  input  from  the standard input or  from 
-	a  previously  opened  file as specified by <device-number> (use the
-	LINEINPUT function to  read  complete  lines from  a  file and BLOAD
+	INPUT gets comma-delimited input from the standard input or from 
+	a previously opened file as specified by <device-number> (use the
+	LINEINPUT function to read complete lines from a file and BLOAD
 	to load complete files). Any input is assigned to the variable(s)
-	specified. If input  is  expected  from  a terminal screen or 
-	console window,  then 
-	<prompt-expression> is printed to the console window to request input
-	from the user.
-
-SEE ALSO:  LINEINPUT,  FORM INPUT AS, PRINT
+	specified. If input is expected from a terminal screen or 
+	console window, then <prompt-expression> is printed to the console 
+        window to request input from the user.
 
 EXAMPLE:
         INPUT #1,a$
         INPUT "Enter your name:",a$
 
+SEE ALSO:  LINEINPUT,  FORM INPUT AS, PRINT
 ##############################################################################
 
 Function:   INPUT$()
-Syntax:     <string-result>=INPUT$(#<nr>,<len>) 
-            <string-result>=INPUT$(<len>) 
+Syntax:     a$=INPUT$(#<nr>,<len>) 
+            a$=INPUT$(<len>) 
 
 DESCRIPTION:
 
 	Reads <len> characters from the keyboard and assigns them 
-        to  a  string.  Optionally,  if  the device-number is 
-        specified,  the  characters are read in from  a  previously 
+        to a string.  Optionally, if the device-number is 
+        specified,  the  characters are read in from a previously 
         OPENed channel <nr>.
 
-SEE ALSO: INPUT, INP()
+SEE ALSO: INPUT, INP(), OPEN
 ##############################################################################
 
 Function:   INSTR()
-Syntax:     <num-result>=INSTR(<a$>,<b$>[,<n>]) 
+Syntax:     a%=INSTR(<a$>,<b$>[,<n>]) 
 
 DESCRIPTION:
 
@@ -273,47 +279,48 @@ DESCRIPTION:
        On error, -1 is returned.
 
 COMMENTS:
-	In case of open USB-Devices, following IOCTL requests are implemented:
-	0 -- USB Reset  e.g. ret%=IOCTL(#1,0)
-	1 -- get descriptor data structure. The data structure has a length of
-	     4148 bytes. 
-	     t$=SPACE$(4148)
-             ret%=IOCTL(#1,1,VARPTR(t$))
-	     Please see the example program usb.bas for details how
-	     to decode the information in this data structure.
-	2 -- Set configuration, e.g. ret%=IOCTL(#1,2,confnr%)
-	3 -- Claim Interface,   e.g. ret%=IOCTL(#1,3,intrfnr%)
-	4 -- control_msg,
-	     t$=MKL$(a%)+MKL$(b%)+MKL$(c%)+MKL$(d%)+MKL$(timeout%)+MKL$(len(data$))+data$ 
-	     ret%=IOCTL(#1,4,VARPTR(t$))
-	5 -- Set default blk_len,      e.g. ~IOCTL(#1,5,blk_len%)
-	6 -- Set default endpoint_in,  e.g. ~IOCTL(#1,6,ep_in%)
-	7 -- Set default endpoint_out, e.g. ~IOCTL(#1,7,ep_out%)
-       12 -- get filename+path
-             t$=SPACE$(4100)
-             l%=IOCTL(#1,12,VARPTR(t$))
-             devicefilenr$=LEFT$(t$,l%)
-       13 -- get manufacturer
-             t$=SPACE$(100)
-             l%=IOCTL(#1,13,VARPTR(t$))
-             manufacturer$=LEFT$(t$,l%)
-       14 -- get product name
-             t$=SPACE$(100)
-             l%=IOCTL(#1,14,VARPTR(t$))
-             product$=LEFT$(t$,l%)
-       15 -- get serial number
-             t$=SPACE$(100)
-             l%=IOCTL(#1,15,VARPTR(t$))
-             serialnr$=LEFT$(t$,l%)
-       16 -- get error string
-             t$=SPACE$(100)
-             l%=IOCTL(#1,16,VARPTR(t$))
-             error$=LEFT$(t$,l%)
-
+	In case of open USB devices, following IOCTL requests are implemented:
+----*
+  0 -- USB Reset  e.g. ret%=IOCTL(#1,0)
+  1 -- get descriptor data structure. The data structure has a
+       length of 4148 bytes. 
+       t$=SPACE$(4148)
+       ret%=IOCTL(#1,1,VARPTR(t$))
+       Please see the example program usb.bas for details how
+       to decode the information in this data structure.
+  2 -- Set configuration, e.g. ret%=IOCTL(#1,2,confnr%)
+  3 -- Claim Interface,   e.g. ret%=IOCTL(#1,3,intrfnr%)
+  4 -- control_msg,
+       t$=MKL$(a%)+MKL$(b%)+MKL$(c%)+MKL$(d%)+MKL$(timeout%)
+       t$=t$+MKL$(len(data$))+data$ 
+       ret%=IOCTL(#1,4,VARPTR(t$))
+  5 -- Set default blk_len,      e.g. ~IOCTL(#1,5,blk_len%)
+  6 -- Set default endpoint_in,  e.g. ~IOCTL(#1,6,ep_in%)
+  7 -- Set default endpoint_out, e.g. ~IOCTL(#1,7,ep_out%)
+ 12 -- get filename+path
+       t$=SPACE$(4100)
+       l%=IOCTL(#1,12,VARPTR(t$))
+       devicefilenr$=LEFT$(t$,l%)
+ 13 -- get manufacturer
+       t$=SPACE$(100)
+       l%=IOCTL(#1,13,VARPTR(t$))
+       manufacturer$=LEFT$(t$,l%)
+ 14 -- get product name
+       t$=SPACE$(100)
+       l%=IOCTL(#1,14,VARPTR(t$))
+       product$=LEFT$(t$,l%)
+ 15 -- get serial number
+       t$=SPACE$(100)
+       l%=IOCTL(#1,15,VARPTR(t$))
+       serialnr$=LEFT$(t$,l%)
+ 16 -- get error string
+       t$=SPACE$(100)
+       l%=IOCTL(#1,16,VARPTR(t$))
+       error$=LEFT$(t$,l%)
+*----
 COMMENT:
 	The interface to Bluetooth devices is not yet defined. 
 
-SEE ALSO:   OPEN, CLOSE
 EXAMPLE:
         OPEN "U",#1,"/dev/console"
         frequency=300
@@ -322,6 +329,5 @@ EXAMPLE:
         PRINT IOCTL(#1,KIOCSOUND,tone)  ! Sounds the speaker
         CLOSE #1
        	Result: 0
-
+SEE ALSO:   OPEN, CLOSE
 ##############################################################################
-

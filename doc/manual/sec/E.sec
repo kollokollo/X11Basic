@@ -22,11 +22,13 @@ DESCRIPTION:
 	$(EDITOR) to edit the BASIC program in memory. 
 	
 	The command invokes the following actions:
-	- SAVE "name.~~~"  writes the BASIC-program into a temporary file, 
-        - calls the editor '$EDITOR', waits until editor is closed   
-        - NEW clears internal values
-        - LOAD "name.~~~"  reads the BASIC-program from the temporary file. 
-
+----*
+SAVE "name.~~~" writes the BASIC-program into a temporary file, 
+calls the editor '$EDITOR'
+                waits until editor is closed   
+NEW             clears internal values
+LOAD "name.~~~" reads the BASIC-program from the temporary file. 
+*----
 	You may want to SAVE the file before using the EDIT command if the file
 	has not yet been saved in order to choose  a  name at  that  occasion. 
 	The default name is "name.~~~". This command requires that the editor
@@ -58,7 +60,7 @@ DESCRIPTION:
 	ELSE IF  <expression>  introduces another  condition  block  and 
 	the  unqualified  ELSE  introduces the default condition block in a
 	multi-line IF statement. 
-SEE ALSO:  IF, ENDIF
+
 EXAMPLE:       
        IF (N=0)
            PRINT "0"
@@ -68,6 +70,8 @@ EXAMPLE:
            PRINT "Out of range"
        ENDIF
 
+SEE ALSO:  IF, ENDIF
+
 ##############################################################################
 Function:    ENCLOSE$()
 Syntax:     e$=ENCLOSE$(t$[,c$])
@@ -75,11 +79,11 @@ Syntax:     e$=ENCLOSE$(t$[,c$])
 DESCRIPTION:
 
 	Encloses a string. With a character or a pair of characters.
-	The default pair is "" 
+	The default pair is "".
 
 EXAMPLE:
-	PRINT enclose$("abc","()")  !	Result: (abc)
-        PRINT enclose$("Hello","-") !   Result: -Hello-
+       PRINT enclose$("abc","()")  !   Result: (abc)
+       PRINT enclose$("Hello","-") !   Result: -Hello-
 
 SEE ALSO:   DECLOSE$()
 ##############################################################################
@@ -98,6 +102,7 @@ DESCRIPTION:
 	has always the same length than the original message.
 	
 	Following algorithms can be used:
+----*
 	Typ%=
 	    1    ! IDEA
             2    ! 3DES
@@ -122,13 +127,14 @@ DESCRIPTION:
           311    ! CAMELLIA192
           312    ! CAMELLIA256
 	  
-	  501    ! RSA
-	  516    ! ELG_E
-	  517    ! DSA
-	  520    ! ELG
-	  801    ! ECDSA
-	  802    ! ECDH
-	
+          501    ! RSA
+          516    ! ELG_E
+          517    ! DSA
+          520    ! ELG
+          801    ! ECDSA
+          802    ! ECDH
+*----
+
 COMMENT: 
   	This function is only available if libgcrypt was compiled in.
 
@@ -209,15 +215,14 @@ SEE ALSO: SETENV
 ##############################################################################
 
 Function:    EOF()
-Syntax:      <boolean-result>=EOF(#<dev-number>)
+Syntax:      a=EOF(#<dev-number>)
 
 DESCRIPTION:
 
-	EOF() checks the end-of-file status of  a file  previously opened for
+	EOF() checks the end-of-file status of a file previously opened for
 	reading by the OPEN command. It returns -1 (TRUE) if the end of file
 	has been reached, otherwise null (FALSE).
 
-SEE ALSO: OPEN
 EXAMPLE:
         OPEN "I",#1,"filename"
         WHILE NOT EOF(#1)
@@ -225,27 +230,31 @@ EXAMPLE:
         WEND
         CLOSE #1
 
+SEE ALSO: OPEN
+
 ##############################################################################
 
 Operator:   EQV
-Syntax:     <num-result>=<num-expression> EQV <num-expression>
+Syntax:     a=<num-expression> EQV <num-expression>
 
 DESCRIPTION:
 
-	The operator EQV (equivalence) produces a TRUE result  only  if  the 
+	The operator EQV (equivalence) produces a TRUE result only if the 
 	arguments of both are either TRUE or both  FALSE.  (same as NOT(x XOR
 	y)) and ((A IMP B) AND (B IMP A)).
 	
-	table:      A  |  B  |  A EQV B
- 		  -----+-----+-----------
- 		   -1  | -1  |   -1
- 		   -1  |  0  |    0
- 		    0  | -1  |    0
- 		    0  |  0  |   -1
+----*
+table:     A  |  B  |  A EQV B
+         -----+-----+----------
+          -1  | -1  |   -1
+          -1  |  0  |    0
+           0  | -1  |    0
+           0  |  0  |   -1
+*----
 
 EXAMPLE:
-           PRINT BIN$((15 EQV 6) and 15,4) 
-	   Result:  0110
+         PRINT BIN$((15 EQV 6) and 15,4) 
+         Result:  0110
  
 SEE ALSO: TRUE, FALSE, NOT, XOR, IMP
 
@@ -275,7 +284,7 @@ SEE ALSO: ERROR, ERR$()
 ##############################################################################
 
 Function:   ERR$()
-Syntax:     <string-result>=ERR$(<error-nr)
+Syntax:     a$=ERR$(<error-nr>)
 
 DESCRIPTION:
 
@@ -329,7 +338,7 @@ EVAL b$
 EVAL a$
 &a$      ! short form
 
-SEE ALSO: EVAL(), &	
+SEE ALSO: EVAL()
 *#############################################################################
 Function:    EVAL()
 Syntax:      a=EVAL(b$)
@@ -345,7 +354,7 @@ result=EVAL(b$)
 
 result=&b$     ! short form
 
-SEE ALSO: EVAL, &
+SEE ALSO: EVAL
 ##############################################################################
 Function:   EVEN()
 Syntax:     e%=EVEN(<num-expression>)
@@ -362,31 +371,36 @@ Syntax:    EVENT typ,[x,y,xr,yr,s,k,ks,t$,timestamp]
 DESCRIPTION:
 
 	EVENT waits for an event of the graphics i/o system. This very 
-	powerful command can wait for a big variaty of different user events
-	which can occur.
+	powerful command can wait for a big variaty of different user 
+        events which can occur.
+        
 	Following events can be watched for: 
+----*
 	- A mouse button is pressed or released, 
 	- A key on the keyboard is pressed or released, 
 	- The mouse pointer has moved to a new position.
-	- The graphics window was clicked to be opened, closed or iconified.
-
+	- The graphics window was clicked to be opened, 
+          closed or iconified.
+*----
 	typ determines which of the events have occured:
-	
-	typ=2        --- key pressed 
-	typ=3        --- key released
-	typ=4        --- mouse button pressed
-	typ=5        --- mouse button released
-	typ=6        --- mouse motion event
-	typ=10       --- Window move event
-	typ=13       --- Window resize event
+----*	
+	typ=2     --- key pressed 
+	typ=3     --- key released
+	typ=4     --- mouse button pressed
+	typ=5     --- mouse button released
+	typ=6     --- mouse motion event
+	typ=10    --- Window move event
+	typ=13    --- Window resize event
 
-	x,y          --- Mouse position relative to window
-	xr,yr        --- Mouse position relative to screen or relative movement
-	s            --- State of the Alt, Caps, Shift keys
-	k            --- state of the mouse buttons or keycode
-	ks           --- scancode of key
-	t$           --- Character of pressed key
-	timestamp    --- timestamp of the time the event occured (in ms)
+	x,y       --- Mouse position relative to window
+	xr,yr     --- Mouse position relative to screen or 
+                      relative movement
+	s         --- State of the Alt, Caps, Shift keys
+	k         --- state of the mouse buttons or keycode
+	ks        --- scancode of key
+	t$        --- Character of pressed key
+	timestamp --- timestamp of the time the event occured (in ms)
+*----
 
 SEE ALSO: KEYEVENT, MOUSEEVENT, MOTIONEVENT, EVENT?()
 ##############################################################################
@@ -397,14 +411,15 @@ DESCRIPTION:
 
 	Returns TRUE if a graphics event is pending which matches the 
 	types given by mask.
-	
-	mask=1       --- key press event
-	mask=2       --- key release event
-	mask=4       --- mouse button press event
-	mask=8       --- mouse button release event
-        mask=0x40    --- mouse motion event
-	mask=0x40000 --- window resize events
-	mask=0x200000 --- window focus change events
+----*
+    mask=       1 --- key press event
+    mask=       2 --- key release event
+    mask=       4 --- mouse button press event
+    mask=       8 --- mouse button release event
+    mask=    0x40 --- mouse motion event
+    mask= 0x40000 --- window resize events
+    mask=0x200000 --- window focus change events
+*----
 
 SEE ALSO: EVENT, KEYEVENT, MOUSEEVENT, MOTIONEVENT, INP?()
 ##############################################################################
@@ -470,9 +485,9 @@ DESCRIPTION:
 	
 	The filename must be either a binary executable, or a script starting 
 	with a line of the form:
-
+----*
            #! interpreter [optional-arg]
-
+*----
 
 
 	In case, name$ is not an android intent, 
@@ -496,12 +511,14 @@ DESCRIPTION:
 	If the name starts with "android.intent", a special operating system 
 	service, called INTENT is called.
 	Following intents are currently available:
-	
+
+----*
 	android.intent.action.EDIT   --- call a text editor
 	android.intent.action.SEND   --- call email client	
 	android.intent.action.VIEW   --- call browser
 	android.intent.action.DIAL   --- call phone
-	
+*----
+
 	Execution will continue in X11-Basic as soon as the intent has finished.
 	If you need a return value to find out if the intent was successful, use
 	EXEC().
@@ -520,13 +537,13 @@ SEE ALSO: SYSTEM, EXEC(), CALL, SHELL
 *##############################################################################
 
 Function: EXEC()
-Syntax:   <int-return>=EXEC(name$[,commandline$[,environment$]])
-          <int-return>=EXEC(action$[,data$[,extra$]])
+Syntax:   a%=EXEC(name$[,commandline$[,environment$]])
+          r%=EXEC(action$[,data$[,extra$]])
 
 DESCRIPTION:
 
-	Does the same as the command EXEC, but returns a return value.  This is
-	either  the value passed to the system exit() function or the result of
+	Does the same as the command EXEC, but returns a return value. This is
+	either the value passed to the system exit() function or the result of
 	an intent.
 
 EXAMPLE:
@@ -546,12 +563,11 @@ SEE ALSO: CALL(), EXEC, SYSTEM$()
 ##############################################################################
 
 Function:   EXIST()
-Syntax:     <boolean-result>=EXIST(<filename>)
+Syntax:     a=EXIST(filename$)
 
 DESCRIPTION:
 
-	Returns TRUE (-1) if the file is present on
-        a file system. 
+	Returns TRUE (-1) if the file exists on the file system. 
 	
 	
 SEE ALSO: OPEN
@@ -564,8 +580,8 @@ DESCRIPTION:
 	The command EXIT will either exit a loop, return from a procedure or
 	subroutine, or quit the interpreter.
 	WHILE,  REPEAT,  DO  and  FOR  loops  can  be
-        aborted  prematurely  with  the  EXIT command. Here it has the same fuinction as
-	BREAK. EXIT leaves the current
+        aborted  prematurely  with  the  EXIT command. Here it has the same 
+        fuinction as BREAK. EXIT leaves the current
         (innermost) loop immediately. Outside a loop, but insidde a procedure
 	or function, that procedure or function is left, like with RETURN.
 	Outside any procedure or function, or invoked from the direct mode
@@ -589,27 +605,28 @@ SEE ALSO:  DO, WHILE, FOR, REPEAT, BREAK, IF
 ##############################################################################
 
 Function:   EXP()
-Syntax:     <num-result> = EXP(<num-expression>)
+Syntax:     a=EXP(b)
+            a#=EXP(b#)
 DESCRIPTION:
 
-	EXP() returns the exponential value of  its argument  (e  to  the 
-	specified  power).
+	EXP() returns the exponential value of its argument (e to  the 
+	specified power).
 
-SEE ALSO:    Operator  ^ 
 EXAMPLE:
-       PRINT EXP(1)
-       Result: 2.718281828459
+       PRINT EXP(1)      ! Result: 2.718281828459
+       PRINT EXP(1+1i)   ! Result: (1.468693939916+2.287355287179i)
        
+SEE ALSO:    LOG(), LN(), LOGB()
 ##############################################################################
 
 Function:   EXPM1()
-Syntax:     <num-result> = EXPM1(<num-expression>)
+Syntax:     a=EXPM1(x)
 DESCRIPTION:
 
 	Returns a value equivalent to `exp(x)-1'.  It
         is computed in a way that is accurate even if the value of
-        x is near zero--a case where `exp(x)-1' would be  inaccurate  
-	due  to subtraction of two numbers that are nearly
+        x is near zero -- a case where `exp(x)-1' would be inaccurate  
+	due to subtraction of two numbers that are nearly
         equal.
 
 EXAMPLE:

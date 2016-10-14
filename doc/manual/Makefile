@@ -53,6 +53,9 @@ DIST=Makefile sec-base/00_Logo.sec sec-base/01_Version.sec sec-base/02_Preamble.
 	convert $< $@
 %.jpg: pictures/%.gif
 	convert $< $@
+%.ind: %.idx
+	makeindex -o $@ $<
+
 
 all : X11-Basic-manual.pdf text-manual
 
@@ -82,7 +85,7 @@ main.otxt : main.dvi
 	dvi2tty -w132 main.dvi -o $@
 main.dvi : A.tex tex/*.tex $(EPSFILES) 39_Errors.sec
 	latex tex/main.tex	
-	makeindex tex/main.tex
+	makeindex main.idx
 	latex tex/main.tex
 A.tex : sec/?.sec bas/maketex.bas
 	xbasic bas/maketex.bas
