@@ -12,6 +12,7 @@
 ' 03.2013: added new compile flags -L and --pseudo
 ' 03.2014: corrected bug with -s (strip)   MH
 ' 01.2016: added prefix macro to library path  MH
+' 10.2016: added more declarations to suppress warnings  MH
 
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
 '* ======================================================================
@@ -201,11 +202,15 @@ PROCEDURE compile
   PRINT #2,"extern char **param_argumente;"
   IF lflag
     PRINT #2,"void programmlauf();"
+    PRINT #2,"void do_run();"
     PRINT #2,"extern char **program;"
     PRINT #2,"extern int prglen;"
     PRINT #2,"char *routine_"+rumpf$+"[]={"
   ELSE
     PRINT #2,"void reset_input_mode(),x11basicStartup(),programmlauf();"
+    PRINT #2,"void do_run();"
+    PRINT #2,"int init_program(int);"
+    PRINT #2,"void set_input_mode(int,int);"
     PRINT #2,"const char version[]="+ENCLOSE$("@version@")+";"
     PRINT #2,"const char vdate[]="+ENCLOSE$(date$+" "+time$+" xxxx @version@")+";"
     PRINT #2,"int verbose=0;"
@@ -258,7 +263,7 @@ PROCEDURE compile
       PRINT #2,"#include <windows.h>"
       PRINT #2,"HINSTANCE hInstance;"
     ENDIF
-    PRINT #2,"main(int anzahl, char *argumente[]){"
+    PRINT #2,"int main(int anzahl, char *argumente[]) {"
     IF win32
       PRINT #2,"hInstance=GetModuleHandle(NULL);"
     ENDIF
