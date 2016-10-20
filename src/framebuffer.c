@@ -68,18 +68,15 @@ G_CONTEXT screen;
 void textscreen_redraw(int x, int y, int w,int h);
 extern int bigfont;
 
-/*TODO: 
-  Evtl. moechte man verschiedene framebufferdevices ansprechen, z.B.
-  beim sense Hat für Raspberry Pi (/dev/fb1)
-  Momentan muss FB_DEVICENAME dafuer geaendert werden.
-  */
-
+#ifndef ANDROID
+char fbdevname[256]=FB_DEVICENAME;
+#endif
 void Fb_Open() {
 #ifndef ANDROID 
-  fbfd=open(FB_DEVICENAME, O_RDWR);
+  fbfd=open(fbdevname, O_RDWR);
   if(fbfd<0) {
-    printf("ERROR: could not open framebuffer device %s.\n",FB_DEVICENAME);
-    perror(FB_DEVICENAME);
+    printf("ERROR: could not open framebuffer device %s.\n",fbdevname);
+    perror(fbdevname);
     exit(EX_OSFILE);
   }
   // Get fixed screen information

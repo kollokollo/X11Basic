@@ -96,6 +96,11 @@ static void intro() {
 }
 
 #endif
+#if defined FRAMEBUFFER && !defined ANDROID
+extern char fbdevname[];
+extern char mousedevname[];
+extern char keyboarddevname[];
+#endif
 
 static void usage() {
   printf(
@@ -114,7 +119,14 @@ static void usage() {
     " -h --help\t--- Usage\n"
     " --help <topic>\t--- Print help on topic\n"
 #endif
+#if defined FRAMEBUFFER && !defined ANDROID
+    " --framebuffer <dev>\t--- set framebuffer device for output [%s]\n"
+    " --mouse <dev>\t--- set mouse device  [/dev/input/mice]\n"
+    " --keyboard <dev>\t--- set keyboard device  [/dev/input/event4]\n"
+    ,xbasic_name,ifilename,fbdevname);
+#else
     ,xbasic_name,ifilename);
+#endif
 }
 
 #ifdef WINDOWS
@@ -180,6 +192,14 @@ void kommandozeile(int anzahl, char *argumente[]) {
       verbose++;
     } else if (strcmp(argumente[count],"-q")==FALSE) {
       verbose--;
+#if defined FRAMEBUFFER && !defined ANDROID
+    } else if (strcmp(argumente[count],"--framebuffer")==FALSE) {
+      strncpy(fbdevname,argumente[++count],256);
+    } else if (strcmp(argumente[count],"--mouse")==FALSE) {
+      strncpy(mousedevname,argumente[++count],256);
+    } else if (strcmp(argumente[count],"--keyboard")==FALSE) {
+      strncpy(keyboarddevname,argumente[++count],256);
+#endif
     } else {
       if(!loadfile) {
         loadfile=TRUE;

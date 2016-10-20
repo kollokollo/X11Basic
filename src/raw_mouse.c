@@ -32,7 +32,6 @@ typedef struct MOUSE_EVENT {
   signed char dx;
   signed char dy;
 } MOUSE_EVENT;
-
 #endif
 
 #include "bitmaps/mauspfeil.bmp"
@@ -253,14 +252,17 @@ void FB_close_mouse() {
     mouse_fd = -1;
   }
 }
+
+char mousedevname[256]=MOUSE_DEVICE;
+
 int Fb_Mouse_Open() {
   FB_close_mouse();
-  mouse_fd=open(MOUSE_DEVICE, O_RDONLY );
+  mouse_fd=open(mousedevname, O_RDONLY );
 /* Jetzt einen Interrupthandler / thread starten, welcher die
 Maus-Ereignisse verarbeitet.*/
   if(mouse_fd>0) {
     pthread_create(&mouse_thread, NULL,mouse_handler, (void*) NULL);
-  } else perror(MOUSE_DEVICE);
+  } else perror(mousedevname);
   return mouse_fd;
 }
 

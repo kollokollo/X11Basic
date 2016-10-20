@@ -27,6 +27,8 @@ void FB_keyboard_events(int onoff) {do_keyboard_events=onoff;}
 
 
 #ifndef ANDROID
+char keyboarddevname[256]=KEYBOARD_DEVICE;
+
 static int keyboard_fd=-1;
 static pthread_t keyboard_thread;
 
@@ -112,12 +114,12 @@ void FB_close_keyboard() {
 }
 int Fb_Keyboard_Open() {
   FB_close_keyboard();
-  keyboard_fd=open(KEYBOARD_DEVICE, O_RDONLY);
+  keyboard_fd=open(keyboarddevname, O_RDONLY);
 /* Jetzt einen Interrupthandler / thread starten, welcher die
 Event-Ereignisse verarbeitet.*/
   if(keyboard_fd>0) {
     pthread_create(&keyboard_thread, NULL,keyboard_handler, (void*) NULL);
-  } else perror(KEYBOARD_DEVICE);
+  } else perror(keyboarddevname);
   return keyboard_fd;
 }
 #endif
