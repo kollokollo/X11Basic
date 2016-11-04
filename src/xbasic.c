@@ -837,19 +837,23 @@ int init_program(int prglen) {
 	muss berücksichtigt werden, welche zielvariablen in der Procedur die Werte aufnehmen
 	sollen. */
 	pcode[i].panzahl=count_parameters(pos);
-	if(pcode[i].panzahl!=procs[pcode[i].integer].anzpar) {
-	  xberror(56,pcode[i].argument); /* Falsche Anzahl Parameter */
-	  structure_warning(original_line(i),"GOSUB"); /*Programmstruktur fehlerhaft */
-          pcode[i].opcode=P_INVALID|P_NOCMD;
-          pcode[i].panzahl=0;
-	}
-        if(pcode[i].panzahl) {
-          unsigned short ptypliste[pcode[i].panzahl];
-	  get_ptypliste(pcode[i].integer,ptypliste,pcode[i].panzahl);
-	  make_pliste2(procs[pcode[i].integer].anzpar,procs[pcode[i].integer].anzpar,
-	      ptypliste,pos,&(pcode[i].ppointer),pcode[i].panzahl);
+        if(pcode[i].integer>=0) {  /* Es kann ja sein, dass die Procedure nicht definiert ist. */
+          if(pcode[i].panzahl!=procs[pcode[i].integer].anzpar) {
+	    xberror(56,pcode[i].argument); /* Falsche Anzahl Parameter */
+	    structure_warning(original_line(i),"GOSUB"); /*Programmstruktur fehlerhaft */
+            pcode[i].opcode=P_INVALID|P_NOCMD;
+            pcode[i].panzahl=0;
+	  }
+          if(pcode[i].panzahl) {
+            unsigned short ptypliste[pcode[i].panzahl];
+	    get_ptypliste(pcode[i].integer,ptypliste,pcode[i].panzahl);
+	    make_pliste2(procs[pcode[i].integer].anzpar,procs[pcode[i].integer].anzpar,
+	        ptypliste,pos,&(pcode[i].ppointer),pcode[i].panzahl);
+          }
+        } else {
+          /* Procedure nicht gefunden, aber vielleicht wird sie spaeter per merge hinzugefügt ....*/
         }
-      }
+     }
       break;
     case P_GOTO: /* Suche Label */
     /*  printf("Goto-Nachbearbeitung, <%s> \n",pcode[i].argument); */
@@ -860,11 +864,12 @@ int init_program(int prglen) {
       } else {
         pcode[i].integer=labelzeile(pcode[i].argument);
         /* Wenn label nicht gefunden, dann */
-        if(pcode[i].integer==-1)  {
-	  printf("ERROR at line %d: Label %s not found!\n",original_line(i),pcode[i].argument);
-          structure_warning(original_line(i),"GOTO"); /*Programmstruktur fehlerhaft */
-	  pcode[i].opcode|=P_INVALID;
-        }
+      //  if(pcode[i].integer==-1)  {
+      //  printf("ERROR at line %d: Label %s not found!\n",original_line(i),pcode[i].argument);
+      //  structure_warning(original_line(i),"GOTO"); /*Programmstruktur fehlerhaft */
+      //  pcode[i].opcode|=P_INVALID;
+      //  }
+      /*  Es kann ja sein, dass das label erst spaeter durch MERGE hinzugefuegt wird.*/
       }
       break;
     } /*  SWITCH */
@@ -1146,6 +1151,10 @@ void programmlauf(){
     
     if((pcode[opc].opcode&P_PREFETCH)==P_PREFETCH) {
       pc=pcode[opc].integer;
+      if(pc<0) {
+        pc=opc+1;
+        xberror(20,pcode[opc].argument); /* Label not found*/
+      }
       continue;
     } else pc++;
       
