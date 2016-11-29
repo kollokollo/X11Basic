@@ -743,12 +743,19 @@ int init_program(int prglen) {
     }
      	 /* Einige Befehle noch nachbearbeiten */
     if(strcmp(zeile,"EXIT")==0) { /*Pruefen ob es EXIT IF ist. */
-   	 char *w1,*w2;
-     	 wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
-     	 if(strcmp(w1,"IF")==0) {
-	   pcode[i].opcode=P_EXITIF|j;
-	   strcpy(pcode[i].argument,w2);
-         } 
+      char *w1,*w2;
+      wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
+      if(strcmp(w1,"IF")==0) {
+        pcode[i].opcode=P_EXITIF|j;
+        strcpy(pcode[i].argument,w2);
+      } else {
+      /* 
+        hier prüfen ob es innerhalb einer Schleife ist, dann P_BREAK
+        wenn nicht, dann normal EXIT kommando ausführen lassen.
+        Die Prüfung geht erst im pass 2, also hier nur vormerken.
+        */
+        pcode[i].opcode=P_EXIT|j;
+      }
     } 
   }  /*  FOR */
 
@@ -801,6 +808,7 @@ int init_program(int prglen) {
       }
       } break;
     case P_BREAK:
+    case P_EXIT:
     case P_EXITIF: { /* Suche ende Schleife*/
       int j,f=0,o=0;
       for(j=i+1; (j<prglen && j>=0);j++) {
@@ -810,9 +818,18 @@ int init_program(int prglen) {
         if(o & P_LEVELOUT) f--;
       }
       if(j==prglen) { 
-        structure_warning(original_line(i),"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
-        pcode[i].integer=-1;
+        if((pcode[i].opcode&PM_SPECIAL)==P_EXIT) {
+          /*EXIT ohne Parameter dann als normales Kommando aufrufen.*/
+          pcode[i].opcode=P_PLISTE|(pcode[i].opcode&PM_COMMS);
+          pcode[i].panzahl=0;
+          pcode[i].ppointer=NULL;
+        } else {
+          structure_warning(original_line(i),"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
+          pcode[i].integer=-1;
+        }
       } else {
+        /* Ansonsten EXIT ohne Parameter wie BREAK behandeln */
+        if((pcode[i].opcode&PM_SPECIAL)==P_EXIT) pcode[i].opcode=P_BREAK|(pcode[i].opcode&PM_COMMS);
         if(o==P_ENDSELECT) pcode[i].integer=j; /* wichtig fuer compiler !*/
         else pcode[i].integer=j+1;
       }
