@@ -85,33 +85,50 @@ BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BL
   0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0,
   0,0,0,0,0,0,BLACK,WHITE,WHITE,BLACK,0,0,0,0,0,0};
 
-static void FB_show_mouse_() {
+
+/* Routines to display or hide the mouse cursor: */
+
+static void FB_show_mouse_(int act) {
   pthread_mutex_lock( &mutex1 );
+  if(act) screen.mouseshown=1;
   if(screen.mouseshown && !mouse_mapped) {
     mouse_mapped++;
     FB_draw_sprite(screen.mousepat,screen.mousemask,screen.mouse_x-screen.mouse_ox,screen.mouse_y-screen.mouse_oy);
   }
   pthread_mutex_unlock( &mutex1 );
 }
-static void FB_hide_mouse_() {
+static void FB_hide_mouse_(int stay) {
   pthread_mutex_lock( &mutex1 );
-  if(screen.mouseshown && mouse_mapped) {
+  if(mouse_mapped) {
     mouse_mapped=0;
     FB_hide_sprite(screen.mouse_x-screen.mouse_ox,screen.mouse_y-screen.mouse_oy);
   }
+  if(stay) screen.mouseshown=0;
   pthread_mutex_unlock( &mutex1 );
 }
+
+
+/* This switches the mouse corsor on or off*/
+
 void FB_show_mouse() {
-  screen.mouseshown=1;
-  FB_show_mouse_();
+  FB_show_mouse_(1);
 }
 void FB_hide_mouse() {
-  FB_hide_mouse_();
-  screen.mouseshown=0;
+  FB_hide_mouse_(1);
+}
+
+/* This makes sure that the mouse cursor is mapped if it is switched on
+   or not mapped */
+
+void FB_showx_mouse() {
+  FB_show_mouse_(0);
+}
+void FB_hidex_mouse() {
+  FB_hide_mouse_(0);
 }
 
 void FB_defmouse(int form) {
-  FB_hide_mouse();
+  FB_hidex_mouse();
   if(form==0 || form==7) {
     screen.mousemask=(unsigned char *)mousealpha;
     screen.mousepat=(unsigned short *)mousepat;
@@ -127,29 +144,26 @@ void FB_defmouse(int form) {
     FB_bmp2pixel(biene_bits,vmousepat,biene_width,biene_height,BLACK);
     FB_bmp2mask(biene_mask_bits,vmousealpha,biene_mask_width,biene_mask_height);
     screen.mouse_ox=screen.mouse_oy=8;
-} else if(form==3) {
-  screen.mousemask=vmousealpha;
-  screen.mousepat=vmousepat;
-  FB_bmp2pixel(zeigehand_bits,vmousepat,zeigehand_width,zeigehand_height,BLACK);
-  FB_bmp2mask(zeigehand_mask_bits,vmousealpha,zeigehand_mask_width,zeigehand_mask_height);
-  screen.mouse_ox=screen.mouse_oy=0;
-} else if(form==4) {
-  screen.mousemask=vmousealpha;
-  screen.mousepat=vmousepat;
-  FB_bmp2pixel(hand_bits,vmousepat,hand_width,hand_height,BLACK);
-  FB_bmp2mask(hand_mask_bits,vmousealpha,hand_mask_width,hand_mask_height);
-  screen.mouse_ox=screen.mouse_oy=8;
-} else if(form==5) {
-  screen.mousemask=vmousealpha;
-  screen.mousepat=vmousepat;
-  FB_bmp2pixel(bombe_bits,vmousepat,bombe_width,bombe_height,RED);
-  FB_bmp2mask(bombe_mask_bits,vmousealpha,bombe_mask_width,bombe_mask_height);
-  screen.mouse_ox=screen.mouse_oy=8;
-}
-
-
-
-  FB_show_mouse();
+  } else if(form==3) {
+    screen.mousemask=vmousealpha;
+    screen.mousepat=vmousepat;
+    FB_bmp2pixel(zeigehand_bits,vmousepat,zeigehand_width,zeigehand_height,BLACK);
+    FB_bmp2mask(zeigehand_mask_bits,vmousealpha,zeigehand_mask_width,zeigehand_mask_height);
+    screen.mouse_ox=screen.mouse_oy=0;
+  } else if(form==4) {
+    screen.mousemask=vmousealpha;
+    screen.mousepat=vmousepat;
+    FB_bmp2pixel(hand_bits,vmousepat,hand_width,hand_height,BLACK);
+    FB_bmp2mask(hand_mask_bits,vmousealpha,hand_mask_width,hand_mask_height);
+    screen.mouse_ox=screen.mouse_oy=8;
+  } else if(form==5) {
+    screen.mousemask=vmousealpha;
+    screen.mousepat=vmousepat;
+    FB_bmp2pixel(bombe_bits,vmousepat,bombe_width,bombe_height,RED);
+    FB_bmp2mask(bombe_mask_bits,vmousealpha,bombe_mask_width,bombe_mask_height);
+    screen.mouse_ox=screen.mouse_oy=8;
+  }
+  FB_showx_mouse();
 }
 
 
@@ -192,7 +206,7 @@ static void *mouse_handler(void *ptr) {
 	if(read_mouse_event(&m)) {
 	// printf("MOUSE: %02x/ %d %d \n",m.but,m.dx,m.dy);
   	  if(m.dx || m.dy) {
-	    FB_hide_mouse_();
+	    FB_hide_mouse_(0);
 	    screen.mouse_x+=m.dx;
 	    screen.mouse_y-=m.dy;
 	    if(screen.mouse_x<0) screen.mouse_x=0;
@@ -208,7 +222,7 @@ static void *mouse_handler(void *ptr) {
               e.xmotion.state=screen.mouse_s;
               FB_put_event(&e);
 	    }
-            FB_show_mouse_();
+            FB_show_mouse_(0);
           }
 	  if((m.but&7)!=screen.mouse_k) {
             if(do_mouse_events) {

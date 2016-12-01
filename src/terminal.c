@@ -20,6 +20,7 @@
 #include "terminal.h"
 #include "consolefont.h"
 #include "framebuffer.h"
+#include "raw_mouse.h"
 
 #define LineLen win.ws_col
 #define AnzLine win.ws_row
@@ -512,4 +513,4 @@ finish:
   }
 }
 
-void gg_outs(char *t){if(t) {while(*t) gg_out(*t++);}}
+void gg_outs(char *t){if(t) {FB_hidex_mouse(); while(*t) gg_out(*t++);}}

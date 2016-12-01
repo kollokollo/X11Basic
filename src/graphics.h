@@ -87,7 +87,7 @@
 #define DrawString(a,b,c,d) FB_DrawString(a,b-window[usewindow].baseline,c,d,window[usewindow].chw,window[usewindow].chh)
 #define DrawLine(a,b,c,d)  FB_line(a,b,c,d)
 #define DrawPoint(a,b)  FB_plot(a,b)
-#define CopyArea(a,b,c,d,e,f) FB_copyarea(a,b,c,d,e,f)
+#define CopyArea(a,b,c,d,e,f) FB_CopyArea(a,b,c,d,e,f)
 #elif defined USE_SDL
 #define SetFillRule(c)   ;
 #define SetFillStyle(c)  ;

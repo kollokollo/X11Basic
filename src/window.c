@@ -831,10 +831,10 @@ short form_dial(unsigned short fo_diflag,short x1,short y1,short w1,short h1,
 #endif
   /* Erst den Graphic-Kontext retten  */
 #ifdef FRAMEBUFFER
-   FB_hide_mouse();
+   FB_hidex_mouse();
    FB_savecontext();
    spix[sgccount]=FB_get_image(x2-3,y2-3,w2+7,h2+7,NULL,0,0);
-   FB_show_mouse();
+   // FB_showx_mouse();
 #endif
 #ifdef USE_X11
     sgc[sgccount]=malloc(sizeof(GC));
@@ -875,10 +875,10 @@ short form_dial(unsigned short fo_diflag,short x1,short y1,short w1,short h1,
     activate();
 #else
 #ifdef FRAMEBUFFER
-    FB_hide_mouse();
+    FB_hidex_mouse();
     FB_put_image(spix[sgccount],x2-3,y2-3);
     FB_restorecontext();
-    FB_show_mouse();
+    // FB_showx_mouse();
 #endif
 #ifdef USE_X11
     XCopyArea(window[usewindow].display, *(spix[sgccount]),window[usewindow].pix,window[usewindow].gc,0,0,w2+7,h2+7,x2-3,y2-3);
@@ -953,6 +953,7 @@ short form_do(OBJECT *tree,short startob) {
   FB_clear_events();
   FB_mouse_events(1);
   FB_keyboard_events(1);
+  FB_show_mouse();
 #endif
     /* erstes editierbare Objekt finden */
 
@@ -987,9 +988,9 @@ short form_do(OBJECT *tree,short startob) {
     if(e==0) return;
     while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_KEYDOWN &&
         event.type!=SDL_MOUSEBUTTONUP) { 
-     handle_event(&window[usewindow],&event);
-     e=SDL_WaitEvent(&event);
-     if(e==0) return;
+      handle_event(&window[usewindow],&event);
+      e=SDL_WaitEvent(&event);
+      if(e==0) return;
     }
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
@@ -1026,22 +1027,22 @@ short form_do(OBJECT *tree,short startob) {
         sbut=objc_find(tree,0,7,global_mousex,global_mousey);
 #endif
         if(sbut!=-1) {
-	if((tree[sbut].ob_flags & SELECTABLE) && !(tree[sbut].ob_state & DISABLED)) {
-          if(tree[sbut].ob_flags & RBUTTON) {
-            idx=rootob(tree,sbut);
-            if(idx>=0) {
-	      int start=tree[idx].ob_head;
-	      int stop=tree[idx].ob_tail;
-	      if(start>=0) {
-		idx=start;
-		while(1) {
-		  if(tree[idx].ob_flags & RBUTTON) tree[idx].ob_state=tree[idx].ob_state & (~SELECTED);
-		  if(idx==stop) break;
-	          idx=tree[idx].ob_next;
-		}
-	      }
+	  if((tree[sbut].ob_flags & SELECTABLE) && !(tree[sbut].ob_state & DISABLED)) {
+            if(tree[sbut].ob_flags & RBUTTON) {
+              idx=rootob(tree,sbut);
+              if(idx>=0) {
+	        int start=tree[idx].ob_head;
+	        int stop=tree[idx].ob_tail;
+	        if(start>=0) {
+		  idx=start;
+		  while(1) {
+		    if(tree[idx].ob_flags & RBUTTON) tree[idx].ob_state=tree[idx].ob_state & (~SELECTED);
+		    if(idx==stop) break;
+	            idx=tree[idx].ob_next;
+		  }
+	        }
+              }
             }
-          }
 	
 	    tree[sbut].ob_state^=SELECTED;
 	    objc_draw(tree,0,-1,0,0,0,0);
@@ -1379,14 +1380,14 @@ void do_menu_open(int nr) {
   SDL_BlitSurface(window[usewindow].display, &a,schubladepix, &b);
 #endif
   #ifdef FRAMEBUFFER
-     FB_hide_mouse();
+     FB_hidex_mouse();
      schubladepix=FB_get_image(schubladex,schubladey,schubladew,schubladeh,NULL,0,0);
   #endif
   schubladeff=1;
   schubladenr=nr;
   do_menu_edraw();
   #ifdef FRAMEBUFFER
-     FB_show_mouse();
+     FB_showx_mouse();
   #endif
 }
 void do_menu_edraw() {
@@ -1438,9 +1439,9 @@ void do_menu_close() {
     SDL_FreeSurface(schubladepix);
 #endif
  #ifdef FRAMEBUFFER 
-   FB_hide_mouse();
+   FB_hidex_mouse();
    FB_put_image(schubladepix,schubladex,schubladey);
-   FB_show_mouse();
+   FB_showx_mouse();
  #endif
     schubladeff=0;
   }
@@ -1471,8 +1472,8 @@ void do_menu_draw() {
     SetForeground(gem_colors[BLACK]);
     DrawLine(window[usewindow].x,window[usewindow].y+window[usewindow].chh,window[usewindow].x+window[usewindow].w,window[usewindow].y+window[usewindow].chh);
  #ifdef FRAMEBUFFER
- FB_restorecontext();
- FB_show_mouse();
+  FB_restorecontext();
+  FB_show_mouse();
  #endif
   activate();
 }
@@ -1841,10 +1842,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
              make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
              make_scaler(objects,anzfiles,showstart);
       }
-
-#endif
-
-      #if defined USE_X11 || defined FRAMEBUFFER
+#elif defined USE_X11 || defined FRAMEBUFFER
       XWindowEvent(window[usewindow].display, window[usewindow].win,
        ButtonReleaseMask|ExposureMask , &event);
       switch (event.type) {

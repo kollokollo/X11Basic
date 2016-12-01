@@ -22,6 +22,8 @@ void FB_Query_pointer(int *rx,int *ry,int *x,int *y,unsigned int *k);
 void FB_defmouse(int form);
 void FB_show_mouse();
 void FB_hide_mouse();
+void FB_showx_mouse();
+void FB_hidex_mouse();
 #ifdef ANDROID
 #define FB_mouse_events(a) ;
 #else

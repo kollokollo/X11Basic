@@ -391,11 +391,11 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_SetMouse(JNIEn
   }
   FB_put_event(&e);
   NLOG("E");
-  FB_hide_mouse();
+  FB_hidex_mouse();
   NLOG("H");
   screen.mouse_x=x;
   screen.mouse_y=y;
-  FB_show_mouse();
+  FB_showx_mouse();
   NLOG("S");
   invalidate_screen();
   NLOG("}.");

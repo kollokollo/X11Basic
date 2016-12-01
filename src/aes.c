@@ -629,7 +629,6 @@ static void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     break;
   }
 
-
   if(tree[idx].ob_state & SELECTED) {
     fillcolor=invert_color(fillcolor);
     textcolor=invert_color(textcolor);
@@ -639,36 +638,33 @@ static void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
   if(tree[idx].ob_flags & DEFAULT) randdicke--;
 
 
+  if (drawbg) {
 
-if (drawbg) {
+/* Outline und Shadow Zeichnen  */
+    if(tree[idx].ob_state & OUTLINED) {
+      SetForeground(gem_colors[bgcolor]);
+      FillRectangle(obx-3,oby-3,obw+6,obh+6);
+      SetForeground(gem_colors[framecolor]);
+      DrawRectangle(obx-3,oby-3,obw+6,obh+6);
+    }
+    if(tree[idx].ob_state & SHADOWED) {
+      SetForeground(gem_colors[framecolor]);
+      FillRectangle(obx+obw,oby+window[usewindow].chh/2,window[usewindow].chw,obh);
+      FillRectangle(obx+window[usewindow].chw,oby+obh,obw,window[usewindow].chh/2);
+    }
 
-/* Zeichnen  */
-  if(tree[idx].ob_state & OUTLINED) {
+    /* Hintergrund zeichnen */
     SetForeground(gem_colors[bgcolor]);
-    FillRectangle(obx-3,oby-3,obw+6,obh+6);
-    SetForeground(gem_colors[framecolor]);
-    DrawRectangle(obx-3,oby-3,obw+6,obh+6);
+    if(!opaque) FillRectangle(obx+1,oby+1,obw-1,obh-1);
+
+    if(pattern) {
+      SetForeground(gem_colors[fillcolor]);
+      SetFillStyle(FillStippled);
+      set_fill(pattern+1);
+      FillRectangle(obx,oby,obw,obh);
+      SetFillStyle(FillSolid);
+    }
   }
-  if(tree[idx].ob_state & SHADOWED) {
-    SetForeground(gem_colors[framecolor]);
-    FillRectangle(obx+obw,oby+window[usewindow].chh/2,window[usewindow].chw,obh);
-    FillRectangle(obx+window[usewindow].chw,oby+obh,obw,window[usewindow].chh/2);
-  }
-
-
-/* Hintergrund zeichnen */
-  SetForeground(gem_colors[bgcolor]);
-  if(!opaque) FillRectangle(obx+1,oby+1,obw-1,obh-1);
-
-
-  if(pattern) {
-    SetForeground(gem_colors[fillcolor]);
-    SetFillStyle(FillStippled);
-    set_fill(pattern+1);
-    FillRectangle(obx,oby,obw,obh);
-    SetFillStyle(FillSolid);
-  }
-}
 
 /* Text zeichnen   */
   if(tree[idx].ob_state & DISABLED) textcolor=LWHITE;
@@ -825,49 +821,26 @@ short objc_draw(OBJECT *tree,short start, short stop,short rootx,short rooty,sho
 #endif
 // TODO: 
 // if(clipw<=0 || cliph<=0) return(0);
-#ifdef FRAMEBUFFER
-  FB_hide_mouse();
-#endif
   draw_object(tree,idx,rootx,rooty);
-  if(tree[idx].ob_flags & LASTOB) {
-#ifdef FRAMEBUFFER
-    FB_show_mouse();
-#endif 
-    return(1);
-  }
+  if(tree[idx].ob_flags & LASTOB) return(1);
+
   if(tree[idx].ob_head!=-1) {
     if(!(tree[idx].ob_flags & HIDETREE)) {
       objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,clipw,cliph);
     }
   }
-  if(idx==stop) {
-#ifdef FRAMEBUFFER
-    FB_show_mouse();
-#endif 
-    return(1);
-  }
+  if(idx==stop) return(1);
+
   while(tree[idx].ob_next!=-1) {
     idx=tree[idx].ob_next;
     draw_object(tree,idx,rootx,rooty);
-    if(tree[idx].ob_flags & LASTOB) {
- #ifdef FRAMEBUFFER
-      FB_show_mouse();
-#endif  
-      return(1);
-    }
+    if(tree[idx].ob_flags & LASTOB) return(1);
+
     if(tree[idx].ob_head!=-1) {
       if(!(tree[idx].ob_flags & HIDETREE)) objc_draw(tree,tree[idx].ob_head,tree[idx].ob_tail,tree[idx].ob_x+rootx,tree[idx].ob_y+rooty,clipw,cliph);
     }
-    if(idx==stop) {
-#ifdef FRAMEBUFFER
-      FB_show_mouse();
-#endif     
-      return(1);
-    }
+    if(idx==stop) return(1);
   }
-#ifdef FRAMEBUFFER
-      FB_show_mouse();
-#endif 
   return(0);
 }
 

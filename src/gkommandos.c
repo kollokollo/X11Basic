@@ -1168,6 +1168,7 @@ void c_mouseevent(PARAMETER *plist,int e) { /*MOUSEEVENT x,y,k,rx,ry,s */
   if(e>5 && plist[5].typ!=PL_LEER)  varcastint(plist[5].integer,plist[5].pointer,global_mouses);
 #elif defined FRAMEBUFFER
    FB_mouse_events(1);
+   FB_showx_mouse();
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
@@ -1221,6 +1222,7 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
    graphics();
 #ifdef FRAMEBUFFER
    FB_mouse_events(1);
+   FB_showx_mouse();
 #endif
     
    XWindowEvent(window[usewindow].display, window[usewindow].win,PointerMotionMask|ExposureMask, &event);
@@ -1406,6 +1408,7 @@ void c_allevent(PARAMETER *plist,int e) {
    graphics();
 #ifdef FRAMEBUFFER
    FB_mouse_events(1);
+   FB_showx_mouse();
    FB_keyboard_events(1);
 #endif
     

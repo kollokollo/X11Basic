@@ -154,7 +154,7 @@ void Fb_Close() {
     close(fbfd);
   }
 #endif
-  FB_hide_mouse();
+  FB_hidex_mouse();
 #ifndef ANDROID
   FB_close_mouse();
   FB_close_keyboard();
@@ -200,6 +200,16 @@ void FB_defaultcontext() {
 void FB_setgraphmode(int n) {
   screen.graphmode=n;
 }
+
+
+/* Hier folgen nun die Grafik-Routinen für primitive.
+
+   Es gibt immer zwei Versionen der Routinen, 
+   1. Eine schnelle ohne Maus-Abschaltung (interne verwendung oder terminal emu)
+   2. Eine normale, bei der Mauszeiger nicht übermalt wird.
+   TODO:
+   Ist noch nicht vollstaendig aussortiert....
+   */
 
 
 /* This is a low-level Function, need to be fast, but does noch check 
@@ -251,7 +261,9 @@ void FB_clip_off(G_CONTEXT *screen) {
 }
 
 void FB_plot(int x, int y) {
+  FB_hidex_mouse();
   FB_PutPixel(x,y,screen.fcolor);
+ // FB_showx_mouse(); muss nicht sein (nur langsam) Mousebewegung aktiviert es wieder
 }
 unsigned short FB_point(int x, int y) {
   if(x<0 || y<0 || x>=screen.width || y>=screen.height) return(0);
@@ -505,7 +517,7 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
   }
 }
 
-void FB_line(int x1,int y1,int x2,int y2) {
+static void FB_doline(int x1,int y1,int x2,int y2) {
   if(screen.linewidth>1) FB_DrawThickLine(x1,y1,x2,y2,screen.linewidth, screen.fcolor);
   else {
     if(y1==y2) {
@@ -514,24 +526,34 @@ void FB_line(int x1,int y1,int x2,int y2) {
     } else FB_DrawLine(x1,y1,x2,y2,screen.fcolor);
   }
 }
+void FB_line(int x1,int y1,int x2,int y2) {
+  FB_hidex_mouse();
+  FB_doline(x1,y1,x2,y2);
+  // FB_showx_mouse();
+}
 
 void FB_lines(XPoint *points, int n, int mode) {
   int i;
+  FB_hidex_mouse();
   if(n>1) {
     for(i=1;i<n;i++)
-      FB_line(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
+      FB_doline(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
   }
+  // FB_showx_mouse();
 }
 void FB_points(XPoint *points, int n, int mode) {
   int i;
+  FB_hidex_mouse();
   if(n) {
-    for(i=0;i<n;i++) FB_plot(points[i].x,points[i].y);
+    for(i=0;i<n;i++) FB_PutPixel(points[i].x,points[i].y,screen.fcolor);
   }
+  // FB_showx_mouse();
 }
 
 
 void FB_box(int x1,int y1,int x2,int y2) {
   int w,h;
+  FB_hidex_mouse();
   /* Swap x1, x2 if required */
   if(x1>x2) {int xtmp=x1;x1=x2;x2=xtmp;}
   /* Swap y1, y2 if required */
@@ -554,6 +576,7 @@ void FB_box(int x1,int y1,int x2,int y2) {
       }
     }
   }
+  // FB_showx_mouse();
 }
 
 
@@ -566,19 +589,16 @@ void FillBox (int x, int y, int w, int h, unsigned short color) {
     } else DrawHorizontalLine(x, i, w, color);
   }  
 }
+
 void FB_pbox(int x1, int y1, int x2, int y2) {
   /* Swap x1, x2 if required */
   if(x1>x2) {int xtmp=x1;x1=x2;x2=xtmp;}
   /* Swap y1, y2 if required */
   if(y1>y2) {int ytmp=y1;y1=y2;y2=ytmp;}
-  
+  FB_hidex_mouse();
   FillBox(x1,y1,x2-x1,y2-y1,screen.fcolor);
+  //FB_showx_mouse();
 }
-
-
-
-
-
 
 
 /* Clear whole screen */
@@ -586,9 +606,12 @@ void FB_Clear(G_CONTEXT *screen) {
   unsigned short *ptr=(unsigned short *)screen->pixels;
   int n=screen->size>>1;
   int i;
+  FB_hidex_mouse();
   for(i=0; i<n; i++) *ptr++=screen->bcolor;
+  //FB_showx_mouse();
 }
 
+/* Wird von Terminal Emulation verwendet*/
 void Fb_Clear2(int y, int h, unsigned short color) {
   if (y<0|| y+h>screen.height) return;
   unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
@@ -651,7 +674,11 @@ void FB_copyarea(int x,int y,int w, int h, int tx,int ty) {
     }
   }
 }
-
+void FB_CopyArea(int x,int y,int w, int h, int tx,int ty) {
+  FB_hidex_mouse();
+  FB_copyarea(x,y,w,h,tx,ty);
+  //FB_showx_mouse();
+}
 
 
 
@@ -1144,7 +1171,7 @@ extern int ltextpflg;
 void FB_DrawString(int x, int y, const char *t,int len,unsigned short chw, unsigned short chh) {
   if(len>0) {
     char buf[len+1];
-    FB_hide_mouse();
+    FB_hidex_mouse();
     utf8(0,(unsigned short *)&buf);   /*Startbedingungen herstellen*/
     memcpy(buf,t,len);
     buf[len]=0;
@@ -1152,7 +1179,7 @@ void FB_DrawString(int x, int y, const char *t,int len,unsigned short chw, unsig
     else if(chh==32 && chw==16) Fb_BlitText1632(x,y,screen.fcolor, screen.bcolor,buf);
     else if(chh<8 || chw<8) Fb_BlitText57(x,y,screen.fcolor,screen.bcolor,buf);
     else Fb_BlitText816_scale(x,y,screen.fcolor, screen.bcolor,buf,chw,chh);
-    FB_show_mouse();
+    //FB_showx_mouse();
   }
 }
 
@@ -1690,7 +1717,9 @@ void fill2Poly(unsigned short color,int *point, int num) {
 
 
 void FB_pPolygon(int *points, int n,int shape, int mode) {
+  FB_hidex_mouse();
   fill2Poly(screen.fcolor,(int *)points,n);
+  //FB_showx_mouse();
 }
 
 
