@@ -354,7 +354,7 @@ typedef struct rshdrv3
 	WORD		rsh_nstring;
 	WORD		rsh_nimages;
 	LONG		rsh_rssize;	/* total bytes in resource	*/
-}RSHDRV3;
+} RSHDRV3;
 
 typedef struct { unsigned char r,g,b;} AESRGBCOLOR;
 
@@ -363,6 +363,20 @@ typedef struct { unsigned char r,g,b;} AESRGBCOLOR;
 
 extern RSHDR *rsrc;
 extern int gem_colors[];
+
+#ifdef IS_BIG_ENDIAN
+  #define swap_WORD(a) (a)
+  #define swap_LONG(a) (a)
+#else
+
+static inline WORD swap_WORD(WORD a) {
+  return(((a<<8)&0xff00) | ((a>>8)&0xff));
+}
+static inline LONG swap_LONG(LONG a) {
+  return(((a<<16)&0xffff0000) | ((a>>16)&0xffff));
+}
+#endif
+
 
 
 void gem_init();

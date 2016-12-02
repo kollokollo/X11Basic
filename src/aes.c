@@ -880,7 +880,7 @@ static void fix_objc(int chw,int chh) {
     int i,j;
     for(i =0; i < anzahl; i++) {
       for(j=0;j<sizeof(OBJECT)/2;j++) {WSWAP((char *)((long)&base[i]+2*j));}
-      LSWAP((short *)&(base[i].ob_spec));
+      base[i].ob_spec.index=swap_LONG((LONG)base[i].ob_spec.index);
       if(!(base[i].ob_type==G_BOX || base[i].ob_type==G_BOXCHAR||
 	      base[i].ob_type==G_IBOX || base[i].ob_type==G_ALERTTYP))
 	    base[i].ob_spec.index+=(LONG)rsrc;	
@@ -898,12 +898,9 @@ static void fix_tedinfo() {
     int i,j;
     for(i =0; i < rsrc->rsh_nted; i++) {
       for(j=0;j<sizeof(TEDINFO)/2;j++) {WSWAP((char *)((long)&base[i]+2*j));}
-      LSWAP((short *)&(base[i].te_ptext));
-      LSWAP((short *)&(base[i].te_ptmplt));
-      LSWAP((short *)&(base[i].te_pvalid));
-      base[i].te_ptext+=(LONG)rsrc;	
-      base[i].te_ptmplt+=(LONG)rsrc;	
-      base[i].te_pvalid+=(LONG)rsrc;	
+      base[i].te_ptext=(char *)((LONG)rsrc+swap_LONG((LONG)base[i].te_ptext));
+      base[i].te_ptmplt=(char *)((LONG)rsrc+swap_LONG((LONG)base[i].te_ptmplt));
+      base[i].te_pvalid=(char *)((LONG)rsrc+swap_LONG((LONG)base[i].te_pvalid));
     }
   }
 }
@@ -916,9 +913,7 @@ static void fix_bitblk() {
    // printf("FIX_BITBLK: Anzahl=$%04x\n",anzahl);
     for(i=0; i<anzahl; i++) {
       // if(rsrc->rsh_vrsn==0) {
-	for(j=0;j<sizeof(BITBLK)/2;j++) {
-          WSWAP((char *)((long)&base[i]+2*j));
-        }
+	for(j=0;j<sizeof(BITBLK)/2;j++) {WSWAP((char *)((long)&base[i]+2*j));}
 	LSWAP((short *)&(base[i].bi_pdata));
       // }
       helper=(LONG *)&base[i].bi_pdata;
@@ -929,9 +924,7 @@ static void fix_bitblk() {
 	  printf("Bitmap #%d at %x\n",i,k);
 	  printf("w=%d h=%d x=%d y=%d c=%d\n",base[i].bi_wb,base[i].bi_hl,base[i].bi_x,base[i].bi_y,base[i].bi_color);
 #endif
-	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
-            WSWAP((char *)INT2POINTER(k+2*j));
-          }
+	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {WSWAP((char *)INT2POINTER(k+2*j));}
 	  for(j=0;j<base[i].bi_wb*base[i].bi_hl/2;j++) {
 	    n=0;
             l=((WORD *)INT2POINTER(k+2*j))[0];
@@ -954,13 +947,11 @@ static void fix_iconblk() {
   if(anzahl) {
     for(i =0; i < anzahl; i++) {
     //  if(rsrc->rsh_vrsn==0) {
-	    for(j=0;j<sizeof(ICONBLK)/2;j++) {
-              WSWAP((char *)INT2POINTER((long)&base[i]+2*j));
-            }
+	    for(j=0;j<sizeof(ICONBLK)/2;j++) {WSWAP((char *)INT2POINTER((long)&base[i]+2*j));}
 	    LSWAP((short *)&(base[i].ib_pmask));
 	    LSWAP((short *)&(base[i].ib_pdata));
 	    LSWAP((short *)&(base[i].ib_ptext));
-	//  }
+    //  }
 	  helper2=(LONG *)&base[i].ib_pdata;
 	  *helper2+=(LONG)rsrc;
 	  helper=(LONG *)&base[i].ib_ptext;
@@ -975,9 +966,7 @@ static void fix_iconblk() {
         //  if(rsrc->rsh_vrsn==0) {
             k=*helper;  /*(LONG *)&base[i].ib_pmask*/
 
-	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
-              WSWAP((char *)INT2POINTER(k+2*j));
-            }
+	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {WSWAP((char *)INT2POINTER(k+2*j));}
 	    for(j=0;j<base[i].ib_wicon*base[i].ib_hicon/16;j++) {
 	      n=0;
               l=((WORD *)INT2POINTER(k+2*j))[0];
@@ -1009,21 +998,18 @@ static void fix_iconblk() {
 }
 void memdump    (const unsigned char *adr,int l);	    
 short rsrc_load(const char *filename) {
-  int i;
   if(exist(filename)) {
     FILE *dptr=fopen(filename,"rb");
     if(dptr==NULL) return(-1);
     int len=lof(dptr);
     rsrc=malloc(len);
-    int a;
+    int i,a;
     if((a=fread(rsrc,1,len,dptr))==len) {
       WSWAP((char *)((long)rsrc));
       if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
-//        if(rsrc->rsh_vrsn==0) {
-        for(i=1;i<HDR_LENGTH/2;i++) {
-          WSWAP((char *)((long)rsrc+2*i));
-        }
-//        }
+//      if(rsrc->rsh_vrsn==0) {
+          for(i=1;i<HDR_LENGTH/2;i++) {WSWAP((char *)((long)rsrc+2*i));}
+//      }
 #if DEBUG 
         printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
         printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
@@ -1038,7 +1024,7 @@ short rsrc_load(const char *filename) {
         if(rsrc->rsh_rssize<=len) {
 	  if(rsrc->rsh_rssize<len) {
 	    printf("Warning: %d extra Bytes detected at end of RSC file.\n",len-rsrc->rsh_rssize);
-memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
+            memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
 	  }
 	
           fix_trindex();
@@ -1054,10 +1040,9 @@ memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
       } else {
         printf("Unsupported RSC version %d.\n",rsrc->rsh_vrsn);
 	memdump((unsigned char *)rsrc,64);
-	}
+      }
     } else {
-      printf("fread failed. %d  %d \n",a,len);
-    
+      printf("ERROR: fread failed. %d  %d \n",a,len);
     }
     fclose(dptr);
     free(rsrc);
