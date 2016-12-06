@@ -2210,48 +2210,28 @@ static int do_break() {
   if(pc<=0) return(0);
   int i=pcode[pc-1].integer;
   if(i==-1) {
-    int f=0,o;
-    for(i=pc; (i<prglen && i>=0);i++) {
-      o=pcode[i].opcode&PM_SPECIAL;
-      if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
-      if(o & P_LEVELIN) f++;
-      if(o & P_LEVELOUT) f--;
-     }
-    if(i==prglen) return(0);
+    i=sucheloopend(pc);
+    if(i<0) return(0);
     pc=i+1;
   } else pc=i;
   return(1);
 }
 
-static void c_break() {
-  if(pc<=0) {xberror(38,"BREAK"); /* Befehl im Direktmodus nicht moeglich */ return;}
-  int i=pcode[pc-1].integer;
-  if(i==-1) {
-    int f=0,o;
-    for(i=pc; (i<prglen && i>=0);i++) {
-      o=pcode[i].opcode&PM_SPECIAL;
-      if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL)  && f<=0) break;
-      if(o & P_LEVELIN) f++;
-      if(o & P_LEVELOUT) f--;
-     }
-    if(i==prglen) { xberror(36,"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */return;}
-    pc=i+1;
-  } else pc=i;
-}
 
 /*  EXIT                 --- same as return or quit
     EXIT IF <expression>  */
 
 static void c_exit(PARAMETER *plist,int e) {
-// printf("c_exit: %d\n",e);
-// dump_parameterlist(plist,e);
-  if(pc<=0) {c_quit(NULL,0);}    /*  Im Direktmodus f"uhrt das zum Beenden des Interpreters.*/
   if(e==0) {
     if(do_break()) return;
     if(do_return()) return;
-    c_quit(NULL,0);
+    c_quit(NULL,0);   /*  Im Direktmodus und ausserhalb von Schleifen und proceduren 
+                          f"uhrt das zum Beenden des Interpreters.*/
   }
-  if(plist->integer) c_break();
+  /*  EXIT IF ... */
+  if(plist->integer) {
+    if(do_break()==0) xberror(36,"EXIT IF"); /*Programmstruktur fehlerhaft */
+  }
 }
 
 

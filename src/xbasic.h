@@ -342,11 +342,25 @@ inline static int suchep(int begin, int richtung, int such, int w1, int w2) {
   for(i=begin; (i<prglen && i>=0);i+=richtung) {
     o=pcode[i].opcode&PM_SPECIAL;
     if(o==such && f==0) return(i);
-    else if(o==w1) f++;
+    if(o==w1) f++;
     else if(o==w2) f--;
   }
   return(-1);
 }
+
+inline static int sucheloopend(int begin) {
+  int i,f=0,o;
+
+  for(i=begin; i<prglen;i++) {
+    o=pcode[i].opcode&PM_SPECIAL;
+    if((o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL||  o==P_ENDSELECT)  && f==0)  return(i);
+    if(o==P_DO || o==P_FOR || o==P_WHILE ||  o==P_REPEAT||  o==P_SELECT) f++;
+    else if(o==P_LOOP || o==P_NEXT || o==P_WEND ||  o==P_UNTIL||  o==P_ENDSELECT) f--;
+  }
+  return(-1);
+}
+
+
 
 inline static int procnr(const char *n,int typ) {
   register int i=anzprocs;

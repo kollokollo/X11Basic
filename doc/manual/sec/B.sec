@@ -179,6 +179,9 @@ DESCRIPTION:
 	select statement. This is the preferred way of leaving such a
 	statement (rather than goto).
 
+COMMENT:
+        BREAK cannot be used in direct mode. Use EXIT instead.
+
 EXAMPLE:
   DO
     INC i
@@ -189,7 +192,6 @@ EXAMPLE:
   LOOP
 
 SEE ALSO:  EXIT IF
-
 ##############################################################################
 
 Command:    BSAVE

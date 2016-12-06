@@ -577,14 +577,13 @@ Syntax:     EXIT
 
 DESCRIPTION:
 
-	The command EXIT will either exit a loop, return from a procedure or
-	subroutine, or quit the interpreter.
-	WHILE,  REPEAT,  DO  and  FOR  loops  can  be
-        aborted  prematurely  with  the  EXIT command. Here it has the same 
-        fuinction as BREAK. EXIT leaves the current
+	EXIT will either exit a loop, return from a procedure or
+	subroutine, quit a SELECT/ENDSELECT structure, or quit the interpreter.
+	WHILE, REPEAT, DO and FOR loops can be aborted prematurely with the EXIT 
+        command. Here it has the same function as BREAK. EXIT leaves the current
         (innermost) loop immediately. Outside a loop, but insidde a procedure
 	or function, that procedure or function is left, like with RETURN.
-	Outside any procedure or function, or invoked from the direct mode
+	Outside any procedure or function or loop, or invoked from the direct mode
 	EXIT has the same effect like QUIT.
 	
 SEE ALSO:  EXIT IF, BREAK, RETURN, QUIT	
@@ -594,14 +593,15 @@ Syntax:     EXIT IF <expression>
 
 DESCRIPTION:
 
-	The innermost loop will be exited if the expression is true.
-	WHILE,  REPEAT,  DO  and  FOR  loops  can  be
-        aborted  prematurely  with  the  EXIT command. EXIT leaves the current
-        (innermost) loop immediately. EXIT IF leaves the current loop only  if
-        the expression after EXIT IF is not FALSE (not null).
-	
-SEE ALSO:  DO, WHILE, FOR, REPEAT, BREAK, IF	
+	The innermost loop will be left if the expression is true.
+	WHILE, REPEAT, DO and FOR loops can be aborted prematurely with the 
+        EXIT IF statement. EXIT IF leaves the current (innermost) loop immediately, 
+        if the expression after EXIT IF is not FALSE (not null).
 
+COMMENT:
+        EXIT IF cannot be used in direct mode. 
+
+SEE ALSO:  DO, WHILE, FOR, REPEAT, BREAK, IF, EXIT
 ##############################################################################
 
 Function:   EXP()
