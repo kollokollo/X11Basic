@@ -823,8 +823,10 @@ int zuweis_string_and_free(const char *name, STRING inhalt) {
     }
   } else {
     vnr=add_variable(r,STRINGTYP,0,V_DYNAMIC,NULL);
-    free_string(variablen[vnr].pointer.s);
-    *(variablen[vnr].pointer.s)=inhalt;
+    if(vnr>=0) {  /*Fehlermeldung muesste es danns schon in add_variable gegeben haben.*/ 
+      free_string(variablen[vnr].pointer.s);
+      *(variablen[vnr].pointer.s)=inhalt;
+    } else free_string(&inhalt); 
   }
   free(r);
   return(0);
