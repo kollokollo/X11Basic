@@ -1110,7 +1110,7 @@ void kommando(char *cmd) {
         PARAMETER *plist;
         int e=make_pliste(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,w2,&plist);
         if(e>=comms[i].pmin) (comms[i].routine)(plist,e);
-	if(e!=-1) free_pliste(e,plist);
+	free_pliste(e,plist);
 	}
 	return;
       default: xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
@@ -1242,8 +1242,8 @@ void programmlauf(){
 	  int e=make_pliste3(pcode[opc].panzahl,pcode[opc].panzahl,ptypliste,
              pcode[opc].ppointer,&plist,pcode[opc].panzahl);
 
-	  call_sub_with_parameterlist(pcode[opc].integer,plist,pcode[opc].panzahl);
-          if(e!=-1) free_pliste(e,plist);
+	  if(e>=0) call_sub_with_parameterlist(pcode[opc].integer,plist,pcode[opc].panzahl);
+          free_pliste(e,plist);
         }
 
 	} break;
@@ -1262,8 +1262,8 @@ void programmlauf(){
           int i=pcode[opc].opcode&PM_COMMS;
           int e=make_pliste3(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,
              pcode[opc].ppointer,&plist,pcode[opc].panzahl);
-          (comms[i].routine)(plist,e);
-          if(e!=-1) free_pliste(e,plist);
+          if(e>=0) (comms[i].routine)(plist,e);
+          free_pliste(e,plist);
         } break;
         default:
 	    printf("something is wrong: %x %s\n",(int)pcode[opc].opcode,program[opc]);

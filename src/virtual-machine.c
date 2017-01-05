@@ -466,7 +466,7 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     int e=make_pliste3(psfuncs[i].pmin,psfuncs[i].pmax,(unsigned short *)psfuncs[i].pliste,
                  &sp[0],&plist,anzarg);
     s=(psfuncs[i].routine)(plist,anzarg);
-    if(e!=-1) free_pliste(e,plist);
+    free_pliste(e,plist);
     e=anzarg;
     while(--e>=0) free_parameter(&sp[e]);
     sp[0].pointer=s.pointer;
@@ -619,7 +619,7 @@ STATIC int vm_func(PARAMETER *sp,int i, int anzarg) {    /*  */
        break;
     default: xberror(13,"");  /* Type mismatch */
     }
-    if(e!=-1) free_pliste(e,plist);
+    free_pliste(e,plist);
     e=anzarg;
     while(--e>=0) free_parameter(&sp[e]);
     *sp=*rpar;free(rpar);
@@ -757,8 +757,8 @@ STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
     PARAMETER *plist;
     int e=make_pliste3(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,
                  &sp[-anzarg],&plist,anzarg);
-    (comms[i].routine)(plist,e);
-    if(e!=-1) free_pliste(e,plist);
+    if(e>=0) (comms[i].routine)(plist,e);
+    free_pliste(e,plist);
     e=anzarg;
   //  printf("Parameters to clear:  (%d)\n",e);
   //  dump_parameterlist(&sp[-e],e);

@@ -363,7 +363,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 		  a=0;
 		  xberror(42,s); /* Zu wenig Parameter */
 		}
-	        if(e!=-1) free_pliste(e,plist);
+	        free_pliste(e,plist);
 		// printf("a=%d\n",a);
 	        return(a);
               }
@@ -707,7 +707,7 @@ COMPLEX complex_parser(const char *funktion) {
 		   default: xberror(13,s);  /* Type mismatch */
 		   }
 		} else xberror(42,s); /* Zu wenig Parameter */
-	        if(e!=-1) free_pliste(e,plist);
+	        free_pliste(e,plist);
 	        return(ret);
               }
 
@@ -1155,7 +1155,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
 	     default: xberror(13,s);  /* Type mismatch */
 	     }
 	  } 
-	  if(e!=-1) free_pliste(e,plist);
+	  free_pliste(e,plist);
 	  return;
         }
 
@@ -1434,7 +1434,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
 		 PARAMETER *plist;
                  int e=make_pliste(pafuncs[i].pmin,pafuncs[i].pmax,(unsigned short *)pafuncs[i].pliste,pos,&plist);
                  ARRAY a=(pafuncs[i].routine)(plist,e);
-	         if(e!=-1) free_pliste(e,plist);
+	         free_pliste(e,plist);
 	         return(a);
 	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
 	        ARRAY ergebnis,a=array_parser(pos);
@@ -1563,7 +1563,7 @@ STRING string_parser(const char *funktion) {
 	        PARAMETER *plist;
                  int e=make_pliste(psfuncs[i].pmin,psfuncs[i].pmax,(unsigned short *)psfuncs[i].pliste,pos,&plist);
                  ergebnis=(psfuncs[i].routine)(plist,e);
-	         if(e!=-1) free_pliste(e,plist);
+	         free_pliste(e,plist);
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 		ergebnis=(psfuncs[i].routine)(parser(pos));
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_IQUICK) {

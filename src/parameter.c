@@ -491,6 +491,7 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
 
 /*Hier Ergaenzungen von pre-pliste zu aktueller (Zu Laufzeit). 
   Jetzt koennen variableninhalte als fix betrachtet werden.
+  Return: 0 = alles OK, -1 = Fehler
  */
 int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
   unsigned short ip=pin->typ;
@@ -505,7 +506,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     if(ip==PL_LABEL || ip==PL_PROC) {
       pret->integer=pin->integer;
       pret->arraytyp=pin->arraytyp;  /* Typ */
-    } else PARERR();
+    } else {PARERR();return(-1);}
     break;
   case PL_FILENR:
   case PL_INT:    /* Integer */
@@ -537,7 +538,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       mpz_init(*((ARBINT *)pret->pointer));
       mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
       break;
-    default: PARERR();
+    default: {PARERR();return(-1);}
     }
     break;
   case PL_CFAI:  /* Float oder complex oder arbint */
@@ -560,7 +561,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       mpz_init(*((ARBINT *)pret->pointer));
       mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
       break;
-    default: PARERR();
+    default: {PARERR();return(-1);}
     }
     break;
   case PL_CF:  /* Float oder complex oder arbint */
@@ -582,7 +583,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       pret->real=mpz_get_d(*((ARBINT *)pin->pointer));
       pret->typ=PL_FLOAT;
       break;
-    default: PARERR();
+    default: {PARERR();return(-1);}
     }
     break;
   case PL_FLOAT:  /* Float oder Number */
@@ -644,7 +645,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       mpz_set(*((ARBINT *)pret->pointer),*((ARBINT *)pin->pointer));
       break;
     case PL_STRING:  *((STRING *)&(pret->integer))=double_string((STRING *)&(pin->integer)); break;
-    default: PARERR();
+    default: {PARERR();return(-1);}
     }
     break;
   case PL_STRING: /* String */
@@ -655,7 +656,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     } else if(ip==PL_STRING) {
       *((STRING *)&(pret->integer))=double_string((STRING *)&(pin->integer));
       pret->typ=PL_STRING;
-    } else PARERR();
+    } else {PARERR();return(-1);}
     break;
   case PL_ARRAY:  /* Array */
   case PL_IARRAY: /* Int-Array */
@@ -700,7 +701,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
         printf("line %d: Error: Parameter is wrong (typ=%x) ARRAY (need to be $%x). Cannot convert.\n",pc,ip,ap);
 	dump_parameterlist(pin,1);
       }
-    } else PARERR();
+    } else {PARERR();return(-1);}
     break;
   case PL_VAR:   /* Variable */
   case PL_NVAR:   /* Variable */
@@ -723,10 +724,11 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
       if(pin->panzahl) {
         indexliste=malloc(pin->panzahl*sizeof(int));
 	get_indexliste(pin->ppointer,indexliste,pin->panzahl);
-          // printf("Es sind %d indizien da.\n",pin[i].panzahl);
+         //  printf("Es sind %d indizien da.\n",pin->panzahl);
       } else indexliste=NULL;
       pret->pointer=varptr_indexliste(&variablen[vnr],indexliste,pin->panzahl);
       free(indexliste);
+      if(pret->pointer==NULL) return(-1);
     } else pret->pointer=pin->pointer;
       
       // printf("Variable uebergeben. %d %s\n",vnr,varinfo(&variablen[vnr]));
@@ -737,40 +739,43 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     else if(ip==PL_EVAL) pret->arraytyp=keyword2num(pin->pointer);
     if(ip==PL_EVAL ||ip==PL_KEY) *((STRING *)&(pret->integer))=create_string(pin->pointer);
     else if(ip==PL_LEER) *((STRING *)&(pret->integer))=create_string("");
-    else PARERR();
+    else {PARERR();return(-1);}
     break;
   case PL_EVAL: /* Keyword */
     if(ip==PL_LEER) pret->typ=PL_LEER;
     else if(ip==PL_EVAL ||ip==PL_KEY) {
       pret->arraytyp=pin->arraytyp;
       *((STRING *)&(pret->integer))=create_string(pin->pointer);
-    } else PARERR();
+    } else {PARERR();return(-1);}
     break;
   default:
-    printf("unknown parameter type. -->$%x \n",ap);
+    printf("ERROR: unknown parameter type. -->$%x \n",ap);
     return(-1);
   }
   return(0);
 }
+
+/* Rueckgabe ist die Anzahl der prozessierten Parameter 
+   oder -1 wenn ein Fehler aufgetreten ist..
+   */
+
 int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAMETER **pout,int ii){
   PARAMETER *pret;
   unsigned short ap;
-  int i;
-  int anzpar;
+  int i=0,anzpar,err=0;
   if(pmax==-1) anzpar=ii;
   else anzpar=min(ii,pmax);
 //  printf("PARAMETER vervollstaendigen: (%d) %d\n",ii,anzpar);
 
   *pout=pret=calloc(anzpar,sizeof(PARAMETER));
-  
-  i=0;
   while(i<anzpar) {
     if(i>pmin && pmax==-1) ap=pliste[pmin];
     else ap=pliste[i];
  //   printf("Par #%d: typ1=%x typ2=%x %s\n",i,ap,ip,plist_paramter(&pin[i]));
-    make_parameter_stage3(&pin[i],ap,&pret[i]);
+    err|=make_parameter_stage3(&pin[i],ap,&pret[i]);
     i++;
   }
+  if(err) return(-1);
   return(i);
 }
 

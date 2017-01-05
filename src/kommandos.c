@@ -2260,8 +2260,8 @@ static void c_if(PARAMETER *plist,int e) {
       int j=pcode[i].opcode&PM_COMMS;
       int e=make_pliste3(comms[j].pmin,comms[j].pmax,(unsigned short *)comms[j].pliste,
 	     pcode[i].ppointer,&plist,pcode[i].panzahl);
-          (comms[j].routine)(plist,e);
-	  if(e!=-1) free_pliste(e,plist);
+          if(e>=0) (comms[j].routine)(plist,e);
+	  free_pliste(e,plist);
     } 
    // else printf("neues Ziel ist: %d  <%s>\n",pc,program[pc]);
   }
