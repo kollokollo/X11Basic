@@ -261,6 +261,7 @@ int vm_neg(PARAMETER *sp);
 void cast_to_real(PARAMETER *sp);
 void cast_to_int(PARAMETER *sp);
 int vm_sfunc(PARAMETER *sp,int i, int anzarg);
+int vm_afunc(PARAMETER *sp,int i, int anzarg);
 int vm_func(PARAMETER *sp,int i, int anzarg);
 int vm_comm(PARAMETER *sp,int i, int anzarg);
 int vm_pushvv(int vnr,PARAMETER *sp);

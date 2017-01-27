@@ -189,7 +189,7 @@ const char *errortxt[] = {
 /* 75*/  "Stack overflow!",
 /* 76*/  "Illegal variable name %s. can not create.",
 /* 77*/  "Function %s not defined for complex numbers.",
-/* 78*/  "Error 78",
+/* 78*/  "Incorrect parameter, %s must be array",
 /* 79*/  "Error 79",
 #ifdef GERMAN
 /* 80*/  "Matrizenoperationen nur für ein- oder zweidimensionale Felder",

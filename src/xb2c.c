@@ -497,6 +497,11 @@ static void translate() {
       n=bcpc[i++]&0xff;
       fprintf(optr,"PUSHSFUNC(%d,%d); /* %s */\n",a,n,psfuncs[a].name);
       break;
+    case BC_PUSHAFUNC:
+      a=bcpc[i++]&0xff;
+      n=bcpc[i++]&0xff;
+      fprintf(optr,"PUSHAFUNC(%d,%d); /* %s */\n",a,n,pafuncs[a].name);
+      break;
     case BC_PUSHCOMM:
       a=bcpc[i++]&0xff;
       n=bcpc[i++]&0xff;

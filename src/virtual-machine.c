@@ -480,7 +480,7 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
       a.len=sp[0].integer;
       a.pointer=sp[0].pointer;
     } else 
-      xberror(47,(char *)pfuncs[i].name); /*  Parameter %s falsch, kein String */
+      xberror(47,(char *)psfuncs[i].name); /*  Parameter %s falsch, kein String */
     
     STRING s=(psfuncs[i].routine)(a);
     free_parameter(sp);
@@ -500,6 +500,80 @@ STATIC int vm_sfunc(PARAMETER *sp,int i, int anzarg) {    /*  */
     sp[0].pointer=s.pointer;
     sp[0].integer=s.len;
     sp[0].typ=PL_STRING;
+    return 1-anzarg;
+  }
+
+  VMERROR("INCOMPLETE"
+       ", this function does not get its parameters.");
+  return 1-anzarg;
+}
+STATIC int vm_afunc(PARAMETER *sp,int i, int anzarg) {    /*  */
+  VERBOSE("vm_%s(%d) ",psfuncs[i].name,anzarg);
+  if(anzarg<pafuncs[i].pmin) {
+    xberror(42,(char *)pafuncs[i].name); /* Zu wenig Parameter  */
+    return 1-anzarg;
+  }
+  if(anzarg>pafuncs[i].pmax && !(pafuncs[i].pmax==-1)) {
+    xberror(45,(char *)pafuncs[i].name); /* Zu viele Parameter  */
+    return 1-anzarg;
+  } 
+  sp-=anzarg;
+  if((pafuncs[i].opcode&FM_TYP)==F_SIMPLE || pafuncs[i].pmax==0) {
+    ARRAY arr=(pafuncs[i].routine)();
+    *((ARRAY *)&(sp->integer))=arr;
+    sp->typ=PL_ARRAY;
+    return 1-anzarg;
+  }  
+  if((pafuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
+    if(sp->typ==PL_KEY) {
+      ARRAY arr=(pafuncs[i].routine)(sp->pointer);
+      free(sp->pointer);
+      *((ARRAY *)&(sp->integer))=arr;
+      sp->typ=PL_ARRAY;
+      return 1-anzarg;
+    } else {
+      VMERROR("SFUNC");
+      return 1-anzarg;
+    }
+  }
+  if((psfuncs[i].opcode&FM_TYP)==F_PLISTE) {
+    PARAMETER *plist;
+    ARRAY arr;
+    int e=make_pliste3(pafuncs[i].pmin,pafuncs[i].pmax,(unsigned short *)pafuncs[i].pliste,
+                 &sp[0],&plist,anzarg);
+    arr=(pafuncs[i].routine)(plist,anzarg);
+    free_pliste(e,plist);
+    e=anzarg;
+    while(--e>=0) free_parameter(&sp[e]);
+    *((ARRAY *)&(sp->integer))=arr;
+    sp->typ=PL_ARRAY;
+    return 1-anzarg;
+  }
+  if((pafuncs[i].opcode&FM_TYP)==F_SQUICK) {
+    STRING s;
+    if(sp->typ==PL_STRING) {
+      s.len=sp[0].integer;
+      s.pointer=sp[0].pointer;
+    } else 
+      xberror(47,(char *)pafuncs[i].name); /*  Parameter %s falsch, kein String */
+    
+    ARRAY arr=(pafuncs[i].routine)(s);
+    free_parameter(sp);
+    *((ARRAY *)&(sp->integer))=arr;
+    sp[0].typ=PL_ARRAY;
+    return 1-anzarg;
+  }
+  if((pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
+    ARRAY s;
+    if(sp->typ==PL_ARRAY) {
+      s=*((ARRAY *)&(sp->integer));
+    } else 
+      xberror(78,(char *)pafuncs[i].name); /*  Parameter %s falsch, kein Array */
+    
+    ARRAY arr=(pafuncs[i].routine)(s);
+    free_parameter(sp);
+    *((ARRAY *)&(sp->integer))=arr;
+    sp[0].typ=PL_ARRAY;
     return 1-anzarg;
   }
 
@@ -1156,6 +1230,11 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       a=bcpc.pointer[i++]&0xff;
       n=bcpc.pointer[i++]&0xff;
       opstack+=vm_sfunc(opstack,a,n);
+      break;
+    case BC_PUSHAFUNC:
+      a=bcpc.pointer[i++]&0xff;
+      n=bcpc.pointer[i++]&0xff;
+      opstack+=vm_afunc(opstack,a,n);
       break;
     case BC_PUSHCOMM:
       a=bcpc.pointer[i++]&0xff;

@@ -835,56 +835,40 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       }
     } else if((i=find_afunc(s))!=-1) {
       if((pafuncs[i].opcode&FM_TYP)==F_SIMPLE || pafuncs[i].pmax==0) {
-        BCADD(BC_PUSHFUNC);BCADD(i);BCADD(0);
-	TP(PL_LEER); /* Fuer den Rueckgabewert*/
-        return(bcerror);
+        BCADD(BC_PUSHAFUNC);BCADD(i);BCADD(0);
       } else if((pafuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
         BCADDPUSHX(pos);
         BCADD(BC_PUSHAFUNC);BCADD(i);BCADD(1);
-        TP(PL_LEER); /* Fuer den Rueckgabewert*/
-        return(bcerror);
       } else if((pafuncs[i].opcode&FM_TYP)==F_PLISTE) { 
       /* TODO: das geht besser !*/
         bc_parser(pos);
 	BCADD(BC_PUSHAFUNC);BCADD(i);BCADD(count_parameters(pos));
 	TA(count_parameters(pos));
-	TP(PL_LEER); /* Fuer den Rueckgabewert*/
-	return(bcerror);
       } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
         bc_parser(pos);
  	BCADD(BC_PUSHAFUNC);BCADD(i);BCADD(1);
 	TO();
-        TP(PL_LEER); /* Fuer den Rueckgabewert*/
-	return(bcerror);
       } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_SQUICK) {
         bc_parser(pos);
  	BCADD(BC_PUSHAFUNC);BCADD(i);BCADD(1);
 	TO();
-        TP(PL_LEER); /* Fuer den Rueckgabewert*/
-	return(bcerror);
       }
+      TP(PL_ARRAY); /* Fuer den Rueckgabewert*/
+      return(bcerror);
     } else if((i=find_sfunc(s))!=-1) {
       if((psfuncs[i].opcode&FM_TYP)==F_SIMPLE || psfuncs[i].pmax==0) {
         BCADD(BC_PUSHSFUNC);BCADD(i);BCADD(0);
-        TP(PL_STRING); /* Fuer den Rueckgabewert*/
-        return(bcerror);
       } else if((psfuncs[i].opcode&FM_TYP)==F_ARGUMENT) {
         BCADDPUSHX(pos);
         BCADD(BC_PUSHSFUNC);BCADD(i);BCADD(1);
-        TP(PL_STRING); /* Fuer den Rueckgabewert*/
-        return(bcerror);
       } else if((psfuncs[i].opcode&FM_TYP)==F_PLISTE) {                
         bc_parser(pos);
 	BCADD(BC_PUSHSFUNC);BCADD(i);BCADD(count_parameters(pos));
 	TA(count_parameters(pos));
-        TP(PL_STRING); /* Fuer den Rueckgabewert*/
-	return(bcerror);
       } else if(psfuncs[i].pmax==2 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
         bc_parser(pos);
 	BCADD(BC_PUSHSFUNC);BCADD(i);BCADD(2);
 	TA(2);
-        TP(PL_STRING); /* Fuer den Rueckgabewert*/
-        return(bcerror);
       } else if(psfuncs[i].pmax==1 && ((psfuncs[i].opcode&FM_TYP)==F_SQUICK ||
                                        (psfuncs[i].opcode&FM_TYP)==F_AQUICK ||
                                        (psfuncs[i].opcode&FM_TYP)==F_IQUICK ||
@@ -894,9 +878,9 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
         bc_parser(pos);
 	BCADD(BC_PUSHSFUNC);BCADD(i);BCADD(1);
 	TO();
-        TP(PL_STRING); /* Fuer den Rueckgabewert*/
-        return(bcerror);
       }
+      TP(PL_STRING); /* Fuer den Rueckgabewert*/
+      return(bcerror);
     } else {
        char buf[strlen(s)+1+strlen(pos)+1+1];
        sprintf(buf,"%s(%s)",s,pos);
@@ -1704,7 +1688,7 @@ void compile(int verbose) {
           TO();
         } else {
           if(typ&ARRAYTYP) {
-            if(TL!=PL_ARRAY) printf("ERROR: cannot convert to array.\n");
+            if(TL!=PL_ARRAY) printf("ERROR: cannot convert to array. $%x\n",TL);
           }
           bc_zuweis(vnr);
         }  
