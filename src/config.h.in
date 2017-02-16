@@ -139,6 +139,12 @@
 /* mpz_primorial_ui in GMP */
 #undef HAVE_PRIMORIAL_UI
 
+/* fftw_make_plan in FFTW */
+#undef HAVE_FFTW
+
+/* rfftw_create_plan in RFFTW */
+#undef HAVE_RFFTW
+
 /* _SystemCycle in dynamical TINE lib */
 #undef HAVE_TINE
 

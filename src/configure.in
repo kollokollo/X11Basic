@@ -274,6 +274,24 @@ libs="$libs -lgmp"
 AC_DEFINE(HAVE_PRIMORIAL_UI,1,[mpz_primorial_ui in gmp])
 ],,[$libs])
 
+
+# `-lfftw':
+AC_CHECK_LIB([fftw], [fftw_make_plan], [
+libs="$libs -lfftw"
+AC_DEFINE(HAVE_FFTW,1,[fftw_make_plan in fftw])
+],,[$libs])
+
+# `-lrfftw':
+AC_CHECK_LIB([rfftw], [rfftw_create_plan], [
+libs="-lrfftw $libs"
+AC_DEFINE(HAVE_RFFTW,1,[rfftw_create_plan in rfftw])
+],,[$libs])
+
+
+
+
+
+
 if test "n$with_usb" = nyes; then
 # `-lusb':
 AC_CHECK_LIB([usb], [usb_open], [

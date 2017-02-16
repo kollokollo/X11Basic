@@ -8,3 +8,4 @@ Release notes for Version 1.25 (Sept 2016 -- 2017)
 - fixed bug in EXIT (bytecode)
 - added bluetooth support (linux)
 - improved USB functions (linux)
+- make use of fftw library when available

@@ -1,3 +1,26 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "config.h"
+#ifdef HAVE_RFFTW
+#include <rfftw.h>
+#include "defs.h"
+#include "x11basic.h"
+#include "mathematics.h"
+#include "fft.h"
+
+
+void fftw_realft(int N, fftw_real *in, fftw_real *out, int isign) {
+  rfftw_plan p;
+  if(isign) p=rfftw_create_plan(N, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
+  else p=rfftw_create_plan(N, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
+  rfftw_one(p, in, out);
+  rfftw_destroy_plan(p);
+}
+
+#else
+
+
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggSQUISH SOFTWARE CODEC SOURCE CODE.   *
@@ -2237,3 +2260,4 @@ wsave   contains initialization calculations which must not be
 ["send index for vfftpk" describes a vectorized version of fftpack]
 
 */
+#endif

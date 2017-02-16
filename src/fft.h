@@ -12,6 +12,10 @@
 #define SQRT2 1.4142135623730950488016887242097
 #define TSQRT2 2.8284271247461900976033774484194
 
-void rffti(int n, FLOAT *wsave, int *ifac);
-void rfftf(int n,FLOAT *r,FLOAT *wsave,int *ifac);
-void rfftb(int n, FLOAT *r, FLOAT *wsave, int *ifac);
+#ifdef HAVE_RFFTW
+  void fftw_realft(int N, double *in, double *out, int isign);
+#else
+  void rffti(int n, FLOAT *wsave, int *ifac);
+  void rfftf(int n,FLOAT *r,FLOAT *wsave,int *ifac);
+  void rfftb(int n, FLOAT *r, FLOAT *wsave, int *ifac);
+#endif

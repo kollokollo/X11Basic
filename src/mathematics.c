@@ -61,37 +61,43 @@ double determinante(double *a,int n) {
 
 
 
-
 /* Routinen f"uer Fouriertransformation   */
 
 void realft(double *data, int n,int isign) {
+  if(n<=0) return;
+#ifdef HAVE_RFFTW
+  double *spek=malloc(n*sizeof(double));
+  int j;
+  if(isign) {
+    spek[0]=data[0];
+    spek[n/2]=data[n-1];
+    for(j=1;j<(n+1)/2;j++) {
+     spek[j]=data[2*j-1];
+     spek[n-j]=data[2*j];
+    }    
+    fftw_realft(n,spek,data,isign);
+  } else {
+    fftw_realft(n,data,spek,isign);
+    data[0]=spek[0];
+    data[n-1]=spek[n/2];
+    for(j=1;j<(n+1)/2;j++) {
+     data[2*j-1]=spek[j];
+     data[2*j]=spek[n-j];
+    }
+  }
+  free(spek);
+#else
   static int oldn=-1;
   static double *wsave=NULL;
   static int ifac[15];
-  if(n<=0) return;
   if(n>1 && n!=oldn) {
     wsave=realloc(wsave,(2*n+15)*sizeof(double));
     rffti(n,wsave,ifac);
-#ifdef DEBUG
-    printf("Initialized for n=%d:\n",n);
-    if(n>1 && ifac[1]>0) {
-      int i;
-      for(i=2;i<2+ifac[1];i++) {
-        printf("ifac[%d]=%d\n",i,ifac[i]);
-      }
-    }
-#endif    
     oldn=n;
   }
-  if(isign) {
-#ifdef DEBUG
-    int i;
-    for(i=0;i<10;i++) printf("data[%d]=%g\n",i,data[i]);
-#endif  
-  
-    rfftf(n,data,wsave,ifac);
-  } else rfftb(n,data,wsave,ifac);
-
+  if(isign) rfftf(n,data,wsave,ifac);
+  else rfftb(n,data,wsave,ifac);
+#endif
 }
 
 #if 0
