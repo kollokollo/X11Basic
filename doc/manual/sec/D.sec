@@ -162,6 +162,11 @@ DESCRIPTION:
 		      1 pixel dash, followed by 6 pixel gap.
 *----
 
+COMMENT: 
+        Start and end symbols are not implemented in the framebuffer (Android) 
+        versions (yet).
+
+
 SEE ALSO: LINE, DEFFILL
 ##############################################################################
 
