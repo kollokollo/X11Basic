@@ -293,7 +293,9 @@ static inline unsigned int catchpointerbase(void *a) {
   unsigned long long pb2;
  // printf("Pointer:     %p\nPointerbase: %p\n",a,pointerbase);
   pb2=((unsigned long long)a&0xffffffff00000000ULL);
-  if(pb2!=(unsigned long long)pointerbase) printf("WARNING: 64bit pointer base has changed!\n");
+  if(pb2!=(unsigned long long)pointerbase) {
+    printf("WARNING: 64bit pointer base has changed! %p --> %p\n",pointerbase, (void *)pb2);
+  }
   pointerbase=(void *)pb2;
   return((unsigned int)((unsigned long long)a&0xffffffffULL));
 }
@@ -323,13 +325,13 @@ static inline void LSWAP(short *adr) {
   *adr=adr[1];
   adr[1]=a;
 }
-static inline void LWSWAP(short *adr) {
-  short a;
-  WSWAP((char *)&adr[0]);
-  WSWAP((char *)&adr[1]);
-  a=*adr;
-  *adr=adr[1];
-  adr[1]=a;
+static inline void LWSWAP(char *p) {
+  char a=*p;
+  *p=p[3];
+  p[3]=a;
+  a=p[1];
+  p[1]=p[2];
+  p[2]=a;
 }
 
 

@@ -20,6 +20,7 @@
 
 #include "defs.h"
 #include "x11basic.h"
+#include "xbasic.h"
 #include "graphics.h"
 #include "variablen.h"
 #include "file.h"
@@ -963,7 +964,7 @@ short form_do(OBJECT *tree,short startob) {
   /* Cursor plazieren */
 	
   if(edob>=0) {
-    (tree[edob].ob_spec.tedinfo)->te_fontid=strlen((tree[edob].ob_spec.tedinfo)->te_ptext);
+    ((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_fontid=strlen((char *)INT2POINTER(((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_ptext));
     draw_edcursor(tree,edob);
   }	
 
@@ -1053,7 +1054,7 @@ short form_do(OBJECT *tree,short startob) {
 	  if(tree[sbut].ob_flags & TOUCHEXIT) exitf=1;
 	  if(tree[sbut].ob_flags & EDITABLE) {
 	    edob=sbut;
-	    (tree[edob].ob_spec.tedinfo)->te_fontid=strlen((tree[edob].ob_spec.tedinfo)->te_ptext);
+	    ((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_fontid=strlen((char *)INT2POINTER(((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_ptext));
 	    objc_draw(tree,0,-1,0,0,0,0);
 	    draw_edcursor(tree,edob);
 	    activate();
@@ -1116,7 +1117,7 @@ short form_do(OBJECT *tree,short startob) {
 	}
       } else if(edob>=0) { /*Ist ein ed-object vorhanden ?*/
          int i;
-         TEDINFO *ted=tree[edob].ob_spec.tedinfo;
+         TEDINFO *ted=(TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo);
 
 #ifdef FRAMEBUFFER
          if(HIBYTE(event.xkey.ks)) {
@@ -1125,13 +1126,14 @@ short form_do(OBJECT *tree,short startob) {
 #endif
            if BACKSPACE  {          /* BSP */
 	     if(ted->te_fontid>0) {
-	       int len=strlen(ted->te_ptext);
+	       int len=strlen((char *)INT2POINTER(ted->te_ptext));
 	       i=ted->te_fontid--;
+	       char *pt=INT2POINTER(ted->te_ptext);
 	       while(i<len) {
-	         (ted->te_ptext)[i-1]=(ted->te_ptext)[i];
+	         pt[i-1]=pt[i];
 		 i++;
 	       }
-	       (ted->te_ptext)[i-1]=0;
+	       pt[i-1]=0;
 	       objc_draw(tree,0,-1,0,0,0,0);draw_edcursor(tree,edob);activate();
 	     }
 	   } else if LEFT  { /* LEFT */
@@ -1139,8 +1141,8 @@ short form_do(OBJECT *tree,short startob) {
 	     objc_draw(tree,0,-1,0,0,0,0);
 	     draw_edcursor(tree,edob);activate();
 	   } else if RIGHT { /* RIGHT */
-	     int len=strlen((char *)ted->te_ptext);
-	     if(ted->te_fontid<len && ((char *)ted->te_ptext)[ted->te_fontid]) ted->te_fontid++;
+	     int len=strlen((char *)INT2POINTER(ted->te_ptext));
+	     if(ted->te_fontid<len && ((char *)INT2POINTER(ted->te_ptext))[ted->te_fontid]) ted->te_fontid++;
              objc_draw(tree,0,-1,0,0,0,0);draw_edcursor(tree,edob);activate();
            } else if TAB  {          /* TAB */
 	     /* Suche naechstes ED-Feld oder wieder das erste */
@@ -1148,15 +1150,15 @@ short form_do(OBJECT *tree,short startob) {
 	     i=finded(tree,edob,1);
 	     if(i<0) edob=finded(tree,0,0);
 	     else edob=i;
-	     ted=tree[edob].ob_spec.tedinfo;
-	     ted->te_fontid=min(cp,strlen(ted->te_ptext));
+	     ted=(TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo);
+	     ted->te_fontid=min(cp,strlen((char *)INT2POINTER(ted->te_ptext)));
 	     objc_draw(tree,0,-1,0,0,0,0);draw_edcursor(tree,edob);activate();
 	   } else if PAGEUP {
 	   /* Suche vorangehendes ED-Feld */
 	     int cp=ted->te_fontid;
 	     i=finded(tree,edob,-1);
-	     if(i>=0) {edob=i;ted=tree[edob].ob_spec.tedinfo;
-	     ted->te_fontid=min(cp,strlen(ted->te_ptext));
+	     if(i>=0) {edob=i;ted=(TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo);
+	     ted->te_fontid=min(cp,strlen((char *)INT2POINTER(ted->te_ptext)));
 	     objc_draw(tree,0,-1,0,0,0,0);draw_edcursor(tree,edob);activate();}
 	   } else if PAGEDOWN  { /* Page down */
 	     int cp=ted->te_fontid;
@@ -1164,14 +1166,14 @@ short form_do(OBJECT *tree,short startob) {
 	     i=finded(tree,edob,1);
 	     if(i>=0) {
 	       edob=i;
-	       ted=tree[edob].ob_spec.tedinfo;
-	       ted->te_fontid=min(cp,strlen(ted->te_ptext));
+	       ted=(TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo);
+	       ted->te_fontid=min(cp,strlen((char *)INT2POINTER(ted->te_ptext)));
 	       objc_draw(tree,0,-1,0,0,0,0);
 	       draw_edcursor(tree,edob);
 	       activate();
 	     }
            } else if ESC  {   /* ESC  */
-	     (ted->te_ptext)[0]=0;
+	     ((char *)INT2POINTER(ted->te_ptext))[0]=0;
 	     ted->te_fontid=0;
 	     objc_draw(tree,0,-1,0,0,0,0);
 	     draw_edcursor(tree,edob);
@@ -1203,17 +1205,18 @@ short form_do(OBJECT *tree,short startob) {
 	} else { /*HIBYTE*/
 #endif
 	  i=ted->te_txtlen-1;
-	  while(i>ted->te_fontid) {((char *)ted->te_ptext)[i]=((char *)ted->te_ptext)[i-1];i--;}
+	  char *pt=(char *)INT2POINTER(ted->te_ptext);
+	  while(i>ted->te_fontid) {pt[i]=pt[i-1];i--;}
 	
 	  if(ted->te_fontid<ted->te_txtlen) {
 #ifdef WINDOWS_NATIVE
-            ((char *)ted->te_ptext)[ted->te_fontid]=(char)global_keycode;
+            pt[ted->te_fontid]=(char)global_keycode;
 #elif defined FRAMEBUFFER
-	    ((char *)ted->te_ptext)[ted->te_fontid]=(char)(event.xkey.ks&0xff);
+	    pt[ted->te_fontid]=(char)(event.xkey.ks&0xff);
 #elif defined USE_X11
-	    ((char *)ted->te_ptext)[ted->te_fontid]=(char)ks;
+	    pt[ted->te_fontid]=(char)ks;
 #elif defined USE_SDL
-            ((char *)ted->te_ptext)[ted->te_fontid]=(char)event.key.keysym.unicode;
+            pt[ted->te_fontid]=(char)event.key.keysym.unicode;
 #endif
 	    ted->te_fontid++;
 	  }	
@@ -1490,7 +1493,7 @@ void do_menu_draw() {
 
 
 typedef struct fileinfo {
-    char name[128];       /* The file name. */
+    char *name;       /* The file name. */
     int typ;
     struct stat dstat;
 } FINFO;
@@ -1511,22 +1514,23 @@ static int dir_bytes(FINFO *dir,int anzfiles) {
 static void make_filelist(OBJECT *objects,FINFO *filenamen,int *filenamensel,int anzfiles,int showstart){
   int i,j;
   TEDINFO *ted;
+
   for(i=0;i<ANZSHOW;i++) {
     j=showstart+i;
-    ted=objects[18+2*i].ob_spec.tedinfo;
+    ted=(TEDINFO *)INT2POINTER(objects[18+2*i].ob_spec.tedinfo);
     objects[18+2*i+1].ob_spec.index&=0x00ffffff;
-      if(j<anzfiles) {
-        if(filenamensel[j]==1) objects[18+2*i].ob_state=SELECTED;
-        else objects[18+2*i].ob_state=NORMAL;
-        ted->te_ptext=filenamen[j].name;
-	objects[18+2*i].ob_flags=SELECTABLE|TOUCHEXIT|RBUTTON;
-	if(filenamen[j].typ & FT_DIR) objects[18+2*i+1].ob_spec.index|=0x44000000;
-	else objects[18+2*i+1].ob_spec.index|=0x20000000;
-      } else {
-        ted->te_ptext="";
-        objects[18+2*i].ob_state=NORMAL;
-        objects[18+2*i].ob_flags=NONE;
-        objects[18+2*i+1].ob_spec.index|=0x20000000;
+    if(j<anzfiles) {
+      if(filenamensel[j]==1) objects[18+2*i].ob_state=SELECTED;
+      else objects[18+2*i].ob_state=NORMAL;
+      ted->te_ptext=(CHAR_P)POINTER2INT(filenamen[j].name);
+      objects[18+2*i].ob_flags=SELECTABLE|TOUCHEXIT|RBUTTON;
+      if(filenamen[j].typ & FT_DIR) objects[18+2*i+1].ob_spec.index|=0x44000000;
+      else objects[18+2*i+1].ob_spec.index|=0x20000000;
+    } else {
+      ted->te_ptext=(CHAR_P)POINTER2INT("");
+      objects[18+2*i].ob_state=NORMAL;
+      objects[18+2*i].ob_flags=NONE;
+      objects[18+2*i+1].ob_spec.index|=0x20000000;
     }
   }
 }
@@ -1559,6 +1563,7 @@ static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char 
       if(stat(filename, &fileinfos[anzfiles].dstat)==0) {
         if(S_ISDIR(fileinfos[anzfiles].dstat.st_mode)) {
 	  if(strcmp(ep->d_name,".") && strcmp(ep->d_name,"..")) {
+	    fileinfos[anzfiles].name=malloc(128);
 	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
 	    fileinfos[anzfiles++].typ=FT_DIR;
 	  }
@@ -1573,6 +1578,7 @@ static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char 
 	  #ifdef DEBUG
 	    printf("****");
 	  #endif
+	    fileinfos[anzfiles].name=malloc(128);
 	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
 	    fileinfos[anzfiles++].typ=FT_NORMAL;
 	  }
@@ -1600,12 +1606,29 @@ static void make_scaler(OBJECT *objects,int anzfiles,int showstart){
   objects[16].ob_y=(int)(xpos*(objects[15].ob_height-objects[16].ob_height));
 }
 #endif
+#define FILESELECT_NOBJ (18+2*ANZSHOW)
+#define FILESELECT_NTED (4+ANZSHOW)
+
 char *fileselector(const char *titel, const char *pfad, const char *sel) {
   unsigned short sbut=-1;
   unsigned short i;
+  /* Das ist der Speicherbereich für Objekt-strukturen. 
+  Bei 64bit systemem darf er nicht auf dem Stack liegen.*/
+  char *buffer=malloc(FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*5);
+  bzero(buffer,FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*5);
+  OBJECT  *objects=(OBJECT *)buffer;
+  TEDINFO *tedinfo=(TEDINFO *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT));
+  char *btitel =(char *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO));
+  char *dpfad  =(char *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128);
+  char *auswahl=(char *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*2);
+  char *mask   =(char *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*3);
+  char *feld1  =(char *)(buffer+FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*4);
   char *ergebnis;
-  char dpfad[128],auswahl[128];
   strncpy(auswahl,sel,127);
+  if(titel!=NULL) strncpy(btitel,titel,60);
+  else strcpy(btitel,"FILESELECT");
+  wort_sepr(pfad,'/',0,dpfad, mask);
+  strcpy(feld1,pfad);
 #ifdef USE_GEM
   char a;
   for(i=0;i<127;i++) {
@@ -1618,8 +1641,6 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   dpfad[i]=0;
   fsel_exinput(dpfad,auswahl,&sbut,titel);
 #else
-  char btitel[128],mask[128];
-  char feld1[128];
   int k;
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
@@ -1633,65 +1654,75 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 
   int anzfiles,showstart=0;
 
-  TEDINFO tedinfo[4+ANZSHOW]={
-  {btitel,"","",FONT_BIGIBM,0,TE_CNTR,0x1200,0,0,0,0},
-  {mask,"","",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
-  {feld1,  "__________________________________________________",
-           "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
-  {auswahl,"__________________________________________________",
-           "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
+
+  const TEDINFO t[4]={
+    {0,0,0,FONT_BIGIBM,0,TE_CNTR,0x1200,0,0,0,0},
+    {0,0,0,FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW},
+    {0,0,0,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,50},
+    {0,0,0,FONT_IBM,0,TE_LEFT,0x1100,0,0,128,20}
   };
- // int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
-  OBJECT objects[18+2*ANZSHOW]={
+  memcpy(tedinfo,t,4*sizeof(TEDINFO));
+
+  tedinfo[0].te_ptext= (CHAR_P)POINTER2INT(btitel);
+  tedinfo[1].te_ptext= (CHAR_P)POINTER2INT(mask);
+  tedinfo[2].te_ptext= (CHAR_P)POINTER2INT(feld1);
+  tedinfo[3].te_ptext= (CHAR_P)POINTER2INT(auswahl);
+  tedinfo[0].te_ptmplt=
+  tedinfo[0].te_pvalid=
+  tedinfo[1].te_ptmplt=
+  tedinfo[1].te_pvalid=(CHAR_P)POINTER2INT("");
+  tedinfo[2].te_ptmplt=
+  tedinfo[3].te_ptmplt=(CHAR_P)POINTER2INT("__________________________________________________");
+  tedinfo[2].te_pvalid=
+  tedinfo[3].te_pvalid=(CHAR_P)POINTER2INT("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  
+  
+  const OBJECT o[18]={
 /* 0*/  {-1,1,14,G_BOX, NONE, OUTLINED, {0x00021100}, 0,0,54,23},
 #ifdef FRAMEBUFFER
-/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)"OK"}, 42,15,9,3},
+/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)POINTER2INT("OK")}, 42,15,9,3},
 #else
-/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)"OK"}, 42,18,9,1},
+/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)POINTER2INT("OK")}, 42,18,9,1},
 #endif
 #ifdef GERMAN
-/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"ABBRUCH"},   42,20,9,1},
+/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("ABBRUCH")},   42,20,9,1},
 #else
 #ifdef FRAMEBUFFER
-/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"CANCEL"},    42,19,9,3},
+/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("CANCEL")},    42,19,9,3},
 #else
-/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"CANCEL"},    42,20,9,1},
+/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("CANCEL")},    42,20,9,1},
 #endif
 #endif
 #ifdef FRAMEBUFFER
-/* 3*/  {4,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL,{ (LONG)"HOME"},      42,11,9,2},
+/* 3*/  {4,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL,{ (LONG)POINTER2INT("HOME")},      42,11,9,2},
 #else
-/* 3*/  {4,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"HOME"},      42,12,9,1},
+/* 3*/  {4,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("HOME")},      42,12,9,1},
 #endif
-/* 4*/  {5,-1,-1,G_TEXT,  NONE, NORMAL, {(LONG)&tedinfo[0]},      1,1,52,1},
+/* 4*/  {5,-1,-1,G_TEXT,  NONE, NORMAL, {(LONG)POINTER2INT(&tedinfo[0])},      1,1,52,1},
 /* 5*/  {11,6,17,G_BOX, NONE, NORMAL, {0x00fe1120}, 2,8,FWW+2,ANZSHOW+1},
-/* 6*/  {7,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"<"}, 0,0,2,1},
-/* 7*/  {8,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)"^"},    FWW,1,2,1},
-/* 8*/  {9,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)"v"}, FWW,ANZSHOW,2,1},
-/* 9*/  {10,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"?"},         FWW,0,2,1},
-/*10*/  {15,-1,-1,G_BOXTEXT, SELECTABLE|EXIT, NORMAL, {(LONG)&tedinfo[1]},       2,0,FWW-2,1},
+/* 6*/  {7,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("<")}, 0,0,2,1},
+/* 7*/  {8,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)POINTER2INT("^")},         FWW,1,2,1},
+/* 8*/  {9,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)POINTER2INT("v")},   FWW,ANZSHOW,2,1},
+/* 9*/  {10,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT("?")},         FWW,0,    2,1},
+/*10*/  {15,-1,-1,G_BOXTEXT, SELECTABLE|EXIT, NORMAL, {(LONG)POINTER2INT(&tedinfo[1])},  2,0,FWW-2,1},
 #ifdef GERMAN
-/*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Pfad:"}, 2,3,2,1},
-/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Auswahl:"}, 2,5,2,1},
+/*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)POINTER2INT("Pfad:")}, 2,3,2,1},
+/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)POINTER2INT("Auswahl:")}, 2,5,2,1},
 #else
-/*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Directory:"}, 2,3,2,1},
-/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)"Selection:"}, 2,5,2,1},
+/*11*/  {12,-1,-1,G_STRING,NONE, NORMAL, {(LONG)POINTER2INT("Directory:")}, 2,3,2,1},
+/*12*/  {13,-1,-1,G_STRING,NONE, NORMAL, {(LONG)POINTER2INT("Selection:")}, 2,5,2,1},
 #endif
-/*13*/  {14,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[2]}, 2,4,50,1},
-/*14*/  {0,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[3]}, 2,6,50,1},
+/*13*/  {14,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)POINTER2INT(&tedinfo[2])}, 2,4,50,1},
+/*14*/  {0,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)POINTER2INT(&tedinfo[3])}, 2,6,50,1},
 /*15*/  {17,16,16,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1459}, FWW,2,2,ANZSHOW-2},
 /*16*/  {15,-1,-1,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1100}, 0,0,2,2},
 /*17*/  {5,18,17+2*ANZSHOW,G_BOX, NONE, NORMAL, {0x00ff1100}, 0,1,FWW,ANZSHOW}
   };
-  int objccount=sizeof(objects)/sizeof(OBJECT);
+  memcpy(objects,o,18*sizeof(OBJECT));
+  
   short x,y,w,h;
   int obx,oby;
-#ifdef DEBUG
-  printf("**fsel_input:\n");
-#endif
 
-  if(titel!=NULL) strncpy(btitel,titel,60);
-  else strcpy(btitel,"FILESELECT");
 #ifdef DEBUG
   printf("**2fsel_input: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
 #endif
@@ -1699,9 +1730,9 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   tedinfo[0].te_txtlen=strlen(btitel);
   tedinfo[0].te_tmplen=0;
   for(i=0;i<ANZSHOW;i++){
-    tedinfo[4+i].te_ptext="________________________________";
-    tedinfo[4+i].te_ptmplt="________________________________";
-    tedinfo[4+i].te_pvalid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    tedinfo[4+i].te_ptext= (CHAR_P)POINTER2INT("________________________________");
+    tedinfo[4+i].te_ptmplt=(CHAR_P)POINTER2INT("________________________________");
+    tedinfo[4+i].te_pvalid=(CHAR_P)POINTER2INT("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     tedinfo[4+i].te_font=FONT_IBM;
     tedinfo[4+i].te_just=TE_LEFT;
     tedinfo[4+i].te_color=0x1110;
@@ -1713,7 +1744,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
     objects[18+2*i].ob_type=G_FTEXT;
     objects[18+2*i].ob_flags=SELECTABLE|RBUTTON|TOUCHEXIT;
     objects[18+2*i].ob_state=NORMAL;
-    objects[18+2*i].ob_spec.tedinfo=&tedinfo[4+i];
+    objects[18+2*i].ob_spec.tedinfo=(TEDINFO_P)POINTER2INT(&tedinfo[4+i]);
     objects[18+2*i].ob_x=2;
     objects[18+2*i].ob_y=i;
     objects[18+2*i].ob_width=FWW-3;
@@ -1729,24 +1760,21 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
     objects[18+2*i+1].ob_y=i;
     objects[18+2*i+1].ob_width=2;
     objects[18+2*i+1].ob_height=1;
-
   }
-  objects[18+2*ANZSHOW-1].ob_next=17;
-  objects[objccount-1].ob_flags|=LASTOB;
+  objects[FILESELECT_NOBJ-1].ob_next=17;
+  objects[FILESELECT_NOBJ-1].ob_flags|=LASTOB;
   graphics();
   gem_init();  /*Fonts und Farben*/ 
-  for(i=0;i<objccount;i++){
+  for(i=0;i<FILESELECT_NOBJ;i++){
     objects[i].ob_x*=window[usewindow].chw;
     objects[i].ob_y*=window[usewindow].chh;
     objects[i].ob_width*=window[usewindow].chw;
     objects[i].ob_height*=window[usewindow].chh;
   }
 
-  wort_sepr(pfad,'/',0,dpfad, mask);
   anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
   sort_dir(filenamen,anzfiles);
 
-  strcpy(feld1,pfad);
 
   for(i=0;i<anzfiles;i++) filenamensel[i]=(strcmp(filenamen[i].name,auswahl)==0);
 
@@ -1817,7 +1845,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
       form_alert(1,buf);
       objects[sbut].ob_state=NORMAL;
     } else if(sbut==10) {    /* MASK */
-      wort_sepr((char *)tedinfo[2].te_ptext,'/',0,dpfad, mask);
+      wort_sepr((char *)INT2POINTER(tedinfo[2].te_ptext),'/',0,dpfad, mask);
       anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
       sort_dir(filenamen,anzfiles);
       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
@@ -1940,8 +1968,8 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
         } else {
           for(k=0;k<anzfiles;k++) filenamensel[k]=0;
 	  filenamensel[showstart+j]=1;
-	  strcpy((char *)tedinfo[3].te_ptext,filenamen[showstart+j].name);
-	  tedinfo[3].te_fontid=strlen((char *)tedinfo[3].te_ptext);
+	  strcpy((char *)INT2POINTER(tedinfo[3].te_ptext),filenamen[showstart+j].name);
+	  tedinfo[3].te_fontid=strlen((char *)INT2POINTER(tedinfo[3].te_ptext));
 	  tedinfo[3].te_fontsize=0;
         }
       }
@@ -1953,7 +1981,6 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   }
   form_dial(3,0,0,0,0,x,y,w,h);
   form_dial(2,0,0,0,0,x,y,w,h);
-  strncpy(auswahl,(char *)tedinfo[3].te_ptext,127);
 #endif
 #ifdef USE_GEM
   unsigned short pos=0;
@@ -1964,10 +1991,14 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   }
   dpfad[pos]=0;
 #endif
+  if(anzfiles) {
+    int i;
+    for(i=0;i<anzfiles;i++) free(filenamen[i].name);
+  }
   ergebnis=malloc(strlen(dpfad)+strlen(auswahl)+2);
   if(sbut==1) sprintf(ergebnis,"%s/%s",dpfad,auswahl);
   else *ergebnis=0;
-//  printf("but=%d, ret=<%s>\n",sbut,ergebnis);
+  free(buffer);
   return(ergebnis);
 }
 static void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfiles,int showstart){
@@ -1975,16 +2006,16 @@ static void make_list(OBJECT *objects,STRING *name,int *filenamensel,int anzfile
   TEDINFO *ted;
   for(i=0;i<ANZSHOW;i++) {
     j=showstart+i;
-    ted=objects[15+2*i].ob_spec.tedinfo;
+    ted=(TEDINFO *)INT2POINTER(objects[15+2*i].ob_spec.tedinfo);
     objects[15+2*i+1].ob_spec.index&=0x00ffffff;
       if(j<anzfiles) {
         if(filenamensel[j]==1) objects[15+2*i].ob_state=SELECTED;
         else objects[15+2*i].ob_state=NORMAL;
-        ted->te_ptext=name[j].pointer;
+        ted->te_ptext=(CHAR_P)POINTER2INT(name[j].pointer);
 	objects[15+2*i].ob_flags=SELECTABLE|TOUCHEXIT|RBUTTON;
 	objects[15+2*i+1].ob_spec.index|=0x20000000;
       } else {
-        ted->te_ptext="";
+        ted->te_ptext=(CHAR_P)POINTER2INT("");
         objects[15+2*i].ob_state=NORMAL;
         objects[15+2*i].ob_flags=NONE;	
         objects[15+2*i+1].ob_spec.index|=0x20000000;
@@ -2007,9 +2038,23 @@ static void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
 
 /* List-Select */
 
+#define LISTSELECT_NOBJ (15+2*ANZSHOW)
+#define LISTSELECT_NTED (4+ANZSHOW)
+
 int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
-  char btitel[128],mask[128];
-  char findmsk[50];
+  /* Das ist der Speicherbereich für Objekt-strukturen. 
+  Bei 64bit systemem darf er nicht auf dem Stack liegen.*/
+  char *buffer=malloc(LISTSELECT_NOBJ*sizeof(OBJECT)+LISTSELECT_NTED*sizeof(TEDINFO)+128*5);
+  bzero(buffer,LISTSELECT_NOBJ*sizeof(OBJECT)+LISTSELECT_NTED*sizeof(TEDINFO)+128*5);
+  OBJECT  *objects=(OBJECT *)buffer;
+  TEDINFO *tedinfo=(TEDINFO *)(buffer+LISTSELECT_NOBJ*sizeof(OBJECT));
+  char *btitel =(char *)(buffer+LISTSELECT_NOBJ*sizeof(OBJECT)+LISTSELECT_NTED*sizeof(TEDINFO));
+  if(titel!=NULL) strncpy(btitel,titel,38);
+  else strcpy(btitel,"LISTSELCT");
+
+  char *mask=malloc(128);
+  char *findmsk=malloc(50);
+
   int ergebnis=0;
   int i,k;
   int sbut=-1;
@@ -2018,30 +2063,34 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
 #endif
   int filenamensel[anzfiles];
   int showstart=0;
-  TEDINFO tedinfo[4+ANZSHOW]={
-  {btitel,"","",FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
-  {mask,"","",FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
-  {findmsk,"________________________","XXXXXXXXXXXXXXXXXXXXXXXX",FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
+  TEDINFO t[4]={
+    {(CHAR_P)POINTER2INT(btitel),(CHAR_P)POINTER2INT(""),(CHAR_P)POINTER2INT(""),FONT_IBM,0,TE_CNTR,0x1200,0,0,0,0},
+    {(CHAR_P)POINTER2INT(mask),  (CHAR_P)POINTER2INT(""),(CHAR_P)POINTER2INT(""),FONT_IBM,0,TE_CNTR,0x113a,0,2,0,FWW-2},
+    {(CHAR_P)POINTER2INT(findmsk),
+     (CHAR_P)POINTER2INT("________________________"),
+     (CHAR_P)POINTER2INT("XXXXXXXXXXXXXXXXXXXXXXXX"),FONT_IBM,0,TE_LEFT,0x1100,0,0,128,24}
   };
- // int anztedinfo=sizeof(tedinfo)/sizeof(TEDINFO);
-  OBJECT objects[15+2*ANZSHOW]={
-/* 0*/  {-1,1, 6,G_BOX,    NONE, OUTLINED, {(LONG)0x00021100}, 0,0,40,21},
-/* 1*/  {2,-1,-1,G_BUTTON, SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)"OK"}, 10,19,9,1},
-/* 2*/  {3,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"CANCEL"},    24,19,9,1},
-/* 3*/  {4,-1,-1,G_TEXT,   NONE, NORMAL, {(LONG)&tedinfo[0]},      1,1,38,1},
-/* 4*/  {5,-1,-1,G_FTEXT,  EDITABLE, NORMAL, {(LONG)&tedinfo[2]}, 12,3,FWW-4-12,1},
-/* 5*/  {6,-1,-1,G_STRING, NONE, NORMAL, {(LONG)"Find:"}, 2,3,2,1},
-/* 6*/  {0, 7,14,G_BOX,    NONE, NORMAL, {0x00fe1120}, 2,4,FWW+2,ANZSHOW+1},
-/* 7*/  {8,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"<"}, 0,0,2,1},
-/* 8*/  {9,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)"^"}, FWW,1,2,1},
-/* 9*/  {10,-1,-1,G_BUTTON, SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)"v"}, FWW,ANZSHOW,2,1},
-/*10*/  {11,-1,-1,G_BUTTON, SELECTABLE|EXIT, NORMAL, {(LONG)"?"},     FWW,0,2,1},
-/*11*/  {12,-1,-1,G_BOXTEXT, SELECTABLE|EXIT, NORMAL, {(LONG)&tedinfo[1]},2,0,FWW-2,1},
-/*12*/  {14,13,13,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1459}, FWW,2,2,ANZSHOW-2},
-/*13*/  {12,-1,-1,G_BOX, TOUCHEXIT, NORMAL, {0x00ff1100}, 0,0,2,2},
+  memcpy(tedinfo,t,4*sizeof(TEDINFO));
+  
+
+  OBJECT o[15]={
+/* 0*/  {-1,1, 6, G_BOX,     NONE, OUTLINED, {(LONG)0x00021100}, 0,0,40,21},
+/* 1*/  {2,-1,-1, G_BUTTON,  SELECTABLE|DEFAULT|EXIT,NORMAL ,{(LONG)POINTER2INT("OK")}, 10,19,9,1},
+/* 2*/  {3,-1,-1, G_BUTTON,  SELECTABLE|EXIT,      NORMAL, {(LONG)POINTER2INT("CANCEL")},    24,19,9,1},
+/* 3*/  {4,-1,-1, G_TEXT,    NONE,                 NORMAL, {(LONG)POINTER2INT(&tedinfo[0])},      1,1,38,1},
+/* 4*/  {5,-1,-1, G_FTEXT,   EDITABLE,             NORMAL, {(LONG)POINTER2INT(&tedinfo[2])}, 12,3,FWW-4-12,1},
+/* 5*/  {6,-1,-1, G_STRING,  NONE,                 NORMAL, {(LONG)POINTER2INT("Find:")}, 2,3,2,1},
+/* 6*/  {0, 7,14, G_BOX,     NONE,                 NORMAL, {0x00fe1120}, 2,4,FWW+2,ANZSHOW+1},
+/* 7*/  {8,-1,-1, G_BUTTON,  SELECTABLE|EXIT,      NORMAL, {(LONG)POINTER2INT("<")}, 0,0,2,1},
+/* 8*/  {9,-1,-1, G_BUTTON,  SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)POINTER2INT("^")}, FWW,1,2,1},
+/* 9*/  {10,-1,-1,G_BUTTON,  SELECTABLE|TOUCHEXIT, NORMAL, {(LONG)POINTER2INT("v")}, FWW,ANZSHOW,2,1},
+/*10*/  {11,-1,-1,G_BUTTON,  SELECTABLE|EXIT,      NORMAL, {(LONG)POINTER2INT("?")},     FWW,0,2,1},
+/*11*/  {12,-1,-1,G_BOXTEXT, SELECTABLE|EXIT,      NORMAL, {(LONG)POINTER2INT(&tedinfo[1])},2,0,FWW-2,1},
+/*12*/  {14,13,13,G_BOX,     TOUCHEXIT, NORMAL, {0x00ff1459}, FWW,2,2,ANZSHOW-2},
+/*13*/  {12,-1,-1,G_BOX,     TOUCHEXIT, NORMAL, {0x00ff1100}, 0,0,2,2},
 /*14*/  {6,15,14+2*ANZSHOW,G_BOX, NONE, NORMAL, {0x00ff1100}, 0,1,FWW,ANZSHOW}
   };
-  int objccount=sizeof(objects)/sizeof(OBJECT);
+  memcpy(objects,o,15*sizeof(OBJECT));
   short x,y,w,h;
   int obx,oby;
 
@@ -2056,8 +2105,6 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
 #define LISTSELECT_SCALER  13
 
 
-  if(titel!=NULL) strncpy(btitel,titel,38);
-  else strcpy(btitel,"LISTSELCT");
 
   strcpy(findmsk,"");
   strcpy(mask,"*");
@@ -2072,9 +2119,9 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
   tedinfo[2].te_fontsize=strlen(findmsk);
 
   for(i=0;i<ANZSHOW;i++){
-    tedinfo[4+i].te_ptext="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-    tedinfo[4+i].te_ptmplt="______________________________";
-    tedinfo[4+i].te_pvalid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    tedinfo[4+i].te_ptext =(CHAR_P)POINTER2INT("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    tedinfo[4+i].te_ptmplt=(CHAR_P)POINTER2INT("______________________________");
+    tedinfo[4+i].te_pvalid=(CHAR_P)POINTER2INT("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     tedinfo[4+i].te_font=FONT_IBM;
     tedinfo[4+i].te_just=TE_LEFT;
     tedinfo[4+i].te_color=0x1110;
@@ -2086,7 +2133,7 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
     objects[15+2*i].ob_type=G_FTEXT;
     objects[15+2*i].ob_flags=SELECTABLE|RBUTTON|TOUCHEXIT;
     objects[15+2*i].ob_state=NORMAL;
-    objects[15+2*i].ob_spec.tedinfo=&tedinfo[4+i];
+    objects[15+2*i].ob_spec.tedinfo=(TEDINFO_P)POINTER2INT(&tedinfo[4+i]);
     objects[15+2*i].ob_x=2;
     objects[15+2*i].ob_y=i;
     objects[15+2*i].ob_width=FWW-3;
@@ -2103,12 +2150,12 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
     objects[15+2*i+1].ob_width=2;
     objects[15+2*i+1].ob_height=1;
   }
-  objects[15+2*ANZSHOW-1].ob_next=14;
-  objects[objccount-1].ob_flags|=LASTOB;
+  objects[LISTSELECT_NOBJ-1].ob_next=14;
+  objects[LISTSELECT_NOBJ-1].ob_flags|=LASTOB;
 
   graphics();
   gem_init();
-  for(i=0;i<objccount;i++){
+  for(i=0;i<LISTSELECT_NOBJ;i++){
     objects[i].ob_x*=window[usewindow].chw;
     objects[i].ob_y*=window[usewindow].chh;
     objects[i].ob_width*=window[usewindow].chw;
@@ -2257,6 +2304,10 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
   }
   form_dial(3,0,0,0,0,x,y,w,h);
   form_dial(2,0,0,0,0,x,y,w,h);
+
+  free(mask);
+  free(findmsk);
+  free(buffer);
   return(ergebnis);
 }
 #endif /* nographics */

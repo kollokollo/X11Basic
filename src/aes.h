@@ -14,7 +14,25 @@
 #define GEMFONTSMALL "*5x8*"
 
 #define WORD short
+
+#ifdef  _LP64
+#define LONG unsigned int
+#define TEDINFO_P LONG
+#define BITBLK_P LONG
+#define ICONBLK_P LONG
+#define USRBLK_P LONG
+#define OBSPEK_P LONG
+
+#define CHAR_P LONG
+#else
 #define LONG unsigned long
+#define TEDINFO_P TEDINFO *
+#define BITBLK_P BITBLK *
+#define ICONBLK_P BITBLK *
+#define USRBLK_P USRBLK *
+#define OBSPEK_P union obspecptr *
+#define CHAR_P char *
+#endif
 
 
 #ifdef USE_GEM
@@ -169,22 +187,21 @@ typedef struct {
 #define BITBLK struct bit_block
 #define USERBLK struct user_blk
 #define PARMBLK struct parm_blk
+#define USRBLK struct user_block
 
-typedef union obspecptr
-{
-	long		index;		
-	union obspecptr	*indirect;	
+typedef union obspecptr {
+	LONG		index;		
+	OBSPEK_P        indirect;	
 	// BFOBSPEC 	obspec;		
-	TEDINFO		*tedinfo;	
-	BITBLK		*bitblk;	
-	ICONBLK		*iconblk;	
-	// CICONBLK 	*ciconblk;	
-	struct user_block *userblk;	
-	char		*free_string;	
+	TEDINFO_P	tedinfo;	
+	BITBLK_P	bitblk;	
+	ICONBLK_P	iconblk;	
+	// CICONBLK_P 	ciconblk;	
+	USRBLK_P        userblk;	
+	CHAR_P		free_string;	
 } OBSPEC;
 
-OBJECT
-{
+OBJECT {
 	WORD		ob_next;	/* -> object's next sibling	*/
 	WORD		ob_head;	/* -> head of object's children */
 	WORD		ob_tail;	/* -> tail of object's children */
@@ -224,9 +241,9 @@ GRECT
 
 TEDINFO
 {
-	char		*te_ptext;	/* ptr to text (must be 1st)	*/
-	char		*te_ptmplt;	/* ptr to template		*/
-	char		*te_pvalid;	/* ptr to validation chrs.	*/
+	CHAR_P          te_ptext;	/* ptr to text (must be 1st)	*/
+	CHAR_P          te_ptmplt;	/* ptr to template		*/
+	CHAR_P          te_pvalid;	/* ptr to validation chrs.	*/
 	WORD		te_font;	/* font				*/
 	WORD		te_fontid;	/* junk word 1			*/
 	WORD		te_just;	/* justification- left, right...*/
