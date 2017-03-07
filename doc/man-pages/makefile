@@ -8,7 +8,7 @@
 # COPYING for details
 
 
-VERSION=1.24
+VERSION=1.25
 NAME=X11-Basic-manpages
 
 DIR=$(NAME)-$(VERSION)

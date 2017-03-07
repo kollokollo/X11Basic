@@ -71,7 +71,7 @@ char selfseek[]="4007111";
 static void intro(){
   printf("****************************************************\n"
          "*  %10s virtual machine  V.%5s             *\n"
-         "*                 by Markus Hoffmann 1997-2016 (c) *\n"
+         "*                 by Markus Hoffmann 1997-2017 (c) *\n"
          "*                                                  *\n"
 #ifdef GERMAN
          "* Programmvers. vom %30s *\n"

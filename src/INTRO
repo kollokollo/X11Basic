@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.24
+                       VERSION 1.25
 
-            (C) 1997-2016 by Markus Hoffmann
+            (C) 1997-2017 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.24                              Vendor: Markus Hoffmann
+Version     : 1.25                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/

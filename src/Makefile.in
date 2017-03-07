@@ -1,5 +1,5 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
-# Version 28.08.2016 modified by Markus Hoffmann
+# Version 04.01.2017 modified by Markus Hoffmann
 
 # This file is part of X11-Basic, the basic interpreter for Unix/X
 # ======================================================================
@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=46
+RELEASE=47
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -376,6 +376,7 @@ MYTOSLIBS = x11basic.toslib
 
 all :    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic 
 
+
 configure : configure.in
 	autoconf
 Makefile : Makefile.in
@@ -389,6 +390,11 @@ config.h: config.h.in
 .cc.o:
 	g++ -c $(INC) -o $@ $<
 
+#### Tricky stuff for 64 bit operating system versions
+#### Mainly linux 64bit (experimental)
+
+bit3264 : configure
+	./configure --prefix=/usr CFLAGS=-m32
 
 ###################################################
 #### Fundamentals for X11-Basic (UNIX/LINUX) ######

@@ -1,8 +1,10 @@
-Release notes for Version 1.25 (Sept 2016 -- )
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Release notes for Version 1.25 (Sept 2016 -- 2017)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - HASH()/SHA1 and MD5 now work also without libgcrypt
 - new Commands: HIDEK, SHOWK (Android)
 - fixed bug in MERGE and FILESELECT
 - new function VRFY()
 - added raw keyboard support for framebuffer version (e.g. Raspberry pi + sense hat)
 - fixed bug in EXIT (bytecode)
+- added bluetooth support (linux)
+- improved USB functions (linux)
