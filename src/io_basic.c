@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "defs.h"
 #ifdef HAVE_ERRNO_H

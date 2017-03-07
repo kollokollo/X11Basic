@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #include <windows.h>

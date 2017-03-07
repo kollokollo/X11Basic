@@ -10,9 +10,9 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_audio.h>
 #else
-#define Uint32 unsigned long
-#define Uint16 unsigned short
-#define Uint8 unsigned char
+#define Uint32 uint32_t
+#define Uint16 uint16_t
+#define Uint8 uint8_t
 #endif
 
 

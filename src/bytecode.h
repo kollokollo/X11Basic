@@ -14,14 +14,14 @@ typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
   unsigned char offs;       /* sizeof(BYTECODE_HEADER)-2*/
   unsigned short rsv;       /*  not used */
-  unsigned long textseglen; /* size of the text/code segment */
-  unsigned long rodataseglen; /* size of the readonly data segment */
-  unsigned long sdataseglen; /* size of the data segment for DATA statements*/
-  unsigned long dataseglen;   /* size of the data segment */
-  unsigned long bssseglen;    /* storage space for variables */
-  unsigned long symbolseglen; /* size of the symbol table segment */
-  unsigned long stringseglen; /* size of the string segment */
-  unsigned long relseglen;    /* size of the relocation data */
+  uint32_t textseglen; /* size of the text/code segment */
+  uint32_t rodataseglen; /* size of the readonly data segment */
+  uint32_t sdataseglen; /* size of the data segment for DATA statements*/
+  uint32_t dataseglen;   /* size of the data segment */
+  uint32_t bssseglen;    /* storage space for variables */
+  uint32_t symbolseglen; /* size of the symbol table segment */
+  uint32_t stringseglen; /* size of the string segment */
+  uint32_t relseglen;    /* size of the relocation data */
   unsigned short flags;       /* not used */
   unsigned short version;     /* version, currently=0x117 */
 } BYTECODE_HEADER;
@@ -33,8 +33,8 @@ typedef struct {
   unsigned char typ;      /* Typ of the symbol */
   unsigned char subtyp;
   unsigned short rsv;       /*  not used */
-  unsigned long name;      /* Pointer to Symbol string table */
-  unsigned long adr;       /* address */
+  uint32_t name;      /* Pointer to Symbol string table */
+  uint32_t adr;       /* address */
 } BYTECODE_SYMBOL;
 
 /* Symbol types */

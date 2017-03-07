@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -399,7 +400,7 @@ Status my_XAllocColor(Display *display,Colormap map,XColor *pixcolor) {
   Status rval;
   if((rval=XAllocColor(display, map, pixcolor))==0) {
     int i,r,g,b;
-    unsigned long e=0xfffffff,d;
+    uint32_t e=0xfffffff,d;
     XColor savecolor;
     XColor ppixcolor[256];
 	for(i=0;i<256;i++) ppixcolor[i].pixel=i;

@@ -10,6 +10,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #include <windows.h>
 #endif
@@ -1785,7 +1786,7 @@ int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
   FILEINFO fff=get_fileptr(plist->integer);
   if(fff.typ==0) {xberror(24,"");return(-1);} /* File nicht geoeffnet */ 
-  if(fread(&ergebnis,sizeof(long),1,fff.dptr)<1)  io_error(errno,"fread");
+  if(fread(&ergebnis,sizeof(unsigned int),1,fff.dptr)<1)  io_error(errno,"fread");
   return(ergebnis);
 }
 

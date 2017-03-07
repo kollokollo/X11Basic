@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -1014,10 +1015,10 @@ short rsrc_load(const char *filename) {
     rsrc=malloc(len);
     int i,a;
     if((a=fread(rsrc,1,len,dptr))==len) {
-      WSWAP((char *)((long)rsrc));
+      WSWAP((char *)rsrc);
       if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
 //      if(rsrc->rsh_vrsn==0) {
-          for(i=1;i<HDR_LENGTH/2;i++) {WSWAP((char *)((long)rsrc+2*i));}
+          for(i=1;i<HDR_LENGTH/2;i++) {WSWAP((char *)((char *)rsrc+2*i));}
 //      }
 #if DEBUG 
         printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);

@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
@@ -2520,8 +2521,8 @@ static void c_dpoke(PARAMETER *plist,int e) {
   *adr=(short)plist[1].integer;
 }
 static void c_lpoke(PARAMETER *plist,int e) {
-  long *adr=(long *)INT2POINTER(plist->integer);
-  *adr=(long)plist[1].integer;
+  uint32_t *adr=(uint32_t *)INT2POINTER(plist->integer);
+  *adr=(uint32_t)plist[1].integer;
 }
 
 /* SOUND channel,frequency [Hz],volume (0-1),duration (s)*/

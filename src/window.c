@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -341,14 +342,14 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
   }
   /* Welchen Bildschirm nehmen ? */
   int screen_num = DefaultScreen(window[nummer].display);/* Ein Server kann mehrere Bildschirme haben */
-  unsigned long border=0;
+  unsigned int border=0;
 
   /* Fenster Oeffnen */
   window[nummer].bcolor=BlackPixel(window[nummer].display, DefaultScreen(window[nummer].display));
   window[nummer].fcolor=WhitePixel(window[nummer].display, screen_num);
   window[nummer].win = XCreateSimpleWindow(window[nummer].display, RootWindow(window[nummer].display, screen_num),
 			    x, y, w, h, border, window[nummer].fcolor, window[nummer].bcolor);
-			   // printf("border=%d\n",border);
+
   XGetGeometry(window[nummer].display,window[nummer].win,&root,&(window[nummer].x),&(window[nummer].y),
                               &(window[nummer].w),&(window[nummer].h),
 			      &(window[nummer].b),&(window[nummer].d));
@@ -772,9 +773,8 @@ void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
 //  memdump((char *)(data->format),sizeof(SDL_PixelFormat));
 //  memdump((char *)(data->format->palette),sizeof(SDL_Palette));
 //  memdump((char *)(data->format->palette->colors),2*sizeof(SDL_Color));
-  unsigned char *pal;
-  pal=(unsigned char *)(data->format->palette->colors);
-  unsigned long col=window[usewindow].bcolor;
+  unsigned char *pal=(unsigned char *)(data->format->palette->colors);
+  uint32_t col=window[usewindow].bcolor;
   col>>=8;
   pal[2]=(col&0xff); col>>=8;
   pal[1]=(col&0xff); col>>=8;

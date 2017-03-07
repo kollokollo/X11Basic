@@ -13,19 +13,18 @@
 //#define GEMFONTSMALL "-*-fixed-*-r-normal-*-8-*-ISO10646-1"
 #define GEMFONTSMALL "*5x8*"
 
-#define WORD short
+#define WORD  int16_t
+#define UWORD uint16_t
+#define LONG  uint32_t
 
 #ifdef  _LP64
-#define LONG unsigned int
 #define TEDINFO_P LONG
 #define BITBLK_P LONG
 #define ICONBLK_P LONG
 #define USRBLK_P LONG
 #define OBSPEK_P LONG
-
 #define CHAR_P LONG
 #else
-#define LONG unsigned long
 #define TEDINFO_P TEDINFO *
 #define BITBLK_P BITBLK *
 #define ICONBLK_P BITBLK *
@@ -76,14 +75,13 @@
 #define WHITEBAK 0x40
 #define DRAW3D 0x80
 
-
-  #undef BLACK
-  #undef WHITE
-  #undef RED
-  #undef GREEN
-  #undef BLUE     
-  #undef YELLOW   
-  #undef MAGENTA  
+#undef BLACK
+#undef WHITE
+#undef RED
+#undef GREEN
+#undef BLUE     
+#undef YELLOW   
+#undef MAGENTA  
 						/* Object colors	*/
 #define WHITE 0
 #define BLACK 1
@@ -205,9 +203,9 @@ OBJECT {
 	WORD		ob_next;	/* -> object's next sibling	*/
 	WORD		ob_head;	/* -> head of object's children */
 	WORD		ob_tail;	/* -> tail of object's children */
-	unsigned WORD		ob_type;	/* type of object- BOX, CHAR,...*/
-	unsigned WORD		ob_flags;	/* flags			*/
-	unsigned WORD		ob_state;	/* state- SELECTED, OPEN, ...	*/
+	UWORD		ob_type;	/* type of object- BOX, CHAR,...*/
+	UWORD		ob_flags;	/* flags			*/
+	UWORD		ob_state;	/* state- SELECTED, OPEN, ...	*/
 	OBSPEC		ob_spec;	/* "out"- -> anything else	*/
 	WORD		ob_x;		/* upper left corner of object	*/
 	WORD		ob_y;		/* upper left corner of object	*/

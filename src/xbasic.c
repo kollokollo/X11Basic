@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #include <windows.h>
@@ -49,6 +50,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "type.h"
 #include "parser.h"
 #include "parameter.h"
@@ -134,7 +136,7 @@ BYTECODE_SYMBOL *symtab;
 
 static void do_relocation(char *adr,unsigned char *fixup, int l) {
   int i=0;
-  long ll;
+  uint32_t ll;
  // printf("Relocation table:\n");
  // memdump(fixup,l);
   while(i<l) {
@@ -142,15 +144,15 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
     else if(fixup[i]==1) adr+=254;
     else {
       adr+=fixup[i];
-      memcpy(&ll,adr,sizeof(long));
+      memcpy(&ll,adr,sizeof(uint32_t));
       #ifdef ATARI
         LWSWAP((short *)&ll);
       #endif
-      ll+=(long)adr;
+      ll+=POINTER2INT(adr);
       #ifdef ATARI
         LWSWAP((short *)&ll);
       #endif
-      memcpy(adr,&ll,sizeof(long));
+      memcpy(adr,&ll,sizeof(uint32_t));
     }
   }
 }

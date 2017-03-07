@@ -8,6 +8,7 @@
 
 #define _GNU_SOURCE
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -730,7 +731,7 @@ static int    f_swap(int a)     {return(((a&0xffff)<<16)|((a&0xffff0000)>>16));}
 static double f_cvd(STRING n)   {return((double)(*((double *)n.pointer))); }
 static double f_cvf(STRING n)   {return((double)(*((float *)n.pointer))); }
 static int    f_cvi(STRING n)   {return((int)(*((short *)n.pointer))); }
-static int    f_cvl(STRING n)   {return((int)(*((long *)n.pointer))); }
+static int    f_cvl(STRING n)   {return((int)(*((int32_t *)n.pointer))); }
 static double f_deg(double d)   {return(d/PI*180);}
 static int    f_device(STRING n) {return(stat_device(n.pointer)); }
 static int    f_dpeek(int adr)  {return((int)(*(short *)INT2POINTER(adr)));}
@@ -742,7 +743,7 @@ static double f_frac(double b)  {return(b-((double)((int)b)));}
 //static double f_real(COMPLEX b) {return(b.r);}
 static int    f_inode(STRING n) {return(stat_inode(n.pointer)); }
 static int    f_len(STRING n)   {return(n.len); }
-static int    f_lpeek(int adr)  {return((int)(*(long *)INT2POINTER(adr)));}
+static int    f_lpeek(int adr)  {return((int)(*(int32_t *)INT2POINTER(adr)));}
 static double f_ltextlen(STRING n) {return((double)ltextlen(ltextxfaktor,ltextpflg,n.pointer)); }
 static int    f_malloc(int size) {return(POINTER2INT(malloc((size_t)size)));}
 static int    f_mshrink(int adr,int size) {return(0);} /*always return zero*/
@@ -1051,7 +1052,7 @@ static int f_julian(STRING n) { /* Julianischer Tag aus time$ */
   char buf[n.len+1],buf2[n.len+1];
   int e;
   int day,mon,jahr;	
-  long jul;
+  int32_t jul;
   int ja,jy,jm;
 
   memcpy(buf,n.pointer,n.len);
@@ -1067,7 +1068,7 @@ static int f_julian(STRING n) { /* Julianischer Tag aus time$ */
   if(jy<0) ++jy;
   if(mon>2) jm=mon+1;
   else { --jy; jm=mon+13; }
-  jul=(long)(floor(365.25*jy)+floor(30.6001*jm)+day+1720995);
+  jul=(int32_t)(floor(365.25*jy)+floor(30.6001*jm)+day+1720995);
   if(day+31L*(mon+12L*jahr)>=IGREG) {
     ja=(int)(0.01*jy);
     jul+=2-ja+(int)(0.25*ja);

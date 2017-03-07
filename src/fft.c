@@ -1,12 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "config.h"
+
+#include "defs.h"
+
 #ifdef HAVE_RFFTW
 #include <rfftw.h>
-#include "defs.h"
-#include "x11basic.h"
-#include "mathematics.h"
 #include "fft.h"
 
 

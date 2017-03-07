@@ -147,7 +147,7 @@ typedef COMPLEX (*cfunc)();
 typedef PARAMETER (*ppfunc)();
 
 typedef struct {
-  unsigned long opcode;
+  uint32_t opcode;
   const char *name;
   void (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
@@ -156,7 +156,7 @@ typedef struct {
 } COMMAND;
 
 typedef struct {
-  unsigned long opcode;
+  uint32_t opcode;
   const char *name;
   double (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
@@ -165,7 +165,7 @@ typedef struct {
 } FUNCTION;
 
 typedef struct {
-  unsigned long opcode;
+  uint32_t opcode;
   const char *name;
   COMPLEX (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */
@@ -174,7 +174,7 @@ typedef struct {
 } CFUNCTION;
 
 typedef struct {
-  unsigned long opcode;
+  uint32_t opcode;
   const char *name;
   STRING (*routine)();
   signed char pmin;        /* Mindestanzahl an Parametern */

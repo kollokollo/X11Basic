@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,7 +34,6 @@
   #include "android.h"
 #endif
 
-#include "config.h"
 #include "defs.h"
 #include "x11basic.h"
 #include "wort_sep.h"

@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include "defs.h"
@@ -50,9 +51,8 @@ void add_history(const char *line) {
     for(i=0;i<MAX_HISTORY;i++) history[i]=NULL;
     historyp=0;  
   }
-  if(historyp<MAX_HISTORY) {
-    history[historyp++]=strdup(line);
-  } else {
+  if(historyp<MAX_HISTORY) history[historyp++]=strdup(line);
+  else {
     free(history[0]);
     for(i=0;i<MAX_HISTORY-1;i++) history[i]=history[i+1];
     history[historyp-1]=strdup(line);  

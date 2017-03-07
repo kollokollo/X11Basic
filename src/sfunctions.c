@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
@@ -789,10 +790,10 @@ static STRING f_mkis(int n) {
 }
 static STRING f_mkls(int n) {   
   STRING ergebnis;
-  ergebnis.pointer=malloc(sizeof(long)+1);
-  ergebnis.len=sizeof(long);
-  *((long *)ergebnis.pointer)=(long)n;
-  *(ergebnis.pointer+sizeof(long))=0;
+  ergebnis.pointer=malloc(4+1);
+  ergebnis.len=4;
+  *((uint32_t *)ergebnis.pointer)=(uint32_t)n;
+  *(ergebnis.pointer+4)=0;
   return(ergebnis);
 }
 static STRING f_mkfs(double n) {   

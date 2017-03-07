@@ -8,9 +8,10 @@
  * COPYING for details
  */
  
+#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 #include "defs.h"
 #include "x11basic.h"

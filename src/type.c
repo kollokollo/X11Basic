@@ -6,6 +6,7 @@
  * COPYING for details
  */
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

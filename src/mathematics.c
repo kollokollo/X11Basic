@@ -11,10 +11,11 @@
 #include <string.h>
 #include <math.h>
 #include "defs.h"
-#include "x11basic.h"
 #include "mathematics.h"
 #include "fft.h"
 
+#define min(a,b) ((a<b)?a:b)
+#define max(a,b) ((a>b)?a:b)
 
 /*Gibt 1 zurueck wenn sich der Punkt (x,y) innerhalb des
 Polygonzugs befindet*/
