@@ -140,13 +140,18 @@ functions may not work, especially pointer aritmetric (\verb|VARPTR()|,
 will probably lead to segmentation faults when using huge amounts of 
 memory.\footnote{In X11-Basic all pointers to memory adresses are stored in 
 32bit integer variables. The upper 32bits of the adresses are stored internally
-fur further use. So if you calculate VARPTR(a), you would be able to 
+for further use. So if you calculate VARPTR(a), you would be able to 
 POKE to the adress immediately after without error, because the upper part of 
 the adresses was stored intenally from the previous call to VARPTR. 
 X11-Basic will emmit a warning, 
 pointer base has changed, whenever this part is different from what it 
 was before. This way, pointer aritmetrics can be used with care, even on 64 bit 
-operating systems.} 
+operating systems.} It has turned out, that also the GEM AES graphics functions 
+make use of pointer conversions (to stay compatible with the anchent ATARI ST format), 
+also here a problem might occur. Also the staticlly linked versions of X11-Basic are
+more likely to work correctly, because the shared libraries are loaded to the upper
+address space. So If you see the WARNING messages, try to use a static version of 
+X11-basic (\verb|xbasic.static|). 
 
 \subsection*{Compiling X11-Basic from its sources under UNIX like systems}
 \index{Compiling}
@@ -172,7 +177,8 @@ the functionality of X11-Basic.).
 \begin{enumerate}
 \item Install the development environment packages, e.g. done by the command:
 \begin{verbatim}
-sudo apt-get install libx11-dev libreadline6-dev liblapack-dev libgmp-dev 
+sudo apt-get install libx11-dev libreadline6-dev liblapack-dev \
+             libgmp-dev libfftw-dev 
 \end{verbatim}
 
 \item Unpack \verb|X11Basic-1.25.tar.gz| with 

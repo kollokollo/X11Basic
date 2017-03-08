@@ -208,10 +208,11 @@ DESCRIPTION:
 	is given, the fill will stop at any other color than the one of 
 	the starting coordinate. 
 	The fill color can be chosen with the command COLOR.
+
 COMMENT:
         The FILL command does not work when the linewidth is set to anything 
         other than 1 pixel. Please use DEFLINE to set the linewidth back to 1
-        before using FFILL in that case.
+        before using FILL in that case.
 
 SEE ALSO: COLOR, DEFLINE
 #############################################################################
