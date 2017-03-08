@@ -35,6 +35,9 @@
   #undef HAVE_INOTIFY_INIT
   #undef HAVE_USB
   #undef HAVE_PRIMORIAL_UI
+  #undef HAVE_FFTW
+  #undef HAVE_RFFTW
+  #undef HAVE_BLUETOOTH 
   #define USE_SDL
   #define HAVE_SDL 1 
   #define HAVE_SDL_GFX 1 

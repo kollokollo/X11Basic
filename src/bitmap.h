@@ -46,10 +46,12 @@ typedef struct   {                   /**** BMP file info structure ****/
  * Constants for the biCompression field...
  */
 
+#ifndef BI_RGB
 #  define BI_RGB       0             /* No compression - straight BGR data */
 #  define BI_RLE8      1             /* 8-bit run-length compression */
 #  define BI_RLE4      2             /* 4-bit run-length compression */
 #  define BI_BITFIELDS 3             /* RGB bitmap with RGB masks */
+#endif
 
 #ifndef WINDOWS
 typedef struct  {                    /**** Colormap entry structure ****/

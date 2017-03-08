@@ -11,9 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-#include <windows.h>
-#endif
 
 #include <ctype.h>
 #include <string.h>
@@ -51,27 +48,16 @@
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/l2cap.h>
 #endif
-
-
-#include "x11basic.h"
-#include "xbasic.h"
-#include "type.h"
-#include "parser.h"
-#include "svariablen.h"
-#include "number.h"
-#include "io.h"
-
-
 #ifdef __hpux
   #define CCTS_OFLOW      0x00010000      /* CTS flow control of output */
   #define CRTS_IFLOW      0x00020000      /* RTS flow control of input */
   #define CRTSCTS         (CRTS_IFLOW|CCTS_OFLOW) /* RTS/CTS flow control */
   #include <sys/termios.h>
-#endif
-#if defined _WIN32
+#elif defined _WIN32
   #include <ws2tcpip.h>
   #include <winsock2.h>
   #include <windows.h>
+  #include <conio.h>
   #define WEXITSTATUS(w)    (((w) >> 8) & 0xff)
   #define WIFEXITED(w)      (((w) & 0xff) == 0)
   #define NAME_MAX FILENAME_MAX
@@ -90,8 +76,16 @@
   #include <sys/ioctl.h>
   #include <termios.h>
   #include <fcntl.h>
-
 #endif 
+
+#include "x11basic.h"
+#include "xbasic.h"
+#include "type.h"
+#include "parser.h"
+#include "svariablen.h"
+#include "number.h"
+#include "io.h"
+
 
 #ifndef WINDOWS
 #ifndef ATARI
@@ -144,10 +138,12 @@ static int make_UDP_socket(unsigned short int port);
 #ifndef ANDROID
 #ifndef ATARI
 #ifndef __APPLE__
+#ifndef WINDOWS
   struct timespec {
         time_t tv_sec;        /* seconds */
         long   tv_nsec;       /* nanoseconds */
   };
+#endif
 #endif
 #endif
 #endif
@@ -1502,7 +1498,7 @@ static void do_close(int i) {
       break;
     case FT_DLL:    /* UNLINK */
  #ifdef WINDOWS
-        if(FreeLibrary(filenr[i].dptr)==0) io_error(GetLastError(),"UNLINK");
+        if(FreeLibrary((HINSTANCE)filenr[i].dptr)==0) io_error(GetLastError(),"UNLINK");
         else filenr[i].typ=FT_NONE;
 #elif defined HAVE_DLOPEN
         if(dlclose(filenr[i].dptr)==EOF) io_error(errno,"UNLINK");
@@ -1837,19 +1833,19 @@ void reset_input_mode() {
 /* Dynamisches Linken von Shared-Object-Files */
 
 int f_symadr(PARAMETER *plist,int e) {
-  long adr=0;
+  int adr=0;
   if(filenr[plist->integer].typ==FT_DLL) {
     char *sym=malloc(plist[1].integer+1);
     char *derror;
     memcpy(sym,plist[1].pointer,plist[1].integer);
     sym[plist[1].integer]=0;
     #ifdef WINDOWS
-      adr = (long)GetProcAddress(filenr[plist[0].integer].dptr,sym);
+      adr = (unsigned int)GetProcAddress((HINSTANCE)filenr[plist[0].integer].dptr,sym);
       if (adr==0) printf("ERROR: SYM_ADR: %s\n",GetLastError());
     #else
       #ifdef HAVE_DLOPEN
-      adr = (long)dlsym(filenr[plist[0].integer].dptr,sym);
-      if ((derror = (char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
+        adr = POINTER2INT(dlsym(filenr[plist[0].integer].dptr,sym));
+        if ((derror=(char *)dlerror()) != NULL) printf("ERROR: SYM_ADR: %s\n",derror);
       #else
         adr=-1;
         xberror(9,"SYM_ADR"); /*Function or command %s not implemented*/

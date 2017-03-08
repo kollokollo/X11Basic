@@ -50,8 +50,7 @@ CCSHARED=@CC@ $(REGS) -fPIC -shared -Wl,-Bsymbolic-functions
 
 # Cross-Compiler fuer Windows-Excecutable
 
-# WINCC=i386-mingw32msvc-gcc
-WINCC=i586-mingw32msvc-gcc
+WINCC=i686-w64-mingw32-gcc
 
 # Cross-Compiler fuer ATARI ST TOS
 TOSCC=m68k-atari-mint-gcc
@@ -461,7 +460,7 @@ libx11basic.dll : x11basic.lib
 x11basic.lib : $(LIBCSRC) WINDOWS/fnmatch.c $(HSRC) WINDOWS/fnmatch.h
 	rm -f *.o
 	$(WINCC) -DWINDOWS -c $(LIBCSRC) WINDOWS/fnmatch.c $(WININC) 
-	i586-mingw32msvc-ar -ru $@ $(LIBOBJS) fnmatch.o
+	i686-w64-mingw32-ar -ru $@ $(LIBOBJS) fnmatch.o
 	rm -f *.o
 
 # Make the exe for MS WINDOWS

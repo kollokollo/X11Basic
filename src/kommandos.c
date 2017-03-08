@@ -15,15 +15,15 @@
 #include <unistd.h>
 #include <signal.h>
 #if defined WINDOWS
-#define EX_OK 0
 #include <windows.h>
 #include <io.h>
+#elif defined ANDROID
 #else
-#ifndef ANDROID
-#include <sysexits.h>
-#else 
-#define EX_OK 0
+  #include <sysexits.h>
 #endif
+
+#ifndef EX_OK
+  #define EX_OK 0
 #endif
 #include <ctype.h>
 #include <time.h>

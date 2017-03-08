@@ -8,8 +8,8 @@
 
 #ifdef _WIN32
 //#define FD_SETSIZE 4096
-#define EINPROGRESS   WSAEINPROGRESS
-#define EWOULDBLOCK   WSAEWOULDBLOCK
+//#define EINPROGRESS   WSAEINPROGRESS
+//#define EWOULDBLOCK   WSAEWOULDBLOCK
 #define gettimeofday(a,b) QueryPerformanceCounter(a)
 #else 
 #define send(s,b,l,f) write(s,b,l)

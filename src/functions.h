@@ -7,7 +7,6 @@
  */
  
 #ifdef WINDOWS
-#undef HAVE_LOGB
 #undef HAVE_FORK
 #endif
 
