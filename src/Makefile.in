@@ -333,10 +333,9 @@ WINDIST=WINDOWS/lib/SDL.dll \
         WINDOWS/lib/README-GMP.txt \
         WINDOWS/lib/README-LAPACK.txt \
 	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
-        Windows-Installer/readme.txt Windows-Installer/old/demo.bas \
-	Windows-Installer/x11basic.ico Windows-Installer/old/x11bver.txt \
-	Windows-Installer/X11-Basic.pdf Windows-Installer/bas.ico \
-	Windows-Installer/old/setup.exe
+        WINDOWS/readme-windows.txt \
+	WINDOWS/x11basic.ico  WINDOWS/demo.bas \
+	WINDOWS/bas.ico ../COPYING ../RELEASE_NOTES INTRO
 
 TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp ATARI-ST/AUTO/VT100EMU.PRG \
         ATARI-ST/readme.txt ATARI-ST/demo.bas ../RELEASE_NOTES \
@@ -635,9 +634,10 @@ TomTom: $(DIR33).zip
 # this is depreciated. Better use Inno-Setup to create a self installing
 # .exe file
 
-windows: $(WINDIST) 
+windows: $(WINDIST) X11-Basic.iss
 	rm -f X11-Basic-@version@-$(RELEASE)-win.zip
 	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-win.zip $(WINDIST)
+	iscc X11-Basic.iss
 
 # Make an ATARI ST version
 

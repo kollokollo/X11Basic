@@ -7,8 +7,8 @@
 #define MyAppName "X11-Basic"
 #define MyAppURL "http://x11-basic.sourceforge.net/"
 #define MyAppExeName "xbasic-wrapper.bat"
-#define MyAppVersion "1.24"
-#define MyAppRelease "32"
+#define MyAppVersion "1.25"
+#define MyAppRelease "47"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -31,9 +31,9 @@ AppPublisherURL={#MyAppURL}
 UninstallDisplayIcon={app}\x11basic.ico
 
 OutputDir=Inno-Output
-AppCopyright=Copyright (C) 1991-2016 Markus Hoffmann
-LicenseFile=COPYING 
-InfoBeforeFile=RELEASE_NOTES
+AppCopyright=Copyright (C) 1991-2017 Markus Hoffmann
+LicenseFile=../COPYING 
+InfoBeforeFile=../RELEASE_NOTES
 InfoAfterFile=INTRO
 OutputBaseFilename={#MyAppName}-{#MyAppVersion}-{#MyAppRelease}-setup
 
@@ -54,22 +54,22 @@ Source: "xbc.exe"; DestDir: "{app}"
 Source: "xb2c.exe"; DestDir: "{app}"
 Source: "xbvm.exe"; DestDir: "{app}"
 Source: "xbbc.exe"; DestDir: "{app}"
-Source: "Windows.extension/lib/SDL.dll"; DestDir: "{sys}"; Flags: sharedfile regserver 32bit
-Source: "../examples2/simulation/rot.bas"; DestName: "demo.bas"; DestDir: "{app}/examples"
-Source: "Windows-Installer/readme.txt"; DestDir: "{app}"; Flags: isreadme
-Source: "Windows.extension/lib/libusb0.dll"; DestDir: "{sys}"; Flags: sharedfile regserver 32bit
-Source: "Windows.extension/lib/README-libusb.txt"; DestDir: "{app}/contrib";  Flags: isreadme
-Source: "Windows-Installer/x11basic.ico"; DestDir: "{app}"
-Source: "Windows-Installer/X11-Basic.pdf"; DestDir: "{app}/doc"
-Source: "Windows-Installer/bas.ico"; DestDir: "{app}"
-Source: "Windows.extension/lib/README-SDL.txt"; DestDir: "{app}/contrib" ;  Flags: isreadme
-Source: "Windows.extension/lib/README-GMP.txt"; DestDir: "{app}/contrib"         ;  Flags: isreadme
-Source: "Windows.extension/lib/README-LAPACK.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
-Source: "Windows.extension/ansicon/readme.txt"; DestName: "README-ANSICON.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
-Source: "Windows.extension/ansicon/LICENSE.txt"; DestName: "LICENSE-ANSICON.txt"; DestDir: "{app}/contrib"  
-Source: "Windows.extension/ansicon/x86/ANSI32.dll"; DestDir: "{app}/contrib"  
-Source: "Windows.extension/ansicon/x86/ansicon.exe";  DestDir: "{app}/contrib"  
-Source: "Windows.extension/xbasic-wrapper.bat";  DestDir: "{app}"  
+Source: "WINDOWS/lib/SDL.dll"; DestDir: "{sys}"; Flags: sharedfile regserver 32bit
+Source: "WINDOWS/demo.bas"; DestName: "demo.bas"; DestDir: "{app}/examples"
+Source: "WINDOWS/readme-windows.txt"; DestDir: "{app}"; Flags: isreadme
+Source: "WINDOWS/lib/libusb0.dll"; DestDir: "{sys}"; Flags: sharedfile regserver 32bit
+Source: "WINDOWS/lib/README-libusb.txt"; DestDir: "{app}/contrib";  Flags: isreadme
+Source: "WINDOWS/x11basic.ico"; DestDir: "{app}"
+Source: "../doc/manual/Outputs/X11-Basic-manual-1.25.pdf"; DestName: "X11-Basic.pdf"; DestDir: "{app}/doc"
+Source: "WINDOWS/bas.ico"; DestDir: "{app}"
+Source: "WINDOWS/lib/README-SDL.txt"; DestDir: "{app}/contrib" ;  Flags: isreadme
+Source: "WINDOWS/lib/README-GMP.txt"; DestDir: "{app}/contrib"         ;  Flags: isreadme
+Source: "WINDOWS/lib/README-LAPACK.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
+Source: "WINDOWS/ansicon/readme.txt"; DestName: "README-ANSICON.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
+Source: "WINDOWS/ansicon/LICENSE.txt"; DestName: "LICENSE-ANSICON.txt"; DestDir: "{app}/contrib"  
+Source: "WINDOWS/ansicon/x86/ANSI32.dll"; DestDir: "{app}/contrib"  
+Source: "WINDOWS/ansicon/x86/ansicon.exe";  DestDir: "{app}/contrib"  
+Source: "WINDOWS/xbasic-wrapper.bat";  DestDir: "{app}"  
 
 
 [Icons]
