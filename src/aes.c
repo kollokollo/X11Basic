@@ -17,6 +17,9 @@
 #ifdef USE_GEM
 #include <osbind.h>
 #include <gem.h>
+#elif defined USE_SDL
+  #include <SDL/SDL.h>
+  #include <SDL/SDL_gfxPrimitives.h>
 #endif
 #include "x11basic.h"
 #include "xbasic.h"

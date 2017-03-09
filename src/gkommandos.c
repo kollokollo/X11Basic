@@ -32,6 +32,10 @@
   #include "framebuffer.h"
   #include "raw_mouse.h"
   #include "raw_keyboard.h"
+#elif defined USE_SDL
+  #include <SDL/SDL.h>
+  #include <SDL/SDL_gfxPrimitives.h>
+  #include <SDL/SDL_rotozoom.h>
 #elif defined USE_GEM
   #include <osbind.h>
   #include <gem.h>
@@ -928,7 +932,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  vx[i]=points[i].x;
 	  vy[i]=points[i].y;
 	}
-        polygonColor(window[usewindow].display,&vx,&vy,anz,window[usewindow].fcolor);
+        polygonColor(window[usewindow].display,&vx[0],&vy[0],anz,window[usewindow].fcolor);
       } else if(doit==2) {
         Sint16 vx[anz],vy[anz];
 	int i;
@@ -936,7 +940,7 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
 	  vx[i]=points[i].x;
 	  vy[i]=points[i].y;
 	}       
-        filledPolygonColor(window[usewindow].display,&vx,&vy,anz,window[usewindow].fcolor);
+        filledPolygonColor(window[usewindow].display,&vx[0],&vy[0],anz,window[usewindow].fcolor);
       }
      #elif defined USE_X11
       else if(doit==1) XDrawLines(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,points,anz,mode);

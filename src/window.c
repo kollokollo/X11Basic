@@ -32,6 +32,9 @@
 #ifdef FRAMEBUFFER
 #include "raw_mouse.h"
 #include "raw_keyboard.h"
+#elif defined USE_SDL
+  #include <SDL/SDL.h>
+  #include <SDL/SDL_gfxPrimitives.h>
 #endif
 
 
@@ -228,7 +231,7 @@ void fetch_icon_pixmap(WINDOWDEF *,int);
 
 static int create_window2(int nummer,const char *title, const char* info,int x,int y,unsigned int w,unsigned int h) {
 #ifdef WINDOWS
-    static class_reg=0;
+    static int class_reg=0;
 #endif
   if(window[nummer].flags&WIN_CREATED) {
     printf("X11-Basic: Window %d already open !\n",nummer);
@@ -983,15 +986,14 @@ short form_do(OBJECT *tree,short startob) {
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER
     XWindowEvent(window[usewindow].display, window[usewindow].win,KeyPressMask |KeyReleaseMask|ExposureMask |ButtonReleaseMask| ButtonPressMask, &event);
-#endif
-#if defined USE_SDL
+#elif defined USE_SDL
     e=SDL_WaitEvent(&event);
-    if(e==0) return;
+    if(e==0) return(sbut);
     while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_KEYDOWN &&
         event.type!=SDL_MOUSEBUTTONUP) { 
       handle_event(&window[usewindow],&event);
       e=SDL_WaitEvent(&event);
-      if(e==0) return;
+      if(e==0) return(sbut);
     }
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER || defined USE_SDL
@@ -1854,12 +1856,13 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
     } else if(sbut==15) {    /* Scalerhintergrund */
 #ifdef USE_SDL
       e=SDL_WaitEvent(&event);
-      if(e==0) return;
+      if(e==0) break;
       while(event.type!=SDL_MOUSEBUTTONUP) { 
         handle_event(&window[usewindow],&event);
         e=SDL_WaitEvent(&event);
-        if(e==0) return;
+        if(e==0) break;
       }
+      if(e==0) break;
       relobxy(objects,16,&obx, &oby);
       if(event.button.y<oby) {
 	     showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));

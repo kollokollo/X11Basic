@@ -15,8 +15,11 @@
 #include <string.h>
 #include "defs.h"
 #ifdef USE_GEM
-#include <osbind.h>
-#include <gem.h>
+  #include <osbind.h>
+  #include <gem.h>
+#elif defined USE_SDL
+  #include <SDL/SDL.h>
+  #include <SDL/SDL_gfxPrimitives.h>
 #endif
 
 #include "x11basic.h"
@@ -85,6 +88,9 @@ void mybox(int x1,int y1,int x2, int y2) {
   DrawRectangle(min(x1,x2),min(y1,y2),abs(x2-x1),abs(y2-y1)); 
 #endif
 }
+#if defined USE_SDL
+Uint32 sdl_getpixel(SDL_Surface *surface, int x, int y);
+#endif
 int get_point(int x, int y) {
 #if defined WINDOWS_NATIVE
   return(0);  /*  TODO */

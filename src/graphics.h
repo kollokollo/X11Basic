@@ -99,7 +99,7 @@
 #define DrawLine(a,b,c,d)  lineColor(window[usewindow].display,a,b,c,d,window[usewindow].fcolor)
 #define DrawPoint(a,b)  pixelColor(window[usewindow].display,a,b,window[usewindow].fcolor)
 #define CopyArea(a,b,c,d,e,f) ;
-#define XDrawArc(a,b,c,d,e,f,g,h,i) pieColor(a,d,e,0,100,window[usewindow].fcolor)
+#define XDrawArc(a,b,c,d,e,f,g,h,i) pieColor(a,d,e,f,h/64,i/64,window[usewindow].fcolor)
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;
 #define XQueryPointer(a,b,c,d,e,f,g,h,i) *(i)=SDL_GetMouseState(g,h)
 #elif defined USE_GEM
