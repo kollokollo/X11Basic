@@ -16,6 +16,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "memory.h"
 #if defined WINDOWS || defined ANDROID
 #define EX_OK 0
 #else

@@ -23,6 +23,7 @@
 #endif
 #include "x11basic.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "graphics.h"
 #include "aes.h"
 #include "file.h"

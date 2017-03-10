@@ -18,6 +18,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "type.h"
 #include "parser.h"
 #include "kommandos.h"

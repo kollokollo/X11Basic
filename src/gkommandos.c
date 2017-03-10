@@ -22,6 +22,7 @@
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "type.h"
 #include "parser.h"
 #include "parameter.h"

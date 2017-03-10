@@ -67,7 +67,7 @@ CFLAGS= $(INC) $(DEF) $(OPT)
 # these are the objects which go into libx11basic
 
 LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o svariablen.o \
-        array.o parameter.o fft.o mathematics.o \
+        array.o parameter.o fft.o mathematics.o memory.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
 	sysVstuff.o aes.o graphics.o sound.o number.o decode.o \
@@ -104,7 +104,8 @@ HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        mathematics.h number.h options.h parameter.h parser.h raw_mouse.h raw_keyboard.h \
        sfunctions.h sound.h svariablen.h sysVstuff.h \
        terminal.h type.h variablen.h virtual-machine.h \
-       window.h wort_sep.h x11basic.h xb2csol.h xbasic.h lodepng.h md5.h sha1.h
+       window.h wort_sep.h x11basic.h xb2csol.h xbasic.h memory.h lodepng.h \
+       md5.h sha1.h
 
 EXAMPLES_TESTS= \
 	../examples/tests/*.bas \
@@ -878,13 +879,6 @@ check :	xbasic
 	LD_LIBRARY_PATH=. ./xbasic -e version
 	
 	
-	
-sourcecheck : main.c bytecode.c xbasic.c do_gets.c variablen.c
-	splint  -warnposix -nullassign -boolops -predboolint \
-	        -I /usr/include/i386-linux-gnu/ $<
-
-
-
 
 # Auto dependency stuff (from info make)
 %.d: %.c

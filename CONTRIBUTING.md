@@ -35,12 +35,13 @@ X11-Basic. Does anybody have an idea what could be the problem?
 More things left to do:
 =======================
 - test the thing and find more bugs,
-- Optimize a bit more, improve performance
-- The WINDOWS-Version needs more work
-- work on the sound system
-- work on the SDL-Graphics implementation (fill styles etc...)
-- documentation needs more work
-- port it to apple ipad/iphone
+- Optimize a bit more, improve performance,
+- The WINDOWS-Version needs more work,
+- work on the sound system,
+- work on the SDL-Graphics implementation (fill styles etc...),
+- documentation needs more work,
+- port it to apple ipad/iphone,
+- improve the 64 Version (pointer handling),
 (etc. etc.)
 
 So you are welcome to help.

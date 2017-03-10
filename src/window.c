@@ -22,6 +22,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "graphics.h"
 #include "variablen.h"
 #include "file.h"
