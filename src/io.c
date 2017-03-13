@@ -1636,6 +1636,12 @@ int f_call(PARAMETER *plist,int e) {
         } else if(strncmp(w1,"F:",2)==0) {
           *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
 	  if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
+        } else if(strncmp(w1,"P:",2)==0) {  /*  Pointer */
+          *((void  **)(&gtt.feld[i-1]))=(void *)INT2POINTER((int)parser(w1+2));
+	  if(sizeof(void *)>(sizeof(int))) i+=(sizeof(void *)/sizeof(int))-1;
+        } else if(strncmp(w1,"R:",2)==0) {  /*  Long Long Int */
+          *((long long *)(&gtt.feld[i-1]))=(long long)parser(w1+2);
+	  if(sizeof(long long)>(sizeof(int))) i+=(sizeof(long long)/sizeof(int))-1;
         } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
         else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
         else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
