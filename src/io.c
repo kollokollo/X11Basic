@@ -1616,9 +1616,14 @@ int f_exec(PARAMETER *plist,int e) {
 
 /* Fuehrt Code an Adresse aus */
 void c_call(PARAMETER *plist,int e) { f_call(plist,e);}
+
 int f_call(PARAMETER *plist,int e) {
-  typedef struct  {int feld[20];} GTT;
+  typedef struct  {long feld[20];} GTT;
+#if SIZEOF_VOID_P == 4
   int (*adr)(GTT)=(int (*)())INT2POINTER(plist->integer);
+#else
+  long (*adr)(long,long,long,long,long,long,long,long,GTT)=(long (*)())INT2POINTER(plist->integer);
+#endif
   // printf("call 0x%x mit %d args.\n",plist->integer,e);
   if(e>20) xberror(45,"CALL"); /* Zu viele Parameter */
   else if(adr==NULL) xberror(29,"CALL"); /* illegal address */
@@ -1632,16 +1637,16 @@ int f_call(PARAMETER *plist,int e) {
       //	printf("arg: %s \n",(char *)plist[i].pointer);
         if(strncmp(w1,"D:",2)==0) {
           *((double *)(&gtt.feld[i-1]))=parser(w1+2);
-          if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(int))-1;
+          if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(long))-1;
         } else if(strncmp(w1,"F:",2)==0) {
           *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
 	  if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
         } else if(strncmp(w1,"P:",2)==0) {  /*  Pointer */
           *((void  **)(&gtt.feld[i-1]))=(void *)INT2POINTER((int)parser(w1+2));
-	  if(sizeof(void *)>(sizeof(int))) i+=(sizeof(void *)/sizeof(int))-1;
+	  if(sizeof(void *)>(sizeof(int))) i+=(sizeof(void *)/sizeof(long))-1;
         } else if(strncmp(w1,"R:",2)==0) {  /*  Long Long Int */
           *((long long *)(&gtt.feld[i-1]))=(long long)parser(w1+2);
-	  if(sizeof(long long)>(sizeof(int))) i+=(sizeof(long long)/sizeof(int))-1;
+	  if(sizeof(long long)>(sizeof(int))) i+=(sizeof(long long)/sizeof(long))-1;
         } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
         else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
         else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
@@ -1652,7 +1657,21 @@ int f_call(PARAMETER *plist,int e) {
         xberror(32,"CALL"); /* Syntax error */
       }
     }
+#if SIZEOF_VOID_P == 4
     return(adr(gtt));
+#else
+  /*We assume the 64bit ABI here. So the first 8 Parameters must be treated
+    differently.*/
+    GTT gtt2;
+    if(e>9) {
+      for(i=9;i<e;i++) {
+        gtt2.feld[i-9]=gtt.feld[i-1];
+      }
+    }
+    return(adr(gtt.feld[0],gtt.feld[1],gtt.feld[2],gtt.feld[3],
+               gtt.feld[4],gtt.feld[5],gtt.feld[6],gtt.feld[7],
+               gtt2));
+#endif
   }
   return(0);
 }
