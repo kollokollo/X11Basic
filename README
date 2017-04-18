@@ -251,9 +251,8 @@ D) 64bit operating systems
 X11-Basic will compile on 64bit systems but it will not be 100% functional.
 X11-Basic internally uses 32bit pointers (--> VARPTR()). These are not compatible 
 with 64bit. Some tricks have been implemented to make it work anyways, but 
-currently e.g. the GEM AES functions do not work on 64bit systems. 
+do not expext 100% compatibility. 
 
-At the moment it is recommended to use a -m32 cross compiled version on 64bit systems. 
 
 E) Crosscompiling for other platforms
      
