@@ -1,4 +1,4 @@
-' Utility to convert gui Files with Formulars OR other Graphical user interface
+' Utility to convert gui Files with Formulars or other Graphical user interface
 ' Objects to X11Basic executable programs
 '
 '* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -8,9 +8,10 @@
 '*
 ' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.08.2003)
 '                                               27.01.2005
+'                                               01.05.2017 Korrektur W. Schoenewolf
 '
 DIM iz$(1000)
-DIM fSTR$(1000)
+DIM fstr$(1000)
 DIM fstrnam$(1000)
 CLR anziz,anzstring,anztree,anzfreestring,anzobj
 CLR anztedinfo,anzdata,anzbitblk,anziconblk
@@ -19,7 +20,7 @@ inputfile$=PARAM$(2)
 chw=8
 chh=16
 OPEN "I",#1,inputfile$
-WHILE NOT eof(#1)
+WHILE NOT EOF(#1)
   LINEINPUT #1,t$
   t$=TRIM$(t$)
   IF LEN(t$)
@@ -185,7 +186,7 @@ FUNCTION doit2(parent)
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
     ENDIF
   WEND
-  '  print "'# END DOIT2: ",parent,count
+  ' print "'# END DOIT2: ",parent,count
   RETURN idx
 ENDFUNC
 
@@ -281,7 +282,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
     obflags=@doflags(flags$)
     obstate=@dostate(state$)
     IF UPPER$(a$)="BOX" OR UPPER$(a$)="BOXCHAR"
-      obtype=20*ABS(UPPER$(a$)="BOX")+27*ABS(UPPER$(a$)="BOX")
+      obtype=20*ABS(UPPER$(a$)="BOX")+27*ABS(UPPER$(a$)="BOXCHAR")
       char$=@getval$(b$,"CHAR")
       IF LEN(char$)=1
         char=ASC(char$)
@@ -391,7 +392,7 @@ PROCEDURE addtree(aob,oobj)
   PRINT "  ~form_center(varptr(tree"+STR$(anztree)+"$),x,y,w,h)"
   PRINT "  ~form_dial(0,0,0,0,0,x,y,w,h)"
   PRINT "  ~form_dial(1,0,0,0,0,x,y,w,h)"
-  PRINT "  ~objc_draw(varptr(tree"+STR$(anztree)+"$),0,-1,0,0)"
+  PRINT "  ~objc_draw(varptr(tree"+STR$(anztree)+"$),0,-1,0,0,,)"
   PRINT "  ret=FORM_DO(VARPTR(tree"+STR$(anztree)+"$))"
   PRINT "  ~form_dial(2,0,0,0,0,x,y,w,h)"
   PRINT "  ~form_dial(3,0,0,0,0,x,y,w,h)"
