@@ -159,9 +159,12 @@ DESCRIPTION:
 
         PLAYSOUND plays a WAV sample on the sound card.  
         s$ must contain the data from a sound file. (WAV format).
-        The saple is then played once on the channel c. If c is -1 a free 
-        channel is selected. There are 16 channels. (currently this only works 
-        in the MS WINDOWS or SDL version.)
+        The sample is then played once on the channel c. If c is -1 a free 
+        channel is selected. There are 16 channels. 
+
+COMMENT:
+	Currently this only works in the MS WINDOWS or SDL version. 
+	On ANDROID please use the PLAYSOUNDFILE command, see below.
         
 EXAMPLE:
         OPEN "I",#1,"sound.wav"
@@ -180,11 +183,15 @@ DESCRIPTION:
         WAV, OGG, MP3. The sound is played in the background. Any previously 
         played sounds will be stopped if they have not been finished so far.
         (currently this only works in the ANDROID version of X11-Basic.)
+	
+COMMENT: 
+	You should use absolute paths for the file names. 
         
 EXAMPLE:
         PLAYSOUNDFILE "/mnt/sdcard/bas/explosion.ogg"
+        PLAYSOUNDFILE DISR$(0)+"/explosion.ogg"
 
-SEE ALSO: SOUND, PLAYSOUND
+SEE ALSO: SOUND, PLAYSOUND, DIR$()
 ##############################################################################
 Command:  PLIST 
 Syntax:   PLIST [#n]
