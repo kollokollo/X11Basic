@@ -1,3 +1,4 @@
+#!/usr/bin/xbasic
 ' Utility to convert gui Files with Formulars or other Graphical user interface
 ' Objects to X11Basic executable programs
 '
@@ -9,16 +10,74 @@
 ' (c) Markus Hoffmann 2003 (letzte Bearbeitung: 10.08.2003)
 '                                               27.01.2005
 '                                               01.05.2017 Korrektur W. Schoenewolf
+'                                               08.05.2017 neue Optionen, 
 '
 DIM iz$(1000)
 DIM fstr$(1000)
 DIM fstrnam$(1000)
 CLR anziz,anzstring,anztree,anzfreestring,anzobj
 CLR anztedinfo,anzdata,anzbitblk,anziconblk
+verbose=1
 
-inputfile$=PARAM$(2)
+' @init_os     ! Operating system dependant things
+
+' Kommandozeile auswerten
+i=1
+CLR inputfile$,outputfilename$
+CLR dofile
+WHILE LEN(PARAM$(i))
+  IF LEFT$(PARAM$(i))="-"
+    IF param$(i)="--help" OR PARAM$(i)="-h"
+      @intro
+      @using
+    ELSE IF PARAM$(i)="--version"
+      @intro
+      QUIT
+    ELSE IF PARAM$(i)="-q"
+      DEC verbose
+    ELSE IF PARAM$(i)="-v"
+      INC verbose
+    ELSE IF PARAM$(i)="-o"
+      INC i
+      IF LEN(PARAM$(i))
+        outputfilename$=PARAM$(i)
+        dofile=TRUE
+      ENDIF
+    ELSE
+      collect$=collect$+PARAM$(i)+" "
+    ENDIF
+  ELSE
+    inputfile$=PARAM$(i)
+    IF NOT EXIST(inputfile$)
+      PRINT "gui2bas: "+inputfile$+": file or path not found"
+      CLR inputfile$
+    ENDIF
+  ENDIF
+  INC i
+WEND
+IF LEN(inputfile$)=0
+  PRINT "gui2bas: No input files"
+  QUIT
+ENDIF
+IF NOT EXIST(inputfile$)
+  PRINT "gui2bas: File not found: ";inputfile$
+  QUIT
+ENDIF
+IF dofile
+  IF EXIST(outputfilename$)
+    PRINT "gui2bas: Outputfilename already exists: ";outputfilename$
+    QUIT
+  ENDIF
+  IF len(outputfilename$)=0
+    QUIT
+  ENDIF
+ENDIF
+
 chw=8
 chh=16
+IF dofile and verbose
+  PRINT "<-- ";inputfile$
+ENDIF
 OPEN "I",#1,inputfile$
 WHILE NOT EOF(#1)
   LINEINPUT #1,t$
@@ -29,19 +88,25 @@ WHILE NOT EOF(#1)
   ENDIF
 WEND
 CLOSE #1
+IF dofile
+  IF verbose
+    PRINT "--> ";outputfilename$
+  ENDIF
+  OPEN "O",#2,outputfilename$
+ENDIF
 
-PRINT "' gui2bas V.1.02   (c) Markus Hoffmann 2003-2005"
-PRINT "' convertetd "+inputfile$+"  "+DATE$+" "+TIME$
-PRINT "@init	     ! initialization"
-PRINT "@doit	     ! execute forms"
-PRINT "quit"
+@writeout("' gui2bas V.1.02   (c) Markus Hoffmann 2003-2017")
+@writeout("' convertetd "+inputfile$+"  "+DATE$+" "+TIME$)
+@writeout("@init       ! initialization")
+@writeout("@doit       ! execute forms")
+@writeout("QUIT")
 
 WHILE count<anziz
   t$=iz$(count)
   INC count
   EXIT IF t$="}"
   IF LEFT$(t$)="'" OR LEFT$(t$)="#"
-    PRINT t$
+    @writeout(t$)
   ELSE
     IF WORT_SEP(t$,":",1,a$,b$)=2
       name$=TRIM$(a$)
@@ -68,31 +133,34 @@ WHILE count<anziz
   ENDIF
 WEND
 
-PRINT "PROCEDURE init"
+@writeout("PROCEDURE init")
 IF anzfreestring>0
-  PRINT "  DIM freestring$("+STR$(anzfreestring)+")"
+  @writeout("  DIM freestring$("+STR$(anzfreestring)+")")
   FOR i=0 TO anzfreestring-1
     IF LEN(fstrnam$(i))
-      PRINT fstrnam$+"="+STR$(i)
+      @writeout(fstrnam$+"="+STR$(i))
     ENDIF
-    t$=REPLACE$(fSTR$(i),CHR$(34),"<&&&gaense>")
+    t$=REPLACE$(fstr$(i),CHR$(34),"<&&&gaense>")
     t$=REPLACE$(t$,"<&&&gaense>",ENCLOSE$("+chr$(34)+"))
-    PRINT "  freestring$("+STR$(i)+")="+ENCLOSE$(fSTR$(i))
+    @writeout("  freestring$("+STR$(i)+")="+ENCLOSE$(fstr$(i)))
   NEXT i
 ENDIF
-PRINT "RETURN"
-PRINT "PROCEDURE doit"
+@writeout("RETURN")
+@writeout("PROCEDURE doit")
 IF anztree>0
   FOR i=0 TO anztree-1
-    PRINT "  @formular"+STR$(i)
+    @writeout("  @formular"+STR$(i))
   NEXT i
 ENDIF
 IF anzfreestring>0
   FOR i=0 TO anzfreestring-1
-    PRINT "  ~FORM_ALERT(1,freestring$("+STR$(i)+"))"
+    @writeout("  ~FORM_ALERT(1,freestring$("+STR$(i)+"))")
   NEXT i
 ENDIF
-PRINT "RETURN"
+@writeout("RETURN")
+IF dofile
+  CLOSE #2
+ENDIF
 QUIT
 
 PROCEDURE dotree(n$)
@@ -100,10 +168,10 @@ PROCEDURE dotree(n$)
   spaces=1
   anzobj=0
   IF LEN(n$)
-    PRINT "' TREE NAME: "+n$
+    @writeout("' TREE NAME: "+n$)
   ENDIF
-  PRINT "PROCEDURE formular"+STR$(anztree)
-  PRINT "  LOCAL ret,x,y,w,h"
+  @writeout("PROCEDURE formular"+STR$(anztree))
+  @writeout("  LOCAL ret,x,y,w,h")
   ~@doit2(-1)
   ' while count<anziz
   '   t$=iz$(count)
@@ -113,18 +181,18 @@ PROCEDURE dotree(n$)
   '   print t$
   ' wend
   @addtree(aobj,anzobj-1)
-  PRINT "RETURN"
+  @writeout("RETURN")
   INC anztree
 RETURN
 PROCEDURE dorsc(n$)
   LOCAL t$
-  PRINT "' RSC information "+n$
+  @writeout("' RSC information "+n$)
   WHILE count<anziz
     t$=iz$(count)
     INC count
     EXIT IF t$="}"
     t$=REPLACE$(t$,"#","!")
-    PRINT "' "+t$
+    @writeout("' "+t$)
   WEND
 RETURN
 PROCEDURE dofreestr(b$)
@@ -145,7 +213,7 @@ FUNCTION doit2(parent)
     INC count
     EXIT IF t$="}"
     IF LEFT$(t$)="'" OR LEFT$(t$)="#"
-      PRINT t$
+      @writeout(t$)
     ELSE
       idx=anzobj
       INC anzobj
@@ -181,7 +249,7 @@ FUNCTION doit2(parent)
         obnext=anzobj
       ENDIF
       IF LEN(label$)
-        PRINT label$+"="+STR$(idx)
+        @writeout(label$+"="+STR$(idx))
       ENDIF
       @doobj(idx,obnext,obhead,obtail,typ$,t$)
     ENDIF
@@ -231,7 +299,7 @@ FUNCTION doit(par1,par2,countee)
     obnext=anzobj
   ENDIF
   IF LEN(label$)
-    PRINT label$+"="+STR$(idx)
+    @writeout(label$+"="+STR$(idx))
   ENDIF
   on=obnext
   oh=obhead
@@ -265,12 +333,13 @@ FUNCTION suchende(start,idx)
 ENDFUNC
 
 PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
+  LOCAL t$
   IF UPPER$(a$)="FREESTR"
     text$=@getval$(b$,"STRING")
     IF LEFT$(text$)=CHR$(34)
       text$=DECLOSE$(text$)
     ENDIF
-    fSTR$(anzfreestring)=text$
+    fstr$(anzfreestring)=text$
     INC anzfreestring
   ELSE
     obx=VAL(@getval$(b$,"X"))*chw
@@ -281,6 +350,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
     state$=@getval$(b$,"STATE")
     obflags=@doflags(flags$)
     obstate=@dostate(state$)
+    t$="obj"+STR$(idx)+"$=MKI$("+STR$(obnext)+")+MKI$("+STR$(obhead)+")+MKI$("+STR$(obtail)+")"
     IF UPPER$(a$)="BOX" OR UPPER$(a$)="BOXCHAR"
       obtype=20*ABS(UPPER$(a$)="BOX")+27*ABS(UPPER$(a$)="BOXCHAR")
       char$=@getval$(b$,"CHAR")
@@ -298,8 +368,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       pattern=VAL(@getval$(b$,"PATTERN"))
       textmode=VAL(@getval$(b$,"TEXTMODE"))
       obspec=cvl(CHR$(16*(bgcol AND 15)+2*(pattern AND 7)+(textmode AND 1))+CHR$((framecol AND 15)+16*(textcol AND 15))+CHR$(frame)+CHR$(char))
-      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(";obspec;")";
+      t$=t$+"+MKI$("+STR$(obtype)+")+MKI$("+STR$(obflags)+")+MKI$("+STR$(obstate)+")+MKL$("+STR$(obspec)+")"
     ELSE IF UPPER$(a$)="TEXT" OR UPPER$(a$)="FTEXT" OR UPPER$(a$)="BOXTEXT"
       obtype=21*abs(UPPER$(a$)="TEXT")+29*abs(UPPER$(a$)="FTEXT")+22*abs(UPPER$(a$)="BOXTEXT")
       text$=@getval$(b$,"TEXT")
@@ -322,8 +391,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       color=VAL(@getval$(b$,"COLOR"))
       border=VAL(@getval$(b$,"BORDER"))
       @addtedinfo(text$,ptmp$,pvalid$,font,just,color,border)
-      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(tedinfo";anztedinfo-1;"$))";
+      t$=t$+"+MKI$("+STR$(obtype)+")+MKI$("+STR$(obflags)+")+MKI$("+STR$(obstate)+")+MKL$(VARPTR(tedinfo"+STR$(anztedinfo-1)+"$))"
     ELSE IF UPPER$(a$)="STRING" OR UPPER$(a$)="TITLE" OR UPPER$(a$)="BUTTON"
       obtype=28*abs(UPPER$(a$)="STRING")+32*abs(UPPER$(a$)="TITLE")+26*abs(UPPER$(a$)="BUTTON")
       text$=@getval$(b$,"TEXT")
@@ -331,8 +399,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
         text$=DECLOSE$(text$)
       ENDIF
       @addstring(text$)
-      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(string";anzstring-1;"$))";
+      t$=t$+"+MKI$("+STR$(obtype)+")+MKI$("+STR$(obflags)+")+MKI$("+STR$(obstate)+")+MKL$(VARPTR(string"+STR$(anzstring-1)+"$))"
     ELSE IF UPPER$(a$)="IMAGE"
       data$=@getval$(b$,"DATA")
       iw=VAL(@getval$(b$,"IW"))
@@ -341,8 +408,7 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       iy=VAL(@getval$(b$,"IY"))
       ic=VAL(@getval$(b$,"IC"))
       @addbitblk(data$,iw,ih,ix,iy,ic)
-      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(bitblk";anzbitblk-1;"$))";
+      t$=t$+"+MKI$("+STR$(obtype)+")+MKI$("+STR$(obflags)+")+MKI$("+STR$(obstate)+")+MKL$(VARPTR(bitblk"+STR$(anzbitblk-1)+"$))"
     ELSE IF UPPER$(a$)="ICON"
       data$=@getval$(b$,"DATA")
       mask$=@getval$(b$,"MASK")
@@ -363,15 +429,14 @@ PROCEDURE doobj(idx,obnext,obhead,obtail,a$,b$)
       ENDIF
 
       @addiconblk(data$,mask$,text$,char,xchar,ychar,xicon,yicon,wicon,hicon,xtext,ytext,wtext,htext)
-      PRINT "obj"+STR$(idx)+"$=mki$(";obnext;")+mki$(";obhead;")+mki$(";obtail;")";
-      PRINT "+mki$(";obtype;")+mki$(";obflags;")+mki$(";obstate;")+mkl$(varptr(iconblk";anziconblk-1;"$))";
+      t$=t$+"+MKI$("+STR$(obtype)+")+MKI$("+STR$(obflags)+")+MKI$("+STR$(obstate)+")+MKL$(VARPTR(iconblk"+STR$(anziconblk-1)+"$))"
     ELSE IF UPPER$(a$)="UNKNOWN"
-      PRINT "' UNKNOWN: ";b$
+      @writeout("' UNKNOWN: "+b$)
     ELSE
-      PRINT "' unsupported: "+a$,parent
+      @writeout("' unsupported: "+a$+" : "+STR$(parent))
       RETURN
     ENDIF
-    PRINT "+mki$(";obx;")+mki$(";oby;")+mki$(";obw;")+mki$(";obh;")"
+    @writeout(t$+"+MKI$("+STR$(obx)+")+MKI$("+STR$(oby)+")+MKI$("+STR$(obw)+")+MKI$("+STR$(obh)+")")
   ENDIF
 RETURN
 PROCEDURE addtree(aob,oobj)
@@ -381,57 +446,69 @@ PROCEDURE addtree(aob,oobj)
     t$=t$+"obj"+STR$(i)+"$"
     IF i<>oobj
       IF LEN(t$)>70
-        PRINT SPACE$(spaces*2)+t$
+        @writeout(SPACE$(spaces*2)+t$)
         t$="tree"+STR$(anztree)+"$=tree"+STR$(anztree)+"$+"
       ELSE
         t$=t$+"+"
       ENDIF
     ENDIF
   NEXT i
-  PRINT SPACE$(spaces*2)+t$
-  PRINT "  ~form_center(varptr(tree"+STR$(anztree)+"$),x,y,w,h)"
-  PRINT "  ~form_dial(0,0,0,0,0,x,y,w,h)"
-  PRINT "  ~form_dial(1,0,0,0,0,x,y,w,h)"
-  PRINT "  ~objc_draw(varptr(tree"+STR$(anztree)+"$),0,-1,0,0,,)"
-  PRINT "  ret=FORM_DO(VARPTR(tree"+STR$(anztree)+"$))"
-  PRINT "  ~form_dial(2,0,0,0,0,x,y,w,h)"
-  PRINT "  ~form_dial(3,0,0,0,0,x,y,w,h)"
-  PRINT "  showpage"
+  @writeout(SPACE$(spaces*2)+t$)
+  @writeout("  ~FORM_CENTER(VARPTR(tree"+STR$(anztree)+"$),x,y,w,h)")
+  @writeout("  ~FORM_DIAL(0,0,0,0,0,x,y,w,h)")
+  @writeout("  ~FORM_DIAL(1,0,0,0,0,x,y,w,h)")
+  @writeout("  ~OBJC_DRAW(VARPTR(tree"+STR$(anztree)+"$),0,-1,0,0,,)")
+  @writeout("  ret=FORM_DO(VARPTR(tree"+STR$(anztree)+"$))")
+  @writeout("  ~FORM_DIAL(2,0,0,0,0,x,y,w,h)")
+  @writeout("  ~FORM_DIAL(3,0,0,0,0,x,y,w,h)")
+  @writeout("  SHOWPAGE")
 RETURN
 PROCEDURE addstring(r$)
-  PRINT "string"+STR$(anzstring)+"$="+ENCLOSE$(r$)+"+chr$(0)"
+  @writeout("string"+STR$(anzstring)+"$="+ENCLOSE$(r$)+"+chr$(0)")
   INC anzstring
 RETURN
 PROCEDURE adddata(r$)
-  PRINT "data"+STR$(anzdata)+"$=INLINE$("+r$+")"
+  @writeout("data"+STR$(anzdata)+"$=INLINE$("+r$+")")
   INC anzdata
 RETURN
 PROCEDURE addtedinfo(a$,b$,c$,d,e,f,g)
-  PRINT "string"+STR$(anzstring)+"$="+ENCLOSE$(a$)+"+chr$(0)+space$("+STR$(LEN(c$))+")"
+  LOCAL t$,txtlen
+  @writeout("string"+STR$(anzstring)+"$="+ENCLOSE$(a$)+"+CHR$(0)+SPACE$("+STR$(LEN(c$))+")")
   INC anzstring
   @addstring(b$)
   @addstring(c$)
-  PRINT "tedinfo"+STR$(anztedinfo)+"$=mkl$(varptr(string"+STR$(anzstring-3)+"$))";
-  PRINT "+mkl$(varptr(string"+STR$(anzstring-2)+"$))";
-  PRINT "+mkl$(varptr(string"+STR$(anzstring-1)+"$))";
-  PRINT "+mki$(";d;")+mki$(0)+mki$(";e;")+mki$(";f;")+mki$(0)+mki$(";g;")+mki$(";LEN(b$);")+mki$(";LEN(c$);")"
+  if len(c$)<=len(a$)
+    txtlen=len(a$)
+  else 
+    txtlen=len(c$)
+  endif
+  t$="tedinfo"+STR$(anztedinfo)+"$=MKL$(VARPTR(string"+STR$(anzstring-3)+"$))"
+  t$=t$+"+MKL$(VARPTR(string"+STR$(anzstring-2)+"$))"
+  t$=t$+"+MKL$(VARPTR(string"+STR$(anzstring-1)+"$))"
+  t$=t$+"+MKI$("+STR$(d)+")+MKI$(0)+MKI$("+STR$(e)+")+MKI$("+STR$(f)+")+MKI$(0)"
+  t$=t$+"+MKI$("+STR$(g)+")+MKI$("+STR$(txtlen)+")+MKI$("+STR$(LEN(b$))+")"
+  @writeout(t$)
   INC anztedinfo
 RETURN
 PROCEDURE addbitblk(a$,b,c,d,e,f)
+  LOCAL t$
   @adddata(a$)
-  PRINT "bitblk"+STR$(anzbitblk)+"$=mkl$(varptr(data"+STR$(anzdata-1)+"$))";
-  PRINT "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")"
+  t$="bitblk"+STR$(anzbitblk)+"$=MKL$(VARPTR(data"+STR$(anzdata-1)+"$))"
+  t$=t$+"+MKI$("+STR$(b)+")+MKI$("+STR$(c)+")+MKI$("+STR$(d)+")+MKI$("+STR$(e)+")+MKI$("+STR$(f)+")"
+  @writeout(t$)
   INC anzbitblk
 RETURN
 PROCEDURE addiconblk(a$,b$,c$,b,c,d,e,f,g,h,i,j,k,l)
+  LOCAL t$
   @adddata(a$)
   @adddata(b$)
   @addstring(c$)
-  PRINT "iconblk"+STR$(anziconblk)+"$=mkl$(varptr(data"+STR$(anzdata-2)+"$))";
-  PRINT "+mkl$(varptr(data"+STR$(anzdata-1)+"$))";
-  PRINT "+mkl$(varptr(string"+STR$(anzstring-1)+"$))";
-  PRINT "+mki$(";b;")+mki$(";c;")+mki$(";d;")+mki$(";e;")+mki$(";f;")";
-  PRINT "+mki$(";g;")+mki$(";h;")+mki$(";i;")+mki$(";j;")+mki$(";k;")+mki$(";l;")"
+  t$="iconblk"+STR$(anziconblk)+"$=MKL$(VARPTR(data"+STR$(anzdata-2)+"$))"
+  t$=t$+"+MKL$(VARPTR(data"+STR$(anzdata-1)+"$))"
+  t$=t$+"+MKL$(VARPTR(string"+STR$(anzstring-1)+"$))"
+  t$=t$+"+MKI$("+STR$(b)+")+MKI$("+STR$(c)+")+MKI$("+STR$(d)+")+MKI$("+STR$(e)+")+MKI$("+STR$(f)+")"
+  t$=t$+"+MKI$("+STR$(g)+")+MKI$("+STR$(h)+")+MKI$("+STR$(i)+")+MKI$("+STR$(j)+")+MKI$("+STR$(k)+")+MKI$("+STR$(l)+")"
+  @writeout(t$)
   INC anziconblk
 RETURN
 FUNCTION getval$(t$,f$)
@@ -522,3 +599,22 @@ FUNCTION dostate(t$)
   WEND
   RETURN ret
 ENDFUNC
+PROCEDURE using
+  PRINT "Usage: gui2bas [options] file"
+  PRINT "Options:"
+  PRINT "  -h, --help               Display this information"
+  PRINT "  -v                       Be more verbose"
+  PRINT "  -q                       Be more quiet"
+  PRINT "  -o <file>                Place the output into <file>"
+RETURN
+PROCEDURE intro
+  PRINT "X11-Basic GUI Converter gui2bas V.1.02 (c) Markus Hoffmann 2003-2017"
+  VERSION
+RETURN
+PROCEDURE writeout(a$)
+  IF dofile
+    PRINT #2,a$
+  ELSE
+    PRINT a$
+  ENDIF
+RETURN
