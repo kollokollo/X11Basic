@@ -127,7 +127,10 @@ static const struct {int sf; char xf; } ioemaptable[] = {
 #endif
 #ifdef ENOSTR
     { ENOSTR,       -60 }, /* 60: Device not a stream */
-#endif  
+#endif
+#ifdef EOVERFLOW
+    { EOVERFLOW,    -75 }, /* 75 Value too large for defined data type */
+#endif
 #ifdef ENOTSOCK
     { ENOTSOCK,     -88 }, /* 88: Socket operation on non-socket */
 
