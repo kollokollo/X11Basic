@@ -50,16 +50,27 @@ DESCRIPTION:
 	If you want to specify other types, please use prefixes:
 
 ----*
-	D: -- double (8-Bytes)
-	F: -- float  (4-Bytes)
-	L: -- long int, pointer (4-Bytes)
+	D: -- double   (8 bytes)
+	F: -- float    (4 bytes)
+	L: -- integer  (4 bytes)
+	R: -- long integer  (8 bytes)
+	W: -- short integer (2 bytes)
+	B: -- byte     (1 byte)
+	P: -- pointer  (4 bytes or 8 bytes, depending on the OS)
 *----
+
+COMMENT: 
+        The Option P: behaves the same as L: on 32bit operating systems. But you 
+        should use P: for pointers (VARPTR() etc...) into memory so that it can 
+        be translated from X11-Basic internal 32bit representation to the 64bit 
+        adresses on 64it operating systems.
+        The B: and W: options behave the same as the L: option.
 
 EXAMPLE:
 	DIM result(100)
 	LINK #1,"simlib.so"
 	adr%=SYM_ADR(#1,"CalcZeta")
-	ret%=CALL(adr%,D:1.2,L:0,L:VARPTR(result(0)))
+	ret%=CALL(adr%,D:1.2,L:0,P:VARPTR(result(0)))
 	UNLINK #1
 
 SEE ALSO: CALL, EXEC

@@ -639,8 +639,8 @@ IF NOT EXIST("./trackit.so")
   SYSTEM "gcc -O3 -shared -o trackit.so trackit.c" 
 ENDIF
 LINK #11,"./trackit.so"
-~EXEC(SYM_ADR(#11,"binit"),L:n,L:200,L:VARPTR(x(0)), \
-                                   L:VARPTR(bins(0)))
+~CALL(SYM_ADR(#11,"binit"),L:n,L:200,P:VARPTR(x(0)), \
+                                   P:VARPTR(bins(0)))
 \end{verbatim}
 \end{mdframed}
 
@@ -679,30 +679,47 @@ UNLINK #11
 \end{verbatim}
 \end{mdframed}
 
-X11-Basic currently allows only a float (double) type for the return value. 
-This is currently a limitation for the use of the standard libraries. If you
-have written the library function yourself, you could bypass this limitation by
-passing pointers to variables.
+X11-Basic currently allows only an integer (int) type for the return value.  This is
+currently a limitation for the use of the standard libraries. If you have written the
+library function yourself, you could bypass this limitation by passing a pointer to the
+return variable.\footnote{If the called function returns a struct value, it expects a
+pointer to a memory area where to store the return value as a first parameter (pointer).
+Unfortunately, depending on the compiler and operating system, this pointer is sometimes
+expected to be internally copied to and from the stack, so there is no  possibility at the
+moment to use this way of returning structs with X11-Basic.}
+
 
 The following parameter types are possible:
 \begin{center}
 \begin{tabular}{|c|c|}
 \hline
-L:  &  32-bits integers and pointers (long) (\%)   \\
-W:  &  16-bits signed (short)  \\ 
+D:  &  64-bit float (double)  \\ 
+L:  &  32-bit integer (int) (\%)   \\
+W:  &  16-bit signed (short)  \\ 
 B:  &  8-bits signed (char)  \\ 
-F:  &  8 byte float (double)  \\ 
-S:  &  4 byte float (float)  \\ 
+F:  &  4 byte float (float)  \\ 
+R:  &  8 byte long integer (long long) \\
+P:  &  4 or 8 byte pointer (void *) \\
 \hline
 \end{tabular}
 \end{center}
+
+%It is also possible to pass a struct to a C function. In this case you need to assemble 
+%the data block for the struct in memory within the X11-Basic program, e.g. in a string, 
+%and then pass several integer parameters each containing 4 bytes of the data.
+
+The Option P: behaves the same as L: on 32bit operating systems. But you 
+should use P: for pointers (VARPTR() etc...) into memory so that it can 
+be translated from X11-Basic internal 32bit representation to the 64bit 
+adresses on 64it operating systems.
+The B: and W: options behave the same as the L: option.
 
 
 The \verb|SYM_ADR| function determines the address of the function from its name. 
 The spelling of the function name must therefore be identical to the spelling
 of the function in the \verb|.so|. 
 
-When passing the address of the string, a null byte must be added to the
+When passing the address of a string, a null byte must be added to the
 end of the string. 
 
 
@@ -746,9 +763,9 @@ FREE ptr%
 \subsection{Shared memory}
 
 Memory which has been allocated with \verb|MALLOC()| can only be accessed from  within a
-single process. If you want two different X11-Basic instances or in general two doifferent
+single process. If you want two different X11-Basic instances or in general two different
 running X11-Basic programs access the same memory (e.g. to share data or to communicate
-with each other), you need to use shared memeory instead.
+with each other), you need to use shared memory instead.
 
 The shared memory segment needs to be created and allocated first. This should be done 
 only by one of the programs. The creator will also select a key (which is just an integer

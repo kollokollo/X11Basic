@@ -7,7 +7,7 @@ IF EXIST(t$)
   LINK #1,t$
   DUMP "#"
   promt$=">>>"
-  adr%=CALL(SYM_ADR(#1,"readline"),L:VARPTR(promt$))
+  adr%=CALL(SYM_ADR(#1,"readline"),P:VARPTR(promt$))
   r=adr%
   WHILE PEEK(r)>0
     PRINT CHR$(PEEK(r));
