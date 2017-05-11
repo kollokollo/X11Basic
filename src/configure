@@ -6135,6 +6135,21 @@ else
 	copt="-O4"
 fi
 	;;
+x86*64-apple-*)
+	echo 'Oh, a Macintosh... Very nice! :-)'
+	regs=
+	copt="-O3"
+	;;
+x86*64-*-linux)
+	echo 'Oh, a 64bit Linux box... A challenge... :-)'
+	regs="-fno-omit-frame-pointer"
+	copt="-O3"
+	;;
+x86*64-*-linux-*)
+	echo 'Oh, a 64bit Linux box... A challenge... :-)'
+	regs="-fno-omit-frame-pointer"
+	copt="-O3"
+	;;
 i*86-*-linux)
 	echo 'Oh, a 80x86-based Linux box... Very nice! :-)'
 	regs="-fno-omit-frame-pointer"
@@ -6261,8 +6276,7 @@ case $endian in
 	big)	echo "You're using a big-endian processor, very good!";;
 	little)	echo "You're using a little-endian processor, too bad...";;
 	*)
-	echo "Your machine seems to have a weird byte-ordering format, which I can't deal"
-	echo "with - sorry!."
+	echo "Your machine seems to have a weird byte-ordering format, Hm..."
 	;;
 esac
 esac
