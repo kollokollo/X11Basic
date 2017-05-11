@@ -363,7 +363,7 @@ sparc-sun-sunos*)
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
 
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-O4"
@@ -375,7 +375,7 @@ sparc-sun-solaris*)
 	AC_DEFINE(SMALL,1,[Small Memory layout])
 
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-O4"
@@ -383,19 +383,21 @@ fi
 	;;
 i*86-*-linux)
 	echo 'Oh, a 80x86-based Linux box... Very nice! :-)'
-	regs="-fomit-frame-pointer"
+	regs="-fno-omit-frame-pointer"
+	copt="-O3"
 	;;
 i*86-*-linux-*)
 	echo 'Oh, a 80x86-based Linux box... Very nice! :-)'
-	regs="-fomit-frame-pointer"
+	regs="-fno-omit-frame-pointer"
+	copt="-O3"
 	;;
 armv*-*-linux-*)
 	echo 'Oh no, an arm-based Linux box... Maybe the Raspberry PI. My condolences! :-)'
-	regs="-fomit-frame-pointer"
+	regs=
 	;;
 i*86-*bsd*)
  	echo 'A 80x86-based BSD box...'
- 	regs="-fomit-frame-pointer -ffixed-ebx -ffixed-ebp"
+ 	regs=" -ffixed-ebx -ffixed-ebp"
  	copt="-O3"
  	;;
 mips-sgi-irix*)
@@ -404,7 +406,7 @@ mips-sgi-irix*)
 	defs="$defs -D_BSD_SIGNALS"
 	xtra="$xtra -laudio -lm"
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-O2"
@@ -415,7 +417,7 @@ mips-dec-ultrix*)
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
 
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-O2"
@@ -426,7 +428,7 @@ hppa*-hp-hpux)
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
 	AC_DEFINE(signed,,[signed not known to compiler])
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 	static="-static"
 else
 	echo "You need gcc on HP-UX, sorry!"
@@ -439,7 +441,7 @@ alpha-dec-osf*)
 	AC_DEFINE(TIMEVAL_WORKAROUND,,[Timeval workaround])
 
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-migrate -non_shared -std1 -O5 -ifo -om"
@@ -450,7 +452,7 @@ m68k-next-bsd)
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
 	
 if test "n$CC" = ngcc; then
-	regs="-posix -fomit-frame-pointer"
+	regs="-posix "
 else
 	regs="-posix"
 	copt="-O3"
@@ -460,7 +462,7 @@ fi
 	echo "know if you can compile and run it successfully!"
 	echo "Determining this system's endianness and short/int sizes..."
 if test "n$CC" = ngcc; then
-	regs="-fomit-frame-pointer"
+	regs=
 else
 	regs=
 	copt="-O2"
@@ -493,8 +495,7 @@ case $endian in
 	big)	echo "You're using a big-endian processor, very good!";;
 	little)	echo "You're using a little-endian processor, too bad...";;
 	*)	
-	echo "Your machine seems to have a weird byte-ordering format, which I can't deal"
-	echo "with - sorry!."
+	echo "Your machine seems to have a weird byte-ordering format, Hm..."
 	;;
 esac
 esac

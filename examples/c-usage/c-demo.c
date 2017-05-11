@@ -9,7 +9,7 @@
 /* You will have to compile this (testme.c) and link it with the 
    x11basic shared library. Also ohers are required as follos:
 
-gcc -fomit-frame-pointer -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
+gcc  -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
     -lreadline  -lasound -lX11 testme.c library.o
 
 */

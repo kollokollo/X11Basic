@@ -3,8 +3,8 @@
 #
 
 SHELL=/bin/sh
-# Register variables (-ffixed-reg)
-REGS= -fomit-frame-pointer
+# Register variables 
+REGS= 
 
 # Optimization and debugging options
 OPT=-O3

@@ -44,9 +44,9 @@ DEF= @def@
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
-CC=@CC@ $(REGS)
-CCDEBUG=@CC@ -g $(REGS)
-CCSHARED=@CC@ $(REGS) -fPIC -shared -Wl,-Bsymbolic-functions 
+CC=@CC@ 
+CCDEBUG=@CC@ -g 
+CCSHARED=@CC@  -fPIC -shared -Wl,-Bsymbolic-functions 
 
 # Cross-Compiler fuer Windows-Excecutable
 
@@ -57,12 +57,12 @@ TOSCC=m68k-atari-mint-gcc
 
 # Cross-Compiler fuer ARM-Linux-Excecutable
 
-ARMCC=arm-linux-gcc $(REGS)
+ARMCC=arm-linux-gcc 
 
 # Preprocessor
 CPP=@CPP@
 
-CFLAGS= $(INC) $(DEF) $(OPT)
+CFLAGS= $(INC) $(DEF) $(OPT) $(REGS)
 
 # these are the objects which go into libx11basic
 
@@ -405,7 +405,7 @@ libx11basic.so: libx11basic.so.$(LIBNO)
 	ln -s -f $< libx11basic.so.1
 	ln -s -f libx11basic.so.1 libx11basic.so
 libx11basic.so.$(LIBNO) : $(LIBCSRC) Makefile
-	$(CCSHARED) $(OPT) $(DEF)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) 
+	$(CCSHARED) $(OPT) $(REGS) $(DEF)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) 
 	strip $@
 
 # Make the (static) library

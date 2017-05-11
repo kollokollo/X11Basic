@@ -12,7 +12,7 @@
 xbc -l -virtualm library.bas
 gcc -DNOMAIN -c library.c 
 
-gcc -fomit-frame-pointer -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
+gcc  -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm 
     -lreadline -lasound -lX11 c-demo2.c library.o
 
 */
