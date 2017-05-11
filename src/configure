@@ -3664,13 +3664,6 @@ Note: using gcc will improve the speed of X11-Basic significantly!
 EOF
 else
 copt="-O3"
-v=`gcc -v 2>&1|grep version|sed 's/^.*\([0-9]\.[0-9]\.[0-9]\).*/\1/g'`
-if test `echo $v|sed 's/\.//g'` -lt 245; then
-	echo "You have only version $v, please install a newer version of gcc!"
-	exit 1
-else
-	echo "Using gcc version $v"
-fi
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether #! works in shell scripts" >&5
