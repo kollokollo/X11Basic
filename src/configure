@@ -7450,7 +7450,7 @@ _ACEOF
 fi
 done
 
-for ac_func in socket strchr strdup strerror strstr
+for ac_func in socket strchr strdup strerror strstr backtrace
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
@@ -7461,6 +7461,7 @@ _ACEOF
 
 fi
 done
+
 
 
 

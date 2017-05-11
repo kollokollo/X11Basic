@@ -16,6 +16,9 @@
 #include <string.h>
 #include <signal.h>
 #include "defs.h"
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#endif
 #include "x11basic.h"
 #include "xbasic.h"
 #include "memory.h"
@@ -114,6 +117,25 @@ static void break_handler( int signum) {
 #ifdef ANDROID
 extern void android_sigaction(int signum, siginfo_t *info, void *reserved);
 #endif
+
+#ifdef HAVE_BACKTRACE
+/* Get some information about the crash... */
+
+static void print_trace() {
+  void *array[16];
+  size_t size;
+  char **strings;
+  size_t i;
+  size=backtrace(array,16);
+  strings=backtrace_symbols(array,size);
+  printf("Obtained %zd stack frames.\n",size);
+  for(i=0;i<size;i++) printf("%02zd %s\n",i,strings[i]);
+  free (strings);
+}
+#endif
+
+
+
 static void fatal_error_handler( int signum) {
   int obatch=batch;
   switch(signum) {
@@ -150,6 +172,10 @@ static void fatal_error_handler( int signum) {
     c_dump(NULL,0);
     puts("** fatal error ** X11BASIC-QUIT");    
   }
+#ifdef HAVE_BACKTRACE  
+  print_trace();
+#endif
+  
 #ifdef ANDROID
   invalidate_screen();
   backlog("** X11BASIC-QUIT (fatal)");
