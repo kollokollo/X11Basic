@@ -2550,10 +2550,14 @@ int spawn_shell (char *argv[]) {
   int saved_stderr = dup (STDERR_FILENO);
   if(saved_stderr < 0) {printf("ERROR saving old STDERR");return -1;}
 #endif
+#ifdef HAVE_FORKPTY
   /* Create a pseudo terminal and fork a process attached
      to it. */
   pid_t pid = forkpty (&ret_fd,slavename, NULL, &win);
  // printf("forkpty(%s) --> %d --> %d\n",slavename,ret_fd,pid);
+#else
+  int pid=-1;
+#endif
   if (pid == 0) {
     /* Inside the child process. */
 

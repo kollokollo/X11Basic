@@ -107,6 +107,8 @@ int get_point(int x, int y) {
     int r=XGetPixel(Image, 0, 0);
     XDestroyImage(Image); 
     return(r);
+#else
+ return(0);
 #endif
 }
 
@@ -277,8 +279,7 @@ void set_fill(int c) {
            /*XSetFillStyle(window[usewindow].display, window[usewindow].gc, FillStippled); */
     fill_alloc=1;   
     XSetStipple(window[usewindow].display, window[usewindow].gc,fill_pattern);
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
     FB_setfillpattern(fill_bits+c*16*2);
 #endif
 }
@@ -288,11 +289,10 @@ int mousex() {
   return(screen.mouse_x);
 #elif defined  WINDOWS_NATIVE
   return(global_mousex);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11 || defined USE_SDL
+#if defined USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
 
@@ -301,6 +301,8 @@ int mousex() {
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
   return(win_x_return);
+#else
+  return(0);
 #endif
 }
 int mousey() {
@@ -309,11 +311,10 @@ int mousey() {
   return(screen.mouse_y);
 #elif defined  WINDOWS_NATIVE
   return(global_mousey);
-#endif
+#elif defined USE_X11 || defined USE_SDL
 #ifdef USE_X11
   Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
   int root_x_return, root_y_return,win_x_return, win_y_return;
   unsigned int mask_return;
   graphics(); 
@@ -321,6 +322,8 @@ int mousey() {
        &root_x_return, &root_y_return,
        &win_x_return, &win_y_return,&mask_return);
   return(win_y_return);
+#else
+  return(0);
 #endif
 }
 int mousek() {
@@ -329,11 +332,10 @@ int mousek() {
   return(screen.mouse_k);
 #elif defined WINDOWS_NATIVE 
   return(global_mousek);
-#endif
+#elif defined USE_X11 || defined USE_SDL
 #ifdef USE_X11
    Window root_return,child_return;
 #endif
-#if defined USE_X11 || defined USE_SDL
    int root_x_return, root_y_return,win_x_return, win_y_return;
    unsigned int mask_return;
    graphics(); 
@@ -345,6 +347,8 @@ int mousek() {
 #else
    return(mask_return>>8);
 #endif
+#else
+  return(0);
 #endif
 }
 int mouses() {
@@ -365,6 +369,8 @@ int mouses() {
 #elif defined FRAMEBUFFER || defined ANDROID
   graphics(); 
   return(screen.mouse_s);
+#else
+  return(0);
 #endif
 }
 
@@ -396,6 +402,8 @@ unsigned int get_color(unsigned char r, unsigned char g, unsigned char b,unsigne
   pixcolor.blue=b<<8;
   if(my_XAllocColor(window[usewindow].display, map, &pixcolor)==0) printf("ERROR: could allocate color.\n");
   return(pixcolor.pixel);
+#else
+  return(0);
 #endif
 }
 
