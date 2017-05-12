@@ -95,6 +95,7 @@
 #define f_arids NULL
 #define f_bwtes NULL
 #define f_bwtds NULL
+#define f_calls NULL
 #define f_compresss NULL
 #define f_encloses NULL
 #define f_decloses NULL
@@ -1345,6 +1346,7 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK,    "BWTD$"     , f_bwtds ,1,1   ,{PL_STRING}},
  { F_CONST|F_SQUICK,    "BWTE$"     , f_bwtes ,1,1   ,{PL_STRING}},
 
+ { F_PLISTE,            "CALL$"     , f_calls ,1,-1  ,{PL_INT,PL_EVAL}},
  { F_CONST|F_IQUICK,    "CHR$"      , f_chrs ,1,1    ,{PL_INT}},
  { F_CONST|F_SQUICK,    "COMPRESS$" , f_compresss ,1,1   ,{PL_STRING}},
 #ifdef CONTROL

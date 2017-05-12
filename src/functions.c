@@ -63,12 +63,6 @@
 
 
 
-#define f_call NULL
-#define f_det NULL
-#define f_eventf NULL
-#define f_exec NULL
-#define f_freefile NULL
-#define f_gray NULL
 #define inp8 NULL
 #define inp32 NULL
 #define inp16 NULL
@@ -97,6 +91,7 @@
 #define f_btst NULL
 #define f_byte NULL
 #define f_call NULL
+#define f_calld NULL
 #define f_card NULL
 #define f_cint NULL
 #define f_color_rgb NULL
@@ -1383,6 +1378,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_IQUICK|F_IRET,    "BYTE"      , (pfunc)f_byte     ,1,1,{PL_INT}},
 
  { F_PLISTE|F_IRET,            "CALL"      , (pfunc)f_call     ,1,-1,{PL_INT,PL_EVAL}},
+ { F_PLISTE|F_DRET,            "CALLD"     , (pfunc)f_calld    ,1,-1,{PL_INT,PL_EVAL}},
  { F_CONST|F_IQUICK|F_IRET,    "CARD"      , (pfunc)f_card     ,1,1,{PL_INT}},
 #ifdef ATARI
  { F_CONST|F_DQUICK|F_DRET,    "CBRT"      , ceil              ,1,1,{PL_FLOAT}},

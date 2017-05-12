@@ -74,6 +74,42 @@ EXAMPLE:
 	UNLINK #1
 
 SEE ALSO: CALL, EXEC
+*##############################################################################
+
+Function: CALLD()
+Syntax:   ret=CALLD(adr%[,<parameter-list>])
+
+DESCRIPTION:
+
+	Calls a machine code or C subroutine at address <adr%> and returns
+	a flotingpoint value.
+	Same as CALL() but returns a floating point value.
+	
+EXAMPLE:
+	LINK #1,"libm.so"
+	adr%=SYM_ADR(#1,"cos")
+	ret=CALL(adr%,D:1)
+	UNLINK #1
+
+SEE ALSO: CALL()
+*##############################################################################
+Function: CALL$()
+Syntax:   ret$=CALL$(adr%[,<parameter-list>])
+
+DESCRIPTION:
+
+	Calls a machine code or C subroutine at address <adr%> and returns
+	data as a string.
+	Same as CALL() but returns arbitrary data, e.g. from a C-function
+	which returns a struct.
+	
+COMMENT: 
+	There is no way to determine, how much data the function will return, 
+	so the returned string has a fixed size of 256 bytes. If this is not
+	enough, X11-Basic will crash. This function is rarely used. Try to
+	avoid it.
+
+SEE ALSO: CALL()
 #############################################################################
 
 Function: CARD()

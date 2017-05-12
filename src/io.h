@@ -97,6 +97,8 @@ STRING f_fsfirsts(PARAMETER *plist,int e);
 STRING f_fsnexts();
 STRING f_inputs(char *n);
 int f_call(PARAMETER *plist,int e);
+double f_calld(PARAMETER *plist,int e);
+STRING f_calls(PARAMETER *plist,int e);
 int f_exec(PARAMETER *plist,int e);
 int f_symadr(PARAMETER *plist,int e);
 int f_ioctl(PARAMETER *plist,int e);

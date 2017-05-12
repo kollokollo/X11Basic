@@ -1366,7 +1366,7 @@ void c_link(PARAMETER *plist, int e) {
 #else
 #ifdef HAVE_DLOPEN
       filenr[number].dptr=(FILE *)dlopen((char *)plist[1].pointer,RTLD_LAZY);
-      if(filenr[number].dptr==NULL) io_error(errno,"LINK");
+      if(filenr[number].dptr==NULL) io_error(EINVAL,dlerror());
       else filenr[number].typ=FT_DLL;
 #else
       xberror(9,"LINK"); /*Function or command %s not implemented*/
@@ -1599,7 +1599,6 @@ int f_exec(PARAMETER *plist,int e) {
     return(ANDROID_waitfor_intentresult());
   }
 #endif
-
   
 #ifndef WINDOWS
   if(fork() == 0) {
@@ -1614,67 +1613,170 @@ int f_exec(PARAMETER *plist,int e) {
   return 0;  /* we never come here*/
 }
 
-/* Fuehrt Code an Adresse aus */
+/* CALL Funktionen: Fuehrt Code an Adresse aus 
+   Es wurde bemerkt, dass diese Weise des Aufrufs von Funktionen zu undefinierten
+   Resultaten beim gcc führt, insbesondere im Zusmmenhang mit der Optimierer-Funktion
+   -fomit-frame-pointer, wenn die aufzurufende Funktion eine struct zurueckliefert.
+   Eine Alternative waere die Verwendung von libffi (TODO).
+   
+*/
+
 void c_call(PARAMETER *plist,int e) { f_call(plist,e);}
 
+#define MAX_ANZ_GTT 20
+typedef struct  {long feld[MAX_ANZ_GTT];} GTT;
+
+static int call_prepare_parameters(GTT *gtt,PARAMETER *plist,int e){
+  if(e>MAX_ANZ_GTT) {xberror(45,"CALL"); return(-1);}/* Zu viele Parameter */
+  int i;
+#define w1 ((char *)plist[i].pointer)
+  for(i=1;i<e;i++) {
+    switch(plist[i].typ) {
+    case PL_EVAL:
+    //        printf("arg: %s \n",(char *)plist[i].pointer);
+      if(*w1 && w1[1]==':') {
+  	switch(*w1) {
+  	case 'D': 
+  	  *((double *)(&gtt->feld[i-1]))=parser(w1+2);
+  	  if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(long))-1;
+  	  break;
+  	case 'F':
+  	  *((float *)(&gtt->feld[i-1]))=(float)parser(w1+2);
+          if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
+  	  break;
+  	case 'P':  /*  Pointer */
+  	  *((void  **)(&gtt->feld[i-1]))=(void *)INT2POINTER((int)parser(w1+2));
+          if(sizeof(void *)>(sizeof(int))) i+=(sizeof(void *)/sizeof(long))-1;
+  	  break;
+  	case 'R':  /*  Long Long Int */
+  	  *((long long *)(&gtt->feld[i-1]))=(long long)parser(w1+2);
+          if(sizeof(long long)>(sizeof(int))) i+=(sizeof(long long)/sizeof(long))-1;
+  	  break;
+  	case 'L':
+  	case 'W':
+  	case 'B':
+  	  gtt->feld[i-1]=(int)parser(w1+2);
+  	  break;
+  	default:
+  	  printf("Unknown type modifyer '%c' with CALL.\n",*w1);
+  	  xberror(51,"CALL"); /*Syntax Error*/
+	  return(-1);
+  	}
+      } else gtt->feld[i-1]=(int)parser(w1);
+#undef w1
+      break;
+    default:
+      xberror(32,"CALL"); /* Syntax error */
+      return(-1);
+    }
+  }
+  return(0);
+}
+
 int f_call(PARAMETER *plist,int e) {
-  typedef struct  {long feld[20];} GTT;
 #if SIZEOF_VOID_P == 4
   int (*adr)(GTT)=(int (*)())INT2POINTER(plist->integer);
 #else
   long (*adr)(long,long,long,long,long,long,long,long,GTT)=(long (*)())INT2POINTER(plist->integer);
 #endif
-  // printf("call 0x%x mit %d args.\n",plist->integer,e);
-  if(e>20) xberror(45,"CALL"); /* Zu viele Parameter */
-  else if(adr==NULL) xberror(29,"CALL"); /* illegal address */
-  else {
-    int i;
-    GTT gtt;
-#define w1 ((char *)plist[i].pointer)
-    for(i=1;i<e;i++) {
-      switch(plist[i].typ) {
-      case PL_EVAL:
-      //	printf("arg: %s \n",(char *)plist[i].pointer);
-        if(strncmp(w1,"D:",2)==0) {
-          *((double *)(&gtt.feld[i-1]))=parser(w1+2);
-          if(sizeof(double)>(sizeof(int))) i+=(sizeof(double)/sizeof(long))-1;
-        } else if(strncmp(w1,"F:",2)==0) {
-          *((float *)(&gtt.feld[i-1]))=(float)parser(w1+2);
-	  if(sizeof(float)>(sizeof(int))) i+=(sizeof(float)/sizeof(int))-1;
-        } else if(strncmp(w1,"P:",2)==0) {  /*  Pointer */
-          *((void  **)(&gtt.feld[i-1]))=(void *)INT2POINTER((int)parser(w1+2));
-	  if(sizeof(void *)>(sizeof(int))) i+=(sizeof(void *)/sizeof(long))-1;
-        } else if(strncmp(w1,"R:",2)==0) {  /*  Long Long Int */
-          *((long long *)(&gtt.feld[i-1]))=(long long)parser(w1+2);
-	  if(sizeof(long long)>(sizeof(int))) i+=(sizeof(long long)/sizeof(long))-1;
-        } else if(strncmp(w1,"L:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-        else if(strncmp(w1,"W:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-        else if(strncmp(w1,"B:",2)==0)  gtt.feld[i-1]=(int)parser(w1+2);
-        else gtt.feld[i-1]=(int)parser(w1);
-#undef w1
-        break;
-      default:
-        xberror(32,"CALL"); /* Syntax error */
-      }
-    }
+  if(adr==NULL) {xberror(29,"CALL"); return(0);}/* illegal address */
+  GTT gtt;
+  // printf("call %p with %d args.\n",adr,e);
+  if(call_prepare_parameters(&gtt,plist,e)<0) return(0);
+
 #if SIZEOF_VOID_P == 4
-    return(adr(gtt));
+  return(adr(gtt));
 #else
   /*We assume the 64bit ABI here. So the first 8 Parameters must be treated
     differently.*/
-    GTT gtt2;
-    if(e>9) {
-      for(i=9;i<e;i++) {
-        gtt2.feld[i-9]=gtt.feld[i-1];
-      }
+  GTT gtt2;
+  if(e>9) {
+    int i;
+    for(i=9;i<e;i++) {
+      gtt2.feld[i-9]=gtt.feld[i-1];
     }
-    return(adr(gtt.feld[0],gtt.feld[1],gtt.feld[2],gtt.feld[3],
-               gtt.feld[4],gtt.feld[5],gtt.feld[6],gtt.feld[7],
-               gtt2));
-#endif
   }
-  return(0);
+/*TODO: Das uebergeben von floating point parametern geht leider so nicht.
+Was funktioniert sind integer und pointer. Eine konsistente Umsetzung des 
+AMD64 ABI ist leider sehr schwierig. Hierzu muesste man libffi verwenden.*/
+  return(adr(gtt.feld[0],gtt.feld[1],gtt.feld[2],gtt.feld[3],
+  	     gtt.feld[4],gtt.feld[5],gtt.feld[6],gtt.feld[7],
+  	     gtt2));
+#endif
 }
+
+/* Version of call which returns a double */
+
+double f_calld(PARAMETER *plist,int e) {
+#if SIZEOF_VOID_P == 4
+  double (*adr)(GTT)=(double (*)())INT2POINTER(plist->integer);
+#else
+  double (*adr)(long,long,long,long,long,long,long,long,GTT)=(double (*)())INT2POINTER(plist->integer);
+#endif
+  if(adr==NULL) {xberror(29,"CALLD"); return(0);}/* illegal address */
+  GTT gtt;
+  if(call_prepare_parameters(&gtt,plist,e)<0) return(0);
+#if SIZEOF_VOID_P == 4
+  return(adr(gtt));
+#else
+  /*We assume the 64bit ABI here. So the first 8 Parameters must be treated
+    differently.*/
+  GTT gtt2;
+  if(e>9) {
+    int i;
+    for(i=9;i<e;i++) {
+      gtt2.feld[i-9]=gtt.feld[i-1];
+    }
+  }
+
+/*TODO: Das uebergeben von floating point parametern geht leider so nicht.
+Was funktioniert sind integer und pointer.*/
+
+  return(adr(gtt.feld[0],gtt.feld[1],gtt.feld[2],gtt.feld[3],
+  	     gtt.feld[4],gtt.feld[5],gtt.feld[6],gtt.feld[7],
+  	     gtt2));
+#endif
+}
+/* Version of call which returns arbitrary data */
+
+STRING f_calls(PARAMETER *plist,int e) {
+  STRING ergebnis;
+  /*TODO: Die maximale Laenge der zurueckgegebenen Daten kann nicht 
+          bestimmt werden....*/
+  ergebnis.pointer=malloc(256);
+  ergebnis.len=0;
+#if SIZEOF_VOID_P == 4
+  STRING (*adr)(GTT)=(STRING (*)())INT2POINTER(plist->integer);
+#else
+  STRING (*adr)(long,long,long,long,long,long,long,long,GTT)=(STRING (*)())INT2POINTER(plist->integer);
+#endif
+  if(adr==NULL) {xberror(29,"CALL$"); return(ergebnis);}/* illegal address */
+  GTT gtt;
+  if(call_prepare_parameters(&gtt,plist,e)<0) return(ergebnis);
+#if SIZEOF_VOID_P == 4
+  return(adr(gtt));
+#else
+  /*We assume the 64bit ABI here. So the first 8 Parameters must be treated
+    differently.*/
+  GTT gtt2;
+  if(e>9) {
+    int i;
+    for(i=9;i<e;i++) {
+      gtt2.feld[i-9]=gtt.feld[i-1];
+    }
+  }
+/*TODO: Das uebergeben von floating point parametern geht leider so nicht.
+Was funktioniert sind integer und pointer.*/
+  return(adr(gtt.feld[0],gtt.feld[1],gtt.feld[2],gtt.feld[3],
+  	     gtt.feld[4],gtt.feld[5],gtt.feld[6],gtt.feld[7],
+  	     gtt2));
+#endif
+}
+
+
+/* Basic file operations.*/
+
+
 void c_bload(PARAMETER *plist,int e) {
   int len=-1;
   if(e>2) len=plist[2].integer;

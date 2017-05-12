@@ -34,8 +34,8 @@ used. Transparency and alpha channels are supported.
 
 Before you may read from or write to a file, you need to open it; once you are
 done, you should close it. Each open file is designated by a simple number,
-which might be stored within a variable and must be supplied to the \verb|PRINT| and
-\verb|INPUT| commands if you want to access the file. 
+which might be stored within a variable and must be supplied to the \verb|PRINT|
+and \verb|INPUT| commands if you want to access the file. 
 
 If you need more control, you may consider reading and writing one byte at a
 time, using the multi-purpose commands \verb|INP()| and \verb|OUT|, or reading
@@ -43,22 +43,23 @@ the whole file as a binary block with \verb|BLOAD|.
 
 \section{Internet and bluetooth connections, special files and sockets}
 
-X11-Basic allows to connect a program to another program on a different (or
-the same) host computer via standard internet or bluetooth protocols or pipes. 
+X11-Basic allows to connect a program to another program on a different (or the
+same) host computer via standard internet or bluetooth protocols or pipes. 
 
 Basically there are two methods of connections to other computers on a network: 
-A stream based connections (well known is the TCP/IP protocol for internet connections) 
-and a connectionless, unreliable datagram 
-packet service (UDP, in case of internet connections, and e.g. L2CAP for bluetooth). 
+A stream based connections (well known is the TCP/IP protocol for internet
+connections) and a connectionless, unreliable datagram packet service (UDP, in
+case of internet connections, and e.g. L2CAP for bluetooth). 
 
-Another method of passing data between two applications on the same computer is using
-so-called  pipes. Pipes are special files which are created in the local filesystem. 
+Another method of passing data between two applications on the same computer is
+using so-called pipes. Pipes are special files which are created in the local
+filesystem. 
 
 \subsection{Local inter process communication: Pipes}
 
 A pipe is a unidirectional data channel that can be used for interprocess 
-communication. The UNIX kernel usually supports this mechanism. The pipe can
-be used to send information or data from one process to another. Here is a little
+communication. The UNIX kernel usually supports this mechanism. The pipe can be
+used to send information or data from one process to another. Here is a little
 example progam you can use to play with it:
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
@@ -96,16 +97,16 @@ QUIT
 \end{mdframed}
 
 Instad of with pipes, the interprocess communication can also be done using a
-shared memory segment. X11-Basic also supports commands for creating and accessing
-such shared memory segments.
+shared memory segment. X11-Basic also supports commands for creating and
+accessing such shared memory segments.
 
 
 \subsection{World-Wide communication: Sockets}
 
 Most inter-process communication uses the client server model. These terms refer
-to the two processes which will be communicating with each other. One of the
-two processes, the client, connects to the other process, the server, typically
-to make a request for information. A good analogy is a person who makes a phone
+to the two processes which will be communicating with each other. One of the two
+processes, the client, connects to the other process, the server, typically to
+make a request for information. A good analogy is a person who makes a phone
 call to another person.
 
 Notice that the client needs to know of the existence of and the address of the
@@ -115,39 +116,41 @@ that once a connection is established, both sides can send and receive
 information.
 
 When a socket is created, the program has to specify the address domain and the
-socket type. Two processes can communicate with each other only if their
-sockets are of the same type and in the same domain. There are two widely used
-address domains, the (local) Unix domain, in which two processes which share a common
-file system communicate, and the Internet domain, in which two processes
-running on any two hosts on the Internet communicate. Each of these has its own
-address format. Another domain to be mentioned is the bluetooth domain for short range
-radio connections. It works similar to the internet connections, but uses its own 
-address space.
+socket type. Two processes can communicate with each other only if their sockets
+are of the same type and in the same domain. There are two widely used address
+domains, the (local) Unix domain, in which two processes which share a common
+file system communicate, and the Internet domain, in which two processes running
+on any two hosts on the Internet communicate. Each of these has its own address
+format. Another domain to be mentioned is the bluetooth domain for short range
+radio connections. It works similar to the internet connections, but uses its
+own address space.
 
 The address of a socket in the Unix domain is a character string which is
 basically an entry in the file system. It can be acced from there like a file. 
 In X11-Basic the normal file i/o commands can be used. 
 
-The address of a socket in the Internet domain consists of the Internet address of the
-host machine (every computer on the Internet has a unique 32 bit address, often referred
-to as its IP address or the bluetooth id, if we are takling about bluetooth connections).
-In addition, each socket needs a port number on that host. Port numbers are 16 bit
-unsigned integers. The lower numbers are reserved in the internet for standard services.
-For example, the port number for the FTP server is 21. It is important that standard
-services be at the same port on all computers so that clients will know their addresses.
-However, port numbers above 2000 are generally available.
+The address of a socket in the Internet domain consists of the Internet address
+of the host machine (every computer on the Internet has a unique 32 bit address,
+often referred to as its IP address or the bluetooth id, if we are takling about
+bluetooth connections). In addition, each socket needs a port number on that
+host. Port numbers are 16 bit unsigned integers. The lower numbers are reserved
+in the internet for standard services. For example, the port number for the FTP
+server is 21. It is important that standard services be at the same port on all
+computers so that clients will know their addresses. However, port numbers above
+2000 are generally available.
 
 \paragraph{Socket Types}
 
-There are two widely used socket types, stream sockets, and datagram sockets. Stream
-sockets treat communications as a continuous stream of characters, while datagram sockets
-have to read entire messages at once. Each uses its own communications protocol. Stream
-sockets for internet connections use TCP (Transmission Control Protocol), which is a
-reliable, stream oriented protocol, and datagram sockets use UDP (Unix Datagram Protocol),
-which is unreliable and message oriented.
+There are two widely used socket types, stream sockets, and datagram sockets.
+Stream sockets treat communications as a continuous stream of characters, while
+datagram sockets have to read entire messages at once. Each uses its own
+communications protocol. Stream sockets for internet connections use TCP
+(Transmission Control Protocol), which is a reliable, stream oriented protocol,
+and datagram sockets use UDP (Unix Datagram Protocol), which is unreliable and
+message oriented.
 
-The same applies for bluetooth connections, stream sockets use the so-called RFCOMM
-protocol and datagram sockets use the L2CAP protocol.
+The same applies for bluetooth connections, stream sockets use the so-called
+RFCOMM protocol and datagram sockets use the L2CAP protocol.
 
 Sockets in X11-Basic can be crated with the OPEN command.
 
@@ -323,21 +326,23 @@ transmission.
 
 \section{Bluetooth connections}
 
-Establishing a connection between two devices with a bluetooth adapter is similar to the
-internet connections. Also here you can use a stream based connection (using RFCOMM) 
-or a datagram based one (using L2CAP).
+Establishing a connection between two devices with a bluetooth adapter is
+similar to the internet connections. Also here you can use a stream based
+connection (using RFCOMM) or a datagram based one (using L2CAP).
 
-The X11-Basic commands for doing so are also similar. The only noticable difference 
-is that instead of a IP address a bluetooth id need to be used and there is no 
-domain name system which can be asked for the address/id of a device knowing its name. 
+The X11-Basic commands for doing so are also similar. The only noticable
+difference is that instead of a IP address a bluetooth id need to be used and
+there is no domain name system which can be asked for the address/id of a
+device knowing its name. 
 
-That means, if you want to connect to a bluetooth device, you need to know its id before. 
-The id consists of six bytes (instead of four in case of a IPV4 internet address). 
-They are usually noted as a string of the format: hh:hh:hh:hh:hh:hh with all 6 bytes 
-in two-digit hex values separated by colons: e.g. "78:F5:FD:15:4A:3A".
+That means, if you want to connect to a bluetooth device, you need to know its
+id before. The id consists of six bytes (instead of four in case of a IPV4
+internet address). They are usually noted as a string of the format:
+hh:hh:hh:hh:hh:hh with all 6 bytes in two-digit hex values separated by colons:
+e.g. "78:F5:FD:15:4A:3A".
 
-You can either hardcode the id in your program, or you can scan for visible bluetooth
-devices. 
+You can either hardcode the id in your program, or you can scan for visible
+bluetooth devices. 
 
 The scan can be done in X11-Basic with the FSFIRST\$() and FSNEXT\$() functions:
 
@@ -356,16 +361,16 @@ WEND
 
 \paragraph{RFCOMM}
 
-RFCOMM (Radio frequency communication) provides a simple reliable data stream to the user,
-similar to TCP. 
+RFCOMM (Radio frequency communication) provides a simple reliable data stream to
+the user, similar to TCP. 
 
 Many Bluetooth applications use RFCOMM because of its widespread support and 
-publicly available API on most operating systems. Additionally, applications that used 
-a serial port to communicate can be quickly ported to use RFCOMM.
+publicly available API on most operating systems. Additionally, applications
+that used a serial port to communicate can be quickly ported to use RFCOMM.
 
-As with TCP/IP establishing a connection via RFCOMM involves the basic construct of a 
-socket.  The two processes (server and client) 
-each establish their own socket.
+As with TCP/IP establishing a connection via RFCOMM involves the basic construct
+of a socket. The two processes (server and client) each establish their own
+socket.
 
 The steps involved in establishing a socket on the client side are as follows 
 (assuming, that the bluetooth id you ant to connect to is in adr\$):
@@ -508,25 +513,27 @@ CLOSE #1
 
 The maximum packet size should not exceed 672 bytes.
 
-Bluetooth support is work in progress and may not yet work on Android and WINDOWS. 
+Bluetooth support is work in progress and may not yet work on Android and
+WINDOWS. 
 
 \section{Accessing USB devices}
 
 X11-Basic has a builtin USB interface, which allows X11-Basic programs to access
-USB-Devices, which are connected to the computer. The interface is on a near hardware
-level, so the driver for the specific hardware connected must be written in X11-Basic.
-Hence, it is well possible to use dataloggers and USB-to-RS232 adapters with this methods.
-In principle every USB-Device can be accessed, if the protocol for data transfers and
-data interpretation is known. 
+USB-Devices, which are connected to the computer. The interface is on a near
+hardware level, so the driver for the specific hardware connected must be
+written in X11-Basic. Hence, it is well possible to use dataloggers and
+USB-to-RS232 adapters with this methods. In principle every USB-Device can be
+accessed, if the protocol for data transfers and data interpretation is known. 
 
-Please see the example program \verb|usb-VDL101T.bas| for an example, how to readout data 
-from a \verb|VOLTCRAFT VDL101-T| datalogger.
+Please see the example program \verb|usb-VDL101T.bas| for an example, how to
+readout data from a \verb|VOLTCRAFT VDL101-T| datalogger.
 
 USB support is work in progress and may not yet work on Android and WINDOWS. 
 
-USB-Devices are opened with the OPEN command. Instead of a filename, a combination if
-PID/VID is used.  Once opened, the commands CLOSE, IOCTL(), SEND and RECEIVE can be used
-on that device.  (PRINT and INPUT currently will not work).
+USB-Devices are opened with the OPEN command. Instead of a filename, a
+combination if PID/VID is used.  Once opened, the commands CLOSE, IOCTL(), SEND
+and RECEIVE can be used on that device.  (PRINT and INPUT currently will not
+work).
 
 
 \section{Data within the program}
@@ -582,9 +589,9 @@ NEXT i
 \end{verbatim}}
 \end{mdframed}
 
-For convenience, a program called \verb|inline.bas| shippes with X11-Basic. It does the
-conversion from and compression of any binary file to ready-to-use X11-Basic
-sourcecode.
+For convenience, a program called \verb|inline.bas| shippes with X11-Basic. It
+does the conversion from and compression of any binary file to ready-to-use
+X11-Basic sourcecode.
 
 %\section{Encrypting and decrypting data}
 
@@ -627,11 +634,9 @@ LINK #n,"myfile.so"
 
 The process of loading a \verb|.so| explicitly is called run-time linking. 
 
-For instance, to use
-the \verb|binit()| function from the \verb|trackit.so| library, an 
-application must
-include following lines of code (supposing, you want to use your own shared 
-object made out of the c-code trackit.c):
+For instance, to use the \verb|binit()| function from the \verb|trackit.so|
+library, an application must include following lines of code (supposing, you
+want to use your own shared object made out of the c-code trackit.c):
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
 \begin{verbatim}
@@ -667,10 +672,10 @@ void binit(int n,int dn,double *x,double *data) {
 X11-Basic applications can load up to 99 shared object files simultaneously, 
 although the channel number space is shared with the open files.. 
 
-To do this, parameter n must specify a value between 1 an 99. X11-Basic maintains
-an internal table with 99 entries to store the handle of the loaded shared
-object modules. These handles are necessary to unload the \verb|.so| when the
-application is finished using them. 
+To do this, parameter n must specify a value between 1 an 99. X11-Basic
+maintains an internal table with 99 entries to store the handle of the loaded
+shared object modules. These handles are necessary to unload the \verb|.so| when
+the application is finished using them. 
 
 The \verb|.so|'s are unloaded by invoking the \verb|UNLINK| command:
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
@@ -679,34 +684,38 @@ UNLINK #11
 \end{verbatim}
 \end{mdframed}
 
-X11-Basic currently allows only an integer (int) type for the return value.  This is
-currently a limitation for the use of the standard libraries. If you have written the
-library function yourself, you could bypass this limitation by passing a pointer to the
-return variable.\footnote{If the called function returns a struct value, it expects a
-pointer to a memory area where to store the return value as a first parameter (pointer).
-Unfortunately, depending on the compiler and operating system, this pointer is sometimes
-expected to be internally copied to and from the stack, so there is no  possibility at the
-moment to use this way of returning structs with X11-Basic.}
+The \verb|CALL()| function allows only an integer (\verb|int|) type for the
+return value. To get a floating point return value, use \verb|CALLD()| instead.
+If the called function returns a complicated data structure, use \verb|CALL$()|
+instead.
+
+There is currently a limitation for the use of \verb|CALL()|, \verb|CALLD()| and
+\verb|CALL$()| on 64bit operating systems. Here only integer and pointer
+parameters are correctly passed to the function called.  If you have written the
+library function yourself, you could bypass this limitation by passing a 
+pointer to the floating point variables instead \verb|(double *)|.\footnote{ The
+calling mechanism depends on the Application Binary Interface, which differs for
+different platforms. Unfortunately the AMD86x64 interface is already that
+complicated that there is n direct portable way to fully implement it. The hope
+is, that an external library could be used in future whch provides a portable
+way to do it. A good candidate would be the foreign function interface library
+libffi.}
 
 
 The following parameter types are possible:
 \begin{center}
 \begin{tabular}{|c|c|}
 \hline
-D:  &  64-bit float (double)  \\ 
-L:  &  32-bit integer (int) (\%)   \\
-W:  &  16-bit signed (short)  \\ 
-B:  &  8-bits signed (char)  \\ 
-F:  &  4 byte float (float)  \\ 
-R:  &  8 byte long integer (long long) \\
-P:  &  4 or 8 byte pointer (void *) \\
+D:  &  64-bit float (double)\\ 
+L:  &  32-bit integer (int) (\%)\\
+W:  &  16-bit signed (short)\\ 
+B:  &  8-bits signed (char)\\ 
+F:  &  4 byte float (float)\\ 
+R:  &  8 byte long integer (long long)\\
+P:  &  4 or 8 byte pointer (void *)\\
 \hline
 \end{tabular}
 \end{center}
-
-%It is also possible to pass a struct to a C function. In this case you need to assemble 
-%the data block for the struct in memory within the X11-Basic program, e.g. in a string, 
-%and then pass several integer parameters each containing 4 bytes of the data.
 
 The Option P: behaves the same as L: on 32bit operating systems. But you 
 should use P: for pointers (VARPTR() etc...) into memory so that it can 
@@ -715,9 +724,9 @@ adresses on 64it operating systems.
 The B: and W: options behave the same as the L: option.
 
 
-The \verb|SYM_ADR| function determines the address of the function from its name. 
-The spelling of the function name must therefore be identical to the spelling
-of the function in the \verb|.so|. 
+The \verb|SYM_ADR| function determines the address of the function from its
+name. The spelling of the function name must therefore be identical to the
+spelling of the function in the \verb|.so|. 
 
 When passing the address of a string, a null byte must be added to the
 end of the string. 
@@ -762,7 +771,7 @@ FREE ptr%
 
 \subsection{Shared memory}
 
-Memory which has been allocated with \verb|MALLOC()| can only be accessed from  within a
+Memory which has been allocated with \verb|MALLOC()| can only be accessed from within a
 single process. If you want two different X11-Basic instances or in general two different
 running X11-Basic programs access the same memory (e.g. to share data or to communicate
 with each other), you need to use shared memory instead.
@@ -779,8 +788,8 @@ id=SHM_MALLOC(2000,4711)
 \end{mdframed}
 
 Unlike \verb|MALLOC()|, \verb|SHM_MALLOC()| does not return an adress directly. Instead 
-it returns the identifier of the shared memory segment  associated with key. The
-identifier is also just an integer number.  A new shared memory segment is created if no
+it returns the identifier of the shared memory segment associated with key. The
+identifier is also just an integer number. A new shared memory segment is created if no
 shared memory segment corresponding to key exists.
 
 To get an address, which you then can use normally as all other adresses, you need to involke the
@@ -794,10 +803,10 @@ adr%=SHM_ATTACH(id)
 
 Once the other process knows the key and the size of the shared memory segment (or at
 least once it knows its id), it can attach the same segement also to his address space. It
-eventually will get a different address  (adr\%) but writing to the memory and reading
+eventually will get a different address (adr\%) but writing to the memory and reading
 from it will now also affect all other processes using this shared segment. 
 
-If not used anymore, the segment should be detached from the adress space  (so that adr\%
+If not used anymore, the segment should be detached from the adress space (so that adr\%
 cannot be used anymore) by any of the processes using it.  If the shared memory segment
 should be removed from memory completely (and all its contend sould be discarded), the
 creator of that segment can free it with \verb|SHM_FREE|. 
