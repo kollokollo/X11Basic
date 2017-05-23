@@ -742,38 +742,37 @@ static void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
    
    */
     flen=strlen(text);
-// printf("Zusammengesetzter text: <%s> len=%d ",text,flen);
-// printf("cursorpos=%d, offset=%d\n",ted->te_fontid,ted->te_fontsize);
-    x=fontwidth(ted->te_font); /*x temporarily used*/
-    if(flen*x>obw) {
-      if((flen-ted->te_fontsize)*x>obw) flen=obw/x;
-      else flen-=ted->te_fontsize;
-    } else ted->te_fontsize=0;
     
-    y=oby+(obh-fontheight(ted->te_font))/2+fontbaseline(ted->te_font)-2;
+    if(flen>0) {
+    // printf("Zusammengesetzter text: <%s> len=%d ",text,flen);
+    // printf("cursorpos=%d, offset=%d\n",ted->te_fontid,ted->te_fontsize);
+      x=fontwidth(ted->te_font); /*x temporarily used*/
+      if(flen*x>obw) {
+        if((flen-ted->te_fontsize)*x>obw) flen=obw/x;
+        else flen-=ted->te_fontsize;
+      } else ted->te_fontsize=0;
     
-    if(ted->te_just==TE_LEFT) x=obx;
-    else if(ted->te_just==TE_RIGHT) {
-      x=obx+obw-fontwidth(ted->te_font)*flen; 
-    } else {
-      x=obx+(obw-fontwidth(ted->te_font)*flen)/2; 
-    }
+      y=oby+(obh-fontheight(ted->te_font))/2+fontbaseline(ted->te_font)-2;
     
-    if(!opaque || 1) { /* AUf dem Atari war edit-text nie durchsichtig!*/
-      SetForeground(gem_colors[bgcolor]);
-      FillRectangle(x+1,y-fontbaseline(ted->te_font)+3,
+      if(ted->te_just==TE_LEFT)       x=obx;
+      else if(ted->te_just==TE_RIGHT) x=obx+obw-fontwidth(ted->te_font)*flen; 
+      else                            x=obx+(obw-fontwidth(ted->te_font)*flen)/2; 
+
+      if(!opaque || 1) { /* AUf dem Atari war edit-text nie durchsichtig!*/
+        SetForeground(gem_colors[bgcolor]);
+        FillRectangle(x+1,y-fontbaseline(ted->te_font)+3,
                     fontwidth(ted->te_font)*flen-1,
 		    fontheight(ted->te_font)-1);
-      SetForeground(gem_colors[textcolor]);
+                    
+        SetForeground(gem_colors[textcolor]);
+      }
+      DrawString(x,y,text+ted->te_fontsize,flen);
+      // printf("DrawString: <%s> l=%d\n",text+ted->te_fontsize,flen);
+      SetForeground(gem_colors[RED]);
+      if(strlen(text)-ted->te_fontsize>obw) DrawString(obx+obw,oby+obh,">",1);
+      if(ted->te_fontsize) DrawString(obx-window[usewindow].chw,oby+obh,"<",1);
+      load_GEMFONT(FONT_DEFAULT);
     }
-    DrawString(x,y,text+ted->te_fontsize,flen);
-    // printf("DrawString: <%s> l=%d\n",text+ted->te_fontsize,flen);
-    SetForeground(gem_colors[RED]);
-    if(strlen(text)-ted->te_fontsize>obw)
-      DrawString(obx+obw,oby+obh,">",1);
-    if(ted->te_fontsize)
-      DrawString(obx-window[usewindow].chw,oby+obh,"<",1);
-    load_GEMFONT(FONT_DEFAULT);
     free(text);
     break;
   case G_IMAGE:

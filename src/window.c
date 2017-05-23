@@ -1552,42 +1552,28 @@ static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char 
   DIR *dp;
   struct dirent *ep;
   int anzfiles=0;
-  char filename[128];
+  char filename[256];
 #ifdef DEBUG
   printf("Read_dir: %s/%s\n",pfad,mask);
 #endif
   sprintf(filename,"%s/",pfad);
   dp=opendir(filename);
   if(dp!=NULL) {
-
     while((ep=readdir(dp)) && (anzfiles<maxentries)) {
-      /* ist es Directory ? */
       sprintf(filename,"%s/%s",pfad,ep->d_name);
       if(stat(filename, &fileinfos[anzfiles].dstat)==0) {
-        if(S_ISDIR(fileinfos[anzfiles].dstat.st_mode)) {
+        if(S_ISDIR(fileinfos[anzfiles].dstat.st_mode)) {   /* ist es Directory ? */
 	  if(strcmp(ep->d_name,".") && strcmp(ep->d_name,"..")) {
 	    fileinfos[anzfiles].name=malloc(128);
 	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
 	    fileinfos[anzfiles++].typ=FT_DIR;
 	  }
-	  #ifdef DEBUG
-	  printf("**%s %d\n",ep->d_name,(int)ep->d_type);
-	  #endif
-        } else {
-	#ifdef DEBUG
-	  printf("%s ",ep->d_name);
-	  #endif
+        } else {  /* kein Directory */
 	  if (fnmatch(mask,ep->d_name,FNM_PERIOD)==0) {
-	  #ifdef DEBUG
-	    printf("****");
-	  #endif
 	    fileinfos[anzfiles].name=malloc(128);
 	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
 	    fileinfos[anzfiles++].typ=FT_NORMAL;
 	  }
-	  #ifdef DEBUG
-	  printf("\n");
-	  #endif
 	}
       }
     }
@@ -1612,9 +1598,20 @@ static void make_scaler(OBJECT *objects,int anzfiles,int showstart){
 #define FILESELECT_NOBJ (18+2*ANZSHOW)
 #define FILESELECT_NTED (4+ANZSHOW)
 
+#define FILESELECT_OK       1
+#define FILESELECT_CANCEL   2
+#define FILESELECT_HOME     3
+#define FILESELECT_BACK     6
+#define FILESELECT_UP       7
+#define FILESELECT_DOWN     8
+#define FILESELECT_INFO     9
+#define FILESELECT_MASK    10
+#define FILESELECT_SCALERP 15
+#define FILESELECT_SCALER  16
+
 char *fileselector(const char *titel, const char *pfad, const char *sel) {
-  unsigned short sbut=-1;
-  unsigned short i;
+  int sbut=-1;
+  int i=0;
   /* Das ist der Speicherbereich für Objekt-strukturen. 
   Bei 64bit systemem darf er nicht auf dem Stack liegen.*/
   char *buffer=malloc(FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*5);
@@ -1630,10 +1627,19 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   strncpy(auswahl,sel,127);
   if(titel!=NULL) strncpy(btitel,titel,60);
   else strcpy(btitel,"FILESELECT");
+
+  /* Change path separator '\' to '/'*/
+  while(dpfad[i]) {
+    if(dpfad[i]=='\\') dpfad[i]='/';
+    i++;
+  }
+  
   wort_sepr(pfad,'/',0,dpfad, mask);
+  
   strcpy(feld1,pfad);
 #ifdef USE_GEM
   char a;
+  short sh=-1;
   for(i=0;i<127;i++) {
     a=pfad[i];
     if(a==0) break;
@@ -1642,9 +1648,10 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
     dpfad[i]=a;
   }
   dpfad[i]=0;
-  fsel_exinput(dpfad,auswahl,&sbut,titel);
+  fsel_exinput(dpfad,auswahl,&sh,titel);
+  sbut=sh;
 #else
-  int k;
+
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
 #elif defined USE_SDL
@@ -1725,6 +1732,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   
   short x,y,w,h;
   int obx,oby;
+  int k;
 
 #ifdef DEBUG
   printf("**2fsel_input: ANZSHOW=%d btitel=%s\n",ANZSHOW,btitel);
@@ -1794,10 +1802,10 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   form_center(objects, &x,&y,&w,&h);  /* Objektbaum Zentrieren */
   form_dial(0,0,0,0,0,x,y,w,h);
   form_dial(1,0,0,0,0,x,y,w,h);
-  while(sbut!=1 && sbut!=2) {
+  while(sbut!=FILESELECT_OK && sbut!=FILESELECT_CANCEL) {
     objc_draw(objects,0,-1,0,0,0,0);
     sbut=form_do(objects,0);
-    if(sbut==3) {    /* HOME */
+    if(sbut==FILESELECT_HOME) {    /* HOME */
       char buf[128];
       if(getcwd(buf,128)!=NULL) {
 
@@ -1816,7 +1824,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 
       }
       objects[sbut].ob_state=NORMAL;
-    } else if(sbut==6) {    /* < */
+    } else if(sbut==FILESELECT_BACK) {    /* < */
       char buf[128];
       wort_sepr(dpfad,'/',0,dpfad, buf);
       sprintf(feld1,"%s/%s",dpfad,mask);
@@ -1828,33 +1836,33 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
       make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
       make_scaler(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
-    } else if(sbut==7) {    /* ^ */
+    } else if(sbut==FILESELECT_UP) {    /* ^ */
       if(showstart) {
         showstart--;
         make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
 	make_scaler(objects,anzfiles,showstart);
       }
       objects[sbut].ob_state=NORMAL;
-    } else if(sbut==8) {    /* v */
+    } else if(sbut==FILESELECT_DOWN) {    /* v */
       if(showstart<anzfiles-ANZSHOW) {
         showstart++;
         make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
         make_scaler(objects,anzfiles,showstart);
       }
       objects[sbut].ob_state=NORMAL;
-    } else if(sbut==9) {    /* ? */
+    } else if(sbut==FILESELECT_INFO) {    /* ? */
       char buf[128];
       sprintf(buf,"[1][%d Bytes in %d Files.][ OK ]",dir_bytes(filenamen,anzfiles),anzfiles);
       form_alert(1,buf);
       objects[sbut].ob_state=NORMAL;
-    } else if(sbut==10) {    /* MASK */
+    } else if(sbut==FILESELECT_MASK) {    /* MASK */
       wort_sepr((char *)INT2POINTER(tedinfo[2].te_ptext),'/',0,dpfad, mask);
       anzfiles=read_dir(filenamen,MAXANZFILES,dpfad,mask);
       sort_dir(filenamen,anzfiles);
       showstart=max(0,min(showstart,anzfiles-ANZSHOW));
       make_filelist(objects,filenamen, filenamensel,anzfiles,showstart);
       make_scaler(objects,anzfiles,showstart);objects[sbut].ob_state=NORMAL;
-    } else if(sbut==15) {    /* Scalerhintergrund */
+    } else if(sbut==FILESELECT_SCALERP) {    /* Scalerhintergrund */
 #ifdef USE_SDL
       e=SDL_WaitEvent(&event);
       if(e==0) break;
@@ -1864,12 +1872,12 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
         if(e==0) break;
       }
       if(e==0) break;
-      relobxy(objects,16,&obx, &oby);
+      relobxy(objects,FILESELECT_SCALER,&obx, &oby);
       if(event.button.y<oby) {
 	     showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));
              make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
              make_scaler(objects,anzfiles,showstart);
-      } else if(event.button.y>oby+objects[16].ob_height) {
+      } else if(event.button.y>oby+objects[FILESELECT_SCALER].ob_height) {
 	     showstart=max(0,min(showstart+ANZSHOW,anzfiles-ANZSHOW));
              make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
              make_scaler(objects,anzfiles,showstart);
@@ -1889,12 +1897,12 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 #endif
         break;
 	case ButtonRelease:
-	  relobxy(objects,16,&obx, &oby);
+	  relobxy(objects,FILESELECT_SCALER,&obx, &oby);
            if(event.xbutton.y<oby) {
 	     showstart=max(0,min(showstart-ANZSHOW,anzfiles-ANZSHOW));
              make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
              make_scaler(objects,anzfiles,showstart);
-	   } else if(event.xbutton.y>oby+objects[16].ob_height) {
+	   } else if(event.xbutton.y>oby+objects[FILESELECT_SCALER].ob_height) {
 	     showstart=max(0,min(showstart+ANZSHOW,anzfiles-ANZSHOW));
              make_filelist(objects,filenamen,filenamensel,anzfiles,showstart);
              make_scaler(objects,anzfiles,showstart);
@@ -1902,7 +1910,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
 	break;
       }
       #endif
-    } else if(sbut==16) {    /* ScalerSchieber */
+    } else if(sbut==FILESELECT_SCALER) {    /* ScalerSchieber */
       int ex=0,root_x_return,root_y_return,win_x_return,win_y_return;
       unsigned int mask_return;
       int ssold=showstart;
@@ -1937,7 +1945,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
           case MotionNotify:
          /* printf("Motion %d\n",event.xmotion.y-win_y_return);*/
           showstart=ssold+(event.xmotion.y-win_y_return)/
-		     (objects[15].ob_height*(1-min(1,(float)(ANZSHOW)/anzfiles)))
+		     (objects[FILESELECT_SCALERP].ob_height*(1-min(1,(float)(ANZSHOW)/anzfiles)))
 		     *(anzfiles-ANZSHOW);
 	  showstart=max(0,min(showstart,anzfiles-ANZSHOW));
           if(showstart!=sssold) {
@@ -2000,7 +2008,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
     for(i=0;i<anzfiles;i++) free(filenamen[i].name);
   }
   ergebnis=malloc(strlen(dpfad)+strlen(auswahl)+2);
-  if(sbut==1) sprintf(ergebnis,"%s/%s",dpfad,auswahl);
+  if(sbut==FILESELECT_OK) sprintf(ergebnis,"%s/%s",dpfad,auswahl);
   else *ergebnis=0;
   free(buffer);
   return(ergebnis);

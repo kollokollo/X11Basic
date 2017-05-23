@@ -118,6 +118,23 @@ DESCRIPTION:
 
 SEE ALSO: FFT()
 ##############################################################################
+Function:  FIB()
+Syntax:    w&=FIB(i%)
+
+DESCRIPTION:
+
+	Returns the i'th Fibonacci number.
+
+COMMENT: 
+	This function works only in the interpreter and only when used in 
+	a direct assignment to a big integer variable.
+
+EXAMPLES:
+  w&=FIB(100)  --> Result: 354224848179261915075
+
+SEE ALSO: LUCNUM()
+
+##############################################################################
 Function: FILEEVENT$
 Syntax:   t$=FILEEVENT$
 
@@ -148,23 +165,6 @@ EXAMPLE:
 
 SEE ALSO:    WATCH
 ##############################################################################
-Function:  FIB()
-Syntax:    w&=FIB(i%)
-
-DESCRIPTION:
-
-	Returns the i'th Fibonacci number.
-
-COMMENT: 
-	This function works only in the interpreter and only when used in 
-	a direct assignment to a big integer variable.
-
-EXAMPLES:
-  w&=FIB(100)  --> Result: 354224848179261915075
-
-SEE ALSO: LUCNUM()
-
-##############################################################################
 
 Command:  FILESELECT
 Syntax:   FILESELECT title$,path$,default$,file$
@@ -191,7 +191,7 @@ default$  contains the name of the file to appear in the
         file$. If CANCEL is selected an empty string is returned.
 
 EXAMPLE:
-     FILESELECT "LOAD File",".\*.dat","input.dat",file$
+     FILESELECT "LOAD File","./*.dat","input.dat",file$
 
 SEE ALSO: XLOAD, XRUN, FSEL_INPUT()
 
