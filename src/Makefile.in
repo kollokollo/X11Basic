@@ -16,7 +16,7 @@ exec_prefix=@exec_prefix@
 
 BINDIR=@bindir@
 DATADIR=@datadir@
-ICONDIR=$(DATADIR)/icons/hicolor/48x48/apps
+ICONDIR=$(DATADIR)/icons/hicolor/scalable/apps
 DESKTOPDIR=$(DATADIR)/applications
 LIBDIR=@libdir@
 MANDIR=@mandir@
@@ -297,7 +297,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
       ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
       config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
-        bitmaps/* logo/x11basic.png \
+        bitmaps/* logo/x11basicVersion.fig \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
         examples/compiler/bas2x11basic.bas \
@@ -384,16 +384,6 @@ Makefile : Makefile.in
 config.h: config.h.in
 	./configure --prefix=/usr
  
-#.c.o:
-#	$(CC) -c $(CFLAGS) -o $@ $<
-.cc.o:
-	g++ -c $(INC) -o $@ $<
-
-#### Tricky stuff for 64 bit operating system versions
-#### Mainly linux 64bit (experimental)
-
-bit3264 : configure
-	./configure --prefix=/usr CFLAGS=-m32
 
 ###################################################
 #### Fundamentals for X11-Basic (UNIX/LINUX) ######
@@ -717,8 +707,15 @@ xb2c.debug : xb2c.c $(LIBCSRC)
 x11basic.tga: logo/x11basic-logo-1999.pov
 	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
  
-install : xbasic logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
-	install -m 644 logo/x11basic.png $(ICONDIR)/
+ 
+x11basic.eps : logo/x11basicVersion.fig
+	fig2dev -L eps $< $@
+
+%.svg : %.eps 
+	convert  $< $@
+
+install : xbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+	install -m 644 x11basic.svg $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
 	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
@@ -743,7 +740,7 @@ install : xbasic logo/x11basic.png x11basic.desktop libx11basic.so x11basic.h xb
 	install -m 644 doc/man-pages/xb2c.1 $(MANDIR)/man1/
 	install -m 644 doc/man-pages/bas2x11basic.1 $(MANDIR)/man1/
 uninstall :
-	rm -f $(ICONDIR)/x11basic.png
+	rm -f $(ICONDIR)/x11basic.svg
 	rm -f $(DESKTOPDIR)/x11basic.desktop
 	rm -f $(LIBDIR)/libx11basic.so*
 	rm -f $(LIBDIR)/x11basic.a

@@ -1,14 +1,16 @@
 [Desktop Entry]
+Encoding=UTF-8
 Name=X11-Basic
 Name[de]=X11-Basic
 GenericName=BASIC Programming Language
 GenericName[de]=BASIC Programmiersprache
 Comment=X11-Basic
 Exec=xbasic
-Icon=/usr/share/icons/hicolor/32x32/apps/x11basic.png
+Icon=x11basic
 Terminal=true
 Type=Application
 StartupNotify=false
 Categories=Application;Development;
 MimeType=application/bas;application/b;
 TryExec=xbasic
+NoDisplay=false

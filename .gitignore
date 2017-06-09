@@ -6,6 +6,8 @@ A.tex
 config.log
 config.status
 src/x11basic.a
+src/x11basic.eps
+src/x11basic.svg
 src/xb2c.static
 src/xbasic.static
 src/xbbc.static
