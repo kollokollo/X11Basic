@@ -41,7 +41,6 @@ More things left to do:
 - work on the SDL-Graphics implementation (fill styles etc...),
 - documentation needs more work,
 - port it to apple ipad/iphone,
-- improve the 64 Version (pointer handling),
 (etc. etc.)
 
 So you are welcome to help.
