@@ -7,6 +7,8 @@
  * COPYING for details
  */
 
+#ifdef SIZEOF_VOID_P
+
 #define MAXANZPOINTERBASE 8
 
 
@@ -79,3 +81,6 @@ static inline void LWSWAP(char *p) {
   p[1]=p[2];
   p[2]=a;
 }
+#else
+#pragma message ( "memory.h got included at the wrong place !" )
+#endif
