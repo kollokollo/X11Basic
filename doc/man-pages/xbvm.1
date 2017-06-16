@@ -43,17 +43,18 @@ look at the README file coming with the package and the X11-Basic manual.
 .SH EXAMPLES
 .nf
 xbvm testme.b
-xbbc -v testme.b
+xbvm -v testme.b
 .fi
 
 You can find many sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 
 .SH The virtual machine
-The virtual machine is an interpreter for bytecode, which implements a stack 
-machine. The bytecode is very compact  and similar to machine code, but still it
-is independant of the  actual processor hardware and such very portable. With an
-additional small  step it can be compiled to native assembler or machine code.
+The virtual machine is an interpreter for bytecode. It implements a virtual 
+stack machine on which the bytecode is excecuted. 
+The bytecode is very compact  and similar to machine code, and it
+is independant of the actual processor hardware and such very portable. With an
+additional small step it can be translated to native assembler or machine code.
 (For linux this is done by the 
 .I xb2c(1) 
 translator and 

@@ -8,68 +8,82 @@
 <head>
 <meta charset="UTF-8">
 <title> X11-Basic Kurzanleitung</title>
-</head><body bgcolor=c0c0ff  vlink="purple" alink="red">
+</head><body bgcolor=c0c0ff vlink="purple" alink="red">
 
 
 <h1>Deutsche Kurzeinführung in X11-Basic</h1>
 
 
-Schön, daß Sie sich für mein kleines Projekt X11-Basic interessieren. Es wird gelegentlich der Wunsch an mich 
-herangetragen, das Benutzerhandbuch zur Programmiersprache, welches es derzeit nur in einer englischen Version gibt, 
-ins deutsche zu übersetzten. Da ich froh bin, daß es ein einigermaßen brachbares Handbuch überhaupt gibt und kaum 
-Zeit habe, noch eine deutsche Version zu machen, werde ich an dieser Stelle wenigstens einige grundlegende 
+Schön, daß Sie sich für mein kleines Projekt X11-Basic interessieren. Es wird
+gelegentlich der Wunsch an mich herangetragen, das Benutzerhandbuch zur
+Programmiersprache, welches es derzeit nur in einer englischen Version gibt, 
+ins Deutsche zu übersetzten. Da ich froh bin, daß es ein einigermaßen
+brauchbares Handbuch überhaupt gibt und kaum Zeit habe, noch eine deutsche
+Version zu machen, werde ich an dieser Stelle wenigstens einige grundlegende 
 Hilfestellungen zum Benutzen der Programmiersprache X11-Basic geben.
 <p/>
-Aus dem kleinen Projekt ist inzwischen über die Jahre eine recht ansehnliche und rubuste Programmierumgebung 
-geworden, von der man in den 80er Jahren des vergangenen Jahrhunderts nur träumen konnte. Dennoch hat sich in Sachen 
-IT-Technik, Programmieranwendungen und auch Programmiertechniken seitdem einiges getan, so daß X11-Basic heutigen 
-Ansprüchen an eine zeitgemäße Entwicklungsumgebung nicht genügt. Das war aber auch nie so gedacht. X11-Basic richtet 
-sich nicht an den (angehenden) professionellen Programmierer, sondern mehr an den mathematisch interessierten 
-Programmier-Laien, oder zumindest an solche, welche zu faul sind, sich die Eigenheiten heutiger Programmiersprachen 
-anzulernen, nur um ein komplexeres Problem rechnerisch umzusetzen. Dieses Diskrepanz zwischen Computerprogrammierung 
-und Umsetzen von mathematischen Algorithmen hat es schon immer gegeben, und das war nicht zuletzt der Grund, warum 
-die BASIC Programmiersprache vor mehr als 50 Jahren überhaupt entstanden ist.
+
+Aus dem kleinen Projekt ist inzwischen über die Jahre eine recht ansehnliche
+und rubuste Programmierumgebung geworden, von der man in den 80er Jahren des
+vergangenen Jahrhunderts nur träumen konnte. Dennoch hat sich in Sachen 
+IT-Technik, Programmieranwendungen und auch Programmiertechniken seitdem einiges
+getan, so daß X11-Basic heutigen Ansprüchen an eine zeitgemäße
+Entwicklungsumgebung nicht genügt. Das war aber auch nie so gedacht. X11-Basic
+richtet sich nicht an den (angehenden) professionellen Programmierer, sondern
+mehr an den mathematisch interessierten Programmier-Laien, oder zumindest an
+solche, welche zu faul sind, sich die Eigenheiten heutiger Programmiersprachen 
+anzulernen, nur um ein etwas komplexeres Problem rechnerisch umzusetzen. Diese
+Diskrepanz zwischen Computerprogrammierung und Umsetzen von mathematischen
+Algorithmen hat es schon immer gegeben, und das war nicht zuletzt der Grund,
+warum die BASIC Programmiersprache vor mehr als 50 Jahren überhaupt entstanden
+ist.
+
 <p/>
-   
+ 
 Um es kurz zu machen: Suchen Sie eine Programmiersprache, mit der Sie
-Anwenderprogramme mit Benutzerschnittstellen,  evtl. sogar Apps für Smartphones
+Anwenderprogramme mit Benutzerschnittstellen, evtl. sogar Apps für Smartphones
 oder dergleichen machen wollen, nutzen Sie besser gleich die dort übliche 
 Programmiersprache. Dann lohnt es sich auch, die zu lernen. Ihre App wird
-sowieso nicht an einem Tag fertig lauffähig  sein. Dafür bekommen Sie aber
+sowieso nicht an einem Tag fertig lauffähig sein. Dafür bekommen Sie aber
 massenhaft Hilfe im Internet in einschlägigen Foren. Die meisten Probleme, die
-Sie  treffen werden, hat eh schon jemand vor Ihnen gelöst. Sie müssen sie nur
-finden, abwandeln und für Ihre App  einsetzen.
+Sie treffen werden, hat eh schon jemand vor Ihnen gelöst. Sie müssen sie nur
+finden, abwandeln und für Ihre App einsetzen.
 
 <p/>
 
 X11-Basic hingegen würden Sie nutzen, wenn Sie eine neue Idee für einen
-Algorithmus schnell ausprobieren wollen. Die  Stärken von X11-Basic sind seine
-Rechenfähigkeit. Sie können leicht mir komplexen Zahlen, beliebig großen
-ganzen  Zahlen oder auch nur mit normalen rationalen Zahlen Berechnungen
-anstellen. Es gibt weiterhin Funktionen, um mit  Matritzen zu rechnen. Nebenbei
-ist X11-Basic recht schnell in der Ausführung und es bedarf nur einer kurzen 
-Lernphase, bis Sie ihr Erstes Programm schreiben und laufen lassen können. Die
-graphischen Fähigkeiten helfen Ihnen  dabei, die Berechnungen auch plastisch
-und in Farbe darzustellen. Schliesslich eignet sich X11-Basic auch besonders 
-für Datenmanipulationen aller Art, dank einer vollst"andigen Implementierung aller 
+Algorithmus schnell ausprobieren wollen. Die Stärken von X11-Basic sind seine
+Rechenfähigkeit. Sie können leicht mit komplexen Zahlen, beliebig großen
+ganzen Zahlen oder auch nur mit normalen rationalen Zahlen Berechnungen
+anstellen. Es gibt weiterhin Funktionen, um mit Matritzen zu rechnen. Nebenbei
+ist X11-Basic recht schnell in der Ausführung, und es bedarf nur einer kurzen 
+Lernphase, bis Sie ihr erstes Programm schreiben und laufen lassen können. Die
+graphischen Fähigkeiten helfen Ihnen dabei, die Berechnungen auch plastisch und
+in Farbe darzustellen. Schliesslich eignet sich X11-Basic auch besonders für
+Datenmanipulationen aller Art, dank einer vollst"andigen Implementierung aller 
 I/O-Funktionen des Betriebsystems.
 
 <p/>
 
-Wenn Sie jetzt denken, dass X11-Basic dann doch recht eingeschränkt ist, so darf ich Sie beruhigen: X11-Basic erlaubt  
-fast alles, was das Betriebsystem an Dateimanipulationen, Datenverarbeitung direkten Speicherzugriff etc. ermöglicht.
-Und das trotzdem weitgehend unabhängig vom tatsächlich eingesetzten Betriebsystem (ob WINDOWS, Linux oder Android).
+Wenn Sie jetzt denken, dass X11-Basic dann doch recht eingeschränkt ist, so
+darf ich Sie beruhigen: X11-Basic erlaubt fast alles, was das Betriebsystem an
+Dateimanipulationen, Datenverarbeitung direkten Speicherzugriff etc.
+ermöglicht. Und das trotzdem weitgehend unabhängig vom tatsächlich
+eingesetzten Betriebsystem (ob WINDOWS, Linux oder Android).
+
 <p/>
 
-Genug der einführenden Worte. Installieren Sie einfach X11-Basic, und sehen Sie selbst. 
+Genug der einführenden Worte. Installieren Sie einfach X11-Basic, und sehen Sie
+selbst. 
+
 <p/>
 
 <h3>Installation unter Android</h3>
 
 Die Installation auf Android-Geräten ist denkbar einfach: Suchen Sie die App
-X11-Basic im Play-Store und installieren Sie sie. Nach dem Öffnen der App können
-Sie direkt mit der Tastatur einzelne Befehle eingeben, welche sofort
-ausgeführt  werden. Ein Programm laden Sie mit MENU->load, Datei mit der Endung
+X11-Basic im Play-Store und installieren Sie sie. Nach dem Öffnen der App
+können Sie direkt mit der Tastatur einzelne Befehle eingeben, welche sofort
+ausgeführt werden. Ein Programm laden Sie mit MENU->load, Datei mit der Endung
 .bas auswählen, und dann mit MENU->Run starten.
 
 <h3>Installaiton unter Linux</h3>
@@ -77,11 +91,12 @@ ausgeführt  werden. Ein Programm laden Sie mit MENU->load, Datei mit der Endung
 Nicht minder einfach ist die Installation unter (Debian-basierten)
 Linux-Systemen: Laden Sie das X11-Basic Paket (eine entsprechende .deb Datei)
 herunter, klicken Sie in einem Dateimanager zweimal drauf und installieren Sie. 
-Alternativ können Sie ein .deb Paket auch in einem Perminal mit dem Kommando
+Alternativ können Sie ein .deb Paket auch in einem Terminal mit dem Kommando
 <p/><tt>
 dpkg -i xxx.deb 
 </tt><p/>
-installieren. Den Interpreter starten Sie dann aus dem Anwendungmenü heraus oder direkt von einer Shell mit 
+installieren. Den Interpreter starten Sie dann aus dem Anwendungmenü heraus 
+oder direkt von einer Shell mit 
 <p/><tt>
 xbasic 
 </tt><p/>
@@ -94,30 +109,47 @@ wenn Sie direkt ein Programm ausführen lassen wollen.
 
 <h3>Installation unter WINDOWS</h3>
 
-Laden Sie die .zip Datei mit dem Installationpaket runter und entpacken Sie es in Ihrem User-Verzeichnis. Starten Sie 
-dann das ausgepackte Setup-Programm.
+Laden Sie die .zip Datei mit dem Installationpaket runter und entpacken Sie es 
+in Ihrem User-Verzeichnis. Starten Sie dann das ausgepackte Setup-Programm. Bei
+der neuesten Version laden Sie anstelle der .zip Datei gleich das
+Installationprogramm runter.
+
 <p/>
-X11-Basic installiert sich nun auf der C: Partition im verzeichnis X11-Basic. Darin finden Sie dann u.a. den 
-Interpreter xbasic.exe sowie den Compiler xbc.exe welche Sie von dort mit Doppelklick oder draufziehen eines .bas 
+
+X11-Basic installiert sich nun auf der C: Partition im Verzeichnis X11-Basic.
+Darin finden Sie dann u.a. den Interpreter xbasic.exe sowie den Compiler
+xbc.exe welche Sie von dort mit Doppelklick oder draufziehen eines .bas 
 Programms starten können.
+
 <p/>
 
 <h2>Mein erstes Programm</h2>
 
-Warscheinlich möchten Sie sofort ein Programm schreiben und zum laufen bringen. Hierzu müssen Sie wissen, dass 
-X11-Basic Programme ganz normale Textdateien mit der Endung .bas sind. Diese müssen Sie erstellen und zwar mit einem 
-Text Editor. Das Schreiben eines X11-Basic Programms geht also nicht mit X11-Basic selbst sondern mit einem separaten 
-Programm. Ein solches müssen Sie also noch besorgen, wenn es noch nicht auf Ihrem Computer installiert ist. Unter 
-Android installieren Sie eine entsprechende App aus dem Play-Store, z.B. "Jota Text Editor". In Windows können Sie 
-den vorhandenen aber sehr rudimentären Editor "notepad" benutzen. Nach einer Weile werden Sie herausfinden, was ihnen 
-in Notepad fehlt und dann vielleicht eine bessere ALternative installieren. In Linux sindüblicherweise bereits jede 
-Menge Texteditoren installiert. Versuchen Sie mal gedit.
+Warscheinlich möchten Sie sofort ein Programm schreiben und zum Laufen bringen.
+Hierzu müssen Sie wissen, dass X11-Basic Programme ganz normale Textdateien
+mit der Endung .bas sind. Diese müssen Sie erstellen und zwar mit einem Text
+Editor. Das Schreiben eines X11-Basic Programms geht also nicht mit X11-Basic
+selbst sondern mit einem separaten Programm. Ein solches müssen Sie also noch
+besorgen, wenn es noch nicht auf Ihrem Computer installiert ist. Unter Android
+installieren Sie eine entsprechende App aus dem Play-Store, z.B. "Jota Text
+Editor". In Windows können Sie den vorhandenen aber sehr rudimentären Editor
+"notepad" benutzen. Nach einer Weile werden Sie herausfinden, was Ihnen in
+Notepad fehlt und dann vielleicht eine bessere ALternative installieren. In
+Linux sind üblicherweise bereits jede Menge Texteditoren installiert.
+Versuchen Sie mal gedit.
+
 <p/>
-Erwähnenswert ist vielleicht noch, dass Sie in Android nach der Installaiton des Editors direkt von der X11-Basic App 
-über MENU-> Editor in den Editor ihrer Wahl gelangen können. Nach Beendigung des Editors wird das Programm dann 
+
+Erwähnenswert ist vielleicht noch, dass Sie in Android nach der Installaiton
+des Editors direkt von der X11-Basic App über MENU-> Editor in den Editor
+ihrer Wahl gelangen können. Nach Beendigung des Editors wird das Programm dann 
 automatisch in X11-Basic neu geladen, so daß Sie es gleich starten können.
+
 <p/>
-Was für ein Programm sollen Sie schreiben? Wenn Sie noch nichts anderes wissen, schreiben Sie die beiden Zeilen 
+
+Was für ein Programm sollen Sie schreiben? Wenn Sie noch nichts anderes wissen,
+schreiben Sie die beiden Zeilen 
+
 <p/><tt>
 PRINT "Hallo" <br>
 PAUSE 10<br>
@@ -125,21 +157,27 @@ END<br>
 </tt><p/>
 in die Datei uns speichern sie als hallo.bas ab.
 <p/>
+
 In Android laden Sie die Datei mit MENU->Load, dann MENU->Run zum Starten. In Windows ziehen Sie die Datei einfach 
 auf den Interpreter xbasic.exe, lassen Sie los und Ihr Programm wird gestartet. In Linux öffnen Sie ein terminal und 
 geben "xbasic hallo.bas" ein. Und schon gehts los. Mehr müssen SIe für den Anfang nicht wissen, um losprogrammieren 
 zu können.
+
 <p/>
 
 Die müssen Sich nun nur noch anlernen, wie man Berechnungen in BASIC formuliert
-und was all die einzelnen Befehle  machen. Diese Informationen finden Sie im
-Benutzerhandbuch bzw in der integrierten Hilfe der Android Version der 
-X11-Basic App.
+und was all die einzelnen Befehle machen. Diese Informationen finden Sie im
+Benutzerhandbuch bzw. in der integrierten Hilfe der Android Version der 
+X11-Basic App. 
+
 <p/>
 
 Vielleicht erinnern Sie sich an GFA-Basic (z.B. für den ATARI ST aus den 80er
 Jahren), dann kennen Sie die meisten Befehle schon.
 
 <p/>
+
+
+
 </body>
 </html>

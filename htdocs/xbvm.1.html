@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of XBVM</TITLE>
 </HEAD><BODY>
 <H1>XBVM</H1>
-Section: X11-Basic Vitual Machine (1)<BR>Updated: 09-Nov-2016<BR><A HREF="#index">Index</A>
+Section: X11-Basic Vitual Machine (1)<BR>Updated: 04-Jan-2017<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -76,7 +76,7 @@ look at the README file coming with the package and the X11-Basic manual.
 
 <PRE>
 xbvm testme.b
-xbbc -v testme.b
+xbvm -v testme.b
 </PRE>
 
 <P>
@@ -87,10 +87,11 @@ You can find many sample programs in
 <A NAME="lbAJ">&nbsp;</A>
 <H2>The virtual machine</H2>
 
-The virtual machine is an interpreter for bytecode, which implements a stack 
-machine. The bytecode is very compact  and similar to machine code, but still it
-is independant of the  actual processor hardware and such very portable. With an
-additional small  step it can be compiled to native assembler or machine code.
+The virtual machine is an interpreter for bytecode. It implements a virtual 
+stack machine on which the bytecode is excecuted. 
+The bytecode is very compact  and similar to machine code, and it
+is independant of the actual processor hardware and such very portable. With an
+additional small step it can be translated to native assembler or machine code.
 (For linux this is done by the 
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1) </I>
 
@@ -105,7 +106,7 @@ but not least, there is no way to recreate the source code from the bytecode.
 <A NAME="lbAK">&nbsp;</A>
 <H2>VERSION</H2>
 
-Page was created for V.1.24
+Page was created for V.1.25
 <P>
 <A NAME="lbAL">&nbsp;</A>
 <H2>BUG REPORTS       </H2>
@@ -130,7 +131,7 @@ Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sou
 <A NAME="lbAN">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
-Copyright (C) 1997-2016 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+Copyright (C) 1997-2017 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software 
@@ -171,6 +172,6 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 08:51:50 GMT, April 19, 2016
+Time: 11:48:24 GMT, June 18, 2017
 </BODY>
 </HTML>
