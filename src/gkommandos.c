@@ -2245,18 +2245,28 @@ void c_objc_add(PARAMETER *plist,int e) {
 void c_objc_delete(PARAMETER *plist,int e) {
   objc_delete((OBJECT *)INT2POINTER(plist->integer),plist[1].integer);
 }
-void c_xload(char *n) {
+static int do_xload(char *n) {
+  int ret=0;
   char *name=fileselector("Load X11-Basic program:","./*.bas","");
   if(strlen(name)) {
     if(exist(name)) {
-      programbufferlen=0; 
-      mergeprg(name);
-    } else xberror(-33,name); /* file not found*/
+      if(name[strlen(name)-1]!='/') {
+        programbufferlen=0;
+        mergeprg(name);
+        ret=1;
+      } else ret=-2;
+    } else {
+      xberror(-33,name); /* file not found*/
+      ret=-1;
+    }
   }
   free(name);
+  return(ret);
+}
+void c_xload(char *n) {
+  do_xload(n);
 }
 void c_xrun(char *n) {
-  c_xload(n);
-  do_run();
+  if(do_xload(n)==1) do_run();
 }
 #endif /* NOGRAPHICS */
