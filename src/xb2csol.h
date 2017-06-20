@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <gmp.h>
@@ -103,6 +104,7 @@ inline static void cast_to_arbint(PARAMETER *sp) {
   mpz_clear(a);
 }
 
+int add_variable(const char *name, unsigned char  typ, unsigned char subtyp, unsigned int flags, void *adr);
 
 void free_parameter(PARAMETER *p);
   /* Initialize the x11basic-library */

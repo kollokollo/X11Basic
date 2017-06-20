@@ -15,10 +15,10 @@ all: demo1 demo2
 
 
 demo1: c-demo.c
-	gcc  -o $@ $< -lx11basic -ldl -lm -lreadline -lasound -lX11 
+	gcc  -o $@ $< -lx11basic -lm
 	
 demo2: library.o c-demo2.c
-	gcc  -o $@ $^ -lx11basic -ldl -lm -lreadline -lasound -lX11 
+	gcc  -o $@ $^ -lx11basic -lm
 	
 %.b: %.bas
 	xbbc -o $@ $<

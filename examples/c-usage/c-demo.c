@@ -16,6 +16,7 @@ gcc  -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <x11basic/x11basic.h>
 
