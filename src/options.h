@@ -28,6 +28,9 @@
   #undef HAVE_CLOG10
  // #undef HAVE_EXECVPE
   #undef HAVE_FUTIMENS
+  #undef HAVE_UTIMENSAT
+  #undef HAVE_FUTIMES
+  #undef HAVE_GCRYPT
   #undef HAVE_PTY_H
   #undef HAVE_SYS_SOCKET_H
   #undef HAVE_SYS_KD_H
@@ -38,9 +41,12 @@
   #undef HAVE_FFTW
   #undef HAVE_RFFTW
   #undef HAVE_BLUETOOTH 
+  #undef HAVE_BACKTRACE 
   #define USE_SDL
   #define HAVE_SDL 1 
-  #define HAVE_SDL_GFX 1 
+  #define HAVE_SDL_GFX 1
+  #undef SIZEOF_VOID_P
+  #define SIZEOF_VOID_P 4
 #elif defined ATARI
   #undef HAVE_READLINE
   #undef HAVE_LAPACK

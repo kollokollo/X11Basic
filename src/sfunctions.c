@@ -23,8 +23,10 @@
 #include "defs.h"
 #ifdef HAVE_GCRYPT
   #include <gcrypt.h>
-  #define GCRYPT_VERSION "1.5.0"
-
+  static int gcrypt_init=0;
+#else
+  #include "md5.h"
+  #include "sha1.h"
 #endif
 #include "x11basic.h"
 #include "variablen.h"
@@ -1093,12 +1095,6 @@ static STRING f_bwtds(STRING n) {  /* inverse Burrows-Wheeler transform */
   (ergebnis.pointer)[ergebnis.len]=0; 
   return(ergebnis);
 }
-#ifdef HAVE_GCRYPT
-  static int gcrypt_init=0;
-#else
-  #include "md5.h"
-  #include "sha1.h"
-#endif
 static STRING f_hashs(PARAMETER *plist,int e) {
   STRING ergebnis;
   int typ=1;  /*  Default is md5 */
@@ -1168,8 +1164,8 @@ static STRING do_encrypt(STRING *message, STRING *key, int typ) {
   size_t keyLength = gcry_cipher_get_algo_keylen(typ);
   gcry_cipher_hd_t hd;
   
-  if(key->len<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
-  if(message->len%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
+  if(key->len<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",key->len,keyLength);
+  if(message->len%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",message->len,blkLength);
   int len=(message->len-1)/blkLength+1;
   
     ergebnis.len=len*blkLength;
@@ -1216,6 +1212,8 @@ static STRING f_signs(PARAMETER *plist,int e) {
   int typ=4;  /*  Default is BLOWFISH */
   if(e>2) typ=plist[2].integer;
   /* ALso erst einen SHA1 Hash berechnen....*/
+#ifdef HAVE_GCRYPT
+#else
   sha1_context ctx;
   sha1_starts(&ctx);
   sha1_update(&ctx, plist->pointer, plist->integer);
@@ -1223,6 +1221,7 @@ static STRING f_signs(PARAMETER *plist,int e) {
   tmp.pointer=malloc(tmp.len+1);
   tmp.pointer[SHA1_DIGEST_LENGTH]=0;
   sha1_finish(&ctx, (unsigned char *)tmp.pointer);
+#endif
   /* Jetzt verschluesseln (geht noch nicht)*/  
   ergebnis=do_encrypt(&tmp,(STRING *)&(plist[1].integer),typ);
   free_string(&tmp);
@@ -1247,8 +1246,8 @@ static STRING do_decrypt(STRING *message, STRING *key, int typ) {
   size_t keyLength = gcry_cipher_get_algo_keylen(typ);
   gcry_cipher_hd_t hd;
   
-  if(key->len<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",plist[1].integer,keyLength);
-  if(message->len%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",plist[0].integer,blkLength);
+  if(key->len<keyLength) printf("WARNING: Key too short (%d). It must be at least %d bytes.\n",key->len,keyLength);
+  if(message->len%blkLength) printf("WARNING: The message length (%d) must be a multiple of %d bytes.\n",message->len,blkLength);
   int len=(message->len-1)/blkLength+1;
   
     ergebnis.len=len*blkLength;
@@ -1285,17 +1284,21 @@ int do_verify(STRING *message,STRING *signature,STRING *key, int typ) {
   /*  Erst hash der message berechnen.*/
   STRING sha1,tmp;
   int flag=1;
+#ifdef HAVE_GCRYPT
+  sha1.len=gcry_md_get_algo_dlen(8);
+#else
   sha1_context ctx;
   sha1_starts(&ctx);
   sha1_update(&ctx, (unsigned char *)message->pointer, message->len);
   sha1.len=SHA1_DIGEST_LENGTH;
   sha1.pointer=malloc(sha1.len+1);
   sha1_finish(&ctx, (unsigned char *)sha1.pointer);
+#endif
   /*  Dann signatur entschluesseln*/
   tmp=do_decrypt(signature,key,typ);
   /* Dann hashes vergleichen*/
-  if(tmp.len==SHA1_DIGEST_LENGTH)
-    flag=memcmp(sha1.pointer,tmp.pointer,SHA1_DIGEST_LENGTH);
+  if(tmp.len==sha1.len)
+    flag=memcmp(sha1.pointer,tmp.pointer,sha1.len);
   free_string(&sha1);
   free_string(&tmp);
   return((flag==0)?-1:0);

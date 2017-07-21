@@ -184,11 +184,6 @@ static void fatal_error_handler( int signum) {
    raise(signum);
 #endif
 }
-#ifdef WINDOWS
-void alarm(int dummy) {
-
-}
-#endif
 PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 
 
@@ -256,6 +251,8 @@ void x11basicStartup() {
   signal(SIGILL, fatal_error_handler);
   signal(SIGSEGV, fatal_error_handler);
 #endif
+// Alarm handling is still not working on WINDOWS, al though
+// the alarm() function is there (declared in <io.h> instead of <unistd.h>)
 #ifndef  WINDOWS  
   signal(SIGALRM, timer_handler);
 #endif
