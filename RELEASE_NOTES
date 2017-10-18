@@ -12,3 +12,4 @@ Release notes for Version 1.25 (Sept 2016 -- 2017)
 - improved memory handling in 64bit versions
 - new parameter list types for CALL
 - new functions CALLD() and CALL$()
+- fixed Bug in XLOAD and TOUCH (Android)

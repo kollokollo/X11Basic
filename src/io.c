@@ -127,31 +127,45 @@ static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned
 static int make_socket(unsigned short int port);
 static int make_UDP_socket(unsigned short int port);
 
-/* get the current cursor position */
+/*futimens does not exist on Android NDK.
+
+This does not work either for NDK r7c:*/
+
+//#if defined ANDROID
+//#include <sys/syscall.h>
+//int utimensat(int dirfd, const char *pathname,
+//        const struct timespec times[2], int flags) {
+//    return syscall(__NR_utimensat, dirfd, pathname, times, flags);
+//}
+//#endif
 
 #ifndef HAVE_FUTIMENS
+#ifndef HAVE_UTIMENSAT
+  /* Bei ANdroid gibt es beide nicht. */
+#ifndef HAVE_FUTIMES
+#ifndef HAVE_UTIME
   #define futimens(a,b)  (0);   /* not supported  */
+  #pragma message ("TOUCH/futimes not supportet. Feature disabled." )
+#else
+/* Here we can try to use utime with proc file system, but we can easily get a permission denied error. */
+   int futimens(int fd, void * dummy) {
+      char pn[64];
+      sprintf(pn,"/proc/%d/fd/%d",getpid(),fd);
+      return(utime(pn,NULL));
+   }
+#endif 
+#else
+  #define futimens(a,b) futimes(a,NULL)
+#endif
+#else
+  #define futimens(a,b) utimensat(a, NULL, b, 0);
+#endif
 #endif
 
-#ifndef UTIME_NOW
-  #define UTIME_NOW      ((1l << 30) - 1l)
-  #define UTIME_OMIT     ((1l << 30) - 2l) 
-#ifndef ANDROID
-#ifndef ATARI
-#ifndef __APPLE__
-#ifndef WINDOWS
-  struct timespec {
-        time_t tv_sec;        /* seconds */
-        long   tv_nsec;       /* nanoseconds */
-  };
-#endif
-#endif
-#endif
-#endif
-#endif
 
 #if defined ANDROID
 extern int lin,col;
+/* get the current cursor position */
 
 void getcrsrowcol(int *_row, int *_col) {
   *_row=lin+1;
@@ -1864,14 +1878,8 @@ void touch(PARAMETER *plist,int e) {
   if(plist->integer>0) {
     FILEINFO fff=get_fileptr(plist->integer);
     if(fff.typ==0) {xberror(24,"");return;} /* File nicht geoeffnet */ 
-    int fp=fileno(fff.dptr);
-    struct timespec ts[2];
-    ts[0].tv_nsec=UTIME_NOW;
-    ts[1].tv_nsec=UTIME_NOW;
-#ifndef ATARI
-    int ret=futimens(fp, ts);
+    int ret=futimens(fileno(fff.dptr), NULL);
     if(ret==-1) io_error(errno,"touch");
-#endif
   }
 }
 
