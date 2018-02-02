@@ -72,7 +72,7 @@ void intro() {
   printf("c");
   printf("*************************************\n"
          "* %10s          V.%5s       *\n"
-         "*  by Markus Hoffmann 1997-2017 (c) *\n"
+         "*  by Markus Hoffmann 1997-2018 (c) *\n"
          "*                                   *\n"
          "* lib %29s *\n"
          "*************************************\n\n",
@@ -82,7 +82,7 @@ void intro() {
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
-         "*                       by Markus Hoffmann 1997-2017 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2018 (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
 #elif defined USE_SDL

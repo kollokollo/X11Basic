@@ -1,4 +1,4 @@
-Release notes for Version 1.25 (Sept 2016 -- 2017)
+Release notes for Version 1.25 (Sept 2016 -- 2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - HASH()/SHA1 and MD5 now work also without libgcrypt
 - new Commands: HIDEK, SHOWK (Android)

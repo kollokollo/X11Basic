@@ -10,7 +10,7 @@
     
                        VERSION 1.25
 
-            (C) 1997-2017 by Markus Hoffmann
+            (C) 1997-2018 by Markus Hoffmann
                (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
