@@ -40,6 +40,7 @@ More things left to do:
 - work on the sound system,
 - work on the SDL-Graphics implementation (fill styles etc...),
 - documentation needs more work,
+- translate the user manual into other languares (german, french,...)
 - port it to apple ipad/iphone,
 (etc. etc.)
 

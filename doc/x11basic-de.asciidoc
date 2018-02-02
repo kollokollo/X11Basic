@@ -1,0 +1,818 @@
+= X11-BASIC Version 1.25 Benutzerhandbuch
+Markus Hoffmann <kollo@users.sourceforge.net>
+v1.25, 2018-02-02  
+:docversion: 1.25
+:docyear: 2018
+:homepage: http://x11-basic.sourceforge.net/
+:toc:
+:sectnums:
+
+Deutsche Übersetzung des Handbuchs
+
+Dieses Dokument ist noch sehr unvollständig und befindet sich gerade 
+erst im Werden... Deshalb konsultieren Sie bitte das englische 
+Benutzerhandbuch stattdessen. Letzteres ist ziemlich vollständig.
+
+== X11-BASIC Version 1.25 Benutzerhandbuch
+(c) 1997-{docyear} Markus Hoffmann  +
+(kollo@users.sourceforge.net)  +
+(siehe auch: {homepage})  
+
+<<<
+
+=== Über dieses Dokument
+
+Dieses Dokument beschreibt die Funktionen von X11-Basic. Sie finden 
+Informationen zum X11-Basic-Interpreter (das Programm `xbasic` unter 
+Unix oder  `xbasic.exe`  unter Windows) und dem Compiler (das Programm  
+`xbc` unter UNIX oder `xbc.exe` unter Windows) sowie zur Sprache 
+selbst. Für eine kompaktere Beschreibung bzw. Einführung möchten Sie 
+vielleicht die man-page `x11basic(1)`  oder die man-page des 
+X11-Basic-Compilers `xbc(1)` jeweils von Fall zu Fall zu rate ziehen.
+
+Die neuesten Informationen und Updates sowie neue Versionen von X11-Basic 
+finden Sie unter {homepage} .
+
+
+<<<
+
+
+[preface]
+== Vorwort
+
+Schön, daß Sie sich für mein kleines Projekt X11-Basic interessieren. Es wird
+gelegentlich der Wunsch an mich herangetragen, das Benutzerhandbuch zur
+Programmiersprache, welches es derzeit nur in einer englischen Version gibt, 
+ins Deutsche zu übersetzten. Da ich froh bin, daß es ein einigermaßen
+brauchbares Handbuch überhaupt gibt und kaum Zeit habe, noch eine deutsche
+Version zu machen, werde ich an dieser Stelle wenigstens einige grundlegende 
+Hilfestellungen zum Benutzen der Programmiersprache X11-Basic geben.
+
+
+Aus dem kleinen Projekt ist inzwischen über die Jahre eine recht ansehnliche
+und rubuste Programmierumgebung geworden, von der man in den 80er Jahren des
+vergangenen Jahrhunderts nur träumen konnte. Dennoch hat sich in Sachen 
+IT-Technik, Programmieranwendungen und auch Programmiertechniken seitdem einiges
+getan, so daß X11-Basic heutigen Ansprüchen an eine zeitgemäße
+Entwicklungsumgebung nicht genügt. Das war aber auch nie so gedacht. X11-Basic
+richtet sich nicht an den (angehenden) professionellen Programmierer, sondern
+mehr an den mathematisch interessierten Programmier-Laien, oder zumindest an
+solche, welche zu faul sind, sich die Eigenheiten heutiger Programmiersprachen 
+anzulernen, nur um ein etwas komplexeres Problem rechnerisch umzusetzen. Diese
+Diskrepanz zwischen Computerprogrammierung und Umsetzen von mathematischen
+Algorithmen hat es schon immer gegeben, und das war nicht zuletzt der Grund,
+warum die BASIC Programmiersprache vor mehr als 50 Jahren überhaupt entstanden
+ist.
+
+Um es kurz zu machen: Suchen Sie eine Programmiersprache, mit der Sie
+Anwenderprogramme mit Benutzerschnittstellen, evtl. sogar Apps für Smartphones
+oder dergleichen machen wollen, nutzen Sie besser gleich die dort übliche 
+Programmiersprache. Dann lohnt es sich auch, die zu lernen. Ihre App wird
+sowieso nicht an einem Tag fertig lauffähig sein. Dafür bekommen Sie aber
+massenhaft Hilfe im Internet in einschlägigen Foren. Die meisten Probleme, die
+Sie treffen werden, hat eh schon jemand vor Ihnen gelöst. Sie müssen sie nur
+finden, abwandeln und für Ihre App einsetzen.
+
+X11-Basic hingegen würden Sie nutzen, wenn Sie eine neue Idee für einen
+Algorithmus schnell ausprobieren wollen. Die Stärken von X11-Basic sind seine
+Rechenfähigkeit. Sie können leicht mit komplexen Zahlen, beliebig großen
+ganzen Zahlen oder auch nur mit normalen rationalen Zahlen Berechnungen
+anstellen. Es gibt weiterhin Funktionen, um mit Matritzen zu rechnen. Nebenbei
+ist X11-Basic recht schnell in der Ausführung, und es bedarf nur einer kurzen 
+Lernphase, bis Sie ihr erstes Programm schreiben und laufen lassen können. Die
+graphischen Fähigkeiten helfen Ihnen dabei, die Berechnungen auch plastisch und
+in Farbe darzustellen. Schliesslich eignet sich X11-Basic auch besonders für
+Datenmanipulationen aller Art, dank einer vollständigen Implementierung aller 
+I/O-Funktionen des Betriebsystems.
+
+Wenn Sie jetzt denken, dass X11-Basic dann doch recht eingeschränkt ist, so
+darf ich Sie beruhigen: X11-Basic erlaubt fast alles, was das Betriebsystem an
+Dateimanipulationen, Datenverarbeitung direkten Speicherzugriff etc.
+ermöglicht. Und das trotzdem weitgehend unabhängig vom tatsächlich
+eingesetzten Betriebsystem (ob WINDOWS, Linux oder Android).
+
+Genug der einführenden Worte. Installieren Sie einfach X11-Basic, und sehen Sie
+selbst. 
+
+
+## Installation unter Android
+
+
+Die Installation auf Android-Geräten ist denkbar einfach: Suchen Sie die App
+`X11-Basic` im Play-Store und installieren Sie sie. Nach dem Öffnen der App
+können Sie direkt mit der Tastatur einzelne Befehle eingeben, welche sofort
+ausgeführt werden. Ein Programm laden Sie mit `MENU->load`, Datei mit der Endung
+`.bas` auswählen, und dann mit `MENU->Run` starten.
+
+## Installaiton unter Linux
+
+
+Nicht minder einfach ist die Installation unter (Debian-basierten)
+Linux-Systemen: Laden Sie das X11-Basic Paket (eine entsprechende `.deb` Datei)
+herunter, klicken Sie in einem Dateimanager zweimal drauf und installieren Sie. 
+Alternativ können Sie ein `.deb` Paket auch in einem Terminal mit dem Kommando
+
+----
+dpkg -i xxx.deb 
+----
+
+installieren. Den Interpreter starten Sie dann aus dem Anwendungmenü heraus 
+oder direkt von einer Shell mit 
+
+----
+xbasic 
+----
+
+oder 
+
+----
+xbasic meinprogramm.bas
+----
+
+wenn Sie direkt ein Programm ausführen lassen wollen. 
+
+
+## Installation unter WINDOWS
+
+Laden Sie die `.zip` Datei mit dem Installationpaket runter und entpacken Sie es 
+in Ihrem User-Verzeichnis. Starten Sie dann das ausgepackte Setup-Programm. Bei
+der neuesten Version laden Sie anstelle der `.zip` Datei gleich das
+Installationprogramm runter.
+
+X11-Basic installiert sich nun auf der `C:` Partition im Verzeichnis `X11-Basic`.
+Darin finden Sie dann u.a. den Interpreter `xbasic.exe` sowie den Compiler
+`xbc.exe` welche Sie von dort mit Doppelklick oder draufziehen eines `.bas` 
+Programms starten können.
+
+## Mein erstes Programm
+
+Warscheinlich möchten Sie sofort ein Programm schreiben und zum Laufen bringen.
+Hierzu müssen Sie wissen, dass X11-Basic Programme ganz normale Textdateien
+mit der Endung `.bas` sind. Diese müssen Sie erstellen und zwar mit einem Text
+Editor. Das Schreiben eines X11-Basic Programms geht also nicht mit X11-Basic
+selbst sondern mit einem separaten Programm. Ein solches müssen Sie also noch
+besorgen, wenn es noch nicht auf Ihrem Computer installiert ist. Unter Android
+installieren Sie eine entsprechende App aus dem Play-Store, z.B. "Jota Text
+Editor". In Windows können Sie den vorhandenen aber sehr rudimentären Editor
+"notepad" benutzen. Nach einer Weile werden Sie herausfinden, was Ihnen in
+Notepad fehlt und dann vielleicht eine bessere Alternative installieren. In
+Linux sind üblicherweise bereits jede Menge Texteditoren installiert.
+Versuchen Sie mal `gedit`.
+
+Erwähnenswert ist vielleicht noch, daß Sie in Android nach der Installaiton
+des Editors direkt von der X11-Basic App über `MENU->Editor` in den Editor
+ihrer Wahl gelangen können. Nach Beendigung des Editors wird das Programm dann 
+automatisch in X11-Basic neu geladen, so daß Sie es gleich starten können.
+
+Was für ein Programm sollen Sie schreiben? Wenn Sie noch nichts anderes wissen,
+schreiben Sie die drei Zeilen 
+
+----
+PRINT "Hallo"
+PAUSE 10
+END
+----
+
+in die Datei und speichern sie als hallo.bas ab.
+
+In Android laden Sie die Datei mit `MENU->Load`, dann `MENU->Run` zum 
+Starten. In Windows ziehen Sie die Datei einfach auf den Interpreter 
+`xbasic.exe`, lassen Sie los und Ihr Programm wird gestartet. In Linux 
+öffnen Sie ein Terminal und geben `xbasic hallo.bas` ein. Und schon 
+gehts los. Mehr müssen SIe für den Anfang nicht wissen, um 
+losprogrammieren zu können.
+
+Sie müssen Sich nun nur noch anlernen, wie man Berechnungen in BASIC formuliert,
+und was all die einzelnen Befehle machen. Diese Informationen finden Sie im
+Benutzerhandbuch bzw. in der integrierten Hilfe der Android Version der 
+X11-Basic App. 
+
+Vielleicht erinnern Sie sich an GFA-Basic (z.B. für den ATARI ST aus den 80er
+Jahren), dann kennen Sie die meisten Befehle schon.
+
+
+== Über X11-Basic
+
+
+X11-Basic ist ein Dialekt der Programmiersprache BASIC. X11-Basic unterstützt
+Grafik und Sound, sowie alle Funktionen welche die traditionellen 
+BASIC Dialekte auch bieten. Es eigenet sich deshalb für Shell-Skripte, CGI-Programmierung sowie zur Berechnung von komplexen Mathematischen Algorithmen sowie zur Visualisierung und grafischen Darstellung der Ergebnisse.  
+Die BASIC Programme sind in der Regel gut strukturiert. X11-Basic
+verwendet keine Zeilennummern.
+
+Die Syntax von X11-Basic ähnelt am ehesten der von GFA-Basic in seiner 
+ursprünglichen Implementierung für den ATARI ST. 
+Alte GFA-Basic Programme sollten nur mit wenigen Änderungen laufen. 
+Auch DOS / QBASIC Programmierer werden sich schnell zuhause fühlen.
+
+
+X11-Basic eignet sich für nahezu alle Programmieraufgaben. Für die Wissenschaft und
+Technik hat X11-Basic bereits seine Fähigkeit bewiesen, in komplexen Simulationen und Regelungs- sowie Automatisierungs-Lösungen.
+X11-Basic bietet eine hohe Abstraktionsebene im Sprachdialekt, eignet sich aber ebenso gut für Hardware-Nahe Aufgaben, Datenanalyse bis zum letzen Bit, sowie Steuerung von Elektronik.
+Und das mit einem Sprachdialekt, der viel einfacher zu 
+lesen, verstehen und pflegen ist, als viele andere Programmiersprachen. 
+X11-Basic wurde konzipiert für alle Anwendungen und ermöglicht die 
+schnelle Entwicklung von kompakten, effizienten, zuverlässigen, lesbaren, portierbaren, gut
+strukturierten Programmen.
+
+X11-Basic unterstützt komplexe Zahlen und komplexe mathematische sowie Berechnungen mit Zahlen mit beliebiger Präzision wo es benötigt wird, sowie sehr schnelle 32bit-Ganzzahl-Arithmetrik
+und 64bit Fließkommaoperationen. Weiterhin sind die Möglichkeiten der Datenmaipulationen mit Strings und Stringfunktionen umfassend.
+
+X11-Basic hat das Motto: "klein und schnell". Dabei ist das Ziel, mit den wenigsten Systemresourcen auszukommen und dabei die höchstmögliche Ausführungsgeschwindigkeit zu erzielen. X11-Basic erreicht das durch
+Bereitstellung sehr mächtiger integrierter Befehle und Funktionen und eines sehr schnellen Compilers, der umso schnellere Programme erzeugt.
+ 
+Mit X11-Basic können Sie mal eben schnell eine kleine Anwendung mit 
+sehr wenig Aufwand schreiben. Sollten einmal die eingebauten Befehle und Funktionen des X11-Basic Dialektes für eine Aufgabe nicht ausreichen, so können problemlos alle systemweiten Shell-Kommandos sowie alle dynamsichen Libraries mit eingebunden werden. Eine Mischung von X11-Basic mit anderen Programmiersprachen, z.B. C und Assembler ist so leicht möglich.
+
+Weil es eine interpretierende Sprache ist, kann jeder neue Schritt in Ihrem Programm schnell
+getestet werden, um schnell zu sehen, wie es läuft. Wenn dann Ihr Programm fertig ist, 
+können Sie den X11-Basic-Compiler verwenden, um einen sehr schnelles unabhängig lauffähiges Programm daraus zu erstellen.
+
+=== Portabilität
+
+Der X11-Basic-Dialekt wurde so konzipiert, dass sie soweit möglich plattformunabhängig ist.
+Sie können also erwarten, dass X11-Basic-Programme auf vielen Betriebssystemen laufen, und überall etwa dasselbe tun und das gleiche Aussehen produzieren. X11-Basic-Programme sind portabel.
+
+X11-Basic wurde entwickelt, um auf vielen Betriebsystemen mit extrem niedrigen Ressourcen zu laufen.
+Es wurde ursprünglich für UNIX-Workstations und Linux-Systeme mit dem X-Window-System entwickelt. 
+
+[NOTE]
+====
+Deshalb auch das "X11", da X damals als X11 bekannt war, basierend auf seiner aktuellen Hauptversion 11. Heute heißt das Projekt X.org.
+====
+
+Nichtsdestotrotz wurden bald X11-Basic Versionen auch für andere Betriebssysteme (MS WINDOWS, MAC OSX, ATARI ST / TOS) erstellt. 
+
+
+In den Fällen, in denen kein X11-Fenstergrafiksystem vorhanden ist, kann X11-Basic stattdessen auch mit einer Unterstützung des Framebuffers  kompiliert werden. Die Android-Version z.B. verwendet die Framebuffer-Schnittstelle. Ebenfalls ist eine solche Implementierung für 
+die TomTom-Navigationsgeräte und für den Raspberry Pi (ohne X.org) möglich. 
+Die SDL (= Simple Direct-Media Library) wird ebenfalls unterstützt als
+alternative Grafik-Engine. Die MS-Windows-Version nutzt dies. Aber es ist
+auch möglich, SDL-Unterstützung für andere Betriebssysteme in X11-Basic hinein zu kompilieren.
+
+
+So ist es auch möglich, X11-Basic auf sehr einfachen Systemen, den sogenannten embedded (=eingebettete) Systemen mit einer sehr
+Geringen Menge an RAM und bei kleiner Prozessorleistung zu portieren. 
+
+Schließlich ist es sogar möglich, 
+eine Version von X11-Basic ohne Grafik zu kompilieren. Auf diese Weise entsteht eine sehr leichte
+Skript-Engine, z.B. zum Aufbau von Servern.
+
+Sound ist nicht auf jedem System verfügbar. Wo es verfügbar ist, nutzt X11-Basic
+einen 16-Kanal-Sound-Synthesizer sowie die Möglichkeit, Sound-Samples 
+aus Standard-Sounddateiformaten (wie `.wav` und `.ogg`) abzuspielen. Auf LINUX-Systemen wird das meist durch die ALSA Sound-Engine ermöglicht. Auf dem Android-Betriebsystem nutzt X11-Basic zusätzlich das Android-Sprachmodul.
+
+Die X11-Basic-Bibliothek enthält eine grafische Benutzerschnittsteölle (GUI), welche dem 
+__GEM__ nachempfunden ist. Dies
+macht das Schreiben von GUI-Programmen in X11-Basic schneller, einfacher und portabler als
+das Programmieren mit jeweils nativen GUI-Tools.
+
+[NOTE]
+====
+GEM=*G*raphics *E*nvironment *M*anager, eine Betriebsystemumgebung, die ursprünglich von Digital Research Inc. (DRI) für den ATARI ST entwickelt wurde und z.B. auch von GFA-BASIC verwendet wurde.
+====
+
+[NOTE]
+====
+GUI=Graphical User Interface (grafische Benutzerschnittstelle)
+====
+
+Die Android-Version von X11-Basic enthält eine voll ausgestattete farbige VT100/ANSI
+Terminalemulation und Unterstützung für Unicode-Zeichensätze (UTF-8 codiert) auf der 
+Standardausgabe für Text.
+
+=== Strukturierte Programmierung
+
+=== Optimaler Programmcode
+
+=== Copyright Informationen
+
+== Benutzung
+
+Wenn Sie X11-Basic bzw `xbasic` aus einem Terminal starten, dann meldet sich der Interpreter
+mit folgender Ausgabe:
+
+----
+**********************************************************
+*        xbasic                     V. 1.25              *
+*                       by Markus Hoffmann 1997-2017 (c) *
+*                                                        *
+* version date:             Tue Jan 23 22:55:46 CET 2018 *
+* library V.1.25 date:      Tue Jan 23 22:55:46 CET 2018 *
+**********************************************************
+
+Usage: xbasic [-e -h -l] [<filename>] --- run basic program [new.bas]
+
+ -l             --- do not run the program (only load)
+ -e <command>   --- execute basic command
+ --eval <exp>   --- evaluate num. expression
+ -h --help      --- Usage
+ --help <topic> --- Print help on topic
+----
+
+Das bedeutet, der Interpreter kann mit einigen wenigen Kommandozeilenparametern gestartet werden.
+Haupsächlich aber übergibt man lediglich den Dateinamen des auszuführenden Programms.
+
+Beispiele:
+
+----
+xbasic testme.bas
+xbasic -e 'alert 1,"Hallo !",1," OK ",b'
+xbasic --eval 1+3-4*3
+----
+
+== Kurzanleitung zu X11BASIC
+
+=== Das Variablenkonzept
+
+Der Interpreter kennt 64-Bit Floatingpoint Variablen, 32-Bit Integervariablen,
+Zeichenketten und beliebigdimensionale Felder obengenannter Typen.
+Eine Deklaration der Variablen ist nicht nötig (Außer bei Feldern --> DIM),
+da der Interpreter den Typ an der Endung der Variable erkennt:
+Integervariablen tragen die Endung `%`, Zeichenketten ein `$`, Felder ein `()`.
+Variablen ohne Endung werden als Gleitkommazahl interpretiert.
+Pointer sind Integer, Funktionsergebnisse werden durch `@` gekennzeichnet
+Logische Ausdrücke sind ebenfalls vom Typ Interger.
+
+Die Variablen werden dynamisch verwaltet, so sind beliebig große Zeichenketten
+und Felder möglich. Die Grenze ist hier nur der maximal allozierbare Speicher
+und max. 31 Bit für die Indizierung. Das sollte vorerst ausreichen.
+
+
+Beispiele:
+
+Integer-Variablen:      i%=25
+			a%=varptr(b$)
+			b%=malloc(100000)
+Float-Variablen:        a=1.2443e17
+			b=@f(x)
+Zeichenkettenvariablen: t$="Das ist ein Text"
+Felder/Arrays:          i%(),a(),t$()
+
+Logische Ausdruecke:    (a=2 AND b=5) sind vom Typ Integer (TRUE=-1, FALSE=0)
+
+
+OPERATOREN
+##########
+
+Man unterscheidet zwischen numerischen, Zeichenketten- und Feld- bzw.
+Matritzenoperatoren, je nachdem, ob das ergebnis der Operation eine Zahl oder
+eine Zeichenkette ist.
+ 
+-- Zeichenkettenoperatoren ---
+
++	Dier Verkettung von Zeichenketten.
+	Dabei werden die durch + verbundenen Strings lückenlos
+	aneinandergefügt.
+
+	Beispiel: a$="X11", b$="-" und c$="BASIC", dann ergibt sich 
+        d$=a$+b$+c$ die Zeichenkette "X11-BASIC" 
+
+$()     Zeichenkettenfunktionen:
+	z.B. LEFT$, RIGHT$, MID$, SPACE$, STRING$, STR$ ...
+
+-- Numerische Operatoren --
+
+Die numerischen Operatoen können in vier Kategorien gegliedert werden:
+
+*	Arithmetische Operatoren
+
+*	Vergleichsoperatoren
+
+*	Logische Operatoren
+
+*	Numerische Funktionen
+
+-- Matritzenoperatoren --
+
+Matritzenoperatoren oder allgemein Feld-Operatoren operieren auf Feldern.
+Je nach Feldtyp und Dimension koennen sie unterschiedliche Bedeuting haben.
+
+        $    F   I   D2 D3 Dn Sonstige Bemerkungen
++       *    *   *    *  *  *
+-       -    *   *    *  *  *
+*       -    *   *    *  -  -  M1=N2 , auch skalar
+INV()   -    *   *    *  -  -  M=N
+TRANS() *    *   *    *  -  -  M=N
+
+Weiterhin gibt es Operatorn/Funktionen, die zwischen verschiedenen
+Variablenklassen Operieren: z.B.
+a%=INT(b), c=DET(d()), s=SMUL(a(),b()), a=NULL(2,4,5), ...
+
+Insbesondere sei auf den Reduktionsoperator hingewiesen:
+a(:,3) ist ein eindimensionaler Vektor, naemlich die Spalte Nr. 3 der
+        Matrix a. 
+
+
+-- Integer und Float-Variablen ---
+()           Klammerung
++ - * /      Grundrechenarten
+^            Potenz
+
+MOD          Modulo
+DIV          Ganzzahliger Teiler
+
+
+=== Vergleichsoperatoren: = <> < > <= >=
+
+Vergleichsoperatoren können zwischen zwei Ausdrüchen gleichen Typs stehen, also
+zwischen Zeichenkettenausdruecken, numerischen Ausdruecken oder Feld-Ausdruecken.
+Abhängig vom Wahrheitswert (wahr oder falsch) wird ein dem Vergleich entweder der
+Wert -1 (wahr) oder 0 (falsch) zugeordnet.
+(Da sich in jedem Fall eine Zahl ergibt, zählt auch der Vergleich von
+Zeichenketten zu den numerischen Operatoren.)
+
+Folgende Vergleichsoperatoren sind verfügbar:
+
+	=	gleich
+	>	größer als
+	<	kleiner als
+	<>	ungleich
+	>=	größer oder gleich
+	<=	kleiner oder gleich
+
+Zum Vergleich von numerischen Ausdrücken sollen hier nur einige Beispiele
+aufgeführt werden:
+
+PRINT 3=1.5*2  übergibt den Wert  -1   (wahr)
+PRINT 5>5      übergibt den Wert   0   (falsch)
+
+Der Vergleich von Zeichenketten vollzieht sich nach folgenden Regeln: 
+
+*	Zwei Zeichenketten sind gleich, wenn sie vollständig übereinstimmen.
+	(Dabei werden alle Zeichen der Strings, auch Leerzeichen und Satzzeichen,
+	verglichen. So gilt z.B. " 123 v fdh.-," = " 123 v fdh.-,")
+
+*	Bein Größenvergleich zweier Strings wird folgendermaßen verfahren:
+	Die Zeichenketten werden Zeichenweise verglichen, solange, bis der
+	ASCII-Code des Zeichens des einen Strings kleiner ist als der des
+	Zeichens  des anderen Strings, oder das Zeichenkettenende eines Strings
+	erreicht wird. Dieser Ist dann kleiner als der andere.
+
+	Beispiele:
+	"X11">"X11"     ergibt  0
+        "X11"<"x11"     ergibt -1
+        "123"<"abc"     ergibt -1
+        "123">"1234"    ergibt  0
+
+=== Logische Operatoren: AND OR NAND OR NOT XOR EQV IMP 
+
+Mit Hilfe der logischen Operatoren können Ausdrücke oder Beziehungen zwischen
+Ausdrücken miteinander verbunden werden.
+
+In der Regel werden mit logischen Operatoren Wahrheitswerte verknüpft und als
+Ergebnis wiederum Wahrheitswerte ausgegeben.
+Dabei wird jedem numerischen Ausdruck ungleich 0 der Wahrheitswert 0 und jedem
+Ausdruck, dessen Wert gleich 0 ist, der Wahrheitswert falsch zugeordnet.
+Die von den Logischen Operatoren erzeugten Wahrheitswerte ergeben sich aus
+der Bit-weisen Operation, wenn die Operanden als 32-Bit Integerwerte
+angesehen werden. Deshalb gehoert zum Wahrheitswert 0 (falsch) der
+Wahrheitswert -1 (wahr). Hierfür gibt es auch die Systemvariablen TRUE=-1
+und FALSE=0. Dies kann man auch in numerischen Ausdrücken verwenden, z.B.:
+a=ABS(x=0)*100+ABS(x=1)*200   je nach dem Wert von x erhaelt die Variable a die
+Werte 100 oder 200.
+
+AND   Konjunktion
+      Das Ergebnis von AND ist nur dann w, wenn beide Argumente w sind:
+
+      A  |  B  |  A AND B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    f
+      f  |  f  |    f
+
+      Beispiele:
+      Print 3=3 AND 4>2        ergibt  -1 (w)
+      Print 3>3 AND 5>3        ergibt   0 (f)
+
+OR   Disjunktion
+     Das Ergebnis von OR ist nur dann f, wenn beide Argumente f sind:
+
+      A  |  B  |  A OR B
+    -----+-----+-----------
+      w  |  w  |    w  
+      w  |  f  |    w
+      f  |  w  |    w
+      f  |  f  |    f
+      
+      Beispiele:
+      Print "A"<"a" OR 3=5     ergibt  -1 (w)
+      Print 2>7 OR 10=20       ergibt   0 (f)
+
+XOR  Exclusives (oder ausschließendes) Oder
+     Das Ergebnis von XOR ist  f, wenn die Argumente gleiche Wahrheitswerte
+     haben:
+      
+      A  |  B  |  A XOR B   
+    -----+-----+-----------
+      w  |  w  |    f
+      w  |  f  |    w
+      f  |  w  |    w
+      f  |  f  |    f
+
+      Beispiele:
+      Print 3=3 XOR 6=6     ergibt   0 (f)
+      Print 3>5 XOR 3<5     ergibt  -1 (w)
+
+NOT   Die Negation vertauscht Wahrheitswerte in ihr Gegenteil.
+
+      A  |  NOT A
+    -----+----------
+      w  |   f 
+      f  |   w  
+
+      Beispiel:
+      Print NOT 3=3      ergibt   0 (f)
+
+IMP  Implikation
+     Das Resultat der Operation ist dann falsch, wenn falsch auf wahr folgt. 
+      
+      A  |  B  |  A IMP B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    w
+      f  |  f  |    w
+
+EQV  Äquivalenz 
+     Dier Operation ist identisch mit (A IMP B) AND (B IMP A)
+                                                                           
+      A  |  B  |  A EQV B
+    -----+-----+-----------
+      w  |  w  |    w
+      w  |  f  |    f
+      f  |  w  |    f
+      f  |  f  |    w
+
+Die logischen Operatoren werden hauptsächlich dazu benutzt, um abhängig vom
+Wahrheitswert verbundener Ausdrücke verschiedene Programmabläufe zu ermöglichen
+(z.B. über die Befehle IF, WHILE, EXIT IF ...)
+Logische Operatoren können aber auch dazu benutzt werden, um Bitfolgen zu
+verknüpfen.
+
+
+
+
+
+
+------ Anweisungen -------------
+Allgemeines:
+
+Nach Befehlen sind Kommentare erlaubt, die mit einem "!" vom Befehl abzusetzen
+sind.
+DO    ! Endlosschleife
+LOOP  ! und nix drin
+
+Diese Kommentare sind natuerlich nicht erlaubt nach DATA (und REM).
+
+Der &-Operator gefolgt von einem Zeichenkettenausdruck evaluiert deren inhalt 
+als Programm-Code.
+
+Beispiel:
+
+clr i
+a$="print a$"
+label1:
+inc i
+if i>10 
+  b$="label2"
+else
+  b$="label1"
+endif
+&a$
+goto &b$
+label2:
+end
+
+erzeugt 10x die Ausgabe "print a$".
+Dies führt leicht zu unuebersichtlichem Code, aber schließlich schimpft sich
+der Interpreter ja Basic.
+
+
+
+'                     -- Abkürzung fuer REM
+?                     -- Abkürzung fuer PRINT
+@                     -- Abkürzung fuer GOSUB, bzw Funktionsaufruf
+~                     -- Abkürzung fuer VOID
+!                     -- Kommentar hinter einer Zeile
+&                     -- Indirektes Kommando
+
+
+------ Systemvariablen ----------
+
+TRUE                  -1
+FALSE                 0
+CRSCOL			n.n.
+CRSLIN			n.n.
+PI                    3.141592...
+TIMER                 Systemtimer, float, erhoet sich mehr oder weniger 
+                      kontinuierlich mit der Zeit, pro Sekunde um eins
+STIMER                Dasselbe nur ganzzahlig
+CTIMER                Dasselbe nur in Einheiten der CPU-Zeit
+PC                    Zeilennr der naechsten auszufuehrenden Zeile
+SP                    interner Stackpointer (Verschachtelungstiefe)
+ERR                   Fehlernr des letzten Fehlers
+
+
+MOUSEX                X-Koordinate der Mausposition relativ zum Fensterursprung
+MOUSEY                Y-Koordinate der Mausposition
+MOUSEK                Bitrepresentation der gedrueckten Maustasten, 
+                      Button 1=Bit 0,Button 2=Bit 1 usw.
+MOUSES                Status der Umschalttasten 
+
+ENV$(n$)              Inhalt der Environmentvariable mit Namen n$
+INKEY$                Inhalt des Tastaturpuffers
+PRG$(i)               Programmzeile i
+TERMINALNAME$         Devicename des Terminals
+TIME$                 Aktuelle Zeit 
+DATE$                 Aktuelles Datum
+
+==================== Befehle ==============================
+
+ADD a,b			-- gleiche Wirkung wie a=a+b
+ALERT a%,b$,c%,d$,e%	-- Warn- und Infobox
+
+BELL			-- Warnton
+BGET #n,a%,n%
+BLOAD f$,a%[,l%]	-- Laed File an Adresse
+BMOVE q%,z%,n%
+BOX x1%,y1%,x2%,y2%	-- Rechteck zeichenen
+BPUT
+BREAK                   -- entspricht EXIT IF true
+BSAVE f$,a%,l%		-- Speichert l% Bytes ab Adresse a% in File f$
+
+CLR a,b%,c(),f$		-- Löscht Variableninhalte
+color n%		-- Farbe auswählen
+
+DATA 1,"Hallo",...	-- Definiert Konstanten im Programmcode
+DEFMOUSE i%		-- aendert das Erscheinungsbild des Mauscursors.
+DO * LOOP		-- Endlosschleife
+DUMP			-- Variablenliste
+DUMP "@"                -- Liste der Funktionen und Prozeduren
+DUMP ":"                -- Liste der Labels
+
+END			-- Programmende, kehrt zurueck in den Direktmodus
+EXIT IF a		-- Verlaesst Schleife wenn Bedingung a erfuellt ist
+
+FILESELECT titel$,pfad$,default$,f$  --
+FOR * NEXT		-- For Next Schleife
+FFT a(),i		-- Fouriertransformation. i=-1 Ruecktransformation
+			   Dim?(a()) muss Zweierpotenz sein.
+FLUSH [#n]              -- Output flushen
+FORM_INPUT t$
+FUNCTION * ENDFUNC
+
+IF * ELSE IF * ELSE * ENDIF 
+i%=INT(a)		-- rundet auf naechste ganze Zahl ab
+
+LIST			-- Listet Programmcode
+LOAD a$			-- Laed Programm (Dateiname in a$)
+LTEXT x%,y%,t$          -- Line-Text
+
+MUL a,b			-- a=a*b
+
+NEW			-- Loescht alle Variablen und haelt Programmausfuehrung an.
+
+ON * GOSUB     
+ON BREAK GOSUB
+ON ERROR GOSUB
+OPEN mode$,#n,filename$	-- Oeffnet ein file
+OPENW n
+OUT #n,a
+
+PAUSE sec		-- Haelt Programmausfuehrung fuer sec Sekunden an
+PBOX  x1,y1,x2,y2
+PCIRCLE x,y,r
+PELLIPSE 
+PLIST                   -- Formatiertes Listing
+PLOT x,y                -- Punkt an Bildschirmkoordinate x,y zeichnen 
+POKE a%,d
+PRINT a;b$     -- Ausgewachsener BASIC-Standard-Befehl
+PROCEDURE * RETURN
+PUTBACK [#n,]a%   -- Zeichen mit ASCII-Code a% an inputkanal zurueckgeben
+
+QUIT           -- Verlaesst den XBASIC-Interpreter
+
+RELSEEK #n,d
+REM Kommentar  -- Kommentarzeile
+REPEAT * UNTIL
+RESTORE
+RESUME
+RUN            -- Startet die Programmausfuehrung
+
+SCOPE a(),typ,yscale,yoffset   -- Schnelles Plotten des Feldes a()
+SCOPE y(),x(),typ,yscale,yoffset,xscale,xoffset   -- 2D Plot
+SEEK
+SHOWPAGE       -- Aktualisiert die Grafikausgabe
+SUB
+SWAP
+SYSTEM t$      -- Führt Shell-Kommando aus
+
+TEXT x,y,t$
+TROFF
+TRON
+a=TRUE         -- TRUE hat immer den Wahrheitswert -1
+
+
+
+VOID a         -- Berechnet Ausdruck a und vergisst Ergebnis
+VSYNC          -- Aktualisiert die Grafikausgabe
+
+WORT_SEP t$,d$,mode,var1$,var2$
+
+XLOAD          -- wie load, mit FILESELECTOR
+XRUN           -- load und run, mit FILESELECTOR
+
+=============== Funktionen  =========================
+b=ABS(a)               -- Absolutbetrag
+c=ADD(a,b)             -- Addiere, binaer
+a%=ARRPTR(b())         -- Adresse des Array-Descriptors
+a%=ASC(t$)             -- ASCII-Wert des ersten Zeichens von t$
+b=ATN(a)               -- Arcustangens
+b=ATAN(a)              -- Arcustangens
+
+b$=BIN$(a%[,n%])
+
+t$=CHR$(a%)
+b=COS(a)
+CVI * CVL * CVS * CVF * CVD
+
+DFREE
+DEG
+DIM?
+DPEEK
+
+EOF(#n)
+EXIST(fname$)
+b=EXP(a)		-- Exponentialfuntion
+
+b=FRAC(a)		-- Liefert den nichtganzzahligen Anteil an a
+FRE(n)			-- Keine Funtion, nur aus Kompatibilitaetsgruenden da.
+a%=FORM_ALERT(n%,t$)
+
+c%=GET_COLOR(r%,g%,b%) -- Alloziert eine Farbe in der Farbtabelle und gibt die
+                          Nummer zurueck. Ist in der Farbtabelle kein Platz
+			  mehr, so wird die Nummer derjenigen Farbe
+			  zurueckgegeben, die der angeforderten am naechsten
+			  kommt.
+
+t$=HEX$(a[,n])
+
+c%=INP(#n)		-- Liest ein Zeichen (Byte) vom Kanal. Kanal -2 ist stdin
+i%=INP%(#n)
+t$=INPUT$(#n,anz%)
+INSTR
+i=INT(a)		-- Schneidet die Nachkommastellen ab, liefert ganze Zahl
+
+LEFT$
+l%=LEN(t$)
+b=LN(a)			-- Natuerlicher Logarithmus
+p%=LOC(#n)		-- Position des Filepointers (--> SEEK/RELSEEK)
+l%=LOF(#n)		-- Laenge des files
+a=LOG(b)
+a=LOG10(b)
+LPEEK
+LPOS
+
+m=MAX(a,b,c,...)
+m=MAX(f())
+MID$
+m=MIN(a,b,c,...)
+m=MIN(f())
+
+MKI$ * MKL$ * MKS$ * MKF$ * MKD$ 
+
+o$=OCT$(d%,n%)
+
+d%=PEEK(a%)
+c%=POINT(x%,y%)         -- Liefert Farbwert des Punkts der Grafik im aktuellen Fenster
+POS
+
+
+RANDOM(n%)
+RIGHT$
+
+
+b=SIN(a)		-- Sinus
+i%=SGN(a)		-- Vorzeichen (-1,0,1)
+t$=SPACE$(i%)		-- gibt einen String
+SPC(i%)
+b=SQR(a)		-- Wurzel
+b=SQRT(a)		-- Wurzel
+t$=STR$(a[,b%,c%])
+t$=STRING$(w$,i%)
+
+
+TAB(i%)
+b=TAN(a)		-- Tangens
+b=TRUNC(a)
+
+u$=UPPER$(t$)		-- liefert t$ in Grossbuchstaben
+
+a=VAL(t$)		-- Wandelt String in Zahl, falls der String eine
+			   Zahlndarstellung enthaelt.
+i%=VAL?(t$)		-- Liefert die Anzahl der Umwandelbaren Zeichen
+a%=VARPTR(v)		-- Adresse der Variablen v
+
+

@@ -1,36 +1,30 @@
-Ideas for future releases of X11-Basic
-======================================
+# Ideas for future releases of X11-Basic
 
 
-
-
-Systemvariablen:
+## System Variables / Systemvariablen:
 
 DATAPOINTER oder _DATA mit Restoremoeglichkeit
 
 ISDIR(d$)  --> STAT ?  --> geht mit user-funktion...
 
 
--------------SDL Graphics -------------------
-* Auch TTF fonts
-* GPRINT routinen zu voller VT100 Emulation mit standard-GEM-Font ausweiten.
-(einschliesslich cursor). Die Routinen koennen von TTconsole genommen werden.
+## SDL Graphics
+
+* Auch TTF fonts (this is a complicated task...)
+* GPRINT Routinen zu voller VT100 Emulation mit standard-GEM-Font ausweiten. (einschließlich cursor). Die Routinen koennen von TTconsole genommen werden. (teilw. erledigt)
 * 16 moegliche Fenster, USEWINDOW, --> SETWINDOW num,mode
 * Was tun mit SCREEN und ROOTWINDOW? SAVESCREEN/SAVEWINDOW?
 * Fullscreenmode (done)
 
 
--------sound-----
+## Sound
 
-* 16 Kanaele zum zusammenmixen (ok)
-* Auf jedem Kanal kann man einen Sound laden (ok)
-* mit MIX kommando kann man die Mixtur beeinflussen
-* Event, wenn sound zuende (oder testfunktionen)
-* Einzelne Toene auf Kanal spielen (ok)
+* mit MIX kommando kann man die Mixtur beeinflussen (would be nice to have!)
+* Event, wenn sound(file) zuende (oder testfunktionen)
 
----- bluetooth ----
+## Bluetooth
 
-FSFIRST$() and FSNEXT$() can be used to scan for bluetooth devices.
+FSFIRST$() and FSNEXT$() can be used to scan for bluetooth devices. (done)
 
 with OPEN "UB" you can open a RFCOMM connection
 with OPEN "UP" cou can open a L2CAP connection.
@@ -42,13 +36,17 @@ you can as well setup a server and open a listening socket with OPEN,
 much the same as you would do it with normal internet connections. 
 
 
----- USB support ----
+## USB support
 
-FSFIRST$() and FSNEXT$() can be used to scan for USB devices.
+FSFIRST$() and FSNEXT$() can be used to scan for USB devices. (done)
 
 
 
--------encryption---------------
+## encryption
+
+The enhancements and new ideas concerning cryptography must be held separately 
+from the master branch, because the can cause problems on US export limitations
+on sourceforge (I think)...
 
 LIBGCRYPT:
     hash$=HASH$(data$[,typ%]) (ok)
@@ -59,14 +57,16 @@ LIBGCRYPT:
 
     err=KEYGEN(typ%,pubkey$,privkey$)
     
----------------------------------
 
+# Incompatible Aenderungen:
 
---------incompatible aenderungen:---------------------
 * xbasic und xbasic.exe umbenennen in x11basic und x11basic.exe
 (vielleicht mit einem link von xbasic)
+
 oder:
-x11basic als wrapper script:
-xbbc -o /tmp/$1.b $1
-xbasic  /tmp/$1.b
+
+x11basic as wrapper script (done, see ybasic) :
+
+  xbbc -o /tmp/$1.b $1
+  xbasic  /tmp/$1.b
 
