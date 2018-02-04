@@ -79,6 +79,7 @@ int main(int anzahl, char *argumente[]) {
     kommando("PLOT MX,MY");
   }
 
+  kommando("GPRINT \"Press any key...\"");
   kommando("SHOWPAGE");
   kommando("KEYEVENT");
   kommando("MOUSE MX,MY");  /*You can also use variables*/

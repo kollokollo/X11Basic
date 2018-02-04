@@ -33,7 +33,7 @@ int verbose=0;
 
 /* Here your c program starts */
 
-main(int anzahl, char *argumente[]) {
+int main(int anzahl, char *argumente[]) {
   double ret;
   int i;
   /* Initialize the x11basic-library */
@@ -51,6 +51,7 @@ main(int anzahl, char *argumente[]) {
   /* If you like, you can use single x11basic-commands: */
 
   kommando("PBOX 10,10,100,100");/* This is for single command execution: */
+  kommando("GPRINT \"PRESS ANY KEY\"");
   kommando("SHOWPAGE");
   kommando("KEYEVENT");
   /* ... */

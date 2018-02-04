@@ -1,6 +1,6 @@
 ' Pseudo-Compiler for X11-Basic (MS WINDOWS Version)
 ' erzeugt allein lauffaehigen Code (.exe)
-' (c) Markus Hoffmann 2010-2015 2015-01-01
+' (c) Markus Hoffmann 2010-2015 2018-01-01
 '
 '* This file is part of X11BASIC, the BASIC interpreter / compiler
 '* ======================================================================
@@ -64,7 +64,7 @@ IF qflag=0
   weiss=COLOR_RGB(1,1,1)
   COLOR weiss,schwarz
   IF LEN(inputfile$)=0
-    TEXT 10,10,"X11-Basic compiler V.1.23 (c) Markus Hoffmann 2010-2015"
+    TEXT 10,10,"X11-Basic compiler V.1.25 (c) Markus Hoffmann 2010-2018"
     FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
     IF LEN(inputfile$)
       IF NOT EXIST(inputfile$)
@@ -241,6 +241,7 @@ PROCEDURE packvm(bfile$)
       ENDIF
     ENDIF
   ENDIF
+  ON ERROR gosub file_error
   PRINT "saving ";outputfilename$,LEN(t$),"bytes."
   BSAVE outputfilename$,VARPTR(t$),LEN(t$)
   KILL bfile$
@@ -348,4 +349,8 @@ PROCEDURE usetcc
     ENDIF
   ENDIF
   SYSTEM "tcc "+cfile$+" x11basic.lib libgfx.lib -o "+outputfilename$
+RETURN
+PROCEDURE file_error
+  PRINT "FILE ERROR ERR=";ERR
+  a=FORM_ALERT(1,"[3][File writing error!|Do you have write-permission in the|specified directory?][QUIT]")
 RETURN
