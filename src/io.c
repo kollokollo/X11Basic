@@ -2476,7 +2476,7 @@ int f_ioctl(PARAMETER *plist,int e) {
     case 1:   /* get descriptor data structure*/
       { struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
      	
-  	  memcpy((void *)plist[2].integer,a,sizeof(struct usb_device));
+  	  memcpy(INT2POINTER(plist[2].integer),a,sizeof(struct usb_device));
           ret=sizeof(struct usb_device);
         break; }
     case 2: /* Set configuration */
@@ -2486,7 +2486,7 @@ int f_ioctl(PARAMETER *plist,int e) {
       ret=usb_claim_interface((usb_dev_handle *) filenr[plist->integer].dptr, plist[2].integer);
       break;
     case 4:
-      { int *params=(int *)plist[2].integer;
+      { int *params=INT2POINTER(plist[2].integer);
         void *data=NULL;
 	// printf("cm: %d %d %d %d\n",params[0],params[1],params[2],params[3]);
 	if(params[5]>0) data=(void *)&params[6];
@@ -2498,26 +2498,26 @@ int f_ioctl(PARAMETER *plist,int e) {
     case 7: filenr[plist->integer].ep_out=plist[2].integer; ret=0; break; /*  Set ep_out */
     case 12: {  /* get filename+path */
       	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
-    	strncpy((void *)plist[2].integer,a->filename,sizeof(a->filename));
+    	strncpy(INT2POINTER(plist[2].integer),a->filename,sizeof(a->filename));
         ret=strlen(a->filename);
       } break;
     case 13: {  /* get manufacturer */
       	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
         if(a->descriptor.iManufacturer) 
-	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iManufacturer, (void *)plist[2].integer, 100);
+	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iManufacturer, INT2POINTER(plist[2].integer), 100);
       } break;
     case 14: {  /* get Product name */
       	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
         if(a->descriptor.iProduct) 
-	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iProduct, (void *)plist[2].integer, 100);
+	  ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iProduct, INT2POINTER(plist[2].integer), 100);
       } break;
     case 15: {  /* get Serial number */
         struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
         if(a->descriptor.iSerialNumber) 
-          ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iSerialNumber, (void *)plist[2].integer, 100);
+          ret=usb_get_string_simple((usb_dev_handle *) filenr[plist->integer].dptr, a->descriptor.iSerialNumber, INT2POINTER(plist[2].integer), 100);
       } break;
     case 16:   /* get error text */
-      strncpy((void *)plist[2].integer,usb_strerror(),100);
+      strncpy(INT2POINTER(plist[2].integer),usb_strerror(),100);
       break;
     default:
       ret=-1;
