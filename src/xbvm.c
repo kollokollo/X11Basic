@@ -189,6 +189,8 @@ static int loadbcprg(char *filename) {
   char *adr=bcpc.pointer=malloc(len+1);
   bload(filename,bcpc.pointer,len);
   bcpc.len=len;
+  programbufferlen=bcpc.len;
+  programbuffer=bcpc.pointer;
   if(verbose) printf("%s loaded (%d Bytes)\n",filename,bcpc.len);
  // memdump(bcpc.pointer,32);
  
@@ -283,6 +285,9 @@ int main(int anzahl, char *argumente[]) {
       #endif
     }
      bytecode_init(bcpc.pointer); 
+     programbufferlen=bcpc.len;
+     programbuffer=bcpc.pointer;
+    
      doit(bcpc);
    } else {
      printf("ERROR: Something is wrong, no code!\n");
