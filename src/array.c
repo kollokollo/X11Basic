@@ -72,59 +72,59 @@ void fill_array_array(const ARRAY *arr, const ARRAY inh) {
 /* create array (need to be freed later) and fill it with a constant value */
 /* Erzeuge jeweils entsprechendes Array und belege es mit value vor. */
 
-ARRAY create_int_array(const int dimension, const int *dimlist,const int value) {
+ARRAY create_int_array(const uint32_t dimension, const uint32_t *dimlist,const int value) {
   ARRAY ergebnis;
   int anz=1,j;
   int *varptr;
   ergebnis.typ=INTTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(int));
   varptr=(int *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) varptr[anz]=value;    
   return(ergebnis);
 }
-ARRAY create_float_array(const int dimension, const int *dimlist,const double value) {
+ARRAY create_float_array(const uint32_t dimension, const uint32_t *dimlist,const double value) {
   ARRAY ergebnis;
   int anz=1,j;
   double *varptr;
   ergebnis.typ=FLOATTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(double));
   varptr=(double *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) varptr[anz]=value;    
   return(ergebnis);
 }
-ARRAY create_complex_array(const int dimension, const int *dimlist,const COMPLEX *value) {
+ARRAY create_complex_array(const uint32_t dimension, const uint32_t *dimlist,const COMPLEX *value) {
   ARRAY ergebnis;
   int anz=1,j;
   COMPLEX *varptr;
   ergebnis.typ=COMPLEXTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(COMPLEX));
   varptr=(COMPLEX *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) varptr[anz]=*value;    
   return(ergebnis);
 }
-ARRAY create_arbint_array(const int dimension, const int *dimlist,ARBINT value) {
+ARRAY create_arbint_array(const uint32_t dimension, const uint32_t *dimlist,ARBINT value) {
   ARRAY ergebnis;
   int anz=1,j;
   ARBINT *varptr;
   ergebnis.typ=ARBINTTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(ARBINT));
   varptr=(ARBINT *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) {
     mpz_init(varptr[anz]);
     mpz_set(varptr[anz],value);
@@ -134,17 +134,17 @@ ARRAY create_arbint_array(const int dimension, const int *dimlist,ARBINT value) 
 
 
 
-ARRAY create_string_array(const int dimension,const  int *dimlist,const STRING *value) {
+ARRAY create_string_array(const uint32_t dimension,const uint32_t *dimlist,const STRING *value) {
   ARRAY ergebnis;
   int anz=1,j;
   STRING *varptr;
   ergebnis.typ=STRINGTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(STRING));
   varptr=(STRING *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) varptr[anz]=double_string(value);    
   return(ergebnis);
 }
@@ -153,17 +153,17 @@ ARRAY create_string_array(const int dimension,const  int *dimlist,const STRING *
 
 
 
-ARRAY create_array_array(const int dimension, const int *dimlist,const ARRAY *value) {
+ARRAY create_array_array(const uint32_t dimension, const uint32_t *dimlist,const ARRAY *value) {
   ARRAY ergebnis;
   int anz=1,j;
   ARRAY *varptr;
   ergebnis.typ=ARRAYTYP;
   ergebnis.dimension=dimension;
-  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0) {for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*sizeof(ARRAY));
   varptr=(ARRAY *)(((char *)ergebnis.pointer)+dimension*INTSIZE);
   /* dimlist kopieren */
-  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   while(--anz>=0) varptr[anz]=double_array(value);
   return(ergebnis);
 }
@@ -171,15 +171,15 @@ ARRAY create_array_array(const int dimension, const int *dimlist,const ARRAY *va
 /*  Erzeuge ein Array und fuelle es mit 0 bzw mit Strings von Laenge 0
     oder Arrays mit NOTYP und dimension 0 */
 
-ARRAY create_array(const int typ, const int dimension, const int *dimlist) {
+ARRAY create_array(const unsigned short typ, const uint32_t dimension, const uint32_t *dimlist) {
   ARRAY ergebnis;
   int anz=1;
   ergebnis.typ=typ;
   ergebnis.dimension=dimension;
-  if(dimension>0 && dimlist) {int j;for(j=0;j<dimension;j++) anz=anz*((int *)dimlist)[j];}
+  if(dimension>0 && dimlist) {int j;for(j=0;j<dimension;j++) anz=anz*dimlist[j];}
   ergebnis.pointer=malloc(dimension*INTSIZE+anz*typlaenge(typ));
   /* dimlist kopieren */
-  if(dimension>0 && dimlist) memcpy(ergebnis.pointer,dimlist,dimension*sizeof(int));
+  if(dimension>0 && dimlist) memcpy(ergebnis.pointer,dimlist,dimension*sizeof(uint32_t));
   
   switch(typ) {
     case NOTYP: break;
@@ -431,7 +431,7 @@ ARRAY double_array(const ARRAY *a) {
 
 
 /*********** make a unity matrix  **********************/
-ARRAY einheitsmatrix(const int typ, const int dimension, const int *dimlist) {
+ARRAY einheitsmatrix(const unsigned short typ, const uint32_t dimension, const uint32_t *dimlist) {
   ARRAY ergebnis=nullmatrix(typ,dimension,dimlist);
  // int anz=anz_eintraege(ergebnis);
   int i,a=0,j;
@@ -486,7 +486,7 @@ ARRAY einheitsmatrix(const int typ, const int dimension, const int *dimlist) {
 #if 0
 /* Uebernimmt einen Speicherbereich in ein Array */
 
-static ARRAY form_array(const int typ, const int dimension, const int *dimlist, const char *inhalt) {
+static ARRAY form_array(const unsigned short typ, const int dimension, const int *dimlist, const char *inhalt) {
   int j,anz=1,dlen;
   char *pp;
   ARRAY ergebnis;
@@ -556,10 +556,10 @@ ARRAY array_const(const char *s) {
       varptr[i].pointer=NULL;
     }
   }
-  if(ergebnis.dimension==1) *((int *)(ergebnis.pointer))=dx;
+  if(ergebnis.dimension==1) *((uint32_t *)(ergebnis.pointer))=dx;
   else if(ergebnis.dimension==2) {
-    ((int *)(ergebnis.pointer))[0]=dy;
-    ((int *)(ergebnis.pointer))[1]=dx;
+    ((uint32_t *)(ergebnis.pointer))[0]=dy;
+    ((uint32_t *)(ergebnis.pointer))[1]=dx;
   }
   i=j=0;
   e=wort_sep(s,';',TRUE,t,s2);
@@ -906,7 +906,7 @@ STRING array_to_string(ARRAY inhalt) {
   int arraylen=anz_eintraege(&inhalt);
   
   /* Stringlaenge berechnen */
-  int len=sizeof(int)+sizeof(int)+sizeof(int)*inhalt.dimension;
+  int len=sizeof(unsigned short)+sizeof(uint32_t)+sizeof(uint32_t)*inhalt.dimension;
  
   switch(inhalt.typ) {
   case STRINGTYP: {
@@ -949,11 +949,16 @@ STRING array_to_string(ARRAY inhalt) {
   ergebnis.pointer=malloc(len);
   ergebnis.len=len;
   
-  ((int *)ergebnis.pointer)[0]=inhalt.typ;
-  ((int *)ergebnis.pointer)[1]=inhalt.dimension;
-  ppp=(char*)ergebnis.pointer+2*sizeof(int);
-  memcpy(ppp,inhalt.pointer,inhalt.dimension*sizeof(int));
-  ppp+=inhalt.dimension*sizeof(int);
+  ppp=(char *)ergebnis.pointer;
+  
+  *((unsigned short *)ppp)=inhalt.typ;
+  ppp+=sizeof(unsigned short);
+  
+  *((uint32_t *)ppp)=inhalt.dimension;
+  ppp+=sizeof(uint32_t);
+  
+  memcpy(ppp,inhalt.pointer,inhalt.dimension*sizeof(uint32_t));
+  ppp+=inhalt.dimension*sizeof(uint32_t);
   
   /*Jetzt Arrayinhalt reinschreiben*/
   switch(inhalt.typ) {
@@ -1038,53 +1043,60 @@ STRING array_to_string(ARRAY inhalt) {
 ARRAY string_to_array(STRING in) {
   ARRAY out;
   int i,len,arraylen;
+  
+ // printf("String to array:\n");
  // memdump(in.pointer,in.len);
-  out.typ=((int *)in.pointer)[0];
-  out.dimension=((int *)in.pointer)[1];
+
+  out.pointer=in.pointer;
+  out.typ=*((unsigned short *)in.pointer);
+  out.pointer+=sizeof(unsigned short);
+
+  out.dimension=*((uint32_t *)out.pointer);
+  out.pointer+=sizeof(uint32_t);
+  
   len=INTSIZE*out.dimension;
-  out.pointer=in.pointer+2*sizeof(int);
   arraylen=anz_eintraege(&out);
   len+=arraylen*typlaenge(out.typ);
  
-// printf("Array typ=%x dimension=%d\n",out.typ,out.dimension);
-// printf("arraylen=%d\n",arraylen);
+ // printf("Array typ=%x dimension=%d\n",out.typ,out.dimension);
+ // printf("arraylen=%d\n",arraylen);
   
   out.pointer=malloc(len);
-  memcpy(out.pointer,in.pointer+2*sizeof(int),sizeof(int)*out.dimension);
+  memcpy(out.pointer,in.pointer+sizeof(unsigned short)+sizeof(uint32_t),sizeof(uint32_t)*out.dimension);
+  char *ppp=in.pointer+sizeof(unsigned short)+sizeof(uint32_t)+sizeof(uint32_t)*out.dimension;
   
   switch(out.typ) {
   case INTTYP:
   case FLOATTYP:
   case COMPLEXTYP:
-    memcpy(out.pointer+INTSIZE*out.dimension,
-         in.pointer+2*sizeof(int)+sizeof(int)*out.dimension,
-	 arraylen*typlaenge(out.typ));
+    memcpy(out.pointer+INTSIZE*out.dimension,ppp,arraylen*typlaenge(out.typ));
     break;
   case STRINGTYP: {
-    char *ppp=in.pointer+2*sizeof(int)+sizeof(int)*out.dimension+arraylen*sizeof(STRING); /*Datenbereich*/
-    STRING *s=(STRING *)(in.pointer+2*sizeof(int)+sizeof(int)*out.dimension);  /*  Verzeichnis*/
-    STRING *a=(STRING *)(out.pointer+INTSIZE*out.dimension);  /*  Verzeichnis*/
+    char *data=ppp+arraylen*sizeof(STRING); /*Datenbereich*/
+/*Datenbereich*/
+    STRING *s=(STRING *)(ppp);  
+    STRING *a=(STRING *)(out.pointer+INTSIZE*out.dimension); 
     /* Alle Strings anlegen und pointer relozieren */
     unsigned long offset;
     for(i=0;i<arraylen;i++) {
       offset=(unsigned long)s[i].pointer;
       a[i].len=s[i].len;
       a[i].pointer=malloc(s[i].len+1);
-      memcpy(a[i].pointer,ppp+offset,s[i].len);
+      memcpy(a[i].pointer,data+offset,s[i].len);
       a[i].pointer[a[i].len]=0;
     }
     }
     break;
   case ARBINTTYP: {
-    char *ppp=in.pointer+2*sizeof(int)+sizeof(int)*out.dimension+arraylen*sizeof(STRING); /*Datenbereich*/
-    STRING *s=(STRING *)(in.pointer+2*sizeof(int)+sizeof(int)*out.dimension);  /*  Verzeichnis*/
-    ARBINT *a=(ARBINT *)(out.pointer+INTSIZE*out.dimension);  /*  Verzeichnis*/
+    char *data=ppp+arraylen*sizeof(STRING); /*Datenbereich*/
+    STRING *s=(STRING *)(ppp);  
+    ARBINT *a=(ARBINT *)(out.pointer+INTSIZE*out.dimension); 
     unsigned long offset;
     char *buf;
     for(i=0;i<arraylen;i++) {
       offset=(unsigned long)s[i].pointer;
       buf=malloc(s[i].len+1);
-      memcpy(buf,ppp+offset,s[i].len);
+      memcpy(buf,data+offset,s[i].len);
       buf[s[i].len]=0;
       mpz_init(a[i]);
       mpz_set_str(a[i],buf,32);
@@ -1093,15 +1105,15 @@ ARRAY string_to_array(STRING in) {
     }
     break;
   case ARRAYTYP: {
-    char *ppp=in.pointer+2*sizeof(int)+sizeof(int)*out.dimension+arraylen*sizeof(STRING); /*Datenbereich*/
-    STRING *s=(STRING *)(in.pointer+2*sizeof(int)+sizeof(int)*out.dimension);  /*  Verzeichnis*/
-    ARRAY *a=(ARRAY *)(out.pointer+INTSIZE*out.dimension);  /*  Verzeichnis*/
+    char *data=ppp+arraylen*sizeof(STRING); /*Datenbereich*/
+    STRING *s=(STRING *)(ppp); 
+    ARRAY *a=(ARRAY *)(out.pointer+INTSIZE*out.dimension);
     unsigned long offset;
     STRING buf;
     for(i=0;i<arraylen;i++) {
       offset=(unsigned long)s[i].pointer;
       buf.pointer=malloc(s[i].len+1);
-      memcpy(buf.pointer,ppp+offset,s[i].len);
+      memcpy(buf.pointer,data+offset,s[i].len);
       buf.pointer[s[i].len]=0;
       buf.len=s[i].len;
       a[i]=string_to_array(buf);

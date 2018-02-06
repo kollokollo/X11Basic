@@ -7,18 +7,17 @@
  */
 
 
-ARRAY create_array(const int , const int ,const int *);
+ARRAY create_array(const unsigned short , const uint32_t ,const uint32_t *);
 ARRAY recreate_array(const int , const int ,const int *, const ARRAY *);
-ARRAY create_int_array(const int dimension,const  int *dimlist,const int value);
-ARRAY create_float_array(const int dimension, const int *dimlist,const double value);
-ARRAY create_string_array(const int dimension, const int *dimlist,const STRING *value);
-ARRAY create_complex_array(const int dimension, const int *dimlist,const COMPLEX *value);
-ARRAY create_arbint_array(const int dimension, const int *dimlist,ARBINT value);
+ARRAY create_int_array(const uint32_t dimension,const uint32_t *dimlist,const int value);
+ARRAY create_float_array(const uint32_t dimension, const uint32_t *dimlist,const double value);
+ARRAY create_string_array(const uint32_t dimension, const uint32_t *dimlist,const STRING *value);
+ARRAY create_complex_array(const uint32_t dimension, const uint32_t *dimlist,const COMPLEX *value);
+ARRAY create_arbint_array(const uint32_t dimension, const uint32_t *dimlist,ARBINT value);
 
-ARRAY einheitsmatrix(const int ,const int ,const int *);
+ARRAY einheitsmatrix(const unsigned short typ, const uint32_t dimension, const uint32_t *dimlist);
 ARRAY array_const(const char *);
 ARRAY double_array(const ARRAY *);
-ARRAY einheitsmatrix(const int, const int, const int *);
 
 ARRAY mul_array(ARRAY, ARRAY);
 ARRAY trans_array(ARRAY);
