@@ -56,7 +56,7 @@ the Web server and can be used only on servers that support user
 authentication. If an area of the Web site has no access control, the
 \verb|AUTH_TYPE| variable has no value associated with it. If an area of the
 Web site has access control, the \verb|AUTH_TYPE| variable is set to a specific
-value that identifies the authentication scheme being used. 
+value that identifies the authentication scheme being used. e.g. "Basic".
 
 Using this mechanism, the server can challenge a client's request and the
 client can respond. To do this, the server sets a value for the
@@ -65,9 +65,6 @@ step is to authenticate the user. Using the basic authentication scheme, the
 user's browser must supply authentication information that uniquely
 identifies the user. This information includes a user ID and password.
 
-Under the current implementation of HTTP, HTTP 1.0, the basic authentication
-scheme is the most commonly used authentication method. To specify this method,
-set the \verb|AUTH_TYPE| variable as follows: \verb|AUTH_TYPE = Basic|
 
 \item[CONTENT\_LENGTH]
 
@@ -221,8 +218,7 @@ extra path information.
 \item[QUERY\_STRING]
 
 The \verb|QUERY_STRING| variable specifies an URL-encoded search string. You set
-this variable when you use the GET method to submit a fill-out form or
-when you use an ISINDEX query to search a document. The query string is
+this variable when you use the GET method to submit a fill-out form. The query string is
 separated from the URL by a question mark. The user submits all the
 information following the question mark separating the URL from the query
 string. The following is an example:

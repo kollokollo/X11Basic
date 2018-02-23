@@ -828,8 +828,6 @@ If not freed, the segment resists in memory until the operating system shuts dow
   \item The current time or date can be retrieved with 
         \verb|TIME$| and \verb|DATE$|.
   \item The interpreter allows self modifying code. 
-  \item It is possible to link shared library objects and use the functions 
-        provided from within the X11-Basic program 
 \end{itemize}
 
 
@@ -1051,8 +1049,7 @@ BOX(X=0,Y=0,W=74,H=14, FRAME=2, FRAMECOL=1, TEXTCOL=1, BGCOL=0, PATTERN=0, TEXTM
 \section{Menus}
 
 Most applications use a menu bar to allow the user to navigate through program
-options. In addition, future versions of X11-Basic will allow pop-up menus and
-drop-down list boxes (a special form of a pop-up menu). 
+options.
 
 Here is a simple example program, which demonstrates the handling of a drop
 down menu. 
@@ -1147,19 +1144,17 @@ by the X11-Basic interpreter \verb|xbasic|. This is seen before in shell
 scripts, in which the first line tells Unix to execute it with one of the shell
 programs. The xbasic executable, which will take this file, parse it, and
 execute it, is located in the directory /usr/bin. This may be different on some
-systems. If you are not sure where the xbasic executable is, type which xbasic
-on the command line, and it will return you the path.
+systems. If you are not sure where the xbasic executable is, type \verb|which
+xbasic| on the command line, and it will return you the path.
 
 \item {\bf All scripts should be marked as executable by the system.}
 
 Executable files are types that contain instructions for the machine or an
 interpreter, such as xbasic, to execute. To mark a file as executable, you need
-to alter the file permissions on the script file. There are three basic
-permissions: read, write, and execute. There are also three levels of access:
-owner, group, and anyone. X11-Basic files should have their permissions changed so
-that you, the owner, has permission to read, write and execute your file, while
-others only have permission to read and execute your file. This is done with
-the following command:
+to alter the file permissions on the script file. X11-Basic files should have
+their permissions changed so that you, the owner, has permission to read, write
+and execute your file, while others only have permission to read and execute
+your file. This is done with the following command:
 
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
