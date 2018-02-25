@@ -13,3 +13,4 @@ Release notes for Version 1.25 (Sept 2016 -- 2018)
 - new parameter list types for CALL
 - new functions CALLD() and CALL$()
 - fixed Bug in XLOAD and TOUCH (Android)
+- created a german version of the user manual (asciidoc,html)
