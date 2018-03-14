@@ -8,6 +8,30 @@ DATAPOINTER oder _DATA mit Restoremöglichkeit
 ISDIR(d$)  --> STAT ?  --> geht mit user-funktion...
 
 
+
+## Text console
+
+FORMINPUT  
+Syntax:    FORMINPUT a$[,n,prompt$,mask$]
+Action:    Enables the insertion of a character string during program 
+           execution.
+           'n' = the maximum length of the character string.
+           a$ is the name of the string variable.
+           If a$ is not empty, the current value of a$  is 
+           displayed, and can be edited.
+	   the text promt$ will be displayed at the beginning of a line. 
+           The n charackters of mask$ are used as a mask for the input:
+	   X -- any charackter
+	   9 -- only digits
+	   If n is ommitted or n > len(prompt$), the last charackter of 
+	   prompt$ is used as a mask for positions > len(prompt$).
+	   
+	   Soll auch nach PRINT AT() funktionieren!
+	   evtl. promt$ weglassen!
+
+
+
+
 ## SDL Graphics
 
 * Use TTF fonts (this is a complicated task...)
