@@ -146,7 +146,14 @@ DESCRIPTION:
 	    7 Long Dash dot dot ..
 	 0x11-0xffffffff User defined (not used)
 
-<thickness> -- sets line width in pixels.
+<thickness> -- sets line width in pixels. A thickness greater than or equal to 
+               1 is considered a wide line, and the value 0 is a special case,  
+	       considered a thin line. Wide and thin lines use different drawing 
+	       algorithms. Styles and different start and end symbols are only 
+	       possible for wide lines. Also it is possible that the last point 
+	       of the line is treated differently, meaning, sometimes it is not 
+	       drawn with wide lines.
+
 <begin_s>,<end_s>  -- The  start  and  end  symbols  are  defined  
 	              by  the   last parameter, and can be:
  		        0 Square

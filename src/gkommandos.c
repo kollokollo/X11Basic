@@ -597,6 +597,8 @@ void c_pbox(PARAMETER *plist,int e) {
   a[2]=plist[2].integer;
   a[3]=plist[3].integer;
   v_bar(window[usewindow].vdi_handle,a);
+#elif defined FRAMEBUFFER
+  FB_pbox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 #else
   pbox(plist[0].integer,plist[1].integer,plist[2].integer,plist[3].integer);
 #endif
@@ -610,6 +612,13 @@ void c_prbox(PARAMETER *plist,int e) {
   a[2]=plist[2].integer;
   a[3]=plist[3].integer;
   v_rfbox(window[usewindow].vdi_handle,a);
+#elif defined FRAMEBUFFER
+  FB_pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
+  FB_pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
+  FB_pArc(plist[0].integer,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,90*64,90*64); 
+  FB_pArc(plist[2].integer-2*RBOX_RADIUS,plist[1].integer,2*RBOX_RADIUS,2*RBOX_RADIUS,0,90*64); 
+  FB_pArc(plist[2].integer-2*RBOX_RADIUS,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,270*64,90*64); 
+  FB_pArc(plist[0].integer,plist[3].integer-2*RBOX_RADIUS,2*RBOX_RADIUS,2*RBOX_RADIUS,180*64,90*64); 
 #else
   pbox(plist[0].integer+RBOX_RADIUS,plist[1].integer,plist[2].integer-RBOX_RADIUS,plist[3].integer);
   pbox(plist[0].integer,plist[1].integer+RBOX_RADIUS,plist[2].integer,plist[3].integer-RBOX_RADIUS);
@@ -1031,6 +1040,9 @@ void c_clip(PARAMETER *plist,int e) {
   }
 #endif
 }
+
+/* TODO: The implementation of DEFLINE other than on X11 is incomplete.*/
+
 void c_defline(PARAMETER *plist,int e) { 
   graphics();
 #ifdef FRAMEBUFFER
@@ -1039,7 +1051,7 @@ void c_defline(PARAMETER *plist,int e) {
   if(e>=3 && plist[2].typ!=PL_LEER)   screen.linecap=plist[2].integer;
   if(e>=4 && plist[3].typ!=PL_LEER)  screen.linejoin=plist[3].integer;
 #elif defined USE_X11
-  static int style=0,width=0,cap=0,join=0;
+  static int style=0,width=0,cap=CapButt,join=JoinMiter;
   if(e>=1 && plist[0].typ!=PL_LEER) style=plist[0].integer;
   if(e>=2 && plist[1].typ!=PL_LEER) width=plist[1].integer;
   if(e>=3 && plist[2].typ!=PL_LEER)   cap=plist[2].integer;

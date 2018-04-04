@@ -10,6 +10,7 @@
 
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -173,7 +174,6 @@ void FB_restorecontext() {
   screen.graphmode=backup.graphmode;
   screen.textmode=backup.textmode;
   screen.linewidth=backup.linewidth;
-  screen.linewidth=backup.linewidth;
   screen.fill_rule=backup.fill_rule;
   screen.fill_style=backup.fill_style;
   screen.fill_pat=backup.fill_pat;
@@ -190,7 +190,7 @@ void FB_defaultcontext() {
   screen.mousepat=(unsigned short *)mousepat;
   screen.alpha=255;
   screen.graphmode=1;
-  screen.linewidth=1;
+  screen.linewidth=0;  /* 0 means thin lines */
   screen.fill_rule=0;
   screen.fill_style=0;
   screen.fill_pat=NULL;
@@ -518,7 +518,7 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
 }
 
 static void FB_doline(int x1,int y1,int x2,int y2) {
-  if(screen.linewidth>1) FB_DrawThickLine(x1,y1,x2,y2,screen.linewidth, screen.fcolor);
+  if(screen.linewidth) FB_DrawThickLine(x1,y1,x2,y2,screen.linewidth, screen.fcolor);
   else {
     if(y1==y2) {
       if(x2>=x1) DrawHorizontalLine(x1,y1,x2-x1,screen.fcolor);
@@ -582,6 +582,8 @@ void FB_box(int x1,int y1,int x2,int y2) {
 
 void FillBox (int x, int y, int w, int h, unsigned short color) {
   int i;
+ // printf("fillbox w=%d\n",w);
+  if(w<=0 || h<=0) return;
   for (i=y; i<y+h; i++) {
     if(screen.fill_pat && screen.fill_style==FillStippled) {
       if(screen.graphmode<=1) DrawHorizontalLinePattBg(x,i,w,color,screen.bcolor,*((unsigned short *)(screen.fill_pat+(i&0xf))));
