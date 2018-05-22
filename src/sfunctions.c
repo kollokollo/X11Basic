@@ -366,7 +366,8 @@ static STRING f_params(int n) {
 static STRING f_unixdates(int n) {
   STRING ergebnis;
   struct tm * loctim;
-  loctim=localtime((time_t *)(&n));
+  time_t nn=(time_t)n;
+  loctim=localtime(&nn);
   ergebnis.pointer=malloc(12);
   sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
   ergebnis.len=strlen(ergebnis.pointer);
@@ -375,7 +376,8 @@ static STRING f_unixdates(int n) {
 static STRING f_unixtimes(int n) {
   STRING ergebnis;
   struct tm * loctim;
-  loctim=localtime((time_t *)&n);
+  time_t nn=(time_t)n;
+  loctim=localtime(&nn);
   ergebnis.pointer=malloc(16);
   sprintf(ergebnis.pointer,"%02d:%02d:%02d",loctim->tm_hour,loctim->tm_min,loctim->tm_sec);
   ergebnis.len=strlen(ergebnis.pointer);
