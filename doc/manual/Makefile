@@ -14,7 +14,7 @@
 # X11-Basic is free software and comes with NO WARRANTY - read the file
 # COPYING for details
 
-VERSION=1.25
+VERSION=1.26
 NAME=X11-Basic-manual
 
 

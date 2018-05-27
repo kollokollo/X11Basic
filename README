@@ -10,13 +10,13 @@
     
     
     
-                       VERSION 1.25
+                       VERSION 1.26
 
             (C) 1997-2018 by Markus Hoffmann
               (kollo@users.sourceforge.net)
 
 Name        : X11Basic                    
-Version     : 1.25                              Vendor: Markus Hoffmann
+Version     : 1.26                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 URL         : http://x11-basic.sourceforge.net/
@@ -46,7 +46,7 @@ Description :
   /usr/share/doc/packages/X11Basic/examples. However, a much bigger variety of 
   other sample programs can be found in an X11-Basic examples repository on
   gitlab (https://gitlab.com/kollo/X11-Basic_examples/tree/master) or in a
-  package X11-Basic-examples-1.25.zip, which you can download from the homepage
+  package X11-Basic-examples-1.26.zip, which you can download from the homepage
   (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version of the
   manual can be found there.
 
@@ -91,7 +91,7 @@ Description :
 
 A)  The configure script takes additional arguments.
   
-`configure' configures X11-Basic 1.25 to adapt to many kinds of systems.
+`configure' configures X11-Basic 1.26 to adapt to many kinds of systems.
 
 Usage: ./configure [OPTION]... [VAR=VALUE]...
 

@@ -1,16 +1,3 @@
-Release notes for Version 1.25 (Sept 2016 -- 2018)
+Release notes for Version 1.26 (June 2018 -- )
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- HASH()/SHA1 and MD5 now work also without libgcrypt
-- new Commands: HIDEK, SHOWK (Android)
-- fixed bug in MERGE and FILESELECT
-- new function VRFY()
-- added raw keyboard support for framebuffer version (e.g. Raspberry pi + sense hat)
-- fixed bug in EXIT (bytecode)
-- added bluetooth support (linux)
-- improved USB functions (linux)
-- make use of fftw library when available
-- improved memory handling in 64bit versions
-- new parameter list types for CALL
-- new functions CALLD() and CALL$()
-- fixed Bug in XLOAD and TOUCH (Android)
-- created a german version of the user manual (asciidoc,html)
+- New functions/commands GPIO (Raspberry)

@@ -14,7 +14,7 @@
 
 
 
-                       VERSION 1.25
+                       VERSION 1.26
 
             (C) 1997-2018 by Markus Hoffmann
               (kollo@users.sourceforge.net)

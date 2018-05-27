@@ -1,7 +1,7 @@
 # configure.in file for X11-Basic   (c) Markus Hoffmann
 # used by autoconf
 #
-AC_INIT([X11-Basic], [1.25], [kollo@users.sourceforge.net])
+AC_INIT([X11-Basic], [1.26], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
 # for debugging we want all warnings

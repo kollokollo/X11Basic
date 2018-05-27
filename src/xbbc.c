@@ -69,8 +69,8 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
-const char version[]="1.25"; /* Version Number. Put some useful information here */
-const char vdate[]="2018-01-01";   /* Creation date.  Put some useful information here */
+const char version[]="1.26"; /* Version Number. Put some useful information here */
+const char vdate[]="2018-06-01";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 
