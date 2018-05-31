@@ -31,6 +31,11 @@
 #include <fnmatch.h>
 
 #include "defs.h"
+
+#ifdef HAVE_WIRINGPI
+#include <wiringPi.h>
+#endif
+ 
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
@@ -106,6 +111,7 @@
 #define c_dec NULL
 #define c_help NULL
 #define c_home NULL
+#define c_gpio NULL
 #define c_gps NULL
 #define c_goto NULL
 #define c_gosub NULL
@@ -2158,6 +2164,61 @@ static void c_gps(PARAMETER *plist,int e) {
   printf("GPS <%s> %x\n",n,f);
 #endif
 }
+
+#ifdef HAVE_WIRINGPI
+extern int wiringpiissetup;
+#endif
+
+/* Sets the GPIO of the Raspberry Pi, using the wirig Pi pin numbering
+   n=0 -->GPIO 17 
+   1           18
+   2           27
+   3           22
+   4           23
+   5           24
+   6           25
+   7           4
+   8           2
+   9           3
+   10          8
+   11          7
+   12          10
+   13           9
+   14          11
+   15          14
+   16          15
+   
+   21          5
+   22          6
+   23         13
+   24         19
+   25         26
+   26         12
+   27         16
+   28         20
+   29         21
+   30         0
+   31         1
+*/
+
+static void c_gpio(PARAMETER *plist,int e) {
+  int n=plist->integer;
+  int f=plist[1].integer;
+#ifdef HAVE_WIRINGPI
+   if(n<0 || n>31) printf("ERROR: Wrong pin number [0-16, 21-31].\n");
+   else {
+     if(!wiringpiissetup) {
+       if (wiringPiSetup()==-1) {
+         printf("Error with wiring Pi setup!\n");
+       } else wiringpiissetup=1;
+     }
+     pinMode(n,OUTPUT);
+     digitalWrite(n,f);
+  }
+#endif
+}
+
+
 static void c_sensor(PARAMETER *plist,int e) {
 #ifdef ANDROID
   char *n=plist[0].pointer;
@@ -2756,6 +2817,7 @@ const COMMAND comms[]= {
 #endif
  { P_GOSUB,    "GOSUB"    , c_gosub,1,1,(unsigned short []){PL_PROC}},
  { P_GOTO,     "GOTO"     , c_goto,1,1,(unsigned short []){PL_LABEL}},
+ { P_PLISTE,   "GPIO"     , c_gpio ,2,2,(unsigned short []){PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
  { P_PLISTE,   "GPRINT"    , c_gprint,       0,-1,(unsigned short []){PL_EVAL}},
 #endif

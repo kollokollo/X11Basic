@@ -344,6 +344,74 @@ EXAMPLE:
 
 SEE ALSO: PRINT, TEXT, SETFONT
 ##############################################################################
+Command:  GPIO
+Syntax:   GPIO n,v
+
+DESCRIPTION:
+
+	Sets the nth GPIO to output direction and value v.
+
+The pin numbers follow the wirig Pi pin numbering
+
+----*
+   n=0 -->GPIO 17 
+   1           18
+   2           27
+   3           22
+   4           23
+   5           24
+   6           25
+   7           4
+   8           2
+   9           3
+   10          8
+   11          7
+   12          10
+   13           9
+   14          11
+   15          14
+   16          15
+   
+   21          5
+   22          6
+   23         13
+   24         19
+   25         26
+   26         12
+   27         16
+   28         20
+   29         21
+   30         0
+   31         1
+*----
+
+SEE ALSO: GPIO?, GPIO()
+##############################################################################
+Variable:  GPIO?
+Syntax:   a=GPIO?
+
+DESCRIPTION:
+
+	This system variable GPIO? is 0 if no general purpose input/output (GPIO)
+	interface is a available on this hardware
+	platform, otherwise the number of usable GPIO channels is returned. 
+	This variable is useful to detect, if the program is running on a
+	Raspberry Pi. 
+
+SEE ALSO: GPS?, SENSOR?, GPIO_SET, GPIO()
+##############################################################################
+Function: GPIO()
+Syntax:   a=GPIO(n)
+
+DESCRIPTION:
+
+	Readout the n-th value of the general purpose input/output (GPIO) 
+	channel. Usually the return values are 0 or 1.
+	The channel is set to input.
+
+SEE ALSO: GPS, SENSOR, SENSOR?, ANDROID?, GPIO
+
+##############################################################################
 
 Command:  GPS
 Syntax:   GPS ON

@@ -23,6 +23,9 @@
 #ifdef HAVE_CACOS
 #include <complex.h>
 #endif
+#ifdef HAVE_WIRINGPI
+#include <wiringPi.h>
+#endif
 #include "x11basic.h"
 #include "variablen.h"
 #include "xbasic.h"
@@ -178,6 +181,7 @@
 #define f_ror NULL
 #define f_root NULL
 #define f_rsrc_gaddr NULL
+#define f_gpio NULL
 #define f_sensor NULL
 #define f_sgn NULL
 #define f_shl NULL
@@ -1088,6 +1092,27 @@ static double f_sensor(int n) {
 }
 
 
+#ifdef HAVE_WIRINGPI
+int wiringpiissetup=0;
+#endif
+
+static double f_gpio(int n) {
+#ifdef HAVE_WIRINGPI
+  if(n<0 || n>31) printf("ERROR: Wrong pin number [0-16, 21-31].\n");
+  else {
+    if(!wiringpiissetup) {
+      if (wiringPiSetup()==-1) {
+        printf("Error with wiring Pi setup!\n");
+      } else wiringpiissetup=1;
+    }
+    pinMode(n,INPUT);
+    return(digitalRead(n));
+  }
+#endif
+  return(0);
+}
+
+
 static int f_lof(PARAMETER *plist,int e) {
 // dump_parameterlist(plist,e);
   if(filenr[plist[0].integer].typ) return(lof(filenr[plist[0].integer].dptr));
@@ -1475,6 +1500,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_PLISTE|F_IRET,            "GET_COLOR" , (pfunc)f_get_color,3,3,{PL_INT,PL_INT,PL_INT}},
 #endif
  { F_CONST|F_PLISTE|F_IRET,    "GLOB"      , (pfunc) f_glob    ,2,3,{PL_STRING,PL_STRING,PL_INT}},
+ { F_IQUICK|F_IRET,            "GPIO"       ,(pfunc) f_gpio  ,1,1,{PL_INT}},
  { F_CONST|F_IQUICK|F_IRET,    "GRAY"      , (pfunc) f_gray    ,1,1,{PL_INT}},
 
  { F_CONST|F_DQUICK|F_DRET,    "HYPOT"     , hypot             ,2,2,{PL_FLOAT,PL_FLOAT}},

@@ -319,6 +319,7 @@ Syntax:   a=SENSOR(n)
 DESCRIPTION:
 
 	Readout the n-th value of the sensor-phalanx. Usually
+----*
 	n=0  --> Temperature
 	  1  --> Ambient light 
 	  3  --> Proximity
@@ -326,8 +327,9 @@ DESCRIPTION:
 	  7,8,9  --> Gyroscope   x,y,z
 	  10,11,12  --> Magnetic field x,y,z
 	  13,14,15  --> Accelerometer x,y,z
+*----
 
-SEE ALSO: GPS, SENSOR, SENSOR?, ANDROID?
+SEE ALSO: GPS, SENSOR, SENSOR?, ANDROID?, GPIO()
 
 ##############################################################################
 

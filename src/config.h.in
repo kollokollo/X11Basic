@@ -151,6 +151,9 @@
 /* rfftw_create_plan in RFFTW */
 #undef HAVE_RFFTW
 
+/* wiringPiSetup in wiringPi */
+#undef HAVE_WIRINGPI
+
 /* _SystemCycle in dynamical TINE lib */
 #undef HAVE_TINE
 

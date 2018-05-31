@@ -51,6 +51,7 @@
 #define v_pi NULL
 #define v_rows NULL
 #define v_sensorf NULL
+#define v_gpiof NULL
 #define v_sp NULL
 #define v_stimer NULL
 #define v_timer NULL
@@ -68,6 +69,9 @@ static int v_pc() {return(pc);}
 
 #ifdef ANDROID
 static int v_sensorf() {return(ANZSENSORS);}
+#endif
+#ifdef HAVE_WIRINGPI
+static int v_gpiof() {return(32);}
 #endif
 static int v_stimer() {   /* Sekunden-Timer */
   time_t timec=time(NULL);
@@ -147,6 +151,11 @@ const SYSVAR sysvars[]= {  /* alphabetisch !!! */
  { FLOATTYP,  "CTIMER",     v_ctimer},
  { INTTYP,    "ERR",    (pfunc)    v_err},
  { CONSTTYP|INTTYP,    "FALSE",   (pfunc)   v_false},
+#ifdef HAVE_WIRINGPI
+ { CONSTTYP|INTTYP,    "GPIO?",   (pfunc)  v_gpiof},
+#else
+ { CONSTTYP|INTTYP,    "GPIO?",   (pfunc)  v_false},
+#endif
 #ifdef ANDROID
  { CONSTTYP|INTTYP,    "GPS?",  (pfunc)   v_true},
 #else
