@@ -2486,7 +2486,7 @@ int f_ioctl(PARAMETER *plist,int e) {
       ret=usb_claim_interface((usb_dev_handle *) filenr[plist->integer].dptr, plist[2].integer);
       break;
     case 4:
-      { int *params=INT2POINTER(plist[2].integer);
+      { int *params=(int *)INT2POINTER(plist[2].integer);
         void *data=NULL;
 	// printf("cm: %d %d %d %d\n",params[0],params[1],params[2],params[3]);
 	if(params[5]>0) data=(void *)&params[6];
