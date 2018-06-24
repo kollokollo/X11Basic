@@ -137,7 +137,7 @@ static void bc_push_integer(int i) {
   else if(i==1) BCADD(BC_PUSH1);
   else if(i==2) BCADD(BC_PUSH2);
   else if(i==-1) BCADD(BC_PUSHM1);
-  else if(i<128 && i>0) {
+  else if(i<128 && i>=-128) {
     BCADD(BC_PUSHB);
     BCADD(i);
   } else if(i<0x7fff && i>-32768) {

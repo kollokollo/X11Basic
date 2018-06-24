@@ -1083,11 +1083,11 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_BRAs:
       VERBOSE("vm_bra.s_%d \n",bcpc.pointer[i]); 
-      i+=bcpc.pointer[i];
+      i+=((signed char *)bcpc.pointer)[i];
       i++;
       break;
     case BC_BEQs:
-      ss=bcpc.pointer[i++];
+      ss=((signed char *)bcpc.pointer)[i++];
       VERBOSE("vm_beqs_%d ",ss);
       if((--opstack)->integer==0) i+=ss;
       break;
@@ -1144,7 +1144,7 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       VERBOSE("%d ",ss);
       break;
     case BC_PUSHB:
-      opstack->integer=bcpc.pointer[i++];
+      opstack->integer=((signed char *)bcpc.pointer)[i++];
       opstack->typ=PL_INT;
       opstack++;
       VERBOSE("%d ",opstack[-1].integer);

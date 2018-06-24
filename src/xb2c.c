@@ -470,7 +470,7 @@ static void translate() {
       fprintf(optr,"PUSHW(%d);\n",ss);
       break;
     case BC_PUSHB:
-      fprintf(optr,"PUSHB(%d);\n",bcpc[i++]);
+      fprintf(optr,"PUSHB(%d);\n",((signed char *)bcpc)[i++]);
       break;
     case BC_PUSHLEER: fprintf(optr,"PUSHLEER;\n"); break;
     case BC_PUSH0:    fprintf(optr,"PUSH0;\n");    break;
