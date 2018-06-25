@@ -1,0 +1,107 @@
+.TH X11BASIC 1 04-Jan-2017 "Version 1.26" "Basic Interpreter"
+.SH NAME
+ybasic \- The X11-BASIC bytecode wrapper
+.SH SYNOPSIS
+.B ybasic
+<filename> [further options]
+
+.SH DESCRIPTION
+
+X11-Basic is a dialect of the BASIC programming language with graphics
+capability.
+
+.IR ybasic 
+is a wrapper which compiles the given X11-Basic program <filename> to 
+bytecode and then excecutes the X11-Basic interpreter
+.B xbasic. 
+The basic command-files (programs) 
+usually have the extension .bas or .xbas.
+
+Further options will be passed to the X11-Basic interpreter 
+.B xbasic
+as they are.
+
+
+This little trick allows to run the BASIC programs as fast, as if they where 
+compiled to bytecode before. With a little overhead of compile time at the 
+beginning. The advantage is that you can keep the flexibility of editing the 
+programs as if they where normal interpreted scripts.
+
+.SH COMMANDLINE OPTIONS
+.P
+.SS \ <file>
+load and run script <file>
+.br
+
+For detailed help and description of the implemented basic commands take a look
+at the README file which comes with the X11-Basic package. There is also a full
+users manual available as *.pdf file on the homepage.
+
+
+
+.SH EXAMPLES
+.nf
+ybasic testme.bas
+ybasic runfast.bas -f file.dat
+.fi
+
+
+
+.SH X11-Basic as shell:
+X11-Basic programs can also be excecuted like shell scripts.
+If the xbasic interpreter was installed in 
+.I /bin/ 
+any X11-Basic program with
+.nf
+ #!/bin/xbasic
+.fi
+or 
+.nf
+ #!/bin/ybasic
+.fi
+
+in the first command line can be excecuted directly.
+
+
+.SH The X11-Basic Language
+
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+.I http://x11-basic.sourceforge.net/x11basic.html
+
+
+.SH VERSION
+This page was created for V.1.26
+.SH BUG REPORTS
+
+If you find a bug in the X11-Basic interpreter, you should report it. But first,
+you should make sure that it really is a bug, and that it appears in the latest
+version of the X11-Basic package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the X11-Basic mailing list on 
+www.sourceforge.net/projects/x11-basic or posted to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2018 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+
+http://x11-basic.sourceforge.net/
+
+xbasic(1), xbbc(1), x11basic(1)

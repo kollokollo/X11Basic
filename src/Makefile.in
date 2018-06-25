@@ -13,6 +13,7 @@ SHELL=/bin/sh
 # Directories
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+datarootdir = @datarootdir@
 
 BINDIR=@bindir@
 DATADIR=@datadir@
@@ -304,6 +305,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
         examples/compiler/gui2bas.bas \
         examples/compiler/xbc-win.bas \
         examples/compiler/xbc-st.bas \
+        examples/compiler/ybasic \
         examples/c-usage/c-demo.c \
         examples/c-usage/c-demo2.c \
         examples/c-usage/library.bas \
@@ -320,6 +322,7 @@ BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
       examples/compiler/inline.bas \
       examples/compiler/bas2x11basic.bas \
       examples/compiler/gui2bas.bas \
+      examples/compiler/ybasic \
       examples/c-usage/c-demo.c \
       examples/c-usage/c-demo2.c \
       examples/c-usage/library.bas \
@@ -718,6 +721,7 @@ install : xbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol
 	install -m 644 x11basic.svg $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
+	install -m 755 ../examples/compiler/ybasic $(BINDIR)/
 	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
 	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
 	ln -s -f $(LIBDIR)/libx11basic.so.1 $(LIBDIR)/libx11basic.so
@@ -726,6 +730,7 @@ install : xbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol
 	install -d $(MANDIR)/man1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
+	install -m 644 doc/man-pages/ybasic.1 $(MANDIR)/man1/ybasic.1
 	install -s -m 755 xbc $(BINDIR)/
 	install -s -m 755 xb2c $(BINDIR)/
 	install -s -m 755 xbvm $(BINDIR)/
@@ -745,11 +750,13 @@ uninstall :
 	rm -f $(LIBDIR)/libx11basic.so*
 	rm -f $(LIBDIR)/x11basic.a
 	rm -f $(BINDIR)/xbasic 
+	rm -f $(BINDIR)/ybasic 
 	rm -f $(BINDIR)/xbc 
 	rm -f $(BINDIR)/xbvm 
 	rm -f $(BINDIR)/xbbc
 	rm -f $(BINDIR)/xb2c
 	rm -f $(BINDIR)/bas2x11basic 
+	rm -f $(MANDIR)/man1/ybasic.1
 	rm -f $(MANDIR)/man1/xbasic.1
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1 $(MANDIR)/man1/xbbc.1 $(MANDIR)/man1/xbvm.1
 	rm -f $(MANDIR)/man1/bas2x11basic.1
@@ -850,6 +857,7 @@ $(DIR3).zip : $(BINDIST)
 	rsync -a RELEASE_NOTES /tmp/$(DIR3)/
 	rsync -a xbasic /tmp/$(DIR3)/bin/
 	rsync -a xbc /tmp/$(DIR3)/bin/
+	rsync -a ../doc/man-pages/ybasic.1 /tmp/$(DIR3)/man/ybasic.1
 	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
 	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
 	(cd /tmp ; zip -r $(DIR3).zip $(DIR3))

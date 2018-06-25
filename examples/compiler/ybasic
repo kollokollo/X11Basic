@@ -1,2 +1,17 @@
+#!/bin/sh
+#
+# ybasic, the X11-Basic bytecode compiler wrapper
+#  (c) 2015-2018 by Markus Hoffmann
+#
+#
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 filename.bas" >&2
+  exit 1
+fi
+if ! [ -e "$1" ]; then
+  echo "$1 not found" >&2
+  exit 1
+fi
+
 xbbc -o /tmp/`basename $1`.b $1
 xbasic  /tmp/`basename $1`.b $2 $3 $4 $5 $6 $7 $8 $9 $10
