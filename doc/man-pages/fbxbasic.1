@@ -1,0 +1,129 @@
+.TH X11BASIC 1 04-Jan-2017 "Version 1.25" "Basic Interpreter"
+.SH NAME
+fbxbasic \- The BASIC language interpreter and shell, framebuffer version
+.SH SYNOPSIS
+.B fbxbasic
+[\--framebuffer <device>] [-e <command>] [-l] [<filename>]
+
+.SH DESCRIPTION
+
+X11-Basic is a dialect of the BASIC programming language with graphics
+capability.
+
+.IR fbxbasic 
+is the framebuffer version of the interpreter and bytecode interpreter 
+(vitual machine). It interpretes basic command-files (programs), which 
+usually have the extension .bas or .xbas.
+
+The base functionallity is exactly the same as the (normal, X11/X.org version) of
+X11-Basic. Please also read the man page of 
+.B xbasic (1).
+
+.SH COMMANDLINE OPTIONS
+.P
+.SS \ <file>
+load and run script <file>
+.br
+.SS \-l <file>
+only load script, do not execute
+.br
+.SS \--eval <expression>
+evaluate expression
+.br
+.SS \--framebuffer <device>
+specify framebuffer device to be used for graphics
+.br
+.SS \--mouse <device>
+specify mouse input device to be used
+.br
+.SS \--keyboard <device>
+specify keyboard input device to be used
+.br
+.SS \-e <command>
+execute command
+.br
+.SS \-version
+shows version, program and other information and exits
+.SS -h --help
+print a short help
+.SS --help <topic>
+print help on topic
+.SS --daemon
+daemon mode
+
+For detailed help and description of the implemented basic commands take a look
+at the README file which comes with the X11-Basic package. There is also a full
+users manual available as *.pdf file on the homepage.
+
+.SH INTERACTIVE USE
+If no options are given on the command line, 
+.B fbxbasic
+will run interactivly.
+
+A prompt will be displayed and any command can be typed in. It will be excecuted
+immediately after pressing return or enter. The input is buffered and can be
+edited using the up and down arrows on the keyboard.
+
+.B To quit the program
+simply enter 
+.IR quit
+or press 
+.IR CTRL-C.
+
+.SH EXAMPLES
+.nf
+fbxbasic testme.bas
+fbxbasic testme.b
+fbxbasic --framebuffer /dev/fb0 -e 'alert 1,"Hello world !",1," OK ",b'
+.fi
+
+You can find many sample programs in 
+.I /usr/share/doc/packages/X11Basic/examples.
+
+
+
+
+.SH The X11-Basic Language
+
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+.I http://x11-basic.sourceforge.net/x11basic.html
+
+
+.SH VERSION
+This page was created for V.1.26
+.SH BUG REPORTS
+
+If you find a bug in the X11-Basic interpreter, you should report it. But first,
+you should make sure that it really is a bug, and that it appears in the latest
+version of the X11-Basic package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the X11-Basic mailing list on 
+www.sourceforge.net/projects/x11-basic or posted to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+.SH COPYRIGHT
+Copyright (C) 1997-2018 Markus Hoffmann <kollo@users.sourceforge.net>
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+
+http://x11-basic.sourceforge.net/
+
+/usr/share/doc/x11basic/
+
+xbasic(1), ybasic(1), xbc(1), xbbc(1), bas211basic(1)

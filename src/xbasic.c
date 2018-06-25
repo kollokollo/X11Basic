@@ -81,6 +81,8 @@ const char xbasic_name[]="doocsxbasic";
 const char xbasic_name[]="tinexbasic";
 #elif defined USE_SDL
 const char xbasic_name[]="sdlxbasic";
+#elif defined FRAMEBUFFER
+const char xbasic_name[]="fbxbasic";
 #else
 const char xbasic_name[]="xbasic";
 #endif

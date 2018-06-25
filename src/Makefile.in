@@ -316,7 +316,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY \
 	../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
-	../doc/editors/* xbasic xbc bas2x11basic xbbc xbvm xb2c \
+	../doc/editors/* xbasic fbxbasic xbc bas2x11basic xbbc xbvm xb2c \
 	x11basic.h xb2csol.h x11basic.a libx11basic.so \
       examples/compiler/xbc.bas.in \
       examples/compiler/inline.bas \
@@ -518,7 +518,10 @@ x11basic.toslib : $(DIST2) mathematics.c
 # Make a version of X11-Basic which uses the framebuffer (and touchscreen) device
 # instead of X11-Graphics. This way, the interpreter (and all basic programs) can run without the X-Server
 
-fb: xbasic.framebuffer
+
+fb: fbxbasic
+fbxbasic: xbasic.framebuffer
+	cp xbasic.framebuffer $@
 xbasic.framebuffer : main.c $(LIBCSRCFB)
 	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRCFB) $(LINKFLAGS)  $(LIBS1) 
 	strip $@
@@ -717,10 +720,11 @@ x11basic.eps : logo/x11basicVersion.fig
 %.svg : %.eps 
 	convert  $< $@
 
-install : xbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+install : xbasic fbxbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
 	install -m 644 x11basic.svg $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
+	install -s -m 755 fbxbasic $(BINDIR)/
 	install -m 755 ../examples/compiler/ybasic $(BINDIR)/
 	install -m 644 libx11basic.so.$(LIBNO) $(LIBDIR)/
 	ln -s -f $(LIBDIR)/libx11basic.so.$(LIBNO) $(LIBDIR)/libx11basic.so.1
@@ -730,7 +734,8 @@ install : xbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol
 	install -d $(MANDIR)/man1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/x11basic.1
 	install -m 644 doc/man-pages/x11basic.1 $(MANDIR)/man1/xbasic.1
-	install -m 644 doc/man-pages/ybasic.1 $(MANDIR)/man1/ybasic.1
+	install -m 644 doc/man-pages/ybasic.1   $(MANDIR)/man1/ybasic.1
+	install -m 644 doc/man-pages/fbxbasic.1 $(MANDIR)/man1/fbxbasic.1
 	install -s -m 755 xbc $(BINDIR)/
 	install -s -m 755 xb2c $(BINDIR)/
 	install -s -m 755 xbvm $(BINDIR)/
@@ -751,6 +756,7 @@ uninstall :
 	rm -f $(LIBDIR)/x11basic.a
 	rm -f $(BINDIR)/xbasic 
 	rm -f $(BINDIR)/ybasic 
+	rm -f $(BINDIR)/fbxbasic 
 	rm -f $(BINDIR)/xbc 
 	rm -f $(BINDIR)/xbvm 
 	rm -f $(BINDIR)/xbbc
@@ -758,6 +764,7 @@ uninstall :
 	rm -f $(BINDIR)/bas2x11basic 
 	rm -f $(MANDIR)/man1/ybasic.1
 	rm -f $(MANDIR)/man1/xbasic.1
+	rm -f $(MANDIR)/man1/fbxbasic.1
 	rm -f $(MANDIR)/man1/x11basic.1 $(MANDIR)/man1/xbc.1 $(MANDIR)/man1/xbbc.1 $(MANDIR)/man1/xbvm.1
 	rm -f $(MANDIR)/man1/bas2x11basic.1
 	rm -f $(MANDIR)/man1/xb2c.1
@@ -858,6 +865,7 @@ $(DIR3).zip : $(BINDIST)
 	rsync -a xbasic /tmp/$(DIR3)/bin/
 	rsync -a xbc /tmp/$(DIR3)/bin/
 	rsync -a ../doc/man-pages/ybasic.1 /tmp/$(DIR3)/man/ybasic.1
+	rsync -a ../doc/man-pages/fbxbasic.1 /tmp/$(DIR3)/man/fbxbasic.1
 	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
 	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
 	(cd /tmp ; zip -r $(DIR3).zip $(DIR3))

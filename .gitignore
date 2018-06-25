@@ -14,6 +14,7 @@ src/x11basic.svg
 src/xb2c.static
 src/xbasic.static
 src/xbasic.framebuffer
+src/fbxbasic
 src/xbbc.static
 src/xbvm.static
 src/Makefile
@@ -58,3 +59,10 @@ doc/manual/nedit-x11basic.eps
 doc/manual/nedit-x11basic.jpg
 src/test.bas
 src/t.bas
+htdocs/X11-Basic-manual.pdf
+doc/x11basic-de.html
+src/Debian/Outputs
+src/Inno-Output
+doc/x11basic-raspi-de.html
+doc/x11basic-raspi-de.pdf
+src/X11-Basic-1.*-*-win.zip

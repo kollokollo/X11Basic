@@ -79,18 +79,77 @@ void intro() {
 	     xbasic_name,libversion,libvdate);
 }
 #else
+
+#ifdef NOGRAPHICS
+  #define FEATURE1 "txt "
+#elif defined USE_X11
+  #define FEATURE1 "x11 "
+#elif defined USE_SDL
+  #define FEATURE1 "sdl "
+#elif defined FRAMEBUFFER
+  #define FEATURE1 "fb  "
+
+#else
+  #define FEATURE1 "    "
+#endif
+
+#ifdef HAVE_LAPACK
+  #define FEATURE2 "la  "
+#else
+  #define FEATURE2 "    "
+#endif
+
+#ifdef HAVE_READLINE
+  #define FEATURE3 "rl  "
+#else
+  #define FEATURE3 "    "
+#endif
+
+#ifdef HAVE_GMP
+  #define FEATURE4 "gmp "
+#else
+  #define FEATURE4 "    "
+#endif
+#ifdef HAVE_FFTW
+  #define FEATURE5 "fft "
+#else
+  #define FEATURE5 "    "
+#endif
+#ifdef HAVE_WIRINGPI
+  #define FEATURE6 "Pi  "
+#else
+  #define FEATURE6 "    "
+#endif
+#ifdef HAVE_ALSA
+  #define FEATURE7 "snd "
+#else
+  #define FEATURE7 "    "
+#endif
+#ifdef HAVE_USB
+  #define FEATURE8 "usb "
+#else
+  #define FEATURE8 "    "
+#endif
+#ifdef HAVE_BLUETOOTH
+  #define FEATURE9 "bt  "
+#else
+  #define FEATURE9 "    "
+#endif
+#ifdef HAVE_GCRYPT
+  #define FEATURE10 "cry "
+#else
+  #define FEATURE10 "    "
+#endif
+
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V.%5s              *\n"
          "*                       by Markus Hoffmann 1997-2019 (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
-#elif defined USE_SDL
-         "* sdl                                                    *\n"
-#elif defined FRAMEBUFFER
-         "* fb                                                     *\n"
 #else
-         "*                                                        *\n"
+         "***  " FEATURE1 FEATURE2 FEATURE3 FEATURE4 FEATURE5 FEATURE6 FEATURE7 
+	      FEATURE8 FEATURE9 FEATURE10 "          ***\n"
 #endif
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"

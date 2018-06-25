@@ -115,7 +115,7 @@ void Fb_Open() {
   // Map the device to memory
 #ifndef ANDROID
   screen.pixels = (unsigned char *)mmap(0, screen.size, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
-  if((int)screen.pixels==-1) {
+  if(screen.pixels==MAP_FAILED) {
     perror("ERROR: Could not map framebuffer device to memory.");
     exit(EX_IOERR);
   }
