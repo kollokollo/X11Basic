@@ -1938,17 +1938,16 @@ static void g_out(char a) {
     if(a==';') {
       if(anznumbers<MAXANZNUMBERS) numbers[anznumbers++]=number;
       number=0;
-    } else if(a=='?') {
-      escflag++;
-    } else if(a>='0' && a<='9') {
-      number=number*10+(a-'0');
-    } else {
+    } else if(a=='?') escflag++;
+    else if(a>='0' && a<='9') number=number*10+(a-'0');
+    else {
       if(anznumbers<MAXANZNUMBERS)  numbers[anznumbers++]=number;
       if(a=='m') {
       	  int i,f;
 	  for(i=0;i<anznumbers;i++) {
 	    f=numbers[i];
-	    if(f==0) {flags=0;
+	    if(f==0) {
+	      flags=0;
 	      // tcolor=LIGHTGREY;tbcolor=BLACK;
 	      }
 	    else if(f<10) flags|=(1<<(f-1));
@@ -1965,15 +1964,15 @@ static void g_out(char a) {
 	    else if(f==36) SetForeground(gem_colors[CYAN]);
 	    else if(f==37) SetForeground(gem_colors[WHITE]);
 	    else if(f==39) SetForeground(gem_colors[LWHITE]);  /* set to default LIGHTGREY*/
-	    else if(f==40) SetBackground(gem_colors[BLACK]);
-	    else if(f==41) SetBackground(gem_colors[RED]);
-	    else if(f==42) SetBackground(gem_colors[GREEN]);
-	    else if(f==43) SetBackground(gem_colors[YELLOW]);
-	    else if(f==44) SetBackground(gem_colors[BLUE]);
-	    else if(f==45) SetBackground(gem_colors[MAGENTA]);
-	    else if(f==46) SetBackground(gem_colors[CYAN]);
-	    else if(f==47) SetBackground(gem_colors[WHITE]);
-	    else if(f==49) SetBackground(gem_colors[BLACK]); /* set to default */
+	    else if(f==40) {SetBackground(gem_colors[BLACK]);}
+	    else if(f==41) {SetBackground(gem_colors[RED]);}
+	    else if(f==42) {SetBackground(gem_colors[GREEN]);}
+	    else if(f==43) {SetBackground(gem_colors[YELLOW]);}
+	    else if(f==44) {SetBackground(gem_colors[BLUE]);}
+	    else if(f==45) {SetBackground(gem_colors[MAGENTA]);}
+	    else if(f==46) {SetBackground(gem_colors[CYAN]);}
+	    else if(f==47) {SetBackground(gem_colors[WHITE]);}
+	    else if(f==49) {SetBackground(gem_colors[BLACK]);} /* set to default */
 	   // else if(f==51) flags|=FL_FRAMED;
 	   // else if(f==54) flags&=~FL_FRAMED;
 	   // else g_terminal_error((char)f,5);

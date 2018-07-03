@@ -34,6 +34,7 @@
 #include "bytecode.h"
 #include "variablen.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "type.h"
 #include "parser.h"
 #include "parameter.h"
@@ -136,7 +137,7 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
            "  Size of String-Segment: %d\n",(int)h.bssseglen,(int)h.stringseglen);
     printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h.symbolseglen,anzsymbols);
   }
-  #ifdef ATARI
+  #ifdef IS_BIG_ENDIAN
   WSWAP((char *)&h.version);
   LWSWAP((short *)&h.textseglen);
   LWSWAP((short *)&h.rodataseglen);
@@ -152,14 +153,14 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   if(write(fdis,adr,len)==-1) io_error(errno,"write");
   if(rodatalen) {if(write(fdis,rodata,rodatalen)==-1) io_error(errno,"write");}
   if(dlen) {if(write(fdis,dadr,dlen)==-1) io_error(errno,"write");}
-  #ifdef ATARI
+  #ifdef IS_BIG_ENDIAN
   LWSWAP((short *)&h.symbolseglen);
   LWSWAP((short *)&h.stringseglen);
   LWSWAP((short *)&h.relseglen);
   #endif
   
   if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write strings");
-#ifdef ATARI
+#ifdef IS_BIG_ENDIAN
   int i;
   int n=h.symbolseglen/sizeof(BYTECODE_SYMBOL);
   if(n>0) {

@@ -25,6 +25,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
+#include "memory.h"
 #include "bytecode.h"
 #include "variablen.h"
 #include "file.h"
@@ -732,9 +733,9 @@ static int loadbcprg(char *filename) {
                  "   (c) Markus Hoffmann 2002-2019\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
-		 
-#ifdef ATARI
-WSWAP((char *)&bytecode->version);
+
+#ifdef IS_BIG_ENDIAN
+    WSWAP((char *)&bytecode->version);
 #endif
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
@@ -742,7 +743,7 @@ WSWAP((char *)&bytecode->version);
       "X11-Basic.\nPlease consider to recompile it.\n");
       return(-1);
     }
-#ifdef ATARI
+#ifdef IS_BIG_ENDIAN
   LWSWAP((short *)&bytecode->textseglen);
   LWSWAP((short *)&bytecode->rodataseglen);
   LWSWAP((short *)&bytecode->sdataseglen);
@@ -799,7 +800,7 @@ WSWAP((char *)&bytecode->version);
 
     fprintf(optr,"%d symbols:\n",c);
     for(i=0;i<c;i++) {
-	#ifdef ATARI
+	#ifdef IS_BIG_ENDIAN
 	  LWSWAP((short *)&symtab[i].name);
 	  LWSWAP((short *)&symtab[i].adr);
 	#endif
@@ -848,7 +849,7 @@ int main(int anzahl, char *argumente[]) {
     } else exit(EX_NOINPUT);
   }
   #ifdef ATARI
-  sleep(2);
+  sleep(5);
   #endif
   return(EX_OK);
 }

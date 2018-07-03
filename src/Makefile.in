@@ -296,7 +296,8 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
       ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
-      config.h.in config.h.tomtom Makefile.in configure config.guess configure.in \
+      config.h.in config.h.tomtom config.h.atari \
+        Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
         bitmaps/* logo/x11basicVersion.fig \
         examples/compiler/xbc.bas.in \
@@ -341,7 +342,8 @@ WINDIST=WINDOWS/lib/SDL.dll \
 	WINDOWS/x11basic.ico  WINDOWS/demo.bas \
 	WINDOWS/bas.ico ../COPYING ../RELEASE_NOTES INTRO
 
-TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp ATARI-ST/AUTO/VT100EMU.PRG \
+TOSDIST=xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp \
+        ATARI-ST/AUTO/VT100EMU.PRG ATARI-ST/AUTO/VT100EMU.TXT \
         ATARI-ST/readme.txt ATARI-ST/demo.bas ../RELEASE_NOTES \
 	../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 

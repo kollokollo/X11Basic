@@ -1998,15 +1998,16 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
   unsigned short pos=0;
   for(i=0;i<strlen(dpfad);i++) {
     a=dpfad[i];
-    if(a=='\\') a='/';
-    if(a=='/') pos=i+1;
+    if(a=='\\') {dpfad[i]=a='/';}
+    if(a=='/') pos=i;
   }
   dpfad[pos]=0;
-#endif
+#else
   if(anzfiles) {
     int i;
     for(i=0;i<anzfiles;i++) free(filenamen[i].name);
   }
+#endif
   ergebnis=malloc(strlen(dpfad)+strlen(auswahl)+2);
   if(sbut==FILESELECT_OK) sprintf(ergebnis,"%s/%s",dpfad,auswahl);
   else *ergebnis=0;

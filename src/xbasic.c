@@ -141,11 +141,11 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
     else {
       adr+=fixup[i];
       memcpy(&ll,adr,sizeof(uint32_t));
-      #ifdef ATARI
+      #ifdef IS_BIG_ENDIAN
         LWSWAP((short *)&ll);
       #endif
       ll+=POINTER2INT(adr);
-      #ifdef ATARI
+      #ifdef IS_BIG_ENDIAN
         LWSWAP((short *)&ll);
       #endif
       memcpy(adr,&ll,sizeof(uint32_t));
@@ -214,7 +214,7 @@ char *bytecode_init(char *adr) {
     a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
     if(a>0) {
       for(i=0;i<a;i++) {
-	#ifdef ATARI
+	#ifdef IS_BIG_ENDIAN
 	  LWSWAP((short *)&symtab[i].name);
 	  LWSWAP((short *)&symtab[i].adr);
 	#endif
@@ -279,7 +279,7 @@ int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
   #if DEBUG 
     printf("Bytecode header found (V.%x)\n",bytecode->version);
   #endif
-  #ifdef ATARI
+  #ifdef IS_BIG_ENDIAN
   WSWAP((char *)&bytecode->version);
   #endif
   if(bytecode->version!=BC_VERSION) {
@@ -287,7 +287,7 @@ int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
     "X11-Basic.\n Please consider to recompile it from the .bas file.\n");
     return(-1);
   }
-#ifdef ATARI
+#ifdef IS_BIG_ENDIAN
   LWSWAP((short *)&bytecode->textseglen);
   LWSWAP((short *)&bytecode->rodataseglen);
   LWSWAP((short *)&bytecode->sdataseglen);

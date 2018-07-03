@@ -88,6 +88,8 @@ void intro() {
   #define FEATURE1 "sdl "
 #elif defined FRAMEBUFFER
   #define FEATURE1 "fb  "
+#elif defined USE_GEM
+  #define FEATURE1 "gem "
 
 #else
   #define FEATURE1 "    "

@@ -20,6 +20,8 @@ cfile$="c.c"
 IF NOT EXIST("xbvm.prg")
   a=FORM_ALERT(1,"[3][xbc: ERROR: xbvm.prg not found.][CANCEL]")
   PRINT "xbc: ERROR: xbvm.prg not found."
+  PRINT "press any key to exit ..."
+  ~INP(-2)
   QUIT
 ENDIF
 
@@ -73,21 +75,24 @@ IF qflag=0
     ENDIF
   ENDIF
 ENDIF
+PRINT "compile: ";inputfile$
 IF UPPER$(RIGHT$(inputfile$,4))<>".BAS"
   PRINT "File must have the extension: .bas!"
+  PRINT "press any key to exit ..."
+  ~INP(-2)
   QUIT
 ENDIF
-
+PAUSE 5
 IF LEN(inputfile$)
   t$="[2][You have now following choice:||"
-  t$=t$+"1. make bytecode, then make a standalone exe from the bytecode,|"
-  t$=t$+"2. make bytecode, then translate bytecode to C,|   and use tcc to compile it,|"
+  t$=t$+"1. make bytecode, then make prg from bytecode,|"
+  t$=t$+"2. make bytecode, then translate to C,|   and use tcc to compile it,|"
   t$=t$+"3. only produce the bytecode,|"
   t$=t$+"4. pseudo compile, then use tcc.|"
   t$=t$+"|Option 1 is recommended.|For options 2 and 4 tcc needs to be installed.|"
 
   t$=t$+"][ 1 | 2 | 3 | 4 |CANCEL]"
-  IF qflag=0
+  IF qflag=0 OR 0
     COLOR weiss,schwarz
     TEXT 10,32,inputfile$+" OK."
     a=FORM_ALERT(1,t$)
@@ -102,6 +107,8 @@ IF LEN(inputfile$)
     IF NOT EXIST("xb2c.ttp")
       ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.ttp not found.][CANCEL]")
       PRINT "xbc: ERROR: xb2c.ttp not found."
+  PRINT "press any key to exit ..."
+  ~INP(-2)
       QUIT
     ENDIF
     SYSTEM "xb2c "+bfile$+" -o "+cfile$
@@ -143,6 +150,10 @@ ELSE
   ENDIF
   PRINT "xbc: No input files"
 ENDIF
+if qflag=0
+  PRINT "press any key to exit ..."
+  ~INP(-2)
+endif
 QUIT
 PROCEDURE intro
   PRINT "X11-Basic Compiler V.1.23 (c) Markus Hoffmann 2002-2014"
@@ -166,11 +177,14 @@ PROCEDURE using
 RETURN
 
 PROCEDURE make_bytecode(file$,bfile$)
+  PRINT "Make bytecode..."
   IF NOT EXIST("xbbc.ttp")
     IF qflag=0
       ~FORM_ALERT(1,"[3][xbc: ERROR: xbbc.ttp not found.][CANCEL]")
     ENDIF
     PRINT "xbc: ERROR: xbbc.ttp not found."
+    PRINT "press any key to exit ..."
+    ~INP(-2)
     QUIT
   ENDIF
   PRINT "INPUT: ";file$
@@ -180,6 +194,8 @@ PROCEDURE make_bytecode(file$,bfile$)
       ~FORM_ALERT(1,"[3][xbc/xbbc: FATAL ERROR: something is wrong.][CANCEL]")
     ENDIF
     PRINT "xbc/xbbc: FATAL ERROR: something is wrong."
+    PRINT "press any key to exit ..."
+    ~INP(-2)
     QUIT
   ENDIF
   IF EXIST(bfile$)
@@ -225,7 +241,7 @@ PROCEDURE packvm(bfile$)
   CLOSE #1
   t$=t$+SPACE$(lb)
   BLOAD bfile$,VARPTR(t$)+l
-  MEMDUMP VARPTR(t$)+l,lb
+  MEMDUMP VARPTR(t$)+l,MIN(lb,64)
   oagain:
   IF qflag=0
     default$=RIGHT$(inputfile$,LEN(inputfile$)-rinstr(inputfile$,"/"))

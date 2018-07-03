@@ -9,7 +9,11 @@
 #ifndef __X11BASICDEFS
 #define __X11BASICDEFS
 
+#ifdef ATARI
+#include "config.h.atari"
+#else
 #include "config.h"
+#endif
 #include "options.h"
 
 #ifdef SAVE_RAM
