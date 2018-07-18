@@ -142,6 +142,9 @@
 /* mpz_init in GMP */
 #undef HAVE_GMP
 
+/* mpz_init in MINI_GMP */
+#undef HAVE_MINI_GMP
+
 /* mpz_primorial_ui in GMP */
 #undef HAVE_PRIMORIAL_UI
 

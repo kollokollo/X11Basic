@@ -19,14 +19,32 @@
 #define E        2.718281828459
 
 #ifdef HAVE_GMP
-#include <gmp.h>
-#define ARBINT mpz_t
-#define ARBFLOAT mpf_t
-typedef struct {
-  ARBFLOAT r;
-  ARBFLOAT i;
-} ARBCOMPLEX;
-
+  #include <gmp.h>
+  #define ARBINT mpz_t
+  #define ARBFLOAT mpf_t
+  typedef struct {
+    ARBFLOAT r;
+    ARBFLOAT i;
+  }   ARBCOMPLEX;
+#elif defined HAVE_MINI_GMP
+  /*MINI_GMP ist nur ein schlechter ersatz, weil es viele Funktionen nicht 
+    enhaelt. Hierfür wird hier ein Dummy definiert. */
+  #include <mini-gmp.h>
+  #define ARBINT mpz_t
+  #define ARBFLOAT double
+  typedef struct {
+    ARBFLOAT r;
+    ARBFLOAT i;
+  } ARBCOMPLEX;
+  #define gmp_randstate_t long
+  #define gmp_randinit_default(a) srand(a)
+  #define gmp_randinit_ui(a,b) srand(a)
+  #define gmp_randseed_ui(a,b) srand(a=b)
+  #define mpz_urandomm(a,b,c)  mpz_set_si(a,rand())
+  #define mpz_div(a,b,c) mpz_set_si(a,mpz_get_si(b)/mpz_get_si(c))
+  #define mpz_get_str(a,b,c) strdup("not supported")
+  #define gmp_printf printf
+  // TODO
 #else
 #define ARBINT int
 #define ARBFLOAT double
