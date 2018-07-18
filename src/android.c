@@ -147,7 +147,9 @@ JNIEXPORT  jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   CATCHSIG(SIGBUS);
   CATCHSIG(SIGFPE);
   CATCHSIG(SIGSEGV);
+#if defined SIGSTKFLT
   CATCHSIG(SIGSTKFLT);
+#endif
   CATCHSIG(SIGPIPE);
 
 
