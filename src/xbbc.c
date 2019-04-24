@@ -70,7 +70,7 @@ char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
 const char version[]="1.26"; /* Version Number. Put some useful information here */
-const char vdate[]="2018-06-01";   /* Creation date.  Put some useful information here */
+const char vdate[]="2019-04-01";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 
@@ -180,7 +180,7 @@ char *rodata;
 static void intro(){
   puts("*************************************************************\n"
        "*           X11-Basic bytecode compiler                     *\n"
-       "*                    by Markus Hoffmann 1997-2018 (c)       *");
+       "*                    by Markus Hoffmann 1997-2019 (c)       *");
   printf("* V.%s/%04x date:   %30s    *\n",version,BC_VERSION,vdate);
   puts("*************************************************************\n");
 }

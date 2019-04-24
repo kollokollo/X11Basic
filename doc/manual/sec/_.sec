@@ -5,7 +5,7 @@ Syntax:     X11-Basic USAGE on Android
 
 DESCRIPTION:
 
-Android deviced usually have a BACK Butten, a HOME button and a MENU Button. 
+Android devices usually have a BACK Butten, a HOME button and a MENU Button. 
 
 * The HOME Button suspends X11-Basic and returns to the Android Desktop.
   Selection of the X11-Basic app again will resume it.

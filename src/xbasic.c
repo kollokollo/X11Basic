@@ -16,12 +16,11 @@
 
                        VERSION 1.26
 
-            (C) 1997-2018 by Markus Hoffmann
+            (C) 1997-2019 by Markus Hoffmann
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
  **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
- **  letzte Bearbeitung: 01/2018  von Markus Hoffmann		   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X

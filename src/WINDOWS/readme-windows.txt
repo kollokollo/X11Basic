@@ -8,9 +8,9 @@
     
     
     
-                       VERSION 1.25
+                       VERSION 1.26
 
-            (C) 1997-2018 by Markus Hoffmann
+            (C) 1997-2019 by Markus Hoffmann
                (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
@@ -26,7 +26,7 @@ This is the WINDOWS-Version of X11-Basic.
 Summary: A Basic interpreter and compiler with graphics capabilities
 Vendor: Markus Hoffmann
 Name: X11Basic
-Version: 1.25
+Version: 1.26
 Copyright: GPLv2
 Group: Development/Languages
 Source: https://gitlab.com/kollo/X11Basic/
