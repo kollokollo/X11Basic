@@ -648,7 +648,7 @@ DESCRIPTION:
 	complex cosine of a complex expression.
 	The complex cosine function is defined as:
 
-           cos(z) := (exp(1i*z#)+exp(-1i*z#))/2
+           cos(z#) := (exp(1i*z#)+exp(-1i*z#))/2
 
 EXAMPLE: 
 	PRINT COS(0)        ! Result: 1

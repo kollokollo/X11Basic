@@ -292,7 +292,7 @@ DESCRIPTION:
 	a#=ABS(a#)*EXP(1i*ARG(a#))
 
         The argument is the phase angle of the complex number.
-	The return value is a real value in the range of [-PI,PI].
+	The return value is a real value in the range of (-PI,PI].
 
 EXAMPLE:   
 
@@ -498,8 +498,8 @@ DESCRIPTION:
 
 	The ATAN() function has a second form which accepts two arguments:
 	ATAN2(a,b) which is (mostly) equivalently to ATAN(a/b) except for the
-	fact, that the two-argument-form returns an angle in the range 
-	-PI to PI, whereas the one-argument-form returns an angle in the 
+	fact, that ATAN2 returns an angle in the range 
+	(-PI to PI], whereas ATAN returns an angle in the 
 	range -PI/2 to PI/2.
 
 EXAMPLE: 
