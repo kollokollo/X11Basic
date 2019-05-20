@@ -1124,7 +1124,7 @@ void kommando(char *cmd) {
 /* programmlauf setzt voraus, dass die Strukturen durch init_program vorbereitet sind*/
 
 void programmlauf(){
-  if(is_bytecode) {  
+  if(is_bytecode) { 
     PARAMETER *p;
     int n;
   #if DEBUG

@@ -61,7 +61,9 @@ char ifilename[100]="new.bas";
 #endif
 int prglen=0;
 int verbose=0;
-int runfile,daemonf=0;
+int runfile;
+int daemonf=0;
+static int quit_on_end=0;
 int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
@@ -178,6 +180,7 @@ static void usage() {
     " -l\t\t--- Programm nur laden\n"
     " -e <kommando>\t--- Basic Kommando ausführen\n"
     " --eval <ausdruck>\t--- Num. Ausdruck auswerten\n"
+    " --quitonend\t--- Verlasse Interbreter bei END\n"
     " -h --help\t--- Diese Kurzhilfe\n"
     " --help <Stichwort>\t--- Hilfe zum Stichwort/Befehl\n"
 #else
@@ -185,6 +188,7 @@ static void usage() {
     " -l\t\t--- do not run the program (only load)\n"
     " -e <command>\t--- execute basic command\n"
     " --eval <exp>\t--- evaluate num. expression\n"
+    " --quitonend\t--- quit on END statement\n"
     " -h --help\t--- Usage\n"
     " --help <topic>\t--- Print help on topic\n"
 #endif
@@ -226,15 +230,11 @@ void kommandozeile(int anzahl, char *argumente[]) {
   /* Kommandozeile bearbeiten   */
   runfile=TRUE;
   for(count=1;count<anzahl;count++) {
-    if (strcmp(argumente[count],"-l")==FALSE)               runfile=FALSE;
-    else if (strcmp(argumente[count],"--load-only")==FALSE) runfile=FALSE;
-    else if (strcmp(argumente[count],"--eval")==FALSE) {
+    if(!strcmp(argumente[count],"-l") || !strcmp(argumente[count],"--load-only")) runfile=FALSE;
+    else if(!strcmp(argumente[count],"--eval")) {
       printf("%.13g\n",parser(argumente[++count]));
       quitflag=1;
-    } else if (strcmp(argumente[count],"-e")==FALSE) {
-      kommando(argumente[++count]);
-      quitflag=1;
-    } else if (strcmp(argumente[count],"--exec")==FALSE) {
+    } else if(!strcmp(argumente[count],"-e") || !strcmp(argumente[count],"--exec")) {
       kommando(argumente[++count]);
       quitflag=1;
     } else if (strcmp(argumente[count],"-h")==FALSE) {
@@ -257,26 +257,24 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if (strcmp(argumente[count],"--daemon")==FALSE) {
       intro();
       daemonf=1;
-    } else if (strcmp(argumente[count],"-v")==FALSE) {
-      verbose++;
-    } else if (strcmp(argumente[count],"-q")==FALSE) {
-      verbose--;
+    } 
+    else if(!strcmp(argumente[count],"--quitonend")) quit_on_end=1;
+    else if(!strcmp(argumente[count],"-v"))	     verbose++;
+    else if(!strcmp(argumente[count],"-q"))	     verbose--;
 #if defined FRAMEBUFFER && !defined ANDROID
-    } else if (strcmp(argumente[count],"--framebuffer")==FALSE) {
-      strncpy(fbdevname,argumente[++count],256);
-    } else if (strcmp(argumente[count],"--mouse")==FALSE) {
-      strncpy(mousedevname,argumente[++count],256);
-    } else if (strcmp(argumente[count],"--keyboard")==FALSE) {
-      strncpy(keyboarddevname,argumente[++count],256);
+    else if(!strcmp(argumente[count],"--framebuffer")) strncpy(fbdevname,      argumente[++count],256);
+    else if(!strcmp(argumente[count],"--mouse"))       strncpy(mousedevname,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--keyboard"))    strncpy(keyboarddevname,argumente[++count],256);
 #endif
-    } else {
+    else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
+    else {
       if(!loadfile) {
         loadfile=TRUE;
         strcpy(ifilename,argumente[count]);
       }
     }
    }
-   if(quitflag) quit_x11basic(0);
+   if(quitflag) quit_x11basic(EX_OK);
 }
 
 extern char *simple_gets(char *);
@@ -316,6 +314,7 @@ int main(int anzahl, char *argumente[]) {
   for(;;) {
     programmlauf();
     echoflag=batch=0;
+    if(quit_on_end) quit_x11basic(EX_OK);
 #ifdef ANDROID
     if(isdirectmode) break;
     isdirectmode=1;

@@ -1,4 +1,4 @@
-.TH X11BASIC 1 04-Jan-2017 "Version 1.25" "Basic Interpreter"
+.TH X11BASIC 1 04-Jan-2019 "Version 1.26" "Basic Interpreter"
 .SH NAME
 xbasic,x11basic,X11-Basic \- The BASIC language interpreter and shell
 .SH SYNOPSIS
@@ -56,6 +56,9 @@ print a short help
 print help on topic
 .SS --daemon
 daemon mode
+.SS --quitonend
+changes the behaviour of the interpreter such that it quits after the program has finished. 
+The direct mode / interactive mode will not be entered.
 
 For detailed help and description of the implemented basic commands take a look
 at the README file which comes with the X11-Basic package. There is also a full
@@ -112,7 +115,7 @@ You should be able to find one at
 
 
 .SH VERSION
-This page was created for V.1.25
+This page was created for V.1.26
 .SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should report it. But first,
@@ -130,7 +133,7 @@ kollo@users.sourceforge.net.
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2017 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2019 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
