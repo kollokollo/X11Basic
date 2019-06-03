@@ -46,8 +46,6 @@ extern char **param_argumente;
 extern const char xbasic_name[];
 extern int pc,sp,err,errcont,everyflag,echoflag;
 
-const char version[]=VERSION;        /* Programmversion          */
-const char vdate[]=VERSION_DATE;
 extern const char libversion[];
 extern const char libvdate[];
 int loadfile=FALSE;
@@ -67,11 +65,11 @@ STRING bcpc;
 
 int verbose=0;
 
-char selfseek[]="4007111";
+static char selfseek[]="4007111";
 
 static void intro(){
   printf("****************************************************\n"
-         "*  %10s virtual machine  V.%5s             *\n"
+         "*  %10s virtual machine  V." VERSION "              *\n"
          "*                 by Markus Hoffmann 1997-2019 (c) *\n"
          "*                                                  *\n"
 #ifdef GERMAN
@@ -82,27 +80,27 @@ static void intro(){
          "* lib. V.%s date: %30s *\n"
 #endif
          "****************************************************\n\n",
-	     xbasic_name,version,vdate,libversion,libvdate);
+	     xbasic_name,VERSION_DATE,libversion,libvdate);
 }
 
 static void usage(){
   printf(
 #ifdef GERMAN
-    "Bedienung: %s [-e -h -l] [<filename>] --- Basic-Programm ausführen  [%s]\n\n"
+    "Bedienung:\n%s [-e -h -l] [<filename>]\t--- Basic-Programm ausführen\t[%s]\n\n"
     " -e <kommando>\t--- Basic Kommando ausführen\n"
     " --eval <ausdruck>\t--- Num. Ausdruck auswerten\n"
     " -h --help\t--- Diese Kurzhilfe\n"
-    "-q --quiet\t--- weniger Ausgaben\n"
-    "-v --verbose\t--- mehr Ausgaben\n"
+    " -q --quiet\t--- weniger Ausgaben\n"
+    " -v --verbose\t--- mehr Ausgaben\n"
 #else
-    "Usage: %s [-e -h -l] [<filename>] --- run basic program [%s]\n\n"
+    "Usage:\n%s [-e -h -l] [<filename>]\t--- run basic program\t[%s]\n\n"
     " -e <command>\t--- execute basic command\n"
     " --eval <exp>\t--- evaluate num. expression\n"
     " -h --help\t--- Usage\n"
-    "-q --quiet\t--- be more quiet\n"
-    "-v --verbose\t--- be more verbose\n"
+    " -q --quiet\t--- be more quiet\n"
+    " -v --verbose\t--- be more verbose\n"
 #endif
-    ,xbasic_name,ifilename);
+    ,"xbvm",ifilename);
 }
 static STRING inhexs(const char *n) {
   int l=strlen(n);

@@ -282,8 +282,6 @@ PROCEDURE pseudo
     PRINT #2,"char *routine_"+rumpf$+"[]={"
   ELSE
     PRINT #2,"void reset_input_mode(),x11basicStartup(),programmlauf();"
-    PRINT #2,"const char version[]="+ENCLOSE$("1.20")+";"
-    PRINT #2,"const char vdate[]="+ENCLOSE$(date$+" "+time$+" xxxx 1.20")+";"
     PRINT #2,"int verbose=0;"
     PRINT #2,"int programbufferlen=0;"
     PRINT #2,"char ifilename[]="+ENCLOSE$(f$)+";"

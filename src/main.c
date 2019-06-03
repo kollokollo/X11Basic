@@ -48,8 +48,6 @@
 
 char *do_gets (char *);
 
-const char version[]=VERSION;        /* Programmversion          */
-const char vdate[]=VERSION_DATE;
 #ifndef ANDROID
 static
 #endif
@@ -163,7 +161,7 @@ static void intro() {
          "* library V.%s date:    %30s *\n"
 #endif
          "**********************************************************\n\n",
-	     xbasic_name,version,vdate,libversion,libvdate);
+	     xbasic_name,VERSION,VERSION_DATE,libversion,libvdate);
 }
 
 #endif
@@ -237,11 +235,11 @@ void kommandozeile(int anzahl, char *argumente[]) {
     } else if(!strcmp(argumente[count],"-e") || !strcmp(argumente[count],"--exec")) {
       kommando(argumente[++count]);
       quitflag=1;
-    } else if (strcmp(argumente[count],"-h")==FALSE) {
+    } else if(!strcmp(argumente[count],"-h")) {
       intro();
       usage();
       quitflag=1;
-    } else if (strcmp(argumente[count],"--help")==FALSE) {
+    } else if(!strcmp(argumente[count],"--help")) {
       intro();
       if(count<anzahl-1 && *argumente[count+1]!='-') {
         char *buffer=strdup(argumente[count+1]);
@@ -251,10 +249,10 @@ void kommandozeile(int anzahl, char *argumente[]) {
       } else usage();
       quitflag=1;
 #ifdef WINDOWS
-    } else if (strncmp(argumente[count],"-doc_",5)==FALSE) {
+    } else if(!strncmp(argumente[count],"-doc_",5)) {
       show_embedded_docu(argumente[count]+5);
 #endif
-    } else if (strcmp(argumente[count],"--daemon")==FALSE) {
+    } else if(!strcmp(argumente[count],"--daemon")) {
       intro();
       daemonf=1;
     } 

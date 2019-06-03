@@ -750,12 +750,11 @@ void Fb_BlitBitmap(int x, int y,unsigned int w, unsigned int h,unsigned short aC
   register unsigned short *ptr  = (unsigned short*)(screen.pixels+y*screen.scanline);
   ptr+=x;
   register unsigned short *endp  = ptr+h*screen.width;
-  int i;
   register const unsigned char *dptr=bdata;
   unsigned char d=0;
   while(ptr<endp) {
   
-    for(i=0;i<w;i++) {
+    for(int i=0;i<w;i++) {
       if((i%8)==0) d=*dptr++;
       if(graphmode==GRAPHMD_TRANS) {    /* Transparent */
         if(d & 1) *ptr= aColor;  ptr++; d >>= 1; 

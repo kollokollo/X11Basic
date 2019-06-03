@@ -25,8 +25,6 @@ gcc  -o testme -L/usr/X11R6/lib -lx11basic -ldl -lm
 int programbufferlen=0;
 char ifilename[]="dummy";     /* Program name.   Put some useful information here */
 char *programbuffer=NULL;
-const char version[]="dummy"; /* Version Number. Put some useful information here */
-const char vdate[]="dummy";   /* Creation date.  Put some useful information here */
 char **program=NULL;
 int prglen=0;
 int verbose=0;

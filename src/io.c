@@ -377,10 +377,11 @@ STRING f_fsnexts() {
       if(hci_read_remote_name(bt_sock, &(bt_ii+num_rsp)->bdaddr, 248-18,ergebnis.pointer+18, 0)<0)
         strcpy(ergebnis.pointer+18, "[unknown]");
       ergebnis.len=strlen(ergebnis.pointer);
+    }
 #else
-      if(0) { ;
+      if(0) { ; }
 #endif
-    } else {
+    else {
       ergebnis.pointer=malloc(1);
       ergebnis.len=0;
     }
@@ -460,7 +461,6 @@ STRING f_fsnexts() {
 //  printf("FSNEXT: pattern=<%s>, attr=<%s>\n",fspattern,fsattr);
     while(1) {
       ep=readdir(dp);
- //   printf("READDIR: --> %p\n",ep);
       if(!ep) {
         ergebnis.pointer=malloc(1);
         ergebnis.len=0;
@@ -472,24 +472,21 @@ STRING f_fsnexts() {
   
     ergebnis.pointer=malloc(3+strlen(ep->d_name));
 #ifdef WINDOWS
-  char filename[NAME_MAX];
-  sprintf(filename,"%s/%s",fspath,ep->d_name);
- // printf("FILENAME: <%s>\n",filename);
-  struct stat fstats;
-  int retc=stat(filename, &fstats);
-  if(retc==-1) io_error(errno,filename);
-  if(S_ISDIR(fstats.st_mode)) ergebnis.pointer[0]='d';
- // else if(S_ISLNK(fstats.st_mode)) ergebnis.pointer[0]='s';
-  else
+    char filename[NAME_MAX];
+    sprintf(filename,"%s/%s",fspath,ep->d_name);
+    // printf("FILENAME: <%s>\n",filename);
+    struct stat fstats;
+    int retc=stat(filename, &fstats);
+    if(retc==-1) io_error(errno,filename);
+    if(S_ISDIR(fstats.st_mode)) ergebnis.pointer[0]='d';
+    // else if(S_ISLNK(fstats.st_mode)) ergebnis.pointer[0]='s';
 #elif defined ATARI
-  if(0) ;
-  else
+    if(0) ;
 #else
-  if(ep->d_type==DT_DIR) ergebnis.pointer[0]='d';
-  else if(ep->d_type==DT_LNK) ergebnis.pointer[0]='s';
-  else 
+    if(ep->d_type==DT_DIR) ergebnis.pointer[0]='d';
+    else if(ep->d_type==DT_LNK) ergebnis.pointer[0]='s';
 #endif
-    ergebnis.pointer[0]='-';    
+    else ergebnis.pointer[0]='-';    
     ergebnis.pointer[1]=' ';
     strcpy(ergebnis.pointer+2,ep->d_name);
     ergebnis.len=2+strlen(ep->d_name);
@@ -864,30 +861,27 @@ static struct usb_dev_handle *open_USB_device(const char *filename, int idx) {
   struct usb_device *dev_cur;
   struct usb_device *dev=NULL;
   struct usb_dev_handle *dev_hdl = NULL;
-#endif
-  int vid=-1,pid=-1,ret;
+  int vid=-1,pid=-1;
   char w1[strlen(filename)+1],w2[strlen(filename)+1];
-  ret=wort_sep(filename,':',TRUE,w1,w2);
+  int ret=wort_sep(filename,':',TRUE,w1,w2);
   if(ret==2) {
     vid=(int)parser(w1); /* Vendor id */  
     pid=(int)parser(w2); /* Product id */  
   }
   // printf("OPEN USB: idx=%d, vid=0x%04x, pid=0x%04x\n",idx,vid,pid);
 
-#ifdef HAVE_USB
-
   if(!usb_is_init) {usb_init();usb_is_init=1;}
   ret=usb_find_busses();
   if(ret<0) {
-      printf("usb_find_busses failed with status %i\n", ret);
-      errno=ENODEV;
-      return(NULL);
+    printf("usb_find_busses failed with status %i\n", ret);
+    errno=ENODEV;
+    return(NULL);
   }
   ret=usb_find_devices();
   if(ret<0) {
-      printf("usb_find_devices failed with status %i\n", ret);
-      errno=ENODEV;
-      return(NULL);
+    printf("usb_find_devices failed with status %i\n", ret);
+    errno=ENODEV;
+    return(NULL);
   }
   free(busses);
   busses=usb_get_busses();

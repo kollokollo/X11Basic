@@ -1,5 +1,3 @@
-
-
 /* gkommandos.c Grafik-Befehle  (c) Markus Hoffmann     */
 
 
@@ -272,15 +270,20 @@ void c_get(PARAMETER *plist,int e) {
 /* PUT x,y,t$[,scale,transparency,x,y,w,h,angle] */
 
 void c_put(PARAMETER *plist,int e) {  
-  double scale=1,angle=0;
-  int sx=0,sy=0;
-  unsigned int sw=99999,sh=99999;
+  double scale=1;
   if(e>=4 && plist[3].typ!=PL_LEER) {
     scale=plist[3].real;
     if(scale==0) return;
     if(scale<0) scale=-scale;
   } 
+
+/* Not implemented yet: */
+#if 0
+  double angle=0;
   if(e>=10 && plist[9].typ!=PL_LEER) angle=plist[9].real;   /* in radian */
+#endif
+  int sx=0,sy=0;
+  unsigned int sw=99999,sh=99999;
   if(e>=6 && plist[5].typ!=PL_LEER) sx=plist[5].integer;   
   if(e>=7 && plist[6].typ!=PL_LEER) sy=plist[6].integer;   
   if(e>=8 && plist[7].typ!=PL_LEER) sw=plist[7].integer;   
@@ -372,8 +375,8 @@ void c_put(PARAMETER *plist,int e) {
 }
 
 void c_put_bitmap(PARAMETER *plist,int e) {  
-    graphics();    
-    put_bitmap(plist[0].pointer,plist[1].integer,plist[2].integer,plist[3].integer,plist[4].integer);
+  graphics();	 
+  put_bitmap(plist[0].pointer,plist[1].integer,plist[2].integer,plist[3].integer,plist[4].integer);
 }
 
 void c_sget(PARAMETER *plist,int e) {
@@ -861,8 +864,6 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
   int i=0,xoffset=0,yoffset=0;
 #ifdef USE_X11
   int mode=CoordModeOrigin,shape=Nonconvex;
-#else
-  int mode,shape;
 #endif
   int anz=max(0,plist[0].integer);
   ARRAY *arrx=(ARRAY *)&(plist[1].integer);
@@ -873,8 +874,8 @@ static void do_polygon(int doit,PARAMETER *plist,int e) {
   if(e>4 && plist[4].typ!=PL_LEER) yoffset=plist[4].integer;
 #ifdef USE_X11
   if(e>5 && plist[5].typ!=PL_LEER) mode=((plist[5].integer)&1) ?CoordModePrevious:CoordModeOrigin; 
-#endif
   if(e>6) shape=plist[6].integer;
+#endif
 
   if(anz>0) {
 #ifndef USE_X11

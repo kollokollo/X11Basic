@@ -34,14 +34,14 @@
 
 
 char ifilename[128]="b.b";       /* Standard inputfile  */
-char ofilename[128]="11.c";       /* Standard outputfile     */
-int loadfile=FALSE;
+static char *ofilename="11.c";       /* Standard outputfile     */
+static int loadfile=FALSE;
 #ifdef ATARI
 int verbose=1;
 #else
 int verbose=0;
 #endif
-int nomain=0;
+static int nomain=0;
 
 BYTECODE_HEADER *bytecode;
 
@@ -50,13 +50,8 @@ char *strings;
 unsigned char *datasec;
 char *rodata;
 
-
-FILE *optr;
-
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
-const char version[]="1.26";        /* Programmversion*/
-const char vdate[]="2019-04-01";
 char *programbuffer=NULL;
 char **program=NULL;
 int programbufferlen=0;
@@ -74,34 +69,33 @@ void xberror(char errnr, const char *bem);
 #endif
 
 static void intro(){
-  printf("********************************************************\n"
-         "*     X11-Basic bytecode to C translator               *\n"
-         "*                  by Markus Hoffmann 1997-2019 (c)    *\n"
-         "* V.%s/%04x    date: %30s  *\n"
-         "********************************************************\n",version,BC_VERSION,vdate);
+  printf("**************************************************\n"
+         "*  X11-Basic bytecode to C translator            *\n"
+         "*              by Markus Hoffmann 1997-2019 (c)  *\n"
+         "* V." VERSION "/%04x       date:  " __DATE__ " " __TIME__ "  *\n"
+         "**************************************************\n",BC_VERSION);
 }
 static void usage(){
-  printf("\n Usage:\n ------ \n"
-         " %s [-o <outputfile> -h] [<filename>] --- translate program [%s]\n\n"
-         "-o <outputfile>\t--- put result in file [%s]\n"
+  printf("\nUsage:\n"
+         "%s [-o <outputfile> -h] [<filename>]\t--- translate program\t[%s]\n\n"
+         "-o <outputfile>\t--- put result in file\t[%s]\n"
          "-h --help\t--- Usage\n"
-         "-l       \t--- suppress the main function\n"
+         "-l\t\t--- suppress the main function\n"
          "-v\t\t--- be more verbose\n"
 	 ,"xb2c",ifilename,ofilename);
 }
 
 static void kommandozeile(int anzahl, char *argumente[]) {
-  int count;
-
   /* Kommandozeile bearbeiten   */
-  for(count=1;count<anzahl;count++) {
-    if (strcmp(argumente[count],"-o")==FALSE) {
-      strcpy(ofilename,argumente[++count]);
-    } else if (strcmp(argumente[count],"-h")==FALSE || strcmp(argumente[count],"--help")==FALSE) {
+  for(int count=1;count<anzahl;count++) {
+    if(!strcmp(argumente[count],"-o")) ofilename=argumente[++count];
+    else if(!strcmp(argumente[count],"-h") || !strcmp(argumente[count],"--help")) {
       intro();usage();
-    } else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
-    else if(strcmp(argumente[count],"-q")==FALSE)   verbose--;
-    else if(strcmp(argumente[count],"-l")==FALSE)   nomain=1;
+    } 
+    else if(!strcmp(argumente[count],"-v")) verbose++;
+    else if(!strcmp(argumente[count],"-q")) verbose--;
+    else if(!strcmp(argumente[count],"-l")) nomain=1;
+    else if(*(argumente[count])=='-') printf("%s: Unknown option %s ignored.\n",argumente[0],argumente[count]); 
     else {
       if(!loadfile) {
         loadfile=TRUE;
@@ -132,7 +126,10 @@ static int frishmemcpy(unsigned char *d,unsigned char *s,unsigned int n) {
   }
   return(j);  
 }
-static void data_section() {
+
+/* Process data section of the bytecode and write to optr */
+
+static void data_section(FILE *optr) {
   int i=0,c;
   int count=0;
   if(verbose) {
@@ -179,7 +176,7 @@ static void data_section() {
   if(verbose) printf(" (done.)\n");
 }
 
-static void translate() {
+static void translate(FILE *optr) {
   unsigned char *buf;
   
   signed char c;
@@ -725,12 +722,12 @@ static void translate() {
   if(verbose)  printf(" (done.)\n");
 }
 
-static int loadbcprg(char *filename) {  
-  int len,i,c;
-  char *p;
-  FILE *dptr;
-  dptr=fopen(filename,"rb"); len=lof(dptr); fclose(dptr);
-  p=malloc(len);
+static int loadbcprg(char *filename, FILE *optr) {  
+  int i,c;
+  FILE *dptr=fopen(filename,"rb"); 
+  int len=lof(dptr); 
+  char *p=malloc(len);
+  fclose(dptr);
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
@@ -835,10 +832,10 @@ int main(int anzahl, char *argumente[]) {
 	intro();
 	printf("--> %s\n",ofilename);
 	#endif
-	optr=fopen(ofilename,"w");
-        if(loadbcprg(ifilename)==0) {
-          data_section();
-	  translate();
+	FILE *optr=fopen(ofilename,"w");
+        if(loadbcprg(ifilename,optr)==0) {
+          data_section(optr);
+	  translate(optr);
 	}
 	fclose(optr);
 	#ifdef ATARI

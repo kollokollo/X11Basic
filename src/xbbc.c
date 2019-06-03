@@ -44,7 +44,6 @@
 
 #ifdef ANDROID
 extern char ifilename[];   /* Standard inputfile  */
-char ofilename[128]="b.b";       /* Standard outputfile     */
 extern int verbose;
 extern int dostrip;                   /* dont write symbol tables */
 extern BYTECODE_SYMBOL *symtab;
@@ -56,7 +55,7 @@ extern char **program;
 extern int prglen;
 #else
 char ifilename[128]="new.bas";   /* Standard inputfile  */
-char ofilename[128]="b.b";       /* Standard outputfile     */
+static char *ofilename="b.b";       /* Standard outputfile     */
 #ifdef ATARI
 int verbose=1;
 #else
@@ -71,8 +70,6 @@ int programbufferlen=0;
 char *programbuffer=NULL;
 char **program=NULL;
 int prglen=0;
-const char version[]="1.26"; /* Version Number. Put some useful information here */
-const char vdate[]="2019-04-01";   /* Creation date.  Put some useful information here */
 STRING bcpc;
 #endif
 
@@ -101,9 +98,9 @@ int bssdatalen=0;
 #endif
 
 int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
-  int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
-  if(fdis==-1) return(-1);
   if(verbose) {printf("--> %s [",name);fflush(stdout);}
+  int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
+  if(fdis==-1) {perror("open");return(-1);}
   BYTECODE_HEADER h;
   bzero(&h,sizeof(BYTECODE_HEADER));
   add_rodata(ifilename,strlen(ifilename));
@@ -180,15 +177,15 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
 #ifndef ANDROID
 char *rodata;
 static void intro(){
-  puts("*************************************************************\n"
-       "*           X11-Basic bytecode compiler                     *\n"
-       "*                    by Markus Hoffmann 1997-2019 (c)       *");
-  printf("* V.%s/%04x date:   %30s    *\n",version,BC_VERSION,vdate);
-  puts("*************************************************************\n");
+  puts("**************************************************\n"
+       "*  X11-Basic bytecode compiler                   *\n"
+       "*              by Markus Hoffmann 1997-2019 (c)  *");
+  printf("* V." VERSION "/%04x      date:    " __DATE__ " " __TIME__ " *\n",BC_VERSION);
+  puts("**************************************************\n");
 }
 static void usage(){
-  printf("Usage: %s [-o <outputfile> -h] [<filename>] --- compile program [%s]\n\n","bytecode",ifilename);
-  printf("-o <outputfile>\t--- put result in file [%s]\n",ofilename);
+  printf("Usage:\n%s [-o <outputfile> -h] [<filename>]\t--- compile program\t[%s]\n\n","xbbc",ifilename);
+  printf("-o <outputfile>\t--- put result in file\t[%s]\n",ofilename);
   puts("-h --help\t--- Usage\n"
        "-c\t\t--- also compile in comments\n"
        "-n\t\t--- also compile in nop's\n"
@@ -198,31 +195,27 @@ static void usage(){
 
 
 static void kommandozeile(int anzahl, char *argumente[]) {
-  int count;
-
   /* Kommandozeile bearbeiten   */
-  for(count=1;count<anzahl;count++) {
-    if (strcmp(argumente[count],"-o")==FALSE) {
-      strcpy(ofilename,argumente[++count]);
-    } else if (strcmp(argumente[count],"-h")==FALSE) {
+  for(int count=1;count<anzahl;count++) {
+    if(!strcmp(argumente[count],"-o")) ofilename=argumente[++count];
+    else if(!strcmp(argumente[count],"-h")) {
       intro();
       usage();
-    } else if (strcmp(argumente[count],"-n")==FALSE) {
-      donops=!donops;
-    } else if (strcmp(argumente[count],"-c")==FALSE) {
-      docomments=!docomments;
-    } else if (strcmp(argumente[count],"-s")==FALSE) dostrip=!dostrip;
-    else if (strcmp(argumente[count],"-v")==FALSE) verbose++;
-    else if (strcmp(argumente[count],"-q")==FALSE) verbose--;
-    else if (strcmp(argumente[count],"--help")==FALSE) {
+    } else if(!strcmp(argumente[count],"-n")) donops=!donops;
+    else if(!strcmp(argumente[count],"-c"))   docomments=!docomments;
+    else if(!strcmp(argumente[count],"-s"))   dostrip=!dostrip;
+    else if(!strcmp(argumente[count],"-v"))   verbose++;
+    else if(!strcmp(argumente[count],"-q"))   verbose--;
+    else if(!strcmp(argumente[count],"--help")) {
       intro();usage();
-    } else {
+    } else if(*(argumente[count])=='-') printf("%s: Unknown option %s ignored.\n",argumente[0],argumente[count]); 
+    else {
       if(!loadfile) {
         loadfile=TRUE;
         strcpy(ifilename,argumente[count]);
       }
     }
-   }
+  }
 }
 
 #ifdef ATARI

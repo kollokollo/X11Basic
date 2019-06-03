@@ -20,7 +20,6 @@
               (kollo@users.sourceforge.net)
             (http://x11-basic.sourceforge.net/)
 
- **  Erstellt: Aug. 1997   von Markus Hoffmann				   **
 */
 
  /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -70,8 +69,6 @@
 
 const char libversion[]=VERSION;           /* Programmversion           */
 const char libvdate[]=VERSION_DATE;
-extern const char version[];
-extern const char libvdate[];
 
 #ifdef CONTROL
 const char xbasic_name[]="csxbasic";
@@ -117,9 +114,8 @@ extern char ifilename[];
 /*return the original line (accounting for splitted lines) */
 int original_line(int i) {
   if(linetable==NULL || i<0) return i;
-  int j;
   int a=i;
-  for(j=0;j<i;j++) a+=linetable[j];
+  for(int j=0;j<i;j++) a+=linetable[j];
   return a;
 }
 
@@ -307,12 +303,11 @@ int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
 /* Routine zum Laden eines Programms */
 
 int mergeprg(const char *fname) {
-  int i,len;
-  char *pos;
-  FILE *dptr;
   /* Filelaenge rauskriegen */
 
-  dptr=fopen(fname,"rb"); len=lof(dptr); fclose(dptr);
+  FILE *dptr=fopen(fname,"rb"); 
+  int len=lof(dptr); 
+  fclose(dptr);
   programbuffer=realloc(programbuffer,programbufferlen+len+1);
   #ifdef ATARI
     if(programbuffer==NULL) {
@@ -347,9 +342,9 @@ int mergeprg(const char *fname) {
   } else {
     
    /* Zeilenzahl herausbekommen */
-    pos=programbuffer;
+    char *pos=programbuffer;
     oldprglen=prglen;
-    i=prglen=0;
+    int i=prglen=0;
     
     /*Erster Durchgang */
     while(i<programbufferlen) {
@@ -375,7 +370,6 @@ int mergeprg(const char *fname) {
 
     /* Zweiter Durchgang */
 
-    
     prglen=i=0;
     while(i<programbufferlen) {
       if(programbuffer[i]==1) {
@@ -401,22 +395,28 @@ int mergeprg(const char *fname) {
   }
 }
 
+/* Durchsucht die Kommandoliste (möglichst effektiv) und 
+   findet den Bereich in der alphabetisch sortierten Liste 
+   welcher auf das Suchwort passt.
+   Rückgabe: 
+   -1 : Kein eindeutiges match gefunden, 
+        alles zwischen guessa und geuessb ist möglich. 
+	Wenn guessa==guessb, dann wurde nix gefunden.
+ */
 
-
-static int find_comm_guess(const char *w1,int *guessa,int *guessb) {
+static int find_comm_guess(const char *suchwort,int *guessa,int *guessb) {
   int i=0,a=anzcomms-1,b;
-  /* Kommandoliste durchsuchen, moeglichst effektiv ! */
-  for(b=0; b<strlen(w1); b++) {
-    while(w1[b]>(comms[i].name)[b] && i<a) i++;
-    while(w1[b]<(comms[a].name)[b] && a>i) a--;
+  for(b=0; b<strlen(suchwort); b++) {
+    while(suchwort[b]>(comms[i].name)[b] && i<a) i++;
+    while(suchwort[b]<(comms[a].name)[b] && a>i) a--;
     if(i==a) break;
   }
   *guessa=i;
   *guessb=a;
-  if((i==a && strncmp(w1,comms[i].name,strlen(w1))==0) ||
-     (i!=a && strcmp(w1,comms[i].name)==0) ) {
+  if((i==a && !strncmp(suchwort,comms[i].name,strlen(suchwort))) ||
+     (i!=a && !strcmp(suchwort,comms[i].name)) ) {
 #ifdef DEBUG
-      if(b<strlen(w1)) printf("Command %s completed --> %s\n",w1,comms[i].name);
+      if(b<strlen(suchwort)) printf("Command %s completed --> %s\n",suchwort,comms[i].name);
 #endif
      return(i);
   }
@@ -426,21 +426,15 @@ static int find_comm_guess(const char *w1,int *guessa,int *guessb) {
 
 
 
-/*Entfernt ein Programm und alle Strukturen/Variablen aus dem Speicher, 
-so dass ein neues Programm (bas oder bytecode) geladen werden kann. */
+/*
+ *  Entfernt ein Programm und alle Strukturen/Variablen aus dem Speicher, auch stack, 
+ *  so dass ein neues Programm (bas oder bytecode) geladen werden kann. 
+ */
 
 void clear_program() {
-
-/* Stack aufraumen und Variablen entfernen */
-
   restore_all_locals();  /* sp=0 */
   remove_all_variables();
-
-  if(is_bytecode) {
-
-  } else {
-    if(databuffer) free(databuffer);    
-  }
+  if(!is_bytecode) free(databuffer);
   is_bytecode=0;
   databuffer=NULL;
   databufferlen=0;
@@ -565,12 +559,12 @@ int init_program(int prglen) {
       } else pcode[i].opcode=P_PROC;
       pos2=searchchr(buffer,'(');
       if(pos2 != NULL) {
-          pos2[0]=0;pos2++;
-          pos3=pos2+strlen(pos2)-1;
-          if(pos3[0]!=')') {
-	    printf("WARNING at line %d: ==> Syntax error: parameter list\n",original_line(i));
-	    return_value|=1;
-          } else *pos3++=0;
+        pos2[0]=0;pos2++;
+        pos3=pos2+strlen(pos2)-1;
+        if(pos3[0]!=')') {
+	  printf("WARNING at line %d: ==> Syntax error: parameter list\n",original_line(i));
+	  return_value|=1;
+        } else *pos3++=0;
       } else pos2=zeile+strlen(zeile);
       pcode[i].integer=add_proc(buffer,pos2,i,typ);
       continue;
@@ -605,7 +599,7 @@ int init_program(int prglen) {
 	   strcat(buffer,w4);
 	 } else j=find_comm(zeile);
     } else j=find_comm(zeile);
-            
+
     if(j==-1) { /* Kein Befehl passt... */
       char *buf=malloc(strlen(zeile)+strlen(buffer)+2);
       char *pos,*name;
@@ -694,7 +688,6 @@ int init_program(int prglen) {
 	  printf("make_parameter_stage2 failed. <%s>\n",pcode[i].argument);
 	  return_value|=-1;
         }
-        // dump_parameterlist(pcode[i].rvalue,1);
 	pcode[i].rvalue->panzahl=0;  /* Warum muss das noch initialisiert werden?*/
 	continue;
       }
@@ -732,13 +725,12 @@ int init_program(int prglen) {
     } else if(comms[j].opcode==P_ELSE) {/*Pruefen ob es ELSE IF ist. */
       char w1[strlen(buffer)+1],w2[strlen(buffer)+1];
       wort_sep(buffer,' ',TRUE,w1,w2);
-      if(strcmp(w1,"IF")==0) {
+      if(!strcmp(w1,"IF")) {
         pcode[i].opcode=P_ELSEIF|j;
 	strcpy(pcode[i].argument,w2);
         int l=strlen(pcode[i].argument);
         if(l>4) {
-    	  if(strcmp(pcode[i].argument+l-5," THEN")==0) {
-       // printf("Unnutzes THEN gefunden:\n");
+    	  if(!strcmp(pcode[i].argument+l-5," THEN")) { /* Unnutzes THEN gefunden  */
     	    pcode[i].argument[l-5]=0;
     	  }
         }
@@ -746,8 +738,7 @@ int init_program(int prglen) {
     } else if(comms[j].opcode==P_IF) { /*Unnötiges THEN entfernen*/
       int l=strlen(pcode[i].argument);
       if(l>4) {
-    	if(strcmp(pcode[i].argument+l-5," THEN")==0) {
-       // printf("Unnutzes THEN gefunden:\n");
+    	if(!strcmp(pcode[i].argument+l-5," THEN")) { /* Unnutzes THEN gefunden  */
     	  pcode[i].argument[l-5]=0;
     	}
       }
@@ -769,10 +760,10 @@ int init_program(int prglen) {
       if(ii==0) pcode[i].ppointer=NULL;
     }
      	 /* Einige Befehle noch nachbearbeiten */
-    if(strcmp(zeile,"EXIT")==0) { /*Pruefen ob es EXIT IF ist. */
+    if(!strcmp(zeile,"EXIT")) { /* Pruefen ob es EXIT IF ist. */
       char *w1,*w2;
       wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
-      if(strcmp(w1,"IF")==0) {
+      if(!strcmp(w1,"IF")) {
         pcode[i].opcode=P_EXITIF|j;
         strcpy(pcode[i].argument,w2);
       } else {
@@ -786,11 +777,7 @@ int init_program(int prglen) {
     } 
   }  /*  FOR */
 
-
-#ifdef DEBUG 
-  puts("PASS 2:");
-#endif
-  /* Pass 2, jetzt sind alle Labels und Proceduren bekannt. 
+  /* PASS 2, jetzt sind alle Labels und Proceduren bekannt. 
      Sprungmarken werden noch gesetzt, sowie zusaetzliche
      Variablen aus Pliste (CLR,LOCAL,DIM,INC,DEC) noch hinzugefuegt.
   */
@@ -856,7 +843,7 @@ int init_program(int prglen) {
       int j=sucheloopend(i+1);
       if(j<0) { 
         if((pcode[i].opcode&PM_SPECIAL)==P_EXIT) {
-          /*EXIT ohne Parameter dann als normales Kommando aufrufen.*/
+          /* EXIT ohne Parameter dann als normales Kommando aufrufen.*/
           pcode[i].opcode=P_PLISTE|(pcode[i].opcode&PM_COMMS);
           pcode[i].panzahl=0;
           pcode[i].ppointer=NULL;
@@ -936,12 +923,11 @@ int init_program(int prglen) {
     } /*  SWITCH */
     if((pcode[i].opcode&PM_TYP)==P_PLISTE) { /* Nachbearbeiten */
        int j=pcode[i].opcode&PM_COMMS;
-     //  printf("OPS: %s   anz=%d\n",comms[j].name,pcode[i].panzahl);
        int e=make_pliste2(comms[j].pmin,comms[j].pmax,
 	(unsigned short *)comms[j].pliste,pcode[i].argument,&(pcode[i].ppointer),pcode[i].panzahl);
        if(e<0) {
          return_value|=-1;
-         printf("Parameterliste konnte nicht nachbereitet werden.\n");
+         printf("ERROR at line %d: invalid parameter list!\n",original_line(i));
        }
     } 
   }  /*  for */
@@ -957,7 +943,7 @@ static int add_label(char *name,int zeile,int dataptr) {
   return(anzlabels-1);
 }
 
-/*Raeume pcode struktor auf und gebe Speicherbereiche wieder frei.*/
+/*Raeume pcode-Struktur auf und gebe Speicherbereiche wieder frei.*/
 
 void free_pcode(int l) {
   while(l>0) {
@@ -971,8 +957,8 @@ void free_pcode(int l) {
       free(pcode[l].rvalue);
       pcode[l].rvalue=NULL;
     }
-    if(pcode[l].argument!=NULL) free(pcode[l].argument);
-    if(pcode[l].extra!=NULL) free(pcode[l].extra);
+    free(pcode[l].argument);
+    free(pcode[l].extra);
     pcode[l].argument=NULL;
     pcode[l].extra=NULL;
     pcode[l].panzahl=0;
@@ -1037,6 +1023,10 @@ static int add_proc(char *name,char *pars,int zeile,int typ) {
 }
 
 
+/* Rückgabewert ist eine Kopie (strdup) von funktion, oder bei indirekt (&)
+ * ein per s_parser und xtrim erzeugter string.
+ */
+
 char *indirekt2(const char *funktion) {
   if(funktion && *funktion=='&') {
     char *ergebnis=s_parser(funktion+1);
@@ -1046,45 +1036,9 @@ char *indirekt2(const char *funktion) {
 }
 
 
-
-
-
-
-
-
-
-
-
-#if 0
-/*Sucht anhand der Programmtextzeilen
-  (anstelle von PCODE)
-  obsolet */
-static int suche(int begin, int richtung, char *such,char *w1,char *w2) {
-  int i,f=0;
-  char nbuffer[MAXSTRLEN];
-  char zbuffer[MAXSTRLEN];
-  char sbuffer[MAXSTRLEN];
-  char *zeile,*buffer,*b1,*b2;
-  
-  for(i=begin; (i<prglen && i>=0);i+=richtung) {
-    xtrim(program[i],TRUE,zbuffer);
-    wort_sep_destroy(zbuffer,'!',TRUE,&zeile,&buffer);
-    wort_sep_destroy(zeile,' ',TRUE,&b1,&b2);
-    strcpy(sbuffer+1,such); sbuffer[0]='|';
-    strcat(sbuffer,"|");
-    strcpy(nbuffer+1,b1); nbuffer[0]='|';
-    strcat(nbuffer,"|");
-    /*printf("SUCHE: %d <%s> <%s> %d\n",i,buffer,nbuffer,f);*/
-    if(strstr(sbuffer,nbuffer)!=NULL && f==0) return(i);
-    else if(strcmp(b1,w1)==0) f++;
-    else if(strcmp(b1,w2)==0) f--;
-  }
-  return(-1);
-}
-#endif
-
-
-/*  Kommando in Direktmodus auswerten (ohne Strukturhilfe vom PASS 1+2).*/
+/*  Kommando in Direktmodus auswerten 
+ *  (ohne Strukturhilfe vom PASS 1+2).
+ */
 void kommando(char *cmd) {
   char buffer[strlen(cmd)+1];
   char *w1,*w2,*pos;
@@ -1181,19 +1135,21 @@ void kommando(char *cmd) {
 
 
 
-/* programmlauf setzt voraus, dass die Strukturen durch init_program vorbereitet sind*/
+/* programmlauf setzt voraus, dass die Strukturen durch init_program vorbereitet sind.
+ * Startet entweder eine virtuelle machschine oder hangelt sich Zeilenweise
+ * durch das Programm.
+ */
 
 void programmlauf(){
   if(is_bytecode) { 
-    PARAMETER *p;
-    int n;
   #if DEBUG
     printf("Virtual Machine: %d bytes.\n",programbufferlen);
   #endif
     STRING bcpc;  /* Bytecode holder */
     bcpc.pointer=programbuffer;
     bcpc.len=programbufferlen;
-    p=virtual_machine(bcpc,0,&n,NULL,0);
+    int n;
+    PARAMETER *p=virtual_machine(bcpc,0,&n,NULL,0);
     dump_parameterlist(p,n);  
     free_pliste(n,p);
     return;
@@ -1279,13 +1235,13 @@ void programmlauf(){
     case P_NOTHING: break;
     case (P_EVAL|P_NOCMD):  kommando(program[opc]); break;
     case P_PROC:
-      xberror(36,program[opc]); /*Programmstruktur fehlerhaft !*/
+      xberror(36,program[opc]); /* Programmstruktur fehlerhaft !*/
       printf("END missing?\n");
       break;
     default: 
       if((pcode[opc].opcode&PM_COMMS)>=anzcomms) {
 	printf("ERROR: invalid command #%d/%d (%x)\n",(int)(pcode[opc].opcode&PM_COMMS),anzcomms,(int)pcode[opc].opcode);
-	xberror(36,program[opc]); /*Programmstruktur fehlerhaft !*/
+	xberror(36,program[opc]); /* Programmstruktur fehlerhaft !*/
 	break;
       }
       /*Jetzt noch Sonderfälle abfangen: */
@@ -1334,8 +1290,7 @@ void programmlauf(){
   }
 }
 
-/* Programm beenden und Aufr"aumen. */
-
+/* X11-Baisic interpreter beenden und aufr�umen. */
 
 void quit_x11basic(int c) {
 #ifdef ANDROID

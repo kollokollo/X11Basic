@@ -6,7 +6,7 @@
  * COPYING for details
  */
 
-#if defined WINDOWS || defined ATARI || defined __APPLE__
+#ifndef key_t
   #define key_t int
 #endif
 

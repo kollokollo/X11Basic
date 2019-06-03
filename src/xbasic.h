@@ -230,8 +230,6 @@ extern int errorpc,errorpctype,breakpc,breakpctype;
 extern int everytime,alarmpc,alarmpctype;
 
 extern int breakcont;
-extern const char vdate[];
-extern const char version[];
 extern int is_bytecode;
 
 /*  Keywords */

@@ -266,7 +266,7 @@
 #define  c_polyfill NULL
 #else
 /*********************/
-static int saveprg(char *fname) {
+static int saveprg(const char *fname) {
   char *buf=malloc(programbufferlen);
   int i=0;
   while(i<programbufferlen) {
@@ -276,8 +276,7 @@ static int saveprg(char *fname) {
       buf[i]=programbuffer[i];
     i++;
   }
-  bsave(fname,buf,programbufferlen);
-  return(0);
+  return(bsave(fname,buf,programbufferlen));
 }
 
 static void c_memdump(PARAMETER *plist,int e) {
@@ -427,9 +426,8 @@ static void c_spawn(const char *n) {
       
 
 static void c_local(PARAMETER *plist,int e) {
-  int i;
   if(e) {
-    for(i=0;i<e;i++) do_local(plist[i].integer,sp);
+    for(int i=0;i<e;i++) do_local(plist[i].integer,sp);
   }
 }
 
@@ -449,8 +447,7 @@ static void c_system(PARAMETER *plist,int e) {
 
 static void c_shell(PARAMETER *plist,int e) {
   char *argv[e+1];
-  int i;
-  for(i=0;i<e;i++) argv[i]=plist[i].pointer;
+  for(int i=0;i<e;i++) argv[i]=plist[i].pointer;
   argv[e]=NULL;
   if(spawn_shell(argv)==-1) io_error(errno,"shell");
 }
@@ -478,24 +475,23 @@ static void c_edit(const char *n) {
 }
 
 static void c_after(PARAMETER *plist,int e) {
-    everyflag=0;
-    alarmpc=plist[1].integer; /*Proc nummer*/
-    alarmpctype=plist[1].arraytyp;
-    alarm(plist[0].integer);     /*Zeit in sec*/
+  everyflag=0;
+  alarmpc=plist[1].integer;    /* Proc nummer */
+  alarmpctype=plist[1].arraytyp;
+  alarm(plist[0].integer);     /* Zeit in sec */
 }
 
 static void c_every(PARAMETER *plist,int e) {
   everyflag=1;
-  alarmpc=plist[1].integer; /*Proc nummer*/ 
+  alarmpc=plist[1].integer;    /* Proc nummer */ 
   alarmpctype=plist[1].arraytyp;
-  everytime=plist[0].integer; /*Zeit in sec*/
+  everytime=plist[0].integer;  /* Zeit in sec */
   alarm(everytime);
 }
 
 
 static inline void do_restore(int offset) {
   datapointer=offset;
- // printf("DO RESTORE %d\n",offset);
 }
 
 static void c_run(const char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
@@ -557,9 +553,8 @@ static char *get_next_data_entry() {
 }
 
 static void c_read(PARAMETER *plist,int e) {
-  int i;
   char *t;
-  for(i=0;i<e;i++) {
+  for(int i=0;i<e;i++) {
     t=get_next_data_entry();
     if(t==NULL) xberror(34,""); /* Zu wenig Data */
     else {
@@ -698,15 +693,13 @@ char *plist_paramter(PARAMETER *p) {
   }
   if(p->panzahl) {
     strcat(ergebnis,"(");
-        char *buf;
-	int i;
-        for(i=0;i<p->panzahl;i++) {
-          buf=plist_paramter(&(p->ppointer[i]));
-          strcat(ergebnis,buf);
-	  free(buf);
-	  if(i<p->panzahl-1) strcat(ergebnis,",");
-        }
-    
+    char *buf;
+    for(int i=0;i<p->panzahl;i++) {
+      buf=plist_paramter(&(p->ppointer[i]));
+      strcat(ergebnis,buf);
+      free(buf);
+      if(i<p->panzahl-1) strcat(ergebnis,",");
+    }
     strcat(ergebnis,")");
   }
   return(strdup(ergebnis));
@@ -812,13 +805,12 @@ static char *plist_zeile(P_CODE *code) {
   return(ergebnis);
 }
 static int plist_printzeile(FILE *dptr,P_CODE *code, int level) {
-  int j;
   char *zeile=plist_zeile(code);
   if(code->opcode & P_LEVELOUT) level--;
-  for(j=0;j<level;j++) fprintf(dptr,"  ");
+  for(int j=0;j<level;j++) fprintf(dptr,"  ");
   fprintf(dptr,"%s\n",zeile);
-  if(code->opcode & P_LEVELIN) level++;
   free(zeile);
+  if(code->opcode & P_LEVELIN) level++;
   return(level);
 }
 
@@ -876,9 +868,9 @@ static void c_load(PARAMETER *plist, int e) {
 static void c_chain(PARAMETER *plist,int e){ c_load(plist,e); do_run(); }
 
 static void c_let(const char *n) {  
-    char v[strlen(n)+1],w[strlen(n)+1];
-    wort_sep(n,'=',TRUE,v,w);
-    xzuweis(v,w);
+  char v[strlen(n)+1],w[strlen(n)+1];
+  wort_sep(n,'=',TRUE,v,w);
+  xzuweis(v,w);
 }
 
 
@@ -892,8 +884,7 @@ void c_quit(PARAMETER *plist, int e) {
 }
 
 static void c_fit_poly(PARAMETER *plist, int e) {  
-  ARRAY *arr;
-  arr=(ARRAY *)&(plist[0].integer);
+  ARRAY *arr=(ARRAY *)&(plist[0].integer);
   int anz=min(plist[3].integer,anz_eintraege(arr));
   double *x=arr->pointer+arr->dimension*INTSIZE;
   arr=(ARRAY *)&(plist[1].integer);
@@ -906,7 +897,6 @@ static void c_fit_poly(PARAMETER *plist, int e) {
   double *varptr=(double  *)(arr->pointer+arr->dimension*INTSIZE);
 
   polynom_fit(x, y, anz, er, 1, varptr,n);
-
 }
 
 
@@ -916,8 +906,7 @@ static void c_fit_poly(PARAMETER *plist, int e) {
 /* PL_FARRAY,PL_FARRAY,PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_FARRAY,PL_FARRAY */
 
 static void c_fit_linear(PARAMETER *plist, int e) {  
-  ARRAY *arr;
-  arr=(ARRAY *)&(plist[0].integer);
+  ARRAY *arr=(ARRAY *)&(plist[0].integer);
   int anz=anz_eintraege(arr);
   double *x=arr->pointer+arr->dimension*INTSIZE;
   arr=(ARRAY *)&(plist[1].integer);
@@ -949,15 +938,15 @@ static void c_fit_linear(PARAMETER *plist, int e) {
 
 static void do_sort(void *a, size_t n,size_t size,int(*compar)(const void *, const void *), int *b) {
  // printf("sort: n=%d size=%d b=%p\n",n,size,b);
-  if (n<2) return;
+  if(n<2) return;
   if(b==NULL) qsort(a,n,size,compar);
   else { 
     void *rra=malloc(size);
-    unsigned long i,ir,j,l;
+    unsigned long i,j;
     int index;
 
-    l=(n>>1)+1;
-    ir=n;
+    unsigned long l=(n>>1)+1;
+    unsigned long ir=n;
     for(;;) {
       if(l>1) {
         memcpy(rra,a+size*(l-2),size);
@@ -1034,16 +1023,15 @@ Todo:
 
 
 static void c_sort(PARAMETER *plist,int e) {  
-  int subtyp;
-  int vnrx,vnry=-1,ndata=0; 
+  int vnry=-1; 
 
-  vnrx=plist->integer;
-  ndata=anz_eintraege(variablen[vnrx].pointer.a);
+  int vnrx=plist->integer;
+  int ndata=anz_eintraege(variablen[vnrx].pointer.a);
 
   if(e>=2) ndata=plist[1].integer;
   if(e>=3) vnry=plist[2].integer;
   // int typ=variablen[vnrx].typ;
-  subtyp=variablen[vnrx].pointer.a->typ;
+  int subtyp=variablen[vnrx].pointer.a->typ;
   
 //  printf("c_sort vnr=%d ndata=%d vnry=%d\n",vnrx,ndata,vnry);
 
@@ -1082,11 +1070,11 @@ static void c_sort(PARAMETER *plist,int e) {
 
 static void c_fit(const char *n) {  
   char w1[strlen(n)+1],w2[strlen(n)+1];                  
-  int e,typ,scip=0,i=0,mtw=0;  
+  int typ,scip=0,i=0,mtw=0;  
   int vnrx=-1,vnry=-1,vnre=-1,vnre2=-1,ndata=0;
   double a,b,siga,sigb,chi2,q;
   char *r;
-  e=wort_sep(n,',',TRUE,w1,w2);
+  int e=wort_sep(n,',',TRUE,w1,w2);
 //  xberror(9,"FIT"); /* Funktion noch nicht moeglich */
   while(e) {
     scip=0;
@@ -1313,26 +1301,23 @@ static char *varinfo(VARIABLE *v) {
 }
 
 char *dump_var(int typ) {/*  dump variables */
-  int i;
   char *ret=malloc(132*anzvariablen+1);
-  char *p;
   *ret=0;
-  p=ret;
-  for(i=0;i<anzvariablen;i++) {
-      if((variablen[i].typ&TYPMASK)==typ) {
-        sprintf(p,"%02d: %s\n",i,varinfo(&variablen[i]));
-	p+=strlen(p);
-      }
+  char *p=ret;
+  for(int i=0;i<anzvariablen;i++) {
+    if((variablen[i].typ&TYPMASK)==typ) {
+      sprintf(p,"%02d: %s\n",i,varinfo(&variablen[i]));
+      p+=strlen(p);
+    }
   }
   return(ret);
 }
 char *dump_arr(int typ) {/*  dump arrays */
   int i,j;
   char *ret=malloc(132*anzvariablen+1);
-  char *p;
   char suffix[3];
   *ret=0;
-  p=ret;
+  char *p=ret;
   for(i=0;i<anzvariablen;i++) {
     if(variablen[i].typ==ARRAYTYP && (variablen[i].pointer.a->typ&TYPMASK)==typ) {
        switch(variablen[i].pointer.a->typ) {
@@ -1672,14 +1657,14 @@ static void gotolabel(int pc2,int type) {
 }
 
 static void c_ongosub(PARAMETER *plist,int e) {
-   if(e>1 && plist[0].integer>0 && plist[0].integer<e) {
-     gosubproc(plist[plist[0].integer].integer,plist[plist[0].integer].arraytyp);
-   }
+  if(e>1 && plist[0].integer>0 && plist[0].integer<e) {
+    gosubproc(plist[plist[0].integer].integer,plist[plist[0].integer].arraytyp);
+  }
 }
 static void c_ongoto(PARAMETER *plist,int e) {
-   if(e>1 && plist[0].integer>0 && plist[0].integer<e) {
-     gotolabel(plist[plist[0].integer].integer,plist[plist[0].integer].arraytyp);
-   }
+  if(e>1 && plist[0].integer>0 && plist[0].integer<e) {
+    gotolabel(plist[plist[0].integer].integer,plist[plist[0].integer].arraytyp);
+  }
 }
 
 /* Allgemeiner ON Befehl. Sollte nur vom Kommandomodus aus 
@@ -1911,15 +1896,14 @@ static void c_swap(PARAMETER *plist,int e) {
 #if 0
 static void c_do(const char *n) {   /* wird normalerweise ignoriert */
   if(*n==0) ;
-  else if(strncmp(n,"WHILE",5)==0) c_while(n+6);
-  else if(strncmp(n,"UNTIL",5)==0) ;
+  else if(!strncmp(n,"WHILE",5)) c_while(n+6);
+  else if(!strncmp(n,"UNTIL",5)) ;
   else xberror(32,n); /*Syntax nicht korrekt*/
 }
 #endif
 
-/*TODO: DIM should not evaluate expressions on runtime, 
+/* DIM should not evaluate expressions on runtime, 
  * better have that resolved before (for the compiler).
- * Maybe similar to how LOCAL does it.
  * Now: DIM takes only a special Parameter with PL_DIMARG
  * The dimension and dimlist is already be resolved.
  */
@@ -2001,8 +1985,6 @@ static void c_dim(PARAMETER *plist,int e) {
       } else xberror(76,"");   /* illegal variable name */
       break;
     default: 
-      printf("DIM %d : ptyp=%x\n",i,plist[i].typ);
-      dump_parameterlist(plist,e);
       xberror(32,"DIM"); /* Syntax error */
       return;
     }
@@ -2031,9 +2013,7 @@ static void c_return(const char *n) {
     if(n && *n) {
       PARAMETER ret;
       bzero(&ret,sizeof(PARAMETER));
-      int t=type(n)&(~CONSTTYP);
-   // printf("returntype %s --> %x \n",n,t);
-      
+      int t=type(n)&(~CONSTTYP);      
       switch(t&TYPMASK) {
       case STRINGTYP:
         *(STRING *)&(ret.integer)=string_parser(n);
@@ -2071,10 +2051,9 @@ void c_void(const char *n) {
     return;
   }
   switch(t) {
-  case STRINGTYP: {
-    char *erg=s_parser(n);
-    free(erg);
-    } return;
+  case STRINGTYP: 
+    free(s_parser(n));
+    return;
   case COMPLEXTYP:
     complex_parser(n);
     return;
@@ -2152,7 +2131,8 @@ static void c_home() {
   printf("\033[H");
 #endif
 }
-static void c_version() { printf("X11-BASIC Version: %s %s\n",version,vdate);}
+
+static void c_version() { puts("X11-BASIC Version: " VERSION " " __DATE__ " " __TIME__);}
 
 static void c_help(PARAMETER *plist,int e) {
   if(e==0 || plist->typ==PL_LEER) puts("HELP [topic]");
@@ -2221,18 +2201,17 @@ static void c_pause(PARAMETER *plist,int e) {
 }
 
 static void c_echo(PARAMETER *plist,int e) {
-  char *n=plist->pointer;
   int f=plist->arraytyp;
-  if(f==KEYW_ON) echoflag=TRUE; 
+  if(f==KEYW_ON)       echoflag=TRUE; 
   else if(f==KEYW_OFF) echoflag=FALSE;
-  else  echoflag=(int)parser(n);
+  else  echoflag=(int)parser(plist->pointer);
 }
 static void c_gps(PARAMETER *plist,int e) {
   char *n=plist->pointer;
   int f=plist->arraytyp;
 
 #ifdef ANDROID
-  if(f==KEYW_ON) do_gpsonoff(1);  
+  if(f==KEYW_ON)       do_gpsonoff(1);  
   else if(f==KEYW_OFF) do_gpsonoff(0);
   else do_gpsonoff((int)parser(n));
 #else
@@ -2283,7 +2262,7 @@ static void c_gpio(PARAMETER *plist,int e) {
    if(n<0 || n>31) printf("ERROR: Wrong pin number [0-16, 21-31].\n");
    else {
      if(!wiringpiissetup) {
-       if (wiringPiSetup()==-1) {
+       if(wiringPiSetup()==-1) {
          printf("Error with wiring Pi setup!\n");
        } else wiringpiissetup=1;
      }
@@ -2296,11 +2275,10 @@ static void c_gpio(PARAMETER *plist,int e) {
 
 static void c_sensor(PARAMETER *plist,int e) {
 #ifdef ANDROID
-  char *n=plist[0].pointer;
   int f=plist->arraytyp;
   if(f==KEYW_ON) do_sensoronoff(1); 
   else if(f==KEYW_OFF) do_sensoronoff(0); 
-  else  do_sensoronoff((int)parser(n));
+  else  do_sensoronoff((int)parser(plist[0].pointer));
 #endif
 }
 
@@ -2337,8 +2315,7 @@ static void c_clr(PARAMETER *plist,int e) {
       *((double *)(plist[e].pointer))=0;
       break;
     default:
-      xberror(13,"");  /* Type mismatch */
-      dump_parameterlist(plist,1);
+      xberror(13,"CLR");  /* Type mismatch */
     }
   }
 }
@@ -2386,22 +2363,21 @@ static void c_if(PARAMETER *plist,int e) {
       else if(o==P_ENDIF) f--;
     }
     
-    if(i==prglen) { xberror(36,"IF"); /*Programmstruktur fehlerhaft */return;}
+    if(i==prglen) { xberror(36,"IF"); /*Programmstruktur fehlerhaft */ return;}
     pc=i+1;  /*hinter(!) ELSE oder ENDIF oder ELSEIF fortfahren.*/
     if(o==P_ELSEIF) {
-      // printf("zwischenZiel ist: %d  <%s>\n",i,program[i]);
       /* ELSEIF wird nicht ausgewertet, wenn pc drauflaeuft, da P_PREFETCH.
-      ALSO muessen wir es hier explizit auswerten... PARAMETERLISTE sollte vorbereitet sein...
-      
-      */
+       * ALSO muessen wir es hier explizit auswerten... 
+       * PARAMETERLISTE sollte vorbereitet sein...
+       *
+       */
       PARAMETER *plist;
       int j=pcode[i].opcode&PM_COMMS;
       int e=make_pliste3(comms[j].pmin,comms[j].pmax,(unsigned short *)comms[j].pliste,
 	     pcode[i].ppointer,&plist,pcode[i].panzahl);
-          if(e>=0) (comms[j].routine)(plist,e);
+          if(e>=0) (comms[j].routine)(plist,e); /* führt c_elseif aus */
 	  free_pliste(e,plist);
     } 
-   // else printf("neues Ziel ist: %d  <%s>\n",pc,program[pc]);
   }
 }
 
@@ -2415,20 +2391,16 @@ static void c_select(PARAMETER *plist,int e) {
   int wert=plist->integer;
   int wert2=-1;
   char *w1=NULL,*w2,*w3;  
- // printf("SELECT: value=%d  e=%d\n",wert,e);
   
   /* Case-Anweisungen finden */
-  while(1) {
-  //  printf("branch to line %d. <%s>\n",npc-1,program[npc-1]);
+  for(;;) {
     pc=npc;
      if((pcode[pc-1].opcode&PM_SPECIAL)==P_CASE) {
        free(w1);
        w1=strdup(pcode[pc-1].argument);
-  //   printf("Argument: <%s>\n",pcode[pc-1].argument);
        e=wort_sep_destroy(w1,',',TRUE,&w2,&w3);
        while(e) {
          wert2=parser(w2);
- //        printf("wert2=%d <%s>\n",wert2,w2);
 	 if(wert==wert2) break;
 	 e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
        }
@@ -2438,11 +2410,15 @@ static void c_select(PARAMETER *plist,int e) {
   } 
   free(w1);
 }
-static void c_case(const char *n) {  /* case und default */
-  /*gehe zum naechsten ENDSELECT*/
-    pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
-    if(pc==-1) xberror(36,"CASE"); /*Programmstruktur fehlerhaft !*/ 
-    pc++;
+
+
+  /* case und default 
+   * --> gehe zum naechsten ENDSELECT
+   */
+static void c_case(const char *n) {
+  pc=suchep(pc,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);/*gehe zum naechsten ENDSELECT*/
+  if(pc==-1) xberror(36,"CASE"); /*Programmstruktur fehlerhaft !*/ 
+  pc++;
 }
 
 
@@ -2546,7 +2522,6 @@ static void c_next(PARAMETER *plist,int e) {
    
    if(step<0) ss=-1;
    else ss=1;
-//   printf("step=%g ss=%d\n",step,ss);
    /* Schleifenende ueberpruefen    */
    if(ss>0) {
      if(varwert>limit) f=TRUE;
@@ -2557,11 +2532,14 @@ static void c_next(PARAMETER *plist,int e) {
    else pc++;
    free(buf);
 }
+
+/* FOR
+ * -- erledigt nur die erste Zuweiseung der Variable und betritt dann den Schleifenblock 
+ */
+
 static void c_for(const char *n) {
-  /* erledigt nur die erste Zuweisung  */
   char *buf=strdup(n);
   char *w1=buf;
-// printf("c_for: <%s>\n",n);
 
   for(;;) {
     w1=find_next_word(w1,' ',TRUE);
@@ -2570,7 +2548,7 @@ static void c_for(const char *n) {
       free(buf);
       return;
     }
-    // printf("w1 zeigt auf: <%s>\n",w1);
+    /* Ist da auch TO oder DOWNTO ?*/
     if((w1[0]=='T' && w1[1]=='O' && w1[2]==' ') || !strncmp(w1,"DOWNTO ",7)) {
       break;
     } else { /* Kein TO oder DOWNTO, also gehört das noch zu dem Ausdruck davor*/
@@ -2580,7 +2558,6 @@ static void c_for(const char *n) {
     
   if((w1=searchchr(buf,'='))!=NULL) {
     *w1++=0;
-    // printf("Zuweisung <%s> <%s>\n",buf,w1);
     xzuweis(buf,w1);
   } else xberror(32,n); /* Syntax error */
   free(buf);
@@ -2784,89 +2761,89 @@ static void c_eval(PARAMETER *plist,int e) { kommando(plist->pointer); }
 
 const COMMAND comms[]= {
 
- { P_IGNORE,    " nulldummy", NULL       , 0, 0},
- { P_REM,       "!"         , NULL       , 0, 0},
- { P_PLISTE,    "?"         , c_print    , 0,-1,(unsigned short []){PL_EVAL}},
+ { P_IGNORE,    " nulldummy", NULL        , 0, 0},
+ { P_REM,       "!"         , NULL        , 0, 0},
+ { P_PLISTE,    "?"         , c_print     , 0,-1,(unsigned short []){PL_EVAL}},
 
- { P_PLISTE,    "ABSOLUTE"  , c_absolute , 2, 2,(unsigned short []){PL_ANYVAR,PL_INT}},
- { P_PLISTE,    "ADD"       , c_add      , 2, 2,(unsigned short []){PL_ANYVAR,PL_ANYVALUE}},
- { P_PLISTE,    "AFTER"     , c_after    , 2, 2,(unsigned short []){PL_INT,PL_PROC}},
+ { P_PLISTE,    "ABSOLUTE"  , c_absolute  , 2, 2,(unsigned short []){PL_ANYVAR,PL_INT}},
+ { P_PLISTE,    "ADD"       , c_add       , 2, 2,(unsigned short []){PL_ANYVAR,PL_ANYVALUE}},
+ { P_PLISTE,    "AFTER"     , c_after     , 2, 2,(unsigned short []){PL_INT,PL_PROC}},
 #ifndef NOGRAPHICS
- { P_PLISTE,    "ALERT"     , c_alert    , 5, 6,(unsigned short []){PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
+ { P_PLISTE,    "ALERT"     , c_alert     , 5, 6,(unsigned short []){PL_INT,PL_STRING,PL_INT,PL_STRING,PL_NVAR,PL_SVAR}},
 #endif
- { P_PLISTE,    "ARRAYCOPY", c_arraycopy  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}}, /*zweiter parameter muesste "PL_ARRAY sein, nicht ARRAYVAR*/
- { P_PLISTE,    "ARRAYFILL", c_arrayfill  , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ANYVALUE}},
+ { P_PLISTE,    "ARRAYCOPY" , c_arraycopy , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}}, /*zweiter parameter muesste "PL_ARRAY sein, nicht ARRAYVAR*/
+ { P_PLISTE,    "ARRAYFILL" , c_arrayfill , 2, 2,(unsigned short []){PL_ARRAYVAR,PL_ANYVALUE}},
 
  { P_SIMPLE,     "BEEP"     , c_beep      ,0, 0},
  { P_SIMPLE,     "BELL"     , c_beep      ,0, 0},
- { P_PLISTE,     "BGET"     , c_bget      ,3, 3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
- { P_PLISTE,     "BLOAD"    , c_bload     ,2, 3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
- { P_PLISTE,     "BMOVE"    , c_bmove     ,3, 3,(unsigned short []){PL_INT,PL_INT,PL_INT} },
+ { P_PLISTE,     "BGET"     , c_bget      ,3,  3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+ { P_PLISTE,     "BLOAD"    , c_bload     ,2,  3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE,     "BMOVE"    , c_bmove     ,3,  3,(unsigned short []){PL_INT,PL_INT,PL_INT} },
 #ifndef NOGRAPHICS
- { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0, 1,(unsigned short []){PL_FILENR}},
- { P_PLISTE,     "BOUNDARY" , c_boundary  ,1, 1,(unsigned short []){PL_INT}},
- { P_PLISTE,     "BOX"      , c_box       ,4, 4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "BOTTOMW"  , c_bottomw,   0,  1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "BOUNDARY" , c_boundary  ,1,  1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "BOX"      , c_box       ,4,  4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,     "BPUT"     , c_bput      ,3, 3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
- { P_BREAK,      "BREAK"    , NULL     ,0, 0},
- { P_PLISTE,     "BSAVE"    , c_bsave     ,3, 3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE,     "BPUT"     , c_bput      ,3,  3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+ { P_BREAK,      "BREAK"    , NULL        ,0,  0},
+ { P_PLISTE,     "BSAVE"    , c_bsave     ,3,  3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
 
- { P_PLISTE,     "CALL"     , c_call      ,1,-1,(unsigned short []){PL_INT,PL_EVAL}},
- { P_CASE,       "CASE"     , c_case      ,1, 1,(unsigned short []){PL_FLOAT}},
- { P_PLISTE,     "CHAIN"    , c_chain     ,1, 1,(unsigned short []){PL_STRING}},
- { P_PLISTE,     "CHDIR"    , c_chdir     ,1, 1,(unsigned short []){PL_STRING}},
- { P_PLISTE,     "CHMOD"    , c_chmod,2,2,(unsigned short []){PL_STRING,PL_INT}},
+ { P_PLISTE,     "CALL"     , c_call      ,1, -1,(unsigned short []){PL_INT,PL_EVAL}},
+ { P_CASE,       "CASE"     , c_case      ,1,  1,(unsigned short []){PL_FLOAT}},
+ { P_PLISTE,     "CHAIN"    , c_chain     ,1,  1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "CHDIR"    , c_chdir     ,1,  1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "CHMOD"    , c_chmod     ,2,  2,(unsigned short []){PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CIRCLE"   , c_circle    ,3, 5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "CIRCLE"   , c_circle    ,3,  5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,     "CLEAR"    , c_clear     ,0,-1,(unsigned short []){PL_ALLVAR}},
+ { P_PLISTE,     "CLEAR"    , c_clear     ,0, -1,(unsigned short []){PL_ALLVAR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CLEARW"   , c_clearw      ,0, 1,(unsigned short []){PL_FILENR}},
- { P_PLISTE,     "CLIP"     , c_clip        ,4, 6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "CLEARW"   , c_clearw    ,0,  1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "CLIP"     , c_clip      ,4,  6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,     "CLOSE"    , c_close     ,0,-1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "CLOSE"    , c_close     ,0, -1,(unsigned short []){PL_FILENR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CLOSEW"   , c_closew    ,0, 1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "CLOSEW"   , c_closew    ,0,  1,(unsigned short []){PL_FILENR}},
 #endif
- { P_PLISTE,     "CLR"      , c_clr       ,1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
- { P_SIMPLE,     "CLS"      , c_cls       ,0, 0},
+ { P_PLISTE,     "CLR"      , c_clr       ,1, -1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_SIMPLE,     "CLS"      , c_cls       ,0,  0},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "COLOR"    , c_color     ,1,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_PLISTE,     "COLOR"    , c_color     ,1,  2,(unsigned short []){PL_INT,PL_INT}},
 #endif
- { P_PLISTE,     "CONNECT"  , c_connect   ,2,3,(unsigned short []){PL_FILENR,PL_STRING,PL_INT}},
- { P_CONTINUE,   "CONTINUE" , c_cont      ,0,0},
+ { P_PLISTE,     "CONNECT"  , c_connect   ,2,  3,(unsigned short []){PL_FILENR,PL_STRING,PL_INT}},
+ { P_CONTINUE,   "CONTINUE" , c_cont      ,0,  0},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "COPYAREA"     , c_copyarea   ,6,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "COPYAREA" , c_copyarea  ,6,  6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
 /* Kontrollsystembefehle  */
 #ifdef CONTROL
- { P_ARGUMENT,   "CSPUT"    , c_csput ,2,-1,(unsigned short []){PL_STRING,PL_VALUE}},
- { P_SIMPLE,     "CSCLEARCALLBACKS"    , c_csclearcallbacks,0,0},
- { P_ARGUMENT,   "CSSET"    , c_csput,2,-1,(unsigned short []){PL_STRING,PL_VALUE}},
+ { P_ARGUMENT,   "CSPUT"    , c_csput     ,2, -1,(unsigned short []){PL_STRING,PL_VALUE}},
+ { P_SIMPLE,     "CSCLEARCALLBACKS", c_csclearcallbacks,0,0},
+ { P_ARGUMENT,   "CSSET"    , c_csput     ,2, -1,(unsigned short []){PL_STRING,PL_VALUE}},
  { P_ARGUMENT,   "CSSETCALLBACK", c_cssetcallback,2,-1},
- { P_ARGUMENT,   "CSSWEEP"  , c_cssweep,2,-1},
- { P_ARGUMENT,   "CSVPUT"   , c_csvput,2,-1},
+ { P_ARGUMENT,   "CSSWEEP"  , c_cssweep   ,2, -1},
+ { P_ARGUMENT,   "CSVPUT"   , c_csvput    ,2, -1},
 #endif
 #ifndef NOGRAPHICS
- { P_PLISTE,     "CURVE"     , c_curve,8,9,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "CURVE"    , c_curve     ,8,  9,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_DATA,       "DATA"     , NULL ,0,-1 },
- { P_PLISTE,     "DEC"      , c_dec, 1,1,(unsigned short []){PL_NVAR}},
- { P_DEFAULT,    "DEFAULT"  , c_case, 0,0},
+ { P_DATA,       "DATA"     , NULL        ,0, -1},
+ { P_PLISTE,     "DEC"      , c_dec       ,1,  1,(unsigned short []){PL_NVAR}},
+ { P_DEFAULT,    "DEFAULT"  , c_case      ,0,  0},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "DEFFILL"  , c_deffill ,1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "DEFFILL"  , c_deffill   ,1,  3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
 #endif
- { P_DEFFN,      "DEFFN"     , NULL  ,0,0},
+ { P_DEFFN,      "DEFFN"    , NULL        ,0,  0},
 #ifndef NOGRAPHICS
- { P_PLISTE,     "DEFLINE"  , c_defline ,1,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,     "DEFMARK"  , c_defmark,1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,     "DEFMOUSE" , c_defmouse, 1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,     "DEFTEXT"  , c_deftext,1,4,(unsigned short []){PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
+ { P_PLISTE,     "DEFLINE"  , c_defline   ,1,  4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "DEFMARK"  , c_defmark   ,1,  3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "DEFMOUSE" , c_defmouse  ,1,  1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "DEFTEXT"  , c_deftext   ,1,  4,(unsigned short []){PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
 #endif
- { P_PLISTE,     "DELAY"    , c_pause,      1,1,(unsigned short []){PL_FLOAT}},
- { P_PLISTE,     "DIM"      , c_dim ,1,-1,(unsigned short []){PL_DIMARG,PL_DIMARG}},
- { P_PLISTE,     "DIV"      , c_div ,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
- { P_DO,         "DO"       , NULL  ,0,0},
+ { P_PLISTE,     "DELAY"    , c_pause     ,1,  1,(unsigned short []){PL_FLOAT}},
+ { P_PLISTE,     "DIM"      , c_dim       ,1, -1,(unsigned short []){PL_DIMARG,PL_DIMARG}},
+ { P_PLISTE,     "DIV"      , c_div       ,2,  2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ { P_DO,         "DO"       , NULL        ,0,  0},
 #ifdef DOOCS
 /* { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,{PL_STRING}},
  { P_SIMPLE,     "TINECYCLE", c_tinecycle,0,0},
@@ -2879,68 +2856,68 @@ const COMMAND comms[]= {
  { P_PLISTE,     "DOOCSSERVER" , c_doocsserver,0,2,(unsigned short []){PL_STRING,PL_INT}},
  { P_ARGUMENT,   "DOOCSSET"    , c_doocsput ,2,-1,(unsigned short []){PL_STRING}},
 #endif
- { P_PLISTE,   "DPOKE"    , c_dpoke,       2,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_PLISTE,     "DPOKE"    , c_dpoke,       2,2,(unsigned short []){PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
  { P_ARGUMENT,   "DRAW"     , c_draw ,2,-1,(unsigned short []){PL_INT,PL_INT}},
 #endif
- { P_PLISTE,   "DUMP"     , c_dump ,0,2,(unsigned short []){PL_STRING,PL_FILENR}},
+ { P_PLISTE,     "DUMP"     , c_dump ,0,2,(unsigned short []){PL_STRING,PL_FILENR}},
 
- { P_PLISTE,   "ECHO"     , c_echo ,1,1,(unsigned short []){PL_KEY}},
- { P_SIMPLE,   "EDIT"     , c_edit ,0,0},
+ { P_PLISTE,     "ECHO"     , c_echo ,1,1,(unsigned short []){PL_KEY}},
+ { P_SIMPLE,     "EDIT"     , c_edit ,0,0},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "ELLIPSE"  , c_ellipse,4,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "ELLIPSE"  , c_ellipse,4,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_ELSE,   "ELSE"     , c_if  ,1,1,(unsigned short []){PL_INT}}, /* ELSE IF something*/
- { P_SIMPLE, "END"      , c_end   ,0,0},
- { P_ENDPROC,"ENDFUNCTION", c_return,0,0},
- { P_ENDIF,  "ENDIF"       , NULL  ,0,0},
- { P_ENDPROC,"ENDPROCEDURE", c_return,0,0},
- { P_ENDSELECT,"ENDSELECT" , NULL  ,0,0},
- { P_PLISTE,   "ERASE"    , c_erase,1,-1,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}},
- { P_PLISTE,   "ERROR"    , c_error,1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,   "EVAL"     , c_eval,1,1,(unsigned short []){PL_STRING}},
+ { P_ELSE,       "ELSE"     , c_if  ,1,1,(unsigned short []){PL_INT}}, /* ELSE IF something*/
+ { P_SIMPLE,     "END"      , c_end   ,0,0},
+ { P_ENDPROC,    "ENDFUNCTION", c_return,0,0},
+ { P_ENDIF,      "ENDIF"    , NULL  ,0,0},
+ { P_ENDPROC,    "ENDPROCEDURE", c_return,0,0},
+ { P_ENDSELECT,  "ENDSELECT", NULL  ,0,0},
+ { P_PLISTE,     "ERASE"    , c_erase,1,-1,(unsigned short []){PL_ARRAYVAR,PL_ARRAYVAR}},
+ { P_PLISTE,     "ERROR"    , c_error,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "EVAL"     , c_eval,1,1,(unsigned short []){PL_STRING}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "EVENT"    , c_allevent,0,10,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR}},
+ { P_PLISTE,     "EVENT"    , c_allevent,0,10,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR}},
 #endif
- { P_PLISTE,   "EVERY"    , c_every,2,2,(unsigned short []){PL_INT,PL_PROC}},
- { P_PLISTE,   "EXEC"     , c_exec,1,3,(unsigned short []){PL_STRING,PL_STRING,PL_STRING}},
- { P_PLISTE,   "EXIT"     , c_exit,0,1,(unsigned short []){PL_INT}}, /* EXIT IF something*/
+ { P_PLISTE,     "EVERY"    , c_every,2,2,(unsigned short []){PL_INT,PL_PROC}},
+ { P_PLISTE,     "EXEC"     , c_exec,1,3,(unsigned short []){PL_STRING,PL_STRING,PL_STRING}},
+ { P_PLISTE,     "EXIT"     , c_exit,0,1,(unsigned short []){PL_INT}}, /* EXIT IF something*/
 /*
- { P_ARGUMENT,   "EXPORT"     , c_export,1,2, {PL_ALLVAR, PL_NUMBER}},
+ { P_ARGUMENT,   "EXPORT"   , c_export,1,2, {PL_ALLVAR, PL_NUMBER}},
 */
- { P_PLISTE,   "FFT",        c_fft,1,2,(unsigned short []){PL_FARRAYVAR,PL_INT}},
+ { P_PLISTE,     "FFT"      , c_fft,1,2,(unsigned short []){PL_FARRAYVAR,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "FILESELECT", c_fileselect,4, 4,(unsigned short []){PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
- { P_PLISTE,   "FILL",       c_fill,      2, 3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "FILESELECT", c_fileselect,4, 4,(unsigned short []){PL_STRING,PL_STRING,PL_STRING,PL_SVAR}},
+ { P_PLISTE,     "FILL",       c_fill,      2, 3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
 #endif
- { P_ARGUMENT, "FIT",        c_fit,       4,10,(unsigned short []){PL_FARRAY,PL_FARRAY}},
- { P_PLISTE,   "FIT_LINEAR", c_fit_linear,5,11,(unsigned short []){PL_FARRAY,PL_FARRAY,PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_FARRAY,PL_FARRAY,PL_NVAR}},
- { P_PLISTE,   "FIT_POLY",   c_fit_poly,  6, 6,(unsigned short []){PL_FARRAY,PL_FARRAY,PL_FARRAY,PL_INT,PL_FARRAYVAR,PL_INT}},
- { P_PLISTE,   "FLUSH",      c_flush,     0, 1,(unsigned short []){PL_FILENR}},
- { P_FOR,      "FOR",        c_for,       1,-1,(unsigned short []){PL_EVAL,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
- { P_PLISTE,   "FREE",       c_free,      1, 1,(unsigned short []){PL_INT}},
+ { P_ARGUMENT,   "FIT",        c_fit,       4,10,(unsigned short []){PL_FARRAY,PL_FARRAY}},
+ { P_PLISTE,     "FIT_LINEAR", c_fit_linear,5,11,(unsigned short []){PL_FARRAY,PL_FARRAY,PL_INT,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_FARRAY,PL_FARRAY,PL_NVAR}},
+ { P_PLISTE,     "FIT_POLY",   c_fit_poly,  6, 6,(unsigned short []){PL_FARRAY,PL_FARRAY,PL_FARRAY,PL_INT,PL_FARRAYVAR,PL_INT}},
+ { P_PLISTE,     "FLUSH",      c_flush,     0, 1,(unsigned short []){PL_FILENR}},
+ { P_FOR,        "FOR",        c_for,       1,-1,(unsigned short []){PL_EVAL,PL_KEY,PL_NUMBER,PL_KEY,PL_NUMBER}},
+ { P_PLISTE,     "FREE",       c_free,      1, 1,(unsigned short []){PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "FULLW",      c_fullw,     0, 1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "FULLW",      c_fullw,     0, 1,(unsigned short []){PL_FILENR}},
 #endif
- { P_PROC,     "FUNCTION" , c_end,0,0},
+ { P_PROC,       "FUNCTION" , c_end,0,0},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "GET"      , c_get,5,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR,PL_INT}},
- { P_PLISTE,   "GET_GEOMETRY" , c_getgeometry,2,7,(unsigned short []){PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { P_PLISTE,   "GET_LOCATION" , c_getlocation,2,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
+ { P_PLISTE,     "GET"      , c_get,5,6,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_SVAR,PL_INT}},
+ { P_PLISTE,     "GET_GEOMETRY" , c_getgeometry,2,7,(unsigned short []){PL_FILENR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "GET_LOCATION" , c_getlocation,2,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_SVAR}},
  
- { P_PLISTE,   "GET_SCREENSIZE" , c_getscreensize,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "GET_SCREENSIZE" , c_getscreensize,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
 #endif
- { P_GOSUB,    "GOSUB"    , c_gosub,1,1,(unsigned short []){PL_PROC}},
- { P_GOTO,     "GOTO"     , c_goto,1,1,(unsigned short []){PL_LABEL}},
- { P_PLISTE,   "GPIO"     , c_gpio ,2,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_GOSUB,      "GOSUB"    , c_gosub,1,1,(unsigned short []){PL_PROC}},
+ { P_GOTO,       "GOTO"     , c_goto,1,1,(unsigned short []){PL_LABEL}},
+ { P_PLISTE,     "GPIO"     , c_gpio ,2,2,(unsigned short []){PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "GPRINT"    , c_gprint,       0,-1,(unsigned short []){PL_EVAL}},
+ { P_PLISTE,     "GPRINT"    , c_gprint,       0,-1,(unsigned short []){PL_EVAL}},
 #endif
- { P_PLISTE,   "GPS"     , c_gps ,1,1,(unsigned short []){PL_KEY}},
+ { P_PLISTE,     "GPS"     , c_gps ,1,1,(unsigned short []){PL_KEY}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "GRAPHMODE", c_graphmode,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "GRAPHMODE", c_graphmode,1,1,(unsigned short []){PL_INT}},
 #endif
- { P_PLISTE,   "HELP"    , c_help,0,1,(unsigned short []){PL_KEY}},
+ { P_PLISTE,     "HELP"    , c_help,0,1,(unsigned short []){PL_KEY}},
 #ifndef NOGRAPHICS
  { P_SIMPLE,     "HIDEK"     , c_hidek,0,0},
  { P_SIMPLE,     "HIDEM"     , c_hidem,0,0},
@@ -2948,13 +2925,13 @@ const COMMAND comms[]= {
  { P_SIMPLE,     "HOME"     , c_home,0,0},
 
  { P_IF,         "IF"       , c_if,1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,   "INC"      , c_inc,1,1,(unsigned short []){PL_NVAR}},
+ { P_PLISTE,     "INC"      , c_inc,1,1,(unsigned short []){PL_NVAR}},
 #ifndef NOGRAPHICS
  { P_PLISTE,	 "INFOW"    , c_infow,    2,2,(unsigned short []){PL_FILENR,PL_STRING}},
 #endif
  { P_ARGUMENT,   "INPUT"    , c_input,1,-1,(unsigned short []){PL_ALLVAR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "KEYEVENT" , c_keyevent,0,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "KEYEVENT" , c_keyevent,0,8,(unsigned short []){PL_NVAR,PL_NVAR,PL_SVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
 #endif
  { P_PLISTE,     "KILL"    , c_kill     ,1, 1,(unsigned short []){PL_STRING}},
 
@@ -2973,7 +2950,7 @@ const COMMAND comms[]= {
  { P_LOOP,       "LOOP"     , NULL,0,0},
  { P_PLISTE,     "LPOKE"    , c_lpoke,       2,2,(unsigned short []){PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "LTEXT"     , c_ltext,3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
+ { P_PLISTE,     "LTEXT"     , c_ltext,3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
 #endif
 
  { P_PLISTE,     "MEMDUMP"    , c_memdump,2,2,(unsigned short []){PL_INT,PL_INT}},
@@ -2983,40 +2960,40 @@ const COMMAND comms[]= {
  { P_SIMPLE,     "MENUKILL" , c_menukill,0,0},
  { P_PLISTE,     "MENUSET"  , c_menuset,2,2,(unsigned short []){PL_INT,PL_INT}},
 #endif
- { P_PLISTE,    "MERGE"    , c_merge,1,1,(unsigned short []){PL_STRING}},
- { P_PLISTE,    "MFREE"      , c_free,1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,    "MKDIR"    , c_mkdir     ,1, 2,(unsigned short []){PL_STRING,PL_INT}},
+ { P_PLISTE,     "MERGE"    , c_merge,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "MFREE"      , c_free,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "MKDIR"    , c_mkdir     ,1, 2,(unsigned short []){PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "MOUSE"    , c_mouse,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { P_PLISTE,   "MOUSEEVENT" , c_mouseevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { P_PLISTE,   "MOTIONEVENT" , c_motionevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
- { P_PLISTE,   "MOVEW"    , c_movew,3,3, (unsigned short []){PL_FILENR,PL_INT,PL_INT}},
+ { P_PLISTE,     "MOUSE"    , c_mouse,1,5,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "MOUSEEVENT" , c_mouseevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "MOTIONEVENT" , c_motionevent,0,6,(unsigned short []){PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR,PL_NVAR}},
+ { P_PLISTE,     "MOVEW"    , c_movew,3,3, (unsigned short []){PL_FILENR,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,  "MSYNC"     , c_msync  ,2,2,(unsigned short []){PL_INT, PL_INT}},
- { P_PLISTE,   "MUL"      , c_mul,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ { P_PLISTE,     "MSYNC"     , c_msync  ,2,2,(unsigned short []){PL_INT, PL_INT}},
+ { P_PLISTE,     "MUL"      , c_mul,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
 
- { P_SIMPLE, "NEW"      , c_new,0,0},
- { P_NEXT,   "NEXT"     , c_next,0,1,(unsigned short []){PL_NVAR}},
- { P_IGNORE, "NOOP",         NULL,         0,0},
- { P_IGNORE, "NOP",          NULL,         0,0},
+ { P_SIMPLE,     "NEW"      , c_new,0,0},
+ { P_NEXT,       "NEXT"     , c_next,0,1,(unsigned short []){PL_NVAR}},
+ { P_IGNORE,     "NOOP",         NULL,         0,0},
+ { P_IGNORE,     "NOP",          NULL,         0,0},
 #ifndef NOGRAPHICS
- { P_SIMPLE,"NOROOTWINDOW", c_norootwindow,0,0},
- { P_PLISTE,   "OBJC_ADD"    , c_objc_add,      3,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,   "OBJC_DELETE"    , c_objc_delete,      2,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_SIMPLE,     "NOROOTWINDOW", c_norootwindow,0,0},
+ { P_PLISTE,     "OBJC_ADD"    , c_objc_add,      3,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "OBJC_DELETE"    , c_objc_delete,      2,2,(unsigned short []){PL_INT,PL_INT}},
 #endif
  { P_ARGUMENT,   "ON"       , c_on,         1,-1,(unsigned short []){PL_KEY}},
- { P_PLISTE,   "ON B/E/M GOSUB" , c_onbreakerrormenugosub,    1,2,(unsigned short []){PL_KEY,PL_PROC}},
- { P_PLISTE,   "ON B/E/M GOTO" , c_onbreakerrormenugoto,    1,2,(unsigned short []){PL_KEY,PL_LABEL}},
- { P_PLISTE,   "ON B/E/M OTHER" , c_onbreakerrormenuother,    1,2,(unsigned short []){PL_KEY,PL_KEY}},
- { P_PLISTE,   "ON GOSUB" , c_ongosub,    2,-1,(unsigned short []){PL_INT,PL_PROC,PL_PROC}},
- { P_PLISTE,   "ON GOTO"  , c_ongoto,     2,-1,(unsigned short []){PL_INT,PL_LABEL,PL_LABEL}},
+ { P_PLISTE,     "ON B/E/M GOSUB" , c_onbreakerrormenugosub,    1,2,(unsigned short []){PL_KEY,PL_PROC}},
+ { P_PLISTE,     "ON B/E/M GOTO" , c_onbreakerrormenugoto,    1,2,(unsigned short []){PL_KEY,PL_LABEL}},
+ { P_PLISTE,     "ON B/E/M OTHER" , c_onbreakerrormenuother,    1,2,(unsigned short []){PL_KEY,PL_KEY}},
+ { P_PLISTE,     "ON GOSUB" , c_ongosub,    2,-1,(unsigned short []){PL_INT,PL_PROC,PL_PROC}},
+ { P_PLISTE,     "ON GOTO"  , c_ongoto,     2,-1,(unsigned short []){PL_INT,PL_LABEL,PL_LABEL}},
  { P_PLISTE,     "OPEN"     , c_open,       3,4,(unsigned short []){PL_STRING,PL_FILENR,PL_STRING,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "OPENW"    , c_openw,      1,1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,     "OPENW"    , c_openw,      1,1,(unsigned short []){PL_FILENR}},
 #endif
- { P_PLISTE,   "OUT"      , c_out,        2,-1,(unsigned short []){PL_FILENR,PL_ANYVALUE,PL_ANYVALUE}},
+ { P_PLISTE,     "OUT"      , c_out,        2,-1,(unsigned short []){PL_FILENR,PL_ANYVALUE,PL_ANYVALUE}},
 
- { P_PLISTE,   "PAUSE"    , c_pause,      1,1,(unsigned short []){PL_FLOAT}},
+ { P_PLISTE,     "PAUSE"    , c_pause,      1,1,(unsigned short []){PL_FLOAT}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PBOX"     , c_pbox ,      4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
  { P_PLISTE,     "PCIRCLE"  , c_pcircle,    3,5,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
@@ -3029,96 +3006,96 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PLOT"     , c_plot,       2,2,(unsigned short []){PL_INT,PL_INT}},
 #endif
- { P_PLISTE,   "POKE"     , c_poke,       2,2,(unsigned short []){PL_INT,PL_INT}},
+ { P_PLISTE,     "POKE"     , c_poke,       2,2,(unsigned short []){PL_INT,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "POLYFILL" , c_polyfill,         3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,   "POLYLINE" , c_polyline,       3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,   "POLYMARK" , c_polymark,   3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,   "PRBOX"    , c_prbox ,      4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "POLYFILL" , c_polyfill,         3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "POLYLINE" , c_polyline,       3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "POLYMARK" , c_polymark,   3,7,(unsigned short []){PL_INT,PL_IARRAY,PL_IARRAY,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PRBOX"    , c_prbox ,      4,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,  "PRINT"    , c_print,       0,-1,(unsigned short []){PL_EVAL}},
- { P_PROC,   "PROCEDURE", c_end  ,      0,0},
- { P_IGNORE, "PROGRAM"  , NULL  ,      0,0},
+ { P_PLISTE,     "PRINT"    , c_print,       0,-1,(unsigned short []){PL_EVAL}},
+ { P_PROC,       "PROCEDURE", c_end  ,      0,0},
+ { P_IGNORE,     "PROGRAM"  , NULL  ,      0,0},
  /* Ausdruck als Message queuen
   { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALLVAR,PL_NUMBER}},
  */
 #ifndef NOGRAPHICS
- { P_PLISTE,   "PUT"  , c_put,      3,10,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_FLOAT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_FLOAT}},
+ { P_PLISTE,     "PUT"  , c_put,      3,10,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_FLOAT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_FLOAT}},
 #endif
- { P_PLISTE,   "PUTBACK"  , c_unget,      2,2,(unsigned short []){PL_FILENR,PL_INT}},
+ { P_PLISTE,     "PUTBACK"  , c_unget,      2,2,(unsigned short []){PL_FILENR,PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "PUT_BITMAP"  , c_put_bitmap, 5,5,(unsigned short []){PL_STRING,PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "PUT_BITMAP"  , c_put_bitmap, 5,5,(unsigned short []){PL_STRING,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
 
- { P_PLISTE, "QUIT"     , c_quit,       0,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "QUIT"     , c_quit,       0,1,(unsigned short []){PL_INT}},
 
- { P_PLISTE, "RANDOMIZE", c_randomize  ,      0,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "RANDOMIZE", c_randomize  ,      0,1,(unsigned short []){PL_INT}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "RBOX"      , c_rbox       ,4, 4,(unsigned short []) {PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,   "READ"     , c_read,       1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_PLISTE,     "READ"     , c_read,       1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
  { P_PLISTE,     "RECEIVE"  , c_receive,    2,3,(unsigned short []){PL_FILENR,PL_SVAR,PL_NVAR}},
  { P_PLISTE,     "RELSEEK"  , c_relseek,    2,2,(unsigned short []){PL_FILENR,PL_INT}},
- { P_REM,    "REM"      , NULL  ,      0,0},
- { P_PLISTE,   "RENAME"     , c_rename,2,2,(unsigned short []){PL_STRING,PL_STRING}},
- { P_REPEAT, "REPEAT"   , NULL  ,      0,0},
- { P_PLISTE,   "RESTORE"  , c_restore,    0,1,(unsigned short []){PL_LABEL}},
- { P_RETURN,   "RETURN"   , c_return,     0,1,(unsigned short []){PL_VALUE}},
+ { P_REM,        "REM"      , NULL  ,      0,0},
+ { P_PLISTE,     "RENAME"     , c_rename,2,2,(unsigned short []){PL_STRING,PL_STRING}},
+ { P_REPEAT,     "REPEAT"   , NULL  ,      0,0},
+ { P_PLISTE,     "RESTORE"  , c_restore,    0,1,(unsigned short []){PL_LABEL}},
+ { P_RETURN,     "RETURN"   , c_return,     0,1,(unsigned short []){PL_VALUE}},
  { P_PLISTE,     "RMDIR"    , c_rmdir     ,1, 1,(unsigned short []){PL_STRING}},
 #ifndef NOGRAPHICS
- { P_SIMPLE, "ROOTWINDOW", c_rootwindow,0,0},
- { P_SIMPLE, "RSRC_FREE", c_rsrc_free,0,0},
- { P_PLISTE, "RSRC_LOAD", c_rsrc_load,1,1,(unsigned short []){PL_STRING}},
+ { P_SIMPLE,     "ROOTWINDOW", c_rootwindow,0,0},
+ { P_SIMPLE,     "RSRC_FREE", c_rsrc_free,0,0},
+ { P_PLISTE,     "RSRC_LOAD", c_rsrc_load,1,1,(unsigned short []){PL_STRING}},
 #endif
 
- { P_SIMPLE, "RUN"      , c_run,        0,0},
+ { P_SIMPLE,     "RUN"      , c_run,        0,0},
 
- { P_PLISTE,   "SAVE"     , c_save,0,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "SAVE"     , c_save,0,1,(unsigned short []){PL_STRING}},
 #ifndef NOGRAPHICS
- { P_PLISTE,   "SAVESCREEN", c_savescreen,1,1,(unsigned short []){PL_STRING}},
- { P_PLISTE,   "SAVEWINDOW", c_savewindow,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "SAVESCREEN", c_savescreen,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "SAVEWINDOW", c_savewindow,1,1,(unsigned short []){PL_STRING}},
  { P_ARGUMENT,   "SCOPE"    , c_scope,      1,6,(unsigned short []){PL_FARRAY,PL_ANYVALUE,PL_FLOAT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
- { P_PLISTE,   "SCREEN"    , c_screen,      1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,     "SCREEN"    , c_screen,      1,3,(unsigned short []){PL_INT,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,   "SEEK"     , c_seek,       1,2,(unsigned short []){PL_FILENR,PL_INT}},
- { P_SELECT, "SELECT"   , c_select,     1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "SEEK"     , c_seek,       1,2,(unsigned short []){PL_FILENR,PL_INT}},
+ { P_SELECT,     "SELECT"   , c_select,     1,1,(unsigned short []){PL_INT}},
  /*
  { P_ARGUMENT,   "SEMGIVE"  , c_semgive, 1,2,{PL_NUMBER,PL_NUMBER}},
  { P_ARGUMENT,   "SEMTAKE"  , c_semtake, 1,2,{PL_NUMBER,PL_NUMBER}},
  */
- { P_PLISTE, "SEND"   , c_send,     2,4,(unsigned short []){PL_FILENR,PL_STRING,PL_INT,PL_INT}},
- { P_PLISTE, "SENSOR" , c_sensor ,1,1,(unsigned short []){PL_KEY}},
+ { P_PLISTE,     "SEND"   , c_send,     2,4,(unsigned short []){PL_FILENR,PL_STRING,PL_INT,PL_INT}},
+ { P_PLISTE,     "SENSOR" , c_sensor ,1,1,(unsigned short []){PL_KEY}},
 #ifndef NOGRAPHICS
- { P_PLISTE,	"SETFONT"  , c_setfont,    1,1,(unsigned short []){PL_STRING}},
- { P_PLISTE,	"SETMOUSE" , c_setmouse,   2,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
- { P_PLISTE,	"SGET" , c_sget,   1,1,(unsigned short []){PL_SVAR}},
+ { P_PLISTE,	 "SETFONT"  , c_setfont,    1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,	 "SETMOUSE" , c_setmouse,   2,4,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT}},
+ { P_PLISTE,	 "SGET" , c_sget,   1,1,(unsigned short []){PL_SVAR}},
 #endif
- { P_PLISTE,	"SHELL"   , c_shell,     1,-1,(unsigned short []){PL_STRING}},
- { P_PLISTE,  "SHM_DETACH"      , c_detatch,1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,    "SHM_FREE" , c_shm_free,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,	 "SHELL"   , c_shell,     1,-1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "SHM_DETACH"      , c_detatch,1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "SHM_FREE" , c_shm_free,1,1,(unsigned short []){PL_INT}},
 #ifndef NOGRAPHICS
  { P_SIMPLE,     "SHOWK"     , c_showk,0,0},
  { P_SIMPLE,     "SHOWM"     , c_showm,0,0},
  { P_SIMPLE,	 "SHOWPAGE" , c_vsync,      0,0},
  { P_PLISTE,	 "SIZEW"    , c_sizew,      3,3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
 #endif
- { P_PLISTE,    "SORT",      c_sort,        1,3,(unsigned short []){PL_ARRAYVAR,PL_INT,PL_IARRAYVAR}},
- { P_PLISTE,    "SOUND",     c_sound,        2,4,(unsigned short []){PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
+ { P_PLISTE,     "SORT",      c_sort,        1,3,(unsigned short []){PL_ARRAYVAR,PL_INT,PL_IARRAYVAR}},
+ { P_PLISTE,     "SOUND",     c_sound,        2,4,(unsigned short []){PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
 
- { P_GOSUB,     "SPAWN"    , c_spawn,1,1,(unsigned short []){PL_PROC}},
- { P_PLISTE,    "SPEAK",     c_speak, 1,4,(unsigned short []){PL_STRING,PL_FLOAT,PL_FLOAT,PL_STRING}},
+ { P_GOSUB,      "SPAWN"    , c_spawn,1,1,(unsigned short []){PL_PROC}},
+ { P_PLISTE,     "SPEAK",     c_speak, 1,4,(unsigned short []){PL_STRING,PL_FLOAT,PL_FLOAT,PL_STRING}},
 
- { P_PLISTE,	"SPLIT"    , c_split,  4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { P_PLISTE,	 "SPLIT"    , c_split,  4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 #ifndef NOGRAPHICS
- { P_PLISTE,	"SPUT"     , c_sput,      1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,	 "SPUT"     , c_sput,      1,1,(unsigned short []){PL_STRING}},
 #endif
- { P_SIMPLE,	"STOP"     , c_stop,       0,0},
- { P_PLISTE,	"SUB"      , c_sub,        2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
- { P_PLISTE,	"SWAP"     , c_swap,       2,2,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
- { P_PLISTE,	"SYSTEM"   , c_system,     1,1,(unsigned short []){PL_STRING}},
+ { P_SIMPLE,	 "STOP"     , c_stop,       0,0},
+ { P_PLISTE,	 "SUB"      , c_sub,        2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ { P_PLISTE,	 "SWAP"     , c_swap,       2,2,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
+ { P_PLISTE,	 "SYSTEM"   , c_system,     1,1,(unsigned short []){PL_STRING}},
 
 #ifndef NOGRAPHICS
- { P_PLISTE,	"TEXT"     , c_text,       3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
+ { P_PLISTE,	 "TEXT"     , c_text,       3,3,(unsigned short []){PL_INT,PL_INT,PL_STRING}},
 #endif
 #ifdef TINE
  { P_ARGUMENT,   "TINEBROADCAST", c_tinebroadcast,1,-1,(unsigned short []){PL_STRING}},
@@ -3132,34 +3109,34 @@ const COMMAND comms[]= {
  { P_ARGUMENT,   "TINESET"    , c_tineput ,2,-1,(unsigned short []){PL_STRING}},
 #endif
 #ifndef NOGRAPHICS
- { P_PLISTE,	"TITLEW"   , c_titlew,     2,2,(unsigned short []){PL_FILENR,PL_STRING}},
- { P_PLISTE,    "TOPW"     , c_topw,       0,1,  (unsigned short []) {PL_FILENR}},
+ { P_PLISTE,	 "TITLEW"   , c_titlew,     2,2,(unsigned short []){PL_FILENR,PL_STRING}},
+ { P_PLISTE,     "TOPW"     , c_topw,       0,1,  (unsigned short []) {PL_FILENR}},
 #endif
- { P_PLISTE,    "TOUCH"    , touch,1,1,(unsigned short []){PL_FILENR}},
- { P_SIMPLE,	"TROFF"    , c_troff,      0,0},
- { P_SIMPLE,	"TRON"     , c_tron,       0,0},
+ { P_PLISTE,     "TOUCH"    , touch,1,1,(unsigned short []){PL_FILENR}},
+ { P_SIMPLE,	 "TROFF"    , c_troff,      0,0},
+ { P_SIMPLE,	 "TRON"     , c_tron,       0,0},
 
- { P_PLISTE,  "UNLINK"   , c_close  ,     1,-1,(unsigned short []){PL_FILENR,PL_FILENR}},
- { P_PLISTE,    "UNMAP"    , c_unmap      ,2,2,(unsigned short []){PL_INT, PL_INT}},
- { P_UNTIL,	"UNTIL"    , c_until,      1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,     "UNLINK"   , c_close  ,     1,-1,(unsigned short []){PL_FILENR,PL_FILENR}},
+ { P_PLISTE,     "UNMAP"    , c_unmap      ,2,2,(unsigned short []){PL_INT, PL_INT}},
+ { P_UNTIL,	 "UNTIL"    , c_until,      1,1,(unsigned short []){PL_INT}},
 #ifndef NOGRAPHICS
- { P_PLISTE,	"USEWINDOW", c_usewindow,  1,1,(unsigned short []){PL_FILENR}},
+ { P_PLISTE,	 "USEWINDOW", c_usewindow,  1,1,(unsigned short []){PL_FILENR}},
 #endif
 
- { P_SIMPLE,	"VERSION"  , c_version,    0,0},
- { P_ARGUMENT,	"VOID"     , c_void,       1,1,(unsigned short []){PL_EVAL}},
+ { P_SIMPLE,	 "VERSION"  , c_version,    0,0},
+ { P_ARGUMENT,	 "VOID"     , c_void,       1,1,(unsigned short []){PL_EVAL}},
 #ifndef NOGRAPHICS
- { P_SIMPLE,	"VSYNC"    , c_vsync,      0,0},
+ { P_SIMPLE,	 "VSYNC"    , c_vsync,      0,0},
 #endif
- { P_PLISTE,     "WATCH"     , c_watch,  1,1,(unsigned short []){PL_STRING}},
- { P_PLISTE,    "WAVE",     c_wave,      2,6,(unsigned short []){PL_INT,PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
+ { P_PLISTE,     "WATCH"    , c_watch      ,1,1,(unsigned short []){PL_STRING}},
+ { P_PLISTE,     "WAVE"     , c_wave       ,2,6,(unsigned short []){PL_INT,PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
 
- { P_WEND,	"WEND"     , NULL,      0,0},
- { P_WHILE,	"WHILE"    , c_while,    1,1,(unsigned short []){PL_INT}},
- { P_PLISTE,	"WORT_SEP" , c_split,    4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
+ { P_WEND,       "WEND"     , NULL,       0,0},
+ { P_WHILE,	 "WHILE"    , c_while,    1,1,(unsigned short []){PL_INT}},
+ { P_PLISTE,	 "WORT_SEP" , c_split,    4,5,(unsigned short []){PL_STRING,PL_STRING,PL_INT,PL_SVAR,PL_SVAR}},
 #ifndef NOGRAPHICS
- { P_SIMPLE,	"XLOAD"    , c_xload,    0,0},
- { P_SIMPLE,	"XRUN"     , c_xrun,     0,0},
+ { P_SIMPLE,	 "XLOAD"    , c_xload,    0,0},
+ { P_SIMPLE,	 "XRUN"     , c_xrun,     0,0},
 #endif
 
 };
