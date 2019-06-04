@@ -315,16 +315,19 @@ SEE ALSO: PRINT
 ##############################################################################
 
 Command: FOR 
-Syntax: FOR <var>=<sexpr> TO <texpr> [STEP incr]
-        FOR <var>=<sexpr> DOWNTO <texpr> [STEP incr]
+Syntax: FOR <var>=<sexpr> TO <texpr> [STEP <incr>]
+        FOR <var>=<sexpr> DOWNTO <texpr> [STEP <incr>]
 
 DESCRIPTION:
 
-	FOR initiates a FOR...NEXT loop with the specified variable var 
+	FOR initiates a FOR...NEXT loop with the specified variable <var> 
 	initially set to <sexpr> and incrementing in
-	incr steps (default is 1). The statements between FOR and
+	<incr> steps (default is 1). The statements between FOR and
 	NEXT are repeated until the variable value reaches or steps over 
 	<texpr>. 
+
+COMMENT: 
+	The body of the FOR loop is excecuted always at least once. 
 
 EXAMPLE:         
        FOR n=2 TO 0 STEP -1
