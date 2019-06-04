@@ -1405,9 +1405,9 @@ const SFUNCTION psfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK,    "PNGENCODE$"  , f_pngencodes ,1,1   ,{PL_STRING}},
  
  { F_CONST|F_IQUICK,    "PRG$"    , f_prgs ,1,1   ,{PL_INT}},
+ { F_CONST|F_PLISTE,    "RADIX$"    , f_radixs ,1,3   ,{PL_NUMBER,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "REPLACE$"  , f_replaces ,3,3   ,{PL_STRING,PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "REVERSE$"  , f_reverses ,1,1   ,{PL_STRING}},
- { F_CONST|F_PLISTE,    "RADIX$"    , f_radixs ,1,3   ,{PL_NUMBER,PL_INT,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHT$"  , f_rights ,1,2   ,{PL_STRING,PL_INT}},
  { F_CONST|F_PLISTE,    "RIGHTOF$" , f_rightofs ,2,2   ,{PL_STRING,PL_STRING}},
  { F_CONST|F_SQUICK,    "RLD$"  , f_rlds ,1,1   ,{PL_STRING}},
