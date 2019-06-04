@@ -41,6 +41,11 @@ DESCRIPTION:
 	pseudo-random number generator to get a new sequence of numbers from
 	RANDOM().
 
+COMMENT: 
+	On WINDOWS operating systems, the RAND() function returns a 
+	pseudo-random integer number between 0 (inclusive)
+	and 32767. 
+
 SEE ALSO: RND(), RANDOMIZE, GASDEV
 
 EXAMPLE:
@@ -69,8 +74,20 @@ DESCRIPTION:
 	a random floatingpoint or complex number between 0 (inclusive)
 	and maximum (exclusive) is returned.
 
+COMMENT: 
+	If the argument to the RANDOM() function is negative, a random number 
+	between the argument (exclusive) and zero (inclusive) is returned.
+
+COMMENT: 
+	WINDOWS operating systems uses a 15 bit random generator only and 
+	linux flavours a 31 bit random generator. That means, one out of 
+	32768 random values will be equal to the argument of the random 
+	function on WINDOWS and only one out of 2147483648 on 
+	linux (and Android).
+
 EXAMPLE:
         PRINT RANDOM(10)    !   Result: 8
+        PRINT RANDOM(-10)   !   Result: -8
 	PRINT RANDOM(10.1)  !   Result: 8.065922004714
 	PRINT RANDOM(1+2i)  !   (0.9116473579368+1.596880066952i)
 	PRINT RANDOM(10000000000000000000) ! Result: 7314076133279565627
@@ -455,7 +472,19 @@ DESCRIPTION:
 	pseudo-random number generator to get a new sequence of numbers from
 	RND(). The optional dummy parameter is ignored. The granularity of
 	the random values depends on the operating system and is usually only
-	32 bits.
+	31 bits.
+	
+COMMENT:
+	On WINDOWS operating systems, the granularity of the RND() function 
+	is only 15 bit.
+
+COMMENT: 
+	WINDOWS operating systems uses a 15 bit random generator only and 
+	linux flavours a 31 bit random generator. That means, one out of 
+	32768 random values will be equal to 1 on WINDOWS and 
+	only one out of 2147483648 on linux (and Android).
+
+
 
 SEE ALSO:  RANDOMIZE, GASDEV(), RANDOM()
 
