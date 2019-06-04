@@ -1215,6 +1215,7 @@ void programmlauf(){
       }	  
     }
     case P_LABEL:
+    case P_DEFFN:
     case P_NOTHING: break;
     case (P_EVAL|P_NOCMD):  kommando(program[opc]); break;
     case P_PROC:
