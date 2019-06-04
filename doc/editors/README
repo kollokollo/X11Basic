@@ -60,3 +60,17 @@ there is also an IDE that uses those definitions but I haven't used it.
 
 Christos Tziotzis
 
+======================== nano (and pico) sytax file ================================
+x11basic.nanorc
+
+Um das Syntax highlighting in Nano zu aktivieren, müssen die 
+Konfigurationsdateien mit einer Profildatei aufgerufen werden.
+
+nano ~/.nanorc
+
+Soll nur für Shell Skripte das Syntax highlighting aktiviert werden, reicht es,
+die entsprechende Konfigurationsdatei einzutragen.
+
+include /usr/share/doc/x11basic/editors/x11basic.nanorc
+
+

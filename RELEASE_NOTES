@@ -3,3 +3,7 @@ Release notes for Version 1.26 (June 2018 -- 2019)
 - New functions/commands GPIO (Raspberry)
 - fixed bug in virtual-machine/compiler (RasPi, signed char)
 - new shortcut compiler start ybasic
+- fbxbasic included 
+- added broadcast permission for UDP sockets
+- new syntax highlighting file for nano/pico
+- new commandline function --quitonend

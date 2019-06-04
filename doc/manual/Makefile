@@ -28,9 +28,10 @@ TEXFILES=tex/about.tex tex/usage.tex tex/programming.tex tex/conditions.tex \
          tex/ACKNOWLEGEMENTS.tex tex/compatibility.tex tex/gui-objects.tex tex/quick.tex
 
 PICTURES=alert1.png alert2.png alert3.png fileselect.png form2.png menu.png \
-         nedit-x11basic.jpg biene.png form1.png form3.png nedit-x11basic.gif
+         nedit-x11basic.jpg nano-x11basic.png biene.png form1.png form3.png \
+	 nedit-x11basic.gif
 EPSFILES=alert1.eps alert2.eps alert3.eps fileselect.eps form2.eps menu.eps \
-         nedit-x11basic.eps biene.eps form1.eps form3.eps nedit-x11basic.eps
+         nedit-x11basic.eps nano-x11basic.eps biene.eps form1.eps form3.eps 
 
 DIR=X11Basic-manual-$(VERSION)
 DIST=Makefile sec-base/00_Logo.sec sec-base/01_Version.sec sec-base/02_Preamble.sec \

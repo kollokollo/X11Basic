@@ -513,7 +513,7 @@ If you want to create a new program, follow these steps  (in this example, the e
 If you have more than one editors installed, you will be asked which one to use. Select TED Text Editor.
 \item Inside the editor do a "Save As" and give it a different name, e.g. "mything.bas", make sure that it is saved 
 into the folder "bas".
-\item Press the back button (not the HOME button), so the editor returns to X11Basic.
+\item Press the back button (not the HOME button), so the editor returns to X11-Basic.
 \item X11-Basic now reloads new.bas, but this is not what you want, so
 \item within X11-Basic load "mything.bas"
 \end{enumerate}
@@ -702,9 +702,10 @@ this is no problem, you will be asked which one to use every time, the editor
 is invoked. 
 
 Besides from the basic editing features I recommend to use a text editor with
-syntax highlighting. Currently X11-Basic syntax definitions are available  for
-the {\it Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS) 
-and for the \verb|920 Text Editor| and \verb|Jota|, available for Android.
+syntax highlighting. Currently X11-Basic syntax definitions are available for 
+\verb|nano| and \verb|pico| (available for the text consoles) and for  the {\it
+Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS)  as well
+as for the \verb|920 Text Editor| and \verb|Jota|, available for Android.
 
 X11-Basic can support foreign language characters. Therefor the basic program
 may be coded in UTF-8 which is compatible to ASCII but has the  ability to use
@@ -735,6 +736,27 @@ programs. Unfortunately nedit does not support UTF-8.
 If you like to use \verb|nedit| as your favorite editor, a \verb|nedit.defs| file
 comes  with this package. This enables syntax highlighting for X11-Basic
 programs in {\bf nedit} (see fig.~\ref{nedit}).
+
+\subsection*{Using syntax highlighting with {\bf nano} and {\bf pico}}\index{syntax highlighting}
+
+GNU \verb|nano| is a text editor for Unix-like computing systems or operating 
+environments using a command line interface. It emulates the \verb|pico| text
+editor, part of the \verb|pine| email client, and also provides additional
+functionality. Al though nano has to be used on the console, it can also use
+pointer devices, such as a mouse, to activate functions that are on the shortcut
+bar, as well as position the cursor. And most important, it can handle UTF-8.
+
+\begin{SCfigure}
+\includegraphics[width=0.5\textwidth]{nano-x11basic.eps}
+\caption{The {\bf nano} editor with syntax highlighting for a X11-Basic program.}
+\label{nano}
+\end{SCfigure}
+
+If you like to use \verb|nano| as your favorite editor, a 
+\verb|x11basic.nanorc| file comes with the X11-Basic package. This enables
+syntax highlighting for  X11-Basic programs in {\bf nano} (see fig.~\ref{nano}).
+
+
 
 \section{The Bytecode Compiler and the Virtual Machine}\index{bytecode}
 

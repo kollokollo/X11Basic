@@ -806,8 +806,11 @@ rpm :	$(DIR).tar.gz x11basic.spec
 	rpmbuild -ba  --clean --nodeps x11basic.spec
 
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian Debian/copyright \
-	../doc/editors/nedit.defs ../doc/editors/README ../doc/editors/920.conf ../doc/editors/x11basic.lang \
-	../doc/editors/x11basic.geany ../RELEASE_NOTES ../README ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
+	../doc/editors/nedit.defs ../doc/editors/README \
+	../doc/editors/920.conf ../doc/editors/x11basic.lang \
+	../doc/editors/x11basic.geany ../doc/editors/x11basic.nanorc \
+	../RELEASE_NOTES ../README \
+	../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
@@ -822,6 +825,7 @@ doc-pak: $(DEBDOC)
 	cp ../doc/editors/920.conf $@/editors/
 	cp ../doc/editors/x11basic.lang $@/editors/
 	cp ../doc/editors/x11basic.geany $@/editors/
+	cp ../doc/editors/x11basic.nanorc $@/editors/
 	cp ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt $@/
 	
 	
