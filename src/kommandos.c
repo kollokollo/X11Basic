@@ -2382,7 +2382,7 @@ static void c_next(PARAMETER *plist,int e) {
   if(pc==-1) {xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
 
 
-  char *w1,*w2,*w3,*w4,*var;
+  char *w2,*w3,*w4,*var;
   double step, limit,varwert;
   int ss,f=0,type=NOTYP;
 
@@ -2392,7 +2392,7 @@ static void c_next(PARAMETER *plist,int e) {
 // printf("Argument dort ist: <%s>\n",pcode[pc].argument);
 
 
-  w1=strdup(pcode[pc].argument);
+  char *w1=strdup(pcode[pc].argument);
   wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
  
   /* Variable bestimmem */
@@ -2411,33 +2411,44 @@ static void c_next(PARAMETER *plist,int e) {
      free(w1);
      return;
    }
-   if(w3[0]=='T' && w3[1]=='O' && w3[2]==' ') {ss=1; w2=w3+3;} 
-   else if(strncmp(w3,"DOWNTO ",7)==0) {ss=-1; w2=w3+7;}
+   if(w3[0]=='T' && w3[1]=='O' && w3[2]==' ') {ss=1;  w2=w3+3;} 
+   else if(!strncmp(w3,"DOWNTO ",7))          {ss=-1; w2=w3+7;}
    else {
      xberror(32,w3); /* Syntax error */
      free(w1);
      return;
    }
 
-   /* Limit bestimmem  */
-   e=wort_sep_destroy(w2,' ',TRUE,&w4,&w3);
-   if(e==0) {
-     xberror(32,w2); /* Syntax error */
-     free(w1);
-     return;
-   } 
-   limit=parser(w4);
-   if(e==1) step=1;
-   else {
-     /* Step-Anweisung auswerten  */
-     if(strncmp(w3,"STEP ",5)==0) {
+   // printf("w2 zeigt auf: <%s>\n",w2);
+
+   w3=w2;
+   for(;;) {
+     /* Limit bestimmem  */
+     w3=find_next_word(w3,' ',TRUE);
+     // printf("w2 zeigt auf: <%s>\n",w2);
+     if(!w3) { /* Hinter Ausdruck kommt nix mehr oder Ausdruck war leer*/
+       if(!(*w2)) { /* Ausdruck war leer */
+         xberror(32,w2); /* Syntax error */
+         free(w1);
+         return;
+       }
+       step=1;
+       limit=parser(w2);
+       break;
+     } 
+
+     // printf("w3 zeigt auf: <%s>\n",w3);
+     if(!strncmp(w3,"STEP ",5)) {
+       limit=parser(w2);
        step=parser(w3+5);
-     } else {
-       xberror(32,w3); /* Syntax error */
-       free(w1);
-       return;
+       break;
+     } else { /* Kein STEP, also gehört das noch zu dem Ausdruck davor*/
+       *(w3-1)=' ';
      }
    }
+
+   // printf("Limit=%g step=%g\n",limit,step);
+
    
    step*=ss;
    varwert=parser(var)+step;

@@ -569,7 +569,7 @@ int init_program(int prglen) {
     } 
     /* Rest Transformieren    */
     j=-1;
-    if(strcmp(zeile,"ON")==0) {
+    if(!strcmp(zeile,"ON")) {
        // TODO: Sonderbehandlung ON  
         char *w1,*w2,w3[strlen(buffer)+1],w4[strlen(buffer)+1];
 	wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
@@ -716,7 +716,7 @@ int init_program(int prglen) {
     	  }
         }
       }
-    } else if(comms[j].opcode==P_IF) {/*Unn"otiges THEN entfernen*/
+    } else if(comms[j].opcode==P_IF) { /*Unnötiges THEN entfernen*/
       int l=strlen(pcode[i].argument);
       if(l>4) {
     	if(strcmp(pcode[i].argument+l-5," THEN")==0) {

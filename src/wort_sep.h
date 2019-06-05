@@ -5,6 +5,7 @@
  */
 int wort_sep   (const char *t,char c,int klamb ,char *w1, char *w2);
 int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2);
+char *find_next_word(char *t,char c,int klamb);
 int wort_sep_multi(const char *t,const char *c, int klamb ,char *w1, char *w2);
 
 int wort_sep_e (const char *t,char c,int klamb ,char *w1, char *w2);

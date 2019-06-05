@@ -100,6 +100,32 @@ int wort_sep_destroy(char *t,char c,int klamb ,char **w1, char **w2)    {
   }
 }
 
+/* Eine einfacherere Version von wort_sep_destroy*/
+
+char *find_next_word(char *t,char c,int klamb) {
+  int f=0, klam=0;
+
+  /* klamb=0 : keine Klammern werden beruecksichtigt
+     klamb=1 : normale Klammern werden beruecksichtigt
+     klamb=2 : eckige Klammern werden beruecksichtigt
+     klamb=4 : geschweifte Klammern werden beruecksichtigt
+  */
+
+  if(!(*t)) return(NULL);
+
+  while(*t && (*t!=c || f || klam>0)) {
+    if(*t=='"') f=!f;
+    else if(!f && (((klamb&1) && *t=='(') || ((klamb&2) && *t=='[') || ((klamb&4) && *t=='{'))) klam++;
+    else if(!f && (((klamb&1) && *t==')') || ((klamb&2) && *t==']') || ((klamb&4) && *t=='}'))) klam--;
+    t++;
+  }
+  if(!(*t)) return(NULL);
+  else {
+    *t++=0;
+    return(t);
+  }
+}
+
 
 /* Dasselbe fuer eine Liste von n Zeichen */
 int wort_sep_multi(const char *t,const char *c, int klamb ,char *w1, char *w2)    {

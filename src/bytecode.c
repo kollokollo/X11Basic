@@ -2051,37 +2051,36 @@ Hier ist also noch ziemlicher Bahnhof ! */
       int pp=pcode[i].integer;  /* Zeile it dem zugehoerigen For */
       if(pp==-1) xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */
       else {
-        char *w1,*w2,*w3,*var,*limit,*step;
-	int ss=0,e,st=0;
-	// printf("Next: bz=%d\n",pp);
-        w1=strdup(pcode[pp].argument);
-        w2=malloc(strlen(w1)+1); 
-        w3=malloc(strlen(w1)+1); 
-        var=malloc(strlen(w1)+1); 
-        step=malloc(strlen(w1)+1); 
-        limit=malloc(strlen(w1)+1); 
+//	printf("Next: FOR ist in Zeile=%d\n",pp);
+        char *w1=strdup(pcode[pp].argument);
+//	printf("Argument=<%s>\n",w1);
+        char *w2=malloc(strlen(w1)+1); 
+        char *w3=malloc(strlen(w1)+1); 
+        char *var=malloc(strlen(w1)+1); 
+        char *step=malloc(strlen(w1)+1); 
+        char *limit=malloc(strlen(w1)+1); 
         wort_sep(w1,' ',TRUE,w2,w3);
         /* Variable bestimmem */
         if(searchchr2(w2,'=')!=NULL) {
           wort_sep(w2,'=',TRUE,var,w1);
         } else printf("Syntax Error ! FOR %s\n",w2); 
-	// printf("Variable ist: %s \n",var);
+	// printf("Variable ist: %s Zuweisungsausdruck <%s>\n",var,w1);
         wort_sep(w3,' ',TRUE,w1,w2);
+	int ss=0,st=0;
    
-        if(strcmp(w1,"TO")==0) ss=0; 
-        else if(strcmp(w1,"DOWNTO")==0) ss=1; 
+        if(!strcmp(w1,"TO"))          ss=0; 
+        else if(!strcmp(w1,"DOWNTO")) ss=1; 
         else printf("Syntax Error ! FOR %s\n",w1);
 
         /* Limit bestimmem  */
-        e=wort_sep(w2,' ',TRUE,limit,w3);
+        int e=wort_sep2(w2," STEP ",TRUE,limit,step);
         if(e==0) printf("Syntax Error ! FOR %s\n",w2);
         else {
-          if(e==1) ;
-          else {
-            /* Step-Anweisung auswerten  */
-            wort_sep(w3,' ',TRUE,w1,step);
-            if(strcmp(w1,"STEP")==0) st=1;
-            else printf("Syntax Error ! FOR %s\n",w1); 
+          if(e==1) {
+	   // printf("limit=<%s> step=NONE\n",limit); /* Kein Step */
+          } else {
+           // printf("limit=<%s> step=<%s>\n",limit,step);
+            st=1;
           }
         }
 		
