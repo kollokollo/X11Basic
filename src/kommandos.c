@@ -2203,9 +2203,9 @@ extern int wiringpiissetup;
 */
 
 static void c_gpio(PARAMETER *plist,int e) {
+#ifdef HAVE_WIRINGPI
   int n=plist->integer;
   int f=plist[1].integer;
-#ifdef HAVE_WIRINGPI
    if(n<0 || n>31) printf("ERROR: Wrong pin number [0-16, 21-31].\n");
    else {
      if(!wiringpiissetup) {
@@ -2382,43 +2382,56 @@ static void c_next(PARAMETER *plist,int e) {
   pc=pcode[pc-1].integer; /*Hier sind wir beim FOR*/
   if(pc==-1) {xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */return;}
 
-
-  char *w2,*w3,*w4,*var;
+  char *w2,*w3,*var;
   double step, limit,varwert;
   int ss,f=0,type=NOTYP;
 
+  // printf("c_next: das for befindet sich bei pc=%d\n",pc);
+  // printf("Argument dort ist: <%s>\n",pcode[pc].argument);
 
+  char *buf=strdup(pcode[pc].argument);
+  char *w1=buf;
+  int to_or_downto=0;
+  
+  for(;;) {
+    w1=find_next_word(w1,' ',TRUE);
+    if(!w1 || !(*w1)) { /* Hinter Ausdruck kommt nix mehr oder Ausdruck war leer*/
+      xberror(32,buf); /* Syntax error */
+      free(buf);
+      return;
+    }
+    // printf("w1 zeigt auf: <%s>\n",w1);
+    if(w1[0]=='T' && w1[1]=='O' && w1[2]==' ') {
+      to_or_downto=0;
+      break;
+    } else if(!strncmp(w1,"DOWNTO ",7)) {
+      to_or_downto=1;
+      break;
+    } else { /* Kein TO oder DOWNTO, also gehört das noch zu dem Ausdruck davor*/
+       *(w1-1)=' ';
+    }
+  }
 
-// printf("c_next: das for befindet sich bei pc=%d\n",pc);
-// printf("Argument dort ist: <%s>\n",pcode[pc].argument);
-
-
-  char *w1=strdup(pcode[pc].argument);
-  wort_sep_destroy(w1,' ',TRUE,&w2,&w3);
  
   /* Variable bestimmem */
-  if((var=searchchr(w2,'='))!=NULL) {
+  if((var=searchchr(buf,'='))!=NULL) {
      *var++=0;
-     var=w2;
+     var=buf;
      type=vartype(var);
      if(type!=INTTYP && type!=FLOATTYP) {
-       printf("Syntax Error: FOR %s, illegal variable type.\n",w2);
-       xberror(32,w2); /* Syntax error */
-       free(w1);
+       printf("Syntax Error: FOR %s, illegal variable type.\n",buf);
+       xberror(32,buf); /* Syntax error */
+       free(buf);
        return;
      }
    } else {
-     xberror(32,w2); /* Syntax error */
-     free(w1);
+     xberror(32,buf); /* Syntax error */
+     free(buf);
      return;
    }
-   if(w3[0]=='T' && w3[1]=='O' && w3[2]==' ') {ss=1;  w2=w3+3;} 
-   else if(!strncmp(w3,"DOWNTO ",7))          {ss=-1; w2=w3+7;}
-   else {
-     xberror(32,w3); /* Syntax error */
-     free(w1);
-     return;
-   }
+   
+   if(!to_or_downto)    {ss=1;  w2=w1+3;} /* TO */ 
+   else                 {ss=-1; w2=w1+7;} /* DOWNTO */
 
    // printf("w2 zeigt auf: <%s>\n",w2);
 
@@ -2430,7 +2443,7 @@ static void c_next(PARAMETER *plist,int e) {
      if(!w3) { /* Hinter Ausdruck kommt nix mehr oder Ausdruck war leer*/
        if(!(*w2)) { /* Ausdruck war leer */
          xberror(32,w2); /* Syntax error */
-         free(w1);
+         free(buf);
          return;
        }
        step=1;
@@ -2468,17 +2481,33 @@ static void c_next(PARAMETER *plist,int e) {
    } 
    if(f)  pc=hpc;          /* Schleifenende, gehe hinter NEXT */
    else pc++;
-   free(w1);
+   free(buf);
 }
 static void c_for(const char *n) {
   /* erledigt nur die erste Zuweisung  */
   char *buf=strdup(n);
-  char *w1,*w2;
+  char *w1=buf;
+// printf("c_for: <%s>\n",n);
 
-  wort_sep_destroy(buf,' ',TRUE,&w1,&w2);
-  if((w2=searchchr(w1,'='))!=NULL) {
-    *w2++=0;
-    xzuweis(w1,w2);
+  for(;;) {
+    w1=find_next_word(w1,' ',TRUE);
+    if(!w1 || !(*w1)) { /* Hinter Ausdruck kommt nix mehr oder Ausdruck war leer*/
+      xberror(32,buf); /* Syntax error */
+      free(buf);
+      return;
+    }
+    // printf("w1 zeigt auf: <%s>\n",w1);
+    if((w1[0]=='T' && w1[1]=='O' && w1[2]==' ') || !strncmp(w1,"DOWNTO ",7)) {
+      break;
+    } else { /* Kein TO oder DOWNTO, also gehört das noch zu dem Ausdruck davor*/
+       *(w1-1)=' ';
+    }
+  }
+    
+  if((w1=searchchr(buf,'='))!=NULL) {
+    *w1++=0;
+    // printf("Zuweisung <%s> <%s>\n",buf,w1);
+    xzuweis(buf,w1);
   } else xberror(32,n); /* Syntax error */
   free(buf);
 }

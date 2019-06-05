@@ -2042,7 +2042,9 @@ Hier ist also noch ziemlicher Bahnhof ! */
       continue;
     case P_FOR: {
       char w1[strlen(pcode[i].argument)+1],w2[strlen(pcode[i].argument)+1];
-      wort_sep(pcode[i].argument,' ',TRUE,w1,w2);
+      int e=wort_sep2(pcode[i].argument," TO ",TRUE,w1,w2);
+      if(e<2) e=wort_sep2(pcode[i].argument," DOWNTO ",TRUE,w1,w2);
+      if(e<2) printf("Syntax Error in line %d ! FOR %s\n",i,pcode[i].argument); 
       wort_sep(w1,'=',TRUE,w1,w2);
       if(verbose>1) printf(" FOR ");
       bc_zuweisung(w1,w2);
@@ -2059,22 +2061,25 @@ Hier ist also noch ziemlicher Bahnhof ! */
         char *var=malloc(strlen(w1)+1); 
         char *step=malloc(strlen(w1)+1); 
         char *limit=malloc(strlen(w1)+1); 
-        wort_sep(w1,' ',TRUE,w2,w3);
+	int ss=0;
+        int e=wort_sep2(w1," TO ",TRUE,w2,w3);
+	if(e>=2) ss=0;
+	else {
+	  e=wort_sep2(w1," DOWNTO ",TRUE,w2,w3);
+	  if(e>=2) ss=1;
+          else printf("Syntax Error ! FOR/NEXT\n");
+	}
         /* Variable bestimmem */
         if(searchchr2(w2,'=')!=NULL) {
           wort_sep(w2,'=',TRUE,var,w1);
-        } else printf("Syntax Error ! FOR %s\n",w2); 
+        } else printf("Syntax Error in line %d ! FOR/NEXT %s\n",i,w2); 
 	// printf("Variable ist: %s Zuweisungsausdruck <%s>\n",var,w1);
-        wort_sep(w3,' ',TRUE,w1,w2);
-	int ss=0,st=0;
-   
-        if(!strcmp(w1,"TO"))          ss=0; 
-        else if(!strcmp(w1,"DOWNTO")) ss=1; 
-        else printf("Syntax Error ! FOR %s\n",w1);
+	
+	int st=0; 
 
         /* Limit bestimmem  */
-        int e=wort_sep2(w2," STEP ",TRUE,limit,step);
-        if(e==0) printf("Syntax Error ! FOR %s\n",w2);
+        e=wort_sep2(w3," STEP ",TRUE,limit,step);
+        if(e==0) printf("Syntax Error ! FOR %s\n",w3);
         else {
           if(e==1) {
 	   // printf("limit=<%s> step=NONE\n",limit); /* Kein Step */
