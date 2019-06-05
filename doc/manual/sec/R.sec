@@ -80,10 +80,7 @@ COMMENT:
 
 COMMENT: 
 	WINDOWS operating systems uses a 15 bit random generator only and 
-	linux flavours a 31 bit random generator. That means, one out of 
-	32768 random values will be equal to the argument of the random 
-	function on WINDOWS and only one out of 2147483648 on 
-	linux (and Android).
+	linux flavours a 31 bit random generator. 
 
 EXAMPLE:
         PRINT RANDOM(10)    !   Result: 8
@@ -477,12 +474,6 @@ DESCRIPTION:
 COMMENT:
 	On WINDOWS operating systems, the granularity of the RND() function 
 	is only 15 bit.
-
-COMMENT: 
-	WINDOWS operating systems uses a 15 bit random generator only and 
-	linux flavours a 31 bit random generator. That means, one out of 
-	32768 random values will be equal to 1 on WINDOWS and 
-	only one out of 2147483648 on linux (and Android).
 
 
 

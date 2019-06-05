@@ -312,12 +312,12 @@ static PARAMETER f_random(PARAMETER *plist,int e) {
   pret.typ=plist->typ;
   switch(pret.typ) {
   case PL_INT: 
-    pret.integer=(int)((double)rand()/RAND_MAX*((double)plist->integer));
+    pret.integer=(int)((double)rand()/((double)RAND_MAX+1)*((double)plist->integer));
     break;
   case PL_COMPLEX:
-    pret.imag=(double)rand()/RAND_MAX*plist->imag;
+    pret.imag=(double)rand()/((double)RAND_MAX+1)*plist->imag;
   case PL_FLOAT:
-    pret.real=(double)rand()/RAND_MAX*plist->real;
+    pret.real=(double)rand()/((double)RAND_MAX+1)*plist->real;
     break;
   case PL_ARBINT:
     if(!randstate_isinit) {
@@ -780,7 +780,7 @@ static int f_point(double v1, double v2) {return(get_point((int)v1,(int)v2));}
 #endif
 static double f_rad(double d)   {return(d*PI/180);}
 static int    f_realloc(int adr,int size) {return(POINTER2INT(realloc((char *)INT2POINTER(adr),(size_t)size)));}
-static double f_rnd(double d)   {return((double)rand()/RAND_MAX);}
+static double f_rnd(double d)   {return((double)rand()/((double)RAND_MAX+1));}
 
 static int    f_size(STRING n)  {return(stat_size(n.pointer)); }
 static int    f_sgn(double b)   {return(sgn(b));}
