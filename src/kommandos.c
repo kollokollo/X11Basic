@@ -334,21 +334,22 @@ static void c_while(PARAMETER *plist, int e) {
 }
 
 void c_gosub(const char *n) {
-  char *buffer,*pos,*pos2;
+  char *pos2;
   int pc2;
    
-  buffer=indirekt2(n);
-  pos=searchchr(buffer,'(');
-    if(pos!=NULL) {
-      pos[0]=0;pos++;
-      pos2=pos+strlen(pos)-1;
-      if(pos2[0]!=')') {
-	xberror(32,n); /* Syntax error */
-	free(buffer);
-	return;
-      }	
-      else pos2[0]=0;
-    } else pos=buffer+strlen(buffer);
+  char *buffer=indirekt2(n);
+  char *pos=searchchr(buffer,'(');
+    
+  if(pos!=NULL) {
+    pos[0]=0;pos++;
+    pos2=pos+strlen(pos)-1;
+    if(pos2[0]!=')') {
+      xberror(32,n); /* Syntax error */
+      free(buffer);
+      return;
+    } 
+    else pos2[0]=0;
+  } else pos=buffer+strlen(buffer);
     
     pc2=procnr(buffer,1);
     if(pc2==-1)   xberror(19,buffer); /* Procedure nicht gefunden */
@@ -366,7 +367,7 @@ void c_gosub(const char *n) {
 	  }
 	}
     }
-    free(buffer);
+  free(buffer);
 }
 /* Spawn soll eine Routine als separaten thread ausfuehren.
    Derzeit klappt as nur als separater Task. Das bedeutet, dass 

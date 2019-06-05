@@ -24,27 +24,6 @@
 #include "number.h"
 
 
-/*Fuellt die Struktur PARAMETER ausgehend von ASCII w1 und solltyp.
-  Hierbei nur Vorbereitung, also keine Parseraufrufe (bei Auswertung der
-  Index-Liste). Es treten nur Variablen und Array-indizies als Variablen
-  auf. Es werden nur gefuellt:
-  p->typ --> Variablentyp
-  p->pointer=Null, da vaiableninhalt sich noch aendern koennte
-  p->integer --> vnr
-  p->panzahl
-  p->ppointer
-  
-  
-  Solltyp ist PL_xVAR, kann auch gemacht werden aus
-  (PL_VARGROUP|type), type aus vartype
-  
-  
-  Rückgabe: 
-   >=0 -- alles OK
-  -1 -- Nicht gefunden.
-  
-  
-  */
   
 static int fit_solltyp(int typ, int solltyp) {
   switch(solltyp) {
@@ -93,9 +72,31 @@ static int fit_solltyp(int typ, int solltyp) {
   return(0);
 }
  
- 
+ /*Fuellt die Struktur PARAMETER ausgehend von ASCII w1 und solltyp.
+  Hierbei nur Vorbereitung, also keine Parseraufrufe (bei Auswertung der
+  Index-Liste). Es treten nur Variablen und Array-indizies als Variablen
+  auf. Es werden nur gefuellt:
+  p->typ --> Variablentyp
+  p->pointer=Null, da vaiableninhalt sich noch aendern koennte
+  p->integer --> vnr
+  p->panzahl
+  p->ppointer
+  
+  
+  Solltyp ist PL_xVAR, kann auch gemacht werden aus
+  (PL_VARGROUP|type), type aus vartype
+  
+  
+  Rückgabe: 
+   >=0 -- alles OK
+  -1 -- Nicht gefunden.
+  
+  
+  */
+
 
 int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
+  // printf("## prepare VVAR... <%s>\n",w1);
   char k1[strlen(w1)+1],k2[strlen(w1)+1];
   int typ=vartype(w1);
   int e=klammer_sep(w1,k1,k2);
@@ -118,6 +119,7 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
       p->typ=(PL_VARGROUP|typ);
     } 
   } else { /* Es sind indizies da. */
+    // printf("Es sind idicies da...\n");
     typ&=TYPMASK;
     if(fit_solltyp(typ,solltyp)) {
       char *r=varrumpf(w1);
@@ -129,7 +131,9 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
       p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
       /*hier die Indizies in einzelne zu evaluierende Ausdruecke
         separieren*/
+      //  printf("eintragen: k2=<%s>\n",k2);
       make_preparlist(p->ppointer,k2);
+      // dump_parameterlist(p,1);
     } 
   }
  // printf("----> vnr=%d\n",p->integer);
@@ -274,9 +278,9 @@ void dump_parameterlist(PARAMETER *p, int n) {
                         printf(" <array$(),%d,%s>\n",p[j].integer,variablen[p[j].integer].name); break;
         default:   printf("<typ=$%x %d %g %p>\n",p[j].typ,p[j].integer,p[j].real,(void *)p[j].pointer);
       }
-      if(p->panzahl>0 && (p[j].typ&PL_GROUPMASK)==PL_VARGROUP) {
-         printf("%d Index-Parameters:\n",p->panzahl);
-         if(p->ppointer) dump_parameterlist(p->ppointer,p->panzahl);
+      if(p[j].panzahl>0 && (p[j].typ&PL_GROUPMASK)==PL_VARGROUP) {
+         printf("%d Index-Parameters:\n",p[j].panzahl);
+         if(p[j].ppointer) dump_parameterlist(p[j].ppointer,p[j].panzahl);
       }
     }
   }
@@ -722,12 +726,14 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     if(ip==PL_LEER) break;  /* bei leerem Parameter: fertig */
     vnr=pret->integer=pin->integer;
     if(pin->pointer==NULL) {
+      /* in pret->pointer wird die ermittelte VARPTR übergeben, auch wenn indicies da sind. */
       if(pin->panzahl) {
         indexliste=malloc(pin->panzahl*sizeof(int));
 	get_indexliste(pin->ppointer,indexliste,pin->panzahl);
-         //  printf("Es sind %d indizien da.\n",pin->panzahl);
+        // printf("Es sind %d indizien da.\n",pin->panzahl);
       } else indexliste=NULL;
       pret->pointer=varptr_indexliste(&variablen[vnr],indexliste,pin->panzahl);
+      // printf("Ermittelte Adresse ist %p\n",pret->pointer);
       free(indexliste);
       if(pret->pointer==NULL) return(-1);
     } else pret->pointer=pin->pointer;

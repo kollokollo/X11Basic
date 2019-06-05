@@ -1665,17 +1665,30 @@ void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
   /* Jetzt Übergabe der Parameter an lokale variablen. Es ist hier essentiell, dass die
      Information, ob ein Parameter by reference übbergeben wird, 
      schon im Parameter enthalten ist.*/
+     
   if(anzpar) {
-    int i,vnr;
+    int vnr;
     int *l=procs[procnr].parameterliste;
-    for(i=0;i<anzpar;i++) {
-      vnr=(l[i]&(~V_BY_REFERENCE));
+    
+    // dump_parameterlist(plist,anzpar);
+    
+    
+    for(int i=0;i<anzpar;i++) {
+      vnr=(l[i]&(~V_BY_REFERENCE)); /* vnr der lokalen variable, auf die Zugewiesen werden soll.*/
+      // printf("par[%d]: Ziel-vnr=%d\n",i,vnr);
       if((l[i]&V_BY_REFERENCE)==V_BY_REFERENCE) {
-        void *pointer=variablen[plist[i].integer].pointer.i; /*Pointer der zugewiesenen var merken*/
+        /* VARPTR sollte schon in PARAMETER eingetragen sein.*/
+        // printf("Wir haben schon folgende adresse: %p\n",plist[i].pointer);
+        void *pointer=plist[i].pointer;    /*  Pointer der zugewiesenen var merken */
+        if(!pointer) {
+	  printf("ERROR: Something is wrong in call_sub_with_parameterlist.\n");
+          pointer=variablen[plist[i].integer].pointer.i; /*  mehme pointer der zugewiesenen var */
+        }
         sp++;
         do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
         /*lokale variable wird nun statisch mit referenz zur Uebergabvar*/
         set_var_adr(vnr,pointer);
+	// printf("VAR: Variablen-adr gesetzt auf: adr=0x%p\n",pointer);
         sp--;
       } else {
         sp++;

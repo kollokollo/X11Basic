@@ -830,9 +830,9 @@ int init_program(int prglen) {
       if(*(pcode[i].argument)=='&') pcode[i].integer=-1;  // TODO
       else {
         char buf[strlen(pcode[i].argument)+1];
-	char *pos,*pos2;
+	char *pos2;
         strcpy(buf,pcode[i].argument);
-        pos=searchchr(buf,'(');
+        char *pos=searchchr(buf,'(');
         if(pos!=NULL) {
           *pos=0;pos++;
           pos2=pos+strlen(pos)-1;
@@ -926,17 +926,17 @@ void free_pcode(int l) {
 }
 
 
-/*Bereitet die Variablenliste einer Procedur oder Funktion vor*/
+/* Bereitet die Variablenliste einer Procedur oder Funktion vor */
 
 static int make_varliste(char *argument, int *l,int n) {
   char arg[strlen(argument)+1];
   char *w1,*w2;
-  int i=0,e;
+  int i=0;
   char *r;
   int typ,subtyp,vnr;
   int flag;
   strcpy(arg,argument);
-  e=wort_sep_destroy(arg,',',TRUE,&w1,&w2);
+  int e=wort_sep_destroy(arg,',',TRUE,&w1,&w2);
   while(e && i<n) {
     if(w1[0]=='V' && w1[1]=='A' && w1[2]=='R' && w1[3]==' ') {
       w1+=4;
@@ -948,7 +948,7 @@ static int make_varliste(char *argument, int *l,int n) {
       subtyp=typ&(~ARRAYTYP);
       typ=ARRAYTYP;
     } else subtyp=0;
-    
+    // printf("  r=<%s> typ=%x subtyp=%x\n",r,typ,subtyp);
     l[i++]=vnr=(add_variable(r,typ,subtyp,V_DYNAMIC,NULL) | flag*V_BY_REFERENCE);
     free(r);
     e=wort_sep_destroy(w2,',',TRUE,&w1,&w2);
@@ -1240,7 +1240,6 @@ void programmlauf(){
   	  PARAMETER *plist;
 	  int e=make_pliste3(pcode[opc].panzahl,pcode[opc].panzahl,ptypliste,
              pcode[opc].ppointer,&plist,pcode[opc].panzahl);
-
 	  if(e>=0) call_sub_with_parameterlist(pcode[opc].integer,plist,pcode[opc].panzahl);
           free_pliste(e,plist);
         }
