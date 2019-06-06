@@ -1,13 +1,14 @@
 # Ideas for future releases of X11-Basic
 
-
 ## System Variables
 
-DATAPOINTER oder _DATA mit Restoremöglichkeit
+* DATAPOINTER or _DATA should point to the memory area where the data is 
+located. Also a possibility for RESTORE with these addresses 
+would be fine.
 
-ISDIR(d$)  --> STAT ?  --> geht mit user-funktion...
-
-
+* ISDIR(d$)  --> STAT ?  The ISDIR() function should find out if the given path
+points to a directory or a regular file. It is redundant, since the same can 
+be found out with the STAT function.
 
 ## Text console
 
@@ -26,19 +27,15 @@ Action:    Enables the insertion of a character string during program
 	   If n is ommitted or n > len(prompt$), the last charackter of 
 	   prompt$ is used as a mask for positions > len(prompt$).
 	   
-	   Soll auch nach PRINT AT() funktionieren!
-	   evtl. promt$ weglassen!
-
-
-
+Soll auch nach PRINT AT() funktionieren! Dann evtl. promt$ weglassen!
 
 ## SDL Graphics
 
 * Use TTF fonts (this is a complicated task...)
-* GPRINT Routinen zu voller VT100 Emulation mit standard-GEM-Font ausweiten. (einschließlich cursor). Die Routinen koennen von TTconsole genommen werden. (teilw. erledigt)
-* 16 mögliche Fenster, USEWINDOW, --> SETWINDOW num,mode
+* GPRINT routines should be extendet to a full VT100 emulation. 
+(including a cursor). 
+* implement 16 possible windows, USEWINDOW, --> SETWINDOW num,mode
 * Was tun mit SCREEN und ROOTWINDOW? SAVESCREEN/SAVEWINDOW?
-
 
 ## Sound
 
@@ -47,7 +44,7 @@ Action:    Enables the insertion of a character string during program
 
 ## Bluetooth
 
-FSFIRST$() and FSNEXT$() can be used to scan for bluetooth devices. (done)
+* FSFIRST$() and FSNEXT$() can be used to scan for bluetooth devices. (done)
 
 with OPEN "UB" you can open a RFCOMM connection
 with OPEN "UP" cou can open a L2CAP connection.
@@ -62,14 +59,15 @@ much the same as you would do it with normal internet connections.
 ## encryption
 
 The enhancements and new ideas concerning cryptography must be held separately 
-from the master branch, because the can cause problems on US export limitations
+from the master branch, because they can cause problems on US export limitations
 on sourceforge (I think)...
 
     err=KEYGEN(typ%,pubkey$,privkey$)
     
 
-# Incompatible Aenderungen:
+# Incompatible changes:
 
-* xbasic und xbasic.exe umbenennen in x11basic und x11basic.exe
+* rename X11-Basic, make the name of the excecutables more unique. 
+xbasic und xbasic.exe umbenennen in x11basic und x11basic.exe
 (vielleicht mit einem link von xbasic)
 

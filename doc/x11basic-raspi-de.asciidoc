@@ -1,0 +1,74 @@
+= X11-BASIC auf dem Raspberry Pi
+Christopher Ladwig
+2018-06-20
+:docversion: 1
+:docyear: 2018
+:homepage:
+:toc:
+:sectnums:
+
+Für die, die noch lernen...
+
+
+
+Für den Raspberry Pi gibt es nun einen weiteren Basic-Interpreter.
+Neben Tinybasic (wir berichteten bereites im Oktober 2012 darüber), 
+scheint nun auch das (nicht ganz so betagte) X11-Basic eine Nutzerschaft 
+auf derm Raspberry Pi anzuziehen. 
+
+X11-Basic soll die Lernkurve bei der Beschäftigung mit dem Raspberry Pi, 
+der für die Lehre und für Hobbyprojekte entwickelten Minicomputer-Platine,  
+stark ansteigen lassen. 
+
+Der gut durchdachte und leicht zu erlernende Dialekt der 1964 entstandenen 
+Programmiersprache BASIC soll es insbesondere Programmier-Anfängern und 
+Raspberry-Einsteigern ermöglichen, ihre Bastelprojekte schnell zum Leben zu
+erwecken.
+
+Insbesondere spricht eine an die Programmiertechniken der 80er und 90er Jahre
+des letzten Jahrhunderts angelehnte Sprache die Eltern an, welche in Ihrer
+Jugend mit C64 und ATARI ST aufgewachsen sind, und ihrerseits erste Schritte im
+Programmieren mit damals weit verbreiteten BASIC-Varianten gemacht haben. 
+
+Eine Installationsanleitung und erste Tipps für den Einstieg ist kürzlich auf
+dem  größten deutschen Raspberry-Pi Forum erschienen, welches von Philipp
+Seidel betrieben wird.
+
+Dort (https://forum-raspberrypi.de/forum/thread/39384-bas-ein-kleines-x11-basic-tutorial/)
+heißt es unter anderem: 
+
+----
+Und was soll ich sagen, BASIC ist noch nicht tot. Es gibt sogar (mindestens) 
+eine Version auch für den Raspberry Pi. Ich habe mich für X11-Basic 
+entschieden, da ich früher mal in GFA-BASIC programmiert hatte. 
+Und X11-Basic kommt dem GFA-Basic recht nahe. 
+----
+
+X11-Basic weicht insofern von den Urvätern des BASIC ab, als es keine 
+Zeilennummern gibt. Der berühmte GOTO Befehl, der angeblich zu Spagetti-Code
+führt, ist jedoch noch immer möglich, wenn auch nicht mehr nötig, da 
+PASCAL-artige Strukturkommandos existieren, welche übersichtliche Blöcke 
+formen. 
+
+Eine Entwicklung, welche in den 90-Jahren einsetzte und schließlich zu
+Objekt-orientierten Programmiersprachen führte. X11-Baisic is aber
+ausdrücklich nicht Objekt-orientiert und eigent sich deshalb gut als Einstieg
+in eine zunächst prozedurale Denkweise, die nach Meinung einiger 
+Wissenschaftler leichter zu verinnerlichen ist.
+
+X11-Basic für den Raspberry Pi umfaßt einen Interpreter und einen Compiler.
+Programme jönnen mit jedem üblichen Text-Editor erstellt werden. 
+Es gibt eine umfangreiche Beispielesammlung, 
+ein Benutzerhandbuch auch auf deutsch sowie diverse Tutorien im Internet. 
+X11-Basic gibt es zudem auch für Android, WINDOWS und GNU/Linux. 
+
+Entwickelt hat X11-Basic Markus Hoffmann, inspiriert wurde er dabei von
+GFA-BASIC auf dem ATARI ST, welches in den 80er Jahren sehr erfolgreich in
+Deutschland war, und nicht wenigen ehemaligen Schülern und Hobby-Programmierern
+den Sprung in die Computerwissenschaft ermöglicht hatte. 
+
+Zumindest gibt es mit X11-Basic nun eine weitere einsteigergeeignete
+Programmiersprache, die die reichliche Vielfalt und Popularität der Raspberry
+Pi Familie zuhause  und im Schuluntericht erweitern dürfte.
+
+(X)

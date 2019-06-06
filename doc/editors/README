@@ -1,3 +1,16 @@
+This readmy provides information about syntax highlighting 
+for X11-Basic for following different editors:
+
+nedit           -- The Nirvana Editor (linux, WINDOWS)
+920 Text Editor -- (Android)
+vim             -- (linux, UNIX)
+gedit / geany   -- (linux)       
+nano            -- (linux)
+
+For the text console I recommend to use nano, otherwise nedit, however
+if you need UTF-8 support you may want to use gedit (and nano).
+
+-----------------------------------------------------------------------------
 nedit.defs:
 
 This is a macro package for nedit -- the Nirvana editor.

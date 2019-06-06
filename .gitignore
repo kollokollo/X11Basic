@@ -7,8 +7,11 @@ config.log
 config.status
 src/*.a
 src/*.lib
+src/*.toslib
 src/autom4te.cache
 src/*.exe
+src/*.ttp
+src/*.prg
 src/x11basic.eps
 src/x11basic.svg
 src/xb2c.static
@@ -34,6 +37,7 @@ xbasic
 xbbc
 xbc
 xbvm
+doc/manual/Outputs/
 doc/manual/X11-Basic-manual.pdf
 doc/manual/X11-Basic-manual.txt
 doc/manual/alert1.eps

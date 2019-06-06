@@ -48,7 +48,7 @@ A: Yes, start xbasic with the option -daemon .
 
 Q: Can X11-Basic generate stand-alone programs, which may run 
    without the xbasic executable ?
-A: Yes. This is done by the X11-Basic compiler.
+A: Yes. This is done by the X11-Basic compiler (xbc).
    
 Q: May I charge for my X11-Basic programs ?
 A: Yes, you may. But you should state clearly, that xbasic itself is available 
@@ -61,11 +61,14 @@ A: Probably at
 
 Q: What can I do to speed up the development of X11-Basic?
 A: You can try to bribe me with any amount of money, any type of hardware or
-   software (no pirated stuff please).
+   software (no pirated stuff please). Well cidding...
    A nice postcard might suffice too. :-)
-   If you like to implement some new features and/or commands to x11basic,
-   please send me your new sources with description. But I only will implement
-   this stuff if I like it .-)
+   You can contribute to the official development of X11-Basic on gitlab 
+   or github. Please visit the project pages here:
+   Android Version:  https://gitlab.com/kollo/X11-Basic
+   Example Programs: https://gitlab.com/kollo/X11-Basic_examples
+   Main Repository:  https://gitlab.com/kollo/X11Basic
+   And on github:    https://github.com/kollokollo/X11Basic
 
 --------------------------------------------------------------------------------
 
