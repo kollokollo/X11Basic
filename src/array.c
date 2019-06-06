@@ -221,7 +221,7 @@ ARRAY create_array(const unsigned short typ, const uint32_t dimension, const uin
     
     */
 
-ARRAY recreate_array(const int typ, const int dimension, const int *dimlist, const ARRAY *uarr) {
+ARRAY recreate_array(const int typ, const int dimension, const uint32_t *dimlist, const ARRAY *uarr) {
   if(uarr==NULL) return(create_array(typ, dimension, dimlist));
   if(typ!=uarr->typ) xberror(13,"");  /* Type mismatch */
   ARRAY ergebnis;

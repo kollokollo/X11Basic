@@ -814,7 +814,7 @@ static int make_UDP_socket(unsigned short int port) {
   int sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
   if(sock<0) return(-1);
   int broadcastEnable=1;
-  int ret=setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
+  if(setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable))<0) ; /* ignore error */
   memset((void*)&name, 0, sizeof(name));
   name.sin_family=AF_INET;
   name.sin_addr.s_addr=INADDR_ANY;

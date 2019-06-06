@@ -1350,7 +1350,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
   if(*s==0) { 
     xberror(51,funktion);
     e=0;
-    return(nullmatrix(FLOATTYP,0,&e));
+    return(nullmatrix(FLOATTYP,0,(uint32_t *)&e));
   }
   if(wort_sep(s,'+',3,w1,w2)>1) {
     if(strlen(w1)) {
@@ -1495,7 +1495,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
 	     } else {
 	       xberror(15,s);  /* Feld nicht dimensioniert  */
 	       e=1;
-  	       ergebnis=einheitsmatrix(FLOATTYP,1,&e);
+  	       ergebnis=einheitsmatrix(FLOATTYP,1,(uint32_t *)&e);
 	     }
 	   }
 	   free(r);
@@ -1506,7 +1506,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
   }
   /* Offenbar war der String leer oder so */
   e=0;
-  return(nullmatrix(FLOATTYP,0,&e));
+  return(nullmatrix(FLOATTYP,0,(uint32_t *)&e));
 }
 
 

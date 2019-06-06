@@ -8,7 +8,7 @@
 
 
 ARRAY create_array(const unsigned short , const uint32_t ,const uint32_t *);
-ARRAY recreate_array(const int , const int ,const int *, const ARRAY *);
+ARRAY recreate_array(const int , const int ,const uint32_t *, const ARRAY *);
 ARRAY create_int_array(const uint32_t dimension,const uint32_t *dimlist,const int value);
 ARRAY create_float_array(const uint32_t dimension, const uint32_t *dimlist,const double value);
 ARRAY create_string_array(const uint32_t dimension, const uint32_t *dimlist,const STRING *value);
@@ -81,7 +81,7 @@ static inline int do_dimension(const VARIABLE *v) {  /* liefert Anzahl der Eleme
 }
 
 
-static inline ARRAY nullmatrix(const int typ, const int dimension, const int *dimlist) {
+static inline ARRAY nullmatrix(const int typ, const int dimension, const uint32_t *dimlist) {
   ARRAY ergebnis;
   if(typ & INTTYP)        ergebnis=create_int_array(dimension,dimlist,0);
   else if(typ & FLOATTYP) ergebnis=create_float_array(dimension,dimlist,0);

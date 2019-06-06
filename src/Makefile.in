@@ -1,5 +1,4 @@
 # Makefile for X11-Basic (c) Markus Hoffmann V.@version@
-# Version 04.01.2017 modified by Markus Hoffmann
 
 # This file is part of X11-Basic, the basic interpreter for Unix/X
 # ======================================================================
@@ -29,23 +28,23 @@ RELEASE=55
 
 
 # Register variables (-ffixed-reg) -Wall
-REGS= @regs@  
+REGS=@regs@  
 
 # Optimization and debugging options
 OPT=@copt@
 
 # Additional header file paths
-INC=@X_CFLAGS@ -I.
+INC=@X_CFLAGS@ 
 WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP
 TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # defines for special flavours
 
-DEF= @def@ 
+DEF=@def@ 
 
 # Compiler
 #CC=@CC@ @static@ $(REGS)
-CC=@CC@ 
+CC=@CC@ -Wall
 CCDEBUG=@CC@ -g 
 CCSHARED=@CC@  -fPIC -shared -Wl,-Bsymbolic-functions 
 
@@ -63,7 +62,7 @@ ARMCC=arm-linux-gcc
 # Preprocessor
 CPP=@CPP@
 
-CFLAGS= $(INC) $(DEF) $(OPT) $(REGS)
+CFLAGS= @CFLAGS@ $(INC) $(DEF) $(OPT) $(REGS)
 
 # these are the objects which go into libx11basic
 
@@ -360,7 +359,7 @@ DOOCSDIR=doocsxbasic-@version@
 DOOCSDIST=$(DIST) src/Extensions/doocs-wrapper.cc ../doc/doocs-xbasic.html \
                   ../doc/tine-xbasic.html examples2/DESY/*
 
-LINKFLAGS =
+LINKFLAGS = @LDFLAGS@
 WINLINKFLAGS = -L./WINDOWS/lib 
 
 LIBS =  @libs@ @xlibs@ @xtra@
@@ -400,7 +399,7 @@ libx11basic.so: libx11basic.so.$(LIBNO)
 	ln -s -f $< libx11basic.so.1
 	ln -s -f libx11basic.so.1 libx11basic.so
 libx11basic.so.$(LIBNO) : $(LIBCSRC) Makefile
-	$(CCSHARED) $(OPT) $(REGS) $(DEF)  -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) 
+	$(CCSHARED) $(LINKFLAGS) $(CFLAGS) -Wl,-soname,$@ -o $@ $(LIBCSRC) $(LIBS) 
 	strip $@
 
 # Make the (static) library
@@ -423,7 +422,7 @@ xbc : xbasic libx11basic.so examples/compiler/xbc.bas
 # Make the bytecode compiler xbbc
 
 xbbc : bytecode.h bytecode.o xbbc.o
-	$(CC) -o $@ xbbc.o bytecode.o  -L . $(LIBS) -lx11basic 
+	$(CC) -o $@ xbbc.o bytecode.o  -L . $(LINKFLAGS) $(LIBS) -lx11basic 
 	strip $@
 xbbc.static : xbbc.o bytecode.o x11basic.a
 	$(CC) -o $@ xbbc.o bytecode.o x11basic.a $(LIBS)		
@@ -434,7 +433,7 @@ xbbc.debug : xbbc.c bytecode.c $(LIBCSRC)
 # Make the virtual machine for interpreting the bytecode
 
 xbvm : bytecode.h xbvm.c 
-	$(CC) -o $@ xbvm.c  -L . $(LIBS)  -lx11basic 
+	$(CC) -o $@ xbvm.c  -L . $(LINKFLAGS) $(LIBS)  -lx11basic 
 	strip $@
 xbvm.static : xbvm.o x11basic.a
 	$(CC) -o $@ xbvm.o x11basic.a $(LIBS)
@@ -525,7 +524,7 @@ fb: fbxbasic
 fbxbasic: xbasic.framebuffer
 	cp xbasic.framebuffer $@
 xbasic.framebuffer : main.c $(LIBCSRCFB)
-	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRCFB) $(LINKFLAGS)  $(LIBS1) 
+	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRCFB)  $(LIBS1) 
 	strip $@
 
 # Make a version of X11-basic which is statically linked to libx11basic and 

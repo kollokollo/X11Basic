@@ -501,7 +501,7 @@ static void dodim(const char *w) {
   else {
     char *s,*t;
     int ndim=count_parameters(w2);
-    int dimlist[ndim];
+    uint32_t dimlist[ndim];
     int i,vnr,typ;
     char *r=varrumpf(w1);
     typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */

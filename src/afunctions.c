@@ -80,11 +80,11 @@ static ARRAY f_smula(PARAMETER *plist, int e) {
   return(ergeb);
 }
 static ARRAY f_nullmat(PARAMETER *plist, int e) {
-    int dimlist[2]={plist[0].integer,plist[1].integer};
+    uint32_t dimlist[2]={plist[0].integer,plist[1].integer};
     return(nullmatrix(FLOATTYP,e,dimlist));
 }
 static ARRAY f_einsmat(PARAMETER *plist, int e) {
-    int dimlist[2]={plist[0].integer,plist[0].integer};
+    uint32_t dimlist[2]={plist[0].integer,plist[0].integer};
     return(einheitsmatrix(FLOATTYP,2,dimlist));
 }
 
