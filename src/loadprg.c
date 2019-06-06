@@ -31,9 +31,13 @@ int anzprocs=0;
 
 
 
+/* Load BASIC program from file into memory 
+ * Return value: 0 -- everything OK
+ *               <0 -- ERRORs detected
+ *               >0 -- WARNINGS detected
+ */
 
-
-void loadprg(const char *filename) {
+int loadprg(const char *filename) {
 #ifndef DUMMY_LIST
   batch=0;   /* Stoppen */
   pc=0;
@@ -41,5 +45,5 @@ void loadprg(const char *filename) {
   clear_program();  /*Stack und databuffer aufräumen, locals, variablen, labels, procs loeschen, */
   free_pcode(prglen);  /*pcode aufraeumen*/
   programbufferlen=prglen=0;
-  mergeprg(filename);
+  return(mergeprg(filename));
 }

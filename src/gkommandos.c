@@ -2263,8 +2263,7 @@ static int do_xload(char *n) {
     if(exist(name)) {
       if(name[strlen(name)-1]!='/') {
         programbufferlen=0;
-        mergeprg(name);
-        ret=1;
+        ret=mergeprg(name);
       } else ret=-2;
     } else {
       xberror(-33,name); /* file not found*/
@@ -2278,6 +2277,6 @@ void c_xload(char *n) {
   do_xload(n);
 }
 void c_xrun(char *n) {
-  if(do_xload(n)==1) do_run();
+  if(!do_xload(n)) do_run();
 }
 #endif /* NOGRAPHICS */

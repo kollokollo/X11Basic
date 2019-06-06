@@ -304,8 +304,11 @@ int main(int anzahl, char *argumente[]) {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
-        loadprg(ifilename);
-	if(runfile) do_run();
+        int prgerrors=loadprg(ifilename);
+	if(prgerrors) {
+	  printf("Errors detected in %s. Can not run.\n",ifilename);
+	}
+	if(!prgerrors && runfile) do_run();
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }

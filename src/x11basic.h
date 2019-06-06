@@ -267,7 +267,7 @@ void reset_input_mode();
 void x11basicStartup();
 
 void kommando(char *);   /* This is for single command execution: */
-void loadprg(const char *);
+int loadprg(const char *);
 int mergeprg(const char *fname);
 
 void programmlauf();

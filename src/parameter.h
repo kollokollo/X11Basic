@@ -232,34 +232,17 @@ inline static void cast_to_x(PARAMETER *sp,unsigned int x) {
 
 
 
-static inline void eval2par(char *n, PARAMETER *pret) {
-  int typ=type(n)&(~CONSTTYP);
-  pret->typ=(PL_CONSTGROUP|typ);
-  switch(typ&TYPMASK) {
-  case INTTYP:
-    pret->integer=(int)parser(n);
-    break;
-  case FLOATTYP:
-    pret->real=parser(n);
-    break;
-  case COMPLEXTYP:
-    *(COMPLEX *)&(pret->real)=complex_parser(n);
-    break;
-  case ARBINTTYP: 
-    pret->pointer=malloc(sizeof(ARBINT));
-    mpz_init(*((ARBINT *)pret->pointer));
-    arbint_parser(n,*((ARBINT *)pret->pointer));
-    break;
-  case STRINGTYP: 
-    *(STRING *)(&pret->integer)=string_parser(n);
-    break;
-  default:   /*heben wir uns für spaeter auf...*/
-    pret->typ=PL_EVAL;
-    *((STRING *)&(pret->integer))=create_string(n);
-    pret->arraytyp=typ;
-  }
-}
-static inline void eval2partype(char *n, PARAMETER *pret,int typ) {
+
+/* Evaluate generic Expression and fill PARAMETER accordingly.
+ * typ of the expression is already known and given. (faster)
+ * It is expected, that pret is fresh (no pointers already in use).
+ * In case of an error, pred will be unchanged.
+ * Return value: 
+ * 0 -- OK, 
+ * -1 -- ERROR 
+ */
+
+static inline int eval2partype(char *n, PARAMETER *pret,int typ) {
   typ&=(~CONSTTYP);
   if((typ&FILENRTYP)==FILENRTYP) typ=INTTYP;
   pret->typ=(PL_CONSTGROUP|typ);
@@ -286,54 +269,73 @@ static inline void eval2partype(char *n, PARAMETER *pret,int typ) {
     *((STRING *)&(pret->integer))=create_string(n);
     pret->arraytyp=typ;
   }
+  return(0); /* no error */
 }
-static inline void eval2parnum(char *n, PARAMETER *pret) {
-  int typ=type(n)&(~CONSTTYP);
-  pret->typ=(PL_CONSTGROUP|typ);
-  switch(typ&TYPMASK) {
-  case INTTYP:
-    pret->integer=(int)parser(n);
-    break;
-  case FLOATTYP:
-    pret->real=parser(n);
-    break;
-  case COMPLEXTYP:
-    *(COMPLEX *)&(pret->real)=complex_parser(n);
-    break;
-  case ARBFLOATTYP: /*behandeln wir erstmal wie ARBINT*/
-    pret->typ=(PL_CONSTGROUP|ARBINTTYP);
-  case ARBINTTYP: 
-    pret->pointer=malloc(sizeof(ARBINT));
-    mpz_init(*((ARBINT *)pret->pointer));
-    arbint_parser(n,*((ARBINT *)pret->pointer));
-    break;
-  default: 
-    printf("Error: line %d eval2parnum: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
-  }
+
+/* Evaluate generic Expression and fill PARAMETER accordingly.
+ * The type of the expression will be determined (slow).
+ * It is expected, that pret is fresh (no pointers already in use).
+ * In case of an error, pred will be unchanged.
+ * Return value: 
+ * 0 -- OK, 
+ * -1 -- ERROR 
+ */
+
+static inline int eval2par(char *n, PARAMETER *pret) {
+  int typ=type(n);
+  return(eval2partype(n,pret,typ));
 }
-static inline void eval2parnumtype(char *n, PARAMETER *pret,int typ) {
+
+
+
+/* Evaluate numeric Expression and fill PARAMETER accordingly.
+ * typ of the expression is already known and given. (faster)
+ * It is expected, that pret is fresh (no pointers already in use).
+ * In case of an error, pred will be unchanged.
+ * Return value: 
+ * 0 -- OK, 
+ * -1 -- ERROR 
+ */
+
+static inline int eval2parnumtype(char *n, PARAMETER *pret,int typ) {
   typ&=(~CONSTTYP);
   pret->typ=(PL_CONSTGROUP|typ);
   switch(typ&TYPMASK) {
   case INTTYP:
     pret->integer=(int)parser(n);
-    break;
+    return(0);
   case FLOATTYP:
     pret->real=parser(n);
-    break;
+    return(0);
   case COMPLEXTYP:
     *(COMPLEX *)&(pret->real)=complex_parser(n);
-    break;
+    return(0);
   case ARBFLOATTYP: /*behandeln wir erstmal wie ARBINT*/
     pret->typ=(PL_CONSTGROUP|ARBINTTYP);
   case ARBINTTYP: 
     pret->pointer=malloc(sizeof(ARBINT));
     mpz_init(*((ARBINT *)pret->pointer));
     arbint_parser(n,*((ARBINT *)pret->pointer));
-    break;
+    return(0);
   default: 
-    printf("Error: line %d eval2parnumtype: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
+    // printf("ERROR at line %d: eval2parnumtype: parameter incompatibel in <%s>. typ=$%x\n",pc,n,typ);
+    return(-1);
   }
+}
+
+/* Evaluate numeric Expression and fill PARAMETER accordingly.
+ * The type of the expression will be determined (slow).
+ * It is expected, that pret is fresh (no pointers already in use).
+ * In case of an error, pred will be unchanged.
+ * Return value: 
+ * 0 -- OK, 
+ * -1 -- ERROR 
+ */
+
+
+static inline int eval2parnum(char *n, PARAMETER *pret) {
+  int typ=type(n);
+  return(eval2parnumtype(n,pret,typ));
 }
 /* Erstellt eine Liste mit Parametertypen aus parameterliste einer 
    Procedur. Es können normale Parameter (PL_CONSTGROUP) erzeugt werden 

@@ -24,6 +24,7 @@
 #if defined WINDOWS || defined ANDROID
 #define EX_CANTCREAT	73	/* can't create (user) output file */
 #define EX_NOINPUT	66	/* cannot open input */
+#define EX_DATAERR      65      /* data format error */
 #define EX_OK 0
 #else
 #include <sysexits.h>
@@ -242,8 +243,11 @@ int main(int anzahl, char *argumente[]) {
 	intro();
 	printf("<-- %s\n",ifilename);
 	#endif
-        loadprg(ifilename);
-
+        int prgerrors=loadprg(ifilename);
+        if(prgerrors) {
+          printf("%s: ERROR: program %s contains errors. Cannot compile.\n",argumente[0],ifilename);
+	  exit(EX_DATAERR);
+	}
     bcpc.pointer=malloc(MAX_CODE);
 #ifdef ATARI
     if(bcpc.pointer==NULL) {

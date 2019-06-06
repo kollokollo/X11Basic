@@ -455,12 +455,17 @@ void clear_program() {
 /*****************************************************
 
 Programmvorbereitung und precompilation
+Rückgabewert: 
+0 -- OK
+-1 -- Error, programm kann nicht ausgef�ührt werden
+>0 -- Warnings, aber man kann loslaufen.
 
 ******************************************************/
 
 int init_program(int prglen) {
   char *expr,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  
   int i,j,len,typ;
+  int return_value=0;
   clear_program();
   free_pcode(oldprglen);
 
@@ -552,6 +557,7 @@ int init_program(int prglen) {
 	  printf("WARNING at line %d: ==> Syntax error: DEFFN\n",original_line(i));
 	  pcode[i].argument=NULL;
 	  pcode[i].opcode|=P_INVALID;
+	  return_value|=1;
 	} else {
 	  *expr++=0;
 	  pcode[i].argument=strdup(expr);
@@ -561,8 +567,10 @@ int init_program(int prglen) {
       if(pos2 != NULL) {
           pos2[0]=0;pos2++;
           pos3=pos2+strlen(pos2)-1;
-          if(pos3[0]!=')') printf("WARNING at line %d: ==> Syntax error: parameter list\n",original_line(i));
-          else *pos3++=0;
+          if(pos3[0]!=')') {
+	    printf("WARNING at line %d: ==> Syntax error: parameter list\n",original_line(i));
+	    return_value|=1;
+          } else *pos3++=0;
       } else pos2=zeile+strlen(zeile);
       pcode[i].integer=add_proc(buffer,pos2,i,typ);
       continue;
@@ -653,30 +661,41 @@ int init_program(int prglen) {
 		pcode[i].integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
 		pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
 		pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
+		
                 /*hier die Indizies in einzelne zu evaluierende Ausdruecke
 		  separieren*/
-		  // printf("makepreparelist: <%s>\n",argument);
+		  
 		make_preparlist(pcode[i].ppointer,argument);
               } else {
   	        pcode[i].panzahl=0;
 	        pcode[i].ppointer=NULL;
 	        pcode[i].integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
 	      }
-	      if((typ&TYPMASK)!=(typ2&TYPMASK) && ((typ&TYPMASK)==STRINGTYP || (typ2&TYPMASK)==STRINGTYP))
+	      if((typ&TYPMASK)!=(typ2&TYPMASK) && ((typ&TYPMASK)==STRINGTYP || (typ2&TYPMASK)==STRINGTYP)) {
 	        printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
+		return_value|=1;
+              }
 	}
-	if(pcode[i].integer==-1) printf("ERROR at line %d: variable could not be created.\n",original_line(i));
+	if(pcode[i].integer==-1) {
+	  printf("ERROR at line %d: variable could not be created.\n",original_line(i));
+	  return_value|=-1;
+	}
 	free(r);
 	free(buf);
         /* Jetzt noch die rechte Seite behandeln....*/
         pcode[i].rvalue=calloc(1,sizeof(PARAMETER));
 	// printf("Rechte Seite <%s> typ=%x\n",pcode[i].argument,pcode[i].atyp);
-        make_parameter_stage2(pcode[i].argument,PL_CONSTGROUP|(pcode[i].atyp&BASETYPMASK),pcode[i].rvalue);
+        e=make_parameter_stage2(pcode[i].argument,PL_CONSTGROUP|(pcode[i].atyp&BASETYPMASK),pcode[i].rvalue);
+	if(e<0) {
+	  printf("make_parameter_stage2 failed. <%s>\n",pcode[i].argument);
+	  return_value|=-1;
+        }
         // dump_parameterlist(pcode[i].rvalue,1);
 	pcode[i].rvalue->panzahl=0;  /* Warum muss das noch initialisiert werden?*/
 	continue;
       }
       printf("WARNING at line %d: Syntax error: %s\n",original_line(i),buf);
+      return_value|=1;
       pcode[i].opcode=P_INVALID|P_NOCMD;
       pcode[i].panzahl=0;
       pcode[i].ppointer=NULL;
@@ -690,9 +709,13 @@ int init_program(int prglen) {
 
     if(comms[j].opcode==P_DATA) {
       printf("WARNING at line %d: Something is wrong. Data should have been treated already.\n",original_line(i));
-    } else if(comms[j].opcode==P_LOOP) {/*Zugehoeriges DO suchen */
+      return_value|=1;
+    } else if(comms[j].opcode==P_LOOP) {       /* Zugehoeriges DO suchen */
       pcode[i].integer=suchep(i-1,-1,P_DO,P_LOOP,P_DO);
-      if(pcode[i].integer==-1)  structure_warning(original_line(i),zeile); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==-1) {
+        structure_warning(original_line(i),zeile); /*Programmstruktur fehlerhaft */
+	return_value|=-1;
+      }
     } else if(comms[j].opcode==P_WEND) {/*Zugehoeriges WHILE suchen */
       pcode[i].integer=suchep(i-1,-1,P_WHILE,P_WEND,P_WHILE);
       if(pcode[i].integer==-1)  structure_warning(original_line(i),zeile); /*Programmstruktur fehlerhaft */
@@ -735,8 +758,10 @@ int init_program(int prglen) {
     } else if((pcode[i].opcode&PM_TYP)==P_PLISTE) {
       int ii;
       pcode[i].panzahl=ii=count_parameters(pcode[i].argument);
-      if((comms[j].pmin>ii && comms[j].pmin!=-1) || (comms[j].pmax<ii && comms[j].pmax!=-1))  
-     	     printf("WARNING at line %d: Wrong number of parameters: %s.\n",original_line(i),comms[j].name); /*Programmstruktur fehlerhaft */
+      if((comms[j].pmin>ii && comms[j].pmin!=-1) || (comms[j].pmax<ii && comms[j].pmax!=-1))  {
+        printf("WARNING at line %d: Wrong number of parameters: %s.\n",original_line(i),comms[j].name); /*Programmstruktur fehlerhaft */
+        return_value|=1;
+      }
       if(ii==0) pcode[i].ppointer=NULL;
     }
      	 /* Einige Befehle noch nachbearbeiten */
@@ -769,23 +794,38 @@ int init_program(int prglen) {
     switch(pcode[i].opcode&PM_SPECIAL) {
     case P_ELSE: /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning(original_line(i),"ELSE"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  {
+        structure_warning(original_line(i),"ELSE"); /*Programmstruktur fehlerhaft */
+        return_value|=-1;
+      }
       break;
     case P_ELSEIF: /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning(original_line(i),"ELSE IF"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0)  {
+        structure_warning(original_line(i),"ELSE IF"); /*Programmstruktur fehlerhaft */
+        return_value|=-1;
+      }
       break;
     case P_IF: /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  structure_warning(original_line(i),"IF"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0) {
+        structure_warning(original_line(i),"IF"); /*Programmstruktur fehlerhaft */
+        return_value|=-1;
+      }
       break;
     case P_WHILE: /* Suche WEND */
       pcode[i].integer=suchep(i+1,1,P_WEND,P_WHILE,P_WEND)+1;
-      if(pcode[i].integer==0)  structure_warning(original_line(i),"WHILE"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0) {
+        structure_warning(original_line(i),"WHILE"); /*Programmstruktur fehlerhaft */
+        return_value|=-1;
+      }
       break;
     case P_FOR: /* Suche NEXT */
       pcode[i].integer=suchep(i+1,1,P_NEXT,P_FOR,P_NEXT)+1;
-      if(pcode[i].integer==0)  structure_warning(original_line(i),"FOR"); /*Programmstruktur fehlerhaft */
+      if(pcode[i].integer==0) {
+        structure_warning(original_line(i),"FOR"); /*Programmstruktur fehlerhaft */
+        return_value|=-1;
+      }
       break;
     case P_SELECT:
     case P_CASE:
@@ -794,6 +834,7 @@ int init_program(int prglen) {
       int p1=pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
       if(p1<0) {
         structure_warning(original_line(i),"SELECT/ENDSELECT"); /*Programmstruktur fehlerhaft */
+	return_value|=-1;
       } else {
         int p2=pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT);
         int p3=pcode[i].integer=suchep(i+1,1,P_DEFAULT,P_SELECT,P_ENDSELECT);
@@ -818,6 +859,7 @@ int init_program(int prglen) {
         } else {
           structure_warning(original_line(i),"BREAK/EXIT IF"); /*Programmstruktur fehlerhaft */
           pcode[i].integer=-1;
+	  return_value|=-1;
         }
       } else {
         /* Ansonsten EXIT ohne Parameter wie BREAK behandeln */
@@ -839,6 +881,7 @@ int init_program(int prglen) {
           if(*pos2!=')') {
 	    printf("ERROR at line %d: Syntax error: GOSUB parameter list\n",original_line(i));
 	    structure_warning(original_line(i),"GOSUB"); /*Programmstruktur fehlerhaft */
+	    return_value|=-1;
           } else pos2[0]=0;
         } else pos=buf+strlen(buf);
         pcode[i].integer=procnr(buf,1);
@@ -852,12 +895,17 @@ int init_program(int prglen) {
 	    structure_warning(original_line(i),"GOSUB"); /*Programmstruktur fehlerhaft */
             pcode[i].opcode=P_INVALID|P_NOCMD;
             pcode[i].panzahl=0;
+	    return_value|=-1;
 	  }
           if(pcode[i].panzahl) {
             unsigned short ptypliste[pcode[i].panzahl];
 	    get_ptypliste(pcode[i].integer,ptypliste,pcode[i].panzahl);
-	    make_pliste2(procs[pcode[i].integer].anzpar,procs[pcode[i].integer].anzpar,
+	    int e=make_pliste2(procs[pcode[i].integer].anzpar,procs[pcode[i].integer].anzpar,
 	        ptypliste,pos,&(pcode[i].ppointer),pcode[i].panzahl);
+	    if(e<0) {
+	      printf("ERROR at line %d: Parameterliste konnte nicht vorbereitet werden.\n",original_line(i));
+	      return_value|=-1;
+	    }
           }
         } else {
           /* Procedure nicht gefunden, aber vielleicht wird sie spaeter per merge hinzugefügt ....*/
@@ -885,12 +933,16 @@ int init_program(int prglen) {
     if((pcode[i].opcode&PM_TYP)==P_PLISTE) { /* Nachbearbeiten */
        int j=pcode[i].opcode&PM_COMMS;
      //  printf("OPS: %s   anz=%d\n",comms[j].name,pcode[i].panzahl);
-       make_pliste2(comms[j].pmin,comms[j].pmax,
+       int e=make_pliste2(comms[j].pmin,comms[j].pmax,
 	(unsigned short *)comms[j].pliste,pcode[i].argument,&(pcode[i].ppointer),pcode[i].panzahl);
+       if(e<0) {
+         return_value|=-1;
+         printf("Parameterliste konnte nicht nachbereitet werden.\n");
+       }
     } 
   }  /*  for */
   free(buffer);free(zeile);
-  return(0);
+  return(return_value);
 }
 
 static int add_label(char *name,int zeile,int dataptr) {
@@ -1107,6 +1159,10 @@ void kommando(char *cmd) {
       case P_PLISTE: {
         PARAMETER *plist;
         int e=make_pliste(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,w2,&plist);
+        if(e<0) {
+	  xberror(51,w1); /*Syntax Error*/
+	  return;
+	}
         if(e>=comms[i].pmin) (comms[i].routine)(plist,e);
 	free_pliste(e,plist);
 	}

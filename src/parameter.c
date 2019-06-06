@@ -288,102 +288,125 @@ void dump_parameterlist(PARAMETER *p, int n) {
 
 
 /*Macht aus einem Ausdruck eine Parameter-Struktur, aber
-  noch nicht laufzeit, d.h. keine parser-Aufrufe! Dafür dürfen type() 
-  aufrufe verwendet werden.*/
+  noch nicht Laufzeit, d.h. keine parser-Aufrufe! Dafür dürfen type() 
+  Aufrufe verwendet werden.
+  
+  Es wird erwartet, dass pret auf eine frische PARAMETER-Struktur zeigt.
+  
+  Rückgabe: 0 -- OK
+            -1 -- ERROR
+
+  Im falle eines Fehlers ist der Zustand von pred entweder unveraendert oder
+  auf den typ ap gewandelt.
+
+  */
 
 int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
-  if(!n ||*n==0) pret->typ=PL_LEER;
-  else {
-    pret->typ=ap;  /*Solltyp des Parameters*/
-    switch(ap) {
-      char *pos2,*pos;
-      int typ;
-    case PL_LABEL: 
-      pret->integer=labelnr(n);
-      if(pret->integer==-1) xberror(20,n);/* Label nicht gefunden */
-      break;
-    case PL_PROC:
-      pos=searchchr(n,'(');
-      if(pos!=NULL) {
-        *pos=0;pos++;
-        pos2=pos+strlen(pos)-1;
-        if(*pos2!=')') xberror(32,n); /* Syntax error */
-        else *pos2=0;
-      } else pos=n+strlen(n);
-      pret->integer=procnr(n,1);
-      if(pret->integer==-1) xberror(19,n); /* Procedure nicht gefunden */
-      break;
-    case PL_FILENR:   /*   TODO: Hier schon auf Konstanten testen !!!!*/
-      if((typ=type(n))&CONSTTYP) {
-        pret->typ=PL_FILENR;
-        if(*n=='#') pret->integer=(int)parser(n+1);
-	else pret->integer=(int)parser(n);
-      } else {
-        pret->typ=PL_EVAL;
-	pret->arraytyp=typ;
-	if(*n=='#') *((STRING *)&(pret->integer))=create_string(n+1);
-	else *((STRING *)&(pret->integer))=create_string(n);
-      }
-      break;
-    case PL_INT:	/* Integer */
-    case PL_FLOAT:  /* Float  */
-    case PL_COMPLEX:/* Complex */
-    case PL_ARBINT: /* Big Int */
-    case PL_ARBFLOAT: /* Arbitrary prec float */
-    case PL_NUMBER: /* Integer or FLOAT or COMPLEX or ARBINT */
-    case PL_CFAI:
-    case PL_CF:
-    case PL_ANYVALUE:	    /* Integer or FLOAT oder string*/
-    case PL_ANY:
-    case PL_STRING: /* String */
-    case PL_ARRAY:  /* Array */
-    case PL_NARRAY:  /* Array */
-    case PL_CFARRAY:  /* Array */
-    case PL_IARRAY: /* Int-Array */
-    case PL_FARRAY: /* float-Array */
-    case PL_CARRAY: /* complex-Array */
-    case PL_AIARRAY: /* big int-Array */
-    case PL_SARRAY: /* String-Array */
-      if((typ=type(n))&CONSTTYP) {
-        switch(ap) {
+  if(!n ||*n==0) {
+    pret->typ=PL_LEER;
+    return(0);
+  }
+  pret->typ=ap;  /*Solltyp des Parameters*/
+  switch(ap) {
+    char *pos2,*pos;
+    int typ;
+  case PL_LABEL: 
+    pret->integer=labelnr(n);
+    if(pret->integer==-1) {
+      xberror(20,n);/* Label nicht gefunden */
+      return(-1);
+    }
+    return(0);
+  case PL_PROC:
+    pos=searchchr(n,'(');
+    if(pos!=NULL) {
+      *pos=0;pos++;
+      pos2=pos+strlen(pos)-1;
+      if(*pos2!=')') xberror(32,n); /* Syntax error */
+      else *pos2=0;
+    } else pos=n+strlen(n);
+    pret->integer=procnr(n,1);
+    if(pret->integer==-1) {
+      xberror(19,n); /* Procedure nicht gefunden */
+      return(-1);
+    }
+    return(0);
+  case PL_FILENR:   /*   TODO: Hier schon auf Konstanten testen !!!!*/
+    if((typ=type(n))&CONSTTYP) {
+      pret->typ=PL_FILENR;
+      if(*n=='#') pret->integer=(int)parser(n+1);
+      else pret->integer=(int)parser(n);
+    } else {
+      pret->typ=PL_EVAL;
+      pret->arraytyp=typ;
+      if(*n=='#') *((STRING *)&(pret->integer))=create_string(n+1);
+      else *((STRING *)&(pret->integer))=create_string(n);
+    }
+    return(0);
+  case PL_INT:        /* Integer */
+  case PL_FLOAT:  /* Float  */
+  case PL_COMPLEX:/* Complex */
+  case PL_ARBINT: /* Big Int */
+  case PL_ARBFLOAT: /* Arbitrary prec float */
+  case PL_NUMBER: /* Integer or FLOAT or COMPLEX or ARBINT */
+  case PL_CFAI:
+  case PL_CF:
+  case PL_ANYVALUE:	  /* Integer or FLOAT oder string*/
+  case PL_ANY:
+  case PL_STRING: /* String */
+  case PL_ARRAY:  /* Array */
+  case PL_NARRAY:  /* Array */
+  case PL_CFARRAY:  /* Array */
+  case PL_IARRAY: /* Int-Array */
+  case PL_FARRAY: /* float-Array */
+  case PL_CARRAY: /* complex-Array */
+  case PL_AIARRAY: /* big int-Array */
+  case PL_SARRAY: /* String-Array */
+    if((typ=type(n))&CONSTTYP) { /* bei Konstante, kann es jetzt schon ausgewertet werden...*/
+      int e=0;
+      switch(ap) {
         case PL_INT:	/* Integer Float, complex, arbint  convertiert nach int */
-	  eval2parnumtype(n,pret,typ); 
+	  e=eval2parnumtype(n,pret,typ); 
 	  pret->integer=p2int(pret);
 	  free_parameter(pret);
           pret->typ=PL_INT;
-	  break;
+	  if(e<0) return(-1);
+	  else return(0);
 	case PL_ANY:       /* Integer or FLOAT oder string oder ARRAY*/
 	case PL_ANYVALUE:  /* Integer or FLOAT oder string*/
-	  eval2partype(n,pret,typ);
-	  break;
+	  if(eval2partype(n,pret,typ)<0) return(-1);
+	  else return(0);
 	case PL_NUMBER:	/* Integer or FLOAT or complex or ARBINT */ 
-	  eval2parnumtype(n,pret,typ);
-	  break;
+	  if(eval2parnumtype(n,pret,typ)<0) return(-1);
+	  else return(0);
 	case PL_CFAI:	/*  FLOAT or complex or ARBINT */ 
-	  eval2parnumtype(n,pret,typ);
+	  if(eval2parnumtype(n,pret,typ)<0) return(-1);
 	  if(pret->typ==PL_INT) cast_to_real(pret);
-	  break;
+	  return(0);
 	case PL_CF:	/*  FLOAT or complex */ 
-	  eval2parnumtype(n,pret,typ);
+	  e=eval2parnumtype(n,pret,typ);
 	  if(pret->typ==PL_INT || pret->typ==PL_ARBINT) cast_to_real(pret);
-	  break;
+          if(e<0) return(-1);
+	  else return(0);
 	case PL_FLOAT:  /* Float, complex, arbint oder INT convertiert nach float */
-	  eval2parnumtype(n,pret,typ); 
+	  e=eval2parnumtype(n,pret,typ); 
 	  pret->real=p2float(pret);
 	  free_parameter(pret);
           pret->typ=PL_FLOAT;
-	  break;
+	  if(e<0) return(-1);
+	  else return(0);
 	case PL_COMPLEX:  /* Complex */
-	  eval2parnumtype(n,pret,typ); 
+	  e=eval2parnumtype(n,pret,typ);
 	  *(COMPLEX *)&(pret->real)=p2complex(pret);
 	  free_parameter(pret);
           pret->typ=PL_COMPLEX;
-	  break;
+	  if(e<0) return(-1);
+	  else return(0);
 	case PL_ARBFLOAT:  /* Arb float, treat as integer */
 	case PL_ARBINT:  /* Big integer */
 	  { ARBINT a;
+	  e=eval2parnumtype(n,pret,typ);
 	  mpz_init(a);
-	  eval2parnumtype(n,pret,typ); 
 	  p2arbint(pret,a);
 	  free_parameter(pret);
           pret->typ=PL_ARBINT;
@@ -391,11 +414,12 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
 	  mpz_init(*((ARBINT *)pret->pointer));
           mpz_set(*((ARBINT *)pret->pointer),a);
 	  mpz_clear(a);}
-	  break;
+	  if(e<0) return(-1);
+	  else return(0);
 	case PL_STRING: /* String */
 	  pret->typ=PL_STRING;
 	  *((STRING *)&(pret->integer))=string_parser(n);
-          break;
+          return(0);
         case PL_ARRAY:  /* Array */
         case PL_IARRAY: /* Int-Array */    /*Wenn es sich wirklich um ein konstantes ARRAY handelt */
         case PL_FARRAY: /* float-Array */  
@@ -406,71 +430,83 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
         case PL_CFARRAY: /* Number-Array */
 	  pret->typ=PL_ARRAY;
 	  *((ARRAY *)&(pret->integer))=array_parser(n);
-	  break;
+	  return(0);
 	default:
           pret->typ=PL_EVAL;
           pret->arraytyp=typ;  /* für spaeter */
 	  *((STRING *)&(pret->integer))=create_string(n);
-	}
-      } else {  /* nicht const typ*/
-        pret->typ=PL_EVAL;
-	*((STRING *)&(pret->integer))=create_string(n);
-	    /* Typ in Parameter eintragen, dann hat man es zu laufzeit schneller*/
-        pret->arraytyp=typ;  /* Muss man spaeter natuerlich noch auswerten....*/
       }
-      break;
-    case PL_VAR:       
-    case PL_NVAR:      
-    case PL_SVAR:      
-    case PL_CVAR:      
-    case PL_IVAR:      
-    case PL_FVAR:      
-    case PL_AIVAR:      
-    case PL_ARRAYVAR:  
-    case PL_IARRAYVAR: 
-    case PL_FARRAYVAR: 
-    case PL_AIARRAYVAR: 
-    case PL_CARRAYVAR: 
-    case PL_SARRAYVAR: 
-    case PL_ALLVAR:
-      prepare_vvar(n,pret,ap); 
-      break;
-    case PL_KEY: /* Keyword */
-      pret->arraytyp=keyword2num(n);
+      return(0);
+    } else {  /* nicht const typ, dann spaeter evaluieren...*/
+      pret->typ=PL_EVAL;
       *((STRING *)&(pret->integer))=create_string(n);
-      break;
-    case PL_EVAL:
-      pret->arraytyp=vartype(n);
-      *((STRING *)&(pret->integer))=create_string(n);
-      break;
-    default:
-      printf("ERROR: illegal parameter type $%x\n",ap);
-      return(-1);
+	    /* Typ in Parameter eintragen, dann hat man es zu laufzeit schneller*/
+      pret->arraytyp=typ;  /* Muss man spaeter natuerlich noch auswerten....*/
+      return(0);
     }
+  case PL_VAR:       
+  case PL_NVAR:      
+  case PL_SVAR:      
+  case PL_CVAR:      
+  case PL_IVAR:      
+  case PL_FVAR:      
+  case PL_AIVAR:      
+  case PL_ARRAYVAR:  
+  case PL_IARRAYVAR: 
+  case PL_FARRAYVAR: 
+  case PL_AIARRAYVAR: 
+  case PL_CARRAYVAR: 
+  case PL_SARRAYVAR: 
+  case PL_ALLVAR:
+    prepare_vvar(n,pret,ap); 
+    return(0);
+  case PL_KEY: /* Keyword */
+    pret->arraytyp=keyword2num(n);
+    *((STRING *)&(pret->integer))=create_string(n);
+    return(0);
+  case PL_EVAL:
+    pret->arraytyp=vartype(n);
+    *((STRING *)&(pret->integer))=create_string(n);
+    return(0);
+  default:
+    printf("ERROR: make_parameter_stage2: illegal parameter type $%x\n",ap);
+    return(-1);
   }
   return(0);
 }
 
 
+/*
+ * Rückgabe: ANzahl der Parameter oder -1 wenn Fehler
+ */
+
 int make_pliste(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **pr){
-  PARAMETER *pr1;
-  int ii=make_pliste2(pmin,pmax,pliste,n,&pr1,count_parameters(n));
-  int ii2=make_pliste3(pmin,pmax,pliste,pr1,pr,ii);
-  if(ii!=ii2) printf("make_pliste: Something is wrong.\n");
-  free_pliste(ii,pr1);
-  return(ii2);
+  PARAMETER *pl;
+  int n1=make_pliste2(pmin,pmax,pliste,n,&pl,count_parameters(n));
+  if(n1<0) return(n1); /* If error */  
+  int n2=make_pliste3(pmin,pmax,pliste,pl,pr,n1);
+  free_pliste(n1,pl);
+  if(n1!=n2) { /* if there is inconsitency or error */
+    printf("make_pliste: Something is wrong. %d != %d\n",n1,n2);
+    return(-1);
+  }
+  return(n2);
 }
 
-/* Hier noch nicht laufzeit, d.h. keine parser-Aufrufe!*/
+/* PARAMETER vorbereiten. 
+ * Hier noch nicht laufzeit, d.h. keine parser-Aufrufe!
+ * Rückgabe: ANzahl der Parameter oder -1 wenn Fehler
+*/
 
 int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **pr,int ii){
   char buf[strlen(n)+1];
   char *w1,*pos=NULL;
   PARAMETER *pret;
-  int anzpar,i=0;
+  int anzpar,i=0,err=0;
   unsigned short ap;
   if(pmax==-1) anzpar=ii;
   else anzpar=pmax;
+  
  // printf("PARAMETER vorbereiten: (%d) \n",ii);
   *pr=pret=calloc(anzpar,sizeof(PARAMETER));
   if(n && *n) {
@@ -482,12 +518,16 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
       if(pos) *pos++=0;
       if(i>pmin && pmax==-1) ap=pliste[pmin];
       else ap=pliste[i];
-      make_parameter_stage2(w1,ap,&pret[i]);
+      err|=make_parameter_stage2(w1,ap,&pret[i]);
       i++;
     }
   }
-  if(i<pmin) xberror(42,""); /* Zu wenig Parameter  */
-  else if(i==pmax && pos) xberror(45,""); /* Zu viele Parameter  */
+  if(i<pmin) xberror(42,n); /* Zu wenig Parameter  */
+  else if(i==pmax && pos) xberror(45,n); /* Zu viele Parameter  */
+  if(err) { /* In case of error, free (broken) list */
+    free_pliste(i,pret);
+    return(-1);
+  }
   return(i);
 }
 
@@ -500,6 +540,7 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
  */
 int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
   unsigned short ip=pin->typ;
+  int e=0;
   pret->typ=ap;
   switch(ap) {
     int vnr;  
@@ -518,11 +559,12 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER: pret->typ=PL_LEER; break;
     case PL_EVAL: 
-      if(pin->arraytyp) eval2partype(pin->pointer,pret,pin->arraytyp); 
-      else eval2par(pin->pointer,pret); 
+      if(pin->arraytyp) e=eval2partype(pin->pointer,pret,pin->arraytyp); 
+      else              e=eval2par(pin->pointer,pret); 
       pret->integer=p2int(pret);
       free_parameter(pret);
       pret->typ=PL_INT;
+      if(e<0) {PARERR();return(-1);}
       break;
     default: pret->integer=p2int(pin);
     }
@@ -532,8 +574,9 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER:  break;
     case PL_EVAL:
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
-      else eval2parnum(pin->pointer,pret); 
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else e=eval2parnum(pin->pointer,pret);
+      if(e<0) {PARERR();return(-1);}
       break;
     case PL_COMPLEX: pret->imag=pin->imag; /* no break */
     case PL_FLOAT:   pret->real=pin->real; break;
@@ -551,9 +594,10 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER:  break;
     case PL_EVAL:
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
-      else eval2parnum(pin->pointer,pret);
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
+      else              e=eval2parnum(pin->pointer,pret);
       if(pret->typ==PL_INT) cast_to_real(pret);
+      if(e<0) {PARERR();return(-1);}
       break;
     case PL_COMPLEX: pret->imag=pin->imag; /* no break */
     case PL_FLOAT:   pret->real=pin->real; break;
@@ -574,9 +618,10 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER:  break;
     case PL_EVAL:
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
-      else eval2parnum(pin->pointer,pret);
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp); 
+      else              e=eval2parnum(pin->pointer,pret);
       if(pret->typ==PL_INT||pret->typ==PL_ARBINT) cast_to_real(pret);
+      if(e<0) {PARERR();return(-1);}
       break;
     case PL_COMPLEX: pret->imag=pin->imag; /* no break */
     case PL_FLOAT:   pret->real=pin->real; break;
@@ -595,11 +640,12 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER: pret->typ=PL_LEER; break;
     case PL_EVAL: 
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
-      else eval2parnum(pin->pointer,pret);
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else              e=eval2parnum(pin->pointer,pret);
       pret->real=p2float(pret);
       free_parameter(pret);
       pret->typ=PL_FLOAT;
+      if(e<0) {PARERR();return(-1);}
       break; 
     default: pret->real=p2float(pin);
     }
@@ -608,11 +654,12 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER: pret->typ=PL_LEER; break;
     case PL_EVAL: 
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
-      else eval2parnum(pin->pointer,pret); 
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else              e=eval2parnum(pin->pointer,pret); 
       *(COMPLEX *)&(pret->real)=p2complex(pret);
       free_parameter(pret);
       pret->typ=PL_COMPLEX;
+      if(e<0) {PARERR();return(-1);}
       break; 
     default: *(COMPLEX *)&(pret->real)=p2complex(pin);
     }
@@ -621,9 +668,10 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER: pret->typ=PL_LEER; break;
     case PL_EVAL: {
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
-      else eval2parnum(pin->pointer,pret); 
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else              e=eval2parnum(pin->pointer,pret); 
       cast_to_arbint(pret);
+      if(e<0) {PARERR();return(-1);}
       }
       break; 
     default:
@@ -638,8 +686,9 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     switch(ip) {
     case PL_LEER: break;
     case PL_EVAL: 
-      if(pin->arraytyp) eval2parnumtype(pin->pointer,pret,pin->arraytyp);
-      else eval2par(pin->pointer,pret); 
+      if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
+      else              e=eval2par(pin->pointer,pret);
+      if(e<0) {PARERR();return(-1);} 
       break;
     case PL_COMPLEX: pret->imag=pin->imag;  /*no break*/
     case PL_FLOAT:   pret->real=pin->real; break;
@@ -756,13 +805,14 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     } else {PARERR();return(-1);}
     break;
   default:
-    printf("ERROR: unknown parameter type. -->$%x \n",ap);
+    printf("ERROR: make_parameter_stage3: unknown parameter type $%x.\n",ap);
     return(-1);
   }
   return(0);
 }
 
-/* Rueckgabe ist die Anzahl der prozessierten Parameter 
+/* PARAMETER aus Liste vervollstaendigen
+   Rueckgabe ist die Anzahl der prozessierten Parameter 
    oder -1 wenn ein Fehler aufgetreten ist..
    */
 
@@ -772,13 +822,10 @@ int make_pliste3(int pmin,int pmax,unsigned short *pliste,PARAMETER *pin, PARAME
   int i=0,anzpar,err=0;
   if(pmax==-1) anzpar=ii;
   else anzpar=min(ii,pmax);
-//  printf("PARAMETER vervollstaendigen: (%d) %d\n",ii,anzpar);
-
   *pout=pret=calloc(anzpar,sizeof(PARAMETER));
   while(i<anzpar) {
     if(i>pmin && pmax==-1) ap=pliste[pmin];
     else ap=pliste[i];
- //   printf("Par #%d: typ1=%x typ2=%x %s\n",i,ap,ip,plist_paramter(&pin[i]));
     err|=make_parameter_stage3(&pin[i],ap,&pret[i]);
     i++;
   }

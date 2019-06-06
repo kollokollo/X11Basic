@@ -232,10 +232,10 @@ double parser(const char *funktion){  /* Rekursiver num. Parser */
   }
   
    char *pos2;
-  char w1buf[strlen(funktion)+1],w2buf[strlen(funktion)+1];
-  int vnr;
-  w1=w1buf;
-  w2=w2buf;
+   char w1buf[strlen(funktion)+1],w2buf[strlen(funktion)+1];
+   int vnr;
+   w1=w1buf;
+   w2=w2buf;
  
 if(searchchr2_multi(s,"*/^")!=NULL) {
   if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
@@ -335,9 +335,11 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 	      } else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {
 	        PARAMETER *plist;
                 int e=make_pliste(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,pos,&plist);
-                double a;
+                double a=0;
 		// printf("e=%d pmin=%d\n",e,pfuncs[i].pmin);
-		if(e>=pfuncs[i].pmin) {
+		if(e<0) xberror(51,s); /* Syntax Error */
+		else if(e<pfuncs[i].pmin) xberror(42,s); /* Zu wenig Parameter */
+		else {
 		   switch(pfuncs[i].opcode&FM_RET) {
 		   case F_IRET: a=(double)((int (*)())pfuncs[i].routine)(plist,e); break;
 		   case F_CRET: a=COMPLEX2FLOAT(((COMPLEX (*)())pfuncs[i].routine)(plist,e)); break;
@@ -360,12 +362,8 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
 		   } break;
 		   default: xberror(13,s);  /* Type mismatch */
 		   }
-		} else {
-		  a=0;
-		  xberror(42,s); /* Zu wenig Parameter */
 		}
-	        free_pliste(e,plist);
-		// printf("a=%d\n",a);
+	        if(e>=0) free_pliste(e,plist);
 	        return(a);
               }
 	      
@@ -684,7 +682,9 @@ COMPLEX complex_parser(const char *funktion) {
 	        PARAMETER *plist;
                 int e=make_pliste(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,pos,&plist);
 		// printf("e=%d pmin=%d\n",e,pfuncs[i].pmin);
-		if(e>=pfuncs[i].pmin) {
+		if(e<0)                   xberror(51,s); /* Syntax Error */
+		else if(e<pfuncs[i].pmin) xberror(42,s); /* Zu wenig Parameter */
+		else {
 		   switch(pfuncs[i].opcode&FM_RET) {
 		   case F_IRET: ret=INT2COMPLEX(((int (*)())pfuncs[i].routine)(plist,e)); break;
 		   case F_CRET: ret=((COMPLEX (*)())pfuncs[i].routine)(plist,e); break;
@@ -707,8 +707,8 @@ COMPLEX complex_parser(const char *funktion) {
 		   } break;
 		   default: xberror(13,s);  /* Type mismatch */
 		   }
-		} else xberror(42,s); /* Zu wenig Parameter */
-	        free_pliste(e,plist);
+		} 
+	        if(e>=0) free_pliste(e,plist);
 	        return(ret);
               }
 
@@ -1136,8 +1136,9 @@ void arbint_parser(const char *funktion, ARBINT ret) {
 	} else if((pfuncs[i].opcode&FM_TYP)==F_PLISTE) {
 	  PARAMETER *plist;
           int e=make_pliste(pfuncs[i].pmin,pfuncs[i].pmax,(unsigned short *)pfuncs[i].pliste,pos,&plist);
-	  // printf("e=%d pmin=%d\n",e,pfuncs[i].pmin);
-	  if(e>=pfuncs[i].pmin) {
+          if(e<0)                   xberror(51,s); /* Syntax Error */
+	  else if(e<pfuncs[i].pmin) xberror(42,s); /* Zu wenig Parameter */
+	  else {
 	     switch(pfuncs[i].opcode&FM_RET) {
 	     case F_IRET: mpz_set_si(ret,(((int (*)())pfuncs[i].routine)(plist,e))); break;
 	     case F_CRET: mpz_set_d(ret,COMPLEX2FLOAT(((COMPLEX (*)())pfuncs[i].routine)(plist,e))); break;
@@ -1156,7 +1157,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
 	     default: xberror(13,s);  /* Type mismatch */
 	     }
 	  } 
-	  free_pliste(e,plist);
+	  if(e>=0) free_pliste(e,plist);
 	  return;
         }
 
@@ -1434,9 +1435,14 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
 	      } else if((pafuncs[i].opcode&FM_TYP)==F_PLISTE) {
 		 PARAMETER *plist;
                  int e=make_pliste(pafuncs[i].pmin,pafuncs[i].pmax,(unsigned short *)pafuncs[i].pliste,pos,&plist);
-                 ARRAY a=(pafuncs[i].routine)(plist,e);
-	         free_pliste(e,plist);
-	         return(a);
+		 if(e>=0) {
+                   ARRAY a=(pafuncs[i].routine)(plist,e);
+	           free_pliste(e,plist);
+	           return(a);
+		 } else {  /* ERROR has occured in parameterlist */
+		   e=0;
+		   return(nullmatrix(FLOATTYP,0,(uint32_t *)&e));
+		 }
 	      } else if(pafuncs[i].pmax==1 && (pafuncs[i].opcode&FM_TYP)==F_AQUICK) {
 	        ARRAY ergebnis,a=array_parser(pos);
 		ergebnis=(pafuncs[i].routine)(a);
@@ -1563,8 +1569,13 @@ STRING string_parser(const char *funktion) {
 	      else if((psfuncs[i].opcode&FM_TYP)==F_PLISTE) {
 	        PARAMETER *plist;
                  int e=make_pliste(psfuncs[i].pmin,psfuncs[i].pmax,(unsigned short *)psfuncs[i].pliste,pos,&plist);
-                 ergebnis=(psfuncs[i].routine)(plist,e);
-	         free_pliste(e,plist);
+		 if(e<0) {
+		   xberror(51,s); /* Syntax Error */
+		   ergebnis=create_string(NULL);
+		 } else {
+		   ergebnis=(psfuncs[i].routine)(plist,e);
+	           free_pliste(e,plist);
+		 }
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_DQUICK) {
 		ergebnis=(psfuncs[i].routine)(parser(pos));
 	      } else if(psfuncs[i].pmax==1 && (psfuncs[i].opcode&FM_TYP)==F_IQUICK) {

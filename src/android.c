@@ -233,8 +233,9 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Init(JNIEnv *e
     kommandozeile(param_anzahl, param_argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
-        loadprg(ifilename);
-	if(runfile) do_run();
+        int prgerrors=loadprg(ifilename);
+	if(prgerrors) printf("Errors detected in %s. Can not run.\n",ifilename);
+	if(runfile && !prgerrors) do_run();
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }
@@ -505,7 +506,8 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Load(JNIEnv *e
       backlog("wait for program to stop...");
       while(!isdirectmode && --i) usleep(10000);
     }
-    loadprg(ifilename); 
+    int prgerrors=loadprg(ifilename);
+    if(prgerrors) LOGE("ERROR: %s contains errors !",ifilename);
     backlog("load done."); 
     invalidate_screen();
   } else LOGE("ERROR: %s not found !",ifilename);
@@ -530,9 +532,11 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Loadandrun(JNI
       backlog("wait for program to stop...");
       while(!isdirectmode && --i) usleep(10000);
     }
-    loadprg(ifilename);
-    graphics_setdefaults();
-    do_run();
+    int prgerrors=loadprg(ifilename);
+    if(!prgerrors) {
+      graphics_setdefaults();
+      do_run();
+    } else LOGE("ERROR: %s contains errors !",ifilename);
   } else LOGE("ERROR: %s not found !",ifilename);
   (*env)->ReleaseStringUTFChars(env,filename,n);
 }
