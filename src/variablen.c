@@ -655,7 +655,8 @@ int zuweis(const char *name, double wert) {
   int e=klammer_sep(name,w1,w2);
   char *r=varrumpf(w1);
   int vnr;
-  if(e==2) {
+  if(e==0) ; /* leer oder Syntax fehler */
+  else if(e==2) {
     int ii=count_parameters(w2);
     vnr=add_variable(r,ARRAYTYP,FLOATTYP,V_DYNAMIC,NULL);
     if(ii==0) {
@@ -680,7 +681,8 @@ int izuweis(const char *name, int wert) {
   int e=klammer_sep(name,w1,w2);
   char *r=varrumpf(w1);
   int vnr;
-  if(e==2) {
+  if(e==0) ; /* leer oder Syntax fehler */
+  else if(e==2) {
     int ii=count_parameters(w2);
     vnr=add_variable(r,ARRAYTYP,INTTYP,V_DYNAMIC,NULL);
     if(ii==0) {
@@ -810,7 +812,8 @@ int zuweis_string_and_free(const char *name, STRING inhalt) {
   int e=klammer_sep(name,w1,w2);
   char *r=varrumpf(w1);
   int vnr;
-  if(e==2) {
+  if(e==0) ; /* leer oder Syntax fehler */
+  else if(e==2) {
     int ii=count_parameters(w2);
     vnr=add_variable(r,ARRAYTYP,STRINGTYP,V_DYNAMIC,NULL);
     if(ii==0) xberror(9,"Array assignment"); /* Funktion noch nicht moeglich */
@@ -853,25 +856,25 @@ void xzuweis(const char *name, char *inhalt) {
   int e=klammer_sep_destroy(buffer1,&vname,&argument);
   char *r=varrumpf(buffer1);
   
-  int vnr;
-  int dim,ii=0;
-  
+  int vnr=-1;
+  int ii=0;
   int *indexliste=NULL;
   
   
  //  printf("xzuweis: <%s> <%s>\n",name,inhalt);
-  if(e>1) {
+  if(e==0) ;  /* leer oder Syntax Error */
+  else if(e>1) { /* Indicies */
     vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
     if(vnr<0) { /*Wenn irgendwas mit Variablen-Erstellung nicht geklappt hat.*/
       free(r);free(buffer1);free(buffer2);
       return;
     }
     ii=count_parameters(argument);
-    dim=variablen[vnr].pointer.a->dimension;
+    int dim=variablen[vnr].pointer.a->dimension;
     if(dim<ii) xberror(18,name); /* Falsche Anzahl Indizes */
     indexliste=malloc(sizeof(int)*ii);
     make_indexliste(ii,argument,indexliste);
-  } else vnr=add_variable(r,typ,0,V_DYNAMIC,NULL);  
+  } else vnr=add_variable(r,typ,0,V_DYNAMIC,NULL);  /* keine Indicies */ 
 
   if(vnr>=0) zuweisxbyindex(vnr,indexliste,ii,buffer2,typ);
   free(r); free(indexliste);

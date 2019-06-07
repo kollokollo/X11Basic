@@ -96,17 +96,16 @@ static int fit_solltyp(int typ, int solltyp) {
 
 
 int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
-  // printf("## prepare VVAR... <%s>\n",w1);
   char k1[strlen(w1)+1],k2[strlen(w1)+1];
   int typ=vartype(w1);
   int e=klammer_sep(w1,k1,k2);
   p->pointer=NULL;
   p->integer=-1;
   p->typ=NOTYP; /* Falls type mismatch auftritt, definiertes Ergebnis */
-//  printf("prepare_vvar: w1=<%s>  solltyp=%x\n",w1,solltyp);
-  if(e==1 || strlen(k2)==0) {  /* Keine Argumente in Klammer oder keine klammern*/
-  //  printf("Keine Klammern/keine Argumente... typ=%x\n",typ);
-  //  printf("---> Typ=%x Solltyp=%x  ....\n",typ,solltyp);
+  
+  // printf("prepare_vvar: w1=<%s>  typ=%x solltyp=%x\n",w1,typ,solltyp);
+  if(e==0) ; /* String war leer oder falsch formatiert */
+  else if(e==1 || strlen(k2)==0) {  /* Keine Argumente in Klammer oder keine klammern*/
     if(fit_solltyp(typ,solltyp)) {
       char *r=varrumpf(w1);
   //    printf("FIT.\n");
@@ -118,7 +117,7 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
       /*Parameter Typ eintragen.*/
       p->typ=(PL_VARGROUP|typ);
     } 
-  } else { /* Es sind indizies da. */
+  } else if(e==2) { /* Es sind indizies da. */
     // printf("Es sind idicies da...\n");
     typ&=TYPMASK;
     if(fit_solltyp(typ,solltyp)) {
@@ -137,7 +136,7 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
     } 
   }
  // printf("----> vnr=%d\n",p->integer);
-  if(p->integer<0) xberror(76,w1);   /*illegal variable name */
+  if(p->integer<0) xberror(76,w1);   /* illegal variable name */
   else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
   return(p->integer);
 }

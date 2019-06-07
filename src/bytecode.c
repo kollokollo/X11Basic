@@ -154,26 +154,23 @@ static void bc_push_integer(int i) {
 /* Push variable inhalt on stack */
 static void bc_pushv(int vnr);
 
-static void bc_pushv_name(char *var) {
-  char w1[strlen(var)+1],w2[strlen(var)+1];
+static void bc_pushv_name(const char *var) {
   int typ=vartype(var);
   char *r=varrumpf(var);
-  int vnr;
-  short f,ss;
-  int e=klammer_sep(var,w1,w2);
+
   if((typ& ARRAYTYP)) {     /*  Ganzes Array */ 
-    vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
-    bc_pushv(vnr);
+    bc_pushv(add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL));
   } else {
-    if(e>1) {  /*   Array Element */
-      vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
-      f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
-      ss=vnr;
-      e=wort_sep(w2,',',TRUE,w1,w2);
-      while(e) {
+    char w1[strlen(var)+1],w2[strlen(var)+1];
+    int e=klammer_sep(var,w1,w2);
+    if(e==0) ; /* Leer oder syntax Fehler */
+    else if(e>1) {  /*   Array Element */
+      int vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
+      short f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
+      short ss=vnr;
+      while(wort_sep(w2,',',TRUE,w1,w2)) {
         bc_parser(w1);  /*  jetzt Indizies Zeugs aufm stack */
 	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
-        e=wort_sep(w2,',',TRUE,w1,w2);
       }
       
     /* Hier muesste man noch cheken, ob alle indizies integer sind.
@@ -186,8 +183,7 @@ static void bc_pushv_name(char *var) {
       if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
       TP(PL_CONSTGROUP|typ);
     } else {  /*  Normale Variable */
-      vnr=add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL);
-      bc_pushv(vnr);
+      bc_pushv(add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL));
     } 
   }
   free(r);
@@ -264,27 +260,25 @@ static void bc_local(int vnr) {
 }
 
 /* Hier ist schon was auf dem Stack. */
-static void bc_zuweis_name(char *var) {
-  char w1[strlen(var)+1],w2[strlen(var)+1];
+static void bc_zuweis_name(const char *var) {
   int typ=vartype(var);
   char *r=varrumpf(var);
   int vnr;
-  short f,ss;
-  int e=klammer_sep(var,w1,w2);
   if(typ & ARRAYTYP) {     /*  Ganzes Array */ 
     vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
     if(TL!=PL_ARRAY) printf("WARNING: no ARRAY for assignment! at line %d.\n",compile_zeile);
     bc_zuweis(vnr);
   } else {
-    if(e>1) {  /*   Array Element */
+    char w1[strlen(var)+1],w2[strlen(var)+1];
+    int e=klammer_sep(var,w1,w2);
+    if(e==0) ;      /* Leer oder Syntax Fehler */
+    else if(e>1) {  /*   Array Element */
       vnr=add_variable(r,ARRAYTYP,typ&TYPMASK,V_DYNAMIC,NULL);
-      f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
-      ss=vnr;
-      e=wort_sep(w2,',',TRUE,w1,w2);
-      while(e) {
+      short f=count_parameters(w2);   /* Anzahl indizes z"ahlen*/
+      short ss=vnr;
+      while(wort_sep(w2,',',TRUE,w1,w2)) {
         bc_parser(w1);  /*  jetzt Indizies Zeugs aufm stack */
 	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
-        e=wort_sep(w2,',',TRUE,w1,w2);
       }
       BCADD(BC_ZUWEISINDEX);
       CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
@@ -292,8 +286,7 @@ static void bc_zuweis_name(char *var) {
       TA(f);
       TO();
     } else {  /*  Normale Variable */
-      vnr=add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL);
-      bc_zuweis(vnr);
+      bc_zuweis(add_variable(r,typ&TYPMASK,0,V_DYNAMIC,NULL));
     } 
   }
   free(r);

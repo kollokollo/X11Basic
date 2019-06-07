@@ -355,23 +355,31 @@ int wort_sepr2_destroy(char *t,const char *c,int klamb ,char **w1, char **w2)   
   }
 }
 
-/* Funktion Trennt w1(w2) string in w1 und w2 auf */ 
+/* Funktion Trennt w1(w2) string in w1 und w2 auf 
+ * Rückgabe: 0 -- String leer oder Fehler
+ *            1 -- Keine Klammer gefunden
+ *            2 -- alles OK
+*/ 
 
 int klammer_sep(const char *t,char *w1, char *w2)    {
-  char *pos,*pos2;
-  
   if(!(*t)) return(*w1=*w2=0);
+  char *pos;
   if((pos=searchchr(t,'('))!=NULL) {
     strncpy(w1,t,pos-t);
     w1[pos-t]=0;
     pos++;
+    char *pos2;
     if((pos2=searchchr2(pos,')'))!=NULL) {
       pos2++;
-      if(*pos2) printf("WARNING: Syntax error: expression <%s> is incomplete, rest: <%s>\n",t,pos2);
-    } else printf("WARNING: Syntax error: missing closing parenthesis in <%s>.\n",t);
+      if(*pos2) {
+        printf("WARNING: Syntax error: expression <%s> is incomplete, rest: <%s>\n",t,pos2);
+      }
+    } else {
+      printf("ERROR: Syntax error: missing closing parenthesis in <%s>.\n",t);
+      return(*w2=0);  /* return 0 for error */
+    }
     strncpy(w2,pos,pos2-pos);
     w2[pos2-pos-1]=0;
-   // printf("w1=<%s>, w2=<%s>\n",w1,w2);
     return(2);
   } else {
     strcpy(w1,t);
@@ -380,10 +388,9 @@ int klammer_sep(const char *t,char *w1, char *w2)    {
   }
 }
 int klammer_sep_destroy(char *t,char **w1, char **w2) {
-  char *pos,*pos2;
-  
-  if(!(*t)) {*w1=*w2=t; return(0);}
+  if(!(*t)) {*w1=*w2=t; return(0);}  
   *w1=t;
+  char *pos,*pos2;
   
   if((pos=searchchr(t,'('))!=NULL) {
     *pos++=0;
@@ -391,7 +398,10 @@ int klammer_sep_destroy(char *t,char **w1, char **w2) {
     if((pos2=searchchr2(pos,')'))!=NULL) {
       *pos2++=0;
       if(*pos2) printf("WARNING: Syntax error: expression <%s> is incomplete, rest: <%s>\n",t,pos2);
-    } else printf("WARNING: Syntax error: missing closing parenthesis in <%s>.\n",t);
+    } else {
+      printf("ERROR: Syntax error: missing closing parenthesis in <%s>.\n",t);
+      return(0);
+    }
     return(2);
   } else {
     *w2=&t[strlen(t)];

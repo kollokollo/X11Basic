@@ -621,7 +621,7 @@ int init_program(int prglen) {
       } 
       pos=searchchr2(buf,'=');
       name=buf;
-      if(pos!=NULL) {
+      if(pos!=NULL) { /* Es ist eine Zuweisung */
         *pos++=0;
 	pcode[i].opcode=P_ZUWEIS; /* opcode durch P_ZUWEIS ersetzen, */
 	pcode[i].argument=strdup(pos);
@@ -656,25 +656,29 @@ int init_program(int prglen) {
 		for den lvalue im P_CODE. Ein hinweis kann höchstens pcode[i].atyp geben.*/
 	      }
         } else {
-	      if(pcode[i].atyp&ARRAYTYP) printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
-              if(e>1) {  /*Idicies sind da */
-		pcode[i].integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
-		pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
-		pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
-		
-                /*hier die Indizies in einzelne zu evaluierende Ausdruecke
-		  separieren*/
-		  
-		make_preparlist(pcode[i].ppointer,argument);
-              } else {
-  	        pcode[i].panzahl=0;
-	        pcode[i].ppointer=NULL;
-	        pcode[i].integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
-	      }
-	      if((typ&TYPMASK)!=(typ2&TYPMASK) && ((typ&TYPMASK)==STRINGTYP || (typ2&TYPMASK)==STRINGTYP)) {
-	        printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
-		return_value|=1;
-              }
+	  if(pcode[i].atyp&ARRAYTYP) printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
+          if(e>1) {  /*Idicies sind da */
+	    pcode[i].integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
+	    pcode[i].panzahl=count_parameters(argument);   /* Anzahl indizes z"ahlen*/
+	    pcode[i].ppointer=calloc(pcode[i].panzahl,sizeof(PARAMETER));
+	
+            /*hier die Indizies in einzelne zu evaluierende Ausdruecke
+	      separieren*/
+	      
+	    make_preparlist(pcode[i].ppointer,argument);
+          } else if(e==1) {
+  	    pcode[i].panzahl=0;
+	    pcode[i].ppointer=NULL;
+	    pcode[i].integer=add_variable(r,typ,0,V_DYNAMIC,NULL);
+	  } else { /* e=0 also Syntaxfehler */
+  	    pcode[i].panzahl=0;
+	    pcode[i].ppointer=NULL;
+	    pcode[i].integer=-1;
+	  }
+	  if((typ&TYPMASK)!=(typ2&TYPMASK) && ((typ&TYPMASK)==STRINGTYP || (typ2&TYPMASK)==STRINGTYP)) {
+	    printf("WARNING: type mismatch in assignment at line %d.\n",original_line(i));
+	    return_value|=1;
+          }
 	}
 	if(pcode[i].integer==-1) {
 	  printf("ERROR at line %d: variable could not be created.\n",original_line(i));

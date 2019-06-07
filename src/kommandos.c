@@ -499,16 +499,15 @@ static void dodim(const char *w) {
  
   if(e<2) xberror(32,"DIM"); /* Syntax nicht Korrekt */
   else {
-    char *s,*t;
     int ndim=count_parameters(w2);
     uint32_t dimlist[ndim];
-    int i,vnr,typ;
     char *r=varrumpf(w1);
-    typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */
+    int typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */
 
     /* Dimensionen bestimmen   */
      
-    i=wort_sep_destroy(w2,',',TRUE,&s,&t);
+    char *s,*t;
+    int i=wort_sep_destroy(w2,',',TRUE,&s,&t);
     ndim=0;
     while(i) {
       xtrim(s,TRUE,s);
@@ -517,7 +516,7 @@ static void dodim(const char *w) {
     }
 //  printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
 
-    vnr=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
+    int vnr=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
     if(vnr>=0) {
       ARRAY arr=*(variablen[vnr].pointer.a);
       *(variablen[vnr].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
