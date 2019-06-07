@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=55
+RELEASE=56
 
 
 # Register variables (-ffixed-reg) -Wall

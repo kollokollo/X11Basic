@@ -8,7 +8,7 @@
 #define MyAppURL "http://x11-basic.sourceforge.net/"
 #define MyAppExeName "xbasic-wrapper.bat"
 #define MyAppVersion "1.26"
-#define MyAppRelease "55"
+#define MyAppRelease "56"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
