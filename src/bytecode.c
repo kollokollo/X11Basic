@@ -976,7 +976,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 	}
         return(bcerror);
       default:
-        printf("ERROR: /xx/ cannot handle this const type=%x: %s\n",e,s); 
+        printf("ERROR: cannot handle this const type <%s>: %s\n",type_name(e),s); 
       }
     } else {           /* Keine Konstante, also Variable */
       bc_pushv_name(s);
@@ -1152,7 +1152,7 @@ static void bc_kommando(int idx) {
       default: xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */
       }
     } else if(i!=a) {
-       printf("Command uneindeutig ! <%s...%s>\n",comms[i].name,comms[a].name);
+       printf("Command not unique! <%s...%s>\n",comms[i].name,comms[a].name);
     }  else xberror(32,w1);  /* Syntax Error */
 }
 
@@ -1166,10 +1166,9 @@ static void bc_jumpto(int from, int ziel, int eqflag) {
        /* Hier jetzt ein JUMP realisieren */
   if(TL!=PL_INT && eqflag) printf("WARNING: EQ: no int on stack !\n");
       if(ziel<=from) { /* Dann ist das Ziel schon bekannt */
-        int a,b;
-        a=bc_index[ziel];
+        int a=bc_index[ziel];
 	add_symbol(a,NULL,STT_NOTYPE,0);
-	b=a-bcpc.len;
+	int b=a-bcpc.len;
 	if(verbose>1) printf("Delta=%d ",b);
         if(b<=127 && b>=-126) {
           if(verbose>1) printf(" %s.s ",(eqflag?"BEQ":"BRA"));
@@ -1247,7 +1246,7 @@ static void bc_pushnumparameter(PARAMETER *p) {
   case PL_FILENR: bc_push_integer(p->integer); break;
   case PL_COMPLEX:bc_push_complex(*((COMPLEX *)&(p->real)));break;
   case PL_ARBINT: bc_push_arbint(*((ARBINT *)(p->pointer)));break;
-  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  default: printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(p->typ));
   }
 }
 static void bc_pushvalueparameter(PARAMETER *p) {
@@ -1265,7 +1264,7 @@ static void bc_pushvalueparameter(PARAMETER *p) {
     str.pointer=p->pointer;
     bc_push_string(str);
     } break;
-  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  default: printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(p->typ));
   }
 }
 static void bc_pushanyparameter(PARAMETER *p) {
@@ -1293,7 +1292,7 @@ static void bc_pushanyparameter(PARAMETER *p) {
     ARRAY arr=*(ARRAY *)&(p->integer);
     bc_push_array(arr);
     } break;
-  default: printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,p->typ);
+  default: printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(p->typ));
   }
 }
 
@@ -1416,14 +1415,14 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
     case PL_STRING: /* String */
       if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
       else if(ip==PL_EVAL) {
-        bc_parser(pin[i].pointer);if(TL!=PL_STRING) printf("Hier ist kein String rausgekommen!\n %s",(char *)pin[i].pointer);
+        bc_parser(pin[i].pointer);if(TL!=PL_STRING) printf("WARNING: result is not a string!\n %s",(char *)pin[i].pointer);
       } else if(ip==PL_STRING) {
         STRING str;
 	str.len=pin[i].integer;
 	if(verbose>1) printf("\"%s\" ",(char *)pin[i].pointer);
 	str.pointer=pin[i].pointer;
 	bc_push_string(str);	
-      } else printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
+      } else printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(pin[i].typ));
 
       break;
     case PL_ARRAY:  /* Array */
@@ -1431,8 +1430,8 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
     case PL_FARRAY: /* float-Array */
     case PL_SARRAY: /* String-Array */
       if(ip==PL_LEER) {BCADD(BC_PUSHLEER);TP(PL_LEER);}
-      else if(pin[i].typ!=PL_EVAL) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,pin[i].typ);
-      else {bc_parser(pin[i].pointer);if(TL!=PL_ARRAY) printf("WARNING: Hier ist kein Array rausgekommen!\n %s",(char *)pin[i].pointer);}
+      else if(pin[i].typ!=PL_EVAL) printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(pin[i].typ));
+      else {bc_parser(pin[i].pointer);if(TL!=PL_ARRAY) printf("WARNING: result is not an array!\n %s",(char *)pin[i].pointer);}
       break;
     case PL_VAR:   /* Variable */
     case PL_NVAR:   /* Variable */

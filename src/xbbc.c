@@ -244,24 +244,22 @@ int main(int anzahl, char *argumente[]) {
 	printf("<-- %s\n",ifilename);
 	#endif
         int prgerrors=loadprg(ifilename);
-        if(prgerrors) {
+        if(prgerrors<0) {
           printf("%s: ERROR: program %s contains errors. Cannot compile.\n",argumente[0],ifilename);
 	  exit(EX_DATAERR);
+	} else if(prgerrors) {
+          printf("%s: WARNING: program %s contains warnings. Will compile anyway.\n",argumente[0],ifilename);
 	}
-    bcpc.pointer=malloc(MAX_CODE);
+        bcpc.pointer=malloc(MAX_CODE);
 #ifdef ATARI
-    if(bcpc.pointer==NULL) {
-      perror("malloc");
-      printf("ERROR: Need at least %d Bytes free memory. %d\n",MAX_CODE,malloc(-1));
-      sleep(5);
-      exit(-1);
-    } else printf("Buffer at %p\n",bcpc.pointer);
-#endif
-
-
-	#ifdef ATARI
+        if(bcpc.pointer==NULL) {
+          perror("malloc");
+          printf("ERROR: Need at least %d Bytes free memory. %d\n",MAX_CODE,malloc(-1));
+          sleep(5);
+          exit(-1);
+        } else printf("Buffer at %p\n",bcpc.pointer);
 	printf("Compile ... \n");
-	#endif
+#endif
 	compile(verbose);
 	// printf("%p LEN=%d\n",bcpc.pointer,bcpc.len);
 	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
@@ -279,9 +277,9 @@ int main(int anzahl, char *argumente[]) {
     } else exit(EX_NOINPUT);
     free(bcpc.pointer);
   }
-  #ifdef ATARI
+#ifdef ATARI
   sleep(4);
-  #endif
+#endif
   return(EX_OK);
 }
-#endif
+#endif  

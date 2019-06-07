@@ -85,11 +85,10 @@ unsigned int combine_type(unsigned int rtyp,unsigned int ltyp,char c) {
     else typ|=INTTYP;
   } else if(c==',') typ|=rtyp;   /* Hm... */
   else  typ|=combtyp[8*rtyp+ltyp];  /*   + - * etc... */
-  //printf("combine-type %x %x %c -->> %x\n",rtyp,ltyp,c,typ);
   
   if((typ&TYPMASK)==NOTYP && (typ&ARRAYTYP)!=ARRAYTYP) {
     xberror(51,"combine-type");  /* Parser: Syntax Error */
-    printf("WARNING: combine-typ r=%x l=%x c=%c ---> %x\n",rtyp,ltyp,c,typ);
+    printf("WARNING: combine-typ <%s>--<%s>--'%c'--> <%s>\n",type_name(ltyp),type_name(rtyp),c,type_name(typ));
   }
   return(typ);
 }
@@ -140,28 +139,40 @@ unsigned int type_list(const char *ausdruck) {
    es darf sich nicht um eine Liste von Ausdr"ucken handeln.
 
 */
-//#define TYPEDEBUG
-#ifdef TYPEDEBUG
+
 /* Typ von Ausdruecken */
 
-static void dump_type(unsigned int typ) {
-  if(typ==NOTYP) printf("notyp ");
+char *type_name(unsigned int typ) {
+  static int offset=0;
+  static char buffer[128];
+  if(offset>80) offset=0;
+  char *nam=&buffer[offset];
+  if(typ==NOTYP) strcpy(nam,"notyp ");
   else {
-    if(typ&INDIRECTTYP) printf("indirect ");
-    if(typ&FILENRTYP) printf("filenr ");
-    if(typ&CONSTTYP) printf("const ");
-    if(typ&ARRAYTYP) printf("array ");
+    *nam=0;
+    if(typ&INDIRECTTYP) strcat(nam,"indirect ");
+    if(typ&FILENRTYP) strcat(nam,"filenr ");
+    if(typ&CONSTTYP) strcat(nam,"const ");
+    if(typ&ARRAYTYP) strcat(nam,"array ");
 
     switch(typ&TYPMASK) {
-    case INTTYP: printf("int ");break;
-    case FLOATTYP: printf("float ");break;
-    case COMPLEXTYP: printf("complex ");break;
-    case ARBINTTYP: printf("arbint ");break;
-    case ARBFLOATTYP: printf("arbflt ");break;
-    case STRINGTYP: printf("string ");break;
-    default: printf("unknown ");break;
+    case INTTYP:      strcat(nam,"int ");    break;
+    case FLOATTYP:    strcat(nam,"float ");  break;
+    case COMPLEXTYP:  strcat(nam,"complex ");break;
+    case ARBINTTYP:   strcat(nam,"arbint "); break;
+    case ARBFLOATTYP: strcat(nam,"arbflt "); break;
+    case STRINGTYP:   strcat(nam,"string "); break;
+    default:          sprintf(nam+strlen(nam),"unknown[%x] ",typ);
     }
   }
+  offset+=strlen(nam)+1;
+  return(nam);
+}
+//#define TYPEDEBUG
+#ifdef TYPEDEBUG
+
+static void dump_type(unsigned int typ) {
+  printf(type_name(typ));
 }
 unsigned int type_(const char *ausdruck);
 unsigned int type(const char *ausdruck) {

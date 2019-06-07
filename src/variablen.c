@@ -199,7 +199,6 @@ Returns:
    -1 -- not allowed
    */
 static int varnamecheck(const char *n, int typ) {
-//  printf("varnamecheck: %s\n",s);
   if(!n || *n==0 || (*n>='0' && *n<='9')) return(-1);
   char c;
   const char *s=n;
@@ -215,22 +214,22 @@ static int varnamecheck(const char *n, int typ) {
       if(i>=a) break;
     }
     if(strcmp(s,sysvars[i].name)==0) {
-      printf("ERROR: Assignment to Sysvar %s not allowed.\n",sysvars[i].name);
+      printf("ERROR: Assignment to system variable %s is not allowed.\n",sysvars[i].name);
       return(-1);
     }
   } else if(typ==STRINGTYP) {
-     /* Liste durchgehen */
-     int i=0,a=anzsyssvars-1,b,l=strlen(s);
-     for(b=0; b<l; b++) {
-       while(s[b]>(syssvars[i].name)[b] && i<a) i++;
-       while(s[b]<(syssvars[a].name)[b] && a>i) a--;
-       if(i>=a) break;
-     }
-	//  printf("i=%d <%s>\n",i,syssvars[i].name);
-     if(i==a && l==strlen(syssvars[i].name)-1 && syssvars[i].name[l]=='$' && strncmp(s,syssvars[i].name,l)==0) {
-        printf("ERROR: Assignment to Sysvar %s not allowed.\n",syssvars[i].name);
-        return(-1);
-     }
+    /* Liste durchgehen */
+    int i=0,a=anzsyssvars-1,b,l=strlen(s);
+    for(b=0; b<l; b++) {
+      while(s[b]>(syssvars[i].name)[b] && i<a) i++;
+      while(s[b]<(syssvars[a].name)[b] && a>i) a--;
+      if(i>=a) break;
+    }
+       //  printf("i=%d <%s>\n",i,syssvars[i].name);
+    if(i==a && l==strlen(syssvars[i].name)-1 && syssvars[i].name[l]=='$' && strncmp(s,syssvars[i].name,l)==0) {
+       printf("ERROR: Assignment to system variable %s is not allowed.\n",syssvars[i].name);
+       return(-1);
+    }
   }
   return(0);
 }
@@ -454,7 +453,7 @@ void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
         *(v->pointer.a)=convert_to_arbintarray(arr);
       } else {
         xberror(58,v->name); /* Variable %s has incorrect type*/  
-	printf("ERROR: cannot convert array from typ %x to %x\n",arr->typ,zarr->typ);
+	printf("ERROR: cannot convert array from typ <%s> to <%s>\n",type_name(arr->typ),type_name(zarr->typ));
       }
       } 
       break;
@@ -514,7 +513,7 @@ void zuweis_v_parameter(VARIABLE *v,PARAMETER *p) {
     break;
   default:
     xberror(58,v->name); /* Variable %s has incorrect type*/  
-    printf("zuweis_v_parameter: $%x->$%x can not convert.\n",p->typ,v->typ);
+    printf("zuweis_v_parameter: <%s> --> <%s> can not convert.\n",type_name(p->typ),type_name(v->typ));
     dump_parameterlist(p,1);
   } /* switch */
 }
@@ -726,7 +725,7 @@ void feed_subarray_and_free(int vnr,int *indexliste, int n, ARRAY *arr) {
         tmparr=convert_to_floatarray(arr); free_array(arr); arr=&tmparr;
       } else {
          xberror(58,variablen[vnr].name); /* Variable %s has incorrect type*/  
-	 printf("dest-Typ: %x  / %x \n",zarr->typ,arr->typ);
+	 printf("dest-typ: <%s>  / array-typ: <%s>\n",type_name(zarr->typ),type_name(arr->typ));
       }      
       /* Jetzt haben beide Arrays den gleichen Typ */
       

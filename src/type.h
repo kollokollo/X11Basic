@@ -11,3 +11,4 @@ unsigned int combine_type(unsigned int rtyp,unsigned int ltyp,char c);
 int returntype(int idx, PARAMETER *p,int n);
 int returntype2(int idx, char *n);
 
+char *type_name(unsigned int typ);

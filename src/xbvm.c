@@ -200,8 +200,8 @@ static int loadbcprg(char *filename) {
     BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)adr;
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
-      printf("WARNING: This Bytecode was compiled for a different version of"
-      "X11-Basic.\n ERROR.\n");
+      printf("ERROR: This bytecode was compiled for a different version of "
+      "X11-Basic.\n");
       return(-1);
     }
     /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
@@ -211,7 +211,7 @@ static int loadbcprg(char *filename) {
     }
     return(0);
   } else {
-    printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
+    printf("ERROR: file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
     return(-1);
   }
 }
