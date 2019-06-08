@@ -72,10 +72,14 @@ HINSTANCE hInstance;
 static int typstack[128];
 static int typsp=0;
 
+/* Typestack add a */
 static inline void TP(int a) {typstack[typsp]=(a);typsp++;}
+/* Typestack replace last*/
 #define TR(a) typstack[typsp-1]=(a)
-#define TO()  if(--typsp<0) printf("WARNING: typestack <zero! at line %d.\n",compile_zeile)
-#define TA(a)  if((typsp-=(a))<0) printf("WARNING: typestack zero or below! at line %d.\n",compile_zeile)
+/* Typestack remove last */
+#define TO()  if(--typsp<0) printf("WARNING: typestack<0 at line %d.\n",compile_zeile)
+/* Typestack remove last a */
+#define TA(a)  if((typsp-=(a))<0) printf("WARNING: typestack<0 at line %d.\n",compile_zeile)
 #define TL    typstack[typsp-1]
 #define TL2    typstack[typsp-2]
 static inline void TEXCH() {
@@ -397,6 +401,9 @@ static void bc_sub(){
   TR(tr);
 }
 
+/*
+ * Bytecode parser.
+ */
 
 int bc_parser(const char *funktion){  /* Rekursiver Parser */
   char *pos,*pos2;
@@ -710,7 +717,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
     }
     /* $-Funktionen und $-Felder   */
     *pos2=0;
-    /* Benutzerdef. Funktionen mit parameter*/
+    /* Benutzerdef. Funktionen mit parameter  */
     if(*s=='@') {
       int pc2,typ;
       int anzpar=0;
@@ -748,27 +755,28 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       if(verbose>1) printf("function procnr=%d, anzpar=%d\n",pc2,anzpar);
       typ=procs[pc2].typ;
       if(typ==4) {   /* DEFFN */
-        int e;
-	int *ix;
+	int oldtypsp=typsp;
 	BCADD(BC_BLKSTART); /* Stackponter erhoehen etc. */
         BCADD(BC_POP); /* Das waere jetzt die Anzahl der Parameter als int auf Stack*/
         TO();
-        e=procs[pc2].anzpar;
-	ix=procs[pc2].parameterliste;
+        int e=procs[pc2].anzpar;
+	int *ix=procs[pc2].parameterliste;
 	while(--e>=0) {
           bc_local(ix[e]&(~V_BY_REFERENCE));  /* Rette alten varinhalt */
-          typsp=1;
           bc_zuweis(ix[e]&(~V_BY_REFERENCE)); /* Weise vom stack zu */
+	  TO();
         }
+	// printf("restore-typesp from %d to %d <%s>\n",typsp,oldtypsp,s);
+        typsp=oldtypsp;
         bc_parser(pcode[procs[pc2].zeile].argument);
+	TO(); /* Typ vom parser weg*/
 	BCADD(BC_BLKEND);
       } else {
         bc_jumptosr2(procs[pc2].zeile);
-        TO();
-        TA(anzpar);
-	int t=type(s+1);
-	TP(PL_CONSTGROUP|(t&TYPMASK));
       }
+      TO(); /* Anzpar weg*/
+      TA(anzpar); /* Einzelne Parameter weg */
+      TP(PL_CONSTGROUP|(type(s+1)&TYPMASK)); /* neuer Typ*/
       /*Der Rueckgabewert sollte nach Rueckkehr auf dem Stack liegen.*/
       return(bcerror);
     }
@@ -927,23 +935,33 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
   
   
   if(*s=='@') {   /*  Funktionsaufrufe ohne Parameterliste ....*/
-    int pc2;
     /* Funktionsnr finden */
     if(verbose>1) printf("function call <%s>\n",s+1);
-    pc2=procnr(s+1,PROC_FUNC);
+    
+    int pc2=procnr(s+1,PROC_FUNC|PROC_DEFFN);
     if(pc2==-1) { 
       xberror(44,s+1); /* Funktion  nicht definiert */
       return(bcerror);
     } 
     if(procs[pc2].anzpar!=0) {
-        xberror(56,s); /* Falsche Anzahl Parameter */
-        return(bcerror);
+      xberror(56,s); /* Falsche Anzahl Parameter */
+      return(bcerror);
     }
-    bc_push_integer(0); /*Keine Parameter*/
+    bc_push_integer(0); /* Keine Parameter*/
 
     if(verbose>1) printf("function procnr=%d\n",pc2);
-    bc_jumptosr2(procs[pc2].zeile);
-    TO();
+    typ=procs[pc2].typ;
+    if(typ==4) {   /* DEFFN */
+      BCADD(BC_BLKSTART); /* Stackponter erhoehen etc. */
+      BCADD(BC_POP); /* Das waere jetzt die Anzahl der Parameter als int auf Stack*/
+      TO();  /* ANzpar weg */
+      bc_parser(pcode[procs[pc2].zeile].argument);
+      TO(); /* Typ vom parser verwerfen*/
+      BCADD(BC_BLKEND);
+    } else {
+      bc_jumptosr2(procs[pc2].zeile);
+      TO();  /* ANzpar weg */
+    }
     TP(PL_CONSTGROUP|(type(s+1)&TYPMASK));
     /*Der Rueckgabewert sollte nach Rueckkehr auf dem Stack liegen.*/
     return(bcerror);
@@ -1299,10 +1317,10 @@ static void bc_pushanyparameter(PARAMETER *p) {
 static void bc_print_arg(const char *ausdruck,char *code) {
   char w1[strlen(ausdruck)+1],w2[strlen(ausdruck)+1];
   char w3[strlen(ausdruck)+1],w4[strlen(ausdruck)+1];
- // printf("bc_print_arg: <%s>  code=<%s>\n",ausdruck,code);
+  // printf("bc_print_arg: <%s>  code=<%s>\n",ausdruck,code);
   int e=arg2(ausdruck,TRUE,w1,w2);
   while(e) {
-   // printf("Teilausdruck: <%s>  e=%d\n",w1,e);
+    // printf("Teilausdruck: <%s>  e=%d\n",w1,e);
     if(strncmp(w1,"AT(",3)==0) {
       w1[strlen(w1)-1]=0;
       wort_sep(w1+3,',',TRUE,w3,w4);
@@ -1329,7 +1347,6 @@ static void bc_print_arg(const char *ausdruck,char *code) {
       sprintf(code+strlen(code),"\"m\"");
     } else {
       /* Hier noch PRINT USING abfangen ...*/
-    
       int ee=wort_sep2(w1," USING ",TRUE,w1,w4);
       if(ee==2) {
         if(strlen(code)) strcat(code,"+");
@@ -1351,6 +1368,7 @@ static void bc_print_arg(const char *ausdruck,char *code) {
     }
     e=arg2(w2,TRUE,w1,w2);
   }
+  // printf("code=<%s>\n",code);
 }
 
 static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int pmax) {
@@ -1732,7 +1750,7 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	    bc_print_arg(n,code);  /* Ergebnis ist dann ein String-Parameter auf dem Stack.*/
 	    if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'' && j==pcode[i].panzahl-1) strcat(code,"+CHR$(10)");
 	    else if(n[strlen(n)-1]!=';' && n[strlen(n)-1]!='\'' && j<pcode[i].panzahl-1) strcat(code,"+CHR$(9)");
-	  //  printf("n=<%s> --> <%s>\n",n,code);
+	    // printf("n=<%s> --> <%s>\n",n,code);
 	  } else if(p[j].typ==PL_LEER) {
             ; /* nixtun !*/
 	  } else {
@@ -1742,6 +1760,8 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	  }
 	}
 	if(TL!=PL_LEER && TL!=PL_FILENR) printf("WARNING: something is wrong at line %d! %x\n",compile_zeile,TL);
+	// printf("marker %d\n",typsp);
+        //printf("--> <%s>\n",code);
 	if(*code) bc_parser(code);
 	else { /* offenbar war der ganze Ausdruck leer, also PRINT ohne Argumente */
           // printf("PRINT leerer Ausdruck ....\n");
@@ -1763,8 +1783,8 @@ Hier ist also noch ziemlicher Bahnhof ! */
 	   2. STRING
 	   */
         BCADD(BC_PUSHCOMM);BCADD(find_comm("OUT"));
-        BCADD(2);
-        TA(2);
+        BCADD(2); /* Parameter Anzahl = 2*/
+        TA(2);    /* nimm zwei typen weg */
       } else {
         BCADD(BC_PUSHCOMM);BCADD(find_comm("PRINT"));
         BCADD(pcode[i].panzahl);
