@@ -1030,15 +1030,22 @@ SEE ALSO:  CONT, END, QUIT
 
 ##############################################################################
 Function:  STR$()
-Syntax:    t$=STR$(a[,b,c])
+Syntax:    t$=STR$(a[,b,c[,d]])
 
 DESCRIPTION:
 
         STR$() converts a number into a string of length b
         with c significant digits. If b or c are omitted, the string
 	will contain as much digits as the number requires.
+	if d=1, leading zeros are printed.
 
-SEE ALSO: VAL(), PRINT USING
+EXAMPLES:
+	PRINT STR$(PI)        ! Result: 3.14159265359
+	PRINT STR$(PI,2,2)    ! Result: 3.1
+	PRINT STR$(PI,5,2,1)  ! Result: 003.1
+	PRINT STR$(PI+3i,5,2,1) ! Result: (003.1+00003i)
+
+SEE ALSO: VAL(), PRINT USING, USING$()
 ##############################################################################
 Function:  STRING$()
 Syntax:    a$=STRING$(i%,b$)

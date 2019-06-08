@@ -111,14 +111,32 @@ Syntax:   MERGE <filename>
 
 DESCRIPTION:
 
-	MERGE appends a BASIC program to the program currently  in  memory. 
-	Program  execution  is  not  interrupted. This command  typically  is 
-	used  to  append  often-used  subroutines   at run-time.
+	MERGE appends a BASIC program to the program currently in memory. 
+	Program execution is not interrupted. This command  typically is 
+	used to append often-used subroutines at run-time.
+
+COMMENT:
+	MERGE always loads the file at the end of the current program and not 
+	at the place where the MERGE statement itself is located.
+
+        MERGE is excecuted on runtime, this means if the MERGE command is not 
+	reched by the program flow, nothing will be merged.
+
+        An END statement is implied at the end of the currently loaded file. 
+	If you want to excecute parts of the just merged code you must use 
+	labels and GOTO or procedures or functions.
+	
+	
+	MERGE is a command and not a compiler directive. MERGE does something 
+	only when it is reached in the program flow. 
+	
 
 SEE ALSO:    CHAIN, LOAD
 
 EXAMPLE:
        MERGE "examples/mylibrary.bas"
+       a=@functionfromlibrary()
+       
 ##############################################################################
 Command:  MFREE 
 Syntax:   MFREE adr%

@@ -198,18 +198,25 @@ SEE ALSO: SELECT, DEFAULT, CASE
 ##############################################################################
 
 Command:    ENV$()
-Syntax:     <string-result>=ENV$(<env-variable>)
+Syntax:     a$=ENV$(name$)
 
 DESCRIPTION:
 
-	ENV$() returns the  current  value of  the  specified  "environment 
+	ENV$() returns the current value of the specified "environment 
 	variable". Environment variables are string variables maintained by the
-	operating system.  These  variables typically   are  used  to  save 
-	configuration  information.   Use the SETENV command to set the values
+	operating system.  These variables typically are used to save 
+	configuration information.  Use the SETENV command to set the values
 	of environment variables.
+	
+	
+COMMENT: 
+	In Unix and Unix-like systems, the names of environment variables are 
+	case-sensitive. 
 
 EXAMPLE:
         PRINT ENV$("USER")  !  Result: hoffmann
+        PRINT ENV$("HOST")  !  may return the name of the computer
+        PRINT ENV$("PWD")   !  may return the current working directory
 
 SEE ALSO: SETENV
 ##############################################################################
