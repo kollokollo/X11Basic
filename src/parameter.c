@@ -105,7 +105,7 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
   
   // printf("prepare_vvar: w1=<%s>  typ=%x solltyp=%x\n",w1,typ,solltyp);
   if(e==0) ; /* String war leer oder falsch formatiert */
-  else if(e==1 || strlen(k2)==0) {  /* Keine Argumente in Klammer oder keine klammern*/
+  else if(e==1 || *k2==0) {  /* Keine Argumente in Klammer oder keine klammern*/
     if(fit_solltyp(typ,solltyp)) {
       char *r=varrumpf(w1);
   //    printf("FIT.\n");
@@ -136,6 +136,43 @@ int prepare_vvar(char *w1,PARAMETER *p, unsigned int solltyp) {
     } 
   }
  // printf("----> vnr=%d\n",p->integer);
+  if(p->integer<0) xberror(76,w1);   /* illegal variable name */
+  else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
+  return(p->integer);
+}
+
+
+/* Macht aus einem Ausdruck A(dimlist) einen Parameter des
+Typs PL_DIMARG, wobei die Indizes als indexparameter eingetragen werden
+zum spaeteren Auswerten zu runtime. */
+
+int prepare_dimvar(char *w1,PARAMETER *p) {
+  char k1[strlen(w1)+1],k2[strlen(w1)+1];
+  int typ=vartype(w1);
+//  printf("prepare_dimvar: <%s> typ=%x %s\n",w1,typ,type_name(typ));
+  int e=klammer_sep(w1,k1,k2);
+  p->pointer=NULL; /* das zeigt, dass noch keine endgültige DIMLIST da ist.*/
+  p->integer=-1;   /* vnr */
+  p->typ=NOTYP; /* Falls type mismatch auftritt, definiertes Ergebnis */
+  
+  if(e==0) ; /* String war leer oder falsch formatiert */
+  else if(e==1 || *k2==0) {  /* Keine Argumente in Klammer oder keine klammern*/
+    ; 
+  } else if(e==2) { /* Es sind indizies da. */
+    // printf("Es sind idicies da...\n");
+    typ&=TYPMASK;
+      char *r=varrumpf(w1);
+      p->integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);  /*  vnr */
+      free(r);
+       /*Parameter Typ eintragen.*/
+      p->typ=(PL_VARGROUP|typ);
+      p->panzahl=count_parameters(k2);   /* Anzahl indizes z"ahlen*/
+      p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
+      /*hier die Indizies in einzelne zu evaluierende Ausdruecke
+        separieren*/
+      make_preparlist(p->ppointer,k2);
+      // dump_parameterlist(p,1);
+  }
   if(p->integer<0) xberror(76,w1);   /* illegal variable name */
   else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
   return(p->integer);
@@ -181,6 +218,7 @@ void free_parameter(PARAMETER *p) {
   case PL_STRING:
   case PL_EVAL:
   case PL_KEY:
+  case PL_DIMARG:
     free(p->pointer);
   case PL_INT:
   case PL_FLOAT:
@@ -458,6 +496,9 @@ int make_parameter_stage2(char *n,unsigned short ap, PARAMETER *pret) {
   case PL_SARRAYVAR: 
   case PL_ALLVAR:
     prepare_vvar(n,pret,ap); 
+    return(0);
+  case PL_DIMARG:
+    prepare_dimvar(n,pret); 
     return(0);
   case PL_KEY: /* Keyword */
     pret->arraytyp=keyword2num(n);
@@ -787,6 +828,30 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     } else pret->pointer=pin->pointer;
       
       // printf("Variable uebergeben. %d %s\n",vnr,varinfo(&variablen[vnr]));
+    break;
+    
+    /* Bei Dimarg, wird als pointer ein Pointer auf die DIMLIST
+       generiert. DIe dimension befindet sich dann in arraytyp und der
+       Variablentyp wird nicht weitergereicht, da er schon durch VNR
+       bestimmt ist.*/
+  case PL_DIMARG:
+    //printf("TODO: make_parameter_stage3 ap=%x ip=%x vnr=%d\n",ap,ip,pin->integer);
+   
+    pret->typ=ap; /* wichtig. vartyp wird vergessen da nicht mehr nötig*/
+    if(ip==PL_LEER) break;  /* bei leerem Parameter: fertig */
+    pret->integer=pin->integer;  /* vnr */
+    if(pin->pointer==NULL) {
+      
+      /* Hier einfach alle parameterindizies übernehmen*/
+      if(pin->panzahl) {
+        indexliste=malloc(pin->panzahl*sizeof(int));
+        get_indexliste(pin->ppointer,indexliste,pin->panzahl);
+       // printf("Es sind %d indizien da.\n",pin->panzahl);
+      } else indexliste=NULL;
+      pret->pointer=indexliste;
+      pret->arraytyp=pin->panzahl;  /*  dimension */
+    } else pret->pointer=pin->pointer;
+    pret->panzahl=0;
     break;
   case PL_KEY: /* Keyword */
     if(ip==PL_LEER) pret->arraytyp=KEYW_NONE;

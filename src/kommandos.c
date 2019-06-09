@@ -493,38 +493,6 @@ static void c_every(PARAMETER *plist,int e) {
 }
 
 
-static void dodim(const char *w) {
-  char w1[strlen(w)+1],w2[strlen(w)+1];
-  int e=klammer_sep(w,w1,w2);
- 
-  if(e<2) xberror(32,"DIM"); /* Syntax nicht Korrekt */
-  else {
-    int ndim=count_parameters(w2);
-    uint32_t dimlist[ndim];
-    char *r=varrumpf(w1);
-    int typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */
-
-    /* Dimensionen bestimmen   */
-     
-    char *s,*t;
-    int i=wort_sep_destroy(w2,',',TRUE,&s,&t);
-    ndim=0;
-    while(i) {
-      xtrim(s,TRUE,s);
-      dimlist[ndim++]=(int)parser(s);
-      i=wort_sep_destroy(t,',',TRUE,&s,&t); 
-    }
-//  printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
-
-    int vnr=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);
-    if(vnr>=0) {
-      ARRAY arr=*(variablen[vnr].pointer.a);
-      *(variablen[vnr].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
-      free_array(&arr); /*Alten Inhalt freigeben*/
-    }
-    free(r);
-  }
-}
 static inline void do_restore(int offset) {
   datapointer=offset;
  // printf("DO RESTORE %d\n",offset);
@@ -1918,19 +1886,96 @@ static void c_do(const char *n) {   /* wird normalerweise ignoriert */
   else xberror(32,n); /*Syntax nicht korrekt*/
 }
 #endif
+
+/*TODO: DIM should not evaluate expressions on runtime, 
+ * better have that resolved before (for the compiler).
+ * Maybe similar to how LOCAL does it.
+ * Now: DIM takes only a special Parameter with PL_DIMARG
+ * The dimension and dimlist is already be resolved.
+ */
+
 static void c_dim(PARAMETER *plist,int e) {
-  int i;
-  for(i=0;i<e;i++) {
-      switch(plist[i].typ) {
-      case PL_EVAL:
-      //  printf("arg: %s \n",(char *)plist[i].pointer);
-	dodim(plist[i].pointer);
-        break;
-      default: 
-        dump_parameterlist(plist,e);
-        xberror(32,"DIM"); /* Syntax error */
-	return;
+  for(int i=0;i<e;i++) {
+    switch(plist[i].typ) {
+#if 0
+    case PL_EVAL:  /* eigentlich obsolete */
+    {
+    printf("DIM %d : eval <%s>\n",i,(char *)plist[i].pointer);
+      PARAMETER par;
+      PARAMETER *p=&par;
+      p->pointer=NULL;
+      p->integer=-1;
+      p->typ=NOTYP; /* Falls type mismatch auftritt, definiertes Ergebnis */
+
+      char w1[strlen(plist[i].pointer)+1],w2[strlen(plist[i].pointer)+1];
+      int e=klammer_sep(plist[i].pointer,w1,w2);
+ 
+      if(e==0) { /* String war leer oder falsch formatiert */
+          xberror(32,"DIM"); /* Syntax nicht Korrekt */
+      } else if(e==1 || *w2==0) {
+          xberror(32,"DIM"); /* Syntax nicht Korrekt */
+      } else if(e==2) {
+        char *r=varrumpf(w1);
+        int typ=type(w1)&(~CONSTTYP);  /* Typ Bestimmen  */
+        p->integer=add_variable(r,ARRAYTYP,typ,V_DYNAMIC,NULL);  /*  vnr */
+    
+        int ndim=count_parameters(w2);
+        uint32_t dimlist[ndim];
+        p->typ=(PL_VARGROUP|typ);
+        p->panzahl=ndim;   /* Anzahl indizes z"ahlen*/
+        p->ppointer=malloc(sizeof(PARAMETER)*p->panzahl);
+
+        make_preparlist(p->ppointer,w2);
+    
+        // dump_parameterlist(p,1);
+        if(p->integer<0) xberror(76,w1);   /* illegal variable name */
+          else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
+
+         /* Dimlist machen   */
+        if(p->panzahl>0) {
+          for(int i=0;i<ndim;i++) {
+            dimlist[i]=p2int(&(p->ppointer[i]));
+          // printf("idx[%d]=%d\n",i,dimlist[i]);
+          }
+        }
+
+     
+   //  printf("DIM: <%s>: dim=%d typ=$%x\n",r,ndim,typ);
+
+          if(p->integer>=0) { /* vnr */
+            ARRAY arr=*(variablen[p->integer].pointer.a);
+            *(variablen[p->integer].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
+            free_array(&arr); /*alten Inhalt freigeben*/
+          }
+          free(r);
+        }
+        if(p->integer<0) xberror(76,w1);   /* illegal variable name */
+        else if(p->typ==NOTYP) xberror(13,w1);  /* Type mismatch */
+        free_parameter(p);
       }
+      break;
+#endif
+    case PL_DIMARG:
+      if(plist[i].integer>=0) { /* vnr */
+        //printf("dimlist vnr=%d (%d):\n",plist[i].integer,plist[i].arraytyp);
+        //for(int j=0;j<plist[i].arraytyp;j++)
+        //  printf("%d:%d\n",j,((int *)plist[i].pointer)[j]); 
+	ARRAY arr=*(variablen[plist[i].integer].pointer.a);
+	unsigned int typ=arr.typ;
+	int ndim=plist[i].arraytyp;
+	uint32_t *dimlist=(uint32_t *)plist[i].pointer;
+	//printf("typ=%x %s\n",typ,type_name(typ));
+	*(variablen[plist[i].integer].pointer.a)=recreate_array(typ,ndim,dimlist,&arr);
+	free_array(&arr); /*alten Inhalt freigeben*/
+	   
+      } else xberror(76,"");   /* illegal variable name */
+      break;
+    default: 
+      printf("DIM %d : ptyp=%x\n",i,plist[i].typ);
+      dump_parameterlist(plist,e);
+      xberror(32,"DIM"); /* Syntax error */
+      return;
+    }
   }
 }
 static void c_erase(PARAMETER *plist,int e) {
@@ -2789,7 +2834,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "DEFTEXT"  , c_deftext,1,4,(unsigned short []){PL_INT,PL_FLOAT,PL_FLOAT,PL_FLOAT}},
 #endif
  { P_PLISTE,     "DELAY"    , c_pause,      1,1,(unsigned short []){PL_FLOAT}},
- { P_PLISTE,     "DIM"      , c_dim ,1,-1,(unsigned short []){PL_EVAL,PL_EVAL}},
+ { P_PLISTE,     "DIM"      , c_dim ,1,-1,(unsigned short []){PL_DIMARG,PL_DIMARG}},
  { P_PLISTE,     "DIV"      , c_div ,2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
  { P_DO,         "DO"       , NULL  ,0,0},
 #ifdef DOOCS

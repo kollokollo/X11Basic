@@ -67,7 +67,7 @@ TODO: Ordnung reinbringen....
 #define PL_CVAR     (PL_VARGROUP|COMPLEXTYP)   /* 15 */
 #define PL_SVAR     (PL_VARGROUP|STRINGTYP)    /* 17 */
 /* 16 */
-/* 17 */
+#define PL_DIMARG    (PL_VARGROUP|PL_ARRAY|PL_SPECIALGROUP)    /* 0x78 */
 #define PL_ARRAYVAR  (PL_VARGROUP|PL_ARRAY)   /* 0x18 */
 #define PL_IARRAYVAR (PL_VARGROUP|PL_IARRAY)  /* 0x19 */
 #define PL_FARRAYVAR (PL_VARGROUP|PL_FARRAY)  /* 0x1a */

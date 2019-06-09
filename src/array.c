@@ -288,7 +288,7 @@ ARRAY recreate_array(const int typ, const int dimension, const uint32_t *dimlist
         else varptr[anz]=create_array(NOTYP,0,NULL);
       }
     } break;
-   default: printf("ERROR: Recreate array unknown type\n");
+   default: printf("ERROR: Recreate array unknown type %x\n",typ);
   }
   return(ergebnis);
 }
