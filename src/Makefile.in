@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=56
+RELEASE=57
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -405,8 +405,9 @@ libx11basic.so.$(LIBNO) : $(LIBCSRC) Makefile
 # Make the (static) library
 
 x11basic.a : $(LIBOBJS)
-	 ar -ru $@ $(LIBOBJS) 
-
+	ar -ru $@ $(LIBOBJS) 
+	strip --strip-debug $@
+	 
 # Make the (dynamically linked) X11-Basic excecutable
 
 xbasic : libx11basic.so main.o
