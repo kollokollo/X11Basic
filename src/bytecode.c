@@ -1200,10 +1200,17 @@ static void bc_restore(int offset) {
   CP4(&bcpc.pointer[bcpc.len],&offset,bcpc.len);
 }
 
+/* 
+ * Vollführt eine bedingte Verzweigung von Zeile from nach Zeile ziel. 
+ * Wenn eqflag=1 dann wird 
+ * der letzte Wert auf dem Stack mit Null verglichen und nur dann 
+ * gesprungen.
+ */
+
+
 static void bc_jumpto(int from, int ziel, int eqflag) {
-       /* Hier jetzt ein JUMP realisieren */
   if(TL!=PL_INT && eqflag) printf("WARNING: EQ: no int on stack !\n");
-      if(ziel<=from) { /* Dann ist das Ziel schon bekannt */
+  if(ziel<=from) { /* Dann ist das Ziel schon bekannt */
         int a=bc_index[ziel];
 	add_symbol(a,NULL,STT_NOTYPE,0);
 	int b=a-bcpc.len;
@@ -1661,7 +1668,10 @@ void compile(int verbose) {
     if(pcode[i].opcode&P_INVALID) xberror(32,program[i]); /*Syntax nicht korrekt*/
 
     /* PREFETCH heisst immer, dass das Kommando ansonsten ignoriert werden kann, 
-       ELSE, LOOP, WEND, BREAK, auch CONTINUE und GOTO*/
+       ELSE, LOOP, WEND, BREAK, auch CONTINUE und GOTO. Es wird nur der Sprung ausgeführt. 
+       Bei ELSEIF muss eine Ausnahme gemacht werden, dort muss erst noch ein Ausdruck
+       ausgewertet werden. 
+       */
     
     if((pcode[i].opcode&P_PREFETCH) && !((pcode[i].opcode&PM_SPECIAL)==P_ELSEIF)) {
       bc_jumpto(i,pcode[i].integer,0);
@@ -1969,11 +1979,12 @@ Hier ist also noch ziemlicher Bahnhof ! */
       if(o==P_ENDSELECT) bc_jumpto(i,j,0); 
     } continue; 
     case P_IF: {
-      int j,f=0,o=0;
-      bc_parser(pcode[i].argument);
-      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+      bc_parser(pcode[i].argument);               /* Ausdruck auswerten */
+      if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}  /* Mache integer draus (wahrheitswert)*/
       if(verbose>1) printf(" IF ");
+      // printf("Werte aus: Zeile %d: IF (ENDIF vor Zeile %d)\n",i,pcode[i].integer);
      /*  a=pcode[i].integer; zeigt auf ENDIF */
+      int j,f=0,o=0;
       for(j=i+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDIF || o==P_ELSE|| o==P_ELSEIF)  && f==0) break;
@@ -1981,14 +1992,25 @@ Hier ist also noch ziemlicher Bahnhof ! */
         else if(o==P_ENDIF) f--;
       }
       if(j==prglen) xberror(36,"IF"); /*Programmstruktur fehlerhaft */
-      if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
+#if 0
+      if(o==P_ENDIF) printf("ENDIF in Zeile %d gefunden.\n",j);
+      else if(o==P_ELSE) printf("ELSE in Zeile %d gefunden.\n",j);
+      else if(o==P_ELSEIF) printf("ELSEIF in Zeile %d gefunden.\n",j);
+#endif
+      if(o==P_ENDIF) bc_jumpto(i,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
+                                                dahinter springen, da es eine ELSE IF Zeile sein könnte*/
+      else if(o==P_ELSE) bc_jumpto(i,j+1,1); /* In den Block rein springen */
       else if(o==P_ELSEIF) bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
       else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
     } continue; 
     case P_ELSEIF: {
+      /* Bei ELSE IF macht es einen Unterschied, ob man von oben drauflaeuft oder es über die 
+       * bc_index Tabelle anspringt. In ersterem Fall wird zum ENDIF gegangen in letzterm muss ja
+       * der Ausdruck ausgewertet werden. 
+       */
       bc_jumpto(i,pcode[i].integer,0); /* von oben draufgelaufen, gehe zum endif */
       /* Korrigiere nun bc_index */
-      bc_index[i]=bcpc.len;   /* Wenn wir vom Sprung kommen, landen wir hier */
+      bc_index[i]=bcpc.len;   /* Wenn wir vom Sprung kommen, landen wir hier. Achtung! */
       if(verbose>1) printf(" ELSE IF (corr=$%x) ",bcpc.len);
       int j,f=0,o=0;
 
@@ -2002,7 +2024,16 @@ Hier ist also noch ziemlicher Bahnhof ! */
         else if(o==P_ENDIF) f--;
       }
       if(j==prglen) xberror(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
-      if(o==P_ENDIF || o==P_ELSE) bc_jumpto(i,j+1,1);
+
+#if 0
+      if(o==P_ENDIF) printf("ENDIF in Zeile %d gefunden.\n",j);
+      else if(o==P_ELSE) printf("ELSE in Zeile %d gefunden.\n",j);
+      else if(o==P_ELSEIF) printf("ELSEIF in Zeile %d gefunden.\n",j);
+#endif
+
+      if(o==P_ENDIF) bc_jumpto(i,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
+                                                dahinter springen, da es eine ELSE IF Zeile sein könnte*/
+      else if(o==P_ELSE) bc_jumpto(i,j+1,1); /* In den Block rein springen */
       else if(o==P_ELSEIF) bc_jumpto(i,j,1); /* Die elseif muss ausgewertet werden*/
       else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
     } continue;
@@ -2215,6 +2246,9 @@ Hier ist also noch ziemlicher Bahnhof ! */
       if(pcode[i].panzahl<comms[j].pmin)  xberror(42,""); /* Zu wenig Parameter  */
       if(comms[j].pmax!=-1 && (pcode[i].panzahl>comms[j].pmax)) xberror(45,""); /* Zu viele Parameter  */
     } continue;
+    default: 
+    
+      printf("Hier ist was durch die Lappen gegangen....\n %lx",pcode[i].opcode&PM_SPECIAL);
     } /*  switch */
 printf("Compiler error, unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
     if((pcode[i].opcode&PM_COMMS)>=anzcomms) puts("Precompiler error...");
