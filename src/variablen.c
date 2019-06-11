@@ -593,28 +593,31 @@ int check_feldindex(VARIABLE *v,int *indexliste,int n) {
 }
 
 
-/* Zentrale funktion. Diese wird von allen zuweisoperationen 
+/* Zentrale Funktion. Diese wird von allen Zuweisoperationen 
    benutzt.
+   
+   Rückgabe ist VARPTR.
+   Bei Fehler: Rückgabe NULL
    */
 
 char *varptr_indexliste(VARIABLE *v,int *indexliste,int n) {
   char *varptr=NULL;
-  if(v->typ!=ARRAYTYP && n) {
-   // Typ ist: $%x, das ist kein ARRAYtyp. Trotzdem gibt es %d indizies. 
+  if(v->typ!=ARRAYTYP && n) { /* kein ARRAYtyp. Trotzdem gibt es indizies.*/
   //  xberror(18,""); /* Falsche Anzahl Indizes */
-    xberror(15,v->name); /* Array not dimensioned */
+  //  xberror(15,v->name); /* Array not dimensioned */
+    printf("ERROR: varptr_indexliste: no varptr possible. Var=<%s>\n",v->name);
     return(NULL);
   }
-  
   switch(v->typ) {
   case ARRAYTYP:
     {
       int ndim,anz=0;
       int a=isarray(indexliste,n);
-   //   printf("n=%d, a=%d\n",n,a);
       if(n>v->pointer.a->dimension) {
         if(v->pointer.a->dimension) xberror(18,"varptr"); /* Falsche Anzahl Indizes */
-        else xberror(15,v->name); /* Array not dimensioned */
+        else { 
+	  xberror(15,v->name); /* Array not dimensioned */
+        }
         return(NULL);
       }
       if(check_feldindex(v,indexliste,n)) { xberror(16,"varptr"); /* Feldindex zu gro� */ return(NULL);}

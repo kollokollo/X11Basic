@@ -147,6 +147,7 @@ void free_parameter(PARAMETER *p);
 // define PUSHV(a) opstack+=vm_pushv(a,opstack)
 #define PUSHVV(a) opstack+=vm_pushvv(a,opstack)
 #define PUSHVVI(a,b) opstack+=vm_pushvvi(a,opstack,b)
+#define PUSHDIMARGI(a,b) opstack+=vm_pushdimargi(a,opstack,b)
 #define ZUWEIS(a) opstack+=vm_zuweis(a,opstack)
 #define ZUWEISi(a) *(variablen[a].pointer.i)=(--opstack)->integer
 #define ZUWEISf(a) *(variablen[a].pointer.f)=(--opstack)->real

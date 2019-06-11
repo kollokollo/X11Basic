@@ -682,6 +682,11 @@ static void translate() {
       CP2(&ss2,&bcpc[i],i);
       fprintf(optr,"PUSHVVI(%d,%d); /* %s */\n",ss,ss2,&strings[symtab[vidx[ss]].name]);
       break;
+    case BC_PUSHDIMARGI:
+      CP2(&ss,&bcpc[i],i);
+      CP2(&ss2,&bcpc[i],i);
+      fprintf(optr,"PUSHDIMARGI(%d,%d); /* %s */\n",ss,ss2,&strings[symtab[vidx[ss]].name]);
+      break;
     case BC_PUSHARRAYELEM:      
       CP2(&ss,&bcpc[i],i);
       CP2(&ss2,&bcpc[i],i);
@@ -739,8 +744,8 @@ static int loadbcprg(char *filename) {
 #endif
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
-      printf("xb2c: ERROR: Cannot translate this bytecode.\nThis bytecode was compiled for a different version of "
-      "X11-Basic.\nPlease consider to recompile it.\n");
+      printf("xb2c: ERROR: Cannot translate this bytecode.\nThis bytecode was compiled for a different version (%04x) of "
+      "X11-Basic.\nPlease consider to recompile it.\n",bytecode->version);
       return(-1);
     }
 #ifdef IS_BIG_ENDIAN

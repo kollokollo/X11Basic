@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x1261   /* Version 1.26 release 1*/
+#define BC_VERSION 0x1262   /* Version 1.26 release 2*/
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
@@ -23,7 +23,7 @@ typedef struct {
   uint32_t stringseglen; /* size of the string segment */
   uint32_t relseglen;    /* size of the relocation data */
   unsigned short flags;       /* not used */
-  unsigned short version;     /* version, currently=0x117 */
+  unsigned short version;     /* version */
 } BYTECODE_HEADER;
 
 
@@ -221,6 +221,8 @@ typedef struct {
 #define BC_SAVEa    0xdf /*    11011111  --- store array from address */
 
 /* Gruppe 14: Frei */
+#define BC_PUSHDIMARGI    0xe0 /*    11100000  --- */
+
 /* Gruppe 15: Frei */
 
 #define BC_FALSE  BC_PUSH0     /* Push a logical FALSE */

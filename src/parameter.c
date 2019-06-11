@@ -838,19 +838,27 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     //printf("TODO: make_parameter_stage3 ap=%x ip=%x vnr=%d\n",ap,ip,pin->integer);
    
     pret->typ=ap; /* wichtig. vartyp wird vergessen da nicht mehr nötig*/
-    if(ip==PL_LEER) break;  /* bei leerem Parameter: fertig */
     pret->integer=pin->integer;  /* vnr */
-    if(pin->pointer==NULL) {
+
+    if(pin->pointer==NULL) { /* idexliste noch nicht erstellt */
       
       /* Hier einfach alle parameterindizies übernehmen*/
       if(pin->panzahl) {
         indexliste=malloc(pin->panzahl*sizeof(int));
         get_indexliste(pin->ppointer,indexliste,pin->panzahl);
-       // printf("Es sind %d indizien da.\n",pin->panzahl);
       } else indexliste=NULL;
       pret->pointer=indexliste;
       pret->arraytyp=pin->panzahl;  /*  dimension */
-    } else pret->pointer=pin->pointer;
+    } else { /* Indexliste kopieren */
+      if(pin->arraytyp) { /* dimension */
+        pret->arraytyp=pin->arraytyp;
+	pret->pointer=malloc(pret->arraytyp*sizeof(int));
+	memcpy(pret->pointer,pin->pointer,pret->arraytyp*sizeof(int));
+      } else {
+        pret->arraytyp=0;
+        pret->pointer=NULL;
+      }
+    }
     pret->panzahl=0;
     break;
   case PL_KEY: /* Keyword */

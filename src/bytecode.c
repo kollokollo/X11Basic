@@ -208,9 +208,22 @@ static void bc_pushvv(int vnr) {
   if(typ==ARRAYTYP) typ|=variablen[vnr].pointer.a->typ;
   TP(PL_VARGROUP|typ);
 }
+
+
 static void bc_pushvvindex(int vnr,int anz) {
   short ss=vnr;
   BCADD(BC_PUSHVVI);
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+  ss=anz;
+  CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
+  TA(anz);
+  TP(PL_VARGROUP|variablen[vnr].typ);
+}
+
+
+static void bc_pushdimargindex(int vnr,int anz) {
+  short ss=vnr;
+  BCADD(BC_PUSHDIMARGI);
   CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
   ss=anz;
   CP2(&bcpc.pointer[bcpc.len],&ss,bcpc.len);
@@ -301,7 +314,9 @@ static void bc_zuweisung(char *var,char *arg) {
 }
 
 
-/*Indexliste aus Parameterarray (mit EVAL) auf stack */
+/* Indexliste aus Parameterarray (mit EVAL) oder aus int-Konstanten
+ * auf Stack.
+ */
 
 static int bc_indexliste(PARAMETER *p,int n) {
   int i;
@@ -312,7 +327,12 @@ static int bc_indexliste(PARAMETER *p,int n) {
         bc_parser((char *)p[i].pointer);
 	if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       }
-    } else bc_push_integer(0);
+    } else if(p[i].typ==PL_INT) {
+      bc_push_integer(p[i].integer);
+    } else {
+      printf("ERROR: bc_indexliste: unexpected type...\n");
+      bc_push_integer(0);
+    }
   }
   return(i);
 }
@@ -1372,12 +1392,12 @@ static void bc_print_arg(const char *ausdruck,char *code) {
 }
 
 static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int pmax) {
-  int i,anzpar;
+  int anzpar;
   unsigned short ap,ip;
   if(pmax==-1) anzpar=anz;
   else anzpar=min(anz,pmax);
   if(anzpar<pmin) printf("Not enough parameters. at line %d.\n",compile_zeile);
-  i=0;
+  int i=0;
   while(i<anzpar) {
     if(i>pmin && pmax==-1) ap=pliste[pmin];
     else ap=pliste[i];
@@ -1442,6 +1462,18 @@ static void plist_to_stack(PARAMETER *pin, short *pliste, int anz, int pmin, int
 	bc_push_string(str);	
       } else printf("WARNING: something is wrong at line %d! typ=<%s>\n",compile_zeile,type_name(pin[i].typ));
 
+      break;
+    case PL_DIMARG:  /* Array definition */
+      if(ip==PL_DIMARG) { /* fertig ausgewetetes DIMARG (kommt eigentlich nicht vor) */
+         ; /* nixtun */
+      } else if((ip&PL_VARGROUP)==PL_VARGROUP) { /*vorausgewerteres DIMARG*/
+        vnr=pin[i].integer;
+        // printf("TODO: DIM Arrayvartyp vnr=%d dimension=%d\n",vnr,pin[i].panzahl);
+        if(pin[i].panzahl) {
+	  bc_indexliste(pin[i].ppointer,pin[i].panzahl);
+	  bc_pushdimargindex(vnr,pin[i].panzahl);
+        } 
+      } else printf("WARNING: something is wrong at line %d! typ=<%s> %x\n",compile_zeile,type_name(pin[i].typ),pin[i].typ);
       break;
     case PL_ARRAY:  /* Array */
     case PL_IARRAY: /* Int-Array */

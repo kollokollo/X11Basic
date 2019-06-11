@@ -834,10 +834,12 @@ STATIC int vm_comm(PARAMETER *sp,int i, int anzarg) {    /*  */
     int e=make_pliste3(comms[i].pmin,comms[i].pmax,(unsigned short *)comms[i].pliste,
                  &sp[-anzarg],&plist,anzarg);
     if(e>=0) (comms[i].routine)(plist,e);
+    // printf("Plist to clear:  (%d)\n",e);
+    // dump_parameterlist(plist,e);
     free_pliste(e,plist);
     e=anzarg;
-  //  printf("Parameters to clear:  (%d)\n",e);
-  //  dump_parameterlist(&sp[-e],e);
+    // printf("Parameters to clear:  (%d)\n",e);
+    // dump_parameterlist(&sp[-e],e);
     while(--e>=0) free_parameter(&sp[-e-1]);
     }
     return -anzarg;
@@ -868,25 +870,49 @@ static void make_indexliste_plist(int dim, PARAMETER *p, int *index) {
 STATIC int vm_pushvvi(int vnr,PARAMETER *sp,int dim) {    /*  */
   int *indexliste=NULL;
   PARAMETER *p=&sp[-dim];
-  //dump_parameterlist(p,dim);
   VERBOSE("vm_pushvvi_%d\n",vnr);
 
   if(dim) {
     indexliste=(int *)malloc(dim*sizeof(int));
     make_indexliste_plist(dim,p,indexliste);
- //   printf("Index=%d\n",*indexliste); 
   }
   int e=dim;
   while(--e>=0) free_parameter(&p[e]);
   bzero(p,sizeof(PARAMETER));
   p->integer=vnr;
   p->pointer=varptr_indexliste(&variablen[vnr],indexliste,dim);
- // printf("Pointer=%x\n",(int)p->pointer);
   p->typ=(PL_VARGROUP|variablen[vnr].pointer.a->typ);
   if(indexliste) free(indexliste);
   return(-dim+1);
 }
 
+
+/*Erstellt einen PL_DIMARG parameter aus dim indexparametern 
+auf dem stack*/
+
+STATIC int vm_pushdimargi(int vnr,PARAMETER *sp,int dim) {    /*  */
+  int *indexliste=NULL;
+  PARAMETER *p=&sp[-dim];
+  VERBOSE("vm_pushvvi_%d\n",vnr);
+
+  if(dim) {
+    indexliste=(int *)malloc(dim*sizeof(int));
+    make_indexliste_plist(dim,p,indexliste);
+  }
+  // for(int i=0;i<dim;i++) printf("index[%d]: %d\n",i,indexliste[i]);
+  
+  
+  int e=dim;
+  while(--e>=0) free_parameter(&p[e]);
+
+  bzero(p,sizeof(PARAMETER));
+  p->integer=vnr;
+  p->pointer=indexliste;
+  p->arraytyp=dim;
+  
+  p->typ=PL_DIMARG;
+  return(-dim+1);
+}
 
 ISTATIC int vm_zuweis(int vnr,PARAMETER *sp) {    /*  */
   VERBOSE("vm_zuweis_%d\n",vnr);
@@ -1493,6 +1519,11 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       CP2(&ss,&bcpc.pointer[i],i);
       CP2(&ss2,&bcpc.pointer[i],i);
       opstack+=vm_pushvvi(ss,opstack,ss2);
+      break;
+    case BC_PUSHDIMARGI:
+      CP2(&ss,&bcpc.pointer[i],i);  /* vnr */
+      CP2(&ss2,&bcpc.pointer[i],i); /* dim /anzindex */
+      opstack+=vm_pushdimargi(ss,opstack,ss2);
       break;
     case BC_RESTORE:
       CP4(&datapointer,&bcpc.pointer[i],i);
