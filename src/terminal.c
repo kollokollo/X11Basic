@@ -196,8 +196,8 @@ static void gg_out(unsigned char a) {
       escflag=0;
     } else if(a=='8') {/* Set cursor an save-pos. and attributes */
       cursor_onoff(0);
-      col=cursor_saved_x;
-      lin=cursor_saved_y;
+      if(cursor_saved_x<LineLen-1) col=cursor_saved_x;
+      if(cursor_saved_y<AnzLine-1) lin=cursor_saved_y;
       flags=cursor_saved_flags;
       cursor_onoff(1);
       escflag=0;
@@ -369,8 +369,8 @@ static void gg_out(unsigned char a) {
         cursor_saved_y=lin;	
       } else if(a=='u') { /* Cursor auf gespeicherte Position setzen */
         cursor_onoff(0);
-        col=cursor_saved_x;
-        lin=cursor_saved_y;
+        if(cursor_saved_x<LineLen-1) col=cursor_saved_x;
+        if(cursor_saved_y<AnzLine-1) lin=cursor_saved_y;
 	cursor_onoff(1);		
       } else if(a=='r') { /* set scroll region */
 	  if(anznumbers>=2) {

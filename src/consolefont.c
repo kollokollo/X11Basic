@@ -136,18 +136,20 @@ static void set_fontsize(int big) {
 }
 void change_fontsize(int big) {
   char buffer[100];
-    set_fontsize(big);
-    if(terminal_fd!=-1) {
+  cursor_onoff(0);                  /* avoid cursor later resored in position outside screen*/
+  set_fontsize(big);
+  if(terminal_fd!=-1) {
 //      pty_change_window_size(terminal_fd, win.ws_row, win.ws_col, win.ws_xpixel, win.ws_ypixel);
       ioctl(terminal_fd, TIOCSWINSZ, &win); /*Announce new screen size*/
-    }
+  }
 //    textscreen_redraw(0,0,win.ws_col,win.ws_row);
-    sprintf(buffer,"%dx%d characters. ",win.ws_col,win.ws_row);
-    Fb_BlitText57(screen.width-strlen(buffer)*5,0,GREEN,BLACK,buffer);
+  sprintf(buffer,"%dx%d characters. ",win.ws_col,win.ws_row);
+  Fb_BlitText57(screen.width-strlen(buffer)*5,0,GREEN,BLACK,buffer);
    // putchar(27);printf("[8;1H");
    // if(big==0) printf("Small font activated. ");
   //  else printf("Big font activated. ");
   //  printf("%dx%d characters. \n",win.ws_col,win.ws_row);
+  cursor_onoff(1);
 }
 
 void cursor_onoff(int onoff) {
