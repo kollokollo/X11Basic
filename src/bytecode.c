@@ -524,7 +524,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
     if(wort_sepr2(s," MOD ",TRUE,w1,w2)>1)  {bc_binaer1(w1,w2,BC_MOD);return(bcerror);}
     if(wort_sepr2(s," DIV ",TRUE,w1,w2)>1)  {bc_binaer1(w1,w2,BC_DIV);if(TL!=PL_INT && TL!=PL_ARBINT) {BCADD(BC_X2I);TR(PL_INT);}return(bcerror);}
     if(wort_sepr2(s,"NOT ",TRUE,w1,w2)>1) {
-      if(strlen(w1)==0) {bc_parser(w2);bc_not();return(bcerror);}    /* von rechts !!  */
+      if(*w1==0) {bc_parser(w2);bc_not();return(bcerror);}    /* von rechts !!  */
       /* Ansonsten ist NOT Teil eines Variablennamens */
     }
   }
@@ -608,7 +608,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
   
   if(searchchr2_multi(s,"*/^")!=NULL) {
     if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         bc_parser(w1);bc_parser(w2);
         if(typstack[typsp-2]==PL_INT && typstack[typsp-1]==PL_INT) {
           BCADD(BC_MULi);
@@ -656,7 +656,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       }
     }
     if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         bc_parser(w1);bc_parser(w2);
         if(typstack[typsp-2]==PL_FLOAT && typstack[typsp-1]==PL_FLOAT) {
           BCADD(BC_DIVf);
@@ -695,7 +695,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
       } else { xberror(51,w2); return(bcerror); }/* "Parser: Syntax error?! "  */
     }
     if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         bc_parser(w1);
 	bc_parser(w2);
 	if(TL==PL_INT && bcpc.pointer[bcpc.len-1]==BC_PUSH2) {
@@ -832,7 +832,7 @@ int bc_parser(const char *funktion){  /* Rekursiver Parser */
 	  int ii=0;
           e=wort_sep(pos,',',TRUE,w1,w2);
 		while(e) {
-	          if(strlen(w1)) {
+	          if(*w1) {
                     par[ii].typ=PL_EVAL;
 		    par[ii].pointer=strdup(w1);
      		  } else  {

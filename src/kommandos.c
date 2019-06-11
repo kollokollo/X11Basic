@@ -847,7 +847,7 @@ static void c_save(PARAMETER *plist, int e) {
     char *name;
     if(e) name=plist[0].pointer;
     else name=ifilename;
-    if(strlen(name)==0) name=ifilename;
+    if(*name==0) name=ifilename;
     if(exist(name)) {
       char buf[100];
       sprintf(buf,"mv %s %s.bak",name,name);
@@ -1090,7 +1090,7 @@ static void c_fit(const char *n) {
 //  xberror(9,"FIT"); /* Funktion noch nicht moeglich */
   while(e) {
     scip=0;
-    if(strlen(w1)) {
+    if(*w1) {
        switch(i) {
          case 0: { /* Array mit x-Werten */     
 	   /* Typ bestimmem. Ist es Array ? */

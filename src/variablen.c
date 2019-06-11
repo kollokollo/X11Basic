@@ -37,7 +37,7 @@ int anzlvar[STACKSIZE];
 */
 
 int vartype(const char *name) {  
-  if(!name || strlen(name)==0) return(NOTYP);
+  if(!name || *name==0) return(NOTYP);
   char *w1=strdup(name);
   char *pos;
   int typ=0;

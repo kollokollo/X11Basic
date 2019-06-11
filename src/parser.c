@@ -197,7 +197,7 @@ double parser(const char *funktion){  /* Rekursiver num. Parser */
       }
     }
     if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
-      if(strlen(w1)==0) return((double)(~(int)parser(w2)));    /* von rechts !!  */
+      if(*w1==0) return((double)(~(int)parser(w2)));    /* von rechts !!  */
       /* Ansonsten ist NOT Teil eines Variablennamens */
     }
   }
@@ -239,14 +239,14 @@ double parser(const char *funktion){  /* Rekursiver num. Parser */
  
 if(searchchr2_multi(s,"*/^")!=NULL) {
   if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
-    if(strlen(w1)) return(parser(w1)*parser(w2));
+    if(*w1) return(parser(w1)*parser(w2));
     else {
       printf("Pointer noch nicht integriert! %s\n",w2);   /* war pointer - */
       return(0);
     }
   }
   if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
-    if(strlen(w1)) {
+    if(*w1) {
       double nenner;
       nenner=parser(w2);
       if(nenner!=0.0) return(parser(w1)/nenner);    /* von rechts !!  */
@@ -254,7 +254,7 @@ if(searchchr2_multi(s,"*/^")!=NULL) {
     } else { xberror(51,w2); return(0); }/* "Parser: Syntax error?! "  */
   }
   if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-    if(strlen(w1)) return(pow(parser(w1),parser(w2)));    /* von rechts !!  */
+    if(*w1) return(pow(parser(w1),parser(w2)));    /* von rechts !!  */
     else { xberror(51,w2); return(0); } /* "Parser: Syntax error?! "  */
   }
 }
@@ -547,7 +547,7 @@ COMPLEX complex_parser(const char *funktion) {
       }
     }
     if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
-      if(strlen(w1)==0) return(INT2COMPLEX(~COMPLEX2INT(complex_parser(w2))));    /* von rechts !!  */
+      if(*w1==0) return(INT2COMPLEX(~COMPLEX2INT(complex_parser(w2))));    /* von rechts !!  */
       /* Ansonsten ist NOT Teil eines Variablennamens */
     }
   }
@@ -587,21 +587,21 @@ COMPLEX complex_parser(const char *funktion) {
   w2=w2buf;
   if(searchchr2_multi(s,"*/^")!=NULL) {
     if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
-      if(strlen(w1)) return(complex_mul(complex_parser(w1),complex_parser(w2)));
+      if(*w1) return(complex_mul(complex_parser(w1),complex_parser(w2)));
       else {
         printf("Pointer not yet implemented! %s\n",w2);   /* war pointer - */
         return(ret);
       }
     }
     if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         COMPLEX nenner=complex_parser(w2);
         if(nenner.r||nenner.i) return(complex_div(complex_parser(w1),nenner));    /* von rechts !!  */
         else { xberror(0,w2); return(ret);  } /* Division durch 0 */
       } else { xberror(51,w2); return(ret); }/* "Parser: Syntax error?! "  */
     }
     if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-      if(strlen(w1)) return(complex_pow(complex_parser(w1),complex_parser(w2)));    /* von rechts !!  */
+      if(*w1) return(complex_pow(complex_parser(w1),complex_parser(w2)));    /* von rechts !!  */
       else { xberror(51,w2); return(ret); } /* "Parser: Syntax error?! "  */
     }
   }
@@ -959,7 +959,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
        return;
     }
     if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
-      if(strlen(w1)==0) {
+      if(*w1==0) {
         arbint_parser(w2,ret);
 	mpz_com(ret,ret);
         return;   
@@ -1011,7 +1011,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
  
   if(searchchr2_multi(s,"*/^")!=NULL) {
     if(wort_sepr(s,'*',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         ARBINT a1,a2;
         mpz_init(a1); arbint_parser(w1,a1);
         mpz_init(a2); arbint_parser(w2,a2);
@@ -1024,7 +1024,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
       }
     }
     if(wort_sepr(s,'/',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         ARBINT a1,a2;
         mpz_init(a2); arbint_parser(w2,a2);
         if(mpz_cmp_si(a2,0)) {
@@ -1037,7 +1037,7 @@ void arbint_parser(const char *funktion, ARBINT ret) {
       } else { xberror(51,w2); return; }/* "Parser: Syntax error?! "  */
     }
     if(wort_sepr(s,'^',TRUE,w1,w2)>1) {
-      if(strlen(w1)) {
+      if(*w1) {
         ARBINT a1,a2;
         mpz_init(a1); arbint_parser(w1,a1);
         mpz_init(a2); arbint_parser(w2,a2);
@@ -1353,7 +1353,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
     return(nullmatrix(FLOATTYP,0,(uint32_t *)&e));
   }
   if(wort_sep(s,'+',3,w1,w2)>1) {
-    if(strlen(w1)) {
+    if(*w1) {
       ARRAY zw1=array_parser(w1);
       ARRAY zw2=array_parser(w2);
       array_add(zw1,zw2);
@@ -1361,7 +1361,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
       return(zw1);
     } else return(array_parser(w2));
   } else if(wort_sepr(s,'-',3,w1,w2)>1) {
-    if(strlen(w1)) {
+    if(*w1) {
       ARRAY zw1=array_parser(w1);
       ARRAY zw2=array_parser(w2);
       array_sub(zw1,zw2);
@@ -1373,7 +1373,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
       return(zw2);
     }
   } else if(wort_sepr(s,'*',3,w1,w2)>1) {
-    if(strlen(w1)) {
+    if(*w1) {
       if(type(w1) & ARRAYTYP) {
         ARRAY zw1=array_parser(w1);
 	ARRAY zw2=array_parser(w2);
@@ -1483,7 +1483,7 @@ ARRAY array_parser(const char *funktion) { /* Array-Parser  */
 	    ARRAY ergebnis;
 	   /* Hier sollten keine Funktionen mehr auftauchen  */
 	   /* Jetzt uebergebe spezifiziertes Array, evtl. reduziert*/
-	   if(strlen(pos)==0) {
+	   if(*pos==0) {
 	     if((vnr=var_exist(r,ARRAYTYP,0,0))!=-1) ergebnis=double_array(variablen[vnr].pointer.a);
              else xberror(15,s);  /* Feld nicht dimensioniert  */
 	   } else {

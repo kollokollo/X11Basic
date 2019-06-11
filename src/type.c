@@ -269,7 +269,7 @@ unsigned int type(const char *ausdruck) {
   if(wort_sepr2_destroy(s," MOD ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'m'));
   if(wort_sepr2_destroy(s," DIV ",TRUE,&w1,&w2)>1)  return(combine_type(type(w2),type(w1),'d'));
   if(wort_sepr2_destroy(s,"NOT ",TRUE,&w1,&w2)>1) {
-      if(strlen(w1)==0) return(type(w2));    /* von rechts !!  */
+      if(*w1==0) return(type(w2));    /* von rechts !!  */
       /* Ansonsten ist NOT Teil eines Variablennamens */
   }
   
