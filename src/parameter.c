@@ -571,7 +571,11 @@ int make_pliste2(int pmin,int pmax,unsigned short *pliste,char *n, PARAMETER **p
   return(i);
 }
 
-#define PARERR() {printf("Error: line %d make_parameter_stage3: parameter incompatibel. typ=$%x solltyp=$%x\n",pc,ip,ap);dump_parameterlist(pin,1);}
+#define PARERR() { \
+    printf("Error: line %d make_parameter_stage3:" \
+    " parameter incompatibel. typ=$%x solltyp=$%x\n",pc,ip,ap); \
+    dump_parameterlist(pin,1); \
+  }
 
 
 /*Hier Ergaenzungen von pre-pliste zu aktueller (Zu Laufzeit). 
@@ -725,7 +729,7 @@ int make_parameter_stage3(PARAMETER *pin,unsigned short ap,PARAMETER *pret) {
     pret->typ=ip;
     switch(ip) {
     case PL_LEER: break;
-    case PL_EVAL: 
+    case PL_EVAL:
       if(pin->arraytyp) e=eval2parnumtype(pin->pointer,pret,pin->arraytyp);
       else              e=eval2par(pin->pointer,pret);
       if(e<0) {PARERR();return(-1);} 

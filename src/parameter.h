@@ -247,12 +247,8 @@ static inline int eval2partype(char *n, PARAMETER *pret,int typ) {
   if((typ&FILENRTYP)==FILENRTYP) typ=INTTYP;
   pret->typ=(PL_CONSTGROUP|typ);
   switch(typ&TYPMASK) {
-  case INTTYP:
-    pret->integer=(int)parser(n);
-    break;
-  case FLOATTYP:
-    pret->real=parser(n);
-    break;
+  case INTTYP:   pret->integer=(int)parser(n); break;
+  case FLOATTYP: pret->real=parser(n);         break;
   case COMPLEXTYP:
     *(COMPLEX *)&(pret->real)=complex_parser(n);
     break;
@@ -282,14 +278,14 @@ static inline int eval2partype(char *n, PARAMETER *pret,int typ) {
  */
 
 static inline int eval2par(char *n, PARAMETER *pret) {
-  int typ=type(n);
-  return(eval2partype(n,pret,typ));
+  return(eval2partype(n,pret,type(n)));
 }
 
 
 
 /* Evaluate numeric Expression and fill PARAMETER accordingly.
  * typ of the expression is already known and given. (faster)
+ * Also strings can be evaluated.
  * It is expected, that pret is fresh (no pointers already in use).
  * In case of an error, pred will be unchanged.
  * Return value: 
@@ -301,15 +297,10 @@ static inline int eval2parnumtype(char *n, PARAMETER *pret,int typ) {
   typ&=(~CONSTTYP);
   pret->typ=(PL_CONSTGROUP|typ);
   switch(typ&TYPMASK) {
-  case INTTYP:
-    pret->integer=(int)parser(n);
-    return(0);
-  case FLOATTYP:
-    pret->real=parser(n);
-    return(0);
-  case COMPLEXTYP:
-    *(COMPLEX *)&(pret->real)=complex_parser(n);
-    return(0);
+  case INTTYP:     pret->integer              =   (int)parser(n); return(0);
+  case FLOATTYP:   pret->real                 =        parser(n); return(0);
+  case COMPLEXTYP: *(COMPLEX *)&(pret->real)  =complex_parser(n); return(0);
+  case STRINGTYP:  *(STRING *)(&pret->integer)= string_parser(n); return(0);
   case ARBFLOATTYP: /*behandeln wir erstmal wie ARBINT*/
     pret->typ=(PL_CONSTGROUP|ARBINTTYP);
   case ARBINTTYP: 
@@ -334,8 +325,7 @@ static inline int eval2parnumtype(char *n, PARAMETER *pret,int typ) {
 
 
 static inline int eval2parnum(char *n, PARAMETER *pret) {
-  int typ=type(n);
-  return(eval2parnumtype(n,pret,typ));
+  return(eval2parnumtype(n,pret,type(n)));
 }
 /* Erstellt eine Liste mit Parametertypen aus parameterliste einer 
    Procedur. Es können normale Parameter (PL_CONSTGROUP) erzeugt werden 
