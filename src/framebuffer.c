@@ -215,16 +215,16 @@ void FB_setgraphmode(int n) {
 /* This is a low-level Function, need to be fast, but does noch check 
    clipping */
 
-inline void FB_PutPixel_noclip(int x, int y, unsigned short color) {
+inline static void FB_PutPixel_noclip(int x, int y, unsigned short color) {
   unsigned short *ptr  = (unsigned short*)(screen.pixels+x*2+y*screen.scanline);
   *ptr = color;
 }
-inline void FB_PutPixel_noclip_alpha(int x, int y, unsigned short color, unsigned char alpha) {
+inline static void FB_PutPixel_noclip_alpha(int x, int y, unsigned short color, unsigned char alpha) {
   unsigned short *ptr  = (unsigned short*)(screen.pixels+x*2+y*screen.scanline);
   *ptr = mix_color(color,*ptr,alpha);
 }
 
-inline void FB_PutPixel(int x, int y, unsigned short color) {
+inline static void FB_PutPixel(int x, int y, unsigned short color) {
   if(x<screen.clip_x) return;
   if(y<screen.clip_y) return;
   if(x>=screen.clip_x+screen.clip_w) return;
