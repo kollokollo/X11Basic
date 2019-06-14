@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x1262   /* Version 1.26 release 2*/
+#define BC_VERSION 0x1270   /* Version 1.27 release 0*/
 
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */

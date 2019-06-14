@@ -7,7 +7,7 @@
 #define MyAppName "X11-Basic"
 #define MyAppURL "http://x11-basic.sourceforge.net/"
 #define MyAppExeName "xbasic-wrapper.bat"
-#define MyAppVersion "1.26"
+#define MyAppVersion "1.27"
 #define MyAppRelease "57"
 
 [Setup]
@@ -60,7 +60,7 @@ Source: "WINDOWS/readme-windows.txt"; DestDir: "{app}"; Flags: isreadme
 Source: "WINDOWS/lib/libusb0.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
 Source: "WINDOWS/lib/README-libusb.txt"; DestDir: "{app}/contrib";  Flags: isreadme
 Source: "WINDOWS/x11basic.ico"; DestDir: "{app}"
-Source: "../doc/manual/Outputs/X11-Basic-manual-1.26.pdf"; DestName: "X11-Basic.pdf"; DestDir: "{app}/doc"
+Source: "../doc/manual/Outputs/X11-Basic-manual-1.27.pdf"; DestName: "X11-Basic.pdf"; DestDir: "{app}/doc"
 Source: "WINDOWS/bas.ico"; DestDir: "{app}"
 Source: "WINDOWS/lib/README-SDL.txt"; DestDir: "{app}/contrib" ;  Flags: isreadme
 Source: "WINDOWS/lib/README-GMP.txt"; DestDir: "{app}/contrib"         ;  Flags: isreadme

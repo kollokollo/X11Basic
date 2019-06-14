@@ -298,7 +298,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
       config.h.in config.h.tomtom config.h.atari \
         Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop 5x7-rev.c \
-        bitmaps/* logo/x11basicVersion.fig \
+        bitmaps/* ../logo/x11basicVersion.fig \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
         examples/compiler/bas2x11basic.bas \
@@ -714,11 +714,11 @@ xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o sv
 xb2c.debug : xb2c.c $(LIBCSRC)
 	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) $(LIBS)
 
-x11basic.tga: logo/x11basic-logo-1999.pov
+x11basic.tga: ../logo/x11basic-logo-1999.pov
 	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
  
  
-x11basic.eps : logo/x11basicVersion.fig
+x11basic.eps : ../logo/x11basicVersion.fig
 	fig2dev -L eps $< $@
 
 %.svg : %.eps 

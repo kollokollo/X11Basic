@@ -403,4 +403,15 @@ Release notes for Version 1.25 (Sept 2016 -- June 2018)
 - fixed bug with PBOX (Android)
 - fixed bug with UNIXDATE$() and UNIXTIME$() on 64 bit
 
+Release notes for Version 1.26 (June 2018 -- June 2019)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- New functions/commands GPIO (Raspberry)
+- fixed bug in virtual-machine/compiler (RasPi, signed char)
+- new shortcut compiler start ybasic
+- fbxbasic included 
+- added broadcast permission for UDP sockets
+- new syntax highlighting file for nano/pico
+- new commandline function --quitonend
+- bugfix in FOR (compiler) and better error handling
+
 --------------------------------------------------------------------------------

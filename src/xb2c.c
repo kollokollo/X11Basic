@@ -731,7 +731,7 @@ static int loadbcprg(char *filename, FILE *optr) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.26\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version 1.27\n"
                  "   (c) Markus Hoffmann 2002-2019\n"
                  "\n"
                  "\nBytecode: %s (%d Bytes)\n\n",filename,len);
@@ -741,7 +741,8 @@ static int loadbcprg(char *filename, FILE *optr) {
 #endif
     if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
-      printf("xb2c: ERROR: Cannot translate this bytecode.\nThis bytecode was compiled for a different version (%04x) of "
+      printf("xb2c: ERROR: Cannot translate this bytecode.\n"
+      "This bytecode was compiled for a different version (%04x) of "
       "X11-Basic.\nPlease consider to recompile it.\n",bytecode->version);
       return(-1);
     }

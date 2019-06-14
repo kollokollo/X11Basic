@@ -1,13 +1,13 @@
 #
-# spec file for package X11Basic (Version 1.26), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.27), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2018
+# Copyright  (c)  Markus Hoffmann 1997-2019
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
 Name: x11basic
-Version: 1.26
-Release: 1
+Version: 1.27
+Release: 57
 License: GPL
 Group: Development/Languages
 Summary: A Basic Interpreter with X11-Graphics capabilities
@@ -44,7 +44,7 @@ Also an ANSI-Basic-to-X11-Basic-converter (bas2x11basic) is included.
 
 You will find the compiler sourcecode and some other sample programs in
 /usr/share/doc/packages/X11Basic/examples. A variety of other sample programs
-can be found in X11-Basic-examples-1.17.zip, which you can download from the
+can be found in X11-Basic-examples-1.27.zip, which you can download from the
 homepage (http://x11-basic.sourceforge.net/). Also an up-to-date pdf-version
 of the manual can be found there.
 
@@ -71,6 +71,8 @@ install -Dm 644 doc/man-pages/xbvm.1 $RPM_BUILD_ROOT%{_mandir}/man1/xbvm.1
 install -Dm 644 doc/man-pages/bas2x11basic.1 $RPM_BUILD_ROOT%{_mandir}/man1/bas2x11basic.1
 install -Dm 755 libx11basic.so $RPM_BUILD_ROOT%{_libdir}/libx11basic.so
 install -Dm 755 xbasic $RPM_BUILD_ROOT%{_bindir}/x11basic
+install -Dm 755 ybasic $RPM_BUILD_ROOT%{_bindir}/ybasic
+install -Dm 755 fbxbasic $RPM_BUILD_ROOT%{_bindir}/fbxbasic
 install -Dm 755 xbbc $RPM_BUILD_ROOT%{_bindir}/xbbc
 install -Dm 755 xbvm $RPM_BUILD_ROOT%{_bindir}/xbvm
 install -Dm 755 xbc $RPM_BUILD_ROOT%{_bindir}/xbc
@@ -93,6 +95,8 @@ xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -
 %{_libdir}/*
 
 %changelog
+* Mon Jun 04 2018 Markus Hoffmann <kollo@users.sourceforge.net> - 1.27
+- adapted for Version 1.27
 * Mon Jun 04 2018 Markus Hoffmann <kollo@users.sourceforge.net> - 1.26
 - adapted for Version 1.26
 * Fri Jan 04 2017 Markus Hoffmann <kollo@users.sourceforge.net> - 1.25
@@ -121,9 +125,9 @@ xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -
   New release (1.09)
 * Sun Jan 26 2003 Markus Hoffmann <kollo@users.sourceforge.net>
   changed manual, my email address has changed, changed installdir
-* Tue Dec 16 2002 Markus Hoffmann <m.hoffmann@uni-bonn.de>
+* Tue Dec 16 2002 Markus Hoffmann <>
   included xbc
-* Tue Mar 07 2002 Markus Hoffmann <m.hoffmann@uni-bonn.de>
+* Tue Mar 07 2002 Markus Hoffmann <>
   included manual
-* Tue Aug 28 2001 Markus Hoffmann <m.hoffmann@uni-bonn.de>
+* Tue Aug 28 2001 Markus Hoffmann <>
   1st release
