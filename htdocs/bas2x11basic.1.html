@@ -1,9 +1,9 @@
 Content-type: text/html
 
-<HTML><HEAD><TITLE>Manpage of bas2x11basic</TITLE>
+<HTML><HEAD><TITLE>Manpage of BAS2X11BASIC</TITLE>
 </HEAD><BODY>
-<H1>bas2x11basic</H1>
-Section: ANSI-Basic to X11-Basic converter (1)<BR>Updated: 19-Sep-2003<BR><A HREF="#index">Index</A>
+<H1>BAS2X11BASIC</H1>
+Section: X11-Basic (1)<BR>Updated: 19-Apr-2019<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -15,72 +15,78 @@ bas2x11basic - ANSI-Basic to X11-Basic converter
 
 <B>bas2x11basic</B>
 
-[ <I>option</I> ] <I>&lt;filename&gt;</I>
+[ <I>option</I> ] 
+
+[<B>-o</B> <I>outfile</I>]
+<I>&lt;filename&gt;</I>
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <P>
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and
-full graphical visualisation into the easy to learn basic language on modern
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 <P>
 X11-Basic is a structured programming language. Structure is a form of visual
-and functional encapsulation in which multipleline sections of program look and
-act like single units. The beginning and end of blocks are marked by descriptive
-keyword delimiters. Lines within blocks are generally indented to make the block
-visible. Most important: X11-Basic does not use line numbers.
+and functional encapsulation in which multiple line sections of a program  look
+and act like single units. The beginning and end of blocks are marked by
+descriptive keyword delimiters. Lines within blocks are generally indented to
+make the block visible. Most important: X11-Basic does not use line numbers.
 <P>
-<I>bas2x11basic</I>
+<B>bas2x11basic</B>
 
-can be used to make X11-Basic template programs out of ANSI basic Files. It
-helps convertig old (real) Basic Programs with line numbers and multiple
+can be used to make X11-Basic template programs out of ANSI basic files. It
+helps converting old (real) Basic Programs with line numbers and multiple
 commands per line to the X11-Basic structure. Because there are so many
-different BASIC Version aroud, in most cases you will have to edit these files
-produced manually. But most of the work will already have been done by this
-converter.
+different BASIC versions and dialects around, in most cases you will have to edit
+these files produced manually. But most of the work will already have been done
+by this converter.
 <P>
-<B>For a desciption of the X11-basic language and Usage of the interpreter see</B>
+<P>
 
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
+For a desciption of the X11-Basic language and usage of the interpreter see
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)</I>.
 
 <P>
 <A NAME="lbAE">&nbsp;</A>
 <H2>Filenames</H2>
 
 <P>
-bas2x11basic processes input files with extention .bas. The default output
-filename is b.bas.
+<B>bas2x11basic </B>
+
+processes input files with extention .bas. The default output filename is 
+<I>b.bas</I>.
+
 <P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-o </B><I>file</I>
+<DT><B>-o</B> <B></B><I>file</I>
 
 <DD>
-Place output in file <I>file</I>. This applies regardless to whatever
-sort of output bas2x11basic is producing.
+Place output in file 
+<I>file</I>
+
+. 
 If you do not specify `<B>-o</B>', the default is to use
 `<B>b.bas</B>'
-<P>
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>--version</H3>
+<DT><B>--version</B>
 
+<DD>
 shows version, program and other information and exits
-<A NAME="lbAH">&nbsp;</A>
-<H3>-h --help</H3>
+<DT><B>-h</B>, <B>--help</B>
 
-print a short help
+<DD>
+print a short help.
+</DL>
 <P>
+
 For detailed help and description of the implemented basic commands take a look
 at the README file. 
 <P>
 <P>
-<A NAME="lbAI">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -96,7 +102,7 @@ You can find some samples of former ANSI basic programs in
 <I>/usr/share/doc/packages/X11Basic/examples.</I>
 
 <P>
-<A NAME="lbAJ">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>The ANSI Basic to X11-Basic converter</H2>
 
 <P>
@@ -104,12 +110,12 @@ Actually this converter is not yet complete. Further improvenents may be applied
 in future. Please let me know about ANSI-Basic programs which will not be
 converted.
 <P>
-<A NAME="lbAK">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.09
 <P>
-<A NAME="lbAL">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>BUG REPORTS </H2>
 
 <P>
@@ -124,12 +130,12 @@ well! Suggestions may be mailed to the X11-Basic bug tracking system.
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2003 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
@@ -143,10 +149,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
-<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1)
+<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+rsc2gui">rsc2gui</A>(1)
 <P>
 
 <HR>
@@ -157,22 +163,18 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAE">Filenames</A><DD>
 <DT><A HREF="#lbAF">OPTIONS</A><DD>
-<DL>
-<DT><A HREF="#lbAG">--version</A><DD>
-<DT><A HREF="#lbAH">-h --help</A><DD>
-</DL>
-<DT><A HREF="#lbAI">EXAMPLES</A><DD>
-<DT><A HREF="#lbAJ">The ANSI Basic to X11-Basic converter</A><DD>
-<DT><A HREF="#lbAK">VERSION</A><DD>
-<DT><A HREF="#lbAL">BUG REPORTS </A><DD>
-<DT><A HREF="#lbAM">AUTHOR</A><DD>
-<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">The ANSI Basic to X11-Basic converter</A><DD>
+<DT><A HREF="#lbAI">VERSION</A><DD>
+<DT><A HREF="#lbAJ">BUG REPORTS </A><DD>
+<DT><A HREF="#lbAK">AUTHOR</A><DD>
+<DT><A HREF="#lbAL">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAM">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>

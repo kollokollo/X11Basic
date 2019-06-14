@@ -1,4 +1,3 @@
-
 # Makefile for X11-Basic html-man-pages (c) Markus Hoffmann V.1.13
 
 
@@ -8,14 +7,15 @@
 # COPYING for details
 
 
-VERSION=1.25
+VERSION=1.27
 NAME=X11-Basic-manpages
 
 DIR=$(NAME)-$(VERSION)
 
 DIST=makefile \
 bas2x11basic.1  gui2bas.1  rsc2gui.1     x11basic.1  xbbc.1  xbvm.1 \
-doocsxbasic.1   myzip.1    tinexbasic.1  xb2c.1      xbc.1
+doocsxbasic.1   myzip.1    tinexbasic.1  xb2c.1      xbc.1  \
+ybasic.1 fbxbasic.1
 
 MANS=$(wildcard *.1)
 HTMLS=$(MANS:.1=.1.html)

@@ -3,24 +3,26 @@
 xbc \- X11-Basic compiler manager
 .SH SYNOPSIS
 .B xbc
-.RI "[ " option " ] " <filename>
+[\fB\-b\fR]
+[\fB\-c\fR]
+[\fB\-l\fR]
+.RI "[ " option " ] " 
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 
-.IR xbc
+.B xbc
 can be used to make stand-alone-binaries out of *.bas script files.
-
-.B For a desciption of the X11-Basic language and usage of the interpreter see
-.I xbasic(1).
+.PP
+For a desciption of the X11-Basic language and usage of the interpreter see
+.I xbasic(1)\fI.
 
 .SH Filenames
 
-Xbc process input files through one or more of three stages: 
+.B xbc 
+process input files through one or more of three stages: 
 preprocessing, compilation, translation and linking. 
 Source filename suffixes identify the source language.
 
@@ -116,16 +118,19 @@ in `\|\c
 .I source\c
 .B \&.c\c
 .
-.SS \-virtualm
-.SS \--virtualm
+.TP
+.BR \-virtualm ", " \-\-virtualm
 this option tells the compiler to compile the code to bytecode and then translate it to C 
 source and finally compile it with gcc. The code produced is really fast. On UNIX this 
 option can always be used unless some compiler trouble occur. 
-.SS \--static
+.TP
+.BR \-\-static
 this is the default. The X11-Basic library will be linked to the excecutable.
-.SS \--dynamic
+.TP
+.BR \-\-dynamic
 The excecutable will be linked dynamically against the X11-Basic library.
-.SS \-shared
+.TP
+.BR \-shared
 This option is passed to the linker and tells it, that it should produce a shared
 object file which can then be linked with other objects to
 form an executable. Not all systems support this option. 
@@ -136,26 +141,26 @@ Usually the extention should be
 if it was used together with the 
 .B -l\c
  option.
-
-.SS \-C
-Do not discard comments. All comments are passed through to the
+.TP
+.BR \-C
+do not discard comments. All comments are passed through to the
 output file.
-
-.SS \-s --strip
-Remove all symbol table and relocation information from the
+.TP
+.BR \-s ", " \-\-strip
+remove all symbol tables and relocation information from the
 executable.
-
-.SS "\-L " path
-Use \c
-.I path\c
+.TP
+.BR \-L " " \fIpath\fR
+Use 
+.I path
 \& when looking for libraries to link (default is /usr/lib). 
-
-
-.SS \--version
-shows version, program and other information and exits
-.SS -h --help
-print a short help
-
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.PP
 For detailed help and description of the implemented basic commands take a 
 look at the README file. 
 
@@ -174,7 +179,7 @@ xbc testme.bas -virtualm --dynamic -o b.out
  produces b.out, which excecutes really fast!
 .fi
 
-You can find many sample programs in 
+You can find additional sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
 
 .SH The Compiler Manager

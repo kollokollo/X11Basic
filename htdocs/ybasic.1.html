@@ -1,0 +1,182 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of YBASIC</TITLE>
+</HEAD><BODY>
+<H1>YBASIC</H1>
+Section: X11-Basic (1)<BR>Updated: 04-Jan-2019<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+ybasic - The X11-Basic bytecode wrapper
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>ybasic</B>
+
+[<B>further options</B>]
+<I>&lt;filename&gt;</I>
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+X11-Basic is a dialect of the BASIC programming language with graphics
+capability.
+<P>
+<I>ybasic</I>
+
+is a wrapper which compiles the given X11-Basic program 
+<I>&lt;filename&gt; </I>
+
+to bytecode and then excecutes the X11-Basic interpreter
+<B>xbasic. </B>
+
+<P>
+The basic command-files (programs) 
+usually have the extension .bas or .xbas.
+<P>
+Further options will be passed to the X11-Basic interpreter 
+<B>xbasic</B>
+
+as they are.
+<P>
+<P>
+
+This little trick allows to run the BASIC programs as fast, as if they where 
+compiled to bytecode before. With a little overhead of compile time at the 
+beginning. The advantage is that you can keep the flexibility of editing the 
+programs as if they where normal interpreted scripts.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+The commandline options are the same as for 
+<B>xbasic .</B>
+
+Please see the man-page 
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)</I>
+
+for details.
+<P>
+
+For detailed help and description of the implemented basic commands take a look
+at the README file which comes with the X11-Basic package. There is also a full
+users manual available as *.pdf file on the homepage.
+<P>
+<P>
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<PRE>
+ybasic testme.bas
+ybasic runfast.bas -f file.dat
+</PRE>
+
+<P>
+<P>
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>X11-Basic as shell:</H2>
+
+X11-Basic programs can also be excecuted like shell scripts.
+If the xbasic interpreter was installed in 
+<I>/bin/ </I>
+
+any X11-Basic program with
+<PRE>
+ #!/bin/xbasic
+</PRE>
+
+or 
+<PRE>
+ #!/bin/ybasic
+</PRE>
+
+<P>
+in the first command line can be excecuted directly.
+<P>
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>The X11-Basic Language</H2>
+
+<P>
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+<I><A HREF="http://x11-basic.sourceforge.net/x11basic.html">http://x11-basic.sourceforge.net/x11basic.html</A></I>
+
+<P>
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>VERSION</H2>
+
+This page was created for V.1.27
+<A NAME="lbAJ">&nbsp;</A>
+<H2>BUG REPORTS</H2>
+
+<P>
+If you find a bug in the X11-Basic interpreter, you should report it. But first,
+you should make sure that it really is a bug, and that it appears in the latest
+version of the X11-Basic package that you have.
+<P>
+Once you have determined that a bug actually exists, mail a bug report to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>. If you have a fix, you are welcome to mail that as
+well! Suggestions may be mailed to the X11-Basic mailing list on 
+<A HREF="http://www.sourceforge.net">www.sourceforge.net</A>/projects/x11-basic or posted to the bug tracking system.
+<P>
+Comments and bug reports concerning this manual page should be directed to
+<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
+<P>
+<A NAME="lbAK">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<A NAME="lbAL">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (C) 1997-2019 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+<P>
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+<P>
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+<P>
+<A NAME="lbAM">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<P>
+<A HREF="http://x11-basic.sourceforge.net/">http://x11-basic.sourceforge.net/</A>
+<P>
+<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">EXAMPLES</A><DD>
+<DT><A HREF="#lbAG">X11-Basic as shell:</A><DD>
+<DT><A HREF="#lbAH">The X11-Basic Language</A><DD>
+<DT><A HREF="#lbAI">VERSION</A><DD>
+<DT><A HREF="#lbAJ">BUG REPORTS</A><DD>
+<DT><A HREF="#lbAK">AUTHOR</A><DD>
+<DT><A HREF="#lbAL">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAM">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 11:59:32 GMT, June 14, 2019
+</BODY>
+</HTML>

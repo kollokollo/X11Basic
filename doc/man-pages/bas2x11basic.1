@@ -3,56 +3,57 @@
 bas2x11basic \- ANSI-Basic to X11-Basic converter
 .SH SYNOPSIS
 .B bas2x11basic
-.RI "[ " option " ] " <filename>
+.RI "[ " option " ] "
+[\fB\-o\fR \fIoutfile\fR]
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and
-full graphical visualisation into the easy to learn basic language on modern
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 
 X11-Basic is a structured programming language. Structure is a form of visual
-and functional encapsulation in which multipleline sections of program look and
-act like single units. The beginning and end of blocks are marked by descriptive
-keyword delimiters. Lines within blocks are generally indented to make the block
-visible. Most important: X11-Basic does not use line numbers.
+and functional encapsulation in which multiple line sections of a program  look
+and act like single units. The beginning and end of blocks are marked by
+descriptive keyword delimiters. Lines within blocks are generally indented to
+make the block visible. Most important: X11-Basic does not use line numbers.
 
-.IR bas2x11basic
-can be used to make X11-Basic template programs out of ANSI basic Files. It
-helps convertig old (real) Basic Programs with line numbers and multiple
+.B bas2x11basic
+can be used to make X11-Basic template programs out of ANSI basic files. It
+helps converting old (real) Basic Programs with line numbers and multiple
 commands per line to the X11-Basic structure. Because there are so many
-different BASIC Version aroud, in most cases you will have to edit these files
-produced manually. But most of the work will already have been done by this
-converter.
+different BASIC versions and dialects around, in most cases you will have to edit
+these files produced manually. But most of the work will already have been done
+by this converter.
 
-.B For a desciption of the X11-basic language and Usage of the interpreter see
-.I xbasic(1).
+.PP
+For a desciption of the X11-Basic language and usage of the interpreter see
+.I xbasic(1)\fR.
 
 .SH Filenames
 
-bas2x11basic processes input files with extention .bas. The default output
-filename is b.bas.
+.B bas2x11basic 
+processes input files with extention .bas. The default output filename is 
+.I b.bas\fR.
 
 .SH OPTIONS
 .TP
-.BI "\-o " file
-Place output in file \c
-.I file\c
-\&. This applies regardless to whatever
-sort of output bas2x11basic is producing.
+.BR \-o " " \fIfile\fR
+Place output in file 
+.I file
+\&. 
 If you do not specify `\|\c
 .B \-o\c
 \&\|', the default is to use
 `\|\c
 .B b.bas\c
 \&\|'
-
-.SS \--version
+.TP
+.BR \-\-version
 shows version, program and other information and exits
-.SS -h --help
-print a short help
-
+.TP
+.BR \-h ", " \-\-help
+print a short help.
+.PP
 For detailed help and description of the implemented basic commands take a look
 at the README file. 
 
@@ -107,4 +108,4 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 .SH SEE ALSO
-xbasic(1), xb2c(1)
+x11basic(1), rsc2gui(1)

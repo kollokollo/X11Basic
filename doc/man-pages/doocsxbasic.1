@@ -1,16 +1,16 @@
 .TH DOOCSX11BASIC 1 10-Aug-2007 "Version 1.14" "X11-Basic"
 .SH NAME
-doocsxbasic \- Basic interpreter for DOOCS (Distributed oo Control System)
+doocsxbasic \- Basic interpreter for the DOOCS control system
 .SH SYNOPSIS
 .B doocsxbasic
-[--eval <expression>] [-e <command>] [-l] [<filename>]
+[\fB\-\-eval\fR \fIexpression\fR]
+[\fB\-e\fR \fIcommand\fR]
+[\fB\-l\fR]
+[\fI<filename>\fR]
 
 .SH DESCRIPTION
 
-X11-Basic is a comprehensive non-standard Basic interpreter with full X 
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a comprehensive non-standard Basic interpreter with graphics. 
 
 DOOCS is a distributed control system that was developed for HERA and TTF
 applications at DESY. It is an object oriented system design from the device
@@ -18,7 +18,8 @@ server level up to the operator console. The communication is established by a
 standard set of data and address objects which are transferred by Remote
 Procedure Calls (ONC RPC) or other protocols.
 
-Doocsxbasic is a modification which combines the DOOCS functionality with the
+.B doocsxbasic 
+is a modification which combines the DOOCS functionality with the
 X11-Basic interpreter.
 (see the man page 
 .I x11basic(1)
@@ -27,29 +28,37 @@ and
 ).
 
 
-.SH COMMANDLINE OPTIONS
-.P
-.SS \ <file>
-load and run script <file>
-.br
-.SS \-l <file>
-only load script, do not execute
-.br
-.SS \--eval <expression>
-evaluate expression
-.br
-.SS \-e <command>
-execute command
-.br
-.SS \-version
-shows version, program and other information and exits
-.SS -h --help
-print a short help
-.SS --help <topic>
-print help on topic
-.SS --daemon
+.SH OPTIONS
+.TP
+.BR \ \fI<file>\fR
+load and run BASIC program \fIfile\fR.
+.TP
+.BR \-l " " \fIfile\fR
+only load script, do not execute.
+.TP
+.BR \-\-eval " " \fIexpression\fR
+evaluate expression.
+.TP
+.BR \-e " " \fIcommand\fR
+execute command.
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help.
+.TP
+.BR \-\-help " " \fItopic\fR
+print help on topic.
+.TP
+.BR \-\-daemon
 daemon mode
-
+.TP
+.BR \-\-quitonend
+changes the behaviour of the interpreter such that it quits after the program 
+has finished. 
+The direct mode / interactive mode will not be entered.
+.PP
 For detailed help and description of the implemented basic commands take a look
 at the README file which comes with the X11Basic package. There is also a full
 users manual available as *.pdf file on the homepage.
@@ -61,12 +70,9 @@ If no options are given on the command line,
 will run interactivly.
 
 A Prompt will be displayed and any command can be typed in. It will be excecuted
-immediately after pressing return or enter. The interpreter uses the 
-.B readline(3) 
-library. So the input is buffered and can be edited using the up and down 
-arrows on the keyboard. Readline offers editing capabilities while the user is
-entering the line. By default, the line editing commands are similar to those of
-emacs. 
+immediately after pressing return or enter. 
+The input is buffered and can be edited using the up and down 
+arrows on the keyboard. 
 
 .B To quit program
 simply enter 
@@ -81,12 +87,14 @@ doocsxbasic --eval 1+3-4*doocsget("TTF.VAC/PENNING/GLOBALS/HEMAGEN")
 doocsxbasic --help "*doocs*"
 .fi
 
-You can find many sample programs in the X11-Basic packages. For a description
+For a description
 of the X11-Basic language please also see the X11-Basic documentation and or
 man-pages. Her we will only describe the modifications of doocsxbasic compared
 to the regular x11basic interpreter (Note that all 
 .B tine(3) 
-functions are also includes in doocsxbasic. So Please also refer to the 
+functions are also includes in 
+.B doocsxbasic\fR. 
+So Please also refer to the 
 .B tinexbasic(1)
 man page.)
 
@@ -103,8 +111,8 @@ in the first command line can be excecuted directly.
 
 .SH The X11-Basic Language extentions for DOOCS
 
-Das Programm mit Kontrollsystemanbindung nennt sich DOOCSXBASIC. Diese Version
-Benutzt die DOOCS-Bibliothek der DESY-Datenbank. Alle Parameter sind zuganglich (sofern freigeschaltet) und werden
+All control system parameters are accessible (if permission is given) 
+and werden
 mittels RPC-Protokoll von den ensprechenden Servern erfragt. 
 
 DOOCSXBASIC erlaubt ab Version 1.14 auch das Programmieren eines eigenen
@@ -449,4 +457,4 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 .SH SEE ALSO
-x11basic(1), xbasic(1), doocs(3), tine(3), readline(3), xbc(1)
+x11basic(1), xbasic(1), doocs(3), tine(3)

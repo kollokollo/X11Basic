@@ -1,37 +1,39 @@
-.TH BAS2X11BASIC 1 19-Sep-2003 "Version 1.09" X11-Basic"
+.TH RSC2GUI 1 19-Sep-2003 "Version 1.09" X11-Basic"
 .SH NAME
-rsc2gui \- ATARI/TOS Resources to X11-Basic GUI converter
+rsc2gui \- ATARI-ST/TOS Resources to X11-Basic GUI converter
 .SH SYNOPSIS
 .B rsc2gui
-.RI "[ " option " ] " <filename>
+.RI "[ " option " ] " 
+[\fB\-o\fR \fIoutfile\fR]
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and
-full graphical visualisation into the easy to learn basic language on modern
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 
 X11-Basic uses a graphical user interface (GUI) which is very similar to the
-ATARI ST TOS/GEM implementation. The *.gui file format, which is basically an
-ASCII representation of the ATARI ST recource files (*.rsc), can be converted to
+ATARI-ST TOS/GEM implementation. The *.gui file format, which is basically an
+ASCII representation of the ATARI-ST recource files (*.rsc), can be converted to
 X11-Basic code, which then can handle message boxes and forms. (see 
-.I gui2bas(1).
+.I gui2bas(1)\fR.
 
-.IR rsc2gui
+.B rsc2gui
 can be used to convert ATARI ST recource files to *.gui files.
 
 
 .SH Filenames
 
-rsc2gui processes input files with extention .rsc. The default output filename
-is b.gui.
+.B rsc2gui 
+processes input files with extention 
+.I .rsc\fR. 
+The default output filename is 
+.I b.gui\fR.
 
 .SH OPTIONS
 .TP
-.BI "\-o " file
-Place output in file \c
-.I file\c
+.BR \-o " " \fIfile\fR
+Place output in file 
+.I file
 \&. This applies regardless to whatever
 sort of output rsc2gui is producing.
 .Sp
@@ -41,12 +43,13 @@ If you do not specify `\|\c
 `\|\c
 .B b.gui\c
 \&\|'
-
-.SS \--version
+.TP
+.BR \-\-version
 shows version, program and other information and exits
-.SS -h --help
-print a short help
-
+.TP
+.BR \-h ", " \-\-help
+print a short help.
+.PP
 For detailed help and description of the implemented basic commands take a 
 look at the README file. 
 
@@ -66,7 +69,7 @@ Page was created for V.1.09
 
 .SH BUG REPORTS  
 
-If you find a bug in the ANSI Basic to X11-Basic converter, you should report
+If you find a bug in the TOS-rsc to X11-Basic GUI converter, you should report
 it. But first, you should make sure that it really is a bug, and that it appears
 in the latest version of the X11-Basic package that you have.
 

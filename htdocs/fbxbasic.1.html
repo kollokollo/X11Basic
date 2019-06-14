@@ -1,20 +1,21 @@
 Content-type: text/html
 
-<HTML><HEAD><TITLE>Manpage of X11BASIC</TITLE>
+<HTML><HEAD><TITLE>Manpage of FBXBASIC</TITLE>
 </HEAD><BODY>
-<H1>X11BASIC</H1>
+<H1>FBXBASIC</H1>
 Section: X11-Basic (1)<BR>Updated: 04-Jan-2019<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-xbasic,x11basic,X11-Basic - The BASIC language interpreter and shell
+fbxbasic - The BASIC language interpreter and shell, framebuffer version
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
-<B>xbasic</B>
+<B>fbxbasic</B>
 
+[<B>--framebuffer</B> <I>&lt;device&gt;</I>]
 [<B>--eval</B> <I>expression</I>]
 [<B>-e</B> <I>command</I>]
 [<B>-l</B>]
@@ -25,36 +26,50 @@ xbasic,x11basic,X11-Basic - The BASIC language interpreter and shell
 
 <P>
 X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+capability.
 <P>
-The syntax is most similar to the old GFA-Basic ATARI ST implementation. Old
-GFA-programs should run with only few changes. Also DOS/QBASIC programmers will
-feel comfortable.
+<B>fbxbasic </B>
+
+is the framebuffer version of the X11-Basic interpreter. 
+It excecutes BASIC programs, which 
+usually have the extension 
+<I>.bas</I>
+
+or 
+<I>.xbas</I>.
+
 <P>
-Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic 
-with the 
-<I>bas2x11basic </I>
 
-program (see the man page 
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+bas2x11basic">bas2x11basic</A>(1)</I>
-
-).
+The base functionallity is exactly the same as the (normal, X11/X.org version) of
+X11-Basic. Please also read the man page of <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)</I>.
 <P>
-<B>xbasic </B>
 
-is the interpreter. It interpretes basic command-files (programs), which 
-usually have the extension .bas or .xbas.
-It can also run in interactive mode in which case it interpretes single lines of
-code, which are entered.
-<B>xbasic </B>
+<B>fbxbasic</B>
 
-can also interpret and run bytecode files, which have been compiled 
-before from .bas programs via the 
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1) </I>
+is independent of the X.org installation and can run without, though
+supporting all graphics commands of the language. 
+<P>
 
-bytecode compiler.
+To show graphics on the screen, 
+<B>fbxbasic</B>
+
+trys to open a framebuffer device, 
+supported by the operating system. By default 
+<I>/dev/fb0</I>
+
+is opened, but you can also specify a specific device with the 
+<B>--framebuffer </B>
+
+option (see below).
+<P>
+
+Mouse and keyboard input is also supported by corresponding raw devices which
+can be specified via the commanline options 
+<B>--mouse </B>
+
+and
+<B>--keyboard </B>.
+
 <P>
 <A NAME="lbAE">&nbsp;</A>
 <H2>OPTIONS</H2>
@@ -76,6 +91,18 @@ evaluate expression.
 
 <DD>
 execute command.
+<DT><B>--framebuffer</B> <B></B><I>&lt;device&gt;</I>
+
+<DD>
+specify framebuffer device to be used for graphics.
+<DT><B>--mouse</B> <B></B><I>&lt;device&gt;</I>
+
+<DD>
+specify mouse input device to be used.
+<DT><B>--keyboard</B> <B></B><I>&lt;device&gt;</I>
+
+<DD>
+specify keyboard input device to be used.
 <DT><B>--version</B>
 
 <DD>
@@ -109,7 +136,7 @@ users manual available as *.pdf file on the homepage.
 <H2>INTERACTIVE USE</H2>
 
 If no options are given on the command line, 
-<B>xbasic</B>
+<B>fbxbasic</B>
 
 will run interactivly.
 <P>
@@ -130,41 +157,13 @@ or press
 <H2>EXAMPLES</H2>
 
 <PRE>
-xbasic testme.bas
-xbasic testme.b
-xbasic -e 'alert 1,&quot;Hello world !&quot;,1,&quot; OK &quot;,b'
-xbasic --eval 1+3-4*3
-xbasic --help &quot;*nl*&quot;
+fbxbasic testme.bas
+fbxbasic testme.b
+fbxbasic --framebuffer /dev/fb0 -e 'alert 1,&quot;Hello world !&quot;,1,&quot; OK &quot;,b'
 </PRE>
-
-<P>
-You can find additional sample programs in 
-<I>/usr/share/doc/packages/X11Basic/examples.</I>
 
 <P>
 <A NAME="lbAH">&nbsp;</A>
-<H2>X11-Basic as daemon:</H2>
-
-The commandline option --daemon forces the interpreter to run in daemon-mode 
-(with no terminal connected).
-No prompt is given and the input is not echoed back. 
-<P>
-<A NAME="lbAI">&nbsp;</A>
-<H2>X11-Basic as shell:</H2>
-
-X11-Basic programs can be excecuted like shell scripts.
-If the xbasic interpreter was installed in 
-<I>/bin/ </I>
-
-any X11-Basic program with
-<PRE>
- #!/bin/xbasic
-</PRE>
-
-in the first command line can be excecuted directly.
-<P>
-<P>
-<A NAME="lbAJ">&nbsp;</A>
 <H2>The X11-Basic Language</H2>
 
 <P>
@@ -174,11 +173,27 @@ You should be able to find one at
 
 <P>
 <P>
-<A NAME="lbAK">&nbsp;</A>
+You can find additional sample programs in 
+<I>/usr/share/doc/packages/X11Basic/examples.</I>
+
+<P>
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>The X11-Basic Language</H2>
+
+<P>
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+<I><A HREF="http://x11-basic.sourceforge.net/x11basic.html">http://x11-basic.sourceforge.net/x11basic.html</A></I>
+
+<P>
+<P>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>VERSION</H2>
 
 This page was created for V.1.27
-<A NAME="lbAL">&nbsp;</A>
+<P>
+<A NAME="lbAK">&nbsp;</A>
 <H2>BUG REPORTS</H2>
 
 <P>
@@ -194,11 +209,11 @@ well! Suggestions may be mailed to the X11-Basic mailing list on
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2019 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
@@ -208,11 +223,12 @@ the terms of the GNU General Public License as published by the Free Software
 Foundation; either version 2 of the License, or (at your option) any later
 version.
 <P>
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAN">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <P>
@@ -220,7 +236,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
 /usr/share/doc/x11basic/
 <P>
-<A HREF="http://localhost/cgi-bin/man/man2html?1+tcsh">tcsh</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+sh">sh</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+ybasic">ybasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+fbxbasic">fbxbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+bas211basic">bas211basic</A>(1)
+<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+ybasic">ybasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+bas211basic">bas211basic</A>(1)
 <P>
 
 <HR>
@@ -232,14 +248,13 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAE">OPTIONS</A><DD>
 <DT><A HREF="#lbAF">INTERACTIVE USE</A><DD>
 <DT><A HREF="#lbAG">EXAMPLES</A><DD>
-<DT><A HREF="#lbAH">X11-Basic as daemon:</A><DD>
-<DT><A HREF="#lbAI">X11-Basic as shell:</A><DD>
-<DT><A HREF="#lbAJ">The X11-Basic Language</A><DD>
-<DT><A HREF="#lbAK">VERSION</A><DD>
-<DT><A HREF="#lbAL">BUG REPORTS</A><DD>
-<DT><A HREF="#lbAM">AUTHOR</A><DD>
-<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
+<DT><A HREF="#lbAH">The X11-Basic Language</A><DD>
+<DT><A HREF="#lbAI">The X11-Basic Language</A><DD>
+<DT><A HREF="#lbAJ">VERSION</A><DD>
+<DT><A HREF="#lbAK">BUG REPORTS</A><DD>
+<DT><A HREF="#lbAL">AUTHOR</A><DD>
+<DT><A HREF="#lbAM">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAN">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by

@@ -3,54 +3,87 @@
 fbxbasic \- The BASIC language interpreter and shell, framebuffer version
 .SH SYNOPSIS
 .B fbxbasic
-[\--framebuffer <device>] [-e <command>] [-l] [<filename>]
+[\fB\-\-framebuffer\fR \fI<device>\fR]
+[\fB\-\-eval\fR \fIexpression\fR]
+[\fB\-e\fR \fIcommand\fR]
+[\fB\-l\fR]
+[\fI<filename>\fR]
 
 .SH DESCRIPTION
 
 X11-Basic is a dialect of the BASIC programming language with graphics
 capability.
 
-.IR fbxbasic 
-is the framebuffer version of the interpreter and bytecode interpreter 
-(vitual machine). It interpretes basic command-files (programs), which 
-usually have the extension .bas or .xbas.
-
+.B fbxbasic 
+is the framebuffer version of the X11-Basic interpreter. 
+It excecutes BASIC programs, which 
+usually have the extension 
+.I .bas
+or 
+.I .xbas\fR.
+.PP
 The base functionallity is exactly the same as the (normal, X11/X.org version) of
-X11-Basic. Please also read the man page of 
-.B xbasic (1).
+X11-Basic. Please also read the man page of \fIxbasic(1)\fR.
+.PP
+.B fbxbasic
+is independent of the X.org installation and can run without, though
+supporting all graphics commands of the language. 
+.PP
+To show graphics on the screen, 
+.B fbxbasic
+trys to open a framebuffer device, 
+supported by the operating system. By default 
+.I /dev/fb0
+is opened, but you can also specify a specific device with the 
+.B \-\-framebuffer 
+option (see below).
+.PP 
+Mouse and keyboard input is also supported by corresponding raw devices which
+can be specified via the commanline options 
+.B \-\-mouse 
+and
+.B \-\-keyboard \fR.
 
-.SH COMMANDLINE OPTIONS
-.P
-.SS \ <file>
-load and run script <file>
-.br
-.SS \-l <file>
-only load script, do not execute
-.br
-.SS \--eval <expression>
-evaluate expression
-.br
-.SS \--framebuffer <device>
-specify framebuffer device to be used for graphics
-.br
-.SS \--mouse <device>
-specify mouse input device to be used
-.br
-.SS \--keyboard <device>
-specify keyboard input device to be used
-.br
-.SS \-e <command>
-execute command
-.br
-.SS \-version
-shows version, program and other information and exits
-.SS -h --help
-print a short help
-.SS --help <topic>
-print help on topic
-.SS --daemon
+.SH OPTIONS
+.TP
+.BR \ \fI<file>\fR
+load and run BASIC program \fIfile\fR.
+.TP
+.BR \-l " " \fIfile\fR
+only load script, do not execute.
+.TP
+.BR \-\-eval " " \fIexpression\fR
+evaluate expression.
+.TP
+.BR \-e " " \fIcommand\fR
+execute command.
+.TP
+.BR \-\-framebuffer " "  \fI<device>\fR
+specify framebuffer device to be used for graphics.
+.TP
+.BR \-\-mouse " " \fI<device>\fR
+specify mouse input device to be used.
+.TP
+.BR \-\-keyboard " " \fI<device>\fR
+specify keyboard input device to be used.
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help.
+.TP
+.BR \-\-help " " \fItopic\fR
+print help on topic.
+.TP
+.BR \-\-daemon
 daemon mode
-
+.TP
+.BR \-\-quitonend
+changes the behaviour of the interpreter such that it quits after the program 
+has finished. 
+The direct mode / interactive mode will not be entered.
+.PP
 For detailed help and description of the implemented basic commands take a look
 at the README file which comes with the X11-Basic package. There is also a full
 users manual available as *.pdf file on the homepage.
@@ -77,10 +110,15 @@ fbxbasic testme.b
 fbxbasic --framebuffer /dev/fb0 -e 'alert 1,"Hello world !",1," OK ",b'
 .fi
 
-You can find many sample programs in 
+.SH The X11-Basic Language
+
+For a complete language reference of X11-Basic please refer to the manual.
+You should be able to find one at
+.I http://x11-basic.sourceforge.net/x11basic.html
+
+
+You can find additional sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
-
-
 
 
 .SH The X11-Basic Language
@@ -91,7 +129,8 @@ You should be able to find one at
 
 
 .SH VERSION
-This page was created for V.1.26
+This page was created for V.1.27
+
 .SH BUG REPORTS
 
 If you find a bug in the X11-Basic interpreter, you should report it. But first,
@@ -109,15 +148,16 @@ kollo@users.sourceforge.net.
 .SH AUTHOR
 Markus Hoffmann <kollo@users.sourceforge.net>
 .SH COPYRIGHT
-Copyright (C) 1997-2018 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2019 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
 Foundation; either version 2 of the License, or (at your option) any later
 version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 .SH SEE ALSO

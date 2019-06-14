@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of XBVM</TITLE>
 </HEAD><BODY>
 <H1>XBVM</H1>
-Section: X11-Basic Vitual Machine (1)<BR>Updated: 04-Jan-2017<BR><A HREF="#index">Index</A>
+Section: X11-Basic (1)<BR>Updated: 04-Jan-2019<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -15,7 +15,11 @@ xbvm  - X11-Basic bytecode interpreter / virtual machine
 
 <B>xbvm</B>
 
-[ <I>option</I> ] <I>&lt;filename&gt;</I>
+[<B>-q</B>]
+[<B>-v</B>]
+[ <I>options</I> ] 
+
+<I>&lt;filename&gt;</I>
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
@@ -23,20 +27,25 @@ xbvm  - X11-Basic bytecode interpreter / virtual machine
 
 <P>
 X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn BASIC language on modern 
-computers.
+capability. 
 <P>
-<I>xbvm</I>
+<B>xbvm</B>
 
-can be used to execute bytecode-binaries which where compiled with 
+can be used to execute bytecode-binaries which have been compiled with 
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1)</I>
 
-<BR>&nbsp;.&nbsp;These&nbsp;bytecode&nbsp;
+before. These bytecode 
 files run about 10-20 times faster than the interpreted .bas files. 
 <P>
-<B>For a desciption of the X11-Basic language and usage of the interpreter see</B>
+<B>xbvm</B>
 
+is a run-only interpreter, it has no interactive mode and no editing features.
+It is possible to pack one BASIC program together with the virtual machine to 
+form a single excecutable file. 
+<P>
+<P>
+
+For a desciption of the X11-Basic language and usage of the interpreter see
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
 
 <P>
@@ -44,34 +53,38 @@ files run about 10-20 times faster than the interpreted .bas files.
 <H2>Filenames</H2>
 
 <P>
-Xbvm processes one input file. The suffix of the input file is usually .b.
+<B>xbvm </B>
+
+processes one input file. The suffix of the input file is usually .b.
 <P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-q </B>
+<DT><B>-q</B>
 
 <DD>
-Be quiet and print less debug information. 
-<B>-v </B>
+be quiet and print less debug information. 
+<DT><B>-v</B>
 
-Be more verbose and print debug information. 
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>--version</H3>
+<DD>
+be more verbose and print debug information. 
+<DT><B>--version</B>
 
+<DD>
 shows version, program and other information and exits.
-<A NAME="lbAH">&nbsp;</A>
-<H3>-h --help</H3>
+<DT><B>-h</B>, <B>--help</B>
 
-print a short help.
+<DD>
+print a short help and exit.
+</DL>
 <P>
+
 For detailed help and description of the implemented basic commands take a 
 look at the README file coming with the package and the X11-Basic manual. 
 <P>
 <P>
-<A NAME="lbAI">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -80,11 +93,8 @@ xbvm -v testme.b
 </PRE>
 
 <P>
-You can find many sample programs in 
-<I>/usr/share/doc/packages/X11Basic/examples.</I>
-
 <P>
-<A NAME="lbAJ">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>The virtual machine</H2>
 
 The virtual machine is an interpreter for bytecode. It implements a virtual 
@@ -103,12 +113,12 @@ The bytecode interpreter is highly optimized, so that the gain in excecution
 speed is immense. Especially complex formulas are speed up by a factor 20. Last
 but not least, there is no way to recreate the source code from the bytecode. 
 <P>
-<A NAME="lbAK">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>VERSION</H2>
 
-Page was created for V.1.25
+Page was created for V.1.27
 <P>
-<A NAME="lbAL">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>BUG REPORTS       </H2>
 
 <P>
@@ -123,15 +133,15 @@ as well! Suggestions may be mailed to the bug tracking system.
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
-Copyright (C) 1997-2017 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+Copyright (C) 1997-2019 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software 
@@ -142,10 +152,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
-<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1)
+<A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+ybasic">ybasic</A>(1)
 <P>
 
 <HR>
@@ -156,22 +166,18 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAE">Filenames</A><DD>
 <DT><A HREF="#lbAF">OPTIONS</A><DD>
-<DL>
-<DT><A HREF="#lbAG">--version</A><DD>
-<DT><A HREF="#lbAH">-h --help</A><DD>
-</DL>
-<DT><A HREF="#lbAI">EXAMPLES</A><DD>
-<DT><A HREF="#lbAJ">The virtual machine</A><DD>
-<DT><A HREF="#lbAK">VERSION</A><DD>
-<DT><A HREF="#lbAL">BUG REPORTS       </A><DD>
-<DT><A HREF="#lbAM">AUTHOR</A><DD>
-<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">The virtual machine</A><DD>
+<DT><A HREF="#lbAI">VERSION</A><DD>
+<DT><A HREF="#lbAJ">BUG REPORTS       </A><DD>
+<DT><A HREF="#lbAK">AUTHOR</A><DD>
+<DT><A HREF="#lbAL">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAM">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>

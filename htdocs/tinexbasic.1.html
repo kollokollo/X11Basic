@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of TINEX11BASIC</TITLE>
 </HEAD><BODY>
 <H1>TINEX11BASIC</H1>
-Section: TINE Basic Interpreter (1)<BR>Updated: 10-Aug-2004<BR><A HREF="#index">Index</A>
+Section: X11-Basic (1)<BR>Updated: 10-Aug-2004<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -16,22 +16,26 @@ Environment)
 
 <B>tinexbasic</B>
 
-[--eval &lt;expression&gt;] [-e &lt;command&gt;] [-l] [&lt;filename&gt;]
+[<B>--eval</B> <I>expression</I>]
+[<B>-e</B> <I>command</I>]
+[<B>-l</B>]
+[<I>&lt;filename&gt;</I>]
+<P>
 <P>
 <A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <P>
-X11-Basic is a dialect of the BASIC programming langage with graphics 
-capability that integrates fratures like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
+<P>
 <P>
 TINE is a multi-platform multi-protocol multi-control system architecture
 allowing client-server, publisher-subscriber, and producer-consumer data 
 exchange in any variation.
 <P>
-Tinexbasic is a modification which combines the TINE functionality with the
+<B>tinexbasic </B>
+
+is a modification which combines the TINE functionality with the
 X11-Basic interpreter.
 (see the man page 
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1)</I>
@@ -43,55 +47,55 @@ and
 <P>
 <P>
 <A NAME="lbAE">&nbsp;</A>
-<H2>COMMANDLINE OPTIONS</H2>
+<H2>OPTIONS</H2>
 
+<DL COMPACT>
+<DT><B>&nbsp;</B><I>&lt;file&gt;</I>
 
-<A NAME="lbAF">&nbsp;</A>
-<H3>&nbsp;&lt;file&gt;</H3>
+<DD>
+load and run BASIC program <I>file</I>.
+<DT><B>-l</B> <B></B><I>file</I>
 
-load and run script &lt;file&gt;
-<BR>
+<DD>
+only load script, do not execute.
+<DT><B>--eval</B> <B></B><I>expression</I>
 
-<A NAME="lbAG">&nbsp;</A>
-<H3>-l &lt;file&gt;</H3>
+<DD>
+evaluate expression.
+<DT><B>-e</B> <B></B><I>command</I>
 
-only load script, do not execute
-<BR>
+<DD>
+execute command.
+<DT><B>--version</B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H3>--eval &lt;expression&gt;</H3>
+<DD>
+shows version, program and other information and exits.
+<DT><B>-h</B>, <B>--help</B>
 
-evaluate expression
-<BR>
+<DD>
+print a short help.
+<DT><B>--help</B> <B></B><I>topic</I>
 
-<A NAME="lbAI">&nbsp;</A>
-<H3>-e &lt;command&gt;</H3>
+<DD>
+print help on topic.
+<DT><B>--daemon</B>
 
-execute command
-<BR>
-
-<A NAME="lbAJ">&nbsp;</A>
-<H3>-version</H3>
-
-shows version, program and other information and exits
-<A NAME="lbAK">&nbsp;</A>
-<H3>-h --help</H3>
-
-print a short help
-<A NAME="lbAL">&nbsp;</A>
-<H3>--help &lt;topic&gt;</H3>
-
-print help on topic
-<A NAME="lbAM">&nbsp;</A>
-<H3>--daemon</H3>
-
+<DD>
 daemon mode
+<DT><B>--quitonend</B>
+
+<DD>
+changes the behaviour of the interpreter such that it quits after the program 
+has finished. 
+The direct mode / interactive mode will not be entered.
+</DL>
 <P>
+
 For detailed help and description of the implemented basic commands take a look
 at the README file which comes with the X11Basic package. There is also a full
 users manual available as *.pdf file on the homepage.
 <P>
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAF">&nbsp;</A>
 <H2>INTERACTIVE USE</H2>
 
 If no options are given on the command line, 
@@ -100,14 +104,9 @@ If no options are given on the command line,
 will run interactivly.
 <P>
 A Prompt will be displayed and any command can be typed in. It will be
-excecuted immediately after pressing return or enter. The interpreter uses the 
-<B><A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3) </B>
-
-library. So the input is buffered and can be edited using the up and down 
+excecuted immediately after pressing return or enter. 
+The input is buffered and can be edited using the up and down 
 arrows on the keyboard.
-Readline offers editing capabilities while the user is
-entering the line. By default, the line editing commands
-are similar to those of emacs. 
 <BR>&nbsp;
 <B>To quit program</B>
 
@@ -117,7 +116,7 @@ simply enter
 or press 
 <I>CTRL-C.</I>
 
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -133,7 +132,7 @@ of the X11-Basic language please also see the X11-Basic documentation and or
 man-pages. Her we will only describe the modifications of tinexbasic compared to
 the regular x11basic interpreter. 
 <P>
-<A NAME="lbAP">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>Tinexbasic as shell:</H2>
 
 X11-Basic programs can be excecuted like shell scripts.
@@ -147,7 +146,7 @@ any X11-Basic program with
 
 in the first command line can be excecuted directly.
 <P>
-<A NAME="lbAQ">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>The X11-Basic Language extentions for TINE</H2>
 
 <P>
@@ -169,7 +168,7 @@ Servern erfragt. TINEXBASIC erlaubt ab Version 1.11 auch das Programmieren
 eines eigenen Servers.
 <P>
 <P>
-<A NAME="lbAR">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H3>TINE server,device,property name convention</H3>
 
 <P>
@@ -189,7 +188,7 @@ a=tineget(&quot;LMBDAC8/#0[AMPLITUDE]&quot;)
 
 <P>
 <P>
-<A NAME="lbAS">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H3>TINE commands</H3>
 
 <P>
@@ -208,7 +207,7 @@ TINESET t$,???[,...]    -- same as tineput
 <P>
 <P>
 <P>
-<A NAME="lbAT">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H3>TINE functions</H3>
 
 <PRE>
@@ -227,7 +226,7 @@ a()=<A HREF="http://localhost/cgi-bin/man/man2html?3+tinehistory">tinehistory</A
 </PRE>
 
 <P>
-<A NAME="lbAU">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H3>TINE system variable</H3>
 
 <PRE>
@@ -235,7 +234,7 @@ a=CCSERR     -- TINE error code in case of errors
 </PRE>
 
 <P>
-<A NAME="lbAV">&nbsp;</A>
+<A NAME="lbAN">&nbsp;</A>
 <H3>Client application</H3>
 
 <P>
@@ -391,7 +390,7 @@ als die Anzahl der Sekunden ab 01.01.1970 00:00 an.
 <P>
 Bemerkung: Die Groesse des Datenpuffers ist auf 64 kBytes beschraenkt.
 <P>
-<A NAME="lbAW">&nbsp;</A>
+<A NAME="lbAO">&nbsp;</A>
 <H3>Server application</H3>
 
 <P>
@@ -485,7 +484,7 @@ Damit Client-Anfragen auch bearbeitet werden koennen, muss der Server abundzu
 <P>
 ausfuehren. 
 <P>
-<A NAME="lbAX">&nbsp;</A>
+<A NAME="lbAP">&nbsp;</A>
 <H3>Variables</H3>
 
 <P>
@@ -638,7 +637,7 @@ The interpretation of these error codes is as follows:
 <P>
 <P>
 <P>
-<A NAME="lbAY">&nbsp;</A>
+<A NAME="lbAQ">&nbsp;</A>
 <H2>Configuration</H2>
 
 <P>
@@ -651,7 +650,7 @@ away from their default settings.
 Besides direct configuration in the program code, there are some files which
 hold information. The Location of the files are set by Environment variables.
 <P>
-<A NAME="lbAZ">&nbsp;</A>
+<A NAME="lbAR">&nbsp;</A>
 <H2>ENVIRONMENT</H2>
 
 <P>
@@ -708,13 +707,13 @@ configured via an environment variable, LOGDEPTH, e.g.
 
 =5000
 <P>
-<A NAME="lbBA">&nbsp;</A>
+<A NAME="lbAS">&nbsp;</A>
 <H2>FILES</H2>
 
 <P>
 All Files are csv-Files (comma separated variables) 
 <P>
-<A NAME="lbBB">&nbsp;</A>
+<A NAME="lbAT">&nbsp;</A>
 <H3>TINE Server Startup Configuration CSV Files</H3>
 
 <P>
@@ -733,7 +732,7 @@ configuration file common to the client as well as the server substructure and
 serves only to provide the address(es) of the TINE Equipment Name Server(s)
 (ENS).
 <P>
-<A NAME="lbBC">&nbsp;</A>
+<A NAME="lbAU">&nbsp;</A>
 <H3>Common Configuration CSV Files</H3>
 
 <P>
@@ -763,7 +762,7 @@ o ALTERNATIVES:
 o ENVIRONMENT: variable TINE_HOME points to location; if not set the 
 <BR>&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
 <P>
-<A NAME="lbBD">&nbsp;</A>
+<A NAME="lbAV">&nbsp;</A>
 <H3>FEC-specific Configuration CSV Files</H3>
 
 <P>
@@ -849,7 +848,7 @@ o ENVIRONMENT: variable HISTORY_HOME (or HISTORYDB) points to
 <BR>&nbsp;set&nbsp;the&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
 <P>
 <P>
-<A NAME="lbBE">&nbsp;</A>
+<A NAME="lbAW">&nbsp;</A>
 <H3>Equipment Module-specific Configuration CSV Files</H3>
 
 <P>
@@ -873,7 +872,7 @@ o ENVIRONMENT: variable FEC_HOME points to location; if not set the
 <BR>&nbsp;working&nbsp;directory&nbsp;is&nbsp;searched.
 <P>
 <P>
-<A NAME="lbBF">&nbsp;</A>
+<A NAME="lbAX">&nbsp;</A>
 <H3>FEC-specific Security CSV Files</H3>
 
 <P>
@@ -920,11 +919,11 @@ o ENVIRONMENT: variable FEC_HOME points to location; if not set the
 <P>
 <P>
 <P>
-<A NAME="lbBG">&nbsp;</A>
+<A NAME="lbAY">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.13
-<A NAME="lbBH">&nbsp;</A>
+<A NAME="lbAZ">&nbsp;</A>
 <H2>BUG REPORTS    </H2>
 
 <P>
@@ -940,12 +939,12 @@ well! Suggestions may be mailed to the X11-Basic bug tracking system.
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbBI">&nbsp;</A>
+<A NAME="lbBA">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbBJ">&nbsp;</A>
+<A NAME="lbBB">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2006 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
@@ -959,10 +958,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbBK">&nbsp;</A>
+<A NAME="lbBC">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
-<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?3+readline">readline</A>(3), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1)
+<A HREF="http://localhost/cgi-bin/man/man2html?1+x11basic">x11basic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?3+tine">tine</A>(3)
 <P>
 
 <HR>
@@ -971,50 +970,40 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAB">NAME</A><DD>
 <DT><A HREF="#lbAC">SYNOPSIS</A><DD>
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAE">COMMANDLINE OPTIONS</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">INTERACTIVE USE</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">Tinexbasic as shell:</A><DD>
+<DT><A HREF="#lbAI">The X11-Basic Language extentions for TINE</A><DD>
 <DL>
-<DT><A HREF="#lbAF">&nbsp;&lt;file&gt;</A><DD>
-<DT><A HREF="#lbAG">-l &lt;file&gt;</A><DD>
-<DT><A HREF="#lbAH">--eval &lt;expression&gt;</A><DD>
-<DT><A HREF="#lbAI">-e &lt;command&gt;</A><DD>
-<DT><A HREF="#lbAJ">-version</A><DD>
-<DT><A HREF="#lbAK">-h --help</A><DD>
-<DT><A HREF="#lbAL">--help &lt;topic&gt;</A><DD>
-<DT><A HREF="#lbAM">--daemon</A><DD>
+<DT><A HREF="#lbAJ">TINE server,device,property name convention</A><DD>
+<DT><A HREF="#lbAK">TINE commands</A><DD>
+<DT><A HREF="#lbAL">TINE functions</A><DD>
+<DT><A HREF="#lbAM">TINE system variable</A><DD>
+<DT><A HREF="#lbAN">Client application</A><DD>
+<DT><A HREF="#lbAO">Server application</A><DD>
+<DT><A HREF="#lbAP">Variables</A><DD>
 </DL>
-<DT><A HREF="#lbAN">INTERACTIVE USE</A><DD>
-<DT><A HREF="#lbAO">EXAMPLES</A><DD>
-<DT><A HREF="#lbAP">Tinexbasic as shell:</A><DD>
-<DT><A HREF="#lbAQ">The X11-Basic Language extentions for TINE</A><DD>
+<DT><A HREF="#lbAQ">Configuration</A><DD>
+<DT><A HREF="#lbAR">ENVIRONMENT</A><DD>
+<DT><A HREF="#lbAS">FILES</A><DD>
 <DL>
-<DT><A HREF="#lbAR">TINE server,device,property name convention</A><DD>
-<DT><A HREF="#lbAS">TINE commands</A><DD>
-<DT><A HREF="#lbAT">TINE functions</A><DD>
-<DT><A HREF="#lbAU">TINE system variable</A><DD>
-<DT><A HREF="#lbAV">Client application</A><DD>
-<DT><A HREF="#lbAW">Server application</A><DD>
-<DT><A HREF="#lbAX">Variables</A><DD>
+<DT><A HREF="#lbAT">TINE Server Startup Configuration CSV Files</A><DD>
+<DT><A HREF="#lbAU">Common Configuration CSV Files</A><DD>
+<DT><A HREF="#lbAV">FEC-specific Configuration CSV Files</A><DD>
+<DT><A HREF="#lbAW">Equipment Module-specific Configuration CSV Files</A><DD>
+<DT><A HREF="#lbAX">FEC-specific Security CSV Files</A><DD>
 </DL>
-<DT><A HREF="#lbAY">Configuration</A><DD>
-<DT><A HREF="#lbAZ">ENVIRONMENT</A><DD>
-<DT><A HREF="#lbBA">FILES</A><DD>
-<DL>
-<DT><A HREF="#lbBB">TINE Server Startup Configuration CSV Files</A><DD>
-<DT><A HREF="#lbBC">Common Configuration CSV Files</A><DD>
-<DT><A HREF="#lbBD">FEC-specific Configuration CSV Files</A><DD>
-<DT><A HREF="#lbBE">Equipment Module-specific Configuration CSV Files</A><DD>
-<DT><A HREF="#lbBF">FEC-specific Security CSV Files</A><DD>
-</DL>
-<DT><A HREF="#lbBG">VERSION</A><DD>
-<DT><A HREF="#lbBH">BUG REPORTS    </A><DD>
-<DT><A HREF="#lbBI">AUTHOR</A><DD>
-<DT><A HREF="#lbBJ">COPYRIGHT</A><DD>
-<DT><A HREF="#lbBK">SEE ALSO</A><DD>
+<DT><A HREF="#lbAY">VERSION</A><DD>
+<DT><A HREF="#lbAZ">BUG REPORTS    </A><DD>
+<DT><A HREF="#lbBA">AUTHOR</A><DD>
+<DT><A HREF="#lbBB">COPYRIGHT</A><DD>
+<DT><A HREF="#lbBC">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>

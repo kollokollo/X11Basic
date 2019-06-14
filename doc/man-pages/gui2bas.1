@@ -3,14 +3,13 @@
 gui2bas \- GUI-File to X11-Basic converter
 .SH SYNOPSIS
 .B gui2bas
-.RI "[ " option " ] " <filename>
+.RI "[ " option " ] " 
+[\fB\-o\fR \fIoutfile\fR]
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 
 X11-Basic uses a graphical user interface (GUI) which is very similar to the
 ATARI ST TOS/GEM implementation. The *.gui file format, which is basically an
@@ -19,13 +18,13 @@ X11-Basic code, which then can handle message boxes and forms. For conversion of
 ATARI ST recource files to *.gui Files see
 .I rsc2gui(1).
 
-.IR gui2bas
-
+.B gui2bas
 can be used to make X11-Basic template programs out of gui Files, which
 represent the Object structure of the Graphical User Interface which is
 implemented into X11-Basic..
 
-.B For a desciption of the X11-basic language and usage of the interpreter see
+.PP
+For a desciption of the X11-basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH The GUI file format
@@ -68,16 +67,16 @@ Comments are indicated by a '#' at the beginning of a line.
 
 .SH Filenames
 
-gui2bas processes input files with extention .gui. The default output filename
-is b.bas.
+.B gui2bas 
+processes input files with extention .gui. The default output filename is 
+.I b.bas\fR.
 
 .SH OPTIONS
 .TP
-.BI "\-o " file
-Place output in file \c
+.BR \-o " " \fIfile\fR
+place output in file \c
 .I file\c
 \&. 
-
 .Sp
 If you do not specify `\|\c
 .B \-o\c
@@ -85,12 +84,13 @@ If you do not specify `\|\c
 `\|\c
 .B b.bas\c
 \&\|'
-
-.SS \--version
+.TP
+.BR \-\-version
 shows version, program and other information and exits
-.SS -h --help
-print a short help
-
+.TP
+.BR \-h ", " \-\-help
+print a short help.
+.PP
 For detailed help and description of the implemented basic commands take a look
 at the README file. 
 

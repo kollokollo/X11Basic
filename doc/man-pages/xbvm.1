@@ -3,39 +3,50 @@
 xbvm  \- X11-Basic bytecode interpreter / virtual machine 
 .SH SYNOPSIS
 .B xbvm
-.RI "[ " option " ] " <filename>
+[\fB\-q\fR]
+[\fB\-v\fR]
+.RI "[ " options " ] " 
+.IR <filename>
 
 .SH DESCRIPTION
 
 X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn BASIC language on modern 
-computers.
+capability. 
 
-.IR xbvm
-can be used to execute bytecode-binaries which where compiled with 
+.B xbvm
+can be used to execute bytecode-binaries which have been compiled with 
 .I xbbc(1)
- . These bytecode 
+before. These bytecode 
 files run about 10-20 times faster than the interpreted .bas files. 
 
-.B For a desciption of the X11-Basic language and usage of the interpreter see
+.B xbvm
+is a run-only interpreter, it has no interactive mode and no editing features.
+It is possible to pack one BASIC program together with the virtual machine to 
+form a single excecutable file. 
+
+.PP
+For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
 
-Xbvm processes one input file. The suffix of the input file is usually .b.
+.B xbvm 
+processes one input file. The suffix of the input file is usually .b.
 
 .SH OPTIONS
 .TP
-.BI "\-q "
-Be quiet and print less debug information. 
-.BI "\-v "
-Be more verbose and print debug information. 
-.SS \--version
+.BR \-q
+be quiet and print less debug information. 
+.TP
+.BR \-v
+be more verbose and print debug information. 
+.TP
+.BR \-\-version
 shows version, program and other information and exits.
-.SS -h --help
-print a short help.
-
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.PP
 For detailed help and description of the implemented basic commands take a 
 look at the README file coming with the package and the X11-Basic manual. 
 
@@ -46,8 +57,6 @@ xbvm testme.b
 xbvm -v testme.b
 .fi
 
-You can find many sample programs in 
-.I /usr/share/doc/packages/X11Basic/examples.
 
 .SH The virtual machine
 The virtual machine is an interpreter for bytecode. It implements a virtual 
@@ -65,7 +74,7 @@ speed is immense. Especially complex formulas are speed up by a factor 20. Last
 but not least, there is no way to recreate the source code from the bytecode. 
 
 .SH VERSION
-Page was created for V.1.25
+Page was created for V.1.27
 
 .SH BUG REPORTS       
 
@@ -84,7 +93,7 @@ kollo@users.sourceforge.net.
 Markus Hoffmann <kollo@users.sourceforge.net>
 
 .SH COPYRIGHT
-Copyright (C) 1997-2017 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2019 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software 
@@ -96,4 +105,4 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 .SH SEE ALSO
-xbasic(1), xbbc(1), xbc(1), xb2c(1)
+xbasic(1), xbbc(1), xbc(1), xb2c(1), ybasic(1)

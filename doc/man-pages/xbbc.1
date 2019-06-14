@@ -3,47 +3,49 @@
 xbbc \- X11-Basic bytecode compiler 
 .SH SYNOPSIS
 .B xbbc
-.RI "[ " option " ] " <filename>
+.RI "[ " option " ] " 
+[\fB\-o\fR \fIoutfile\fR]
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 
-.IR xbbc
-can be used to make bytecode-binaries out of *.bas script-Files. These bytecode 
-files can be interpreted by the X11-Basic virtual machine (
-.I xbvm(1)
-) and they run about 10-20 times faster than the interpreted .bas files. Since 
-.I xbbc
+.B xbbc
+can be used to make bytecode-binaries out of *.bas script files. These bytecode 
+files can be interpreted by the X11-Basic virtual machine (\fIxbvm(1)\fR) 
+and they run about 10-20 times faster than the interpreted .bas files. Since 
+.B xbbc
 is a real compiler, some restrictions to the code apply. (Not every X11-Basic 
 program which does well on the interpreter can be correctly compiled),
-
-.B For a desciption of the X11-Basic language and usage of the interpreter see
-.I xbasic(1).
+.PP
+For a desciption of the X11-Basic language and usage of the interpreter see
+.I xbasic(1)\fR.
 
 .SH Filenames
 
-Xbbc processes one input file. The suffix of the input file is usually .bas.
+.B xbbc 
+processes one input file. The suffix of the input file is usually .bas.
 The default output file name is 
 .I b.b
 but you can specify alternate names with the -o option.
+
 .SH OPTIONS
 .TP
-.BI "\-o " file
-Place output in file \c
-.I file\c
+.BR \-o " \fIfile\fR
+Place output in file 
+.I file
 \&. 
 If you do not specify `\|\c
 .B \-o\c
 \&\|', the default is to produce a file `\|\c
 .B b.b\c
- .
-.SS \--version
+\.
+.TP
+.BR \-\-version
 shows version, program and other information and exits
-.SS -h --help
+.TP
+.BR \-h ", " \-\-help
 print a short help.
 
 For detailed help and a description of the implemented basic commands take a look
@@ -58,11 +60,10 @@ xbbc testme.bas -o testme.b
  produces a bytecode file testme.b
 .fi
 
-You can find many sample programs in 
-.I /usr/share/doc/packages/X11Basic/examples.
 .SH The bytecode compiler
 
-Xbbc is a compiler. It compiles the BASIC source code into a bytecode of a
+.B xbbc 
+is a compiler. It compiles the BASIC source code into a bytecode of a
 virtual stack machine. This virtual stack machine needs to be emulated on each
 different operating system platform, but the bytecode itself is still portable.
 The bytecode is very compact and similar to machine code, but still it is
@@ -96,7 +97,7 @@ kollo@users.sourceforge.net.
 Markus Hoffmann <kollo@users.sourceforge.net>
 
 .SH COPYRIGHT
-Copyright (C) 1997-2017 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2019 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

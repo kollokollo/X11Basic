@@ -3,31 +3,37 @@
 xb2c \- translate X11-Basic bytecode to C
 .SH SYNOPSIS
 .B xb2c
-.RI "[ " option " ] " <filename>
+.RI "[ " option " ] " 
+[\fB\-o\fR \fIoutfile\fR]
+.IR <filename>
 
 .SH DESCRIPTION
 
-X11-Basic is a dialect of the BASIC programming langage with graphics 
-capability that integrates fratures like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming langage with graphics. 
 
-.IR xb2c
+.B xb2c
 can be used to convert X11-Basic *.b bytecode binary files (produced with 
 .I xbbc(1))
-into C sourcecode, which can be compiled with the gnu C compiler gcc or any
-other ANSI C compiler, e.g. tcc, the tiny c compiler. 
-The sources depend on the x11basic.a or libx11basic.so libraries and on the
-header file xb2csol.h, which therefore should be installed and linked. The
+into C sourcecode, which can be compiled with the gnu C compiler 
+.B gcc 
+or any other ANSI C compiler, e.g. 
+.B tcc\fR, 
+the tiny c compiler. 
+.PP
+The sources depend on the 
+.I x11basic.a 
+or 
+.I libx11basic.so 
+libraries and on the header file 
+.I xb2csol.h\fR, 
+which therefore should be installed and linked. The
 compiled programs will be faster than the interpreted ones and even a bit
 faster than the bytecode processed ones (see 
 .I xbbc(1)
- and 
-.I xbvm(1)
-)
-. 
-
-.B For a desciption of the X11-Basic language and usage of the interpreter see
+and 
+.I xbvm(1)\fR).
+.PP
+For a desciption of the X11-Basic language and usage of the interpreter see
 .I xbasic(1).
 
 .SH Filenames
@@ -39,9 +45,10 @@ Xb2c processes one input file. The suffix of the input file is usually .b
 The default output file name is 
 .I 11.c
 but you can specify alternate names with the -o option.
+
 .SH OPTIONS
 .TP
-.BI "\-o " file
+.BR \-o " " \fIfile\fR
 Place output in file \c
 .I file\c
 \&. This applies regardless to whatever
@@ -51,10 +58,12 @@ If you do not specify `\|\c
 \&\|', the default is to put the output into the file `\|\c
 .B 11.c\c
 \& .
-.SS \--version
-shows version, program and other information and exits
-.SS -h --help
-print a short help
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help.
 
 For detailed help and description of the implemented basic commands take a look
 at the README file and the X11-Basic manual. 
@@ -66,14 +75,15 @@ xbbc testme.bas -o testme.b
  produces a bytecode file testme.b
 xb2c testme.b -o testme.c
  produces a file testme.c
-gcc testme.c -o testme -lx11basic -ldl -lm -lcurses -lncurses -lasound -lreadline -lX11
+gcc testme.c -o testme -lx11basic -ldl -lm -lasound -lreadline -lX11
  produces an excecutable file testme. However the same result can be optained by
 xbc -virtualm testme.bas -o testme
  which does all the above steps.
 .fi
 
-You can find many sample programs in 
+You can find additional sample programs in 
 .I /usr/share/doc/packages/X11Basic/examples.
+
 .SH The basic to C translator
 
 There is no way to recreate the .bas source code from the c file.. 
@@ -99,16 +109,18 @@ kollo@users.sourceforge.net.
 Markus Hoffmann <kollo@users.sourceforge.net>
 
 .SH COPYRIGHT
-Copyright (C) 1997-2017 Markus Hoffmann <kollo@users.sourceforge.net>
+Copyright (C) 1997-2019 Markus Hoffmann <kollo@users.sourceforge.net>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
 Foundation; either version 2 of the License, or (at your option) any later
 version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. 
+See the GNU General Public License for more details.
 
 .SH SEE ALSO
 xbasic(1), xbvm(1), xbc(1), xbbc(1), gcc(1)

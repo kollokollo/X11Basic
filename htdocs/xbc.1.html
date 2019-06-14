@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of XBC</TITLE>
 </HEAD><BODY>
 <H1>XBC</H1>
-Section: X11-Basic Compiler Manager (1)<BR>Updated: 04-Jan-2017<BR><A HREF="#index">Index</A>
+Section: X11-Basic (1)<BR>Updated: 04-Jan-2019<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -15,24 +15,26 @@ xbc - X11-Basic compiler manager
 
 <B>xbc</B>
 
-[ <I>option</I> ] <I>&lt;filename&gt;</I>
+[<B>-b</B>]
+[<B>-c</B>]
+[<B>-l</B>]
+[ <I>option</I> ] 
+
+<I>&lt;filename&gt;</I>
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <P>
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 <P>
-<I>xbc</I>
+<B>xbc</B>
 
 can be used to make stand-alone-binaries out of *.bas script files.
 <P>
-<B>For a desciption of the X11-Basic language and usage of the interpreter see</B>
 
+For a desciption of the X11-Basic language and usage of the interpreter see
 <I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
 
 <P>
@@ -40,7 +42,9 @@ can be used to make stand-alone-binaries out of *.bas script files.
 <H2>Filenames</H2>
 
 <P>
-Xbc process input files through one or more of three stages: 
+<B>xbc </B>
+
+process input files through one or more of three stages: 
 preprocessing, compilation, translation and linking. 
 Source filename suffixes identify the source language.
 <P>
@@ -113,27 +117,23 @@ producing an executable file as output.
 <P>
 If you do not specify `<B>-o</B>', the default is to put an executable file
 in `<B>b.out</B>', the object file for `<I>source</I><B>.</B><I>suffix</I>' in
-`<I>source</I><B>.o</B>', and its *.c file in `<I>source</I><B>.c</B></DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>-virtualm</H3>
+`<I>source</I><B>.o</B>', and its *.c file in `<I>source</I><B>.c</B><DT><B>-virtualm</B>, <B>--virtualm</B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H3>--virtualm</H3>
-
+<DD>
 this option tells the compiler to compile the code to bytecode and then translate it to C 
 source and finally compile it with gcc. The code produced is really fast. On UNIX this 
 option can always be used unless some compiler trouble occur. 
-<A NAME="lbAI">&nbsp;</A>
-<H3>--static</H3>
+<DT><B>--static</B>
 
+<DD>
 this is the default. The X11-Basic library will be linked to the excecutable.
-<A NAME="lbAJ">&nbsp;</A>
-<H3>--dynamic</H3>
+<DT><B>--dynamic</B>
 
+<DD>
 The excecutable will be linked dynamically against the X11-Basic library.
-<A NAME="lbAK">&nbsp;</A>
-<H3>-shared</H3>
+<DT><B>-shared</B>
 
+<DD>
 This option is passed to the linker and tells it, that it should produce a shared
 object file which can then be linked with other objects to
 form an executable. Not all systems support this option. 
@@ -141,39 +141,39 @@ Usually the extention should be
 <B>.so</B><BR>&nbsp;This&nbsp;option&nbsp;only&nbsp;makes&nbsp;sense
 if it was used together with the 
 <B>-l</B><BR>&nbsp;option.
-<P>
-<A NAME="lbAL">&nbsp;</A>
-<H3>-C</H3>
+<DT><B>-C</B>
 
-Do not discard comments. All comments are passed through to the
+<DD>
+do not discard comments. All comments are passed through to the
 output file.
-<P>
-<A NAME="lbAM">&nbsp;</A>
-<H3>-s --strip</H3>
+<DT><B>-s</B>, <B>--strip</B>
 
-Remove all symbol table and relocation information from the
+<DD>
+remove all symbol tables and relocation information from the
 executable.
-<P>
-<A NAME="lbAN">&nbsp;</A>
-<H3>-L  path</H3>
+<DT><B>-L</B> <B></B><I>path</I>
 
-Use <I>path</I> when looking for libraries to link (default is /usr/lib). 
-<P>
-<P>
-<A NAME="lbAO">&nbsp;</A>
-<H3>--version</H3>
+<DD>
+Use 
+<I>path</I>
 
-shows version, program and other information and exits
-<A NAME="lbAP">&nbsp;</A>
-<H3>-h --help</H3>
+ when looking for libraries to link (default is /usr/lib). 
+<DT><B>--version</B>
 
-print a short help
+<DD>
+shows version, program and other information and exits.
+<DT><B>-h</B>, <B>--help</B>
+
+<DD>
+print a short help and exit.
+</DL>
 <P>
+
 For detailed help and description of the implemented basic commands take a 
 look at the README file. 
 <P>
 <P>
-<A NAME="lbAQ">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -190,11 +190,11 @@ xbc testme.bas -virtualm --dynamic -o b.out
 </PRE>
 
 <P>
-You can find many sample programs in 
+You can find additional sample programs in 
 <I>/usr/share/doc/packages/X11Basic/examples.</I>
 
 <P>
-<A NAME="lbAR">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>The Compiler Manager</H2>
 
 <P>
@@ -209,12 +209,12 @@ programs, which run in the interpreter. The real compiler has some restrictions
 on the BASIC code, because it cannot compile every constructs (e.g. jumps/GOTO
 out of a procedure).
 <P>
-<A NAME="lbAS">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.25
 <P>
-<A NAME="lbAT">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>BUG REPORTS </H2>
 
 <P>
@@ -229,12 +229,12 @@ as well! Suggestions may be mailed to the bug tracking system.
 Comments and bug reports concerning this manual page should be directed to 
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAU">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbAV">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2017 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
@@ -248,7 +248,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAW">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+gcc">gcc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+ld">ld</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbbc">xbbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1)
@@ -262,30 +262,18 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAE">Filenames</A><DD>
 <DT><A HREF="#lbAF">OPTIONS</A><DD>
-<DL>
-<DT><A HREF="#lbAG">-virtualm</A><DD>
-<DT><A HREF="#lbAH">--virtualm</A><DD>
-<DT><A HREF="#lbAI">--static</A><DD>
-<DT><A HREF="#lbAJ">--dynamic</A><DD>
-<DT><A HREF="#lbAK">-shared</A><DD>
-<DT><A HREF="#lbAL">-C</A><DD>
-<DT><A HREF="#lbAM">-s --strip</A><DD>
-<DT><A HREF="#lbAN">-L  path</A><DD>
-<DT><A HREF="#lbAO">--version</A><DD>
-<DT><A HREF="#lbAP">-h --help</A><DD>
-</DL>
-<DT><A HREF="#lbAQ">EXAMPLES</A><DD>
-<DT><A HREF="#lbAR">The Compiler Manager</A><DD>
-<DT><A HREF="#lbAS">VERSION</A><DD>
-<DT><A HREF="#lbAT">BUG REPORTS </A><DD>
-<DT><A HREF="#lbAU">AUTHOR</A><DD>
-<DT><A HREF="#lbAV">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAW">SEE ALSO</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">The Compiler Manager</A><DD>
+<DT><A HREF="#lbAI">VERSION</A><DD>
+<DT><A HREF="#lbAJ">BUG REPORTS </A><DD>
+<DT><A HREF="#lbAK">AUTHOR</A><DD>
+<DT><A HREF="#lbAL">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAM">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>

@@ -1,40 +1,40 @@
 Content-type: text/html
 
-<HTML><HEAD><TITLE>Manpage of bas2x11basic</TITLE>
+<HTML><HEAD><TITLE>Manpage of RSC2GUI</TITLE>
 </HEAD><BODY>
-<H1>bas2x11basic</H1>
-Section: ATARI/TOS Resources to X11-Basic GUI converter (1)<BR>Updated: 19-Sep-2003<BR><A HREF="#index">Index</A>
+<H1>RSC2GUI</H1>
+Section: X11-Basic (1)<BR>Updated: 19-Sep-2003<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-rsc2gui - ATARI/TOS Resources to X11-Basic GUI converter
+rsc2gui - ATARI-ST/TOS Resources to X11-Basic GUI converter
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
 <B>rsc2gui</B>
 
-[ <I>option</I> ] <I>&lt;filename&gt;</I>
+[ <I>option</I> ] 
+
+[<B>-o</B> <I>outfile</I>]
+<I>&lt;filename&gt;</I>
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <P>
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and
-full graphical visualisation into the easy to learn basic language on modern
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 <P>
 X11-Basic uses a graphical user interface (GUI) which is very similar to the
-ATARI ST TOS/GEM implementation. The *.gui file format, which is basically an
-ASCII representation of the ATARI ST recource files (*.rsc), can be converted to
+ATARI-ST TOS/GEM implementation. The *.gui file format, which is basically an
+ASCII representation of the ATARI-ST recource files (*.rsc), can be converted to
 X11-Basic code, which then can handle message boxes and forms. (see 
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+gui2bas">gui2bas</A>(1).</I>
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+gui2bas">gui2bas</A>(1)</I>.
 
 <P>
-<I>rsc2gui</I>
+<B>rsc2gui</B>
 
 can be used to convert ATARI ST recource files to *.gui files.
 <P>
@@ -43,37 +43,46 @@ can be used to convert ATARI ST recource files to *.gui files.
 <H2>Filenames</H2>
 
 <P>
-rsc2gui processes input files with extention .rsc. The default output filename
-is b.gui.
+<B>rsc2gui </B>
+
+processes input files with extention 
+<I>.rsc</I>. 
+
+The default output filename is 
+<I>b.gui</I>.
+
 <P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-o </B><I>file</I>
+<DT><B>-o</B> <B></B><I>file</I>
 
 <DD>
-Place output in file <I>file</I>. This applies regardless to whatever
+Place output in file 
+<I>file</I>
+
+. This applies regardless to whatever
 sort of output rsc2gui is producing.
 
 If you do not specify `<B>-o</B>', the default is to use
 `<B>b.gui</B>'
-<P>
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>--version</H3>
+<DT><B>--version</B>
 
+<DD>
 shows version, program and other information and exits
-<A NAME="lbAH">&nbsp;</A>
-<H3>-h --help</H3>
+<DT><B>-h</B>, <B>--help</B>
 
-print a short help
+<DD>
+print a short help.
+</DL>
 <P>
+
 For detailed help and description of the implemented basic commands take a 
 look at the README file. 
 <P>
 <P>
-<A NAME="lbAI">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -86,16 +95,16 @@ rsc2gui 1st_word.rsc -o newname.gui
 
 <P>
 <P>
-<A NAME="lbAJ">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.09
 <P>
-<A NAME="lbAK">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>BUG REPORTS  </H2>
 
 <P>
-If you find a bug in the ANSI Basic to X11-Basic converter, you should report
+If you find a bug in the TOS-rsc to X11-Basic GUI converter, you should report
 it. But first, you should make sure that it really is a bug, and that it appears
 in the latest version of the X11-Basic package that you have.
 <P>
@@ -106,12 +115,12 @@ well! Suggestions may be mailed to the X11-Basic bug tracking system.
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAL">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright (C) 1997-2003 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
@@ -125,7 +134,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)
@@ -139,21 +148,17 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAE">Filenames</A><DD>
 <DT><A HREF="#lbAF">OPTIONS</A><DD>
-<DL>
-<DT><A HREF="#lbAG">--version</A><DD>
-<DT><A HREF="#lbAH">-h --help</A><DD>
-</DL>
-<DT><A HREF="#lbAI">EXAMPLES</A><DD>
-<DT><A HREF="#lbAJ">VERSION</A><DD>
-<DT><A HREF="#lbAK">BUG REPORTS  </A><DD>
-<DT><A HREF="#lbAL">AUTHOR</A><DD>
-<DT><A HREF="#lbAM">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAN">SEE ALSO</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">VERSION</A><DD>
+<DT><A HREF="#lbAI">BUG REPORTS  </A><DD>
+<DT><A HREF="#lbAJ">AUTHOR</A><DD>
+<DT><A HREF="#lbAK">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAL">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>

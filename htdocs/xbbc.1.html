@@ -3,7 +3,7 @@ Content-type: text/html
 <HTML><HEAD><TITLE>Manpage of XBBC</TITLE>
 </HEAD><BODY>
 <H1>XBBC</H1>
-Section: X11-Basic bytecode compiler (1)<BR>Updated: 04-Jan-2017<BR><A HREF="#index">Index</A>
+Section: X11-Basic (1)<BR>Updated: 04-Jan-2019<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -15,68 +15,72 @@ xbbc - X11-Basic bytecode compiler
 
 <B>xbbc</B>
 
-[ <I>option</I> ] <I>&lt;filename&gt;</I>
+[ <I>option</I> ] 
+
+[<B>-o</B> <I>outfile</I>]
+<I>&lt;filename&gt;</I>
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <P>
-X11-Basic is a dialect of the BASIC programming language with graphics
-capability that integrates features like shell scripting, cgi-Programming and 
-full graphical visualisation into the easy to learn basic language on modern 
-computers.
+X11-Basic is a dialect of the BASIC programming language with graphics.
 <P>
-<I>xbbc</I>
+<B>xbbc</B>
 
-can be used to make bytecode-binaries out of *.bas script-Files. These bytecode 
-files can be interpreted by the X11-Basic virtual machine (
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1)</I>
-
-) and they run about 10-20 times faster than the interpreted .bas files. Since 
-<I>xbbc</I>
+can be used to make bytecode-binaries out of *.bas script files. These bytecode 
+files can be interpreted by the X11-Basic virtual machine (<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1)</I>) 
+and they run about 10-20 times faster than the interpreted .bas files. Since 
+<B>xbbc</B>
 
 is a real compiler, some restrictions to the code apply. (Not every X11-Basic 
 program which does well on the interpreter can be correctly compiled),
 <P>
-<B>For a desciption of the X11-Basic language and usage of the interpreter see</B>
 
-<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1).</I>
+For a desciption of the X11-Basic language and usage of the interpreter see
+<I><A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1)</I>.
 
 <P>
 <A NAME="lbAE">&nbsp;</A>
 <H2>Filenames</H2>
 
 <P>
-Xbbc processes one input file. The suffix of the input file is usually .bas.
+<B>xbbc </B>
+
+processes one input file. The suffix of the input file is usually .bas.
 The default output file name is 
 <I>b.b</I>
 
 but you can specify alternate names with the -o option.
+<P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-o </B><I>file</I>
+<DT><B>-o</B> <I>file</I>
 
 <DD>
-Place output in file <I>file</I>. 
-If you do not specify `<B>-o</B>', the default is to produce a file `<B>b.b</B><BR>&nbsp;.
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>--version</H3>
+Place output in file 
+<I>file</I>
 
+. 
+If you do not specify `<B>-o</B>', the default is to produce a file `<B>b.b</B>.
+<DT><B>--version</B>
+
+<DD>
 shows version, program and other information and exits
-<A NAME="lbAH">&nbsp;</A>
-<H3>-h --help</H3>
+<DT><B>-h</B>, <B>--help</B>
 
+<DD>
 print a short help.
 <P>
 For detailed help and a description of the implemented basic commands take a look
 at the README file which ships with the X11-Basic package.
 <P>
 <P>
-<A NAME="lbAI">&nbsp;</A>
+</DL>
+<A NAME="lbAG">&nbsp;</A>
 <H2>EXAMPLES</H2>
 
 <PRE>
@@ -87,14 +91,13 @@ xbbc testme.bas -o testme.b
 </PRE>
 
 <P>
-You can find many sample programs in 
-<I>/usr/share/doc/packages/X11Basic/examples.</I>
-
-<A NAME="lbAJ">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>The bytecode compiler</H2>
 
 <P>
-Xbbc is a compiler. It compiles the BASIC source code into a bytecode of a
+<B>xbbc </B>
+
+is a compiler. It compiles the BASIC source code into a bytecode of a
 virtual stack machine. This virtual stack machine needs to be emulated on each
 different operating system platform, but the bytecode itself is still portable.
 The bytecode is very compact and similar to machine code, but still it is
@@ -110,12 +113,12 @@ translator and
 <P>
 There is no way to recreate the source code from the bytecode. 
 <P>
-<A NAME="lbAK">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>VERSION</H2>
 
 Page was created for V.1.18
 <P>
-<A NAME="lbAL">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>BUG REPORTS  </H2>
 
 <P>
@@ -130,15 +133,15 @@ well! Suggestions may be mailed to the x11-basic bug tracking system.
 Comments and bug reports concerning this manual page should be directed to
 <A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>.
 <P>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>AUTHOR</H2>
 
 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
-Copyright (C) 1997-2017 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
+Copyright (C) 1997-2019 Markus Hoffmann &lt;<A HREF="mailto:kollo@users.sourceforge.net">kollo@users.sourceforge.net</A>&gt;
 <P>
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -149,7 +152,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <P>
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <A HREF="http://localhost/cgi-bin/man/man2html?1+xbasic">xbasic</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbvm">xbvm</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xbc">xbc</A>(1), <A HREF="http://localhost/cgi-bin/man/man2html?1+xb2c">xb2c</A>(1)
@@ -163,22 +166,18 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
 <DT><A HREF="#lbAE">Filenames</A><DD>
 <DT><A HREF="#lbAF">OPTIONS</A><DD>
-<DL>
-<DT><A HREF="#lbAG">--version</A><DD>
-<DT><A HREF="#lbAH">-h --help</A><DD>
-</DL>
-<DT><A HREF="#lbAI">EXAMPLES</A><DD>
-<DT><A HREF="#lbAJ">The bytecode compiler</A><DD>
-<DT><A HREF="#lbAK">VERSION</A><DD>
-<DT><A HREF="#lbAL">BUG REPORTS  </A><DD>
-<DT><A HREF="#lbAM">AUTHOR</A><DD>
-<DT><A HREF="#lbAN">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
+<DT><A HREF="#lbAG">EXAMPLES</A><DD>
+<DT><A HREF="#lbAH">The bytecode compiler</A><DD>
+<DT><A HREF="#lbAI">VERSION</A><DD>
+<DT><A HREF="#lbAJ">BUG REPORTS  </A><DD>
+<DT><A HREF="#lbAK">AUTHOR</A><DD>
+<DT><A HREF="#lbAL">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAM">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 11:48:24 GMT, June 18, 2017
+Time: 11:59:32 GMT, June 14, 2019
 </BODY>
 </HTML>
