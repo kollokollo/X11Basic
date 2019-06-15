@@ -34,6 +34,7 @@
   #undef HAVE_PTY_H
   #undef HAVE_SYS_SOCKET_H
   #undef HAVE_SYS_KD_H
+  #undef HAVE_REGEX_H
   #undef HAVE_DLOPEN
   #undef HAVE_INOTIFY_INIT
   #undef HAVE_USB

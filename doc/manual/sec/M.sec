@@ -10,6 +10,39 @@ DESCRIPTION:
 
 SEE ALSO: FREE(), MFREE(), REALLOC()
 ##############################################################################
+Function:   MATCH()
+Syntax:     a%=MATCH(a$,r$) 
+
+DESCRIPTION:
+
+	Searches to see if a substring matching the regular expression 
+	r$ is present in a$ and returns its position.
+        If no matching substring is found in a$, 0 is returned. In case of 
+	an ERROR in the regular expression, -1 is returned.
+
+COMMENT:
+	Regular expressions are very powerful in pattern matching. Compared
+	to INSTR() or GLOB() you have nearly infinite flexibility.
+	If you do not know what a regular expression is or what the syntax 
+	of it should be, please look elsewhere for information. An full 
+	explanation would be too much for this manual. 
+	Unfortunately there are many different standards for regular expression.
+	The Implementation uses here is the so called "POSIX.2" type.
+	Note: Zero-Bytes (CHR$(0)) cannot be matched and will indicate 
+	the end of the content of a$.
+
+COMMENT: 
+	This command is currently no available in the WINDOWS version of
+	X11-Basic.	
+	
+EXAMPLES:
+	t$="This 1 is nice 2 so 33 for 4254"
+	PRINT MATCH(t$,"([[:digit:]]+)[^[:digit:]]+([[:digit:]]+)")
+	Result: 6
+	
+	
+SEE ALSO: INSTR(), RINSTR(), GLOB(), REGEXP()
+##############################################################################
 Function: MAX()
 Syntax:   m=MAX(a,b[,c,...])
           m=MAX(f())

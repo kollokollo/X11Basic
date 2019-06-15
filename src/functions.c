@@ -18,8 +18,10 @@
 #include <windows.h>
 #endif
 #include <fnmatch.h>
-
 #include "defs.h"
+#ifdef HAVE_REGEX_H
+#include <regex.h>        
+#endif
 #ifdef HAVE_CACOS
 #include <complex.h>
 #endif
@@ -134,6 +136,7 @@
 #define f_gcd NULL
 #define f_get_color NULL
 #define f_glob NULL
+#define f_regexp NULL
 #define f_gray NULL
 #define f_inode NULL
 #define inp8 NULL
@@ -1214,6 +1217,38 @@ static int f_glob(PARAMETER *plist,int e) {
   return(0);
 }
 
+/* Process regular expression matching ....*/
+
+static int f_regexp(PARAMETER *plist,int e) {
+#ifdef HAVE_REGEX_H
+  char msgbuf[100];
+  regex_t regex;
+  int reti;
+  /* Compile regular expression */
+  if(!(reti=regcomp(&regex, plist[1].pointer, REG_EXTENDED|REG_NEWLINE))) {
+    regmatch_t pmatch;
+    /* Execute regular expression */
+    reti=regexec(&regex, plist[0].pointer, 1, &pmatch, 0);
+    if(!reti) {
+      regfree(&regex);
+      return(pmatch.rm_so+1); /* First charackter counts 1*/
+    } else if(reti==REG_NOMATCH) {
+      regfree(&regex);
+      return(0);
+    }
+    regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+    xberror(79,msgbuf); /*"Incorrect regular expression %s, cannot match"*/
+    regfree(&regex);
+  } else {
+    regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+    xberror(79,msgbuf); /*"Incorrect regular expression %s, cannot match"*/
+  }
+#else
+  xberror(9,"REGEX()"); /* Funktion nicht implementiert */
+#endif
+  return(-1);
+}
+
 #ifndef NOGRAPHICS
 static int f_form_alert(PARAMETER *plist,int e) {
   return(form_alert(plist[0].integer,plist[1].pointer));
@@ -1543,7 +1578,8 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_IQUICK|F_IRET,            "LPEEK"     , (pfunc)f_lpeek    ,1,1,{PL_INT}},
  { F_SQUICK|F_DRET,            "LTEXTLEN"  , f_ltextlen        ,1,1,{PL_STRING}},
 
- { F_IQUICK|F_IRET,            "MALLOC"    ,(pfunc) f_malloc   ,1,1,{PL_INT}},
+ { F_IQUICK|F_IRET,            "MALLOC"    , (pfunc)f_malloc   ,1,1,{PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "MATCH"     , (pfunc)f_regexp   ,2,2,{PL_STRING,PL_STRING}},
  { F_CONST|F_PLISTE|F_NRET,    "MAX"       , (pfunc)f_max      ,1,-1,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_CONST|F_PLISTE|F_NRET,    "MIN"       , (pfunc)f_min      ,1,-1,{PL_NUMBER,PL_NUMBER,PL_NUMBER}},
  { F_CONST|F_PLISTE|F_NRET,    "MOD"       , (pfunc)f_mod      ,2,2,{PL_NUMBER,PL_NUMBER}},
@@ -1579,6 +1615,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 
  { F_CONST|F_CQUICK|F_DRET,    "REAL"    , creal ,1,1     ,{PL_COMPLEX}},
  { F_IQUICK|F_IRET,    "REALLOC"    , (pfunc)f_realloc ,2,2     ,{PL_INT,PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "REGEXP"      , (pfunc) f_regexp    ,2,2,{PL_STRING,PL_STRING}},
  { F_CONST|F_PLISTE|F_IRET,    "RINSTR"    , (pfunc)f_rinstr ,2,3  ,{PL_STRING,PL_STRING,PL_INT}},
  { F_DQUICK|F_DRET,    "RND"       , f_rnd ,0,1     ,{PL_FLOAT}},
  { F_CONST|F_PLISTE|F_IRET,    "ROL"      , (pfunc)f_rol,2,3     ,{PL_INT,PL_INT,PL_INT}},

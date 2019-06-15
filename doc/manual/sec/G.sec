@@ -265,7 +265,7 @@ GLOB(".testme.bas","*.bas",1)       -1
 GLOB(".testme.bas","*.bas",1+4)      0
 GLOB(".testme.bas",".*.bas",1+4)    -1
 
-SEE ALSO: INSTR(), RINSTR(), SPLIT
+SEE ALSO: INSTR(), RINSTR(), SPLIT, REGEXP(), MATCH()
 
 ##############################################################################
 Command: GOSUB      Abbrev.  @

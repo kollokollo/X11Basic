@@ -207,7 +207,7 @@ DESCRIPTION:
         the search begins at the first character of a$.
         If b$ is found in a$ the start position is returned, otherwise 0.
 	
-SEE ALSO: RINSTR(), GLOB()
+SEE ALSO: RINSTR(), GLOB(), REGEXP(), MATCH()
 
 ##############################################################################
 

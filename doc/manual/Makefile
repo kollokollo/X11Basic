@@ -83,10 +83,10 @@ $(NAME)-$(VERSION).txt : sec-base/*.sec sec/*.sec 39_Errors.sec main.otxt ../FAQ
 39_Errors.sec: bas/do_the_error_section.bas ../../src/errortxt.c
 	rm -f $@; xbasic bas/do_the_error_section.bas > $@
 	
-#main.otxt : main.dvi
-#	dvi2tty -w132 main.dvi -o $@
-main.otxt : main.ps
-	pstotext -cork -output $@ $< 
+main.otxt : main.dvi
+	dvi2tty -w132 main.dvi -o $@
+# main.otxt : main.ps
+#	pstotext -cork -gs "/usr/bin/gs -dNOSAFER" -debug -output $@ $< 
 main.dvi : A.tex tex/*.tex $(EPSFILES) 39_Errors.sec
 	latex tex/main.tex	
 	makeindex main.idx
