@@ -79,7 +79,7 @@ int notify_handler(int pid, int overflow, int entries) {
     if(pids[i]==pid) {
       int oldbatch,osp=sp;
       pc2=procs[isubs[i]].zeile;
-      if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+      if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
       else xberror(75,""); /* Stack Overflow! */
       oldbatch=batch;batch=1;
       programmlauf();

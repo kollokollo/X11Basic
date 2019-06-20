@@ -22,8 +22,8 @@
 #include "wort_sep.h"
 
 
-VARIABLE *lvar[STACKSIZE];
-int anzlvar[STACKSIZE];
+VARIABLE **lvar=NULL;
+int *anzlvar=NULL;
 
 /* Variablen-Verwaltung   */
 

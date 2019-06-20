@@ -87,8 +87,8 @@ int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int errorpc=-1,errorpctype=0,breakpc=-1,breakpctype=0;
 int everytime=0,alarmpc=-1,alarmpctype=0;
 
-int stack[STACKSIZE];
-
+int *stack=NULL;  /* Stack für Rücksprungadressen (Zeilennr).*/
+int stack_size=0;
 
 /* fuer die Dateiverwaltung     */
 FILEINFO filenr[ANZFILENR];

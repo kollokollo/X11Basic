@@ -241,7 +241,7 @@ extern char **param_argumente;
 extern const char xbasic_name[];
 extern int pc,sp,err,errcont,everyflag,batch,echoflag;
 extern char ifilename[];
-extern int stack[];
+extern int *stack;
 extern int datapointer;
 
 extern const int anzsysvars;

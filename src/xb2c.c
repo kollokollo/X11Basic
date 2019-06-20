@@ -397,6 +397,7 @@ static void translate(FILE *optr) {
       fprintf(optr,"restore_locals(sp--);\n");
       break;
     case BC_BLKSTART:
+      /* TODO: Use stack_check() to expand the stack...*/
       fprintf(optr,"sp++;\n");
       break;
     case BC_RTS:

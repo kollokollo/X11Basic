@@ -2167,7 +2167,7 @@ void c_menu(char *n) {
         } else {
           batch=1;
           pc2=procs[menuaction].zeile;
-          if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+          if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
           else xberror(75,""); /* Stack Overflow! */
         }
       } else if(menuactiontype==1) {
@@ -2185,10 +2185,12 @@ void c_menu(char *n) {
 	  par[1].typ=PL_INT;
 	  par[1].panzahl=0;
 	  par[1].ppointer=NULL;
-	  sp++;
-	  stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-	  virtual_machine(bcpc,menuaction, &n,par,2);
-	  sp--;	
+	  if(stack_check(sp)) {
+	    sp++;
+	    stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
+	    virtual_machine(bcpc,menuaction, &n,par,2);
+	    sp--;
+	  } else xberror(75,""); /* Stack Overflow! */	
 	} else {
 	  // TODO:
 	  void (*func)();	  

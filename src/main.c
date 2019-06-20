@@ -43,6 +43,8 @@
 #endif
 #ifdef WINDOWS
   #include <windows.h>
+#endif
+#ifdef WINDOWS_NATIVE
   HINSTANCE hInstance;
 #endif
 
@@ -284,17 +286,14 @@ int orig_main(int anzahl, char *argumente[]) {
 int main(int anzahl, char *argumente[]) {
 #endif
   char buffer[MAXSTRLEN],*zw;
-#ifdef WINDOWS
+#ifdef WINDOWS_NATIVE
   hInstance=GetModuleHandle(NULL);
 #endif
-
   x11basicStartup();   /* initialisieren   */
-
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
   (void) atexit(reset_input_mode);
   param_anzahl=anzahl;
   param_argumente=argumente;
-
   if(anzahl<2) {    /* Kommandomodus */
     intro();
     batch=0;
@@ -310,7 +309,6 @@ int main(int anzahl, char *argumente[]) {
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }
-
   /* Programmablaufkontrolle  */
   for(;;) {
     programmlauf();

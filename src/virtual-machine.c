@@ -1091,7 +1091,8 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
       break;
     case BC_BLKSTART:
       VERBOSE("vm_{ ");
-      sp++;
+      if(stack_check(sp)) sp++;
+      else xberror(75,""); /* Stack Overflow! */
       break;
     case BC_BLKEND:
       VERBOSE("vm_} \n");

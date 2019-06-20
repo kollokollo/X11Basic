@@ -359,7 +359,7 @@ void c_gosub(const char *n) {
 	  xberror(42,buffer); /* Zu wenig Parameter */
 	} else { batch=1;
 	  pc2=procs[pc2].zeile;
-	  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+	  if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
 	  else {
 	    printf("Stack overflow! PC=%d\n",pc); 
 	    restore_locals(sp+1);
@@ -410,7 +410,7 @@ static void c_spawn(const char *n) {
       } else { 
         batch=1;
         pc2=procs[pc2].zeile;
-        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
         else {
           printf("Stack overflow! PC=%d\n",pc); 
 	  restore_locals(sp+1);
@@ -1613,7 +1613,7 @@ static void gosubproc(int pc2,int type) {
     if(type==0) {
       int oldbatch,osp=sp;
       pc2=procs[pc2].zeile;
-      if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+      if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
       else xberror(75,""); /* Stack Overflow! */
         oldbatch=batch;batch=1;
         programmlauf();
@@ -1632,10 +1632,12 @@ static void gosubproc(int pc2,int type) {
       par[0].typ=PL_INT;
       par[0].panzahl=0;
       par[0].ppointer=NULL;
-      sp++;
-      stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-      virtual_machine(bcpc,pc2, &n,par,1);
-      sp--;
+      if(stack_check(sp)) {
+        sp++;
+        stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
+        virtual_machine(bcpc,pc2, &n,par,1);
+        sp--;
+      } xberror(75,""); /* Stack Overflow! */
     } else {
       void (*func)();
       func=(void *)INT2POINTER(pc2);

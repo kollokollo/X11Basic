@@ -20,7 +20,8 @@
   #define MAXSTRLEN   1024   /* in Bytes */
   #define MAXLINELEN  1024   /* in Bytes */
   #define ANZFILENR     64
-  #define STACKSIZE    256
+  #define MAXSTACKSIZE  1024
+  #define STACKINCREMENT    256
   #define ANZVARS     1024
   #define ANZLABELS    256
   #define ANZPROCS     512
@@ -28,7 +29,8 @@
   #define MAXSTRLEN   4096   /* in Bytes */
   #define MAXLINELEN  4096   /* in Bytes */
   #define ANZFILENR    100
-  #define STACKSIZE    512
+  #define MAXSTACKSIZE    (512*16)
+  #define STACKINCREMENT    512
   #define ANZVARS     4096
   #define ANZLABELS   1024
   #define ANZPROCS    1024

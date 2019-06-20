@@ -51,10 +51,11 @@ static void run_bytecode_from_handler(int jumppc) {
   par[0].panzahl=0;
   par[0].ppointer=NULL;
 
-  sp++;
-  stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-  virtual_machine(bcpc,jumppc, &n,par,1);
-  sp--;	
+  if(stack_check(sp)) {
+    stack[++sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
+    virtual_machine(bcpc,jumppc, &n,par,1);
+    sp--;	
+  } else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
 }
 
 
@@ -73,7 +74,7 @@ void xberror(char errnr, const char *bem) {
 	batch=0;
       }
       if((errorpctype&7)==0) {
-        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
         else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
         programmlauf();
 	
@@ -111,7 +112,7 @@ static void break_handler( int signum) {
         }
         if((breakpctype&7)==0) {
           int osp=sp;
-          if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+          if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
           else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
           programmlauf();
           if(osp!=sp) {
@@ -193,7 +194,7 @@ static void fatal_error_handler( int signum) {
 #else
     signal(signum,SIG_DFL);
 #endif
-    printf("Stack-Pointer: SP=%d\n",sp);
+    printf("Stack-Pointer: SP=%d/%d\n",sp,stack_size);
     c_dump(NULL,0);
     puts("** fatal error ** X11BASIC-QUIT");    
   }
@@ -223,7 +224,7 @@ static void timer_handler( int signum) {
       if(alarmpctype==0) {
         int oldbatch,osp=sp,pc2;
         pc2=procs[alarmpc].zeile;
-        if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
         else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
         oldbatch=batch;batch=1;
         programmlauf();
@@ -250,6 +251,8 @@ static void timer_handler( int signum) {
 /* Initialisierungsroutine  */
 
 void x11basicStartup() {
+  expand_stack(); /* Stack initialisieren */
+
 
 #ifdef CONTROL  
   cs_init();        /* Kontrollsystem anmelden */

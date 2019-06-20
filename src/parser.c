@@ -1668,8 +1668,8 @@ void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
     xberror(56,procs[procnr].name); /* Falsche Anzahl Parameter */
     return;
   }
-  if(!(sp<STACKSIZE-1)) {
-    printf("Stack overflow! PC=%d SP=%d\n",pc,sp);
+  if(!stack_check(sp)) {
+    printf("Stack overflow! PC=%d SP=%d/%d\n",pc,sp,stack_size);
     xberror(39,procs[procnr].name); /* Program Error Gosub impossible */ 
     return;
   }
@@ -1695,24 +1695,28 @@ void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
 	  printf("ERROR: Something is wrong in call_sub_with_parameterlist.\n");
           pointer=variablen[plist[i].integer].pointer.i; /*  mehme pointer der zugewiesenen var */
         }
-        sp++;
-        do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
-        /*lokale variable wird nun statisch mit referenz zur Uebergabvar*/
-        set_var_adr(vnr,pointer);
-	// printf("VAR: Variablen-adr gesetzt auf: adr=0x%p\n",pointer);
-        sp--;
+	if(stack_check(sp)) {
+          sp++;
+          do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
+          /*lokale variable wird nun statisch mit referenz zur Uebergabvar*/
+          set_var_adr(vnr,pointer);
+	  // printf("VAR: Variablen-adr gesetzt auf: adr=0x%p\n",pointer);
+          sp--;
+        } else xberror(75,""); /* Stack Overflow! */
       } else {
-        sp++;
-        do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
-        zuweis_v_parameter(&variablen[vnr],&plist[i]);
-        sp--;
+        if(stack_check(sp)) {
+          sp++;
+          do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
+          zuweis_v_parameter(&variablen[vnr],&plist[i]);
+          sp--;
+	} else xberror(75,""); /* Stack Overflow! */
       }
     }
   }
 
   /*Rücksprungzeile auf den Stack und PC auf anfang der Routine setzen.*/
-  int pc2=procs[procnr].zeile;
-  stack[sp++]=pc;pc=pc2+1;
+  if(stack_check(sp)) {stack[sp++]=pc;pc=procs[procnr].zeile+1;} 
+  else xberror(75,""); /* Stack Overflow! */
 }
 
 
@@ -1738,19 +1742,23 @@ int do_parameterliste(const char *pos, const int *l,int n) {
        if(typ==ARRAYTYP) typ|=variablen[vnr].pointer.a->typ;
        if(prepare_vvar(w1,&p,(PL_VARGROUP|typ))>=0) {
          void *pointer=variablen[p.integer].pointer.i; /*Pointer merken*/
-         sp++;
-         do_local(vnr,sp);    /* Variable sichern... ! */
+         if(stack_check(sp)) {
+	   sp++;
+           do_local(vnr,sp);    /* Variable sichern... ! */
        
-         /*lokale variable wird nun statisch mit referenz zur Uebergabvar*/
-         set_var_adr(vnr,pointer);
-         free_parameter(&p);
-         sp--;
+           /*lokale variable wird nun statisch mit referenz zur Uebergabvar*/
+           set_var_adr(vnr,pointer);
+           free_parameter(&p);
+           sp--;
+	 } else xberror(75,""); /* Stack Overflow! */
        }
     } else {
-      sp++;
-      do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
-      zuweisxbyindex(vnr,NULL,0,w1,variablen[vnr].typ); /*Todo: Ausdruck kann andere Typen enthalten !*/
-      sp--;
+      if(stack_check(sp)) {
+        sp++;
+        do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
+        zuweisxbyindex(vnr,NULL,0,w1,variablen[vnr].typ); /*Todo: Ausdruck kann andere Typen enthalten !*/
+        sp--;
+      } else xberror(75,""); /* Stack Overflow! */
     }
     i++;
     e=wort_sep_destroy(w2,',',TRUE,&w1,&w2);
@@ -1775,7 +1783,7 @@ static void do_benfunction(const char *name,const char *argumente) {
   int proctyp=procs[pc2].typ;
   int typ=vartype(name);
   pc2=procs[pc2].zeile;
-  if(sp<STACKSIZE) {stack[sp++]=pc;pc=pc2+1;}
+  if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
   else {xberror(75,""); /* Stack Overflow! */restore_locals(sp+1);return;}
   if(proctyp==PROC_DEFFN) {
     PARAMETER localpar;  /* Localer parameter, da die Parseraufrufe returnvalue wiederum veraendern.*/

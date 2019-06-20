@@ -246,6 +246,13 @@ unsigned int type_list(const char *ausdruck);
 void free_pcode(int l);
 
 
+extern int *stack;
+extern int stack_size;
+extern VARIABLE **lvar;
+extern int *anzlvar;
+
+
+
 #ifndef ANDROID
    #define invalidate_screen() ;
 #endif
@@ -325,6 +332,34 @@ inline static int labelzeile(char *n) {
     free(procs[anzprocs].name); \
     free(procs[anzprocs].parameterliste); \
   } \
+}
+
+
+/* Stack handling functions */
+
+static inline void expand_stack() {
+  stack_size+=STACKINCREMENT;
+  /* Stack initialisieren */
+  stack=realloc(stack,stack_size*sizeof(int));
+  anzlvar=realloc(anzlvar,stack_size*sizeof(int));
+  anzlvar[stack_size-STACKINCREMENT]=0; /* Initialisieren */
+  lvar=realloc(lvar,stack_size*sizeof(VARIABLE *));
+#if DEBUG
+  printf("Stacksize changed to: %d (%ld Bytes.)\n",stack_size,
+         stack_size*(sizeof(int)*2+sizeof(VARIABLE *)));
+#endif
+}
+
+/* Makes sure that there is at least one more space for a 
+   Stack entry. Otherwise tries to expand the stack.*/
+
+static inline int stack_check(int sp) {
+  if(sp<stack_size-1) return(1);
+  else if(stack_size<MAXSTACKSIZE) {
+    expand_stack();
+    return(1);
+  }
+  return(0);
 }
 
 
