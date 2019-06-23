@@ -1907,6 +1907,7 @@ Hier ist also noch ziemlicher Bahnhof ! */
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       BCADD(BC_NOTi);
       bc_jumpto(i,pcode[i].integer,1);
+    case P_REM:
     case P_DATA: continue;  /*Erzeugt keinen Code...*/
     case P_SELECT: {
       bc_parser(pcode[i].argument);
@@ -2248,9 +2249,9 @@ Hier ist also noch ziemlicher Bahnhof ! */
     } continue;
     default: 
     
-      printf("Hier ist was durch die Lappen gegangen....\n %lx",pcode[i].opcode&PM_SPECIAL);
+      printf("Hier ist was durch die Lappen gegangen... -> %lx\n",pcode[i].opcode&PM_SPECIAL);
     } /*  switch */
-printf("Compiler error, unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
+    printf("Compiler ERROR: unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
     if((pcode[i].opcode&PM_COMMS)>=anzcomms) puts("Precompiler error...");
     bc_kommando(i);
   } /*  for */

@@ -458,7 +458,9 @@ Rückgabewert:
 
 int init_program(int prglen) {
   char *expr,*pos2,*pos3,*buffer=NULL,*zeile=NULL;  
-  int i,j,len,typ;
+  char *p;
+  int i,j;
+  int len;
   int return_value=0;
   clear_program();
   free_pcode(oldprglen);
@@ -469,8 +471,6 @@ int init_program(int prglen) {
   for(i=0; i<prglen;i++) {
     zeile=realloc(zeile,strlen(program[i])+1);
     buffer=realloc(buffer,strlen(program[i])+1);
-    strcpy(zeile, program[i]);
-    
 /*löschen nicht nötig, da das init_pcode macht.*/
 //    code[i].opcode=0;       /*Typ und Kommandonummer*/
 //    pcode[i].panzahl=0;       /*Anzahl Parameter*/
@@ -479,39 +479,41 @@ int init_program(int prglen) {
 //    pcode[i].etyp=PE_NONE;   /* fuer Kommentare */
 //    pcode[i].extra=NULL;   /*Extra string fuer Kommentare*/
     pcode[i].integer=-1;
-
+    /* Leerzeichen am Anfang der Zeile überspringen:*/
+    p=program[i];
+    while(*p==' ' || *p==9) p++;
+    
     /* Seitenkommentar behandeln:*/
-
-    wort_sep2(zeile," !",TRUE,zeile,buffer);  /*Kommentare abseparieren*/
-    xtrim2(zeile,TRUE,zeile);
-    if(strlen(buffer)) {
+    if(wort_sep2(p," !",TRUE,zeile,buffer)==2) {  /* Kommentare abseparieren*/
       pcode[i].etyp=PE_COMMENT;
       pcode[i].extra=strdup(buffer);
     }
-    
 #if defined DEBUG 
     printf("Zeile %d (%d) : %s\n",i,original_line(i),zeile);
 #endif
-    if(wort_sep(zeile,' ',TRUE,zeile,buffer)==0) {
-      pcode[i].opcode=P_NOTHING;
-      continue;
-    }
     switch(*zeile) {
+    case 0:     /* Leere Zeile */
+      pcode[i].opcode=P_NOTHING;
+      continue;    
     case '\'':
     case '#':
     case '!':
       pcode[i].opcode=P_REM;
-      pcode[i].argument=strdup(buffer);
-      continue;
-    case '@':
+      pcode[i].integer=(int)*zeile;  /* Welche Art rem ?*/
       pcode[i].argument=strdup(zeile+1);
-      pcode[i].opcode=P_GOSUB|find_comm("GOSUB");
-      continue;
-    case '~':
-      pcode[i].argument=strdup(zeile+1);
-      pcode[i].opcode=P_VOID|find_comm("VOID");
       continue;
     }
+
+
+    /* Ab hier brauchen wir Gro�bucstaben und Formatierung.*/
+    xtrim(zeile,TRUE,zeile);
+    /* Zeile hat jetzt keine Blanks mehr vorne und hinten, 
+       keine doppelten Blanks mehr und alles is Grossbuchstaben
+       ausser in Anführungszeichen. Ausserdem sind Kommentare am 
+       Ende der Zeile abgetrennt.
+     */
+
+    /* Labels finden*/
     len=strlen(zeile);
     if(zeile[len-1]==':') {
       zeile[len-1]=0;
@@ -522,22 +524,62 @@ int init_program(int prglen) {
       pcode[i].integer=add_label(zeile,i,(databufferlen?(databufferlen+1):databufferlen));
       continue;
     } 
-    if(strcmp(zeile,"DATA")==0) {
+
+    /* Kommandos REM, HELP und DATA */
+
+    if(!strncmp(zeile,"DATA ",5)) {
       pcode[i].opcode=P_DATA;
-#ifdef DEBUG
-      printf("DATA Statement found in line %d (%d). <%s>\n",i,original_line(i),buffer);
-#endif
-      databuffer=realloc(databuffer,databufferlen+strlen(buffer)+2);
-      if(databufferlen) databuffer[databufferlen++]=',';
+      char *content=zeile+5;
       
-      memcpy(databuffer+databufferlen,buffer,strlen(buffer));
-      databufferlen+=strlen(buffer);
+#ifdef DEBUG
+      printf("DATA Statement found in line %d (%d). <%s>\n",i,original_line(i),content);
+#endif
+      databuffer=realloc(databuffer,databufferlen+strlen(content)+2);
+      if(databufferlen) databuffer[databufferlen++]=',';
+      pcode[i].integer=strlen(content);
+      pcode[i].argument=strdup(content);
+      memcpy(databuffer+databufferlen,content,pcode[i].integer);
+      
+      databufferlen+=pcode[i].integer;
       databuffer[databufferlen]=0;
-   //   printf("databuffer now contains %d Bytes.\n",databufferlen);
-   //   printf("databuffer=<%s>\n",databuffer);
+      continue;
+    } else if(!strncmp(zeile,"REM ",4)) {
+      ;
+    } else if(!strncmp(zeile,"HELP ",5)) {
+      ; 
+    } else {
+      xtrim2(zeile,TRUE,zeile);  /* Unnötige blanks vor Operatoren entfernen */
+    }
+
+
+    /* Erstes Wort abtrennen: 
+       Wie soll man eine Zuweisung erkennen, wenn nach der
+       Variable und vor dem Gleichzeichen ein Blank ist?
+       Problematisch sind z.B. :
+       REM =test=1
+       HELP *h*
+       DATA ==========
+       REM (hallo)=4
+    
+     */
+  
+    if(wort_sep(zeile,' ',TRUE,zeile,buffer)==0) {
+      pcode[i].opcode=P_NOTHING;
       continue;
     }
-    typ=(PROC_PROC*(strcmp(zeile,"PROCEDURE")==0) | 
+    
+    switch(*zeile) {
+    case '@':
+      pcode[i].argument=strdup(zeile+1);
+      pcode[i].opcode=P_GOSUB|find_comm("GOSUB");
+      continue;
+    case '~':
+      pcode[i].argument=strdup(zeile+1);
+      pcode[i].opcode=P_VOID|find_comm("VOID");
+      continue;
+    }
+
+    int typ=(PROC_PROC*(strcmp(zeile,"PROCEDURE")==0) | 
                    (PROC_FUNC*(strcmp(zeile,"FUNCTION")==0)) |
 		   (PROC_DEFFN*(strcmp(zeile,"DEFFN")==0)));
     if(typ!=0) {
@@ -1040,33 +1082,54 @@ char *indirekt2(const char *funktion) {
  *  (ohne Strukturhilfe vom PASS 1+2).
  */
 void kommando(char *cmd) {
-  char buffer[strlen(cmd)+1];
-  char *w1,*w2,*pos;
-  char zeile[strlen(cmd)+1];
-  int i,a,b,e,l;
-  wort_sep2(cmd," !",TRUE,zeile,buffer);
-  xtrim2(zeile,TRUE,zeile);
-// printf("KOMMANDO: <%s>\n",zeile);
+
+  /* Leerzeichen vorne ignorieren */
+  while(*cmd==' ' || *cmd==9) cmd++;
 
 /*  1. Analysiere erstes Zeichen der Zeile*/
 
-  switch(*zeile) {
+  switch(*cmd) {
   case 0:
   case '\'':
   case '#':
   case '!':
-    return;  /* Kommentar oder leerzeile */
-  case '@':
-    c_gosub(zeile+1);
-    return;
-  case '~':
-    c_void(zeile+1);
-    return;
-  case '&':
-    {
+    return;  /* Kommentar oder Leerzeile? dann fertig. */
+  }
+  char zeile[strlen(cmd)+1];
+  char buffer[strlen(cmd)+1];
+    
+  wort_sep2(cmd," !",TRUE,zeile,buffer);
+
+  /* doppelte Leerzeichen entfernen und Grossbuchstaben */
+
+  xtrim(zeile,TRUE,zeile);
+
+  /*REM, DATA und HELP abfangen */
+
+  if(!strncmp(zeile,"DATA ",5)) {
+    ; /* ignorieren, bzw. spaeter wird Fehlermeldung ausgegeben. */
+  } else if(!strncmp(zeile,"REM ",4)) {
+    return; /* ignorieren */
+  } else if(!strncmp(zeile,"HELP ",5)) {
+    ; /* Keine Blanks entfernen und alles so lassen...*/
+  } else {
+    xtrim2(zeile,TRUE,zeile); /* Leerzeichen vor und nach operatoren enfernen*/
+  }
+
+  switch(*zeile) {
+  case '@': c_gosub(zeile+1); return;
+  case '~': c_void(zeile+1); return;
+  case '&': {  /* Indirektes Kommando bearbeiten */
+      static int level=0;
+      if(level>100) {
+        printf("ERROR: indirect recursion: Stack overflow. %d\n",level);
+        return;
+      }
+      level++;
       char *test=s_parser(zeile+1);
       kommando(test);
       free(test);
+      level--;
     }
     return;
   case '(':
@@ -1079,13 +1142,14 @@ void kommando(char *cmd) {
      printf("%.13g\n",parser(zeile));
      return;
   }
-  
+  char *w1,*w2;
   
   /* 2. Betrachte erstes Wort*/
-  
-  e=wort_sep_destroy(zeile,' ',TRUE,&w1,&w2);
-  l=strlen(w1);
-  if(w1[l-1]==':')             return;  /* nixtun, label */
+  int e;
+  if((e=wort_sep_destroy(zeile,' ',TRUE,&w1,&w2))==0) return;
+
+  int l=strlen(w1);
+  if(w1[l-1]==':') return;  /* nixtun, label */
   if(w1[l-1]=='=') {
     w1[l-1]=0;
     xzuweis(w1,w2);
@@ -1095,7 +1159,7 @@ void kommando(char *cmd) {
     xzuweis(w1,++w2);
     return;
   }
-
+  char *pos;
   if((pos=searchchr2(w1,'='))!=NULL) {
     *pos++=0;
     if(e==2) w1[l]=' ';
@@ -1108,7 +1172,8 @@ void kommando(char *cmd) {
   
 
   /* Restliche Befehle */
-  i=find_comm_guess(w1,&a,&b);
+  int a,b;
+  int i=find_comm_guess(w1,&a,&b);
   if(i!=-1) {
     switch(comms[i].opcode&PM_TYP) {
       case P_IGNORE: xberror(38,w1); /* Befehl im Direktmodus nicht moeglich */return; 
@@ -1232,6 +1297,8 @@ void programmlauf(){
     }
     case P_LABEL:
     case P_DEFFN:
+    case P_REM:
+    case P_DATA:
     case P_NOTHING: break;
     case (P_EVAL|P_NOCMD):  kommando(program[opc]); break;
     case P_PROC:

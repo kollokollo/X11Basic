@@ -598,7 +598,8 @@ void xtrim(const char *t,int f, char *w ) {
   } *w=0;
 }
 
-/*Dasselbe, aber entferne auch blanks nach ,;+- und vor ,; 
+/*
+ * Dasselbe, aber entferne auch blanks nach ,;+- und vor ,; 
 
 Damit das ganze funktioniert, muss man evtl ein Kommando 
 am Anfang beruecksichtigen. Hier muss das Blank bleiben.
@@ -617,8 +618,7 @@ void xtrim2(const char *t,int f, char *w ) {
     b sagt, ob schonam ein blank nach einem space da war
     u sagt, ob schonmal ein nichtspace da war*/
   const char solo[]=",;+-*/^'(~@<>="; /*Potentielle Zeichen, wo ein blank danach entfallen kann*/
-  const char solo2[]="*/^)<>="; /*Potentielle Zeichen, wo ein blank davor niemals simm macht*/
-  /*evtl. hier das * herausnehmen, da es bei HELP und REM als erstes Zeichen des Arguments auftauchen kann*/
+  const char solo2[]="*/^)<>="; /*Potentielle Zeichen, wo ein blank davor niemals Sinn macht*/
 #if 0
 char *w2=w;
 printf("XTRIM2 <%s> --> ",t);

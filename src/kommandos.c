@@ -737,7 +737,12 @@ static char *plist_zeile(P_CODE *code) {
     }
     break;
   case P_REM:
-    sprintf(ergebnis,"' %s",code->argument);
+    if(code->integer==(int)'#') sprintf(ergebnis,"#%s",code->argument);
+    else if(code->integer==(int)'!') sprintf(ergebnis,"!%s",code->argument);
+    else sprintf(ergebnis,"'%s",code->argument);
+    break;
+  case P_DATA:
+    sprintf(ergebnis,"DATA %s",code->argument);
     break;
   case P_LABEL:
     sprintf(ergebnis,"%s:",labels[code->integer].name);
@@ -2762,7 +2767,7 @@ static void c_eval(PARAMETER *plist,int e) { kommando(plist->pointer); }
 const COMMAND comms[]= {
 
  { P_IGNORE,    " nulldummy", NULL        , 0, 0},
- { P_REM,       "!"         , NULL        , 0, 0},
+ { P_REM,       "!"         , NULL        , 0,-1,(unsigned short []){PL_EVAL}},
  { P_PLISTE,    "?"         , c_print     , 0,-1,(unsigned short []){PL_EVAL}},
 
  { P_PLISTE,    "ABSOLUTE"  , c_absolute  , 2, 2,(unsigned short []){PL_ANYVAR,PL_INT}},
@@ -2827,7 +2832,7 @@ const COMMAND comms[]= {
 #ifndef NOGRAPHICS
  { P_PLISTE,     "CURVE"    , c_curve     ,8,  9,(unsigned short []){PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT}},
 #endif
- { P_DATA,       "DATA"     , NULL        ,0, -1},
+ { P_DATA,       "DATA"     , NULL        ,0, -1,(unsigned short []){PL_EVAL}},
  { P_PLISTE,     "DEC"      , c_dec       ,1,  1,(unsigned short []){PL_NVAR}},
  { P_DEFAULT,    "DEFAULT"  , c_case      ,0,  0},
 #ifndef NOGRAPHICS
@@ -3036,7 +3041,7 @@ const COMMAND comms[]= {
  { P_PLISTE,     "READ"     , c_read,       1,-1,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
  { P_PLISTE,     "RECEIVE"  , c_receive,    2,3,(unsigned short []){PL_FILENR,PL_SVAR,PL_NVAR}},
  { P_PLISTE,     "RELSEEK"  , c_relseek,    2,2,(unsigned short []){PL_FILENR,PL_INT}},
- { P_REM,        "REM"      , NULL  ,      0,0},
+ { P_REM,        "REM"      , NULL  ,      0,-1,(unsigned short []){PL_EVAL}},
  { P_PLISTE,     "RENAME"     , c_rename,2,2,(unsigned short []){PL_STRING,PL_STRING}},
  { P_REPEAT,     "REPEAT"   , NULL  ,      0,0},
  { P_PLISTE,     "RESTORE"  , c_restore,    0,1,(unsigned short []){PL_LABEL}},
