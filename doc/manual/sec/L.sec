@@ -18,7 +18,7 @@ Syntax:     a$=LEFT$(<string-expression> [,<numchars>])
 DESCRIPTION:
 
 	LEFT$() returns the specified number of characters from its 
-	argument,  beginning at its left side. If the number of characters
+	argument, beginning at its left side. If the number of characters
 	is not specified then LEFT$() returns only the leftmost character.
 
 EXAMPLE:
@@ -53,14 +53,13 @@ Syntax:   LET <variable> = <expression>
 	  
 DESCRIPTION:
 
-	LET  assigns  the  value  of  <expression>  to <variable>.  The 
-	interpreter  also supports implicit assignments, ie. the LET keyword
-	before  an  assignment  may  be  omitted.  This  works because  the 
+	LET assigns the value of <expression> to <variable>. The 
+	interpreter also supports implicit assignments, ie. the LET keyword
+	before an assignment may be omitted. This works because the 
 	first equal sign is regarded as assignment operator.
 EXAMPLE:
        LET N=1
 
-##############################################################################
 ##############################################################################
 Function:   LGAMMA()
 Syntax:     b=LGAMMA(a)
@@ -102,9 +101,9 @@ Syntax:   LINEINPUT [[#]<device-number>,] t$
 
 DESCRIPTION:
 
-	LINE INPUT reads an entire line from a standard input  or from a
+	LINE INPUT reads an entire line from a standard input or from a
 	previously opened file as specified by <device-number> (to load a 
-	complete  file,  use  BLOAD).  Unlike  the regular INPUT command,
+	complete  file, use  BLOAD). Unlike the regular INPUT command,
 	LINEINPUT does not stop at delimiters (commas). 
 
 SEE ALSO: INPUT
@@ -114,9 +113,9 @@ Syntax:   t$=LINEINPUT$([#1])
 
 DESCRIPTION:
 
-	LINEINPUT$() reads an entire line from a standard input  or from a
+	LINEINPUT$() reads an entire line from a standard input or from a
 	previously opened file as specified by <device-number> (to load a 
-	complete  file,  use  BLOAD).  Unlike  the regular INPUT command,
+	complete file, use BLOAD). Unlike the regular INPUT command,
 	LINEINPUT$() does not stop at delimiters (commas). 
 
 SEE ALSO: INPUT$(),LINEINPUT
@@ -126,7 +125,7 @@ Syntax:   LINK #<device-nr>,name$
 
 DESCRIPTION:
 
-	LINK links a  shared object file/library (*.so in /var/lib) 
+	LINK links a shared object file/library (*.so in /var/lib) 
 	dynamically. It will from now on be addressed via the device-nr.
 
 	The addresses of he symbols of that library can be read with the
@@ -142,7 +141,7 @@ Syntax:   LIST [<line-number>[,<line-number>]
 
 DESCRIPTION:
 
-	LIST displays  the  source  code  or  a  code segment.  Note  that the
+	LIST displays the source code or a code segment. Note that the
 	line number of the first line in a file is 0, that the second line is
 	line 1 etc.
 	
@@ -154,7 +153,7 @@ EXAMPLE:
 SEE ALSO: PLIST, PRG$()
 ##############################################################################
 Function:  LISTSELECT()
-Syntax:   num=LISTSELECT(title$,list$())
+Syntax:   num%=LISTSELECT(title$,list$())
 
 DESCRIPTION:
 	 listselect opens a graphical list-selector, which enables the user to 
@@ -175,12 +174,12 @@ EXAMPLE:
 SEE ALSO: XLOAD, MERGE, CHAIN
 ##############################################################################
 Function:  LOC()
-Syntax:   <int-result>=LOC(#<device-nre>)
+Syntax:   p%=LOC(#<device-nre>)
 
 DESCRIPTION:
 
-	Returns the location of the file pointer for the file with  the device
-	number.  The location is given in number of bytes from the start of 
+	Returns the location of the file pointer for the file with the device
+	number. The location is given in number of bytes from the start of 
 	the file.
 
 SEE ALSO: LOF()
@@ -199,7 +198,7 @@ EXAMPLE:
 	LOCAL a,b$,s()
 ##############################################################################
 Command:  LOCATE
-Syntax:   LOCATE <row>,<column>
+Syntax:   LOCATE row%,column%
 
 DESCRIPTION:
 
@@ -209,7 +208,7 @@ DESCRIPTION:
 SEE ALSO: PRINT AT(), CRSLIN, CRSCOL
 ##############################################################################
 Function:  LOF()
-Syntax:   <int-result>=LOF(#n)
+Syntax:   l%=LOF(#n)
 
 DESCRIPTION:
 
@@ -224,7 +223,7 @@ Syntax:   <num-result>=LOG(<num-expression>)
 
 DESCRIPTION:
 
-	Returns  the natural logarithm (log, ln) or the logarithm
+	Returns the natural logarithm (log, ln) or the logarithm
         base 10 (log10).
 
 SEE ALSO: EXP()
@@ -234,7 +233,7 @@ Syntax:   <int-result>=LOGB(<num-expression>)
 
 DESCRIPTION:
 
-	Returns  the logarithm base 2 in integer values.
+	Returns the logarithm base 2 in integer values.
 
 SEE ALSO: LOG()
 ##############################################################################
@@ -243,7 +242,7 @@ Syntax:   <num-result>=LOG1P(<num-expression>)
 
 DESCRIPTION:
 
-	Returns a value equivalent to log(1+x).  It
+	Returns a value equivalent to log(1+x). It
         is computed in a way that is accurate even if the value of
         x is near zero.
 
@@ -254,9 +253,9 @@ Syntax:   LOOP
 
 DESCRIPTION:
 
-	LOOP terminates a DO loop and can be used  as unqualified  loop
+	LOOP terminates a DO loop and can be used as unqualified loop
 	terminator (such a loop can only be aborted with the EXIT command).
-	Execution continues with  the DO line.
+	Execution continues with the DO line.
 EXAMPLE: 
 	DO
 	  PRINT TIME$
@@ -301,10 +300,10 @@ Syntax:   LTEXT x,y,t$
 
 DESCRIPTION:
 
-	Draws a text at position x,y. The LTEXT command uses a 
-	linegraphic text, which allows the user to draw very large 
-	fonts and be independent of the system fonts. The font style can 
-	be influenced with the DEFLINE and the DEFTEXT command.
+	Draws a text at position x,y. The LTEXT command uses a linegraphic 
+	text, which allows the user to draw very large fonts and be 
+	independent of the system fonts. The font style can be influenced with 
+	the DEFLINE and the DEFTEXT command.
 
 SEE ALSO: DEFTEXT, TEXT, DEFLINE, LTEXTLEN()
 ##############################################################################
@@ -314,8 +313,8 @@ Syntax:    w=LTEXTLEN(t$)
 DESCRIPTION:
 
 	Returns the with of the text t$ in pixels.
-	The font style can be influenced
-	with the DEFLINE and the DEFTEXT command.
+	The font style can be influenced with the DEFLINE and the 
+	DEFTEXT command.
 
 SEE ALSO: LTEXT
 ##############################################################################

@@ -433,10 +433,11 @@ Command:   PRINT AT()
 Syntax:    PRINT AT(line,row)[;...]
       
 DESCRIPTION:
-	   For interactive programs you might want to print output at specific
-	   screen locations. PRINT AT(lin,row) will place the text cursor at 
-	   row row line lin. The top left corner of the screen corresponds to the 
-	   position (1,1).  
+
+	For interactive programs you might want to print output at specific
+	screen locations. PRINT AT(lin,row) will place the text cursor at 
+	row row line lin. The top left corner of the screen corresponds to 
+	the position (1,1).  
 	   
 EXAMPLE: 
    PRINT AT(4,7);"Test"
@@ -450,10 +451,10 @@ Syntax:    PRINT TAB(x)[;...]
 
 DESCRIPTION:
 
-           TAB(x) and SPC(x) move the text cursor x positions to the right. 
-	   TAB starts at the beginning of the line, 
-	   SPC at current cursor position.
-	   So TAB is an absolute and SPC a relative movement. 
+	TAB(x) and SPC(x) move the text cursor x positions to the right. 
+	TAB starts at the beginning of the line, 
+	SPC at current cursor position.
+	So TAB is an absolute and SPC a relative movement. 
 
 
 EXAMPLE: 
@@ -470,8 +471,8 @@ DESCRIPTION:
 	Changes the foreground and background text color and also sets the
 	style attributes for the console text. 
 
-           The COLOR statement s can be of three types depending on their
-	   number range. Their meaning is:
+	The COLOR statement s can be of three types depending on their
+	number range. Their meaning is:
 ----*
   Text Mode:           Text color:       Background color:
 
@@ -484,8 +485,8 @@ DESCRIPTION:
                        36  cyan          46  cyan
   7  reverse           37  white         47  white
 *----
-	   You can pass one or more arguments to the COLOR() function to
-	   combine the attributes and colors.
+	You can pass one or more arguments to the COLOR() function to
+	combine the attributes and colors.
 
 EXAMPLE:   
 	PRINT COLOR(32,2);"Hallo"
@@ -497,12 +498,13 @@ Syntax:    PRINT a$ USING format$
 
 DESCRIPTION:
 
-	   To control the way numbers are printed, use the PRINT USING
-	   statement: PRINT 12.34 USING "###.####" produces 12.3400. The
-	   format string ("###.####") consists of hashes (#) with one optional
-	   dot and it pictures the appearance of the number to print. 
-	   For all the details of this command please read the X11-Basic 
-	   user manual.
+	To control the way numbers are printed, use the PRINT USING
+	statement: PRINT 12.34 USING "###.####" produces 12.3400. The
+	format string ("###.####") consists of hashes (#) with one optional
+	dot and it pictures the appearance of the number to print. 
+	For all the details of this command please read the X11-Basic 
+	user manual.
+
 EXAMPLE:   
 	PRINT 12.34 USING "###.####"
 
@@ -629,9 +631,9 @@ DESCRIPTION:
 
         Maps a monochrome bitmap contained in bitmp$ into the graphic
         window  at coordinate x,y. The bitmap is stored in raw
-        format, so you must  specify the size of the bitmap with w
+        format, so you must specify the size of the bitmap with w
         (width) and h (height) in pixels. The Bitmap is drawn with
-        the color set by COLOR and transparency if  set with
+        the color set by COLOR and transparency if set with
         GRAPHMODE. You must avoid to put the bitmap or parts of it 
 	outside the screen. The bitmap data format is such that the 
 	least significant bit of each byte is drawn to the left. 

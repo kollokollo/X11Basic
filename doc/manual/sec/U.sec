@@ -1,7 +1,7 @@
 ##############################################################################
 
 Function: UBOUND()
-Syntax:   n%=UBOUND(array()[,i%]) 
+Syntax:   n%=UBOUND(array()[,i%])
 
 DESCRIPTION:
 
@@ -20,8 +20,8 @@ Syntax:   a$=UCASE$(<string-expression>)
 
 DESCRIPTION:
 
-	Transforms all lower case letters of a string to upper
-	case. Any non letter characters are left unchanged.
+	Transforms all lower case letters of a string to upper case. 
+	Any non letter characters are left unchanged.
 
 SEE ALSO: UPPER$(), LOWER$()
 
@@ -40,7 +40,7 @@ SEE ALSO: COMPRESS$()
 ##############################################################################
 
 Variable: UNIX?
-Syntax:   <boolean-result>=UNIX? 
+Syntax:   a%=UNIX? 
 
 DESCRIPTION:
 
@@ -113,12 +113,12 @@ EXAMPLE:
 ##############################################################################
 
 Function: UPPER$()
-Syntax:   <string-result>=UPPER$(<string-expression>) 
+Syntax:   u$=UPPER$(t$) 
 
 DESCRIPTION:
 
-	Transforms all lower case letters of a string to upper
-	case. Any non letter characters are left unchanged.
+	Transforms all lower case letters of a string to upper case. 
+	Any non letter characters are left unchanged.
 
 SEE ALSO: UCASE$(), LOWER$()
 ##############################################################################

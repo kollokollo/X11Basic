@@ -14,10 +14,9 @@ DESCRIPTION:
 
 EXAMPLES:
 
-PRINT 3=3 NAND 4<2	 Result:  -1 (true)
-PRINT 3>2 NAND 5>3	 Result:   0 (false)
-
-PRINT (1 NAND -3)       Result:   -2
+PRINT 3=3 NAND 4<2	! Result:  -1 (true)
+PRINT 3>2 NAND 5>3	! Result:   0 (false)
+PRINT (1 NAND -3)       ! Result:   -2
 
 SEE ALSO:   NOR, AND, NOT
 ##############################################################################
@@ -40,18 +39,18 @@ Syntax:   NEXT [<variable>]
 DESCRIPTION:
 
 	NEXT terminates a FOR loop. FOR loops must be
-        nested  correctly:  The variable name after NEXT is for looks only and
-        can not be used to select a FOR statement.  Each  NEXT  jumps  to  the
-        matching  FOR statement regardless if and what <variable> is specified
+        nested correctly: The variable name after NEXT is for looks only and
+        can not be used to select a FOR statement. Each NEXT jumps to the
+        matching FOR statement regardless if and what <variable> is specified
         after NEXT.
 	
 SEE ALSO: FOR
 
 EXAMPLE:
         FOR n=1 TO 2
-            FOR m=10 to 11
-                PRINT "n=";n,"m=";m
-            NEXT m
+          FOR m=10 to 11
+            PRINT "n=";n,"m=";m
+          NEXT m
         NEXT n
 
 ##############################################################################
@@ -135,7 +134,7 @@ Syntax:     NOT <num-expression>
 DESCRIPTION:
 
 	The result of the NOT operator is true, if the following expression 
-	if false, and false if the expression is true. 
+	is false, and false if the expression is true. 
 	Used to produce the opposite/negation of a logical expression. 
 	 
 	Returns -1 for true, 0 for false.

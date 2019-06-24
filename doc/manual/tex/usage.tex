@@ -108,17 +108,17 @@ dpkg -i x11basic_1.27-1_i386.deb
 from a terminal will do. The file system structure should be similar
 to what is described in the previous chapter (explaining the RedHat packages),
 so you should expect to find the same files at the same places. Please note, 
-that you need a special debian package if you want to install it on 64 bit linux
+that you need a special Debian package if you want to install it on 64 bit Linux
 installations, usually called \verb|x11basic_1.27-1_amd64.deb|. 
 
 \subsection*{Other Linux and UNIX distributions}
 
-The author currently provides only 32bit and 64bit debian binary packages for 
-linux (specifically {\it Ubuntu linux}). A
-rpm package can be made out of the debian packet with a tool called
+The author currently provides only 32bit and 64bit Debian binary packages for 
+Linux (specifically {\it Ubuntu Linux}). A
+rpm package can be made out of the Debian packet with a tool called
 \verb|alien|. 
 
-For exotic linux based devices usually binary distributions come as a zip file
+For exotic Linux based devices usually binary distributions come as a zip file
 (like the TomTom version). In these cases they are accompanied by a README or
 other instructions how to install them. The  package for Android comes in a file
 called \verb|X11-Basic-1.27-57.apk| usually  provided by {\it Google Play}
@@ -135,20 +135,20 @@ FreeBSD and maybe others.  Also X11-Basic compiles on Cygwin, and on
 ARM-Linuxes like the one often used together with the {\it Raspberry Pi}. 
 Please note that X11-Basic is designed for 32-bit operating systems. 
 X11-Basic will also compile on 64 bit systems. But some of the
-functions may not work, especially pointer aritmetric (\verb|VARPTR()|, 
+functions may not work, especially pointer arithmetic (\verb|VARPTR()|, 
 \verb|PEEK()|, \verb|POKE|, etc.)
 will probably lead to segmentation faults when using huge amounts of 
-memory.\footnote{In X11-Basic all pointers to memory adresses are stored in 
-32bit integer variables. The upper 32bits of the adresses are stored internally
+memory.\footnote{In X11-Basic all pointers to memory addresses are stored in 
+32bit integer variables. The upper 32bits of the addresses are stored internally
 for further use. So if you calculate VARPTR(a), you would be able to 
-POKE to the adress immediately after without error, because the upper part of 
-the adresses was stored intenally from the previous call to VARPTR. 
-X11-Basic will emmit a warning, 
+POKE to the address immediately after without error, because the upper part of 
+the addresses was stored internally from the previous call to VARPTR. 
+X11-Basic will emit a warning, 
 pointer base has changed, whenever this part is different from what it 
-was before. This way, pointer aritmetrics can be used with care, even on 64 bit 
+was before. This way, pointer arithmetics can be used with care, even on 64 bit 
 operating systems.} It has turned out, that also the GEM AES graphics functions 
-make use of pointer conversions (to stay compatible with the anchent ATARI ST format), 
-also here a problem might occur. Also the staticlly linked versions of X11-Basic are
+make use of pointer conversions (to stay compatible with the ancient ATARI ST format), 
+also here a problem might occur. Also the statically linked versions of X11-Basic are
 more likely to work correctly, because the shared libraries are loaded to the upper
 address space. So If you see the WARNING messages, try to use a static version of 
 X11-basic (\verb|xbasic.static|). 
@@ -207,7 +207,7 @@ is the option not to use X or SDL libraries at all. You can have a full
 featured X11-basic with graphics and mouse input anyway, if you compile the 
 framebuffer version (\verb|make fb|). This will produce the single file 
 \verb|xbasic.framebuffer| which is the interpreter (and virtual machine) 
-ready to be used from a console (and without X). This way you have full comtrol 
+ready to be used from a console (and without X). This way you have full control 
 over the screen and mouse and keyboard. Usually everything you need to make the 
 Raspberry pi interact with and display to the user. 
 
@@ -360,7 +360,7 @@ X11-Basic can be invoked in the following three ways:
 \item Choose "X11-Basic" from the start-menu: You can choose between 
 \begin{description}
 \item[COMPILER]: opens the compiler Application which then asks for a .bas file to compile into .exe,
-\item[DEMO]: Opens and rund the demo.bas example program,
+\item[DEMO]: Opens and runs the demo.bas example program,
 \item[DOCU]: Opens the X11-Basic User Manual,
 \item[X11-Basic]: Opens the X11-Basic interpreter. \verb|xbasic.exe| will come 
 up with a console window and the interpreter waits for commands to be typed
@@ -383,17 +383,17 @@ written to.
 By default, the WINDOWS or DOS console does not support ANSI/VT100 coding.  So
 \verb|PRINT AT()| and line editing will probably not work. To fix this,
 ANSI.SYS  has to be installed and switched on for the console windows.
-Instructions how to install \verb|ANSI.SYS| can be found on the internet. 
+Instructions how to install \verb|ANSI.SYS| can be found on the Internet. 
 (Also an alternative extension named ANSICON can be used.)
 
 \subsubsection*{The Context Menu}\index{context menu}
 
-Every icon unter WINDOWS offers a contect menu when you click on it with the
+Every icon under WINDOWS offers a context menu when you click on it with the
 right mouse button. Clicking on an icon of a X11-Basic program as well opens this 
 context menu with following options: 
 \begin{description}
 \item[Execute] will invoke the X11-Basic interpreter to execute your program. 
-The same happens, if you doubleclick on the icon.
+The same happens, if you double-click on the icon.
 \item[Edit] invokes {\it notepad}, allowing you to edit your program.
 \item[View docu] opens a window which shows the embedded documentation 
 of your program if there is any. Embedded documentation within a .bas file are comments, which
@@ -402,12 +402,12 @@ start with a double comment character (\verb|##|).
 
 \subsection{The Android Version of X11-Basic}\index{Android}
 
-A version of X11-Basic ready to be installed on Android smartphones and tablets
+A version of X11-Basic ready to be installed on Android smart-phones and tablets
 is available on the {\it Android Market} (nowadays also called {\it Google Play}). 
 A more recent version usually can be found in the files section of the project 
 pages of X11-Basic on sourceforge. Watch out for a file named 
 \verb|X11-Basic-1.27-57.apk| which contains the app.  Download this file to 
-your Android tablet or smartphone and install it, allowing installation 
+your Android tablet or smart-phone and install it, allowing installation 
 of apps from other sources in the systems settings before if necessary.
 
 Unlike the other versions of X11-Basic, the interpreter and virtual machine is
@@ -426,7 +426,7 @@ endianess of the processor architecture of the platform, bytecode may or may not
 be compatible with those produced on a Linux PC or WINDOWS machine. Standard
 output is rendered directly into the graphics screen with a VT100\index{VT100} compatible
 terminal emulation. Not all graphics features have the same result than on a
-X11-Windows installation, the whole screen counts as a single fullscreen
+X11-Windows installation, the whole screen counts as a single full-screen
 window. Finally shortcuts to X11-Basic programs can be placed on the desktop,
 so they can be started with one click. Also X11-Basic is registered as a method
 to open files (from a file browser).  A small selection of example programs is
@@ -448,11 +448,11 @@ Android devices usually have a BACK button, a HOME button and a MENU button.
 \begin{description}
 \item[About] shows information about the current version of X11-Basic, news and 
              impressum.
-\item[Load ...] opens a fileselector which displays all .bas and all .b 
+\item[Load ...] opens a file-selector which displays all .bas and all .b 
                 programs in the directory \verb|/mnt/sdcard/bas|. 
 		The selected program will be loaded into memory. A program 
 		eventually stored there before will be overwritten. You can 
-		display the sourcecode by entering \verb|LIST|.
+		display the source-code by entering \verb|LIST|.
 \item[Run] will simply start the execution of a program which has been 
              loaded before. (You can also enter RUN)
 \item[STOP/CONT] will interrupt the execution of the program or resume it. 
@@ -509,7 +509,7 @@ If you want to create a new program, follow these steps  (in this example, the e
 
 \begin{enumerate}
 \item Do a MENU -> New
-\item Do a MENU -> Editor. The editor will be excecuted with the default file name (new.bas). 
+\item Do a MENU -> Editor. The editor will be executed with the default file name (new.bas). 
 If you have more than one editors installed, you will be asked which one to use. Select TED Text Editor.
 \item Inside the editor do a "Save As" and give it a different name, e.g. "mything.bas", make sure that it is saved 
 into the folder "bas".
@@ -611,21 +611,24 @@ nothing appears after ENTER, then you probably have the Screen Refresh Problem
 
 \subsection{Command line parameters}\index{command line parameters}
 
-If you are using X11-Basic under Android, you can skip this section.
+If you are using X11-Basic under Android, you can skip this section. 
+Command-line parameters cannot be used on Android.
 
 The X11-Basic interpreter \verb|xbasic| can be evoked with  additional but
 optional command line parameters. It takes the following ones:
 
-\begin{tabbing}
-XXXXXXXXXXXXXXXXXXXX \=\kill\\
-  {\bf xbasic <filename> }  \> run Basic program \verb|[input.bas]|\\
-  {\bf -l		  } \> load only, don't execute\\
-  {\bf -e <command>	  }\> execute basic command \\
-  {\bf --eval <expression>}   \> evaluate numerical expression  \\
-  {\bf --daemon 	  } \> switch off prompting and echoing\\
-  {\bf -h --help	  } \> print a short help \\
-  {\bf --help <topic>	  } \> print help on a specific topic\\
-\end{tabbing}
+\begin{longtable}{lp{11cm}}
+  {\tt\bf xbasic} {\it<filename>} & run Basic program \verb|[input.bas]|\\
+  \verb|-l|                       & load only, don't execute\\
+  \verb|-e| {\it<command>}        & execute basic command \\
+  \verb|--eval| {\it<expression>} & evaluate numerical expression  \\
+  \verb|--daemon|                 & switch off prompting and echoing\\
+  \verb|-h --help|                & print a short help \\
+  \verb|--help|  {\it<topic>}	  & print help on a specific topic\\
+  \verb|--quitonend|              & changes the behavior of the interpreter such 
+  that it quits after the program  has  finished.
+  The direct mode / interactive mode will not be entered.\\
+\end{longtable}
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
 \subsubsection*{Examples:}
@@ -639,8 +642,8 @@ XXXXXXXXXXXXXXXXXXXX \=\kill\\
 
 \subsubsection*{X11-Basic as daemon}
 
-The  command line option {\normalfont \bf --daemon} forces the interpreter to run in
-daemon-mode (with no terminal connected).  No prompt is given and the 
+The command line option {\bf \verb|--daemon|} forces the interpreter to run in
+daemon-mode (with no terminal connected). No prompt is given and the 
 input is not echoed back. This is useful, if you want to run X11-Basic
 programs as a background service.
   
@@ -664,19 +667,23 @@ programs as a background service.
 \subsubsection*{Additional command line parameters for the framebuffer version}
 
 If X11-Basic was compiled to use the framebuffer device for graphics output there are
-threee more options to control which framebuffer device is to be used, which mouse 
+three more options to control which framebuffer device is to be used, which mouse 
 device and which keyboard-device:
 
-\begin{tabbing}
-XXXXXXXXXXXXXXXXXXXX \=\kill\\
-  {\bf --keyboard <device>}   \> set the keyboard device (default: /dev/input/event4)  \\
-  {\bf --mouse <device>}   \> set the mouse device (default: /dev/input/mice)  \\
-  {\bf --framebuffer <device>}   \> set the framebuffer device (default: /dev/fb0)  \\
-\end{tabbing}
+\begin{longtable}{lp{11cm}}
+\verb|--keyboard| {\it<device>} & set the keyboard device (default: \verb|/dev/input/event4|)\\
+\verb|--mouse|    {\it<device>} & set the mouse device (default: \verb|/dev/input/mice|)\\
+\verb|--framebuffer| {\it<device>} & set the framebuffer device (default: \verb|/dev/fb0|)\\
+\end{longtable}
 
 For example: The sense hat for the Raspberry Pi uses the framebuffer device
 \verb|/dev/fb1| for its LED matrix. So if you want to draw to the LED matrix 
 display specify this for graphics output.
+\begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
+\begin{verbatim}
+  xbasic --framebuffer /dev/fb1 led-blink.bas
+\end{verbatim}
+\end{mdframed}
 
 
 \section{Editing X11-Basic programs}\index{Editor}
@@ -696,25 +703,25 @@ ones like \verb|pico| or \verb|nano| will do. MS-WINDOWS user can use the simple
 Users of X11-Basic under Android need to install a good text editor. TED (Text
 Editor), \verb|920 Text Editor|, or \verb|Jota| will work fine. Other text
 editors which might have been already preinstalled can be a source of
-frustration and trouble. So if unsure, please installe one of the mentioned
-editors from the Android Market. If you have installed more than one editor,
-this is no problem, you will be asked which one to use every time, the editor
+frustration and trouble. So if unsure, please install one of the mentioned
+editors. If you have installed more than one editor,
+this is no problem, you will be asked which one to use every time the editor
 is invoked. 
 
 Besides from the basic editing features I recommend to use a text editor with
 syntax highlighting. Currently X11-Basic syntax definitions are available for 
-\verb|nano| and \verb|pico| (available for the text consoles) and for  the {\it
+\verb|nano| (available for the text consoles) and for the {\it
 Nirvana Editor} (\verb|nedit|, available for Linux, UNIX and WINDOWS)  as well
 as for the \verb|920 Text Editor| and \verb|Jota|, available for Android.
 
 X11-Basic can support foreign language characters. Therefor the basic program
-may be coded in UTF-8 which is compatible to ASCII but has the  ability to use
+may be coded in UTF-8 which is compatible to ASCII but has the ability to use
 and encode any Unicode character. Such characters can be used in X11-Basic
-string constants, but may not be used in variable names. Currently  only the
+string constants, but may not be used in variable names. Currently only the
 standard output (console) supports the full UTF-8 character
 sets.\footnote{LTEXT will accept some of the special characters
 (currently only german), TEXT will work with UTF-8 only on Android
-devices (all latin, greek, cyrillic). }
+devices (all latin, greek, cyrillic).}
 
 \subsection*{Using syntax highlighting with {\bf nedit}}\index{syntax highlighting}
 
@@ -758,49 +765,49 @@ syntax highlighting for  X11-Basic programs in {\bf nano} (see fig.~\ref{nano}).
 
 
 
-\section{The Bytecode Compiler and the Virtual Machine}\index{bytecode}
+\section{The Byte-code Compiler and the Virtual Machine}\index{bytecode}
 
 If you are using the Android version of X11-Basic, you can skip this chapter.
 All you need to know is that there is the option to compile X11-Basic programs
-(to bytecode) which makes them run much faster.
+(to byte-code) which makes them run much faster.
 
-Under UNIX, Linux and Windows a seperate program need to be used to compile .bas files and make bytecode files or 
-standalobe .exe files out of it. 
+Under UNIX, Linux and Windows a separate program need to be used to compile .bas files and make byte-code files or 
+standalone .exe files out of it. 
 
-If you are using WINDOWS, the most convinient way to compile X11-Basic programs
+If you are using WINDOWS, the most convenient way to compile X11-Basic programs
 is to execute the compiler \verb|xbc.exe| which has a little use interface. Also
-under UNIX/Linux it is very convinient to use the compiler manager \verb|xbc|
-with appropiate command line options (watch out for the 
+under UNIX/Linux it is very convenient to use the compiler manager \verb|xbc|
+with appropriate command line options (watch out for the 
 \verb|-virtualm| option). 
 
-Advanced users probably want to deal with the bytecode files produced in the
+Advanced users probably want to deal with the byte-code files produced in the
 compiling process. For each compilation step there are separate programs which
 do it; namely: \verb|xbbc|, \verb|xb2c| and \verb|xbvm|.
 
-\verb|xbbc| compiles X11-Basic programs (.bas files) to bytecode files (.b).\index{xbbc}
-\verb|xb2c| can translate bytecode files to C source code.\index{xb2c}
-\verb|xbvm| is a virtual machine (interpreter for bytecode).\index{xbvm}
+\verb|xbbc| compiles X11-Basic programs (.bas files) to byte-code files (.b).\index{xbbc}
+\verb|xb2c| can translate byte-code files to C source code.\index{xb2c}
+\verb|xbvm| is a virtual machine (interpreter for byte-code).\index{xbvm}
 
 The idea is to increase the execution speed of X11-Basic programs a lot by 
-compiling it to a bytecode, this still being portable. The bytecode itself is 
-interpreted by a bytecode interpreter (also called a virtual machine). This
+compiling it to a byte-code, this still being portable. The byte-code itself is 
+interpreted by a byte-code interpreter (also called a virtual machine). This
 virtual machine needs to be present on the target computer, and then all
-bytecode programs can be used there. This way, the X11-Basic compiler need not
-deal with different target machine architectures, and also the bytecode can be
+byte-code programs can be used there. This way, the X11-Basic compiler need not
+deal with different target machine architectures, and also the byte-code can be
 run much faster than the interpreted BASIC source code. 
 
-The conversion to bytecode is a real compilation. The step to assembler or
+The conversion to byte-code is a real compilation. The step to assembler or
 machine code is not far. Also a translation to C or to JAVA or any other
-language will be straight forward. As with JAVA, the bytecode is platform
+language will be straight forward. As with JAVA, the byte-code is platform
 independent and can be run on any system, which has a virtual machine ported to.
 
 Also one point to mention (whether this is a feature or a disadvantage): 
-X11-Basic bytecode can not be converted back into BASIC source code (.bas), but
+X11-Basic byte-code can not be converted back into BASIC source code (.bas), but
 is rather a very abstract representation of your program.
 
 If you want to get a feeling on what this is about, open a .c source file, 
-which has been produced by the bytecode to C translator \verb|xb2c|. Implemented
-with an  additional macro translation step, the bytecode is in a way readable.
+which has been produced by the byte-code to C translator \verb|xb2c|. Implemented
+with an  additional macro translation step, the byte-code is in a way readable.
 Here is an example:
 
 \index{bytecode}
@@ -881,13 +888,13 @@ NEXT i
 }
 \end{mdframed}
 
-You are not suuposed to understand any of these, but it may give you a 
-feeling about what bytecode really is, and that is really hard to reconstruct
+You are not supposed to understand any of these, but it may give you a 
+feeling about what byte-code really is, and that is really hard to reconstruct
 the original BASIC lines out of it.
 
-Please try the bytecode compiler out and maybe you want to report errors etc.
-Quite a lot of the example programs are known to work well with the bytecode
-compiler:  e.g. \verb|mandel-simple.bas|. The bytecode will execute about 10
+Please try the byte-code compiler out and maybe you want to report errors etc.
+Quite a lot of the example programs are known to work well with the byte-code
+compiler:  e.g. \verb|mandel-simple.bas|. The byte-code will execute about 10
 times faster than the interpreted program. Here is how to use it:
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
@@ -899,10 +906,10 @@ xbvm b.b
 
 \section{Using the X11-Basic to C translator}\index{C}
 
-It is possible to translate the bytecode generated by \verb|xbbc|\index{xbbc} to C source
+It is possible to translate the byte-code generated by \verb|xbbc|\index{xbbc} to C source
 code and finally compile this intermediate C-source to a native executable
 (e.g. with the GNU C compiler \verb|gcc|). This way the program will be a real
-native executable which  --again-- runs even a bit faster  that the bytecode
+native executable which  --again-- runs even a bit faster  that the byte-code
 interpreted by the virtual machine. 
 
 Such programs can be linked against the dynamic library (.so or .dll) or the
@@ -920,14 +927,14 @@ output file name is \verb|11.c| but you can specify alternate names with the -o
 option.
 
 Actually \verb|xb2c| is not a real compiler, but rather a translator.  The
-compilation is already done by the bytecode compiler. \verb|xb2c| itself does a
-one to one translation of the bytecode (currently only into C).  This
+compilation is already done by the byte-code compiler. \verb|xb2c| itself does a
+one to one translation of the byte-code (currently only into C).  This
 translation process is not yet highly optimized, but quite robust and portable.
 There is no way to recreate the .bas source code from the .c file.  But still
 the C file is platform independent and can be compiled on all platforms, where a
 C compiler is available (and the x11basic library is ported to).
 
-Here is how to use it (examples are under linux):
+Here is how to use it (examples are under Linux):
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
 \begin{verbatim}
@@ -939,7 +946,7 @@ gcc  11.c -lm -lX11 -lx11basic -lasound -lreadline -lgmp \
 \end{verbatim}
 \end{mdframed}
 
-For convinience, a
+For convenience, a
 \begin{mdframed}[hidealllines=true,backgroundcolor=black!20]
 \begin{verbatim}
 xbc -virtualm myprogram.bas -o a.out
@@ -951,27 +958,27 @@ will exactly do the same.
 
 The X11-Basic package is shipped with the X11-Basic compiler \index{xbc}\verb|xbc|, which
 makes stand-alone binaries out of X11-Basic source code. It also can produce
-\verb|.o| object files, shared objects (or DLLs) and bytecode. 
+\verb|.o| object files, shared objects (or DLLs) and byte-code. 
 
 There are three methods on how the compilation can be done:
 \begin{description}
-\item[1. The pseudo method:] The sourcecode is bundled together with the
+\item[1. The pseudo method:] The source-code is bundled together with the
 X11-Basic interpreter into one executable file, which can be run. Execution
 speed is not faster than the interpreted source code, but all programs will run
 and behave exactly the same as if they were run in the interpreter. Currently
 this method is not available for WINDOWS since \verb|gcc| is used to do the
 compression and linking with the X11-Basic runtime library. This is the default 
 on UNIX and Linux operating systems.
-\item[2. The bytecode method:] The sourcecode is compiled into bytecode and this
-bytecode is bundled together with the X11-Basic virtual machine into one
+\item[2. The byte-code method:] The source-code is compiled into byte-code and this
+byte-code is bundled together with the X11-Basic virtual machine into one
 executable file, which can be run. Execution speed is much faster than the
 interpreted source code. However,
-some restrictions to the compiled sourcecode apply, e.g. GOTOs across procedures
+some restrictions to the compiled source-code apply, e.g. GOTOs across procedures
 are not possible, as well as ON ERROR and ON BREAK will currently not work. So some
 obscure code will probably not compile correctly. However, this method is
 recommended as the preferred method and it is the default on MS WINDOWS.
-\item[3. The independent method:] The sourcecode is compiled to bytecode and
-then translated to C sourcecode, which finally will be compiled using a
+\item[3. The independent method:] The source-code is compiled to byte-code and
+then translated to C source-code, which finally will be compiled using a
 C-Compiler (e.g. GNU gcc) or a cross-compiler. This is the preferred method on
 UNIX systems (although it is not the default) where a development environment
 (gcc and development packages for libraries) is available. On WINDOWS this is
@@ -1009,7 +1016,7 @@ See the man page \verb|xbc(1)| for further information on the compiler.
 \section{The ANSI-Basic to X11-Basic converter}\index{bas2x11basic}
 
 X11-Basic packages come with a simple ANSI-Basic to X11-Basic converter 
-\verb|bas2x11basic|\footnote{The sourcecode {\tt bas2x11basic.bas} of the 
+\verb|bas2x11basic|\footnote{The source-code {\tt bas2x11basic.bas} of the 
 converter can be found in the {\tt examples/compiler/} directory.}.
 It helps converting old (real) Basic Programs with line numbers and multiple
 commands per line to the X11-Basic structure.  Because there are so many

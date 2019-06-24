@@ -24,7 +24,8 @@ DESCRIPTION:
 	into a number. 
 
 EXAMPLE:
-	print val?("12345.67e12Hallo")  Result: 11
+	PRINT VAL?("12345.67e12Hallo")     ! Result: 11
+	
 SEE ALSO:  VAL()
 ##############################################################################
 Operator:   VAR
@@ -60,7 +61,8 @@ DESCRIPTION:
         order without repetition.
 
 EXAMPLE:
-	print VARIAT(6,2)  Result: 30
+	PRINT VARIAT(6,2)      ! Result: 30
+
 SEE ALSO:  COMBIN(), FACT()
 
 ##############################################################################
@@ -102,11 +104,10 @@ Syntax:   VOID <expression>
 
 DESCRIPTION:
 
-	This command performs a calculation and forgets the
-        result. Sounds silly but there are occasions when this
-        command is required, e.g. when you want to execute a function
-	but you are not really interested in the return value.
-        e.g. waiting for a keystroke (inp(-2)).
+	This command performs a calculation and forgets the result. Sounds 
+	silly but there are occasions when this command is required, e.g. 
+	when you want to execute a function but you are not really interested 
+	in the return value; e.g. waiting for a keystroke (INP(-2)).
 
 EXAMPLE:
 	~INP(-2)
@@ -135,13 +136,12 @@ Syntax:   VSYNC
 
 DESCRIPTION:
 
-	Enables synchronization with the screen. Actually this is a 
-	synonym for SHOWPAGE. Graphic output will not be shown in 
-	the window until SHOWPAGE (or VSYNC). 
+	Enables synchronization with the screen. Actually this is a synonym 
+	for SHOWPAGE. Graphic output will not be shown in the window until 
+	SHOWPAGE (or VSYNC). 
         On the framebuffer version of X11-Basic (e.g. TomTom) this command
         has no effect. 
 	
 SEE ALSO:  SHOWPAGE
 
 ##############################################################################
-

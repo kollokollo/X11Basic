@@ -6,7 +6,7 @@ DESCRIPTION:
 
 	TALLY() returns the number of occurrences of s$ in t$, 
 	starting at the given position start% in t$.
-	If s$  is not present in t$, zero is returned.
+	If s$ is not present in t$, zero is returned.
 
 EXAMPLE:
 	PRINT TALLY("Hello","l")    ! Result: 2
@@ -142,8 +142,8 @@ Command:  TOUCH
 Syntax:   TOUCH #n
 
 DESCRIPTION:
-	Updates the date and time stamps of a file,  
-	giving it the current system time and date.
+	Updates the date and time stamps of a file, giving it the current 
+	system time and date.
 
 EXAMPLE:
     	OPEN "U",#1,"test.txt"
@@ -157,8 +157,8 @@ Syntax:     a$=TRACE$
 
 DESCRIPTION:
 
-           The variable TRACE$ contains the command which is next to 
-           be processed.
+	The variable TRACE$ contains the command which is next to 
+	be processed.
 
 EXAMPLE:
 	PRINT TRACE$      ! Result: END
@@ -189,7 +189,7 @@ Command:  TROFF
 Syntax:   TROFF 
 DESCRIPTION: 
 
-	TROFF disables  tracing  output. This command is meant to be used
+	TROFF disables tracing output. This command is meant to be used
 	during program development.
 
 SEE ALSO: TRON, ECHO
@@ -200,9 +200,10 @@ Command:  TRON
 Syntax:   TRON
 
 DESCRIPTION:
-	TRON enables  tracing  output:  each  program
-	line  is  displayed  on the console before it is executed. This
-	command is meant to be used during program development.
+
+	TRON enables tracing output: each program line is displayed on the 
+	console before it is executed. This command is meant to be used during 
+	program development.
 
 SEE ALSO: TROFF, ECHO
 ##############################################################################
@@ -224,7 +225,7 @@ Syntax:   a=TRUNC(x)
 DESCRIPTION:
 
 	TRUNC() rounds x to the nearest integer not larger in absolute
-   	    value.  TRUNC complements FRAC:
+	value.  TRUNC complements FRAC:
 ----*
             TRUNC(x)=x-FRAC(x)
 *----

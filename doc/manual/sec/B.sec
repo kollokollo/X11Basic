@@ -35,10 +35,10 @@ Syntax:     BEEP
 	    BELL
 DESCRIPTION:
 	
-	Sounds the speaker of your terminal. This command is not a
-	sound-interface, so you can neither vary the length or the height of
-	the sound (technically, it just prints chr$(7)). BELL is exactly the
-	same as BEEP.
+	Sounds the speaker of your terminal. This command is not a sound
+	interface, so you can neither vary the length or the height of the sound
+	(technically, it just prints CHR$(7)). 
+	BELL is exactly the same as BEEP.
 
 SEE ALSO: SOUND
 ##############################################################################
@@ -126,7 +126,7 @@ Syntax:    BOUNDARY flag%
 
 DESCRIPTION:
 
-	Switch off (or on) borders  on filled shapes (PBOX, PCIRCLE ..). 
+	Switch off (or on) borders on filled shapes (PBOX, PCIRCLE ..). 
 	If flag% is zero - no border will be drawn (which is the default).
 
 COMMENT: 
@@ -203,7 +203,7 @@ DESCRIPTION:
 	If filename does not exist, it will be created. If it does exist, 
 	the old content will be overwritten.
 	This command is meant be be used for saving binary data obtained
-        via BLOAD. To save  text  files,  use  OPEN  and  PRINT  #  to  remain
+        via BLOAD. To save text  files, use OPEN and PRINT # to remain
         compatible with other BASIC implementations.
 
 EXAMPLE:

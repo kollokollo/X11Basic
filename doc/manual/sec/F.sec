@@ -306,7 +306,7 @@ Syntax:    FLUSH [#<device-name>]
   	  
 DESCRIPTION:
 
-	Flushes the output to the file or console. Usually a Line is printed
+	Flushes the output to the file or console. Usually a line is printed
 	when the newline character is encountered. To enforce output of
 	everything which has been printed so far use FLUSH.
 
@@ -343,14 +343,13 @@ Syntax:     a%=FORK()
 
 DESCRIPTION:
 
-	FORK()  creates a child process of the running task (usually the 
-	X11-Basic interpreter with the Basic program) that differs from the 
-	parent process only in its PID and PPID, and  in  the  fact  that
-	resource  utilizations are set to 0.
+	FORK() creates a child process of the running task (usually the 
+	X11-Basic interpreter with the Basic program). After the fork, 
+	both tasks will be run in parallel.
 
-	On  success,  the  PID of the child process is returned in
-        the parent's thread of execution, and a 0 is  returned  in
-        the child's thread of execution.  On failure, a -1 will be
+	On success, the PID of the child process is returned in
+        the parent's thread of execution, and a 0 is returned in
+        the child's thread of execution. On failure, a -1 will be
         returned in the parent's context, no child process will be
         created.
 
@@ -401,7 +400,7 @@ DESCRIPTION:
 
 	Centers the object tree and returns its coordinates.
         
-        tree% is the  address of the object tree.
+        tree% is the address of the object tree.
 
            OUTPUTS:
            x,y    coordinates of top left corner
@@ -503,7 +502,7 @@ Function:   FRAC()
 Syntax:     a=FRAC(b)
 DESCRIPTION:
 
-	FRAC() returns the fractional part of  its argument.
+	FRAC() returns the fractional part of its argument.
 
 EXAMPLE:
 

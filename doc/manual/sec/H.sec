@@ -49,19 +49,23 @@ Syntax:  HELP <string-pattern>
 
 DESCRIPTION:
 
-	Gives information of built in commands and functions.
+	Gives information on the synopsis of built-in commands and functions.
+	You can either specify a complete name of a command or a 
+	wildcard-pattern. All commands and functions matching the pattern will 
+	be listed.
 
 EXAMPLE:
 	HELP CL*
 
 	Result:
 
-	CLEAR [,...]
-	CLEARW [,i%]
-	CLOSE [,...]
-	CLOSEW [,i%]
-	CLR [,...]
-	CLS	 
+	CLEAR [...]
+        CLEARW [#n]
+        CLIP i%,i%,i%,i%[,i%,i%]
+	CLOSE [...]
+        CLOSEW [#n]
+        CLR var[,...]
+	CLS
 
 ##############################################################################
 Function: HEX$()
@@ -72,9 +76,9 @@ DESCRIPTION:
 	Converts an integer value d% into a string containing its hexadecimal 
 	number representation. The optional parameter n% specifies the minimal 
 	length of the output. If it is larger than needed, the string will
-	be filled with leading zeros.  
+	be filled with leading zeros.
 	Negative numbers are converted to unsigned int before processing. 
-	If you need binary representations with sign, use RADIX$() instead.
+	If you need a binary representations with sign, use RADIX$() instead.
 
 EXAMPLES:
 	PRINT HEX$(123)        Result:  7B
@@ -103,8 +107,8 @@ DESCRIPTION:
 	Hide the mouse cursor. (It will be invisible.)
 
 COMMENT: 
-	Works only on the framebuffer (Android) and on ATARI-MINT. On other platforms
-	this command has no effect.
+	Works only on the framebuffer (Android) and on ATARI-MINT. 
+	On other platforms this command has no effect.
 
 SEE ALSO:  SHOWM, DEFMOUSE
 ##############################################################################
@@ -113,7 +117,7 @@ Syntax:  HOME
 
 DESCRIPTION:
 
-	moves text cursor home. (upper left corner)
+	HOME will move the text cursor home (upper left corner).
 
 SEE ALSO:  PRINT AT()
 ##############################################################################
@@ -123,10 +127,9 @@ Syntax:  a=HYPOT(x,y)
 
 DESCRIPTION:
 
-	The HYPOT() function returns the sqrt(x*x+y*y).  This is
-        the length of the hypotenuse of a right-angle triangle
-        with sides of length x and y, or the distance of the point
-        (x,y) from the origin.
+	The HYPOT() function returns the SQRT(x*x+y*y). This is the length of 
+	the hypotenuse of a right-angle triangle with sides of length x and y, 
+	or the distance of the point (x,y) from the origin.
 	
 EXAMPLE: 
 	PRINT HYPOT(3,4)    ! Result: 5

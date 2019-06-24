@@ -52,7 +52,7 @@ DESCRIPTION:
 	Returns the largest value out of the list of arguments or
 	the largest value of an array.
 
-SEE ALSO: MIN()	  
+SEE ALSO: MIN()	
 ##############################################################################
 Command:  MENU
 Syntax:   MENU
@@ -60,9 +60,9 @@ Syntax:   MENU
 DESCRIPTION:
 
 	Performs menu check and action.
-        
-	This  command  handles  EVENTs. Prior to use, the 
-        required  action should be specified with a MENUDEF 
+
+	This command handles EVENTs. Prior to use, the 
+        required action should be specified with a MENUDEF 
         command. For constant supervision of events, 
         MENU is usually found in a loop.
 
@@ -76,7 +76,7 @@ LOOP
 PROCEDURE menuaction(k)
    ...
 RETURN
-   
+ 
 SEE ALSO: MENUDEF
 ##############################################################################
 Command:  MENUDEF
@@ -84,13 +84,13 @@ Syntax:   MENUDEF array$(),<procname>
 
 DESCRIPTION:
 
-	This command reads text for menu-header from \verb|array$()|  the
+	This command reads text for menu-header from \verb|array$()| the
 	string-array contains the text for menu-titles and menu-entries
 ----*
-    - end of row: empty string ""           
+    - end of row: empty string ""
     - end of menu-text: empty string ""
 *----
-	\verb|<procname>|  The  procedure to which control will be passed on 
+	\verb|<procname>| The procedure to which control will be passed on 
 	selection of a menu entry. It must be a procedure with one 
         parameter which is the number
 	of the selected item to call when item was selected.
@@ -108,12 +108,12 @@ PROCEDURE menuaction(k)
   PRINT "MENU selected ";k;" contents: ";field$(k)
   IF field$(k)="  Quit"
     QUIT
-  ENDIF  
+  ENDIF
 RETURN
 
 SEE ALSO: MENU, MENUSET, MENUKILL
 *#############################################################################
-Command: MENUKILL                     
+Command: MENUKILL
 Syntax:  MENUKILL
 
 DESCRIPTION:
@@ -136,7 +136,7 @@ DESCRIPTION:
      x=4  check the menu entry  
           '-'  permanent non selectable     
 *----
-SEE ALSO: MENU			  
+SEE ALSO: MENU
 ##############################################################################
 
 Command:  MERGE 
@@ -145,7 +145,7 @@ Syntax:   MERGE <filename>
 DESCRIPTION:
 
 	MERGE appends a BASIC program to the program currently in memory. 
-	Program execution is not interrupted. This command  typically is 
+	Program execution is not interrupted. This command typically is 
 	used to append often-used subroutines at run-time.
 
 COMMENT:
@@ -169,7 +169,7 @@ SEE ALSO:    CHAIN, LOAD
 EXAMPLE:
        MERGE "examples/mylibrary.bas"
        a=@functionfromlibrary()
-       
+
 ##############################################################################
 Command:  MFREE 
 Syntax:   MFREE adr%
@@ -202,7 +202,7 @@ DESCRIPTION:
 	Returns the smallest value out of the list of arguments or
 	the smallest value of an array.
 
-SEE ALSO: MAX()	  
+SEE ALSO: MAX()
 #############################################################################
 
 Command: MKDIR
@@ -211,10 +211,10 @@ Syntax:  MKDIR <path-name>[,mode%]
 DESCRIPTION:
 
 	MKDIR attempts to create a directory named path-name.
-	The  argument  mode specifies the permissions to use.  
+	The argument mode specifies the permissions to use.
 	It is modified by the process's umask in the usual way:
         the permissions of the created directory are 
-	(mode% AND NOT umask AND (7*64+7*8+7)).  
+	(mode% AND NOT umask AND (7*64+7*8+7)). 
 	Other mode bits of the created directory depend on the 
 	operating system.
 
@@ -429,8 +429,8 @@ Syntax:   a=MSHRINK(adr%,size%)
 
 DESCRIPTION:
 
-	Reduces  the  size  of  a  storage  area previously  allocated  with 
-	MALLOC.  adr%  specifies  the address of the area,
+	Reduces the size of a storage area previously allocated with 
+	MALLOC. adr% specifies the address of the area,
 	size% gives the required size.
         Returns 0 if no error.
 	This command does nothing (and always returns 0) on Linux and windows
@@ -445,10 +445,10 @@ Command: MSYNC
 Syntax:  MSYNC adr,length
 
 DESCRIPTION:
-       MSYNC  flushes  changes  made  to  the in-core copy of a file that was 
-       mapped into memory using MAP back to disk.  
+       MSYNC flushes changes made to the in-core copy of a file that was 
+       mapped into memory using MAP back to disk.
        Without use of this call there is no guarantee that changes are written
-       back before UNMAP is called.  
+       back before UNMAP is called.
        To be more precise, the part of the file that corresponds to
        the memory area starting at addr and having length length is updated.
 
@@ -462,9 +462,9 @@ DESCRIPTION:
 	This function performs a Move To Front decoding function on an
         input string.
         The MTF decoder keeps an array of 256 characters
-        in the order that they have appeared.  Each time the encoder
+        in the order that they have appeared. Each time the encoder
         sends a number, the decoder uses it to look up a character in
-        the corresponding position of the array, and outputs it.  That
+        the corresponding position of the array, and outputs it. That
         character is then moved up to position 0 in the array, and all
         the in-between characters are moved down a spot.
 
@@ -480,8 +480,8 @@ DESCRIPTION:
         An MTF encoder encodes each character using the
         count of distinct previous characters seen since the characters
         last appearance. This is implemented by keeping an array of
-        characters.  Each new input character is encoded with its
-        current position in the array.  The character is then moved to
+        characters. Each new input character is encoded with its
+        current position in the array. The character is then moved to
         position 0 in the array, and all the higher order characters
         are moved down by one position to make room. 
 

@@ -20,7 +20,8 @@ DESCRIPTION:
 
 EXAMPLE:
 
-  PRINT "Number of days since Sept. 11 2001: ";julian(date$)-julian("11.09.2001")
+  PRINT "Number of days since Sept. 11 2001: ";
+  PRINT JULIAN(DATE$)-JULIAN("11.09.2001")
 	
 SEE ALSO: JULDATE$(), DATE$
 ##############################################################################

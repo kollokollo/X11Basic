@@ -5,9 +5,8 @@ Syntax:  QUIT [<return-code>]
 
 DESCRIPTION:
 
-	QUIT exits the interpreter.  You  may  set  a <return-code>  which 
-	will  be  passed  to  the  program  running  the interpreter.
+	QUIT exits the interpreter. You may set a <return-code> which 
+	will be passed to the program which has called the interpreter.
 	
 SEE ALSO: END
 ##############################################################################
-	

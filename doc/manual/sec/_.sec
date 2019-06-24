@@ -5,32 +5,32 @@ Syntax:     X11-Basic USAGE on Android
 
 DESCRIPTION:
 
-Android devices usually have a BACK Butten, a HOME button and a MENU Button. 
+Android devices usually have a BACK button, a HOME button and a MENU button. 
 
-* The HOME Button suspends X11-Basic and returns to the Android Desktop.
+* The HOME button suspends X11-Basic and returns to the Android desktop.
   Selection of the X11-Basic app again will resume it.
 
 * With the BACK button, a running BASIC program will be stopped. If you press
   the back button again, the X11-Basic interpreter quits.
 
-* The MENU Button opens a menu with following options: About, LOAD Program, RUN
+* The MENU button opens a menu with following options: About, LOAD Program, RUN
   program, STOP/CONT program, NEW, Keyboard, Paste from Clipboard,
   Info/Settings, Editor, Compile, Help and Quit.
 
-** About: Show information about the current version of X11-Basic, News and
-   Impressum.
+** About: Show information about the current version of X11-Basic, news and
+   impressum.
 
-** Load ... opens a fileselector which displays all .bas and all .b Programs in 
-   the Directory /mnt/sdcard/bas. The selected program will be loaded into
+** Load ... opens a fileselector which displays all .bas and all .b programs in 
+   the directory /mnt/sdcard/bas. The selected program will be loaded into
    memory. A program eventiually stored there before will be overwritten. You
-   can display the sourcecode by entering LIST. Long pressing on the selection 
+   can display the source code by entering LIST. Long pressing on the selection 
    opens another menu with convinience functions on the selcted program. 
 
 ** Run will simply start the execution of a program which has been loaded 
    before. (You can also enter RUN)
 
 ** STOP/CONT will interrupt the execution of the program or resume it. (you
-   can also press the BACK buton once to stop the program, and you can enter 
+   can also press the BACK button once to stop the program, and you can enter 
    CONT to continue it).
 
 ** New will delete the program from memory.
@@ -39,7 +39,7 @@ Android devices usually have a BACK Butten, a HOME button and a MENU Button.
    hardware or external USB/bluetooth keyboard, you can also enter commands
    with that.
 
-** Paste from Clipboard will paste any text you have copied to the clipboard 
+** Paste from clipboard will paste any text you have copied to the clipboard 
    (from any other application) before.
 
 ** Info/Settings will open a dialog with additional information, links, and 
