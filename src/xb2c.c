@@ -28,6 +28,7 @@
 #include "memory.h"
 #include "bytecode.h"
 #include "variablen.h"
+#include "keywords.h"
 #include "file.h"
 #include "virtual-machine.h"
 //#include "xb2c.h"

@@ -73,17 +73,3 @@ int find_sfunc(const char *w1) {
   if(strcmp(w1,psfuncs[i].name)==0) return(i);
   return(-1);
 }
-
-const char *keywords[]={"","ON","OFF","CONT","THEN","MENU","IF","TO","DOWNTO","STEP","USING","ERROR","BREAK","GOTO","GOSUB"};
-const int anzkeywords=sizeof(keywords)/sizeof(char *);
-
-int keyword2num(char *t) {
-  int i;
-  for(i=0;i<anzkeywords;i++) {
-    if(strcmp(t,keywords[i])==0) {
-  //    printf("keyw2num: <%s> --> %x\n",t,i);
-      return(i);
-    }
-  }
-  return(KEYW_UNKNOWN);
-}

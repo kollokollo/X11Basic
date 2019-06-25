@@ -232,30 +232,6 @@ extern int everytime,alarmpc,alarmpctype;
 extern int breakcont;
 extern int is_bytecode;
 
-/*  Keywords */
-
-#define KEYW_UNKNOWN 127
-#define KEYW_NONE     0
-#define KEYW_ON       1
-#define KEYW_OFF      2
-#define KEYW_CONT     3
-#define KEYW_THEN     4
-#define KEYW_MENU     5
-#define KEYW_IF       6
-#define KEYW_TO       7
-#define KEYW_DOWNTO   8
-#define KEYW_STEP     9
-#define KEYW_USING   10
-#define KEYW_ERROR   11
-#define KEYW_BREAK   12
-#define KEYW_GOTO    13
-#define KEYW_GOSUB   14
-
-
-extern int keyword2num(char *t);
-extern const int anzkeywords;
-extern const char *keywords[];
-
 
 /* Deklarationen von Hilfsfunktionen */
 

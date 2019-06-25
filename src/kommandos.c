@@ -38,6 +38,7 @@
  
 #include "x11basic.h"
 #include "variablen.h"
+#include "keywords.h"
 #include "xbasic.h"
 #include "memory.h"
 #include "type.h"

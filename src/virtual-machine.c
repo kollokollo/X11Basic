@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdarg.h>
 #include <math.h>
 #include <string.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)
@@ -23,7 +22,7 @@
 #include "parser.h"
 #include "variablen.h"
 #include "parameter.h"
-#include "functions.h"
+#include "keywords.h"
 #include "number.h"
 #include "bytecode.h"
 #include "array.h"
@@ -32,10 +31,8 @@
 
 extern int datapointer;
 
-
-
-/* Aus Geschwindigkeitsgruenden kann der verbose mode abgeschaltet werden, wenn er keinen sinn
-macht (z.B. beim Android) */
+/* For performance reasons the verbose mode can be switched off, 
+ * where it does not make sense (e.g. for Android) */
 // #define USE_VERBODE
 
 #ifdef USE_VERBOSE
@@ -48,7 +45,7 @@ extern int verbose;
 #define TYPEMISMATCH(...) printf("ERROR: type mismatch for %s.\n",__VA_ARGS__)
 #define VMERROR(a,...) {printf("VM-ERROR: " a "\n",##__VA_ARGS__);batch=0;}
 
-/*for every platform where no real compiler exists define some functions
+/* for every platform where no real compiler exists define some functions
   static --> higher performance */
 
 #if defined ANDROID || defined WINDOWS
@@ -61,9 +58,6 @@ extern int verbose;
 
 
 char *rodata=NULL;
-
-
-
 
 #define vm_x2f(a) cast_to_real(a-1)
 #define vm_x2c(a) cast_to_complex(a-1)
@@ -1554,121 +1548,9 @@ PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAM
     }
   }
   VERBOSE("\nVirtual machine exited at %p. batch=%d err=%d",(void *)i,batch,err);
-  // printf("\nVirtual machine exited at %p. batch=%d err=%d\n",(void *)i,batch,err);
 #ifdef ANDROID
   backlog("Virtual machine exited.");
 #endif
-  *npar=(opstack-osp); /* *npar=((int)opstack-(int)osp)/sizeof(PARAMETER);  */
+  *npar=(opstack-osp);
   return(osp);
-}
-
-
-/*******************************************/
-/* These Routines allow the access from X11-Basic compiled 
-   functions (in shared libraries etc.) */
-/*******************************************/
-
-
-
-/* Diese Routinen sollten als Interface zur Virtual machine dienen.
-   Sie muessen in das virtual-machine.c file integriert werden. Ist nur
-   wichtig, wenn man C-Libraries aus X11-Basic Funktionen compilieren
-   moechte.*/
-
-static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
-  ARRAY a;
-  STRING s;
-  double f;
-  int i;
-  PARAMETER *opstack=*sp;
-//#ifdef SYSTEM64
-  va_list arguments;     /*Patch von Matthias Vogl, 29.12.2012*/
-  va_copy(arguments, *arg);
-//#else
-//  va_list arguments=*arg;
-//#endif
-    switch(typ) {
-    case 'a': a=va_arg ( arguments, ARRAY );  *((ARRAY *)INT2POINTER(opstack->integer))=double_array(&a); opstack->typ=PL_ARRAY; opstack++; break;
-    case 's': s=va_arg ( arguments, STRING ); *((STRING *)INT2POINTER(opstack->integer))=double_string(&s); opstack->typ=PL_STRING; opstack++; break;
-    case 'f': f=va_arg ( arguments, double ); opstack->real=f; opstack->typ=PL_FLOAT; opstack++;  break;
-    case 'i': i=va_arg ( arguments, int );    opstack->integer=i; opstack->typ=PL_INT; opstack++;    break;
-    case '.':   va_arg ( arguments, int );  /*parameter abraeumen*/
-    case ' ':
-    default:
-      opstack->typ=PL_LEER; opstack++;
-      break;
-    }
-    *sp=opstack;
-//#ifdef SYSTEM64
-    va_copy(*arg, arguments); /*Patch von Matthias Vogl, 29.12.2012*/
-//#else
-//    *arg=arguments;
-//#endif
-}
-
-
-
-/* API for The virtual machine */
-
-
-
-int pusharg(PARAMETER **opstack, char *typ,...)   {
-  int count=0;
-  unsigned char c;
-  va_list arguments;    
-  va_start ( arguments, typ ); 
-  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
-  (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
-// jetzt kann die Funktion aufgerufen werden...
-  return(count);
-}
-
-int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
-  int count=0;
-  unsigned char c;
-  PARAMETER *osp=*opstack;
-  va_list arguments;    
-  va_start(arguments,typ); 
-  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
-  (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
-  name();
-  return(osp->integer);
-}
-double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
-  int count=0;
-  unsigned char c;
-  PARAMETER *osp=*opstack;
-  va_list arguments;    
-  va_start(arguments,typ); 
-  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
-  (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
-  name();
-  return(osp->real);
-}
-STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
-  int count=0;
-  unsigned char c;
-  PARAMETER *osp=*opstack;
-  va_list arguments;    
-  va_start(arguments,typ); 
-  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
-  (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
-  name();
-  return(*((STRING *)&(osp->integer)));
-}
-ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
-  int count=0;
-  unsigned char c;
-  PARAMETER *osp=*opstack;
-  va_list arguments;    
-  va_start(arguments,typ); 
-  while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
-  (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
-  name();
-  return(*((ARRAY *)&(osp->integer)));
 }

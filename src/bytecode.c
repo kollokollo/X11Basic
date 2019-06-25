@@ -18,6 +18,7 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
+#include "keywords.h"
 #include "array.h"
 #include "xbasic.h"
 #include "type.h"

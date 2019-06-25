@@ -70,8 +70,8 @@ LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o s
         array.o parameter.o fft.o mathematics.o memory.o \
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
-	sysVstuff.o aes.o graphics.o sound.o number.o decode.o \
-	virtual-machine.o type.o lodepng.o md5.o sha1.o
+	sysVstuff.o aes.o graphics.o sound.o number.o keywords.o decode.o \
+	virtual-machine.o vm-api.o type.o lodepng.o md5.o sha1.o
 
 # these are objects which are compiled to binary
 
@@ -100,7 +100,7 @@ DEPSRC=  $(CSRC)
 
 HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        consolefont.h decode.h defs.h fft.h file.h framebuffer.h functions.h \
-       gkommandos.h graphics.h io.h kommandos.h \
+       gkommandos.h graphics.h io.h kommandos.h keywords.h \
        mathematics.h number.h options.h parameter.h parser.h raw_mouse.h raw_keyboard.h \
        sfunctions.h sound.h svariablen.h sysVstuff.h \
        terminal.h type.h variablen.h virtual-machine.h \
@@ -708,8 +708,8 @@ xb2c_d.o: xb2c.c
 xb2c :  xb2c.o
 	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic 
 	strip $@
-xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o
-	$(CC) -o $@ xb2c_d.o functions_d.o tools.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o $(LIBS)
+xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o keywords.o
+	$(CC) -o $@ xb2c_d.o functions_d.o tools.o keywords.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o $(LIBS)
 	strip $@
 xb2c.debug : xb2c.c $(LIBCSRC)
 	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) $(LIBS)
