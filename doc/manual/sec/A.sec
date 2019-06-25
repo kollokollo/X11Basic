@@ -283,6 +283,39 @@ ENDIF
 SEE ALSO: TRUE, FALSE, UNIX?, WIN32?
 ##############################################################################
 
+Variable:   ANS
+Syntax:     ANS
+  	  
+DESCRIPTION:
+
+	This variable stores the most recent result of a calculation which
+	has not been assigned to any variable. If you enter X11-Basic code 
+	that returns a number result without specifying a variable which the
+	result should be assigned to, X11-Basic creates the ANS 
+	variable and stores the result there.
+
+EXAMPLE:
+	' perform a simple calculation in direct mode
+	' without assigning the result to a variable:
+	1+2    ! Result: 3
+	4+ANS  ! Result: 7
+	' perform a simple calculation in direct mode
+	' and assign the result to the variable result, 
+	' ANS will not be created:
+	result=1+2
+	PRINT result ! Result: 3
+
+
+COMMENT:
+	The variable ANS can be used like a normal variable as well. 
+	It will only be changed if a short calculation is used (normally in the
+	direct/interactive mode). This is useful if the X11-Basic interpreter 
+	is used like a pocket calculator.
+
+
+SEE ALSO: TRUE, FALSE, PI
+##############################################################################
+
 Function:   ARG()
 Syntax:     a=ARG(z#)
 DESCRIPTION:

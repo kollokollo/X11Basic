@@ -825,24 +825,12 @@ int init_program(int prglen) {
   */
   for(i=0; i<prglen;i++) {
     switch(pcode[i].opcode&PM_SPECIAL) {
-    case P_ELSE: /* Suche Endif */
-      pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0)  {
-        structure_warning(original_line(i),"ELSE"); /*Programmstruktur fehlerhaft */
-        return_value|=-1;
-      }
-      break;
+    case P_IF:     /* Suche Endif */
     case P_ELSEIF: /* Suche Endif */
+    case P_ELSE:   /* Suche Endif */
       pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
       if(pcode[i].integer==0)  {
-        structure_warning(original_line(i),"ELSE IF"); /*Programmstruktur fehlerhaft */
-        return_value|=-1;
-      }
-      break;
-    case P_IF: /* Suche Endif */
-      pcode[i].integer=suchep(i+1,1,P_ENDIF,P_IF,P_ENDIF)+1;
-      if(pcode[i].integer==0) {
-        structure_warning(original_line(i),"IF"); /*Programmstruktur fehlerhaft */
+        structure_warning(original_line(i),"IF/ELSE/ELSE IF"); /* Programmstruktur fehlerhaft */
         return_value|=-1;
       }
       break;
@@ -866,7 +854,7 @@ int init_program(int prglen) {
     case P_CONTINUE: {/* Suche CASE/DEFAULT/ENDSELECT */
       int p1=pcode[i].integer=suchep(i+1,1,P_ENDSELECT,P_SELECT,P_ENDSELECT);
       if(p1<0) {
-        structure_warning(original_line(i),"SELECT/ENDSELECT"); /*Programmstruktur fehlerhaft */
+        structure_warning(original_line(i),"SELECT/CASE/DEFAULT/ENDSELECT"); /* Programmstruktur fehlerhaft */
 	return_value|=-1;
       } else {
         int p2=pcode[i].integer=suchep(i+1,1,P_CASE,P_SELECT,P_ENDSELECT);
@@ -1132,14 +1120,19 @@ void kommando(char *cmd) {
       level--;
     }
     return;
-  case '(':
+  case '(':  /* Vereinfachte Taschenrechner-Funktion */
   case '-':
   case '+':
-     printf("%.13g\n",parser(zeile));
-     return;
+     { double result=parser(zeile);
+       printf("%.13g\n",result);
+       zuweis("ANS",result);     /* Ergebnis wird in variable "ANS" gespeichert.*/
+       return;
+     }
   }
   if(isdigit(*zeile)) {
-     printf("%.13g\n",parser(zeile));
+     double result=parser(zeile);
+     printf("%.13g\n",result);
+     zuweis("ANS",result);   /* Ergebnis wird in variable "ANS" gespeichert.*/
      return;
   }
   char *w1,*w2;
