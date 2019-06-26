@@ -277,7 +277,6 @@ void kommandozeile(int anzahl, char *argumente[]) {
    if(quitflag) quit_x11basic(EX_OK);
 }
 
-extern char *simple_gets(char *);
 
 #ifdef ANDROID
 int orig_main(int anzahl, char *argumente[]) {
@@ -285,7 +284,6 @@ int orig_main(int anzahl, char *argumente[]) {
 #else
 int main(int anzahl, char *argumente[]) {
 #endif
-  char buffer[MAXSTRLEN],*zw;
 #ifdef WINDOWS_NATIVE
   hInstance=GetModuleHandle(NULL);
 #endif
@@ -309,6 +307,10 @@ int main(int anzahl, char *argumente[]) {
       } else printf("ERROR: %s not found !\n",ifilename);
     }
   }
+
+  char *buffer;
+  char *zw;
+  
   /* Programmablaufkontrolle  */
   for(;;) {
     programmlauf();
@@ -322,8 +324,9 @@ int main(int anzahl, char *argumente[]) {
     else zw=do_gets("> ");
     if(zw==NULL) quit_x11basic(0);
     else {
-      strcpy(buffer,zw);
+      buffer=strdup(zw);
       kommando(buffer);
+      free(buffer);
     }
 #ifdef ANDROID
     isdirectmode=0;

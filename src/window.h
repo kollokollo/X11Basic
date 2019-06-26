@@ -16,7 +16,7 @@
 
 #define WINDOW_DEFAULT_W 640
 #define WINDOW_DEFAULT_H 400
-#ifdef SAVE_RAM
+#ifdef SMALL_RAM
   #define MAXWINDOWS 8
 #else
   #define MAXWINDOWS 16

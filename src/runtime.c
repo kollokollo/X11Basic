@@ -248,12 +248,19 @@ static void timer_handler( int signum) {
 }
 
 
-/* Initialisierungsroutine  */
-
-void x11basicStartup() {
+/* Initialisierungsroutinen:
+   initialisiert Speicherbereiche für die library.
+ */
+void libx11basic_init() {
   expand_stack(); /* Stack initialisieren */
+  expand_vars();  /* Platz für Variablen initialisieren.*/
+  expand_procs();  /* Platz für Procedures initialisieren.*/
+  expand_labels();  /* Platz für Labels initialisieren.*/
+}
 
-
+/* Initialisiert Funktionen, die zur Laufzeit benötigt werden.  */
+void x11basicStartup() {
+  libx11basic_init();
 #ifdef CONTROL  
   cs_init();        /* Kontrollsystem anmelden */
 #endif

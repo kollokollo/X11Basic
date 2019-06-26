@@ -16,24 +16,30 @@
 #endif
 #include "options.h"
 
-#ifdef SAVE_RAM
-  #define MAXSTRLEN   1024   /* in Bytes */
-  #define MAXLINELEN  1024   /* in Bytes */
-  #define ANZFILENR     64
-  #define MAXSTACKSIZE  1024
-  #define STACKINCREMENT    256
-  #define ANZVARS     1024
-  #define ANZLABELS    256
-  #define ANZPROCS     512
+#ifdef SMALL_RAM
+  #define MAXSTRLEN      1024   /* in Bytes */
+  #define MAXLINELEN     1024   /* in Bytes */
+  #define ANZFILENR        64
+  #define MAXSTACKSIZE   1024
+  #define STACKINCREMENT   64
+  #define MAXANZVARS     1024
+  #define VARSINCREMENT    64
+  #define MAXANZLABELS    256
+  #define LABELSINCREMENT  16
+  #define MAXANZPROCS     512
+  #define PROCSINCREMENT   16
 #else
-  #define MAXSTRLEN   4096   /* in Bytes */
-  #define MAXLINELEN  4096   /* in Bytes */
-  #define ANZFILENR    100
-  #define MAXSTACKSIZE    (512*16)
-  #define STACKINCREMENT    512
-  #define ANZVARS     4096
-  #define ANZLABELS   1024
-  #define ANZPROCS    1024
+  #define MAXSTRLEN      4096   /* in Bytes */
+  #define MAXLINELEN     4096   /* in Bytes */
+  #define ANZFILENR       100
+  #define MAXSTACKSIZE (512*16)
+  #define STACKINCREMENT  256
+  #define MAXANZVARS     4096
+  #define VARSINCREMENT    64
+  #define MAXANZLABELS   1024
+  #define LABELSINCREMENT  32
+  #define MAXANZPROCS    1024
+  #define PROCSINCREMENT   32
 #endif
 #define DEFAULTWINDOW 1
 

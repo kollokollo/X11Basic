@@ -12,7 +12,7 @@
 
 /* If you have to save memory space...*/
 
-/*#define SAVE_RAM*/
+/*#define SMALL_RAM*/
 
 /* If you want to compile a versin of X11-basic which uses the SDL library
    also on unix systems, you can uncomment following line. This is useful 
@@ -64,7 +64,7 @@
  // #define HAVE_SDL 1
   #define HAVE_GEM 1
   #define USE_GEM 1
-  #define SAVE_RAM 1
+  #define SMALL_RAM 1
 #endif
 
 
@@ -100,11 +100,6 @@
   #ifndef USE_SDL
     #define USE_ALSA
   #endif
-#endif
-
-/*Systems with small Memory Layout*/
-#ifdef SMALL
-  #define SAVE_RAM
 #endif
 
 #endif /* OPTIONS_H */

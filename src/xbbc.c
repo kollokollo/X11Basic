@@ -231,7 +231,7 @@ int main(int anzahl, char *argumente[]) {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(loadfile) {
       if(exist(ifilename)) {
-        int ret;
+        libx11basic_init();  /* Alles vorbereiten, damit loadprg() funktioniert. */
 	#ifdef ATARI
 	intro();
 	printf("<-- %s\n",ifilename);
@@ -255,7 +255,7 @@ int main(int anzahl, char *argumente[]) {
 #endif
 	compile(verbose);
 	// printf("%p LEN=%d\n",bcpc.pointer,bcpc.len);
-	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
+	int ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
 	if(ret==-1) exit(EX_CANTCREAT);
 	#ifdef ATARI
 	printf("done.\n");

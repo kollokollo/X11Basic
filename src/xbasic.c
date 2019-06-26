@@ -54,7 +54,6 @@
 #include "parameter.h"
 #include "kommandos.h"
 #include "gkommandos.h"
-#include "io.h"
 #include "file.h"
 #include "array.h"
 #include "x11basic.h"
@@ -85,31 +84,18 @@ const char xbasic_name[]="xbasic";
 #endif
 int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int errorpc=-1,errorpctype=0,breakpc=-1,breakpctype=0;
-int everytime=0,alarmpc=-1,alarmpctype=0;
 
-int *stack=NULL;  /* Stack für Rücksprungadressen (Zeilennr).*/
-int stack_size=0;
 
-/* fuer die Dateiverwaltung     */
-FILEINFO filenr[ANZFILENR];
 static int *linetable=NULL;   /* for correctly count splitted lines*/
-
-
-PARAMETER returnvalue;
-
-int param_anzahl;
-char **param_argumente=NULL;
 
 int usewindow=DEFAULTWINDOW;
 
-void free_pcode(int l);
 
 static int add_label(char *name,int zeile,int dataptr);
 static int add_proc(char *name,char *pars,int zeile,int typ);
 
 static int oldprglen=0;
 
-extern char ifilename[];
 
 /*return the original line (accounting for splitted lines) */
 int original_line(int i) {
@@ -966,11 +952,16 @@ int init_program(int prglen) {
 }
 
 static int add_label(char *name,int zeile,int dataptr) {
-  labels[anzlabels].name=strdup(name);
-  labels[anzlabels].zeile=zeile;
-  labels[anzlabels].datapointer=dataptr;
-  anzlabels++;
-  return(anzlabels-1);
+  if(procs_check(anzlabels)) {
+    labels[anzlabels].name=strdup(name);
+    labels[anzlabels].zeile=zeile;
+    labels[anzlabels].datapointer=dataptr;
+    anzlabels++;
+    return(anzlabels-1);
+  } else {
+    printf("ERROR: Cannot create more than %d labels in this version of X11-Basic.\n",MAXANZLABELS);
+    return(-1);
+  }
 }
 
 /*Raeume pcode-Struktur auf und gebe Speicherbereiche wieder frei.*/
@@ -1028,24 +1019,29 @@ static int make_varliste(char *argument, int *l,int n) {
   return(i);
 }
 
-/*Prozedur in Liste hinzufuegen */
+/* Prozedur in Liste hinzufuegen */
 
 static int add_proc(char *name,char *pars,int zeile,int typ) {
-  int ap,i;
-  i=procnr(name,typ);
+  int i=procnr(name,typ);
   if(i==-1) {
-    procs[anzprocs].name=strdup(name);
-    procs[anzprocs].typ=typ;
-    procs[anzprocs].rettyp=vartype(name);
-    procs[anzprocs].zeile=zeile;
-    procs[anzprocs].anzpar=ap=count_parameters(pars);
-    if(ap) {
-      procs[anzprocs].parameterliste=(int *)malloc(sizeof(int)*ap);
-      make_varliste(pars,procs[anzprocs].parameterliste,ap);
-    } else procs[anzprocs].parameterliste=NULL;
-//printf("ADDPROC: name=%s rettyp=%x\n",procs[anzprocs].name,procs[anzprocs].rettyp);
-    anzprocs++;
-    return(anzprocs-1);
+    if(procs_check(anzprocs)) {
+      int ap;
+      procs[anzprocs].name=strdup(name);
+      procs[anzprocs].typ=typ;
+      procs[anzprocs].rettyp=vartype(name);
+      procs[anzprocs].zeile=zeile;
+      procs[anzprocs].anzpar=ap=count_parameters(pars);
+      if(ap) {
+        procs[anzprocs].parameterliste=(int *)malloc(sizeof(int)*ap);
+        make_varliste(pars,procs[anzprocs].parameterliste,ap);
+      } else procs[anzprocs].parameterliste=NULL;
+  //printf("ADDPROC: name=%s rettyp=%x\n",procs[anzprocs].name,procs[anzprocs].rettyp);
+      anzprocs++;
+      return(anzprocs-1);
+    } else {
+      printf("ERROR: Cannot create more than %d procedures in this version of X11-Basic.\n",MAXANZPROCS);
+      return(-1);
+    }
   } else {
     printf("ERROR: Procedure/Function %s already exists at line %d.\n",name,original_line(procs[i].zeile));
     return(i);

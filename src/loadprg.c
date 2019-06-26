@@ -20,12 +20,26 @@ char *databuffer=NULL;  /* Hier werden alle DATA-Inhalte gespeichert.*/
 int databufferlen=0;
 int datapointer=0; 
 
-VARIABLE variablen[ANZVARS];
-int anzvariablen;
-LABEL labels[ANZLABELS];
+LABEL *labels=NULL;
+int labels_size=0;
 int anzlabels=0;
-PROCEDURE procs[ANZPROCS];
+PROCEDURE *procs=NULL;
+int procs_size=0;
 int anzprocs=0;
+
+PARAMETER returnvalue;  /* general return value for functions */
+
+
+int *stack=NULL;  /* Stack für Rücksprungadressen (Zeilennr).*/
+int stack_size=0;
+
+
+/* global commandline parameters*/
+int param_anzahl;
+char **param_argumente=NULL;
+
+/* for EVERY and AFTER */
+int everytime=0,alarmpc=-1,alarmpctype=0;
 
 
 
@@ -47,3 +61,6 @@ int loadprg(const char *filename) {
   programbufferlen=prglen=0;
   return(mergeprg(filename));
 }
+
+
+

@@ -41,20 +41,20 @@ char *lineinput( FILE *n, char *line,int size) {   /* liest eine ganze Zeile aus
     return line;
 }
 
-char *input( FILE *n, char *line,int size) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
+char *input(FILE *n, char *line,int size) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
   int c; 
   int  i=0,ff=0;
   while((c=fgetc(n))!=EOF) {
-      if(c==(int)'\n' || (c==(int)',' && ff==0)) {
-	  line[i]='\0';
-	  return line;
-	}
-	else if(c==(int)'\"') ff=!ff;
-	else line[i++]=(char)c;
-	if(i>=size-1) break;
+    if(c==(int)'\n' || (c==(int)',' && ff==0)) {
+      line[i]='\0';
+      return line;
     }
-    line[i]='\0';
-    return line;
+    else if(c==(int)'\"') ff=!ff;
+    else line[i++]=(char)c;
+    if(i>=size-1) break;
+  }
+  line[i]='\0';
+  return line;
 }
 
 /* Returns the length of the open file n */

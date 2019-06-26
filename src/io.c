@@ -208,6 +208,8 @@ void getrowcols(int *rows, int *cols) {
 #endif
 }
 
+/* fuer die Dateiverwaltung     */
+FILEINFO filenr[ANZFILENR];
 
 
 /*******************************/
@@ -231,10 +233,9 @@ FILEINFO get_fileptr(int n) {
 }
 
 int f_freefile() {
-  int i=1;
-  while(i<ANZFILENR) {
+  int i=0;
+  while(++i<ANZFILENR) {
     if(filenr[i].typ==0) return(i);
-    i++;
   }
   return(-1);
 }
@@ -590,8 +591,6 @@ void c_print(PARAMETER *plist,int e) {
 
 void c_input(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
-  char *u,*v=NULL,*text;
-  char inbuf[MAXSTRLEN];
   int e;
   
   FILE *fff=stdin;
@@ -603,10 +602,11 @@ void c_input(const char *n) {
     else xberror(24,""); /* File nicht geoeffnet */
   } else strcpy(s,n);
   
-  if(strlen(s)) {   
+  if(strlen(s)) {
+    char *text;
     e=arg2(s,TRUE,s,t);
     if(*s=='\"') {
-      u=s_parser(s);
+      char *u=s_parser(s);
       text=malloc(strlen(u)+4);
       strcpy(text,u);
       free(u);
@@ -615,8 +615,10 @@ void c_input(const char *n) {
     } else text=strdup("? ");
     
      /* Wenn Terminal: Jetzt ganze Zeile einlesen */
+    char *v=NULL;
     if(fff==stdin) v=do_gets(text);
-    u=inbuf;
+    char inbuf[MAXSTRLEN];
+    char *u=inbuf;
     while(e!=0) {
       xtrim(s,TRUE,s);
       if(fff==stdin) {
@@ -629,7 +631,7 @@ void c_input(const char *n) {
 	  e2=arg2(v,TRUE,u,v);
 	}
        */
-      } else u=input(fff,inbuf,MAXSTRLEN);
+      } else u=input(fff,inbuf,sizeof(inbuf));
   //    printf("INPUT, ZUWEIS: <%s> <%s>\n",s,u);
       if(vartype(s)==STRINGTYP) {
         STRING str;
@@ -645,17 +647,17 @@ void c_input(const char *n) {
   }  
 }
 
-/*
-Es werden beliebig lange Zeilen eingelesen, dafuer wird der buffer mit realloc
-vergroessert, wenn noetig. Zurueckgegeben wird Zeile als STRING. 
-Liest bis \n oder eof oder 0. Die Laenge kann deshalb mit strlen ermittelt
-werden. Zeile wird Nullterminiert
-*/
+/* This function reads arbitrary long lines (ASCII until \n or EOF or 0) from a file. 
+ * An internal buffer is increased accordingly using realloc() starting with a length of 256.
+ * Return value: 
+ * a STRING containing the line, The string is zero-terminated.
+ * The length of the read line can be determined later with strlen().
+ */
 
 static STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
   int c; int i=0;
   STRING line;
-  int l=MAXSTRLEN;
+  int l=256;  /* Begin with a possible line length of 256 */
   line.pointer=malloc(l+1);
   line.len=0;
   
@@ -664,7 +666,7 @@ static STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASC
     if(c==0) break;
     (line.pointer)[i++]=(char)c;
     if(i>l) {
-      l+=MAXSTRLEN;
+      l+=256;  /* Increase the possible line length */
       line.pointer=realloc(line.pointer,l+1);
     }
   }

@@ -259,11 +259,11 @@ extern const int anzpsfuncs;
 extern const SFUNCTION psfuncs[];
 
 extern int anzvariablen;
-extern VARIABLE variablen[];
+extern VARIABLE *variablen;
 
 extern int anzlabels, anzprocs;
-extern PROCEDURE  procs[];
-extern LABEL labels[];
+extern PROCEDURE *procs;
+extern LABEL *labels;
 
 /* Variablen, welche ausserhalb der lib definiert werden muessen */
 
@@ -283,6 +283,7 @@ const char *error_text(unsigned char errnr, const char *bem);
 void xberror(char errnr, const char *bem);
 void reset_input_mode();
 void x11basicStartup();
+void libx11basic_init();
 
 void kommando(char *);   /* This is for single command execution: */
 int loadprg(const char *);
@@ -307,7 +308,7 @@ void doocssig_handler( int);
 
 double ltext(int, int, double, double, double , int, char *);
 char *do_gets (char *); 
-char *simple_gets(char *);
+char *simple_gets(const char *);
 char *indirekt2(const char *);
 void local_vars_loeschen(int);
 char *varrumpf(const char *);

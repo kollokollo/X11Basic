@@ -1,6 +1,6 @@
 /* do_gets.c */
 
-/* Benoetigt readline und curses Libraries  */
+/* eventually needs readline and curses libraries  */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -27,10 +27,9 @@
 #endif
 
 
-/* **************************************************************** */
-/*    Liest einen String ein mit Editiermoeglichkeiten              */
-/*                                                                  */
-/* **************************************************************** */
+/* Reads a string from stdin with editing possibilities 
+ * and history        
+ */
 
 /* A static variable for holding the line. */
 static char *line_read = (char *)NULL;
@@ -46,15 +45,14 @@ static int utf8coding=0;    /* Flag if we should use UTF-8 coding */
 static int historyp=-1;
 static char *history[MAX_HISTORY];
 void add_history(const char *line) {
-  int i;
   if(historyp<0) {
-    for(i=0;i<MAX_HISTORY;i++) history[i]=NULL;
+    for(int i=0;i<MAX_HISTORY;i++) history[i]=NULL;
     historyp=0;  
   }
   if(historyp<MAX_HISTORY) history[historyp++]=strdup(line);
   else {
     free(history[0]);
-    for(i=0;i<MAX_HISTORY-1;i++) history[i]=history[i+1];
+    for(int i=0;i<MAX_HISTORY-1;i++) history[i]=history[i+1];
     history[historyp-1]=strdup(line);  
   }
  // printf("Add history: %s --> %d\n",line,historyp);
@@ -72,19 +70,18 @@ static int strlen_utf8(const char *s) {
 }
 
 void out_line(const char *prompt,const char *edittext, const int cursorpos) {
-  int i;
   /* ESC sequenz fuer ganze Zeile l"oschen, cursor an*/
 #if 0
   putchar(13);
 #else
-  putchar(27);   /*   resore cursor position */
+  putchar(27);   /*   restore cursor position */
   putchar('8');
 #endif
   putchar(27);
   printf("[K%s%s ",prompt,edittext);
   putchar(8);
   if(strlen_utf8(edittext)>cursorpos) {
-    for(i=0;i<strlen_utf8(edittext)-cursorpos;i++) putchar(8);
+    for(int i=0;i<strlen_utf8(edittext)-cursorpos;i++) putchar(8);
   }
   #ifdef ANDROID
     invalidate_screen();
@@ -213,10 +210,8 @@ char *do_gets (char *prompt) {
   reenter=1;
   /* If the buffer has already been allocated, return the memory
      to the free pool. */
-  if(line_read!=(char *)NULL) {
-      free(line_read);
-      line_read=(char *)NULL;
-  }
+  free(line_read);
+  line_read=(char *)NULL;
   set_input_mode_echo(1);
   /* Get a line from the user. */
   line_read = readline (prompt);
@@ -224,29 +219,25 @@ char *do_gets (char *prompt) {
   /* If the line has any text in it, save it on the history. */
   if (line_read && *line_read) add_history (line_read);
   reenter=0;
-  return (line_read);
+  return(line_read);
 }
 
+/* Read a string, and return a pointer to it.  Returns NULL on EOF. 
+ *
+ * This is for non terminal stdin */
 
-
-
-/* This is for non terminal stdin*/
-
-char *simple_gets(char *prompt) {
-  char *buffer=malloc(MAXLINELEN);  
-  if (line_read != (char *)NULL){
-      free(line_read);
-      line_read = (char *)NULL;
-  }
+char *simple_gets(const char *prompt) {
+  char *buffer=malloc(MAXLINELEN);
+  free(line_read);
+  line_read=(char *)NULL;
   set_input_mode_echo(0); /* this is the clou in daemon mode*/
   /* Get a line from the user. */
   fputs(prompt,stdout);
   fflush(stdout);
-  line_read = fgets(buffer,MAXLINELEN,stdin);
+  line_read=fgets(buffer,MAXLINELEN,stdin);
   if(line_read==NULL) free(buffer);
  
   /* If the line has any text in it, save it on the history. */
-  if (line_read && *line_read)
-    add_history (line_read);
-  return (line_read);
+  if(line_read && *line_read) add_history(line_read);
+  return(line_read);
 }

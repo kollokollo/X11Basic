@@ -333,7 +333,7 @@
 #undef RETSIGTYPE
 
 /* Small Memory layout */
-#undef SMALL
+#undef SMALL_RAM
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

@@ -36,10 +36,10 @@ nicht freigegeben werden.*/
 #define V_STATIC 1
 
 
-/* Flags fuer Uebergabeart  (bit wert muss groesser ANZVARS sein !)*/
+/* Flags fuer Uebergabeart  (bit wert muss groesser MAXANZVARS sein !)*/
 
 #define V_BY_VALUE       0x00000
-#define V_BY_REFERENCE    0x10000
+#define V_BY_REFERENCE   0x10000
 
 
 
@@ -176,5 +176,30 @@ static inline void varcaststring_and_free(void *pointer,STRING val) {
 }
 
 
+/* Variable handling functions */
+extern int variablen_size;
+extern VARIABLE *variablen;
+
+/* Increase the nunber of variables */
+static inline void expand_vars() {
+  variablen_size+=VARSINCREMENT;
+  /* Stack initialisieren */
+  variablen=realloc(variablen,variablen_size*sizeof(VARIABLE));
+#if DEBUG
+  printf("Variables size changed to: %d (%ld Bytes.)\n",variablen_size,
+         variablen_size*(sizeof(VARIABLE)));
+#endif
+}
+/* Makes sure that there is at least one more space for a 
+   new variable entry. Otherwise tries to expand the space.*/
+
+static inline int variables_check(int av) {
+  if(av<variablen_size-1) return(1);
+  else if(variablen_size<MAXANZVARS) {
+    expand_vars();
+    return(1);
+  }
+  return(0);
+}
 
 #endif

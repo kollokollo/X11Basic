@@ -22,6 +22,12 @@
 #include "wort_sep.h"
 
 
+
+VARIABLE *variablen=NULL;
+int variablen_size=0;  /* Größe des reservierten Speicherberichs */
+int anzvariablen;      /* tatsächliche Anzahl benutzter Veriablen */
+
+
 VARIABLE **lvar=NULL;
 int *anzlvar=NULL;
 
@@ -243,7 +249,7 @@ int add_variable(const char *name, unsigned char typ, unsigned char subtyp, unsi
 
   if(vnr==-1) {   /*Variable gibt es noch nicht, also neue anlegen. */
   //  printf("Add new variable. %s flags=%x\n",name,flags);
-    if(anzvariablen<ANZVARS) { 
+    if(variables_check(anzvariablen)) { 
       if(varnamecheck(name,typ)) xberror(32,name); /* Syntax error */
       else {
         variablen[anzvariablen].name=strdup(name);
@@ -253,7 +259,10 @@ int add_variable(const char *name, unsigned char typ, unsigned char subtyp, unsi
         else variablen[anzvariablen].pointer.i=NULL;
         vnr=anzvariablen++;
       }
-    } else printf("WARNING: too many variables! Can not create more than %d in this version of X11-Basic.\n",ANZVARS);
+    } else {
+      xberror(70,""); /* too many variables! */
+      printf("Cannot create more than %d variables in this version of X11-Basic.\n",MAXANZVARS);
+    }
   }
   if(vnr>=0 && variablen[vnr].pointer.i==NULL) {
      // printf("Add variable %d %s\n",vnr,name);

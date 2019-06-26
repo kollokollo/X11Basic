@@ -246,7 +246,6 @@ unsigned int type_list(const char *ausdruck);
 void free_pcode(int l);
 
 
-extern int *stack;
 extern int stack_size;
 extern VARIABLE **lvar;
 extern int *anzlvar;
@@ -357,6 +356,55 @@ static inline int stack_check(int sp) {
   if(sp<stack_size-1) return(1);
   else if(stack_size<MAXSTACKSIZE) {
     expand_stack();
+    return(1);
+  }
+  return(0);
+}
+/* Makes sure that there is at least one more space for a 
+   procedure entry. Otherwise tries to expand the space.*/
+
+extern int procs_size;
+extern PROCEDURE *procs;
+
+static inline void expand_procs() {
+  procs_size+=PROCSINCREMENT;
+  /* initialisieren */
+  procs=realloc(procs,procs_size*sizeof(PROCEDURE));
+#if DEBUG
+  printf("Procs size changed to: %d (%ld Bytes.)\n",procs_size,
+         procs_size*sizeof(PROCEDURE));
+#endif
+}
+
+static inline int procs_check(int pp) {
+  if(pp<procs_size-1) return(1);
+  else if(procs_size<MAXANZPROCS) {
+    expand_procs();
+    return(1);
+  }
+  return(0);
+}
+
+/* Makes sure that there is at least one more space for a 
+   label entry. Otherwise tries to expand the space.*/
+
+extern int labels_size;
+extern LABEL *labels;
+
+static inline void expand_labels() {
+  labels_size+=LABELSINCREMENT;
+  /* initialisieren */
+  labels=realloc(labels,labels_size*sizeof(LABEL));
+#if DEBUG
+  printf("Labels size changed to: %d (%ld Bytes.)\n",labels_size,
+         labels_size*sizeof(LABEL));
+#endif
+}
+
+static inline int labels_check(int pp) {
+  if(pp<labels_size-1) return(1);
+  else if(labels_size<MAXANZLABELS) {
+    expand_labels();
     return(1);
   }
   return(0);

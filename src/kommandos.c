@@ -1,10 +1,10 @@
-/* kommandos.c  Sachen fuer die Kommandobearbeitung (c) Markus Hoffmann */
+/* kommandos.c  Kommandobearbeitung (c) Markus Hoffmann */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
- * X11BASIC is free software and comes with NO WARRANTY - read the file
- * COPYING for details
+ * ===============================================================
+ * X11BASIC is free software and comes with NO WARRANTY - 
+ * read the file COPYING for details
  */
 
 

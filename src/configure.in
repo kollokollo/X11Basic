@@ -105,7 +105,7 @@ fi
 
 
 if test "n$with_smallram" = nyes; then
-def="$def -DSAVE_RAM"
+def="$def -DSMALL_RAM"
 fi
 if test "n$with_framebuffer" = nyes; then
 def="$def -DFRAMEBUFFER"
@@ -380,7 +380,7 @@ fi
 sparc-sun-solaris*)
 	echo "A Sun with Solaris 2.x"
 	AC_DEFINE(IS_BIG_ENDIAN,1,[System is big or little endian])
-	AC_DEFINE(SMALL,1,[Small Memory layout])
+	AC_DEFINE(SMALL_RAM,1,[Small Memory layout])
 
 if test "n$CC" = ngcc; then
 	regs=
