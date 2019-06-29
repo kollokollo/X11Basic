@@ -1,4 +1,4 @@
-/* memory.c   Hilfsfunktionen fuer Memory-Management (c) Markus Hoffmann */
+/* memory.c   helper functions for memory management (c) Markus Hoffmann */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * =====================================================================
@@ -12,7 +12,9 @@
 #include "memory.h"
 
 
-/* Pointerbase: Hier können bis zu 8 verschiedene Speicherbereiche addressiert werden.
+/* This just defines a table of pointers used as 
+ * Pointerbase for translating 64bit pointers to 32bit numbers: 
+ * You can address up to 8 different memory areas.
  */
 
 #if SIZEOF_VOID_P == 8

@@ -1,7 +1,7 @@
-/* svariablen.c   Funktionen für systemvariablen (c) Markus Hoffmann*/
+/* svariablen.c   system variables handling (c) Markus Hoffmann*/
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+ * ================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
@@ -57,15 +57,15 @@
 #define v_timer NULL
 #else
 
-/* Systemvariablen vom typ Int */
+/* system variables with return type <int> */
 
 extern int mousex(),mousey(), mousek(), mouses();
 
 static int v_false() {return(0);}
-static int v_true() {return(-1);}
-static int v_err() { extern int globalerr; return(globalerr);}
-static int v_sp() {return(sp);}
-static int v_pc() {return(pc);}
+static int v_true()  {return(-1);}
+static int v_err()   {extern int globalerr; return(globalerr);}
+static int v_sp()    {return(sp);}
+static int v_pc()    {return(pc);}
 
 #ifdef ANDROID
 static int v_sensorf() {return(ANZSENSORS);}
@@ -73,18 +73,18 @@ static int v_sensorf() {return(ANZSENSORS);}
 #ifdef HAVE_WIRINGPI
 static int v_gpiof() {return(32);}
 #endif
-static int v_stimer() {   /* Sekunden-Timer */
+static int v_stimer() {   /* seconds timer */
   time_t timec=time(NULL);
   if(timec==-1) io_error(errno,"TIMER");
   return(timec);
 }
 
-static int v_cols() {   /* Anzahl Spalten des Terminals */
+static int v_cols() {   /* number of colums of the terminal */
   int rows=0,cols=0;
   getrowcols(&rows,&cols);
   return(cols);
 }
-static int v_rows() {   /* Anzahl Zeilen des Terminals */
+static int v_rows() {   /* number of rows of the terminal */
   int rows=0,cols=0;
   getrowcols(&rows,&cols);
   return(rows);
@@ -100,7 +100,7 @@ static int v_crslin() {   /* Terminal cursor position */
   return(rows);
 }
 
-/* Systemvariablen vom typ Float */
+/* system variables with return type <float> */
 
 #ifdef ANDROID
 extern double gps_alt,gps_lat,gps_lon;
@@ -132,83 +132,83 @@ static double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
 static double v_pi() {return(PI);}
 #endif
 
-const SYSVAR sysvars[]= {  /* alphabetisch !!! */
- { NOTYP,   "!nulldummy", (pfunc)v_false},
+const SYSVAR sysvars[]= {  /* alphabetical order is required !!! */
+ { NOTYP,           "!nulldummy", (pfunc)v_false},
 #ifdef ANDROID
- { CONSTTYP|INTTYP,    "ANDROID?",  (pfunc)   v_true},
+ { CONSTTYP|INTTYP, "ANDROID?",   (pfunc)v_true},
 #else
- { CONSTTYP|INTTYP,    "ANDROID?",  (pfunc)   v_false},
+ { CONSTTYP|INTTYP, "ANDROID?",   (pfunc)v_false},
 #endif
 #ifdef CONTROL
- { INTTYP,    "CCSAPLID", (pfunc)  v_ccsaplid},
+ { INTTYP,          "CCSAPLID",   (pfunc)v_ccsaplid},
 #endif
 #if defined CONTROL || defined TINE
- { INTTYP,    "CCSERR",  (pfunc)   v_ccserr},
+ { INTTYP,          "CCSERR",     (pfunc)v_ccserr},
 #endif
- { INTTYP,    "COLS",    (pfunc)   v_cols},
- { INTTYP,    "CRSCOL",  (pfunc)     v_crscol},
- { INTTYP,    "CRSLIN",   (pfunc)    v_crslin},
- { FLOATTYP,  "CTIMER",     v_ctimer},
- { INTTYP,    "ERR",    (pfunc)    v_err},
- { CONSTTYP|INTTYP,    "FALSE",   (pfunc)   v_false},
+ { INTTYP,          "COLS",       (pfunc)v_cols},
+ { INTTYP,          "CRSCOL",     (pfunc)v_crscol},
+ { INTTYP,          "CRSLIN",     (pfunc)v_crslin},
+ { FLOATTYP,        "CTIMER",      v_ctimer},
+ { INTTYP,          "ERR",        (pfunc)v_err},
+ { CONSTTYP|INTTYP, "FALSE",      (pfunc)v_false},
 #ifdef HAVE_WIRINGPI
- { CONSTTYP|INTTYP,    "GPIO?",   (pfunc)  v_gpiof},
+ { CONSTTYP|INTTYP, "GPIO?",      (pfunc)v_gpiof},
 #else
- { CONSTTYP|INTTYP,    "GPIO?",   (pfunc)  v_false},
+ { CONSTTYP|INTTYP, "GPIO?",      (pfunc)v_false},
 #endif
 #ifdef ANDROID
- { CONSTTYP|INTTYP,    "GPS?",  (pfunc)   v_true},
+ { CONSTTYP|INTTYP, "GPS?",       (pfunc)v_true},
 #else
- { CONSTTYP|INTTYP,    "GPS?",  (pfunc)   v_false},
+ { CONSTTYP|INTTYP, "GPS?",       (pfunc)v_false},
 #endif
- { FLOATTYP,  "GPS_ALT",      v_gpsalt}, /* Altitude in meters*/
- { FLOATTYP,  "GPS_LAT",      v_gpslat}, /* Lattitude in degrees*/
- { FLOATTYP,  "GPS_LON",      v_gpslon}, /* Longitude in degrees*/
+ { FLOATTYP,        "GPS_ALT",     v_gpsalt}, /* Altitude in meters*/
+ { FLOATTYP,        "GPS_LAT",     v_gpslat}, /* Lattitude in degrees*/
+ { FLOATTYP,        "GPS_LON",     v_gpslon}, /* Longitude in degrees*/
 #ifndef NOGRAPHICS
- { INTTYP,    "MOUSEK",   (pfunc)  mousek},
- { INTTYP,    "MOUSES",  (pfunc)   mouses},
- { INTTYP,    "MOUSEX",  (pfunc)   mousex},
- { INTTYP,    "MOUSEY",  (pfunc)   mousey},
+ { INTTYP,          "MOUSEK",     (pfunc)mousek},
+ { INTTYP,          "MOUSES",     (pfunc)mouses},
+ { INTTYP,          "MOUSEX",     (pfunc)mousex},
+ { INTTYP,          "MOUSEY",     (pfunc)mousey},
 #endif
- { INTTYP,    "PC",        (pfunc) v_pc},
- { CONSTTYP|FLOATTYP,  "PI",         v_pi},
- { INTTYP,    "ROWS",	   (pfunc) v_rows},
+ { INTTYP,          "PC",         (pfunc)v_pc},
+ { CONSTTYP|FLOATTYP, "PI",        v_pi},
+ { INTTYP,          "ROWS",	  (pfunc)v_rows},
 #ifdef ANDROID
- { CONSTTYP|INTTYP,    "SENSOR?",   (pfunc)  v_sensorf},
+ { CONSTTYP|INTTYP, "SENSOR?",    (pfunc)v_sensorf},
 #else
- { CONSTTYP|INTTYP,    "SENSOR?",   (pfunc)  v_false},
+ { CONSTTYP|INTTYP, "SENSOR?",    (pfunc)v_false},
 #endif
- { INTTYP,    "SP",	 (pfunc)   v_sp},
- { INTTYP,    "STIMER",  (pfunc)   v_stimer},
- { FLOATTYP,  "TIMER",      v_timer},
- { CONSTTYP|INTTYP,    "TRUE",     (pfunc)  v_true},
+ { INTTYP,          "SP",	  (pfunc)v_sp},
+ { INTTYP,          "STIMER",     (pfunc)v_stimer},
+ { FLOATTYP,        "TIMER",       v_timer},
+ { CONSTTYP|INTTYP, "TRUE",       (pfunc)v_true},
 #ifdef WINDOWS
- { CONSTTYP|INTTYP,    "WIN32?",   (pfunc)  v_true},
+ { CONSTTYP|INTTYP, "WIN32?",     (pfunc)v_true},
 #else
- { CONSTTYP|INTTYP,    "WIN32?",    (pfunc) v_false},
+ { CONSTTYP|INTTYP, "WIN32?",     (pfunc)v_false},
 #endif
 #ifndef WINDOWS
- { CONSTTYP|INTTYP,    "UNIX?",    (pfunc) v_true}
+ { CONSTTYP|INTTYP, "UNIX?",      (pfunc)v_true}
 #else
- { CONSTTYP|INTTYP,    "UNIX?",    (pfunc) v_false}
+ { CONSTTYP|INTTYP, "UNIX?",      (pfunc)v_false}
 #endif
 };
 const int anzsysvars=sizeof(sysvars)/sizeof(SYSVAR);
 
 
-/*Stringvariablen / Systemvariablen */
+/* system variables with return type <string> */
 
 #ifdef DUMMY_LIST
-#define vs_error NULL
-#define vs_date NULL
-#define vs_fileevent NULL
-#define vs_inkey NULL
+#define vs_error        NULL
+#define vs_date         NULL
+#define vs_fileevent    NULL
+#define vs_inkey        NULL
 #define vs_terminalname NULL
-#define vs_time NULL
-#define vs_trace NULL
+#define vs_time         NULL
+#define vs_trace        NULL
 #else
 STRING vs_error()       { return(create_string("<ERROR>")); }
-static STRING vs_inkey()       { return(create_string(inkey())); }
+static STRING vs_inkey(){ return(create_string(inkey())); }
 static STRING vs_date() {
   STRING ergebnis;
   time_t timec;
@@ -253,18 +253,13 @@ static STRING vs_fileevent() {
 }
 #endif
 
-const SYSSVAR syssvars[]= {  /* alphabetisch !!! */
- { PL_LEER,   "!nulldummy", vs_error},
- { PL_STRING, "DATE$", vs_date},
- { PL_STRING, "FILEEVENT$", vs_fileevent},
- { PL_STRING, "INKEY$", vs_inkey},
+const SYSSVAR syssvars[]= {  /* alphabetical order required !!! */
+ { PL_LEER,   "!nulldummy",    vs_error},
+ { PL_STRING, "DATE$",         vs_date},
+ { PL_STRING, "FILEEVENT$",    vs_fileevent},
+ { PL_STRING, "INKEY$",        vs_inkey},
  { PL_STRING, "TERMINALNAME$", vs_terminalname},
- { PL_STRING, "TIME$", vs_time},
- { PL_STRING, "TRACE$", vs_trace}
+ { PL_STRING, "TIME$",         vs_time},
+ { PL_STRING, "TRACE$",        vs_trace}
 };
 const int anzsyssvars=sizeof(syssvars)/sizeof(SYSSVAR);
-
-
-
-
-

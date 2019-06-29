@@ -1,13 +1,10 @@
-
-/* runtime.c Sachen fuer den Interpreter-Programmablauf (c) Markus Hoffmann*/
-
+/* runtime.c routines for the interpreter program flow control (c) Markus Hoffmann*/
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +30,7 @@ static void *obh;       /* old break handler  */
 
 PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 
-/* Standard-Fehlerroutine   */
+/* X11-Basic standard error routine */
 
 int globalerr=0;
 extern int program_adr;
@@ -58,25 +55,40 @@ static void run_bytecode_from_handler(int jumppc) {
   } else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
 }
 
+/* default error handler: stop program and print error message */
+static void default_error(char errnr, const char *bem) {
+  batch=0; /* Stop program */
+  if(pc>0) printf("ERROR at line %d: %s\n",original_line(pc-1),error_text(errnr,bem));
+  else if(program_adr) printf("ERROR at offset $%x: %s\n",program_adr,error_text(errnr,bem));
+  else printf("ERROR: %s\n",error_text(errnr,bem));
+#ifdef ANDROID
+  invalidate_screen();
+#endif
+}
+
+
+
+/* Evoke error handling. Either do a default action or trigger the 
+ * function which has been defined with ON ERROR GOSUB.
+ */
 
 void xberror(char errnr, const char *bem) {
-  extern int globalerr;
-  globalerr=errnr;
-  if(errcont) {   
-    errcont=0;
-    if(errorpc!=-1) {
+  globalerr=errnr; /*save error number for ERR system variable */
+  if(errcont) { /* ON ERROR CONT or ON ERROR GOSUB */
+    errcont=0; /* reset to default action for the next time */
+    if(errorpc!=-1) { /* ON ERROR GOSUB or GOTO */
       int osp=sp;
-      int pc2=errorpc;
-      if(errorpctype&8)       pc2=procs[pc2].zeile;
-      else if(errorpctype&16) pc2=labels[pc2].zeile;
+      int pc2=errorpc; /* Number of procedure or label */
+      if(errorpctype&8)       pc2=procs[pc2].zeile;  /* ON ERROR GOSUB */
+      else if(errorpctype&16) pc2=labels[pc2].zeile; /* ON ERROR GOTO */
       else if(errorpctype!=0) {
         printf("ERROR ERROR--> TODO errorpctype=%x\n",errorpctype);
-	batch=0;
+	batch=0; /* Stop program */
       }
       if((errorpctype&7)==0) {
         if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
         else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
-        programmlauf();
+        programmlauf();  /* run the error procedure */
 	
         if(osp!=sp) pc=stack[--sp]; /* wenn error innerhalb der func. */
       } else {
@@ -84,15 +96,7 @@ void xberror(char errnr, const char *bem) {
 	run_bytecode_from_handler(errorpc);
       }
     }
-  } else { 
-    batch=0;
-    if(pc>0) printf("ERROR at line %d: %s\n",original_line(pc-1),error_text(errnr,bem));
-    else if(program_adr) printf("ERROR at offset $%x: %s\n",program_adr,error_text(errnr,bem));
-    else printf("ERROR: %s\n",error_text(errnr,bem));
-#ifdef ANDROID
-    invalidate_screen();
-#endif
-  }
+  } else default_error(errnr,bem);
 }
 
 extern int breakcont;
@@ -123,9 +127,9 @@ static void break_handler( int signum) {
 	  run_bytecode_from_handler(breakpc);
 	}
       }
-    } else {
+    } else { /* default action */
       puts("** PROGRAM-STOP");
-      batch=0;
+      batch=0; /* stop program */
     }
     signal(signum, break_handler);
   } else {
@@ -211,7 +215,7 @@ static void fatal_error_handler( int signum) {
 #endif
 }
 
-
+/* Interrupt handler used for timer events, EVERY/AFTER*/
 
 static void timer_handler( int signum) {
   if(alarmpc==-1) {
@@ -220,45 +224,46 @@ static void timer_handler( int signum) {
 #else
     printf("** Uninitialized interrupt #%d \n",signum);
 #endif
-  } else {      
-      if(alarmpctype==0) {
-        int oldbatch,osp=sp,pc2;
-        pc2=procs[alarmpc].zeile;
-        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
-        else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
-        oldbatch=batch;batch=1;
-        programmlauf();
-        batch=min(oldbatch,batch);
-        if(osp!=sp) {
-  	  pc=stack[--sp]; /* wenn error innerhalb der func. */
-        }
-     } else if(alarmpctype==1) {
-       /* Bytecode: */
-       run_bytecode_from_handler(alarmpc);
-     } else {
-     // TODO:
-     	  void (*func)();	  
-	  func=(void *)INT2POINTER(alarmpc);
-	  func();
-     }
+  } else {
+    if(alarmpctype==0) {
+      int oldbatch,osp=sp,pc2;
+      pc2=procs[alarmpc].zeile;
+      if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
+      else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
+      oldbatch=batch;
+      batch=1;
+      programmlauf();
+      batch=min(oldbatch,batch);
+      if(osp!=sp) pc=stack[--sp]; /* wenn error innerhalb der func. */
+      
+    } else if(alarmpctype==1) {
+      /* Bytecode: */
+      run_bytecode_from_handler(alarmpc);
+    } else {
+      // TODO:
+      void (*func)();	  
+      func=(void *)INT2POINTER(alarmpc);
+      func();
+    }
   }
-  
   signal(signum, timer_handler);
   if(everyflag) alarm(everytime); 
 }
 
 
-/* Initialisierungsroutinen:
-   initialisiert Speicherbereiche für die library.
+/* initialized memory areas. Must be called before using any routines.
  */
 void libx11basic_init() {
-  expand_stack(); /* Stack initialisieren */
-  expand_vars();  /* Platz für Variablen initialisieren.*/
-  expand_procs();  /* Platz für Procedures initialisieren.*/
+  expand_stack();   /* Stack initialisieren */
+  expand_vars();    /* Platz für Variablen initialisieren.*/
+  expand_procs();   /* Platz für Procedures initialisieren.*/
   expand_labels();  /* Platz für Labels initialisieren.*/
 }
 
-/* Initialisiert Funktionen, die zur Laufzeit benötigt werden.  */
+/* initializes memory areas and 
+ * interrupt handlers, which are needed for 
+ * runing a program 
+ */
 void x11basicStartup() {
   libx11basic_init();
 #ifdef CONTROL  

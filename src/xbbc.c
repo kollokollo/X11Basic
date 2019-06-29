@@ -159,10 +159,9 @@ int save_bytecode(const char *name,char *adr,int len,char *dadr,int dlen) {
   
   if(write(fdis,strings.pointer,h.stringseglen)==-1) io_error(errno,"write strings");
 #ifdef IS_BIG_ENDIAN
-  int i;
   int n=h.symbolseglen/sizeof(BYTECODE_SYMBOL);
   if(n>0) {
-    for(i=0;i<n;i++) {
+    for(int i=0;i<n;i++) {
         LWSWAP((short *)&symtab[i].name);
         LWSWAP((short *)&symtab[i].adr);
     }

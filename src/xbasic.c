@@ -60,10 +60,9 @@
 #include "wort_sep.h"
 #include "bytecode.h"
 #include "virtual-machine.h"
-#include "graphics.h"
-#include "window.h"
 #include "number.h"
 #include "functions.h"
+#include "io.h"
 
 
 const char libversion[]=VERSION;           /* Programmversion           */
@@ -82,20 +81,18 @@ const char xbasic_name[]="fbxbasic";
 #else
 const char xbasic_name[]="xbasic";
 #endif
-int pc=0,sp=0,echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
+int echoflag=0,batch=0,errcont=0,breakcont=0,everyflag=0;
 int errorpc=-1,errorpctype=0,breakpc=-1,breakpctype=0;
 
 
 static int *linetable=NULL;   /* for correctly count splitted lines*/
-
-int usewindow=DEFAULTWINDOW;
-
 
 static int add_label(char *name,int zeile,int dataptr);
 static int add_proc(char *name,char *pars,int zeile,int typ);
 
 static int oldprglen=0;
 
+extern int verbose;
 
 /*return the original line (accounting for splitted lines) */
 int original_line(int i) {
@@ -256,34 +253,58 @@ char *bytecode_init(char *adr) {
   }
 }
 
+
+/*
+ * Check if this is a valid bytecode and if so, fix the values (according to 
+ * Endianess).
+ * Return: 0 -- OK
+ *        -1 -- no bytecode
+ *        -2 -- wrong bytecode version
+ */
+
 int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
   if(((char *)bytecode)[0]==BC_BRAs && ((char *)bytecode)[1]==sizeof(BYTECODE_HEADER)-2) {
-  #if DEBUG 
-    printf("Bytecode header found (V.%x)\n",bytecode->version);
-  #endif
-  #ifdef IS_BIG_ENDIAN
-  WSWAP((char *)&bytecode->version);
-  #endif
-  if(bytecode->version!=BC_VERSION) {
-    printf("ERROR: This bytecode was compiled for a different version of "
-    "X11-Basic.\n Please consider to recompile it from the .bas file.\n");
-    return(-1);
-  }
+    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    #ifdef IS_BIG_ENDIAN
+    WSWAP((char *)&bytecode->version);
+    #endif
+    if(bytecode->version!=BC_VERSION) {
+      printf("ERROR: This bytecode was compiled for a different version of "
+      "X11-Basic.\n Please consider to recompile it from the .bas file.\n");
+      return(-1);
+    }
 #ifdef IS_BIG_ENDIAN
-  LWSWAP((short *)&bytecode->textseglen);
-  LWSWAP((short *)&bytecode->rodataseglen);
-  LWSWAP((short *)&bytecode->sdataseglen);
-  LWSWAP((short *)&bytecode->dataseglen);
-  LWSWAP((short *)&bytecode->bssseglen);
-  LWSWAP((short *)&bytecode->symbolseglen);
-  LWSWAP((short *)&bytecode->stringseglen);
-  LWSWAP((short *)&bytecode->relseglen);
-  WSWAP((char *)&bytecode->flags);
+    LWSWAP((short *)&bytecode->textseglen);
+    LWSWAP((short *)&bytecode->rodataseglen);
+    LWSWAP((short *)&bytecode->sdataseglen);
+    LWSWAP((short *)&bytecode->dataseglen);
+    LWSWAP((short *)&bytecode->bssseglen);
+    LWSWAP((short *)&bytecode->symbolseglen);
+    LWSWAP((short *)&bytecode->stringseglen);
+    LWSWAP((short *)&bytecode->relseglen);
+    WSWAP((char *)&bytecode->flags);
 #endif
-  return(0);
+    return(0);
   } else return(-1);
 }
 
+/* make sure that the memory area allocated is large enough
+ * for bss segment.
+ * reallocates programbuffer, returns new progambufferlen.
+ */
+int bytecode_make_bss(BYTECODE_HEADER *bytecode,char **adr,int len) {
+  if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
+    len+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
+    *adr=realloc(*adr,len);
+  #ifdef ATARI
+    if(*adr==NULL) {
+      perror("malloc");
+      sleep(5);
+    }
+  #endif
+  }
+  return(len);
+}
 
 
 /* Routine zum Laden eines Programms */
@@ -316,15 +337,9 @@ int mergeprg(const char *fname) {
     BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)programbuffer;
 
     if(fix_bytecode_header((BYTECODE_HEADER *)programbuffer)) return(-1);
-    
-    /* Sicherstellen, dass der Speicherberiech auch gross genug ist fuer bss segment*/
-    if(bytecode->bssseglen>bytecode->relseglen+bytecode->stringseglen+bytecode->symbolseglen) {
-      programbufferlen+=bytecode->bssseglen-bytecode->stringseglen-bytecode->symbolseglen;
-      programbuffer=realloc(programbuffer,programbufferlen);
-    }
-    
+    programbufferlen=bytecode_make_bss(bytecode,&programbuffer,programbufferlen);
     if(bytecode_init(programbuffer)) return(0);
-    return(-1); /* stimmt was nicht. */
+    return(-1); /* something is wrong... */
   } else {
     
    /* Zeilenzahl herausbekommen */
@@ -409,25 +424,6 @@ static int find_comm_guess(const char *suchwort,int *guessa,int *guessb) {
   return(-1);
 }
 
-
-
-
-/*
- *  Entfernt ein Programm und alle Strukturen/Variablen aus dem Speicher, auch stack, 
- *  so dass ein neues Programm (bas oder bytecode) geladen werden kann. 
- */
-
-void clear_program() {
-  restore_all_locals();  /* sp=0 */
-  remove_all_variables();
-  if(!is_bytecode) free(databuffer);
-  is_bytecode=0;
-  databuffer=NULL;
-  databufferlen=0;
-  datapointer=0;
-  clear_labelliste();
-  clear_procliste();
-}
 
 
 
@@ -964,29 +960,6 @@ static int add_label(char *name,int zeile,int dataptr) {
   }
 }
 
-/*Raeume pcode-Struktur auf und gebe Speicherbereiche wieder frei.*/
-
-void free_pcode(int l) {
-  while(l>0) {
-    l--;
-    if(pcode[l].ppointer!=NULL) {
-      free_pliste(pcode[l].panzahl,pcode[l].ppointer);
-      pcode[l].ppointer=NULL;
-    }
-    if(pcode[l].rvalue!=NULL) {
-      free_parameter(pcode[l].rvalue);
-      free(pcode[l].rvalue);
-      pcode[l].rvalue=NULL;
-    }
-    free(pcode[l].argument);
-    free(pcode[l].extra);
-    pcode[l].argument=NULL;
-    pcode[l].extra=NULL;
-    pcode[l].panzahl=0;
-  }
-  if(pcode) free(pcode);
-  pcode=NULL;
-}
 
 
 /* Bereitet die Variablenliste einer Procedur oder Funktion vor */
@@ -1194,18 +1167,22 @@ void kommando(char *cmd) {
  * durch das Programm.
  */
 
+
+void run_bytecode(char *adr,int len) {
+  STRING bcpc;  /* Bytecode holder */
+  bcpc.pointer=adr;
+  bcpc.len=len;
+  if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
+  if(verbose>1) memdump((unsigned char *)bcpc.pointer,bcpc.len);
+  int n;
+  PARAMETER *p=virtual_machine(bcpc,0,&n,NULL,0);
+  dump_parameterlist(p,n);  
+  free_pliste(n,p);
+}
+
 void programmlauf(){
-  if(is_bytecode) { 
-  #if DEBUG
-    printf("Virtual Machine: %d bytes.\n",programbufferlen);
-  #endif
-    STRING bcpc;  /* Bytecode holder */
-    bcpc.pointer=programbuffer;
-    bcpc.len=programbufferlen;
-    int n;
-    PARAMETER *p=virtual_machine(bcpc,0,&n,NULL,0);
-    dump_parameterlist(p,n);  
-    free_pliste(n,p);
+  if(is_bytecode) {
+    run_bytecode(programbuffer,programbufferlen);
     return;
   }
   int opc;
@@ -1346,27 +1323,3 @@ void programmlauf(){
   }
 }
 
-/* X11-Baisic interpreter beenden und aufräumen. */
-
-void quit_x11basic(int c) {
-#ifdef ANDROID
-  invalidate_screen();
-  sleep(1);
-#endif
-#ifndef NOGRAPHICS
-  close_window(&window[usewindow]); 
-#endif
-  /* Aufr"aumen */
-  clear_program();
-  free_pcode(prglen);
-  if(programbuffer) free(programbuffer);
- // if(program) free(program); machen wir nicht, gibt aerger beim xbc - compiler
-#ifdef CONTROL
-  cs_exit();
-#endif
-#ifdef USE_GEM
-// APPL_EXIT
-// close VDI workstation
-#endif
-  exit(c); 
-}

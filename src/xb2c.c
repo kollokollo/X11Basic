@@ -628,35 +628,35 @@ static void translate(FILE *optr) {
     case BC_LOCAL:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"LOCAL(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"LOCAL(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEISi:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"ZUWEISi(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEISf:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"ZUWEISf(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEISc:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"ZUWEISc(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
     case BC_ZUWEIS:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"ZUWEIS(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"ZUWEIS(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
@@ -668,7 +668,7 @@ static void translate(FILE *optr) {
     case BC_PUSHV:
       CP2(&ss,&bcpc[i],i);
       if(ss==-1) {
-        printf("Error, Variable gibts nicht.\n");
+        printf("ERROR, variable does not exist.\n");
 	fprintf(optr,"PUSHV(%d); /* ERROR */\n",ss);
       } else fprintf(optr,"PUSHV(%d); /* %s */\n",ss,&strings[symtab[vidx[ss]].name]);
       break;
@@ -745,7 +745,7 @@ static int loadbcprg(char *filename, FILE *optr) {
     if(bytecode->version!=BC_VERSION) {
       printf("xb2c: ERROR: Cannot translate this bytecode.\n"
       "This bytecode was compiled for a different version (%04x) of "
-      "X11-Basic.\nPlease consider to recompile it.\n",bytecode->version);
+      "X11-Basic.\n",bytecode->version);
       return(-1);
     }
 #ifdef IS_BIG_ENDIAN

@@ -244,7 +244,7 @@ char *indirekt2(const char *funktion);
 unsigned int type_list(const char *ausdruck);
 
 void free_pcode(int l);
-
+void newprg();
 
 extern int stack_size;
 extern VARIABLE **lvar;

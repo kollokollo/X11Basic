@@ -228,8 +228,6 @@ typedef struct {
 } PROCEDURE;
 
 
-
-
 /* Globale Variablen */
 
 extern int databufferlen;
@@ -290,6 +288,7 @@ int loadprg(const char *);
 int mergeprg(const char *fname);
 
 void programmlauf();
+void run_bytecode(char *,int);
 
 void do_run();
 void do_help(const char *);
@@ -392,6 +391,12 @@ int doocssize(char *);
 #endif
 int v_ccserr();
 
+#if defined FRAMEBUFFER && !defined ANDROID
+extern char fbdevname[];
+extern char mousedevname[];
+extern char keyboarddevname[];
+#endif
+
 /* API for The virtual machine */
 
 int pusharg(PARAMETER **opstack, char *typ,...);
@@ -400,6 +405,16 @@ double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...);
 
+/* important prototypes (repetitions) so that only x11basic.h need to be
+   included for normal cases.... 
+ */
+
+int wort_sep(const char *t,char c,int klamb ,char *w1, char *w2);
+void xtrim(const char *t,int f, char *w);
+STRING inhexs(const char *n);
+int exist(const char *);
+size_t lof(FILE *);
+size_t bload(const char *, char *, size_t);
 
 #endif
 

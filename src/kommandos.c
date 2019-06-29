@@ -317,10 +317,7 @@ static void c_clear(PARAMETER *plist,int e){
 }
 
 void c_new(const char *n) {
-  c_stop();
-  clear_program();
-  free_pcode(prglen);
-  programbufferlen=prglen=pc=0;
+  newprg();
   strcpy(ifilename,"new.bas");
   graphics_setdefaults();
 }
@@ -865,10 +862,7 @@ static void c_merge(PARAMETER *plist, int e){
 
 /*LOAD: altes Programm stoppen und loeschen.*/
 static void c_load(PARAMETER *plist, int e) { 
-  batch=0;   /* Stoppen */
-  clear_program();  /*Stack und databuffer aufräumen, locals, variablen, labels, procs loeschen, */
-  free_pcode(prglen);  /*pcode aufraeumen*/
-  programbufferlen=prglen=pc=0;
+  newprg();
   c_merge(plist,e); 
 }
 static void c_chain(PARAMETER *plist,int e){ c_load(plist,e); do_run(); }
@@ -1748,8 +1742,8 @@ static void c_absolute(PARAMETER *plist,int e) {
 
 
 static void c_add(PARAMETER *plist,int e) {
-  int vnr=plist->integer;
-  char *varptr=plist->pointer;
+  const int vnr=plist->integer;
+  const char *varptr=plist->pointer;
   int typ=variablen[vnr].typ;
   if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
   switch(typ) {
@@ -1778,8 +1772,8 @@ static void c_add(PARAMETER *plist,int e) {
   }
 }
 static void c_sub(PARAMETER *plist,int e) {
-  int vnr=plist->integer;
-  char *varptr=plist->pointer;
+  const int vnr=plist->integer;
+  const char *varptr=plist->pointer;
   int typ=variablen[vnr].typ;
   if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
   switch(typ) {
@@ -1798,8 +1792,8 @@ static void c_sub(PARAMETER *plist,int e) {
   }
 }
 static void c_mul(PARAMETER *plist,int e) {
-  int vnr=plist->integer;
-  char *varptr=plist->pointer;
+  const int vnr=plist->integer;
+  const char *varptr=plist->pointer;
   int typ=variablen[vnr].typ;
   if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
   switch(typ) {
@@ -1818,8 +1812,8 @@ static void c_mul(PARAMETER *plist,int e) {
   }
 }
 static void c_div(PARAMETER *plist,int e) {
-  int vnr=plist->integer;
-  char *varptr=plist->pointer;
+  const int vnr=plist->integer;
+  const char *varptr=plist->pointer;
   int typ=variablen[vnr].typ;
   if(typ==ARRAYTYP) typ=variablen[vnr].pointer.a->typ;
   switch(typ) {

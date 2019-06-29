@@ -238,11 +238,13 @@ typedef struct {
 //#define BC_LINE        1
 
 /* Protos */
-
+int bytecode_make_bss(BYTECODE_HEADER *bytecode,char **,int );
 PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 void compile(int verbose);
 int bc_parser(const char *funktion);
 int add_rodata(char *data,int len);
+int fix_bytecode_header(BYTECODE_HEADER *bytecode);
+char *bytecode_init(char *adr);
 
 #if 0
 int vm_add(PARAMETER *sp);

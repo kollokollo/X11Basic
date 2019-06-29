@@ -42,6 +42,7 @@
 /* globale Variablen */
 
 WINDOWDEF window[MAXWINDOWS];
+int usewindow=DEFAULTWINDOW;
 
 
 /* GEM-Globals   */

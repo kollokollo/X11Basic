@@ -1,4 +1,4 @@
-/* number.c   Numerische Hilfsfunktionen (c) Markus Hoffmann*/
+/* number.c   functions fornumber processing and conversion (c) Markus Hoffmann*/
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -19,7 +19,7 @@
 #include "variablen.h"
 #include "number.h"
 
-
+/* Decode hexadecimal number to int  */
 static int atohex(char *n) {
   int value=0;
   while(*n) {
@@ -30,6 +30,27 @@ static int atohex(char *n) {
     n++;
   }
   return(value);
+}
+/* Decode hex-encoded binary data */
+
+STRING inhexs(const char *n) {
+  const int l=strlen(n);
+  STRING ergebnis;
+  ergebnis.len=(l+1)/2;
+  ergebnis.pointer=malloc(ergebnis.len+1);  
+  unsigned int value=0;
+  int i=0;
+  while(*n) {
+    value<<=4;
+    if(v_digit(*n)) value+=(int)(*n-'0');
+    else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
+    else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
+    n++;
+    if((i&1)) (ergebnis.pointer)[i>>1]=(value&0xff);
+    i++;
+  }
+  (ergebnis.pointer)[ergebnis.len]=0;
+  return(ergebnis);
 }
 
 
@@ -42,11 +63,15 @@ static int atobin(char *n) {
   }
   return(value);
 }
+
+/* count number of hexadecimal digits in string n */
 static int atohexc(char *n) {
   int i=0;
   while(*n && (v_digit(*n) || (*n>='a' && *n<='f') || (*n>='A' && *n<='F'))) {i++;n++;}
   return(i);
 }
+
+/* count number of binary digits in string n */
 static int atobinc(char *n) {
   int i=0;
   while(*n && (*n=='0' || *n=='1')) {i++;n++;}
@@ -265,6 +290,7 @@ int f_fak(int k) {
   return(s);
 }
 #endif
+
 /* Operationen zum COMPLEX Datentyp */
 
 COMPLEX complex_add(COMPLEX a, COMPLEX b) {
@@ -279,13 +305,6 @@ COMPLEX complex_sub(COMPLEX a, COMPLEX b) {
   c.i=a.i-b.i;
   return(c);
 }
-COMPLEX complex_neg(COMPLEX a) {
-  a.r=-a.r;
-  a.i=-a.i;
-  return(a);
-}
-double complex_real(COMPLEX a) {return(a.r);}
-double complex_imag(COMPLEX a) {return(a.i);}
 
 COMPLEX complex_mul(COMPLEX a, COMPLEX b) {
   COMPLEX c;
@@ -338,20 +357,16 @@ STRING COMPLEXtoSTRING(COMPLEX a) {
 }
 
 
-
-
-/* 32 Bit Checksumme */
+/* 32 Bit checksum algorithm */
 
 static unsigned long crc_table[256];  /* Table of CRCs of all 8-bit messages. */
 static int crc_table_computed = 0;    /* Flag: has the table been computed? Initially false. */
 
 static void make_crc_table(void){    /* Make the table for a fast CRC. */
   unsigned long c;
-  int n, k;
-  
-  for(n=0;n<256;n++) {
+  for(int n=0;n<256;n++) {
     c=(unsigned long)n;
-    for(k=0;k<8;k++) {
+    for(int k=0;k<8;k++) {
       if(c&1) c=0xedb88320L^(c>>1);
       else c=c>>1;
     }
@@ -363,14 +378,7 @@ static void make_crc_table(void){    /* Make the table for a fast CRC. */
 
 unsigned long update_crc(unsigned long crc, unsigned char *buf, int len) {
   unsigned long c=crc^0xffffffffL;
-  int n;
-
   if(!crc_table_computed) make_crc_table();
-  for(n=0;n<len;n++) c=crc_table[(c^buf[n])&0xff]^(c>>8);
+  for(int n=0;n<len;n++) c=crc_table[(c^buf[n])&0xff]^(c>>8);
   return c^0xffffffffL;
 }
-
-
-
-
-

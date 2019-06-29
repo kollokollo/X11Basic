@@ -1,13 +1,10 @@
-/* MAIN.C                                           (c) Markus Hoffmann
-
-*/
+/* MAIN.C  for the X11-Basic interpreter xbasic (c) Markus Hoffmann */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ======================================================================
- * X11BASIC is free software and comes with NO WARRANTY - read the file
- * COPYING for details
+ * ================================================================
+ * X11BASIC is free software and comes with NO WARRANTY - 
+ * read the file COPYING for details.
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,19 +33,17 @@
 
 #include "defs.h"
 #include "x11basic.h"
-#include "wort_sep.h"
-#include "file.h"
 #ifdef ANDROID
   #include "terminal.h"
 #endif
 #ifdef WINDOWS
   #include <windows.h>
 #endif
+
 #ifdef WINDOWS_NATIVE
   HINSTANCE hInstance;
 #endif
 
-char *do_gets (char *);
 
 #ifndef ANDROID
 static
@@ -81,73 +76,9 @@ void intro() {
 	     xbasic_name,libversion,libvdate);
 }
 #else
-
-#ifdef NOGRAPHICS
-  #define FEATURE1 "txt "
-#elif defined USE_X11
-  #define FEATURE1 "x11 "
-#elif defined USE_SDL
-  #define FEATURE1 "sdl "
-#elif defined FRAMEBUFFER
-  #define FEATURE1 "fb  "
-#elif defined USE_GEM
-  #define FEATURE1 "gem "
-
-#else
-  #define FEATURE1 "    "
-#endif
-
-#ifdef HAVE_LAPACK
-  #define FEATURE2 "la  "
-#else
-  #define FEATURE2 "    "
-#endif
-
-#ifdef HAVE_READLINE
-  #define FEATURE3 "rl  "
-#else
-  #define FEATURE3 "    "
-#endif
-
-#ifdef HAVE_GMP
-  #define FEATURE4 "gmp "
-#else
-  #define FEATURE4 "    "
-#endif
-#ifdef HAVE_FFTW
-  #define FEATURE5 "fft "
-#else
-  #define FEATURE5 "    "
-#endif
-#ifdef HAVE_WIRINGPI
-  #define FEATURE6 "Pi  "
-#else
-  #define FEATURE6 "    "
-#endif
-#ifdef HAVE_ALSA
-  #define FEATURE7 "snd "
-#else
-  #define FEATURE7 "    "
-#endif
-#ifdef HAVE_USB
-  #define FEATURE8 "usb "
-#else
-  #define FEATURE8 "    "
-#endif
-#ifdef HAVE_BLUETOOTH
-  #define FEATURE9 "bt  "
-#else
-  #define FEATURE9 "    "
-#endif
-#ifdef HAVE_GCRYPT
-  #define FEATURE10 "cry "
-#else
-  #define FEATURE10 "    "
-#endif
-
 static void intro() {
   printf("**********************************************************\n"
-         "*    %10s                     V.%5s              *\n"
+         "*    %10s                     V." VERSION "              *\n"
          "*                       by Markus Hoffmann 1997-2019 (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
@@ -163,14 +94,9 @@ static void intro() {
          "* library V.%s date:    %30s *\n"
 #endif
          "**********************************************************\n\n",
-	     xbasic_name,VERSION,VERSION_DATE,libversion,libvdate);
+	     xbasic_name,VERSION_DATE,libversion,libvdate);
 }
 
-#endif
-#if defined FRAMEBUFFER && !defined ANDROID
-extern char fbdevname[];
-extern char mousedevname[];
-extern char keyboarddevname[];
 #endif
 
 static void usage() {
@@ -226,8 +152,7 @@ static
 #endif
 void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
-
-  /* Kommandozeile bearbeiten   */
+  /* process command line parameters */
   runfile=TRUE;
   for(count=1;count<anzahl;count++) {
     if(!strcmp(argumente[count],"-l") || !strcmp(argumente[count],"--load-only")) runfile=FALSE;
@@ -235,7 +160,13 @@ void kommandozeile(int anzahl, char *argumente[]) {
       printf("%.13g\n",parser(argumente[++count]));
       quitflag=1;
     } else if(!strcmp(argumente[count],"-e") || !strcmp(argumente[count],"--exec")) {
-      kommando(argumente[++count]);
+      char *p=argumente[++count];
+      if(*p==':') { /* If it is hex-coded bytecode, load and run it...*/
+        STRING bcpc=inhexs(p+1);
+	// memdump(bcpc.pointer,bcpc.len);
+  	do_run(); /*set variables etc to zero */
+  	run_bytecode(bcpc.pointer,bcpc.len);
+      } else kommando(p);
       quitflag=1;
     } else if(!strcmp(argumente[count],"-h")) {
       intro();
@@ -273,8 +204,8 @@ void kommandozeile(int anzahl, char *argumente[]) {
         strcpy(ifilename,argumente[count]);
       }
     }
-   }
-   if(quitflag) quit_x11basic(EX_OK);
+  }
+  if(quitflag) quit_x11basic(EX_OK);
 }
 
 
@@ -287,11 +218,13 @@ int main(int anzahl, char *argumente[]) {
 #ifdef WINDOWS_NATIVE
   hInstance=GetModuleHandle(NULL);
 #endif
+
   x11basicStartup();   /* initialisieren   */
   set_input_mode(1,0);  /* Terminalmode auf noncanonical, no echo */
   (void) atexit(reset_input_mode);
   param_anzahl=anzahl;
   param_argumente=argumente;
+
   if(anzahl<2) {    /* Kommandomodus */
     intro();
     batch=0;

@@ -1,4 +1,4 @@
-/* keywords.c (c) Markus Hoffmann             */
+/* keywords.c defines some of the X11-Basic keywords (c) Markus Hoffmann             */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================

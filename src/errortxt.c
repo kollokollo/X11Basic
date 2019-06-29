@@ -9,14 +9,15 @@
 #include "options.h"
 #include <stdio.h>
 
-/* This is the list of official error messages liked to a number
-   (see the command reference for ERROR <n>). Positive numbers correspond to
-   X11-Basic ruintime errors, negative numbers correspond to system errors
-
-   The translation is not complete. The length of the Messages 
-   (including any possible inserted stings) can not 
-   exceed MAXERRORTXTLEN.
-   */
+/* This is the list of official error messages for X11-Basic linked to 
+ * an error number (see the command reference for ERROR <n>). 
+ * Positive numbers correspond to X11-Basic ruintime errors, 
+ * negative numbers correspond to system errors.
+ * 
+ * The translations to german is not complete. 
+ * The length of the messages (including any possible inserted stings) 
+ * can not exceed MAXERRORTXTLEN.
+ */
 
 
 #define MAXERRORTXTLEN 128
@@ -521,7 +522,7 @@ const char *errortxt[] = {
 const char *error_text(unsigned char errnr, const char *bem) {
   if(bem) {
     static char errbuffer[MAXERRORTXTLEN];
-    snprintf(errbuffer,MAXERRORTXTLEN,errortxt[errnr],bem );
+    snprintf(errbuffer,sizeof(errbuffer),errortxt[errnr],bem);
     return(errbuffer);
   } else return(errortxt[errnr]);
 }

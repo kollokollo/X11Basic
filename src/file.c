@@ -1,7 +1,6 @@
 /* file.c  (c) Markus Hoffmann   */
 /* Extensions for the standard file i/o operations.
-   Erweiterungen fuer die Datei Ein- und Ausgabe ....   */
-
+ */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ================================================================
@@ -27,21 +26,30 @@
 
 void io_error(int,char *);
 
-char *lineinput( FILE *n, char *line,int size) {   /* liest eine ganze Zeile aus einem ASCII-File ein */
+/* read a whole line from an open (ASCII) file n 
+ * reads until \n or EOF 
+ * reads at maximum size bytes. */
+
+char *lineinput(FILE *n, char *line,int size) {
   int c; int i=0;
   while((c=fgetc(n))!=EOF) {
-      if(c==(int)'\n') {
-	  line[i]=(int)'\0';
-	  return line;
-	}
-	else line[i++]=(char)c;
-	if(i>=size-1) break;
-    }
-    line[i]='\0';
-    return line;
+    if(c==(int)'\n') {
+      line[i]=(int)'\0';
+      return line;
+    } else line[i++]=(char)c;
+    if(i>=size-1) break;
+  }
+  line[i]='\0';
+  return line;
 }
 
-char *input(FILE *n, char *line,int size) {   /* liest bis Komma oder Zeilenende aus einem ASCII-File ein */
+/* reads from an open (ASCII) file n 
+ * until comma \n or EOF
+ * If parts of the data is encloses in "", 
+ * do not stop at commas inside the enclosing.
+ * reads at maximum size bytes. */
+
+char *input(FILE *n, char *line,int size) {
   int c; 
   int  i=0,ff=0;
   while((c=fgetc(n))!=EOF) {

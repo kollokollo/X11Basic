@@ -7,6 +7,7 @@
  * COPYING for details
  */
 
+STRING inhexs(const char *n);
 int myisatof(char *n);
 int myatofc(char *n);
 double myatof(char *n);
@@ -21,9 +22,15 @@ COMPLEX complex_sub(COMPLEX a, COMPLEX b);
 COMPLEX complex_mul(COMPLEX a, COMPLEX b);
 COMPLEX complex_div(COMPLEX a, COMPLEX b);
 COMPLEX complex_pow(COMPLEX a, COMPLEX b);
-COMPLEX complex_neg(COMPLEX a);
-double complex_real(COMPLEX a);
-double complex_imag(COMPLEX a);
+
+inline static COMPLEX complex_neg(COMPLEX a) {
+  a.r=-a.r;
+  a.i=-a.i;
+  return(a);
+}
+
+inline static double complex_real(COMPLEX a) {return(a.r);}
+inline static double complex_imag(COMPLEX a) {return(a.i);}
 
 
 STRING INTtoSTRING(int n);

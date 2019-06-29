@@ -1,4 +1,4 @@
-/* io_basic.c I/O_Routinen  (c) Markus Hoffmann  */
+/* io_basic.c I/O routines  (c) Markus Hoffmann  */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -21,8 +21,8 @@
 
 
 /* This is a handy helper function which prints out a 
-   hex dump of the memory arey pointed to by adr of length l
-   The output is in magenta and fints on a 80 char screen.
+   hex dump of the memory area pointed to by adr of length l
+   The output is in magenta and fits on a 80 char screen.
    (c) by Markus Hoffmann 1997 */
 
 void memdump(const unsigned char *adr,int l) {
@@ -31,12 +31,12 @@ void memdump(const unsigned char *adr,int l) {
   while(l>16) {
     printf("%p: ",(void *)adr);	
     for(i=0;i<16;i++) printf("%02x ",adr[i]);
-    printf(" ");
+    putchar(' ');
     for(i=0;i<16;i++) {
-      if(adr[i]>31) printf("%c",adr[i]);
-      else printf(".");
+      if(adr[i]>31) putchar(adr[i]);
+      else putchar('.');
     }
-    printf("\n");
+    putchar('\n');
     adr+=16;
     l-=16;
   }
@@ -46,12 +46,12 @@ void memdump(const unsigned char *adr,int l) {
       if(i<l) printf("%02x ",adr[i]);
       else printf("   ");
     }
-    printf(" ");
+    putchar(' ');
     for(i=0;i<l;i++) {
-      if(adr[i]>31) printf("%c",adr[i]);
-      else printf(".");
+      if(adr[i]>31) putchar(adr[i]);
+      else putchar('.');
     }
-    printf("\n");
+    putchar('\n');
   }
   printf("\033[m");
 #ifdef ANDROID
@@ -157,13 +157,12 @@ static const struct {int sf; char xf; } ioemaptable[] = {
 static const int anztabs=sizeof(ioemaptable)/sizeof(struct {int sf; char xf; });
   
 void io_error(int n, const char *s) {
-  int i;
-  for(i=0;i<anztabs;i++) {
+  for(int i=0;i<anztabs;i++) {
     if(n==ioemaptable[i].sf) {
       xberror(ioemaptable[i].xf,s);
       return;    
     }
   }
   printf("errno=%d\n",n);
-  xberror(-1,s);  /* Allgemeiner IO-Fehler */
+  xberror(-1,s);  /* general IO error */
 }
