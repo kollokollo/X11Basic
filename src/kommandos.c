@@ -1533,68 +1533,88 @@ void c_dump(PARAMETER *plist,int e) {
 
 static void c_end() { batch=0; pc=0; close_all_files();}
 
+
+/* Handles ON ERROR  {GOTO|GOSUB|CONT} proc/label
+           ON BREAK  {GOTO|GOSUB|CONT} proc/label
+	   ON MENU   [{GOSUB} proc/label]
+ */
+
 static void c_onbreakerrormenugosub(PARAMETER *plist,int e) {
-  int f=plist->arraytyp;
-  if(f==KEYW_BREAK) {
-    if(e==1) { breakcont=0; return; }
-    breakpc=plist[1].integer; /*Proc nummer*/
-    breakpctype=plist[1].arraytyp|8;
+  switch(plist->arraytyp) {
+  case KEYW_BREAK: 
+    if(e==1) { breakcont=0; return; }  /* ON BREAK */
+    breakpc=plist[1].integer;   /* Proc nummer*/
+    breakpctype=8|plist[1].arraytyp;
     breakcont=1;
-  } else if(f==KEYW_ERROR) {
+    return;
+  case KEYW_ERROR:
     if(e==1) { errcont=0; return; } 
     errorpc=plist[1].integer; /*Proc nummer*/
-    errorpctype=plist[1].arraytyp|8;
+    errorpctype=8|plist[1].arraytyp;
     errcont=1;
+    return;
 #ifndef NOGRAPHICS
-  } else if(f==KEYW_MENU) {
+  case KEYW_MENU:
     if(e==1) { c_menu(""); return;}
     menuaction=plist[1].integer; /*Proc nummer*/
     menuactiontype=plist[1].arraytyp;
+    return;
 #endif
-  } else xberror(32,"ON ??"); /* Syntax error */
+  default:
+    xberror(32,"ON ??"); /* Syntax error */
+  }
 }
 static void c_onbreakerrormenugoto(PARAMETER *plist,int e) {
-  int f=plist->arraytyp;
-  if(f==KEYW_BREAK) {
+  switch(plist->arraytyp) {
+  case KEYW_BREAK: 
     if(e==1) { breakcont=0; return; }
     breakpc=plist[1].integer; /*Label */
-    breakpctype=plist[1].arraytyp|16;
+    breakpctype=16|plist[1].arraytyp;
     breakcont=1;
-  } else if(f==KEYW_ERROR) {
+    return;
+  case KEYW_ERROR:
     if(e==1) { errcont=0; return; } 
     errorpc=plist[1].integer; /*Label */
-    errorpctype=plist[1].arraytyp|16;
+    errorpctype=16|plist[1].arraytyp;
     errcont=1;
+    return;
 #ifndef NOGRAPHICS
-  } else if(f==KEYW_MENU) {
+  case KEYW_MENU:
     if(e==1) { c_menu(""); return;}
     xberror(32,"ON MENU"); /* Syntax error */
+    return;
 #endif
-  } else xberror(32,"ON ??"); /* Syntax error */
+  default:
+    xberror(32,"ON ??"); /* Syntax error */
+  }
 }
 static void c_onbreakerrormenuother(PARAMETER *plist,int e) {
-  int f1=plist->arraytyp;
   if(e==2 && plist[1].typ==PL_LEER) e=1;
   if(e==2 && plist[1].arraytyp==KEYW_NONE) e=1;
-  
-  if(f1==KEYW_BREAK) {
+  switch(plist->arraytyp) {
+  case KEYW_BREAK: 
     if(e==1) { breakcont=0; return; }
     if(plist[1].arraytyp==KEYW_CONT) {
       breakcont=1;
       breakpc=-1;
     } else xberror(32,"ON BREAK"); /* Syntax error */
-  } else if(f1==KEYW_ERROR) {
+    return;
+  case KEYW_ERROR:
     if(e==1) { errcont=0; return; }
     if(plist[1].arraytyp==KEYW_CONT) {
       errcont=1;
       errorpc=-1;
     } else xberror(32,"ON ERROR"); /* Syntax error */
+    return;
 #ifndef NOGRAPHICS
-  } else if(f1==KEYW_MENU) {
+  case KEYW_MENU:
     if(e==1) { c_menu(""); return;} 
     xberror(32,"ON MENU"); /* Syntax error */
+    return;
 #endif
-  } else xberror(32,"ON ??"); /* Syntax error */
+  default:
+    xberror(32,"ON ??"); /* Syntax error */
+  }
 }
 
 static void gosubproc(int pc2,int type) {
@@ -1669,48 +1689,58 @@ static void c_on(const char *n) {
   char w1[strlen(n)+1],w2[strlen(n)+1],w3[strlen(n)+1];
   int e=wort_sep(n,' ',TRUE,w1,w2);
   int mode=0;
-  if(e==0) xberror(32,"ON"); /* Syntax error */
-  else {
-    wort_sep(w2,' ',TRUE,w2,w3);
-    if(strcmp(w2,"CONT")==0) mode=1;
-    else if(strcmp(w2,"GOTO")==0) mode=2;
-    else if(strcmp(w2,"GOSUB")==0) mode=3;
-    else mode=0;
+  if(e==0) {
+    xberror(32,"ON"); /* Syntax error */
+    return;
+  }
+  wort_sep(w2,' ',TRUE,w2,w3);
+
+  if(!strcmp(w2,"CONT")) mode=1;
+  else if(!strcmp(w2,"GOTO")) mode=2;
+  else if(!strcmp(w2,"GOSUB")) mode=3;
     
-    if(strcmp(w1,"ERROR")==0) {
-      errcont=(mode>0);
-      if(mode==2) errorpc=labelzeile(w3);
-      else if(mode==3) {
-        errorpc=procnr(w3,1);
-	if(errorpc!=-1) errorpc=procs[errorpc].zeile;      
-      }
-    } else if(strcmp(w1,"BREAK")==0) {
-      breakcont=(mode>0);
-      if(mode==2) breakpc=labelzeile(w3);
-      else if(mode==3) {
-        breakpc=procnr(w3,1);
-	if(breakpc!=-1) breakpc=procs[breakpc].zeile;
-      }
+  if(!strcmp(w1,"ERROR")) {
+    errcont=(mode>0);
+    if(mode==1) errorpctype=0;
+    else if(mode==2) {
+      errorpctype=16;
+      errorpc=labelzeile(w3);
+    } else if(mode==3) {
+      errorpc=procnr(w3,1);
+      if(errorpc!=-1) errorpc=procs[errorpc].zeile;
+      errorpctype=8;      
+    }
+    return;
+  } 
+  if(strcmp(w1,"BREAK")==0) {
+    breakcont=(mode>0);
+    if(mode==2) breakpc=labelzeile(w3);
+    else if(mode==3) {
+      breakpc=procnr(w3,1);
+      if(breakpc!=-1) breakpc=procs[breakpc].zeile;
+    }
+    return;
+  }
 #ifndef NOGRAPHICS 
-    } else if(strcmp(w1,"MENU")==0) {
-      if(mode==0)  c_menu("");  
-      else if(mode==3) {
-       int pc2=procnr(w3,1);
-       if(pc2==-1) xberror(19,w3); /* Procedure nicht gefunden */
-       else menuaction=pc2;
-      } else  xberror(32,w1);  /* Syntax Error */
+  if(strcmp(w1,"MENU")==0) {
+    if(mode==0)  c_menu("");  
+    else if(mode==3) {
+      int pc2=procnr(w3,1);
+      if(pc2==-1) xberror(19,w3); /* Procedure nicht gefunden */
+      else menuaction=pc2;
+    } else  xberror(32,w1);  /* Syntax Error */
+    return;
+  }
 #endif
-    } else { /* on n goto ...  */
-      if(mode<2) xberror(32,w1);  /* Syntax Error */
-      else {
-        int gi=max(0,(int)parser(w1));
-	if(gi) {
-	  while(gi) { e=wort_sep(w3,',',TRUE,w2,w3); gi--;}
-	  if(e) {
-            if(mode==3) c_gosub(w2);
-	    else if(mode==2) c_goto(w2);
-          }
-	}
+  /* on n goto/gosub ...  */
+  if(mode<2) xberror(32,w1);  /* Syntax Error */
+  else {
+    int gi=max(0,(int)parser(w1));
+    if(gi) {
+      while(gi) { e=wort_sep(w3,',',TRUE,w2,w3); gi--;}
+      if(e) {
+  	if(mode==3) c_gosub(w2);
+    	else if(mode==2) c_goto(w2);
       }
     }
   }

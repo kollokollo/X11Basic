@@ -31,11 +31,32 @@
 
 static void *obh;       /* old break handler  */
 
+PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 
 /* Standard-Fehlerroutine   */
 
 int globalerr=0;
 extern int program_adr;
+
+static void run_bytecode_from_handler(int jumppc) {
+  batch=1;
+  int n;
+  PARAMETER par[1];
+
+  STRING bcpc;
+  bcpc.pointer=programbuffer;
+  bcpc.len=programbufferlen;
+  par[0].integer=0;
+  par[0].typ=PL_INT;
+  par[0].panzahl=0;
+  par[0].ppointer=NULL;
+
+  sp++;
+  stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
+  virtual_machine(bcpc,jumppc, &n,par,1);
+  sp--;	
+}
+
 
 void xberror(char errnr, const char *bem) {
   extern int globalerr;
@@ -45,10 +66,10 @@ void xberror(char errnr, const char *bem) {
     if(errorpc!=-1) {
       int osp=sp;
       int pc2=errorpc;
-      if(errorpctype==8) pc2=procs[pc2].zeile;
-      else if(errorpctype==16) pc2=labels[pc2].zeile;
+      if(errorpctype&8)       pc2=procs[pc2].zeile;
+      else if(errorpctype&16) pc2=labels[pc2].zeile;
       else if(errorpctype!=0) {
-        printf("ERROR ERROR--> TODO\n");
+        printf("ERROR ERROR--> TODO errorpctype=%x\n",errorpctype);
 	batch=0;
       }
       if((errorpctype&7)==0) {
@@ -56,9 +77,10 @@ void xberror(char errnr, const char *bem) {
         else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
         programmlauf();
 	
-        if(osp!=sp) {
-	  pc=stack[--sp]; /* wenn error innerhalb der func. */
-        }
+        if(osp!=sp) pc=stack[--sp]; /* wenn error innerhalb der func. */
+      } else {
+        /* Bytecode: */
+	run_bytecode_from_handler(errorpc);
       }
     }
   } else { 
@@ -95,6 +117,9 @@ static void break_handler( int signum) {
           if(osp!=sp) {
 	    pc=stack[--sp]; /* wenn error innerhalb der func. */
           }
+        } else {
+          /* Bytecode: */
+	  run_bytecode_from_handler(breakpc);
 	}
       }
     } else {
@@ -184,7 +209,6 @@ static void fatal_error_handler( int signum) {
    raise(signum);
 #endif
 }
-PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
 
 
 
@@ -208,23 +232,8 @@ static void timer_handler( int signum) {
   	  pc=stack[--sp]; /* wenn error innerhalb der func. */
         }
      } else if(alarmpctype==1) {
-	  batch=1;
-	  int n;
-	  PARAMETER par[1];
-
-	  STRING bcpc;
-	  bcpc.pointer=programbuffer;
-          bcpc.len=programbufferlen;
-	  par[0].integer=0;
-	  par[0].typ=PL_INT;
-	  par[0].panzahl=0;
-	  par[0].ppointer=NULL;
-
-	  sp++;
-	  stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-	  virtual_machine(bcpc,alarmpc, &n,par,1);
-	  sp--;	
-
+       /* Bytecode: */
+       run_bytecode_from_handler(alarmpc);
      } else {
      // TODO:
      	  void (*func)();	  

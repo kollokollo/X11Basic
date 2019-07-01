@@ -583,7 +583,7 @@ int init_program(int prglen) {
 	wort_sep_destroy(buffer,' ',TRUE,&w1,&w2);
 	wort_sep(w2,' ',TRUE,w3,w4);
 	// printf("Onspecial: <%s> <%s> --<%s>-- / <%s>\n",w1,w2,w3,w4);
-         if(strcmp(w1,"ERROR")==0 || strcmp(w1,"BREAK")==0 || strcmp(w1,"MENU")==0) {
+         if(!strcmp(w1,"ERROR") || !strcmp(w1,"BREAK") || !strcmp(w1,"MENU")) {
 	   if(strcmp(w3,"GOSUB")==0) {
 	     j=find_comm("ON B/E/M GOSUB");
 	     sprintf(buffer,"%s,%s",w1,w4);
