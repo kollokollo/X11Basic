@@ -70,6 +70,7 @@ WEND
 PRINT "Current working directory: ";DIR$(0)
 PRINT "virtual machine:   "+xbvm_binary$
 PRINT "bytecode compiler: "+xbbc_binary$
+PRINT "input file: "+inputfile$
 
 IF NOT EXIST(xbvm_binary$)
   ~FORM_ALERT(1,"[3][xbc: ERROR: "+xbvm_binary$+" not found.][CANCEL]")
@@ -89,6 +90,12 @@ IF qflag=0
       ENDIF
     ENDIF
   ENDIF
+ENDIF
+
+IF UPPER$(RIGHT$(inputfile$,2))=".B"
+  bfile$=inputfile$
+  @packvm(bfile$)
+  QUIT
 ENDIF
 IF UPPER$(RIGHT$(inputfile$,4))<>".BAS" AND UPPER$(RIGHT$(inputfile$,5))<>".XBAS"
   PRINT "File must have the extension: .bas!"
@@ -191,6 +198,7 @@ PROCEDURE make_bytecode(file$,bfile$)
   ENDIF
   PRINT "INPUT: ";file$
   SYSTEM xbbc_binary$+" "+file$+" -o "+bfile$
+  PRINT "--> "+bfile$
   IF NOT EXIST(bfile$)
     IF qflag=0
       ~FORM_ALERT(1,"[3][xbc/xbbc: FATAL ERROR: something is wrong.][CANCEL]")

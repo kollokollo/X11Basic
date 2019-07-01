@@ -215,9 +215,8 @@ int main(int anzahl, char *argumente[]) {
   if(atoi(selfseek)!=4007111) {
     int s=atoi(selfseek);
     char filename[strlen(argumente[0])+8];
-    char filename2[strlen(argumente[0])+8];
-    FILE *dptr;
-    wort_sep(argumente[0],'.',FALSE,filename,filename2);
+
+    strcpy(filename,argumente[0]);
     if(!exist(filename)) {
    #ifdef ATARI
      strcat(filename,".prg");
@@ -227,11 +226,12 @@ int main(int anzahl, char *argumente[]) {
      verbose=2;
    #else
      strcat(filename,".exe");
+     printf("try <%s>\n",filename); 
    #endif
     }
-    if(!exist(filename)) printf("ERROR: could not link X11-Basic code.\n");
+    if(!exist(filename)) printf("ERROR: could not link X11-Basic code from <%s>.\n",filename);
     if(verbose) printf("selfseek=%s %d\n",selfseek,s);
-    dptr=fopen(filename,"rb"); 
+    FILE *dptr=fopen(filename,"rb"); 
     fseek(dptr,s,SEEK_SET);
     bcpc.len=lof(dptr)-s; 
    #ifdef ATARI
