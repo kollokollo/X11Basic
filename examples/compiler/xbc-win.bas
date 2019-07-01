@@ -1,6 +1,6 @@
 ' Pseudo-Compiler for X11-Basic (MS WINDOWS Version)
 ' erzeugt allein lauffaehigen Code (.exe)
-' (c) Markus Hoffmann 2010-2015 2018-01-01
+' (c) Markus Hoffmann 2010-2019
 '
 '* This file is part of X11BASIC, the BASIC interpreter / compiler
 '* ======================================================================
@@ -17,11 +17,9 @@ outputfilename$="b.exe"
 bfile$="b.b"
 cfile$="c.c"
 
-IF NOT EXIST("xbvm.exe")
-  ~FORM_ALERT(1,"[3][xbc: ERROR: xbvm.exe not found.][CANCEL]")
-  PRINT "xbc: ERROR: xbvm.exe not found."
-  QUIT
-ENDIF
+xbbc_binary$="xbbc.exe"
+xbvm_binary$="xbvm.exe"
+xb2c_binary$="xb2c.exe"
 
 WHILE LEN(PARAM$(i))
   IF LEFT$(PARAM$(i))="-"
@@ -47,6 +45,16 @@ WHILE LEN(PARAM$(i))
       IF LEN(PARAM$(i))
         outputfilename$=PARAM$(i)
       ENDIF
+    ELSE IF PARAM$(i)="--xbbc"
+      INC i
+      IF LEN(PARAM$(i))
+        xbbc_binary$=PARAM$(i)
+      ENDIF
+    ELSE IF PARAM$(i)="--xbvm"
+      INC i
+      IF LEN(PARAM$(i))
+        xbvm_binary$=PARAM$(i)
+      ENDIF
     ELSE
       collect$=collect$+PARAM$(i)+" "
     ENDIF
@@ -59,12 +67,21 @@ WHILE LEN(PARAM$(i))
   ENDIF
   INC i
 WEND
+PRINT "Current working directory: ";DIR$(0)
+PRINT "virtual machine:   "+xbvm_binary$
+PRINT "bytecode compiler: "+xbbc_binary$
+
+IF NOT EXIST(xbvm_binary$)
+  ~FORM_ALERT(1,"[3][xbc: ERROR: "+xbvm_binary$+" not found.][CANCEL]")
+  PRINT "xbc: ERROR: "+xbvm_binary$+" not found."
+  QUIT
+ENDIF
 IF qflag=0
   schwarz=COLOR_RGB(0,0,0)
   weiss=COLOR_RGB(1,1,1)
   COLOR weiss,schwarz
   IF LEN(inputfile$)=0
-    TEXT 10,10,"X11-Basic compiler V.1.25 (c) Markus Hoffmann 2010-2018"
+    TEXT 10,10,"X11-Basic compiler V.1.27 (c) Markus Hoffmann 2010-2019"
     FILESELECT "select program to compile","./*.bas","demo.bas",inputfile$
     IF LEN(inputfile$)
       IF NOT EXIST(inputfile$)
@@ -73,7 +90,7 @@ IF qflag=0
     ENDIF
   ENDIF
 ENDIF
-IF UPPER$(RIGHT$(inputfile$,4))<>".BAS"
+IF UPPER$(RIGHT$(inputfile$,4))<>".BAS" AND UPPER$(RIGHT$(inputfile$,5))<>".XBAS"
   PRINT "File must have the extension: .bas!"
   QUIT
 ENDIF
@@ -99,9 +116,9 @@ IF LEN(inputfile$)
     @packvm(bfile$)
   ELSE IF a=2
     @make_bytecode(inputfile$,bfile$)
-    IF NOT EXIST("xb2c.exe")
-      ~FORM_ALERT(1,"[3][xbc: ERROR: xb2c.exe not found.][CANCEL]")
-      PRINT "xbc: ERROR: xb2c.exe not found."
+    IF NOT EXIST(xb2c_binary$)
+      ~FORM_ALERT(1,"[3][xbc: ERROR: "+xb2c_binary$+" not found.][CANCEL]")
+      PRINT "xbc: ERROR: "+xb2c_binary$+" not found."
       QUIT
     ENDIF
     SYSTEM "xb2c "+bfile$+" -o "+cfile$
@@ -128,7 +145,7 @@ IF LEN(inputfile$)
       a=FORM_ALERT(1,"[0][done.| |The program was stored under:|"+outputfilename$+".|Do you want to run it?][RUN|QUIT]")
       IF a=1
         IF outputfilename$=bfile$
-          SYSTEM "xbvm "+outputfilename$
+          SYSTEM xbvm_binary$+" "+outputfilename$
         ELSE
           SYSTEM outputfilename$
         ENDIF
@@ -145,7 +162,7 @@ ELSE
 ENDIF
 QUIT
 PROCEDURE intro
-  PRINT "X11-Basic Compiler V.1.22 (c) Markus Hoffmann 2002-2015"
+  PRINT "X11-Basic Compiler V.1.27 (c) Markus Hoffmann 2002-2019"
   VERSION
 RETURN
 PROCEDURE using
@@ -165,15 +182,15 @@ PROCEDURE using
 RETURN
 
 PROCEDURE make_bytecode(file$,bfile$)
-  IF NOT EXIST("xbbc.exe")
+  IF NOT EXIST(xbbc_binary$)
     IF qflag=0
-      ~FORM_ALERT(1,"[3][xbc: ERROR: xbbc.exe not found.][CANCEL]")
+      ~FORM_ALERT(1,"[3][xbc: ERROR: "+xbbc_binary$+" not found.][CANCEL]")
     ENDIF
-    PRINT "xbc: ERROR: xbbc.exe not found."
+    PRINT "xbc: ERROR: "+xbbc_binary$+" not found."
     QUIT
   ENDIF
   PRINT "INPUT: ";file$
-  SYSTEM "xbbc "+file$+" -o "+bfile$
+  SYSTEM xbbc_binary$+" "+file$+" -o "+bfile$
   IF NOT EXIST(bfile$)
     IF qflag=0
       ~FORM_ALERT(1,"[3][xbc/xbbc: FATAL ERROR: something is wrong.][CANCEL]")
@@ -192,12 +209,12 @@ RETURN
 
 PROCEDURE packvm(bfile$)
   LOCAL t$,l,lb,p,u$
-  OPEN "I",#1,"xbvm.exe"
+  OPEN "I",#1,xbvm_binary$
   l=LOF(#1)
-  PRINT "xbvm.exe (lof: ",l,")"
+  PRINT xbvm_binary$+" (lof: ",l,")"
   CLOSE #1
   t$=SPACE$(l)
-  BLOAD "xbvm.exe",VARPTR(t$)
+  BLOAD xbvm_binary$,VARPTR(t$)
   PRINT "len(t$) ",LEN(t$)
   p=INSTR(t$,"4007111")
   PRINT p
@@ -235,7 +252,7 @@ PROCEDURE packvm(bfile$)
       QUIT
     ENDIF
     IF EXIST(outputfilename$)
-      a=form_alert(2,"[3][File "+outputfilename$+" already exists!|Overwrite ?][Overwrite|CANCEL]")
+      a=FORM_ALERT(2,"[3][File "+outputfilename$+" already exists!|Overwrite ?][Overwrite|CANCEL]")
       IF a=2
         GOTO oagain
       ENDIF
@@ -352,5 +369,5 @@ PROCEDURE usetcc
 RETURN
 PROCEDURE file_error
   PRINT "FILE ERROR ERR=";ERR
-  a=FORM_ALERT(1,"[3][File writing error!|Do you have write-permission in the|specified directory?][QUIT]")
+  a=FORM_ALERT(1,"[3][File writing error #"+STR$(ERR)+"!|Do you have write-permission in the|specified directory?][QUIT]")
 RETURN

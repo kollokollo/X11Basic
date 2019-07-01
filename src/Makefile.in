@@ -478,10 +478,12 @@ xbvm.exe: bytecode.h xbvm.c $(MYWINLIBS)
 	 $(MYWINLIBS) $(WINLIBS)
 	strip $@
 
-# Make th X11-Xasic psydocompiler (for MS WINDOWS)
-
+# Make the X11-Basic compiler (for MS WINDOWS)
+# TODO: The problem here is that this only works if the same 
+#       version (bytecode version) of X11-Basic is already installed
+#       on the host system.
 xbc.exe : xbasic examples/compiler/xbc-win.bas xbvm.exe xbbc
-	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-win.bas -o $@
+	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-win.bas -o $@ --xbbc ./xbbc
 	chmod 755 $@ 
 
 
