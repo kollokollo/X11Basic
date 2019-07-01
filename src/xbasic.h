@@ -341,7 +341,8 @@ static inline void expand_stack() {
   /* Stack initialisieren */
   stack=realloc(stack,stack_size*sizeof(int));
   anzlvar=realloc(anzlvar,stack_size*sizeof(int));
-  anzlvar[stack_size-STACKINCREMENT]=0; /* Initialisieren */
+  for(int i=stack_size-STACKINCREMENT;i<stack_size;i++)
+    anzlvar[i]=0; /* Initialisieren */
   lvar=realloc(lvar,stack_size*sizeof(VARIABLE *));
 #if DEBUG
   printf("Stacksize changed to: %d (%ld Bytes.)\n",stack_size,
