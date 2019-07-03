@@ -106,8 +106,7 @@ int original_line(int i) {
 /* Bytecode spezifica. */
 
 int is_bytecode=0;
-static char *stringseg;
-BYTECODE_SYMBOL *symtab;
+
 
 static void do_relocation(char *adr,unsigned char *fixup, int l) {
   int i=0;
@@ -142,7 +141,7 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
 	--- RELOCATION
 	*/
 
-char *bytecode_init(char *adr) {
+COMPILE_BLOCK *bytecode_init(char *adr) {
   int i,a,typ;
   char *name;
   char *bsseg;
@@ -169,22 +168,30 @@ char *bytecode_init(char *adr) {
       return(NULL);
     }
         
-    /* Set up the data buffer */
-    databuffer=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
+    /* Set up the data buffers */
+    
+    /* Initialize compile block: */
+
+    COMPILE_BLOCK *cb=calloc(sizeof(COMPILE_BLOCK),1);
+    cb->bc_version=bytecode->version;
+    cb->status=1; /*cannot free rodataseg and textseg*/
+    cb->textseg=adr+sizeof(BYTECODE_HEADER);
+    cb->textseglen=bytecode->textseglen;
+    cb->rodataseg=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
+    cb->rodataseglen=bytecode->rodataseglen;
+    cb->dataseg=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
+    cb->dataseglen=bytecode->sdataseglen+bytecode->dataseglen;
+    databuffer=cb->dataseg;
     databufferlen=bytecode->sdataseglen;
-//#ifdef ANDROID
-//    sprintf(buffer,"Databuffer $%08x contains: <%s>\n",(unsigned int)databuffer,databuffer);
-//    backlog(buffer);
-//#endif
-    rodata=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
-    bsseg=stringseg=&adr[sizeof(BYTECODE_HEADER)+
+    
+    cb->bsseg=cb->stringseg=&adr[sizeof(BYTECODE_HEADER)+
                  bytecode->textseglen+
 		 bytecode->rodataseglen+
 		 bytecode->sdataseglen+
 		 bytecode->dataseglen];
 
     /* Jetzt Variablen anlegen.*/
-    symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
+    cb->symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
                                    bytecode->textseglen+
 		                   bytecode->rodataseglen+
 		                   bytecode->sdataseglen+
@@ -197,10 +204,10 @@ char *bytecode_init(char *adr) {
 	  LWSWAP((short *)&symtab[i].name);
 	  LWSWAP((short *)&symtab[i].adr);
 	#endif
-        if(symtab[i].typ==STT_OBJECT) {
-	  typ=symtab[i].subtyp;
-	  if(symtab[i].name) {
-	    name=&stringseg[symtab[i].name];
+        if(cb->symtab[i].typ==STT_OBJECT) {
+	  typ=cb->symtab[i].subtyp;
+	  if(cb->symtab[i].name) {
+	    name=&cb->stringseg[cb->symtab[i].name];
           } else {
 	    name=malloc(32);  /*TODO: Das muss irgendwann wieder freigegeben werden ....*/
 	    sprintf(name,"VAR_%x",i);
@@ -215,7 +222,7 @@ char *bytecode_init(char *adr) {
 //#endif	  
 	  if(typ&ARRAYTYP)        add_variable(name,ARRAYTYP,typ&(~ARRAYTYP),V_DYNAMIC,NULL);
 	  else if(typ==STRINGTYP) add_variable(name,typ,0,V_DYNAMIC,NULL);
-	  else                    add_variable(name,typ,0,V_STATIC,bsseg+symtab[i].adr);
+	  else                    add_variable(name,typ,0,V_STATIC,cb->bsseg+cb->symtab[i].adr);
 //#ifdef ANDROID	  
 //    sprintf(buffer,"BSSSEG auf %08x ",bsseg);
 //    backlog(buffer);
@@ -246,7 +253,7 @@ char *bytecode_init(char *adr) {
 #ifdef ANDROID
     backlog("bytecode_init done.");
 #endif
-    return(adr);
+    return(cb);
   } else {
     printf("VM: ERROR, file format not recognized. $%02x $%02x\n",adr[0],adr[1]);
     return(NULL);
@@ -1159,26 +1166,29 @@ void kommando(char *cmd) {
   } else xberror(32,w1);  /* Syntax Error */
 }
 
-
-
-
-/* programmlauf setzt voraus, dass die Strukturen durch init_program vorbereitet sind.
- * Startet entweder eine virtuelle machschine oder hangelt sich Zeilenweise
- * durch das Programm.
+/* Started eine virtuelle machine. 
+ * Vorausgesetzt, adr zeigt auf eine BYTECODE_HEADER struktur
  */
-
 
 void run_bytecode(char *adr,int len) {
   STRING bcpc;  /* Bytecode holder */
   bcpc.pointer=adr;
   bcpc.len=len;
+  BYTECODE_HEADER *bh=(BYTECODE_HEADER *)adr;
   if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
   if(verbose>1) memdump((unsigned char *)bcpc.pointer,bcpc.len);
   int n;
-  PARAMETER *p=virtual_machine(bcpc,0,&n,NULL,0);
+  char *rodata=adr+sizeof(BYTECODE_HEADER)+bh->textseglen;
+  
+  PARAMETER *p=virtual_machine(bcpc,0,&n,NULL,0,rodata);
   dump_parameterlist(p,n);  
   free_pliste(n,p);
 }
+
+/* programmlauf setzt voraus, dass die Strukturen durch init_program vorbereitet sind.
+ * Startet entweder eine virtuelle machschine oder hangelt sich Zeilenweise
+ * durch das Programm.
+ */
 
 void programmlauf(){
   if(is_bytecode) {

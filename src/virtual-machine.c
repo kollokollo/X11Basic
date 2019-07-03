@@ -29,8 +29,6 @@
 #include "io.h"
 #include "virtual-machine.h"
 
-extern int datapointer;
-
 /* For performance reasons the verbose mode can be switched off, 
  * where it does not make sense (e.g. for Android) */
 // #define USE_VERBODE
@@ -55,9 +53,6 @@ extern int verbose;
 #define ISTATIC
 #define STATIC
 #endif
-
-
-char *rodata=NULL;
 
 #define vm_x2f(a) cast_to_real(a-1)
 #define vm_x2c(a) cast_to_complex(a-1)
@@ -1023,8 +1018,9 @@ static int vm_eval(PARAMETER *sp) {    /*  */
 }
 
 
-int program_adr=0;
-PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAMETER *plist, int inpar) {
+int program_adr=0; /* used by runtime.c for error messages */
+
+PARAMETER *virtual_machine(const STRING bcpc, int offset, int *npar, const PARAMETER *plist, int inpar, char *rodata) {
   PARAMETER *opstack=calloc(BC_STACKLEN,sizeof(PARAMETER));
   PARAMETER *osp=opstack;
   register unsigned char cmd;

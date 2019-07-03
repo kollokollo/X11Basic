@@ -34,6 +34,7 @@ Android version.
 #include "variablen.h"
 #include "graphics.h"
 #include "window.h"
+#include "bytecode.h"
 
 extern int termecho;
 extern int terminal_last_esc;
@@ -559,29 +560,23 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Programmlauf(J
 
 /*             Bytecode compiler           */
 
-#define MAX_CODE 256000
-int dostrip=0;                   /* dont write symbol tables */
-int donops=0;
-int docomments=0;
-STRING bcpc;
 
 JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Compile(JNIEnv *env, jobject  obj,jstring filename) {
-  bcpc.pointer=malloc(MAX_CODE);
+  COMPILE_BLOCK cb;
+  bzero(&cb,sizeof cb);
   int status=0;
   NLOG("Compile{");
   if(prglen>0) {
-        int ret;
-        const char *ofilename = (*env)->GetStringUTFChars(env,filename, 0);
- 
-	printf("\ncompile <%s> --> <%s>\n",ifilename,ofilename);
-backlog("compile start");
-	compile(1);
-	backlog("compile done.");
-	ret=save_bytecode(ofilename,(char *)bcpc.pointer,bcpc.len,databuffer,databufferlen);
-	backlog("save bytecode done.");
-	if(ret==-1) status=-3;
-       (*env)->ReleaseStringUTFChars(env,filename, ofilename);//DON'T FORGET THIS LINE!!!
-       invalidate_screen();
+    const char *ofilename = (*env)->GetStringUTFChars(env,filename, 0);
+    printf("\ncompile <%s> --> <%s>\n",ifilename,ofilename);
+    backlog("compile start");
+    compile(&cb,COMPILE_VERBOSE);
+    backlog("compile done.");
+    int ret=save_bytecode(ofilename,&cb,0);
+    backlog("save bytecode done.");
+    if(ret==-1) status=-3;
+    (*env)->ReleaseStringUTFChars(env,filename, ofilename);//DON'T FORGET THIS LINE!!!
+    invalidate_screen();
   } else status=-1;
   free(bcpc.pointer);
   NLOG("}.");

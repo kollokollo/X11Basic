@@ -237,7 +237,6 @@ extern int is_bytecode;
 
 void clear_program();
 int init_program(int prglen);
-char *bytecode_init(char *adr);
 // int fix_bytecode_header(BYTECODE_HEADER *bytecode);
 
 char *indirekt2(const char *funktion);

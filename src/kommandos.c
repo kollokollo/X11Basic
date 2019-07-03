@@ -60,6 +60,7 @@
 #include "bytecode.h"
 #include "number.h"
 
+#include "virtual-machine.h"
 
 #ifdef DUMMY_LIST
 #define c_while NULL
@@ -1628,8 +1629,10 @@ static void gosubproc(int pc2,int type) {
       par[0].ppointer=NULL;
       if(stack_check(sp)) {
         sp++;
+        BYTECODE_HEADER *bh=(BYTECODE_HEADER *)programbuffer;
+	char *rodata=programbuffer+sizeof(BYTECODE_HEADER)+bh->textseglen;
         stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-        virtual_machine(bcpc,pc2, &n,par,1);
+        virtual_machine(bcpc,pc2, &n,par,1,rodata);
         sp--;
       } xberror(75,""); /* Stack Overflow! */
     } else {

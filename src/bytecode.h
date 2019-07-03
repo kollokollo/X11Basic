@@ -10,6 +10,9 @@
 
 #define BC_VERSION 0x1271   /* Version 1.27 release 1*/
 
+
+/* File heade for bytecode */
+
 typedef struct {
   unsigned char BRAs;       /* DC_BRAs */
   unsigned char offs;       /* sizeof(BYTECODE_HEADER)-2*/
@@ -26,7 +29,11 @@ typedef struct {
   unsigned short version;     /* version */
 } BYTECODE_HEADER;
 
-
+#ifdef ATARI
+#define MAX_CODE 16000
+#else
+#define MAX_CODE 256000
+#endif
 #define EXE_REL 1     /* If relocation is needed */
 
 typedef struct {
@@ -36,6 +43,33 @@ typedef struct {
   uint32_t name;      /* Pointer to Symbol string table */
   uint32_t adr;       /* address */
 } BYTECODE_SYMBOL;
+
+typedef struct {
+  unsigned short bc_version;    /* Bytecode version used */
+  unsigned short status;        /* 0 fresh, 1 dont free segments */
+  unsigned short comp_flags;    /* flags for compilation */
+  char *textseg;                /* Memory for text segment */
+  unsigned int  textseglen;     /* size of the text/code segment */
+  char *rodataseg;              /* Memory for readonly data segment */
+  unsigned int rodataseglen;    /* size of the readonly data segment */
+  char *sdataseg;               /* Memory for data segment  for DATA statements*/
+  unsigned int sdataseglen;     /* size of the data segment for DATA statements*/
+  char *dataseg;                /* Memory for data segment */
+  unsigned int dataseglen;      /* size of the data segment */
+  
+  char *stringseg;
+  unsigned int stringseglen;    /* size of the string segment */
+  char *bsseg;               /* Memory for block starage segment */
+  unsigned int bsseglen;    
+  BYTECODE_SYMBOL *symtab;
+  unsigned int anzsymbols; 
+  int *reltab;
+  unsigned int relseglen;       /* in bytes. */
+  int anzreloc;   
+  int *bc_index;
+  int prglen;
+} COMPILE_BLOCK;
+
 
 /* Symbol types */
 
@@ -237,14 +271,73 @@ typedef struct {
 
 //#define BC_LINE        1
 
+
+
+
+#ifdef ATARI
+#define CP4(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s)+3; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd=*ss; l+=4;}
+#define CP2(d,s,l) { register char *dd_=(char *)(d); \
+                   register char *ss_=(char *)(s)+1; \
+                 *dd_++=*ss_--; \
+                 *dd_=*ss_; l+=2;}
+
+#define CP8(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s)+7; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd++=*ss--; \
+                 *dd=*ss; l+=8;}
+
+#else
+#define CP4(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s); \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd=*ss; l+=4;}
+#define CP2(d,s,l) { register char *dd_=(char *)(d); \
+                   register char *ss_=(char *)(s); \
+                 *dd_++=*ss_++; \
+                 *dd_=*ss_; l+=2;}
+#define CP8(d,s,l) { register char *dd=(char *)(d); \
+                   register char *ss=(char *)(s); \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd++=*ss++; \
+                 *dd=*ss; l+=8;}
+#endif
+
+
+/* Compile flags */
+
+#define COMPILE_DEFAULT  0
+#define COMPILE_NOOPS    1
+#define COMPILE_COMMENTS 2
+#define COMPILE_VERBOSE  8
+
+
 /* Protos */
 int bytecode_make_bss(BYTECODE_HEADER *bytecode,char **,int );
-PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
-void compile(int verbose);
-int bc_parser(const char *funktion);
-int add_rodata(char *data,int len);
+void compile(COMPILE_BLOCK *cb,int );
+int bc_parser(COMPILE_BLOCK *cb,const char *funktion);
+int add_rodata(COMPILE_BLOCK *cb,char *data,int len);
 int fix_bytecode_header(BYTECODE_HEADER *bytecode);
-char *bytecode_init(char *adr);
+void free_cb(COMPILE_BLOCK *cb);
+COMPILE_BLOCK *bytecode_init(char *adr);
+int save_bytecode(const char *name,COMPILE_BLOCK *cb,int);
 
 #if 0
 int vm_add(PARAMETER *sp);

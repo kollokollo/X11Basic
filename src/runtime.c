@@ -24,16 +24,15 @@
 #include "kommandos.h"
 #include "variablen.h"
 #include "parameter.h"
+#include "bytecode.h"
+#include "virtual-machine.h"
 
 
 static void *obh;       /* old break handler  */
 
-PARAMETER *virtual_machine(STRING, int, int *, const PARAMETER *, int);
-
 /* X11-Basic standard error routine */
 
 int globalerr=0;
-extern int program_adr;
 
 static void run_bytecode_from_handler(int jumppc) {
   batch=1;
@@ -48,9 +47,12 @@ static void run_bytecode_from_handler(int jumppc) {
   par[0].panzahl=0;
   par[0].ppointer=NULL;
 
+  BYTECODE_HEADER *bh=(BYTECODE_HEADER *)bcpc.pointer;
+  char *rodata=programbuffer+sizeof(BYTECODE_HEADER)+bh->textseglen;
+
   if(stack_check(sp)) {
     stack[++sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-    virtual_machine(bcpc,jumppc, &n,par,1);
+    virtual_machine(bcpc,jumppc, &n,par,1,rodata);
     sp--;	
   } else {printf("Stack overflow! PC=%d\n",pc); batch=0;}
 }

@@ -25,12 +25,9 @@
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
-#include "memory.h"
 #include "bytecode.h"
 #include "variablen.h"
 #include "keywords.h"
-#include "file.h"
-#include "virtual-machine.h"
 //#include "xb2c.h"
 
 
@@ -46,10 +43,10 @@ static int nomain=0;
 
 BYTECODE_HEADER *bytecode;
 
-BYTECODE_SYMBOL *symtab;
+BYTECODE_SYMBOL *symtab=NULL;
 char *strings;
 unsigned char *datasec;
-char *rodata;
+char *rodata=NULL;
 
 /* X11-Basic needs these declar<ations:  */
 int prglen=0;
@@ -578,10 +575,13 @@ static void translate(FILE *optr) {
       }
       break;
     case BC_COMMENT:
-      a=bcpc[i++];
-      fprintf(optr,"/* %s (%d)*/\n",&bcpc[i],a);
+      {a=bcpc[i++];
+       char buf[a+1];
+       memcpy(buf,&bcpc[i],a);
+       buf[a]=0;
+      fprintf(optr,"/* %s (%d)*/\n",buf,a);
       i+=a;
-      break;
+      } break;
     case BC_ADD:  fprintf(optr,"ADD;\n");  break;
     case BC_ADDi: fprintf(optr,"ADDi;\n"); break;
     case BC_ADDf: fprintf(optr,"ADDf;\n"); break;

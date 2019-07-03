@@ -46,6 +46,7 @@
 #include "array.h"
 #include "wort_sep.h"
 #include "io.h"
+#include "bytecode.h"
 #include "virtual-machine.h"
 
 #ifndef TerminateEventLoop
@@ -2187,8 +2188,11 @@ void c_menu(char *n) {
 	  par[1].ppointer=NULL;
 	  if(stack_check(sp)) {
 	    sp++;
+            BYTECODE_HEADER *bh=(BYTECODE_HEADER *)programbuffer;
+	    char *rodata=programbuffer+sizeof(BYTECODE_HEADER)+bh->textseglen;
+
 	    stack[sp]=bcpc.len;  /*Return wird diesen Wert holen, dann virt machine beenden.*/
-	    virtual_machine(bcpc,menuaction, &n,par,2);
+	    virtual_machine(bcpc,menuaction,&n,par,2,rodata);
 	    sp--;
 	  } else xberror(75,""); /* Stack Overflow! */	
 	} else {
