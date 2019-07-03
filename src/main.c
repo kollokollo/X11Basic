@@ -38,6 +38,7 @@
 #endif
 #ifdef WINDOWS
   #include <windows.h>
+  #include "file.h"
 #endif
 
 #ifdef WINDOWS_NATIVE

@@ -18,6 +18,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#if defined WINDOWS
+#include <windows.h>
+#endif
 
 #include "defs.h"
 #include "x11basic.h"

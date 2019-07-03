@@ -23,6 +23,7 @@
 #include "x11basic.h"
 #ifdef WINDOWS
   #include <windows.h>
+  #include "file.h"
 #endif
 #ifdef WINDOWS_NATIVE
   HINSTANCE hInstance;
