@@ -76,9 +76,9 @@ static inline void TP(int a) {typstack[typsp]=(a);typsp++;}
 /* Typestack replace last*/
 #define TR(a) typstack[typsp-1]=(a)
 /* Typestack remove last */
-#define TO()  if(--typsp<0) printf("WARNING: typestack<0 at line %d.\n",compile_zeile)
+#define TO()  if(--typsp<0) printf("WARNING: typestack<0 at line %d. %d\n",compile_zeile,typsp)
 /* Typestack remove last a */
-#define TA(a)  if((typsp-=(a))<0) printf("WARNING: typestack<0 at line %d.\n",compile_zeile)
+#define TA(a)  if((typsp-=(a))<0) printf("WARNING: typestack<0 at line %d. %d\n",compile_zeile,typsp)
 #define TL    typstack[typsp-1]
 #define TL2    typstack[typsp-2]
 static inline void TEXCH() {
@@ -791,6 +791,7 @@ int bc_parser(COMPILE_BLOCK *cb,const char *funktion){  /* Rekursiver Parser */
       if(verbose>1) printf("function procnr=%d, anzpar=%d\n",pc2,anzpar);
       typ=procs[pc2].typ;
       if(typ==4) {   /* DEFFN */
+        if(verbose>1) printf("is DEFFN! typsp=%d\n",typsp);
 	int oldtypsp=typsp;
 	BCADD(BC_BLKSTART); /* Stackponter erhoehen etc. */
         BCADD(BC_POP); /* Das waere jetzt die Anzahl der Parameter als int auf Stack*/
@@ -800,9 +801,8 @@ int bc_parser(COMPILE_BLOCK *cb,const char *funktion){  /* Rekursiver Parser */
 	while(--e>=0) {
           bc_local(cb,ix[e]&(~V_BY_REFERENCE));  /* Rette alten varinhalt */
           bc_zuweis(cb,ix[e]&(~V_BY_REFERENCE)); /* Weise vom stack zu */
-	  TO();
         }
-	// printf("restore-typesp from %d to %d <%s>\n",typsp,oldtypsp,s);
+	if(verbose>1) printf("restore-typesp from %d to %d <%s>\n",typsp,oldtypsp,s);
         typsp=oldtypsp;
         bc_parser(cb,pcode[procs[pc2].zeile].argument);
 	TO(); /* Typ vom parser weg*/
