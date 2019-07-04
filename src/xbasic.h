@@ -253,6 +253,9 @@ extern int *anzlvar;
 
 #ifndef ANDROID
    #define invalidate_screen() ;
+#else
+  void invalidate_screen();
+  void backlog(char *n);
 #endif
 
 #ifdef GERMAN

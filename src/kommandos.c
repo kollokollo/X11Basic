@@ -60,6 +60,10 @@
 #include "bytecode.h"
 #include "number.h"
 
+#ifdef ANDROID
+#include "android.h"
+#endif
+
 #include "virtual-machine.h"
 
 #ifdef DUMMY_LIST

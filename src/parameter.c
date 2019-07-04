@@ -15,13 +15,13 @@
 #include "x11basic.h"
 #include "xbasic.h"
 #include "type.h"
+#include "keywords.h"
 #include "variablen.h"
 #include "parser.h"
 #include "array.h"
 
 #include "wort_sep.h"
 #include "parameter.h"
-#include "keywords.h"
 #include "number.h"
 
 

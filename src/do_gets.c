@@ -23,6 +23,7 @@
 #include <readline/history.h>
 #endif
 #ifdef ANDROID
+  #include "android.h"
   #include "terminal.h"
 #endif
 

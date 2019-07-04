@@ -82,5 +82,5 @@ static inline void LWSWAP(char *p) {
   p[2]=a;
 }
 #else
-#pragma message ( "memory.h got included at the wrong place !" )
+//#pragma message ( "memory.h got included at the wrong place !" )
 #endif

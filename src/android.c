@@ -23,18 +23,23 @@ Android version.
 #include <pthread.h>    /* POSIX Threads */
 #include <signal.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "config.h"
 #include "defs.h"
 
 #include "x11basic.h"
 #include "android.h"
-#include "io.h"
+#include "terminal.h"
+#include "raw_mouse.h"
 #include "framebuffer.h"
+#include "file.h"
+#include "io.h"
 #include "variablen.h"
 #include "graphics.h"
 #include "window.h"
 #include "bytecode.h"
+#include "sound.h"
 
 extern int termecho;
 extern int terminal_last_esc;
@@ -90,6 +95,12 @@ extern double gps_time;
 extern char *gps_provider;
 
 static int ringbufout(char *d,int n);
+
+void kommandozeile(int anzahl, char *argumente[]);
+void intro();
+void mixeAudio(Uint8 *stream, int laenge);
+
+
 
 /*Diese Routine wird nur ein einziges mal beim linken der x11basic lib 
   aufgerufen. */
@@ -452,7 +463,7 @@ JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_AudioFillStrea
      lassen)
 */
   NLOG("m");
-  mixeAudio(dst, size);
+  mixeAudio((Uint8 *)dst, size);
 //int i=0;
 //for(i=0;i<size/4;i++) {
 //  dst[2*i]=0x000+(short)(32000.0*sin(440.0/44100*2*3.141592*i));
@@ -574,11 +585,11 @@ JNIEXPORT jint JNICALL Java_net_sourceforge_x11basic_X11basicView_Compile(JNIEnv
     backlog("compile done.");
     int ret=save_bytecode(ofilename,&cb,0);
     backlog("save bytecode done.");
+    free_cb(&cb);
     if(ret==-1) status=-3;
     (*env)->ReleaseStringUTFChars(env,filename, ofilename);//DON'T FORGET THIS LINE!!!
     invalidate_screen();
   } else status=-1;
-  free(bcpc.pointer);
   NLOG("}.");
   return(status);
 }

@@ -17,7 +17,10 @@
 #endif
 #include "x11basic.h"
 
-
+#ifdef ANDROID
+  #include <signal.h>
+  #include "android.h"
+#endif
 
 
 /* This is a handy helper function which prints out a 

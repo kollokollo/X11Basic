@@ -35,9 +35,10 @@
 int terminal_fd=-1;   /* File descriptor for connection to shell */
 
 #ifndef ANDROID
-int utf8coding=1;    /* flag if we use utf8 coding*/
+int utf8coding=1;    /* flag if we use utf8 coding */
 #else
 extern int utf8coding;    /* flag if we use utf8 coding*/
+#include "android.h"
 #endif
 
 #define WRITE_str_to_TERMINAL(a) {int ret=write(terminal_fd,(a),strlen(a)); \

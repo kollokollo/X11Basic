@@ -39,6 +39,10 @@
   #include <osbind.h>
   #include <gem.h>
 #endif
+#ifdef ANDROID
+  #include <signal.h>
+  #include "android.h"
+#endif
 #include "aes.h"
 #include "window.h"
 #include "bitmap.h"

@@ -18,6 +18,8 @@
 #include <math.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <utime.h>
 
 #include "defs.h"
 #include <dirent.h>
@@ -87,7 +89,9 @@
 #include "number.h"
 #include "io.h"
 
-
+#ifdef ANDROID
+  #include "android.h"
+#endif
 #ifndef WINDOWS
 #ifndef ATARI
  #include <sys/mman.h>

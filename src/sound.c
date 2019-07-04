@@ -22,6 +22,9 @@
 #include <math.h>
 #include <sys/types.h>
 #include "defs.h"
+#ifdef ANDROID
+  #include "android.h"
+#endif
 #ifdef USE_ALSA
   #include <signal.h>
   #include <sys/stat.h>
