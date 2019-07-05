@@ -1715,7 +1715,6 @@ static int compile_print(COMPILE_BLOCK *cb,P_CODE pcode) {
 /* (re-)create structures for the compilation process...
  * If a bytecode has already been loaded, it need to be removed.
  */
-static int last_proc_number;
 static void init_compile(COMPILE_BLOCK *cb) {
   if(cb->status==0) {  /* fresh block, all memory need to be allocated. */
     cb->textseg=realloc(cb->textseg,MAX_CODE);
@@ -1739,7 +1738,8 @@ static void init_compile(COMPILE_BLOCK *cb) {
   cb->textseglen=0;
   cb->stringseglen=0;
   typsp=0;
-  last_proc_number=NOTYP;
+  cb->expected_typsp=0;
+  cb->last_proc_number=NOTYP;
   cb->bc_version=BC_VERSION;
   cb->sdataseg=databuffer;
   cb->sdataseglen=databufferlen;
@@ -1795,7 +1795,7 @@ static int compile_line(COMPILE_BLOCK *cb,int lnr) {
     case P_PROC: {
       int e;
       int *ix;
-      last_proc_number=pcode[lnr].integer;  /* Save the procedure we are compiling, to reconstruct return type later.*/
+      cb->last_proc_number=pcode[lnr].integer;  /* Save the procedure we are compiling, to reconstruct return type later.*/
       if(verbose>1) printf(" PROC_%d %s ",pcode[lnr].integer,(char *)procs[pcode[lnr].integer].parameterliste);
       add_symbol(cb,cb->textseglen,procs[pcode[lnr].integer].name,STT_FUNC,0); /* Save symbol for function/procedure */
 
@@ -1943,64 +1943,32 @@ static int compile_line(COMPILE_BLOCK *cb,int lnr) {
     return(1); /* done */
   }
 
-  
-  
-  return(0); /* not done, because we might need extra treatment...*/
-}
+  /* Jetzt behandlungen nach Pcode PM_SPECIAL */
 
-
-/* Compiles the currently loaded program.
- * the compile() function will generate follwing structures:
- *
- *  rodata   --- realloc()
- *  symtab   --- realloc()
- *  strings.pointer -- realloc   (nicht von bytecode_load verwendet)
-*/
-
-void compile(COMPILE_BLOCK *cb,int compile_flags) {
-  cb->comp_flags=compile_flags;
-  init_compile(cb);
-  
-  if(cb->comp_flags&COMPILE_VERBOSE) {
-    printf("%d\tlines.\n",prglen);
-    printf("%d\tprocedures.\n",anzprocs);
-    printf("%d\tlabels.\n",anzlabels);
-    printf("%d\tvariables.\n",anzvariablen);
-    if(verbose>1) printf("PASS A:\n");
-    printf("Compile flags=%x\n",cb->comp_flags);
-  }
-  add_string(cb,"compiled by xbbc " VERSION);
-  
-  int a,b;
-  int expected_typsp=0;
-  
-  for(int i=0;i<prglen;i++) {
-    if(typsp!=expected_typsp) printf("COMPILER WARNING: typsp=%d at line %d.\n",typsp,i);
-    if(compile_line(cb,i)) continue;
-       
-    /* Jetzt behandlungen nach Pcode PM_SPECIAL */
-    
-    switch(pcode[i].opcode&PM_SPECIAL) {
+  switch(pcode[lnr].opcode&PM_SPECIAL) {
     case P_EXITIF: 
       if(verbose>1) printf(" EXIT IF ");
-      bc_parser(cb,pcode[i].argument);
+      bc_parser(cb,pcode[lnr].argument);
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       BCADD(BC_NOTi);
-      bc_jumpto(cb,i,pcode[i].integer,1);
-    case P_DATA: continue;  /*Erzeugt keinen Code...*/
+      bc_jumpto(cb,lnr,pcode[lnr].integer,1);
+    case P_DATA: return(1); /* done */  /* does not produce any code here */
     case P_REM:
-      bc_comment(cb,pcode[i].argument);
-      continue;
+      bc_comment(cb,pcode[lnr].argument);
+      return(1); /* done */
     case P_SELECT: {
-      bc_parser(cb,pcode[i].argument);
+      bc_parser(cb,pcode[lnr].argument);
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" SELECT ");
-      /*Vergleichswert liegt jetzt auf dem Stack.*/ 
-      expected_typsp++;
-      int npc=pcode[i].integer;
+      /* Vergleichswert liegt jetzt auf dem Stack. */ 
+      cb->expected_typsp++;
+      int npc=pcode[lnr].integer;
       char *w1=NULL,*w2,*w3;
       int l2,l=0,e;
-      if(npc==-1) xberror(36,"SELECT"); /*Programmstruktur fehlerhaft */
+      if(npc==-1) {
+        xberror(36,"SELECT"); /* Programmstruktur fehlerhaft */
+        return(-1);
+      }
       /* Case-Anweisungen finden */
       while(1) {
        // printf("branch to line %d. <%s>\n",npc-1,program[npc-1]);
@@ -2008,7 +1976,7 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
           l2=strlen(program[npc-1])+1;
           if(l2>l || w1==NULL) {
             l=l2+256;
-           w1=realloc(w1,l);
+            w1=realloc(w1,l);
           }
 	  strcpy(w1,pcode[npc-1].argument);
        
@@ -2018,152 +1986,173 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
             bc_parser(cb,w2);
 	    if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
 	    BCADD(BC_EQUAL);TO();TR(PL_INT);BCADD(BC_NOTi);
-	    bc_jumpto(cb,i,npc,1);
+	    bc_jumpto(cb,lnr,npc,1);
 	    e=wort_sep_destroy(w3,',',TRUE,&w2,&w3);
           }
           npc=pcode[npc-1].integer;
-	  if(npc==-1) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
+	  if(npc==-1) {
+	    xberror(36,"SELECT/CASE"); /* Programmstruktur fehlerhaft */
+            return(-1);
+          }
         } else if((pcode[npc-1].opcode&PM_SPECIAL)==P_DEFAULT) {          
-          bc_jumpto(cb,i,npc,0);
+          bc_jumpto(cb,lnr,npc,0);
           npc=pcode[npc-1].integer;
-	  if(npc==-1) xberror(36,"SELECT/DEFAULT"); /*Programmstruktur fehlerhaft */  
+	  if(npc==-1) {
+	    xberror(36,"SELECT/DEFAULT"); /* Programmstruktur fehlerhaft */  
+	    return(-1);
+          }
         } else break;
       } 
      
      /*Wenn er vorher weggesprungen ist, dann verbleibt ein Wert auf dem Stack !!*/
      /*TODO */
-    } continue;
+    } return(1); /* done */
     case P_ENDSELECT: 
        BCADD(BC_POP);TO(); /* Stack korrigieren und weitermachen */
-       expected_typsp--;
-       continue;
+       cb->expected_typsp--;
+       return(1); /* done */
     case P_CASE: {
       if(verbose>1) printf(" CASE ");
       int j,f=0,o=0;
-      for(j=i+1; (j<prglen && j>=0);j++) {
+      for(j=lnr+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDSELECT)  && f==0) break;
         else if(o==P_SELECT) f++;
         else if(o==P_ENDSELECT) f--;
       }
-      if(j==prglen) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
-      if(o==P_ENDSELECT) bc_jumpto(cb,i,j,0); 
-    } continue;
+      if(j==prglen) {
+        xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
+        return(-1);
+      }
+      if(o==P_ENDSELECT) bc_jumpto(cb,lnr,j,0); 
+    } return(1); /* done */
     case P_DEFAULT: { 
       if(verbose>1) printf(" DEFAULT ");
-        int j,f=0,o=0;
-      for(j=i+1; (j<prglen && j>=0);j++) {
+      int j,f=0,o=0;
+      for(j=lnr+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDSELECT)  && f==0) break;
         else if(o==P_SELECT) f++;
         else if(o==P_ENDSELECT) f--;
       }
-      if(j==prglen) xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
-      if(o==P_ENDSELECT) bc_jumpto(cb,i,j,0); 
-    } continue; 
+      if(j==prglen) {
+        xberror(36,"SELECT/CASE"); /*Programmstruktur fehlerhaft */
+        return(-1);
+      }
+      if(o==P_ENDSELECT) bc_jumpto(cb,lnr,j,0); 
+    } return(1); /* done */ 
     case P_IF: {
-      bc_parser(cb,pcode[i].argument);               /* Ausdruck auswerten */
+      bc_parser(cb,pcode[lnr].argument);    /* Evaluate expression */
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}  /* Mache integer draus (wahrheitswert)*/
       if(verbose>1) printf(" IF ");
-      // printf("Werte aus: Zeile %d: IF (ENDIF vor Zeile %d)\n",i,pcode[i].integer);
+      // printf("Werte aus: Zeile %d: IF (ENDIF vor Zeile %d)\n",lnr,pcode[lnr].integer);
      /*  a=pcode[i].integer; zeigt auf ENDIF */
       int j,f=0,o=0;
-      for(j=i+1; (j<prglen && j>=0);j++) {
+      for(j=lnr+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDIF || o==P_ELSE|| o==P_ELSEIF)  && f==0) break;
         else if(o==P_IF) f++;
         else if(o==P_ENDIF) f--;
       }
-      if(j==prglen) xberror(36,"IF"); /*Programmstruktur fehlerhaft */
+      if(j==prglen) {
+        xberror(36,"IF"); /*Programmstruktur fehlerhaft */
+        return(-1);
+      }
 #if 0
       if(o==P_ENDIF) printf("ENDIF in Zeile %d gefunden.\n",j);
       else if(o==P_ELSE) printf("ELSE in Zeile %d gefunden.\n",j);
       else if(o==P_ELSEIF) printf("ELSEIF in Zeile %d gefunden.\n",j);
 #endif
-      if(o==P_ENDIF) bc_jumpto(cb,i,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
+      if(o==P_ENDIF) bc_jumpto(cb,lnr,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
                                                 dahinter springen, da es eine ELSE IF Zeile sein könnte*/
-      else if(o==P_ELSE) bc_jumpto(cb,i,j+1,1); /* In den Block rein springen */
-      else if(o==P_ELSEIF) bc_jumpto(cb,i,j,1); /* Die elseif muss ausgewertet werden*/
+      else if(o==P_ELSE) bc_jumpto(cb,lnr,j+1,1); /* In den Block rein springen */
+      else if(o==P_ELSEIF) bc_jumpto(cb,lnr,j,1); /* Die elseif muss ausgewertet werden*/
       else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
-    } continue; 
+    } return(1); /* done */  
     case P_ELSEIF: {
       /* Bei ELSE IF macht es einen Unterschied, ob man von oben drauflaeuft oder es über die 
        * bc_index Tabelle anspringt. In ersterem Fall wird zum ENDIF gegangen in letzterm muss ja
        * der Ausdruck ausgewertet werden. 
        */
-      bc_jumpto(cb,i,pcode[i].integer,0); /* von oben draufgelaufen, gehe zum endif */
+      bc_jumpto(cb,lnr,pcode[lnr].integer,0); /* von oben draufgelaufen, gehe zum endif */
       /* Korrigiere nun bc_index */
-      cb->bc_index[i]=cb->textseglen;   /* Wenn wir vom Sprung kommen, landen wir hier. Achtung! */
+      cb->bc_index[lnr]=cb->textseglen;   /* Wenn wir vom Sprung kommen, landen wir hier. Achtung! */
       if(verbose>1) printf(" ELSE IF (corr=$%x) ",cb->textseglen);
       int j,f=0,o=0;
 
       /* Bedingung auswerten */
-      bc_parser(cb,pcode[i].argument); if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
+      bc_parser(cb,pcode[lnr].argument); if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
 
-      for(j=i+1; (j<prglen && j>=0);j++) {
+      for(j=lnr+1; (j<prglen && j>=0);j++) {
         o=pcode[j].opcode&PM_SPECIAL;
         if((o==P_ENDIF || o==P_ELSE|| o==P_ELSEIF)  && f==0) break;
         else if(o==P_IF) f++;
         else if(o==P_ENDIF) f--;
       }
-      if(j==prglen) xberror(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
-
+      if(j==prglen) {
+        xberror(36,"ELSE IF"); /*Programmstruktur fehlerhaft */
+        return(-1);
+      }
 #if 0
       if(o==P_ENDIF) printf("ENDIF in Zeile %d gefunden.\n",j);
       else if(o==P_ELSE) printf("ELSE in Zeile %d gefunden.\n",j);
       else if(o==P_ELSEIF) printf("ELSEIF in Zeile %d gefunden.\n",j);
 #endif
 
-      if(o==P_ENDIF) bc_jumpto(cb,i,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
+      if(o==P_ENDIF) bc_jumpto(cb,lnr,j,1);       /* auch wenn ENDIF ignoriert wird, dürfen wir nicht einfach in die Zeile 
                                                 dahinter springen, da es eine ELSE IF Zeile sein könnte*/
-      else if(o==P_ELSE) bc_jumpto(cb,i,j+1,1); /* In den Block rein springen */
-      else if(o==P_ELSEIF) bc_jumpto(cb,i,j,1); /* Die elseif muss ausgewertet werden*/
+      else if(o==P_ELSE) bc_jumpto(cb,lnr,j+1,1); /* In den Block rein springen */
+      else if(o==P_ELSEIF) bc_jumpto(cb,lnr,j,1); /* Die elseif muss ausgewertet werden*/
       else {BCADD(BC_POP);TO();} /* Stack korrigieren und weitermachen */
-    } continue;
+    } return(1); /* done */
     case P_GOSUB:
-      if(pcode[i].integer==-1) bc_kommando(cb,i);
+      if(pcode[lnr].integer==-1) bc_kommando(cb,lnr);
       else {
-        char buf[strlen(pcode[i].argument)+1];
+        char buf[strlen(pcode[lnr].argument)+1];
 	char *pos,*pos2;
 	int anzpar=0;
-        if(verbose>1) printf(" GOSUB %d:%d ",pcode[i].integer,procs[pcode[i].integer].zeile);
- //       anzpar=pcode[i].panzahl;
+        if(verbose>1) printf(" GOSUB %d:%d ",pcode[lnr].integer,procs[pcode[lnr].integer].zeile);
+ //       anzpar=pcode[lnr].panzahl;
  //       if(anzpar) {
-          strcpy(buf,pcode[i].argument);
+          strcpy(buf,pcode[lnr].argument);
           pos=searchchr(buf,'(');
           if(pos!=NULL) {
             *pos=0;pos++;
             pos2=pos+strlen(pos)-1;
             if(*pos2!=')') {
 	      puts("GOSUB: Syntax error @ parameter list");
-	      structure_warning(original_line(i),"GOSUB"); /*Programmstruktur fehlerhaft */
+	      structure_warning(original_line(lnr),"GOSUB"); /*Programmstruktur fehlerhaft */
+	      return(-1);
             } else {
 	      *pos2=0;
 	      anzpar=count_parameters(pos);
 	      
-	      if(anzpar!=procs[pcode[i].integer].anzpar) {
-                xberror(56,pcode[i].argument); /* Falsche Anzahl Parameter */
+	      if(anzpar!=procs[pcode[lnr].integer].anzpar) {
+                xberror(56,pcode[lnr].argument); /* Falsche Anzahl Parameter */
+		return(-1);
               }
-              if(anzpar) if(push_typeliste(cb,pos,procs[pcode[i].integer].parameterliste,procs[pcode[i].integer].anzpar))
+              if(anzpar) if(push_typeliste(cb,pos,procs[pcode[lnr].integer].parameterliste,procs[pcode[lnr].integer].anzpar)) {
 	                    printf("WARNING: something is wrong at line %d!\n",compile_zeile);  /* Parameter auf den Stack */
+			    return(-1);
+                         }
 	    }
           } else pos=buf+strlen(buf);
  
    //     }
 	bc_push_integer(cb,anzpar);
-	bc_jumptosr(cb,i,procs[pcode[i].integer].zeile);
+	bc_jumptosr(cb,lnr,procs[pcode[lnr].integer].zeile);
 	TO();
 	TA(anzpar);
       }
-      continue; 
+      return(1); /* done */
     case P_RETURN:
-      if(verbose>1) printf(" RETURN %s ",pcode[i].argument);
-      if(pcode[i].argument && strlen(pcode[i].argument)) {
-        bc_parser(cb,pcode[i].argument);
+      if(verbose>1) printf(" RETURN %s ",pcode[lnr].argument);
+      if(pcode[lnr].argument && strlen(pcode[lnr].argument)) {
+        bc_parser(cb,pcode[lnr].argument);
 	
 	/*Jetzt noch den Returntype chekcen:*/
 	
-	switch(procs[last_proc_number].rettyp){
+	switch(procs[cb->last_proc_number].rettyp){
 	  case INTTYP:
 	    if(TL!=PL_INT) BCADD(BC_X2I);
             break;	
@@ -2178,39 +2167,47 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
 	    if(TL!=PL_ARBINT) BCADD(BC_X2AI);
             break;	
 	  case STRINGTYP:
-	    if(TL!=PL_STRING) printf("compile error: Returntype mismatch!\n");
+	    if(TL!=PL_STRING) {
+	      printf("compile error: Returntype mismatch!\n");
+	      return(-1);
+	    }
             break;	
 	}
 	TO();  /*Jetzt sollten wir wieder bei  typsp=0; auskommen....*/
       }      
       BCADD(BC_BLKEND);
       BCADD(BC_RTS);
-      continue;
+      return(1); /* done */
     case P_WHILE:
-      bc_parser(cb,pcode[i].argument);
+      bc_parser(cb,pcode[lnr].argument);
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" WHILE ");
-      bc_jumpto(cb,i,pcode[i].integer,1);
-      continue;
+      bc_jumpto(cb,lnr,pcode[lnr].integer,1);
+      return(1); /* done */
     case P_UNTIL:
-      bc_parser(cb,pcode[i].argument);
+      bc_parser(cb,pcode[lnr].argument);
       if(TL!=PL_INT) {BCADD(BC_X2I);TR(PL_INT);}
       if(verbose>1) printf(" UNTIL ");
-      bc_jumpto(cb,i,pcode[i].integer,1);
-      continue;
+      bc_jumpto(cb,lnr,pcode[lnr].integer,1);
+      return(1); /* done */
     case P_FOR: {
-      char w1[strlen(pcode[i].argument)+1],w2[strlen(pcode[i].argument)+1];
-      int e=wort_sep2(pcode[i].argument," TO ",TRUE,w1,w2);
-      if(e<2) e=wort_sep2(pcode[i].argument," DOWNTO ",TRUE,w1,w2);
-      if(e<2) printf("Syntax Error in line %d ! FOR %s\n",i,pcode[i].argument); 
+      char w1[strlen(pcode[lnr].argument)+1],w2[strlen(pcode[lnr].argument)+1];
+      int e=wort_sep2(pcode[lnr].argument," TO ",TRUE,w1,w2);
+      if(e<2) e=wort_sep2(pcode[lnr].argument," DOWNTO ",TRUE,w1,w2);
+      if(e<2) {
+        printf("Syntax Error in line %d ! FOR %s\n",lnr,pcode[lnr].argument); 
+        return(-1);
+      }
       wort_sep(w1,'=',TRUE,w1,w2);
       if(verbose>1) printf(" FOR ");
       bc_zuweisung(cb,w1,w2);
-      } continue;
+      } return(1); /* done */
     case P_NEXT: {
-      int pp=pcode[i].integer;  /* Zeile it dem zugehoerigen For */
-      if(pp==-1) xberror(36,"NEXT"); /*Programmstruktur fehlerhaft */
-      else {
+      int pp=pcode[lnr].integer;  /* Zeile it dem zugehoerigen For */
+      if(pp==-1) {
+        xberror(36,"NEXT"); /* Programmstruktur fehlerhaft */
+        return(-1);
+      } else {
 //	printf("Next: FOR ist in Zeile=%d\n",pp);
         char *w1=strdup(pcode[pp].argument);
 //	printf("Argument=<%s>\n",w1);
@@ -2225,20 +2222,28 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
 	else {
 	  e=wort_sep2(w1," DOWNTO ",TRUE,w2,w3);
 	  if(e>=2) ss=1;
-          else printf("Syntax Error ! FOR/NEXT\n");
+          else {
+	    printf("Syntax Error ! FOR/NEXT\n");
+	    return(-1);
+	  }
 	}
         /* Variable bestimmem */
         if(searchchr2(w2,'=')!=NULL) {
           wort_sep(w2,'=',TRUE,var,w1);
-        } else printf("Syntax Error in line %d ! FOR/NEXT %s\n",i,w2); 
+        } else {
+	  printf("Syntax Error in line %d ! FOR/NEXT %s\n",lnr,w2);
+	  return(-1);
+	}
 	// printf("Variable ist: %s Zuweisungsausdruck <%s>\n",var,w1);
 	
 	int st=0; 
 
         /* Limit bestimmem  */
         e=wort_sep2(w3," STEP ",TRUE,limit,step);
-        if(e==0) printf("Syntax Error ! FOR %s\n",w3);
-        else {
+        if(e==0) {
+	  printf("Syntax Error ! FOR %s\n",w3);
+	  return(-1);
+        } else {
           if(e==1) {
 	   // printf("limit=<%s> step=NONE\n",limit); /* Kein Step */
           } else {
@@ -2289,53 +2294,98 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
   	  TO();TR(PL_INT);
 	}	        
         free(w1);free(w2);free(w3);free(var);free(step);free(limit);
-        bc_jumpto(cb,i,pp+1,1);
+        bc_jumpto(cb,lnr,pp+1,1);
       }	
-    } continue;
+    } return(1); /* done */
     case P_ENDPROC: 
       if(verbose>1) printf(" * ");
       BCADD(BC_BLKEND);
       BCADD(BC_RTS);
       typsp=0;
-      continue;
+      return(1); /* done */
     } /* switch */
-    
-    /* Jetzt behandlung nach Typ:*/
 
-    switch(pcode[i].opcode&PM_TYP) {
+      /* Jetzt behandlung nach Typ:*/
+
+    switch(pcode[lnr].opcode&PM_TYP) {
     case P_IGNORE:
       if(verbose>1) printf(" * ");
-      continue;
+      return(1); /* done */
     case P_EVAL:
       if(verbose>1) printf(" EVAL ");
-      bc_kommando(cb,i);
-      continue;
+      bc_kommando(cb,lnr);
+      return(1); /* done */
     case P_SIMPLE:
       if(verbose>1) printf(" SIMPLE_COMM ");
-      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(0);
-      continue;
+      BCADD(BC_PUSHCOMM);BCADD(pcode[lnr].opcode&PM_COMMS);BCADD(0);
+      return(1); /* done */
     case P_ARGUMENT:
       if(verbose>1) printf(" ARGUMENT_COMM ");
-      BCADDPUSHX(pcode[i].argument);
-      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(1);
-      continue;
+      BCADDPUSHX(pcode[lnr].argument);
+      BCADD(BC_PUSHCOMM);BCADD(pcode[lnr].opcode&PM_COMMS);BCADD(1);
+      return(1); /* done */
     case P_PLISTE: {
-      int j=(pcode[i].opcode&PM_COMMS);
-      if(verbose>1) printf(" PLISTE(%d) ",pcode[i].panzahl);
+      int j=(pcode[lnr].opcode&PM_COMMS);
+      if(verbose>1) printf(" PLISTE(%d) ",pcode[lnr].panzahl);
       if(verbose>1) printf("COMMS=%d(%d)\n",j,comms[j].pmax);
-      plist_to_stack(cb,(PARAMETER *)pcode[i].ppointer,(short *)comms[j].pliste,pcode[i].panzahl,comms[j].pmin,comms[j].pmax);
-      BCADD(BC_PUSHCOMM);BCADD(pcode[i].opcode&PM_COMMS);BCADD(pcode[i].panzahl);
-      TA(pcode[i].panzahl);
-      if(pcode[i].panzahl<comms[j].pmin)  xberror(42,""); /* Zu wenig Parameter  */
-      if(comms[j].pmax!=-1 && (pcode[i].panzahl>comms[j].pmax)) xberror(45,""); /* Zu viele Parameter  */
-    } continue;
+      plist_to_stack(cb,(PARAMETER *)pcode[lnr].ppointer,(short *)comms[j].pliste,pcode[lnr].panzahl,comms[j].pmin,comms[j].pmax);
+      BCADD(BC_PUSHCOMM);BCADD(pcode[lnr].opcode&PM_COMMS);BCADD(pcode[lnr].panzahl);
+      TA(pcode[lnr].panzahl);
+      if(pcode[lnr].panzahl<comms[j].pmin) {
+        xberror(42,""); /* Zu wenig Parameter  */
+	return(-1);
+      }
+      if(comms[j].pmax!=-1 && (pcode[lnr].panzahl>comms[j].pmax)) {
+        xberror(45,""); /* Zu viele Parameter  */
+	return(-1);
+      }
+    } return(1); /* done */
     default: 
-    
-      printf("ERROR Compile: Unknown statement -> %lx\n",pcode[i].opcode&PM_SPECIAL);
-    } /*  switch */
-    printf("Compiler ERROR: unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
-    if((pcode[i].opcode&PM_COMMS)>=anzcomms) puts("Precompiler error...");
-    bc_kommando(cb,i);
+      printf("ERROR Compile: Unknown statement -> %lx\n",pcode[lnr].opcode&PM_SPECIAL);
+  } /*  switch */
+  return(0); /* not done, because we might need extra treatment...*/
+}
+
+
+/* Compiles the currently loaded program.
+ *
+ * Return value: 
+ *              0 -- everything OK
+ *             -1 -- compiling failed.
+ */
+
+int compile(COMPILE_BLOCK *cb,int compile_flags) {
+  cb->comp_flags=compile_flags;
+  init_compile(cb);
+  
+  if(cb->comp_flags&COMPILE_VERBOSE) {
+    printf("%d\tlines.\n",prglen);
+    printf("%d\tprocedures.\n",anzprocs);
+    printf("%d\tlabels.\n",anzlabels);
+    printf("%d\tvariables.\n",anzvariablen);
+    if(verbose>0) printf("Compile flags=%x\n",cb->comp_flags);
+    if(verbose>1) printf("PASS A:\n");
+  }
+  add_string(cb,"compiled by xbbc " VERSION);
+  
+  int ret;
+  
+  for(int i=0;i<prglen;i++) {
+    if(typsp!=cb->expected_typsp) printf("COMPILER WARNING: typsp=%d at line %d.\n",typsp,i);
+    ret=compile_line(cb,i);
+    if(ret>0) continue; /* done, take next line...*/
+    else if(ret<0) break; /* error, stop compiling.*/
+    else {
+      /* Anything more to handle ?
+       *  ...
+       */
+      /* Hm, something was not handled...*/
+      printf("Compiler ERROR: unknown code %08x in line %d\n",(unsigned int)pcode[i].opcode,i);
+      if((pcode[i].opcode&PM_COMMS)>=anzcomms) puts("Precompiler error...");
+      bc_kommando(cb,i); /*Try to compile something at least, so we can see it with xb2c for debugging */
+      ret=-1;
+      break;
+    }
   } /*  for */
   
   
@@ -2371,6 +2421,7 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
   if(verbose>1) printf("PASS B: %d relocations\n",cb->anzreloc);
   else if(verbose) printf("%d\trelocations.\n",cb->anzreloc);
   int dummy=0;
+  int a,b;
   for(int i=0;i<cb->anzreloc;i++) {
     b=cb->reltab[i];
     CP4(&a,&cb->textseg[cb->reltab[i]],dummy);
@@ -2387,18 +2438,23 @@ void compile(COMPILE_BLOCK *cb,int compile_flags) {
     }
     CP4(&cb->textseg[cb->reltab[i]],&a,dummy);
   }
+  return(ret);
 }
 
-
-
-
-
-
-
-
-
-
-
+/* Save a bytecode into a .b file. 
+ *
+ * The filename will be stored in rodata.
+ * Following blocks were written: 
+ *
+ *  1. The BYTECODE_HEADER
+ *  2. The TEXT segment
+ *  3. The RODATA segment
+ *  4. The SDATA segment
+ *  5. If not dostrip: The STRINGS segment
+ *  6. If not dostrip: The SYMBOL table
+ *  
+ * currently there is no relocation table and also not (real) DATA segment.
+ */
 
 int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   if(verbose) {printf("--> %s [",name);fflush(stdout);}
@@ -2406,7 +2462,7 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   if(fdis==-1) {perror("open");return(-1);}
   BYTECODE_HEADER h;
   bzero(&h,sizeof(BYTECODE_HEADER));
-  add_rodata(cb,ifilename,strlen(ifilename));
+  add_rodata(cb,ifilename,strlen(ifilename));  /* store filename */
   int len=cb->textseglen;
   int rodatalen=cb->rodataseglen;
   int dlen=cb->dataseglen;
@@ -2477,5 +2533,3 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   if(verbose) printf("] done.\n");
   return(close(fdis));
 }
-
-

@@ -68,6 +68,9 @@ typedef struct {
   int anzreloc;   
   int *bc_index;
   int prglen;
+  
+  int last_proc_number;    /*internal: proc number of the last PROCEDURE/FUNCTION statement */
+  int expected_typsp;      /*internal: Expected type stack position.*/
 } COMPILE_BLOCK;
 
 
@@ -331,7 +334,7 @@ typedef struct {
 
 /* Protos */
 int bytecode_make_bss(BYTECODE_HEADER *bytecode,char **,int );
-void compile(COMPILE_BLOCK *cb,int );
+int compile(COMPILE_BLOCK *cb,int );
 int bc_parser(COMPILE_BLOCK *cb,const char *funktion);
 int add_rodata(COMPILE_BLOCK *cb,char *data,int len);
 int fix_bytecode_header(BYTECODE_HEADER *bytecode);

@@ -120,7 +120,9 @@ int main(int anzahl, char *argumente[]) {
 #ifdef ATARI
 	printf("Compile ... \n");
 #endif
-	compile(&cb,compile_flags);
+	if(compile(&cb,compile_flags)<0) {
+  	  printf("ERROR: compilation failed. Saving the result anyways.\n");
+	}
 	int ret=save_bytecode(ofilename,&cb,dostrip);
 	if(ret==-1) exit(EX_CANTCREAT);
 	#ifdef ATARI
