@@ -248,7 +248,7 @@ static void translate(FILE *optr) {
     
     fprintf(optr,"\nvoid lib_%s_init() {\n",nn);
   } else {
-    fprintf(optr,"\nmain(int anzahl, char *argumente[]) {\n"
+    fprintf(optr,"\nint main(int anzahl, char *argumente[]) {\n"
                "  MAIN_INIT;\n"
                "  databufferlen=%d;\n",(int)bytecode->dataseglen);
     if(bytecode->dataseglen) fprintf(optr,"  databuffer=datasec;\n");
@@ -733,10 +733,11 @@ static int loadbcprg(char *filename, FILE *optr) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version 1.27\n"
+    fprintf(optr,"/* X11-Basic-Compiler Version " VERSION "\n"
                  "   (c) Markus Hoffmann 2002-2019\n"
-                 "\n"
-                 "\nBytecode: %s (%d Bytes)\n\n",filename,len);
+                 "\n\n"
+		 "Compile this with:\n tcc -lx11basic " TCC_COMPILE_FLAGS " %s\n"
+                 "\nBytecode: %s (%d Bytes)\n\n",ofilename,filename,len);
 
 #ifdef IS_BIG_ENDIAN
     WSWAP((char *)&bytecode->version);
@@ -812,6 +813,7 @@ static int loadbcprg(char *filename, FILE *optr) {
       if(verbose>1) fprintf(optr,"%4d : $%08x %s\n",i,(unsigned int)symtab[i].adr,&strings[symtab[i].name]);
     }
     fprintf(optr,"\t\t\t*/\n"
+                 "#define HAVE_GMP 1 /* uncomment if you have it */\n"
                  "#include <x11basic/xb2csol.h>\n\n");
     fflush(optr);
     return(0);

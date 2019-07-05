@@ -7837,6 +7837,11 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define TCC_COMPILE_FLAGS "$regs $libs"
+_ACEOF
+
+
 #libs=$LIBS
 
 

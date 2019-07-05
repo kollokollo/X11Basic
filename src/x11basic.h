@@ -22,20 +22,12 @@
   #include <gmp.h>
   #define ARBINT mpz_t
   #define ARBFLOAT mpf_t
-  typedef struct {
-    ARBFLOAT r;
-    ARBFLOAT i;
-  }   ARBCOMPLEX;
 #elif defined HAVE_MINI_GMP
   /*MINI_GMP ist nur ein schlechter ersatz, weil es viele Funktionen nicht 
     enhaelt. Hierfür wird hier ein Dummy definiert. */
   #include <mini-gmp.h>
   #define ARBINT mpz_t
   #define ARBFLOAT double
-  typedef struct {
-    ARBFLOAT r;
-    ARBFLOAT i;
-  } ARBCOMPLEX;
   #define gmp_randstate_t long
   #define gmp_randinit_default(a) srand(a)
   #define gmp_randinit_ui(a,b) srand(a)
@@ -48,7 +40,6 @@
 #else
 #define ARBINT int
 #define ARBFLOAT double
-#define ARBCOMPLEX COMPLEX
 #define mpz_init(a) ;
 #define mpz_init_set(a,b) a=b
 #define mpz_clear(a) a=0
@@ -105,6 +96,12 @@
 #define gmp_printf printf
 #endif
 
+/*Variablen Typen*/
+
+typedef struct {
+   ARBFLOAT r;
+   ARBFLOAT i;
+}  ARBCOMPLEX;
 /*Variablen Typen*/
 
 typedef struct {

@@ -556,6 +556,7 @@ AC_CHECK_FUNCS([socket strchr strdup strerror strstr backtrace])
 # Versioning
 AC_DEFINE_UNQUOTED(VERSION,"$version",[Version of actual implementation])
 AC_DEFINE_UNQUOTED(VERSION_DATE,"$vdate",[Date of actual compilation])
+AC_DEFINE_UNQUOTED(TCC_COMPILE_FLAGS,"$regs $libs",[Compilation options for tcc])
 
 #libs=$LIBS
 AC_SUBST(mandir)
