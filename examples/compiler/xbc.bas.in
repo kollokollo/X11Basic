@@ -289,13 +289,13 @@ PROCEDURE link
     IF win32
       SYSTEM "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o -L"+librarypath$+"/ -lx11basic -lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32"
     ELSE
-      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @X_LIBS@ -L"+librarypath$+"/ -lx11basic  @libs@"
+      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o @xlibs@ -L"+librarypath$+"/ -lx11basic  @libs@"
     ENDIF
   ELSE
     IF win32
       SYSTEM "i686-pc-mingw32-gcc @regs@ -o "+outputfilename$+" "+rumpf$+".o "+librarypath$+"/x11basic.lib -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 "
     ELSE
-      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o "+librarypath$+"/x11basic.a @X_LIBS@ @libs@"
+      SYSTEM "@CC@ @regs@ -o "+outputfilename$+" "+rumpf$+".o "+librarypath$+"/x11basic.a @xlibs@ @libs@"
     ENDIF
   ENDIF
   IF dostrip

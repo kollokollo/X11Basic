@@ -416,6 +416,10 @@ xbasic : libx11basic.so main.o
 
 # Make th X11-Basic compiler manager xbc
 
+
+examples/compiler/xbc.bas: examples/compiler/xbc.bas.in
+	./configure --prefix=/usr
+
 xbc : xbasic libx11basic.so examples/compiler/xbc.bas
 	LD_LIBRARY_PATH=. ./xbasic examples/compiler/xbc.bas --dynamic -o $@ -L .
 	strip $@
