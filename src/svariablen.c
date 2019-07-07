@@ -117,15 +117,31 @@ static double v_gpslon() {return(-1);}
 static double v_timer() {
 #ifdef WINDOWS
 #if 0
-       return((double)GetTickCount()/1000.0);
-#else
-       return((double)clock()/CLOCKS_PER_SEC);
+  /* GetTickCount() starts counting at system start/boot */
+  return((double)GetTickCount()/1000.0);
 #endif
+#if 0
+  /* clock() starts counting at program start */
+  return((double)clock()/CLOCKS_PER_SEC);
+#endif
+  double fraction=GetTickCount()/1000.0;
+  static time_t st_tt=-1;
+  static double st_fr=-1;
+  if(st_tt==-1 || st_fr>fraction) { /* GetTickCount() overflows after 49 days.*/
+    time_t ltime;
+    time(&ltime);
+    // struct tm* timeinfo = gmtime(&ltime); /* Convert to UTC */
+    // ltime = mktime(timeinfo); /* Store as unix timestamp */
+
+    st_tt=ltime;
+    st_fr=fraction;
+  }
+  return((double)st_tt+fraction-st_fr);
 #else
-        struct timeval t;
-        struct timezone tz;
-	gettimeofday(&t,&tz);
-	return((double)t.tv_sec+(double)t.tv_usec/1000000);
+  struct timeval t;
+  struct timezone tz;
+  gettimeofday(&t,&tz);
+  return((double)t.tv_sec+(double)t.tv_usec/1000000);
 #endif
 }
 static double v_ctimer() {return((double)clock()/CLOCKS_PER_SEC);}
