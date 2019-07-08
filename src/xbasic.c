@@ -144,7 +144,6 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
 COMPILE_BLOCK *bytecode_init(char *adr) {
   int i,a,typ;
   char *name;
-  char *bsseg;
   unsigned char *fixup;   /* Relocation information */
 //#ifdef ANDROID
 //  char buffer[256];
@@ -179,6 +178,7 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
     cb->textseglen=bytecode->textseglen;
     cb->rodataseg=&adr[sizeof(BYTECODE_HEADER)+bytecode->textseglen];
     cb->rodataseglen=bytecode->rodataseglen;
+    cb->bsseglen=bytecode->bssseglen;
     cb->dataseg=adr+bytecode->textseglen+bytecode->rodataseglen+sizeof(BYTECODE_HEADER);
     cb->dataseglen=bytecode->sdataseglen+bytecode->dataseglen;
     databuffer=cb->dataseg;
@@ -190,7 +190,9 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
 		 bytecode->sdataseglen+
 		 bytecode->dataseglen];
 
-    /* Jetzt Variablen anlegen.*/
+    /* Now create all variables from symbol table. Afterwards the
+       symbol table and the string segment is not needed anymore.
+       */
     cb->symtab=(BYTECODE_SYMBOL *)(adr+sizeof(BYTECODE_HEADER)+
                                    bytecode->textseglen+
 		                   bytecode->rodataseglen+
@@ -224,7 +226,7 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
 	  else if(typ==STRINGTYP) add_variable(name,typ,0,V_DYNAMIC,NULL);
 	  else                    add_variable(name,typ,0,V_STATIC,cb->bsseg+cb->symtab[i].adr);
 //#ifdef ANDROID	  
-//    sprintf(buffer,"BSSSEG auf %08x ",bsseg);
+//    sprintf(buffer,"BSSSEG auf %08x ",cb->bsseg);
 //    backlog(buffer);
 //#endif
         }  
@@ -245,11 +247,11 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
 		       bytecode->dataseglen+
 		       bytecode->stringseglen+
 		       bytecode->symbolseglen);
+
     if((bytecode->flags&EXE_REL)==EXE_REL && bytecode->relseglen>0) 
       do_relocation(adr,fixup,bytecode->relseglen);
-
    /*Now: clear bss segment. This will probably overwrite symbol table and strings and relocation info*/
-    if(bytecode->bssseglen>0) bzero(bsseg,bytecode->bssseglen);
+    if(bytecode->bssseglen>0) bzero(cb->bsseg,cb->bsseglen);
 #ifdef ANDROID
     backlog("bytecode_init done.");
 #endif
@@ -345,8 +347,10 @@ int mergeprg(const char *fname) {
 
     if(fix_bytecode_header((BYTECODE_HEADER *)programbuffer)) return(-1);
     programbufferlen=bytecode_make_bss(bytecode,&programbuffer,programbufferlen);
-    if(bytecode_init(programbuffer)) return(0);
-    return(-1); /* something is wrong... */
+    COMPILE_BLOCK *cb=bytecode_init(programbuffer); 
+    if(!cb) return(-1); /* something is wrong... */
+    free(cb);  /* We do not need this here */
+    return(0);
   } else {
     
    /* Zeilenzahl herausbekommen */
