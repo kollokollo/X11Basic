@@ -45,7 +45,6 @@ DEF=@def@
 # Compiler
 #CC=@CC@ @static@ $(REGS)
 CC=@CC@ -Wall
-CCDEBUG=@CC@ -g 
 CCSHARED=@CC@  -fPIC -shared -Wl,-Bsymbolic-functions 
 
 # Cross-Compiler fuer Windows-Excecutable
@@ -404,8 +403,12 @@ libx11basic.so.$(LIBNO) : $(LIBCSRC) Makefile
 
 # Make the (static) library
 
-x11basic.a : $(LIBOBJS)
+
+x11basic.a.debug : $(LIBOBJS)
 	ar -ru $@ $(LIBOBJS) 
+
+x11basic.a : x11basic.a.debug
+	cp $< $@
 	strip --strip-debug $@
 	 
 # Make the (dynamically linked) X11-Basic excecutable
@@ -432,8 +435,8 @@ xbbc : bytecode.h bytecode.o xbbc.o
 xbbc.static : xbbc.o bytecode.o x11basic.a
 	$(CC) -o $@ xbbc.o bytecode.o x11basic.a $(LIBS)		
 	strip $@
-xbbc.debug : xbbc.c bytecode.c $(LIBCSRC) 
-	$(CCDEBUG) -o $@ xbbc.c bytecode.c  $(LIBCSRC) $(LIBS)		
+xbbc.debug : xbbc.o bytecode.o x11basic.a.debug
+	$(CC) -o $@ xbbc.o bytecode.o  x11basic.a.debug $(LIBS)		
 
 # Make the virtual machine for interpreting the bytecode
 
@@ -443,8 +446,8 @@ xbvm : bytecode.h xbvm.c
 xbvm.static : xbvm.o x11basic.a
 	$(CC) -o $@ xbvm.o x11basic.a $(LIBS)
 	strip $@
-xbvm.debug : xbvm.c  $(LIBCSRC) 
-	$(CCDEBUG) -o $@ xbvm.c $(LIBCSRC) $(LIBS) 	
+xbvm.debug : xbvm.o  x11basic.a.debug 
+	$(CC) -o $@ xbvm.o x11basic.a.debug $(LIBS) 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -540,8 +543,8 @@ xbasic.framebuffer : main.c $(LIBCSRCFB)
 xbasic.static : x11basic.a main.o
 	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a $(LIBS) 
 	strip $@
-xbasic.debug :	main.c $(LIBCSRC)
-	$(CCDEBUG) $(OPT) $(LINKFLAGS) -o $@ main.c $(DEF) $(LIBCSRC) $(LIBS) 
+xbasic.debug :	main.o x11basic.a.debug
+	$(CC) $(OPT) $(LINKFLAGS) -o $@ main.o x11basic.a.debug $(LIBS) 
 	
 static : xbasic.static	xbbc.static xbvm.static xb2c.static
 
@@ -712,11 +715,11 @@ xb2c_d.o: xb2c.c
 xb2c :  xb2c.o
 	$(CC) -o $@ xb2c.o  -L . $(LIBS) -lx11basic 
 	strip $@
-xb2c.static : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o keywords.o
+xb2c.debug : xb2c_d.o file.o functions_d.o io_basic.o tools.o afunctions_d.o svariablen_d.o sfunctions_d.o kommandos_d.o keywords.o
 	$(CC) -o $@ xb2c_d.o functions_d.o tools.o keywords.o afunctions_d.o svariablen_d.o file.o io_basic.o sfunctions_d.o kommandos_d.o $(LIBS)
+xb2c.static : xb2c.debug
+	cp $< $@
 	strip $@
-xb2c.debug : xb2c.c $(LIBCSRC)
-	$(CCDEBUG) -o $@ xb2c.c  $(LIBCSRC) $(LIBS)
 
 x11basic.tga: ../logo/x11basic-logo-1999.pov
 	povray +I$< +O$@ +FT +W512 +H400 +V -D +X +MV3.0 +L/usr/share/fonts/truetype/msttcorefonts/
