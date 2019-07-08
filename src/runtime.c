@@ -189,9 +189,9 @@ static void fatal_error_handler( int signum) {
   }
   if(obatch) {
     if(pc>0) {
-      if(pc>1) printf("    pc-1  : %s\n",program[pc-2]);
+      if(pc>1) printf("    pc-1 : %s\n",program[pc-2]);
       printf("--> pc=%d : %s\n",pc-1,program[pc-1]);
-      printf("    pc+1  : %s\n",program[pc]);
+      printf("    pc+1 : %s\n",program[pc]);
     } else puts("PC negativ !");
     puts("** PROGRAM-STOP");
   } else {

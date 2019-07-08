@@ -79,7 +79,7 @@ void intro() {
 #else
 static void intro() {
   printf("**********************************************************\n"
-         "*    %10s                     V." VERSION "              *\n"
+         "*    %10s                     V." VERSION "               *\n"
          "*                       by Markus Hoffmann 1997-2019 (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
