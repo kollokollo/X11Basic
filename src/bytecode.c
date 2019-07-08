@@ -1744,20 +1744,7 @@ static void init_compile(COMPILE_BLOCK *cb) {
   cb->sdataseg=databuffer;
   cb->sdataseglen=databufferlen;
 }
-void free_cb(COMPILE_BLOCK *cb) {
-  if(cb->status==0) {  /* all memory should be freed. */
-    free(cb->textseg);
-    cb->textseg=NULL;
-    free(cb->rodataseg);
-    cb->rodataseg=NULL;
-    free(cb->dataseg);
-    cb->dataseg=NULL;
-    free(cb->bc_index);
-    cb->bc_index=NULL;
-    free(cb->reltab);
-    cb->reltab=NULL;
-  }
-}
+
 /* compiles one line and produces bytecode for it.
  * adds to bcpc.
  * return: 0 -- not done
@@ -2487,15 +2474,7 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   h.version=cb->bc_version;
   h.relseglen=0;
 
-  if(verbose) {
-    printf("Info: BC_VERSION=%04x\n"
-           "  Size of   Text-Segment: %d\n"
-           "  Size of roData-Segment: %d\n"
-           "  Size of   Data-Segment: %d\n",h.version,(int)h.textseglen,(int)h.rodataseglen,(int)h.sdataseglen);
-    printf("  Size of    bss-Segment: %d\n"
-           "  Size of String-Segment: %d\n",(int)h.bssseglen,(int)h.stringseglen);
-    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h.symbolseglen,cb->anzsymbols);
-  }
+  if(verbose) print_bytecode_info(&h);
   #ifdef IS_BIG_ENDIAN
   WSWAP((char *)&h.version);
   LWSWAP((short *)&h.textseglen);

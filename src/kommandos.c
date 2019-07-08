@@ -622,14 +622,8 @@ static void c_list(PARAMETER *plist, int e) {
   }
   if(is_bytecode && programbufferlen>sizeof(BYTECODE_HEADER)-2) {
     BYTECODE_HEADER *h=(BYTECODE_HEADER *)programbuffer;
-    printf("Bytecode: %s (%d Bytes) Version: %04x\n",ifilename,programbufferlen,h->version);
-    printf("Info:\n"
-           "  Size of   Text-Segment: %d\n"
-           "  Size of roData-Segment: %d\n"
-           "  Size of   Data-Segment: %d\n",(int)h->textseglen,(int)h->rodataseglen,(int)h->sdataseglen);
-    printf("  Size of    bss-Segment: %d\n"
-           "  Size of String-Segment: %d\n",(int)h->bssseglen,(int)h->stringseglen);
-    printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)h->symbolseglen,(int)(h->symbolseglen/sizeof(BYTECODE_SYMBOL)));
+    printf("Bytecode: %s (%d Bytes)\n",ifilename,programbufferlen);
+    print_bytecode_info(h);
   } else {
     if(o<=prglen) for(i=a;i<o;i++) puts(program[i]);
   }

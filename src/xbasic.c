@@ -130,6 +130,22 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
     }
   }
 }
+
+void print_bytecode_info(BYTECODE_HEADER *bytecode) {
+  printf("Info: bytecode version: %04x\n"
+  	 "  Size of   Text-Segment: %d\n"
+  	 "  Size of roData-Segment: %d\n"
+  	 "  Size of   Data-Segment: %d\n",bytecode->version,(int)bytecode->textseglen,
+    					(int)bytecode->rodataseglen,(int)bytecode->sdataseglen);
+  printf("  Size of    bss-Segment: %d\n"
+  	 "  Size of String-Segment: %d\n",(int)bytecode->bssseglen,(int)bytecode->stringseglen);
+  printf("  Size of Symbol-Segment: %d (%d symbols)\n",(int)bytecode->symbolseglen,(int)(bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL)));
+}
+
+
+
+
+
 /* We assume that the segments are in following order: 
    HEADER
    TEXT
@@ -240,6 +256,7 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
     printf("%d variables.\n",anzvariablen);
     c_dump(NULL,0);
 #endif
+    if(verbose>1) print_bytecode_info(bytecode);
     fixup=(unsigned char *)(adr+sizeof(BYTECODE_HEADER)+
                        bytecode->textseglen+
 		       bytecode->rodataseglen+

@@ -338,9 +338,24 @@ int compile(COMPILE_BLOCK *cb,int );
 int bc_parser(COMPILE_BLOCK *cb,const char *funktion);
 int add_rodata(COMPILE_BLOCK *cb,char *data,int len);
 int fix_bytecode_header(BYTECODE_HEADER *bytecode);
-void free_cb(COMPILE_BLOCK *cb);
 COMPILE_BLOCK *bytecode_init(char *adr);
 int save_bytecode(const char *name,COMPILE_BLOCK *cb,int);
+void print_bytecode_info(BYTECODE_HEADER *bytecode);
+
+static inline void free_cb(COMPILE_BLOCK *cb) {
+  if(cb->status==0) {  /* all memory should be freed. */
+    free(cb->textseg);
+    cb->textseg=NULL;
+    free(cb->rodataseg);
+    cb->rodataseg=NULL;
+    free(cb->dataseg);
+    cb->dataseg=NULL;
+    free(cb->bc_index);
+    cb->bc_index=NULL;
+    free(cb->reltab);
+    cb->reltab=NULL;
+  }
+}
 
 #if 0
 int vm_add(PARAMETER *sp);

@@ -29,7 +29,7 @@
   HINSTANCE hInstance;
 #endif
 #include "bytecode.h"
-
+extern int program_adr;
 
 int loadfile=0;
 char ifilename[100]="b.b";
@@ -189,6 +189,7 @@ static int loadbcprg(char *filename) {
     bcpc.len=bytecode_make_bss(bytecode,&bcpc.pointer,bcpc.len);
     programbufferlen=bcpc.len;
     programbuffer=bcpc.pointer;
+    if(verbose) print_bytecode_info(bytecode);
     return(0);
   } else {
     printf("ERROR: file format not recognized. $%02x $%02x\n",bcpc.pointer[0],bcpc.pointer[1]);
@@ -255,12 +256,17 @@ int main(int anzahl, char *argumente[]) {
     if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
     if(fix_bytecode_header((BYTECODE_HEADER *)bcpc.pointer)==0) {
       BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)bcpc.pointer;
+      
       programbufferlen=bcpc.len=bytecode_make_bss(bytecode,&bcpc.pointer,bcpc.len);
       programbuffer=bcpc.pointer;
-      bytecode_init(bcpc.pointer); 
-      do_run(); /*set variables etc to zero */
-      run_bytecode(bcpc.pointer,bcpc.len);
-      return(EX_OK);
+      COMPILE_BLOCK *cb=bytecode_init(bcpc.pointer); 
+      if(cb) {
+        do_run(); /*set variables etc to zero */
+        run_bytecode(bcpc.pointer,bcpc.len);
+        free_cb(cb);
+        free(cb);
+        return(EX_OK);
+      }
     }
     printf("ERROR: Something is wrong, no code!\n");
    #ifdef ATARI
@@ -283,9 +289,12 @@ int main(int anzahl, char *argumente[]) {
       printf("xbvm: could not run %s.\n",ifilename);
       return(EX_CONFIG);
     }
-    if(bytecode_init(bcpc.pointer)) {
+    COMPILE_BLOCK *cb=bytecode_init(bcpc.pointer);
+    if(cb) {
       do_run(); /*set variables etc to zero */
       run_bytecode(bcpc.pointer,bcpc.len);
+      free_cb(cb);
+      free(cb);
     }
   }
   return(EX_OK);
