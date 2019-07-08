@@ -105,7 +105,7 @@ int myeof(FILE *n) {
 int bsave(const char *name, char *adr, size_t len) { 
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   if(fdis==-1) return(-1);
-  if(write(fdis,adr,len)==-1) io_error(errno,"write");
+  if(write(fdis,adr,len)==-1) {close(fdis); return(-1);}
   return(close(fdis));
 }
 

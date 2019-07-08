@@ -268,7 +268,10 @@ PROCEDURE packvm(bfile$)
   ENDIF
   ON ERROR gosub file_error
   PRINT "saving ";outputfilename$,LEN(t$),"bytes."
-  BSAVE outputfilename$,VARPTR(t$),LEN(t$)
+  OPEN "O",#9,outputfilename$
+  PRINT #9,t$;
+  CLOSE #9
+  ' BSAVE outputfilename$,VARPTR(t$),LEN(t$)
   KILL bfile$
 RETURN
 PROCEDURE pseudo
