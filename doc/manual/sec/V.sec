@@ -67,12 +67,29 @@ SEE ALSO:  COMBIN(), FACT()
 
 ##############################################################################
 
+Function:   VARLEN()
+Syntax:     a=VARLEN(<variable>)        
+
+DESCRIPTION:
+
+	Determines the length of the content of a variable in memory. 
+	For float variables usually 8 is returned, meaning, 8 bytes 
+	following the adress returned by VARPTR() belong to the variable. 
+	For string variables the length of the string content is returned. 
+	This is the same result as of LEN(var$) but the calculation is 
+	much faster for very long strings. 
+
+
+SEE ALSO: VARPTR(), PEEK(), POKE, ABSOLUTE
+##############################################################################
+
 Function:   VARPTR()
 Syntax:     adr%=VARPTR(<variable>)        
 
 DESCRIPTION:
 
-	Determines the address of a variable and returns a pointer. 
+	Determines the address of the content of a variable in memory 
+	and returns a pointer. 
 	Usually this is used together with PEEK() and POKE to modify 
 	the content of the variable.
 	VARPTR() can also be used to determine the address of an 
@@ -82,7 +99,7 @@ EXAMPLE:
 	PRINT VARPTR(t$),VARPTR(a(2,4))
 	POKE VARPTR(t$),ASC("A")
 
-SEE ALSO: ARRPTR(), PEEK(), POKE, ABSOLUTE
+SEE ALSO: VARLEN(), ARRPTR(), PEEK(), POKE, ABSOLUTE
 
 ##############################################################################
 

@@ -83,7 +83,7 @@
 #define f_add NULL
 #define f_and NULL
 #define carg NULL
-#define arrptr NULL
+#define f_arrptr NULL
 #define f_asc NULL
 #define f_asin NULL
 #define f_asinh NULL
@@ -211,6 +211,7 @@
 #define f_valf NULL
 #define f_variat NULL
 #define f_varptr NULL
+#define f_varlen NULL
 #define f_ubound NULL
 #define f_word NULL
 #define f_wort_sep NULL
@@ -304,7 +305,7 @@ static COMPLEX myconj(COMPLEX a)  {a.i=-a.i;return(a);}
 extern int shm_malloc(int,int);
 extern int shm_attach(int);
 
-static char   *arrptr(PARAMETER *p,int e) {return((char *)variablen[p->integer].pointer.a); }
+static int f_arrptr(PARAMETER *p,int e) {return(POINTER2INT(variablen[p->integer].pointer.a)); }
 
 /*Funktionen (mit f_ prefix )*/
 
@@ -1343,25 +1344,26 @@ static int f_listselect(PARAMETER *plist,int e) {
 }
 #endif
 
-
+/* VARPTR(): Return the address of the first byte of the content of the variable.
+ */
 static int f_varptr(PARAMETER *p,int e) {
   switch(p->typ) {
   case PL_IVAR:
   case PL_FVAR:
   case PL_CVAR:
   case PL_NVAR:
-  case PL_IARRAYVAR: /* Variable */
-  case PL_FARRAYVAR: /* Variable */
-  case PL_AIARRAYVAR: /* Variable */
+  case PL_IARRAYVAR:
+  case PL_FARRAYVAR:
+  case PL_AIARRAYVAR:
     return(POINTER2INT(p->pointer));
   case PL_SVAR:
     return(POINTER2INT(((STRING *)p->pointer)->pointer));
-  case PL_SARRAYVAR: /* Variable */
+  case PL_SARRAYVAR:
     if(p->panzahl>0) return(POINTER2INT(((STRING *)p->pointer)->pointer));
     else return(POINTER2INT(p->pointer));
-  case PL_VAR:   /* Variable */
-  case PL_ARRAYVAR: /* Variable */
-  case PL_ALLVAR:  /* Varname */
+  case PL_VAR:
+  case PL_ARRAYVAR:
+  case PL_ALLVAR:
   default:
   {
     int typ=variablen[p->integer].typ;
@@ -1373,6 +1375,33 @@ static int f_varptr(PARAMETER *p,int e) {
   }  
 }
 
+/* VARLEN(): Return the length of the content of the variable.
+ */
+static int f_varlen(PARAMETER *p,int e) {
+  switch(p->typ) {
+  case PL_IVAR: return(sizeof(int));
+  case PL_FVAR: return(sizeof(double));
+  case PL_CVAR: return(sizeof(COMPLEX));
+  case PL_AIVAR: return(sizeof(ARBINT));
+  case PL_SVAR: return(((STRING *)p->pointer)->len);
+  default:
+  {
+    int typ=variablen[p->integer].typ;
+    if(typ==ARRAYTYP) typ=variablen[p->integer].pointer.a->typ;
+    switch(typ) {
+    case INTTYP:  return(sizeof(int));
+    case FLOATTYP: return(sizeof(double));
+    case STRINGTYP: return(((STRING *)p->pointer)->len);
+    case ARRAYTYP:  return(((ARRAY *)p->pointer)->dimension);
+    case ARBINTTYP: return(sizeof(ARBINT));
+    case ARBFLOATTYP: return(sizeof(ARBFLOAT));
+    default: 
+      // printf("VARLEN() TODO: typ=$%x\n",typ);
+      return(0);
+    }
+  }
+  }
+}
 /*Einzelne Dimensionierungen eines (mehrdimensionalen) Arrays*/
 
 static int f_ubound(PARAMETER *p,int e) {
@@ -1422,7 +1451,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
 #else
  { F_CONST|F_CQUICK|F_DRET,    "ARG"       , atan2              ,1,1,{PL_COMPLEX}},
 #endif
- { F_PLISTE|F_IRET,            "ARRPTR"    , (pfunc)arrptr     ,1,1,{PL_ARRAYVAR}},
+ { F_PLISTE|F_IRET,            "ARRPTR"    , (pfunc)f_arrptr   ,1,1,{PL_ARRAYVAR}},
  { F_CONST|F_SQUICK|F_IRET,    "ASC"       , (pfunc)f_asc      ,1,1,{PL_STRING}},
  { F_CONST|F_PLISTE|F_NRET,    "ASIN"      , (pfunc)f_asin     ,1,1,{PL_CF}},
  { F_CONST|F_PLISTE|F_NRET,    "ASINH"     , (pfunc)f_asinh    ,1,1,{PL_CF}},
@@ -1667,6 +1696,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_SQUICK|F_DRET, "VAL"       , f_val ,1,1     ,{PL_STRING}},
  { F_CONST|F_SQUICK|F_IRET, "VAL?"       ,(pfunc) f_valf ,1,1   ,{PL_STRING}},
  { F_CONST|F_PLISTE|F_IRET, "VARIAT"    , (pfunc)f_variat ,2,2     ,{PL_INT,PL_INT}},
+ { F_PLISTE|F_IRET,         "VARLEN"    , (pfunc)f_varlen ,1,1     ,{PL_ALLVAR}},
  { F_PLISTE|F_IRET,         "VARPTR"    , (pfunc)f_varptr ,1,1     ,{PL_ALLVAR}},
  { F_CONST|F_PLISTE|F_IRET, "VRFY"      ,(pfunc) f_vrfy ,3,4   ,{PL_STRING,PL_STRING,PL_STRING,PL_INT}},
 

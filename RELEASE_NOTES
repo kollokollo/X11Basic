@@ -15,3 +15,4 @@ Release notes for Version 1.27 (June 2019 -- )
 - new function REGEXP() and MATCH()
 - little fix for HELP, REM and DATA
 - New feature: ANS variable (store result of simple calculation)
+- New function VARLEN() 
