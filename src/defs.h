@@ -56,7 +56,6 @@
 #endif
 #define min(a,b) ((a<b)?a:b)
 #define max(a,b) ((a>b)?a:b)
-#define sgn(x)   ((x<0)?-1:1)
 #define rad(x)   (PI*x/180)
 #define deg(x)   (180*x/PI)
 #ifndef LOBYTE

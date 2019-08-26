@@ -787,7 +787,11 @@ static int    f_realloc(int adr,int size) {return(POINTER2INT(realloc((char *)IN
 static double f_rnd(double d)   {return((double)rand()/((double)RAND_MAX+1));}
 
 static int    f_size(STRING n)  {return(stat_size(n.pointer)); }
-static int    f_sgn(double b)   {return(sgn(b));}
+static int    f_sgn(double b)   {
+  if(b>0.0) return 1;
+  if(b<0.0) return -1;
+  return 0;
+}
 static int    f_srand(double d) {srand((int)d);return(0);}
 static int    f_succ(double b)  {return((int)(b+1));}
 
