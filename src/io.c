@@ -1217,7 +1217,10 @@ static void set_terminal_flags(FILEINFO *finfo, const char *pars, int port) {
 #ifdef B1000000
 	  case 1000000: port|=B1000000; break;
 #endif
-          default: printf("Baud rate not supported !\n");
+#ifdef B2000000
+	  case 2000000: port|=B2000000; break;
+#endif
+          default: printf("Baud rate %d not supported!\n",baud);
           }
    	  port&=~CSIZE;      /* Bits loeschen !  */
           if(bits==7) port|=CS7;
