@@ -107,6 +107,7 @@
 #define f_cos NULL
 #define f_cosh NULL
 #define f_crc NULL
+#define f_crc16 NULL
 #define f_cspid NULL
 #define f_cssize NULL
 #define f_cvi NULL
@@ -1091,6 +1092,9 @@ static int f_crc(PARAMETER *plist,int e) {
   if(e>1) return(update_crc(plist[1].integer, plist->pointer, plist->integer));
   return(update_crc(0L, plist->pointer, plist->integer));
 }
+static int f_crc16(PARAMETER *plist,int e) { 
+  return(CRC16CCITT(plist->pointer, (uint16_t) plist->integer));
+}
 
 
 static double f_sensor(int n) {
@@ -1494,6 +1498,7 @@ const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_PLISTE|F_NRET,    "COS"       , (pfunc) f_cos     ,1,1,{PL_CF}},
  { F_CONST|F_PLISTE|F_NRET,    "COSH"      , (pfunc) f_cosh    ,1,1,{PL_CF}},
  { F_CONST|F_PLISTE|F_IRET,    "CRC"       , (pfunc) f_crc     ,1,2,{PL_STRING, PL_INT}},
+ { F_CONST|F_PLISTE|F_IRET,    "CRC16"     , (pfunc) f_crc16   ,1,1,{PL_STRING}},
 #ifdef CONTROL
  { F_SQUICK|F_DRET,            "CSGET"     , f_csget           ,1,1,{PL_STRING}},
  { F_SQUICK|F_DRET,            "CSMAX"     , f_csmax           ,1,1,{PL_STRING}},

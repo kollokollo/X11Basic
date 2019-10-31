@@ -681,7 +681,17 @@ DESCRIPTION:
 	 If oc is passed, the checksum will be updated with the 
 	 given string.
 
-SEE ALSO:  LEN()
+SEE ALSO:  LEN(), HASH$()
+###############################################################################
+
+Function:   CRC16()
+Syntax:     <num-result>=CRC(t$)
+
+DESCRIPTION:
+
+	 Calculates a 16 bit checksum with CRC-CCITT on the given string. 
+
+SEE ALSO:  CRC(), HASH$()
 
 #############################################################################
 

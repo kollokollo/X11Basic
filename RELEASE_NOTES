@@ -16,3 +16,4 @@ Release notes for Version 1.27 (June 2019 -- )
 - little fix for HELP, REM and DATA
 - New feature: ANS variable (store result of simple calculation)
 - New function VARLEN() 
+- New function CRC16() 

@@ -17,6 +17,9 @@ int f_gray(int n);
 unsigned long update_crc(unsigned long crc, unsigned char *buf, int len);
 
 
+uint16_t CRC16CCITT(uint8_t *data, uint16_t length);
+
+
 COMPLEX complex_add(COMPLEX a, COMPLEX b);
 COMPLEX complex_sub(COMPLEX a, COMPLEX b);
 COMPLEX complex_mul(COMPLEX a, COMPLEX b);
