@@ -8,7 +8,7 @@
 
 #define BC_STACKLEN 256
 
-#define BC_VERSION 0x1273   /* Version 1.27 release 3*/
+#define BC_VERSION 0x1274   /* Version 1.27 release 4*/
 
 
 /* File heade for bytecode */

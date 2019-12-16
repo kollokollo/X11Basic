@@ -570,6 +570,24 @@ DESCRIPTION:
 
 SEE ALSO: POINT(),PLOT
 ##############################################################################
+Command: PUBLISH
+Syntax:  PUBLISH topic$,message$[,qos,retained]
+
+DESCRIPTION:
+
+	Publishes a message to the topic on a (mqtt) broker. 
+	You can optionally specify the quality of service (0-2) and the 
+	retained-flag (0,1). By default the retained flag is 1 if the qos is
+	0. If qos>0 the default for retained is 1.
+
+EXAMPLE:
+
+	BROKER "tcp://localhost:1883"
+	PUBLISH "TIME",time$
+
+	 
+SEE ALSO: BROKER, SUBSCRIBE
+##############################################################################
 Command: PUT
 Syntax:  PUT x,y,var$[,scale[,trans[,xs,ys,w,h],angle]]
 

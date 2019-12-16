@@ -284,9 +284,11 @@
 /* Define to 1 if  you have the <usb.h> header file. */
 #undef HAVE_USB
 
-/* Define to 1 if  you have the <usb.h> header file. */
+/* Define to 1 if  you have bluetooth libraries. */
 #undef HAVE_BLUETOOTH
 
+/* Define to 1 if  you have the mqtt libraries. */
+#undef HAVE_MQTT
 
 /* Define to 1 if  you have the <gcrypt.h> header file. */
 #undef HAVE_GCRYPT

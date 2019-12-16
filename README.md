@@ -184,6 +184,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-bluetooth        support blutooth [default=yes]
   --with-usb              support USB [default=yes]
+  --with-mqtt             support mqtt [default=yes]
   --with-readline         support readline library [default=yes]
   --with-framebuffer      support framebuffer [default=no]
   --with-sdl              support SDL library [default=no]

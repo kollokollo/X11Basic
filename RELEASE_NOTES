@@ -17,3 +17,4 @@ Release notes for Version 1.27 (June 2019 -- 2020)
 - New feature: ANS variable (store result of simple calculation)
 - New function VARLEN() 
 - New function CRC16() 
+- New mqtt commands BROKER, SUBSCRIBE, PUBLISH

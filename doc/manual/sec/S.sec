@@ -1087,6 +1087,59 @@ DESCRIPTION:
 
 SEE ALSO: SUB, ADD()
 ##############################################################################
+Command:   SUBSCRIBE
+Syntax:    SUBSCRIBE topic$,value$[,callback[,qos]]
+
+DESCRIPTION:
+	Subscribes to (or unsubscribes from) a topic on the (mqtt) broker. 
+	You can optionally specify 
+	a quality of service value. When a message is received, its content 
+	will be stored in the global variable value$ and the procedure 
+	callback is excecuted.
+	If qos=-1, the topic will be unsubscribed. 
+	The callback function is optional.
+	
+	The Quality of service can be:
+----*
+	-1  -- unsubscribe
+	0   -- receive at most once
+	1   -- receive ar least once
+	2   -- receive exactly once
+*----
+	
+
+EXAMPLE:
+
+BROKER "tcp://localhost:1883"
+SUBSCRIBE "CMD",cmd_var$,cmd_callback,2
+SUBSCRIBE "TEMPERATURE",temp_var$,engine
+SUBSCRIBE "HUMIDITY",hum_var$,engine
+SUBSCRIBE "SOMETHING",something_var$
+DO
+  PUBLISH "ACTIVITY",STR$(i MOD 4)
+  INC i
+  PAUSE 1
+  EXIT IF cmd_var$="exit"
+LOOP
+SUBSCRIBE "CMD",cmd_var$,cmd_callback,-1
+QUIT
+
+' This realizes a "rule". The input topics will trigger this. 
+PROCEDURE engine
+  LOCAL temp,hum,dev
+  PRINT "engine triggered"
+  temp=VAL(temp_var$)
+  hum=VAL(hum_var$)
+  dev=temp*hum  ! please implement the correct formula
+  PUBLISH "DEWPOINT",STR$(dev)
+RETURN
+PROCEDURE cmd_callback
+  PRINT "cmd_callback trigered: cmd_var=";cmd_var$
+RETURN
+
+
+SEE ALSO: BROKER, PUBLISH
+##############################################################################
 Function: SUCC()
 Syntax:   a=SUCC(b)
 

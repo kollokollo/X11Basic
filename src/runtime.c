@@ -26,6 +26,7 @@
 #include "parameter.h"
 #include "bytecode.h"
 #include "virtual-machine.h"
+#include "ccs.h"
 
 
 static void *obh;       /* old break handler  */
@@ -270,6 +271,9 @@ void x11basicStartup() {
   libx11basic_init();
 #ifdef CONTROL  
   cs_init();        /* Kontrollsystem anmelden */
+#endif
+#ifdef HAVE_MQTT  
+  mqtt_init();        /* Kontrollsystem anmelden */
 #endif
   /* Signal- und Interrupt-Handler installieren  */
   obh=signal(SIGINT, break_handler);

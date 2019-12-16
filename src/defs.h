@@ -142,6 +142,11 @@
 #else
   #define FEATURE10 "    "
 #endif
+#ifdef HAVE_MQTT
+  #define FEATURE11 "mqtt "
+#else
+  #define FEATURE11 "     "
+#endif
 
 
 #endif

@@ -85,7 +85,7 @@ static void intro() {
          "*    ====> Version without graphics support <====        *\n"
 #else
          "***  " FEATURE1 FEATURE2 FEATURE3 FEATURE4 FEATURE5 FEATURE6 FEATURE7 
-	      FEATURE8 FEATURE9 FEATURE10 "          ***\n"
+	      FEATURE8 FEATURE9 FEATURE10 FEATURE11 "     ***\n"
 #endif
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"

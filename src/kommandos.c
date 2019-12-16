@@ -59,6 +59,7 @@
 #include "sysVstuff.h"
 #include "bytecode.h"
 #include "number.h"
+#include "ccs.h"
 
 #ifdef ANDROID
 #include "android.h"
@@ -208,6 +209,9 @@
 #define c_screen NULL
 #define c_seek NULL
 #define c_send NULL
+#define c_publish NULL
+#define c_broker NULL
+#define c_subscribe NULL
 #define c_setfont NULL
 #define c_setmouse NULL
 #define c_sget NULL
@@ -2789,6 +2793,8 @@ const COMMAND comms[]= {
 #endif
  { P_PLISTE,     "BPUT"     , c_bput      ,3,  3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
  { P_BREAK,      "BREAK"    , NULL        ,0,  0},
+ /* Ausdruck als Message queuen oder per MQTT pushen */
+ { P_PLISTE,     "BROKER"  , c_broker,    1,3, (unsigned short [])  {PL_STRING,PL_STRING,PL_NUMBER}},
  { P_PLISTE,     "BSAVE"    , c_bsave     ,3,  3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
 
  { P_PLISTE,     "CALL"     , c_call      ,1, -1,(unsigned short []){PL_INT,PL_EVAL}},
@@ -3019,9 +3025,8 @@ const COMMAND comms[]= {
  { P_PLISTE,     "PRINT"    , c_print,       0,-1,(unsigned short []){PL_EVAL}},
  { P_PROC,       "PROCEDURE", c_end  ,      0,0},
  { P_IGNORE,     "PROGRAM"  , NULL  ,      0,0},
- /* Ausdruck als Message queuen
-  { P_ARGUMENT,   "PUBLISH"  , c_publish, 1,2,{PL_ALLVAR,PL_NUMBER}},
- */
+ /* Ausdruck als Message queuen oder per MQTT pushen */
+ { P_PLISTE,     "PUBLISH"  , c_publish,   2,4, (unsigned short [])  {PL_STRING,PL_STRING,PL_NUMBER,PL_NUMBER}},
 #ifndef NOGRAPHICS
  { P_PLISTE,     "PUT"  , c_put,      3,10,(unsigned short []){PL_INT,PL_INT,PL_STRING,PL_FLOAT,PL_INT,PL_INT,PL_INT,PL_INT,PL_INT,PL_FLOAT}},
 #endif
@@ -3094,6 +3099,8 @@ const COMMAND comms[]= {
 #endif
  { P_SIMPLE,	 "STOP"     , c_stop,       0,0},
  { P_PLISTE,	 "SUB"      , c_sub,        2,2,(unsigned short []){PL_NVAR,PL_NUMBER}},
+ /* MQTT subscribe */
+ { P_PLISTE,     "SUBSCRIBE", c_subscribe,  2,4,(unsigned short []){PL_STRING,PL_SVAR,PL_PROC,PL_NUMBER}},
  { P_PLISTE,	 "SWAP"     , c_swap,       2,2,(unsigned short []){PL_ALLVAR,PL_ALLVAR}},
  { P_PLISTE,	 "SYSTEM"   , c_system,     1,1,(unsigned short []){PL_STRING}},
 

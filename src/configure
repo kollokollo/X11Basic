@@ -698,6 +698,7 @@ enable_static
 enable_smallram
 enable_german
 with_bluetooth
+with_mqtt
 with_usb
 with_readline
 with_framebuffer
@@ -1348,6 +1349,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-bluetooth        support blutooth [default=yes]
+  --with-mqtt             support mqtt [default=yes]
   --with-usb              support USB [default=yes]
   --with-readline         support readline library [default=yes]
   --with-framebuffer      support framebuffer [default=no]
@@ -2523,6 +2525,15 @@ fi
 
 
 
+# Check whether --with-mqtt was given.
+if test "${with_mqtt+set}" = set; then :
+  withval=$with_mqtt; with_mqtt=$withval
+else
+  with_mqtt=yes
+fi
+
+
+
 # Check whether --with-usb was given.
 if test "${with_usb+set}" = set; then :
   withval=$with_usb; with_usb=$withval
@@ -2580,6 +2591,7 @@ echo "Use framebuffer               = " $with_framebuffer
 echo "Use readline library          = " $with_readline
 echo "Support USB                   = " $with_usb
 echo "Support bluetooth             = " $with_bluetooth
+echo "Support mqtt                  = " $with_mqtt
 echo
 
 if test "n$with_sdl" = nno && test "n$with_x" = nno && test "n$with_framebuffer" = nno; then
@@ -6209,6 +6221,55 @@ if test "x$ac_cv_lib_bluetooth_hci_get_route" = xyes; then :
 libs="$libs -lbluetooth"
 
 $as_echo "#define HAVE_BLUETOOTH 1" >>confdefs.h
+
+
+fi
+
+fi
+
+if test "n$with_mqtt" = nyes; then
+# `-lpaho-mqtt3c':
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MQTTClient_create in -lpaho-mqtt3c" >&5
+$as_echo_n "checking for MQTTClient_create in -lpaho-mqtt3c... " >&6; }
+if ${ac_cv_lib_paho_mqtt3c_MQTTClient_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpaho-mqtt3c $libs $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char MQTTClient_create ();
+int
+main ()
+{
+return MQTTClient_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_paho_mqtt3c_MQTTClient_create=yes
+else
+  ac_cv_lib_paho_mqtt3c_MQTTClient_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_paho_mqtt3c_MQTTClient_create" >&5
+$as_echo "$ac_cv_lib_paho_mqtt3c_MQTTClient_create" >&6; }
+if test "x$ac_cv_lib_paho_mqtt3c_MQTTClient_create" = xyes; then :
+
+libs="$libs -lpaho-mqtt3c"
+
+$as_echo "#define HAVE_MQTT 1" >>confdefs.h
 
 
 fi

@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=60
+RELEASE=61
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -70,13 +70,13 @@ LIBOBJS=xbasic.o tools.o loadprg.o file.o io.o io_basic.o parser.o variablen.o s
         runtime.o wort_sep.o ltext.o functions.o sfunctions.o afunctions.o \
 	kommandos.o gkommandos.o bitmap.o do_gets.o errortxt.o window.o\
 	sysVstuff.o aes.o graphics.o sound.o number.o keywords.o decode.o \
-	virtual-machine.o vm-api.o type.o lodepng.o md5.o sha1.o
+	virtual-machine.o vm-api.o type.o lodepng.o md5.o sha1.o ccs.o
 
 # these are objects which are compiled to binary
 
 MAINOBJS= main.o xbbc.o xbvm.o xb2c.o
 
-EXTRAOBJS= bytecode.o ccs.o framebuffer.o raw_mouse.o raw_keyboard.o spat-a-fnt.o 5x7.o consolefont.o \
+EXTRAOBJS= bytecode.o framebuffer.o raw_mouse.o raw_keyboard.o spat-a-fnt.o 5x7.o consolefont.o \
 	   unifont.o unifont57.o terminal.o 8x16.o
 
 # Sources for libx11basic
@@ -104,7 +104,7 @@ HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        sfunctions.h sound.h svariablen.h sysVstuff.h \
        terminal.h type.h variablen.h virtual-machine.h \
        window.h wort_sep.h x11basic.h xb2csol.h xbasic.h memory.h lodepng.h \
-       md5.h sha1.h
+       md5.h sha1.h ccs.h
 
 EXAMPLES_TESTS= \
 	../examples/tests/*.bas \

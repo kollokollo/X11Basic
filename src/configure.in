@@ -61,6 +61,9 @@ AC_ARG_ENABLE(german, AS_HELP_STRING([--enable-german],
 AC_ARG_WITH(bluetooth, AS_HELP_STRING([--with-bluetooth],
               [support blutooth @<:@default=yes@:>@]), [with_bluetooth=$withval], [with_bluetooth=yes])
 
+AC_ARG_WITH(mqtt, AS_HELP_STRING([--with-mqtt],
+              [support mqtt @<:@default=yes@:>@]), [with_mqtt=$withval], [with_mqtt=yes])
+
 AC_ARG_WITH(usb, AS_HELP_STRING([--with-usb],
               [support USB @<:@default=yes@:>@]), [with_usb=$withval], [with_usb=yes])
 
@@ -89,6 +92,7 @@ echo "Use framebuffer               = " $with_framebuffer
 echo "Use readline library          = " $with_readline
 echo "Support USB                   = " $with_usb
 echo "Support bluetooth             = " $with_bluetooth
+echo "Support mqtt                  = " $with_mqtt
 echo
 
 if test "n$with_sdl" = nno && test "n$with_x" = nno && test "n$with_framebuffer" = nno; then
@@ -309,6 +313,14 @@ if test "n$with_bluetooth" = nyes; then
 AC_CHECK_LIB([bluetooth], [hci_get_route], [
 libs="$libs -lbluetooth"
 AC_DEFINE(HAVE_BLUETOOTH,1,[hci_get_route in lbluetooth])
+],,[$libs])
+fi
+
+if test "n$with_mqtt" = nyes; then
+# `-lpaho-mqtt3c':
+AC_CHECK_LIB([paho-mqtt3c], [MQTTClient_create], [
+libs="$libs -lpaho-mqtt3c"
+AC_DEFINE(HAVE_MQTT,1,[MQTTClient_create in paho-mqtt3c])
 ],,[$libs])
 fi
 

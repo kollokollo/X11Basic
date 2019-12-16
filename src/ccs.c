@@ -12,12 +12,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
 #include "svariablen.h"
 #include "xbasic.h"
+#include "ccs.h"
+
 
 
 #if defined CONTROL || defined TINE
@@ -1595,3 +1598,180 @@ void c_tinecycle(char *n) {
   SystemCycle(FALSE);
 }
 #endif
+
+
+#ifdef HAVE_MQTT
+#include <MQTTClient.h>
+#include <time.h>
+char clientID[64];
+#define TIMEOUT     10000L
+MQTTClient client;
+int mqtt_isconnected=0;
+MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+volatile MQTTClient_deliveryToken deliveredtoken;
+typedef struct {
+  char *topic;
+  int vnr;
+  char *ptr;
+  int procnr;
+} SUBSCRIPTION;
+
+SUBSCRIPTION subscriptions[100];
+int anzsubscription;
+
+void connlost(void *context, char *cause) {
+  printf("\nMQTT-Connection lost\n");
+  printf("     cause: %s\n", cause);
+}
+int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+  int i;
+#if DEBUG
+  char* payloadptr;
+  printf("Message arrived\n");
+  printf("     topic: %s\n", topicName);
+  printf("   message: ");
+  payloadptr = message->payload;
+  for(i=0; i<message->payloadlen; i++) putchar(*payloadptr++);
+  putchar('\n');
+#endif
+  STRING a;
+  a.pointer=message->payload;
+  a.len=message->payloadlen;
+  for(i=0;i<anzsubscription;i++) {
+    if(!strcmp(topicName,subscriptions[i].topic)) {
+    // printf("Subscription found!\n");
+      varcaststring(subscriptions[i].vnr,subscriptions[i].ptr,a);
+      if(subscriptions[i].procnr>=0) {
+	batch=1;
+        int pc2=procs[subscriptions[i].procnr].zeile;
+        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
+        else {
+          printf("Stack overflow! PC=%d\n",pc); 
+	  restore_locals(sp+1);
+          xberror(39,"SUBSCRIBE"); /* Program Error Gosub impossible */
+        }
+        programmlauf();
+      }
+      break;
+    }
+  }
+  MQTTClient_freeMessage(&message);
+  MQTTClient_free(topicName);
+  return 1;
+}
+void delivered(void *context, MQTTClient_deliveryToken dt) {
+ //   printf("Message with token value %d delivery confirmed\n", dt);
+    deliveredtoken = dt;
+}
+
+void mqtt_init() {
+  atexit(mqtt_exit);
+}
+static void mqtt_publish(char *topic, STRING payload, int qos, int retain) {
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  MQTTClient_deliveryToken token;
+  pubmsg.payload=payload.pointer;
+  pubmsg.payloadlen=payload.len;
+  pubmsg.qos =qos;
+  pubmsg.retained = retain;
+//  printf("publish to <%s> <%s> qos=%d\n",topic,payload.pointer,qos);
+  MQTTClient_publishMessage(client,topic, &pubmsg, &token);
+//  printf("done token=%d\n",token);
+  // int rc=
+  MQTTClient_waitForCompletion(client, token, TIMEOUT);
+  // printf("Message with delivery token %d delivered\n", token);
+}
+
+static void mqtt_subscribe(char *topic,int qos) {
+  MQTTClient_subscribe(client, topic, qos);
+}
+static void mqtt_unsubscribe(char *topic) {
+  MQTTClient_unsubscribe(client, topic);
+}
+void mqtt_exit() {
+  /* free the subscription list */
+  while(anzsubscription>0) {
+    anzsubscription--;
+    free(subscriptions[anzsubscription].topic);
+  }
+
+  if(mqtt_isconnected) {
+    MQTTClient_disconnect(client, 10000);
+    MQTTClient_destroy(&client);
+    mqtt_isconnected=0;
+  }
+}
+#endif
+
+/* Define a broker for PUBLISH/SUBSCRIBE. Usually the mqtt url is given
+   as well as a username and password if needed. Only one connection at a
+   time is allowed. The old connection will be closed when BROKER is called
+   a second time. 
+
+ */
+
+void c_broker(PARAMETER *plist, int e) {
+#ifdef HAVE_MQTT
+  mqtt_exit(); /* Alte Verbindung beenden.*/
+  sprintf(clientID,"X11-Basic-%ld",clock());
+  MQTTClient_create(&client, plist[0].pointer, clientID,MQTTCLIENT_PERSISTENCE_NONE, NULL);
+  conn_opts.keepAliveInterval = 20;
+  conn_opts.cleansession = 1;
+  MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+  int rc;
+  if((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+    printf("MQTT Client: <%s>\n",clientID);
+    printf("Failed to connect, return code %d\n", rc);
+  }
+#else
+  printf("MQTT support not compiled in.\n");
+  xberror(9,"MQTT support");
+#endif
+}
+
+/* Publish the content of a string (message) to a topic on 
+   a (mqtt) server. This command could also work with message queues.
+ */
+
+void c_publish(PARAMETER *plist, int e) {
+#ifdef HAVE_MQTT
+  int qos=0; /* Quality of Service, default=0 */
+  int retain=0; /* This is the default */
+  if(e>2) qos=plist[2].integer;
+  if(qos==0) retain=1;
+  if(e>3) retain=(plist[3].integer!=0);
+  mqtt_publish(plist[0].pointer, *((STRING *)&(plist[1].integer)), qos, retain);
+#else
+  printf("MQTT support not compiled in.\n");
+  xberror(9,"MQTT support");
+#endif
+}
+
+
+/* Subscribe to a topic and get message as well as call a function on
+   reception.
+   This currently can work with MQTT support.  
+   
+ */
+
+
+void c_subscribe(PARAMETER *plist, int e) {
+#ifdef HAVE_MQTT
+  int qos=0;  /* Quality of Service, default=0 */
+  if(e>3) qos=plist[3].integer;
+  if(qos>=0) {
+    subscriptions[anzsubscription].ptr=plist[1].pointer;
+    subscriptions[anzsubscription].vnr=plist[1].integer;
+    if(plist[2].typ==0) subscriptions[anzsubscription].procnr=-1;
+    else subscriptions[anzsubscription].procnr=plist[2].integer;
+    subscriptions[anzsubscription].topic=strdup(plist[0].pointer);
+    anzsubscription++;
+    mqtt_subscribe(plist[0].pointer, qos);
+  } else { /* Unsubscribe */
+    mqtt_unsubscribe(plist[0].pointer);
+  }
+#else
+  printf("MQTT support not compiled in.\n");
+  xberror(9,"MQTT support");
+#endif
+}

@@ -194,6 +194,20 @@ EXAMPLE:
 SEE ALSO:  EXIT IF
 ##############################################################################
 
+Command:    BROKER
+Syntax:     BROKER url$[,user$,passwd$]
+DESCRIPTION:
+
+	Define a (mqtt) broker and connect to it. 
+	You can specify a username and a password if needed. 
+
+COMMENT:
+        Only available, if MQTT support is compiled in.
+
+
+SEE ALSO:  PUBLISH, SUBSCRIBE
+##############################################################################
+
 Command:    BSAVE
 Syntax:     BSAVE filename$,adr%,len%
 
