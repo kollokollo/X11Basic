@@ -9,7 +9,7 @@
 
 
 int do_parameterliste(const char *pos, const int *,int);
-void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar);
+int call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar);
 
 double parser(const char *funktion);
 ARRAY array_parser(const char *funktion);

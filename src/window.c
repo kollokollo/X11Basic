@@ -338,11 +338,12 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
   Window root;
   XTextProperty win_name, icon_name;
   char *agv[1];
-
+  
+/* This should be called: */
+  XInitThreads(); 
   /* Verbindung zum X-Server aufnehmen. */
-  if ( (window[nummer].display = XOpenDisplay(display_name)) == NULL) {
-    printf("Can't Connect XServer on display %s. Aborted\n",
-	    XDisplayName(display_name));
+  if((window[nummer].display=XOpenDisplay(display_name))==NULL) {
+    printf("Can't Connect XServer on display %s. Aborted\n",XDisplayName(display_name));
     return(-1);
   }
   /* Welchen Bildschirm nehmen ? */
@@ -615,6 +616,9 @@ static int fetch_rootwindow() {
   char *display_name = NULL;   /* NULL: Nimm Argument aus setenv DISPLAY */
   XGCValues gc_val;            /* */
   Window root;
+  
+  /* This should be called first: */
+  XInitThreads(); 
 
   /* Verbindung zum X-Server aufnehmen. */
   if ((window[0].display=XOpenDisplay(display_name))==NULL) {

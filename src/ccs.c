@@ -1640,23 +1640,23 @@ void connlost(void *context, char *cause) {
   
   
 }
+
+
+/* This callback is called in a separate thread, when a message for a
+   subscribed topic is received.
+ */
+
+
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
   int i;
-#if DEBUG
-  char* payloadptr;
-  printf("Message arrived\n");
-  printf("     topic: %s\n", topicName);
-  printf("   message: ");
-  payloadptr = message->payload;
-  for(i=0; i<message->payloadlen; i++) putchar(*payloadptr++);
-  putchar('\n');
-#endif
-  STRING a;
-  a.pointer=message->payload;
-  a.len=message->payloadlen;
   for(i=0;i<anzsubscription;i++) {
     if(!strcmp(topicName,subscriptions[i].topic)) { /* Subscription found! */
-      if(subscriptions[i].vnr>=0) varcaststring(subscriptions[i].vnr,subscriptions[i].ptr,a);
+      if(subscriptions[i].vnr>=0) {
+        STRING a;
+        a.pointer=message->payload;
+        a.len=message->payloadlen;
+        varcaststring(subscriptions[i].vnr,subscriptions[i].ptr,a);
+      }
       if(subscriptions[i].procnr>=0) {
         /* create two local variables topic$ and message$ */
 	PARAMETER p[2];
@@ -1667,14 +1667,17 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 	p[1].pointer=message->payload;
 	p[1].integer=message->payloadlen;
 //	printf("Topic: <%s> (%d)\n",topicName,topicLen);
-	call_sub_with_parameterlist(subscriptions[i].procnr,&p[0],2);
+        if(batch) { /* nur ausführen wenn nicht im Kommandomodus */
+  	  int err=call_sub_with_parameterlist(subscriptions[i].procnr,&p[0],2);
+          if(!err) programmlauf(); /* Lasse Subroutine in diesem Thread laufen...*/
+        }
       }
       break;
     }
   }
   MQTTClient_freeMessage(&message);
   MQTTClient_free(topicName);
-  return 1;
+  return 1;  /* Message successfully consumed. */
 }
 void delivered(void *context, MQTTClient_deliveryToken dt) {
  //   printf("Message with token value %d delivery confirmed\n", dt);

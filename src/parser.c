@@ -1661,17 +1661,20 @@ STRING string_parser(const char *funktion) {
 
 
 /* Ruft PROCEDURE oder FUNCTION auf und erstellt lokale Übergabeparameter der
-   procedur. und füllt diese mit Ihnalten aus der Parameterliste.*/
+   procedur. und füllt diese mit Ihnalten aus der Parameterliste.
+   Returns: 0 everything OK, 
+            1 error
+	   */
 
-void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
+int call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
   if(anzpar!=procs[procnr].anzpar) {
     xberror(56,procs[procnr].name); /* Falsche Anzahl Parameter */
-    return;
+    return 1;
   }
   if(!stack_check(sp)) {
     printf("Stack overflow! PC=%d SP=%d/%d\n",pc,sp,stack_size);
     xberror(39,procs[procnr].name); /* Program Error Gosub impossible */ 
-    return;
+    return 1;
   }
   /* Jetzt Übergabe der Parameter an lokale variablen. Es ist hier essentiell, dass die
      Information, ob ein Parameter by reference übbergeben wird, 
@@ -1702,21 +1705,22 @@ void call_sub_with_parameterlist(int procnr,PARAMETER *plist,int anzpar) {
           set_var_adr(vnr,pointer);
 	  // printf("VAR: Variablen-adr gesetzt auf: adr=0x%p\n",pointer);
           sp--;
-        } else xberror(75,""); /* Stack Overflow! */
+        } else {xberror(75,""); /* Stack Overflow! */ return(1);}
       } else {
         if(stack_check(sp)) {
           sp++;
           do_local(vnr,sp);    /* Uebergabeparameter sind lokal ! */
           zuweis_v_parameter(&variablen[vnr],&plist[i]);
           sp--;
-	} else xberror(75,""); /* Stack Overflow! */
+	} else {xberror(75,""); /* Stack Overflow! */ return(1);}
       }
     }
   }
 
   /*Rücksprungzeile auf den Stack und PC auf anfang der Routine setzen.*/
   if(stack_check(sp)) {stack[sp++]=pc;pc=procs[procnr].zeile+1;} 
-  else xberror(75,""); /* Stack Overflow! */
+  else {xberror(75,""); /* Stack Overflow! */ return 1;}
+  return(0);
 }
 
 

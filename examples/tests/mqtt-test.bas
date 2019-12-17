@@ -28,14 +28,19 @@ SUBSCRIBE "SOMETHING",something_var$
 ' It is very simple to publish something:
 
 PUBLISH "TIME",time$,1,1
+PUBLISH "STATUS","OK"
 
 ' You can now enter an endless loop and so just react to the callbacks. 
 DO
-  PUBLISH "ACTIVITY",str$(i MOD 4)
+  PUBLISH "COUNTER",str$(i)
   INC i
-  PAUSE 1
+  PAUSE 0.1
   EXIT IF cmd_var$="exit"
   PRINT i
+  if (i mod 10)=0
+    PUBLISH "ACTIVITY",str$(INT(i/10) MOD 4)
+    PUBLISH "TIME",time$
+  endif
 LOOP
 QUIT
 
