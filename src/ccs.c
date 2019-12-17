@@ -1610,7 +1610,6 @@ char clientID[64];
 #define TIMEOUT     10000L
 MQTTClient client;
 int mqtt_isconnected=0;
-MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 volatile MQTTClient_deliveryToken deliveredtoken;
 typedef struct {
   char *topic;
@@ -1622,9 +1621,24 @@ typedef struct {
 SUBSCRIPTION subscriptions[100];
 int anzsubscription;
 
+
+
+/* This is a callback function. 
+   The client application must provide an implementation of this function
+to enable asynchronous notification of the loss of connection to the server.
+It is
+called by the client library if the client loses its connection to the server. The client
+application must take appropriate action, such as trying to reconnect or reporting the problem. This
+function is executed on a separate thread to the one on which the client application is running.
+*/
+
 void connlost(void *context, char *cause) {
   printf("\nMQTT-Connection lost\n");
   printf("     cause: %s\n", cause);
+  
+  /* TODO: sleep a while and then try to reconnect....*/
+  
+  
 }
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
   int i;
@@ -1711,19 +1725,45 @@ void mqtt_exit() {
    time is allowed. The old connection will be closed when BROKER is called
    a second time. 
 
+   TODO: user credentials, persistence / clean session ? What happens when conneciton is lost?
+
  */
 
 void c_broker(PARAMETER *plist, int e) {
 #ifdef HAVE_MQTT
+
+  MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+  MQTTClient_willOptions will_opts;
+  
   mqtt_exit(); /* Alte Verbindung beenden.*/
-  sprintf(clientID,"X11-Basic-%ld",clock());
+  sprintf(clientID,"X11-Basic-%ld",clock()); /* Make a unique client ID */
   MQTTClient_create(&client, plist[0].pointer, clientID,MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;
+  conn_opts.reliable=0;
+  
+  if(e>1 && plist[1].typ>0) conn_opts.username=plist[1].pointer;
+  if(e>2 && plist[2].typ>0) conn_opts.password=plist[2].pointer;
+  if(e>3 && plist[3].typ>0) conn_opts.cleansession=plist[3].integer;
+  
+  will_opts.struct_id[0]='M';
+  will_opts.struct_id[1]='Q';
+  will_opts.struct_id[2]='T';
+  will_opts.struct_id[3]='W';
+  will_opts.struct_version=0;
+  will_opts.topicName=clientID;
+  will_opts.message="disconnect";
+  will_opts.retained=0;
+  will_opts.qos=0;
+  
+  conn_opts.will=&will_opts;
+  
+  
+  
   MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
   int rc;
   if((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
-    printf("MQTT Client: <%s>\n",clientID);
+    printf("MQTT Client: <%s> ",clientID);
     printf("Failed to connect, return code %d\n", rc);
   }
 #else

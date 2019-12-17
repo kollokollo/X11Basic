@@ -2793,8 +2793,7 @@ const COMMAND comms[]= {
 #endif
  { P_PLISTE,     "BPUT"     , c_bput      ,3,  3,(unsigned short []){PL_FILENR,PL_INT,PL_INT}},
  { P_BREAK,      "BREAK"    , NULL        ,0,  0},
- /* Ausdruck als Message queuen oder per MQTT pushen */
- { P_PLISTE,     "BROKER"  , c_broker,    1,3, (unsigned short [])  {PL_STRING,PL_STRING,PL_NUMBER}},
+ { P_PLISTE,     "BROKER"  , c_broker,    1,4, (unsigned short [])  {PL_STRING,PL_STRING,PL_STRING,PL_NUMBER}},
  { P_PLISTE,     "BSAVE"    , c_bsave     ,3,  3,(unsigned short []){PL_STRING,PL_INT,PL_INT}},
 
  { P_PLISTE,     "CALL"     , c_call      ,1, -1,(unsigned short []){PL_INT,PL_EVAL}},

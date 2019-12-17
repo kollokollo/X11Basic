@@ -195,15 +195,22 @@ SEE ALSO:  EXIT IF
 ##############################################################################
 
 Command:    BROKER
-Syntax:     BROKER url$[,user$,passwd$]
+Syntax:     BROKER url$[,user$,passwd$,pesistence]
 DESCRIPTION:
 
 	Define a (mqtt) broker and connect to it. 
 	You can specify a username and a password if needed. 
-
+	You can specify if the session should be persistent or not. 
+	
+	The url$ takes the form "protocol://host:port". 
+	Currently, protocol must be tcp or ssl. 
+	For host, you can specify either an IP address or a host name. 
+	
 COMMENT:
         Only available, if MQTT support is compiled in.
 
+EXAMPLE:
+	BROKER "tcp://localhost:1883"
 
 SEE ALSO:  PUBLISH, SUBSCRIBE
 ##############################################################################
