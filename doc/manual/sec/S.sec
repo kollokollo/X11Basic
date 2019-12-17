@@ -1107,6 +1107,11 @@ DESCRIPTION:
 	2   -- receive exactly once
 *----
 	
+	The callback procedure takes exactly two arguments. A string with the
+	topic name and another string with the message content.
+	You can use mqtt-wildcards in the topic name on subscriptions, so the
+	callback procedure gets called on messages from any of these topics.
+	
 
 EXAMPLE:
 
@@ -1121,19 +1126,19 @@ DO
   PAUSE 1
   EXIT IF cmd_var$="exit"
 LOOP
-SUBSCRIBE "CMD",cmd_var$,cmd_callback,-1
+SUBSCRIBE "CMD",,,-1    ! Unsubscribe from CMD
 QUIT
 
 ' This realizes a "rule". The input topics will trigger this. 
-PROCEDURE engine
+PROCEDURE engine(topic$,message$)
   LOCAL temp,hum,dev
-  PRINT "engine triggered"
+  PRINT "engine triggered on ";topic$
   temp=VAL(temp_var$)
   hum=VAL(hum_var$)
   dev=temp*hum  ! please implement the correct formula
   PUBLISH "DEWPOINT",STR$(dev)
 RETURN
-PROCEDURE cmd_callback
+PROCEDURE cmd_callback(topic$,message$)
   PRINT "cmd_callback trigered: cmd_var=";cmd_var$
 RETURN
 

@@ -7,14 +7,14 @@
 BROKER "tcp://localhost:1883"   ! This will use the local broker, e.q. mosquitto
 
 ' Subscribe to some topics
-SUBSCRIBE "DEWPOINT",result_var$,callback
+SUBSCRIBE "DEWPOINT",,callback   ! no global variable given here
 SUBSCRIBE "CMD",cmd_var$,cmd_callback
 
 
 ' Now realize a so-called rule-engine
 ' The rule engine should listen for changes of
 ' Temperature and Humidity and then calculate the dew point and
-' publish it
+' publish it. Note: values are stored in global variables specified here. 
 
 SUBSCRIBE "TEMPERATURE",temp_var$,engine
 SUBSCRIBE "HUMIDITY",hum_var$,engine
@@ -35,21 +35,21 @@ DO
   INC i
   PAUSE 1
   EXIT IF cmd_var$="exit"
+  PRINT i
 LOOP
 QUIT
 
-PROCEDURE callback
-  PRINT "callback trigered: ";
-  print "result_var=";result_var$
+PROCEDURE callback(topic$,message$)
+  PRINT "callback trigered on ";topic$;": message=";message$
 RETURN
-PROCEDURE cmd_callback
+PROCEDURE cmd_callback(t$,message$)
   PRINT "cmd_callback trigered: cmd_var=";cmd_var$
 RETURN
 
 ' This realizes a "rule". The input topics will trigger this. 
-PROCEDURE engine
+PROCEDURE engine(topic$,message$)
   LOCAL temp,hum
-  PRINT "engine triggered"
+  PRINT "engine triggered on ";topic$
   temp=VAL(temp_var$)
   hum=VAL(hum_var$)
   PUBLISH "DEWPOINT",STR$(temp*hum)

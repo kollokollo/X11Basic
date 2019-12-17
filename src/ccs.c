@@ -19,6 +19,9 @@
 #include "variablen.h"
 #include "svariablen.h"
 #include "xbasic.h"
+#include "type.h"
+#include "parser.h"
+#include "parameter.h"
 #include "ccs.h"
 
 
@@ -1638,19 +1641,19 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
   a.pointer=message->payload;
   a.len=message->payloadlen;
   for(i=0;i<anzsubscription;i++) {
-    if(!strcmp(topicName,subscriptions[i].topic)) {
-    // printf("Subscription found!\n");
-      varcaststring(subscriptions[i].vnr,subscriptions[i].ptr,a);
+    if(!strcmp(topicName,subscriptions[i].topic)) { /* Subscription found! */
+      if(subscriptions[i].vnr>=0) varcaststring(subscriptions[i].vnr,subscriptions[i].ptr,a);
       if(subscriptions[i].procnr>=0) {
-	batch=1;
-        int pc2=procs[subscriptions[i].procnr].zeile;
-        if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
-        else {
-          printf("Stack overflow! PC=%d\n",pc); 
-	  restore_locals(sp+1);
-          xberror(39,"SUBSCRIBE"); /* Program Error Gosub impossible */
-        }
-        programmlauf();
+        /* create two local variables topic$ and message$ */
+	PARAMETER p[2];
+	p[0].typ=PL_STRING;
+	p[0].pointer=topicName;
+	p[0].integer=strlen(topicName);
+	p[1].typ=PL_STRING;
+	p[1].pointer=message->payload;
+	p[1].integer=message->payloadlen;
+//	printf("Topic: <%s> (%d)\n",topicName,topicLen);
+	call_sub_with_parameterlist(subscriptions[i].procnr,&p[0],2);
       }
       break;
     }
@@ -1751,7 +1754,7 @@ void c_publish(PARAMETER *plist, int e) {
 /* Subscribe to a topic and get message as well as call a function on
    reception.
    This currently can work with MQTT support.  
-   
+   Also used for unsubscribe.
  */
 
 
@@ -1761,13 +1764,23 @@ void c_subscribe(PARAMETER *plist, int e) {
   if(e>3) qos=plist[3].integer;
   if(qos>=0) {
     subscriptions[anzsubscription].ptr=plist[1].pointer;
-    subscriptions[anzsubscription].vnr=plist[1].integer;
+    if(plist[1].typ==0) subscriptions[anzsubscription].vnr=-1;
+    else subscriptions[anzsubscription].vnr=plist[1].integer;
     if(plist[2].typ==0) subscriptions[anzsubscription].procnr=-1;
     else subscriptions[anzsubscription].procnr=plist[2].integer;
     subscriptions[anzsubscription].topic=strdup(plist[0].pointer);
     anzsubscription++;
     mqtt_subscribe(plist[0].pointer, qos);
   } else { /* Unsubscribe */
+    if(anzsubscription>0) {
+      int i;
+      for(i=0;i<anzsubscription;i++) {
+        if(!strcmp(plist[0].pointer,subscriptions[i].topic)) { /* Subscription found! */
+	  anzsubscription--;
+	  if(i<anzsubscription) subscriptions[i]=subscriptions[anzsubscription];
+        }
+      }
+    }
     mqtt_unsubscribe(plist[0].pointer);
   }
 #else
