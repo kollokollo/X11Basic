@@ -35,7 +35,7 @@ OPT=@copt@
 
 # Additional header file paths
 INC=@X_CFLAGS@ 
-WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP
+WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP -I./WINDOWS/include/mqtt
 TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # defines for special flavours

@@ -43,6 +43,7 @@
   #undef HAVE_RFFTW
   #undef HAVE_BLUETOOTH 
   #undef HAVE_BACKTRACE 
+  #undef HAVE_MQTT
   #define USE_SDL
   #define HAVE_SDL 1 
   #define HAVE_SDL_GFX 1
