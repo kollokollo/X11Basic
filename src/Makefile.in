@@ -296,7 +296,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
       ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
       config.h.in config.h.tomtom config.h.atari \
         Makefile.in configure config.guess configure.in \
-        x11basic.spec x11basic.desktop 5x7-rev.c \
+        x11basic.spec x11basic.desktop x11basic.svg 5x7-rev.c \
         bitmaps/* ../logo/x11basicVersion.fig \
         examples/compiler/xbc.bas.in \
         examples/compiler/inline.bas \
