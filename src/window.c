@@ -1550,18 +1550,19 @@ static inline void sort_dir(FINFO *fileinfos,int anz) {
 }
 #define MAXANZFILES 512
 static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char *mask) {
+  if(!fileinfos || !pfad || !mask) return(0);
   DIR *dp;
   struct dirent *ep;
   int anzfiles=0;
-  char filename[256];
+  char filename[256+strlen(pfad)];
 #ifdef DEBUG
   printf("Read_dir: %s/%s\n",pfad,mask);
 #endif
-  sprintf(filename,"%s/",pfad);
+  snprintf(filename,sizeof(filename),"%s/",pfad);
   dp=opendir(filename);
   if(dp!=NULL) {
     while((ep=readdir(dp)) && (anzfiles<maxentries)) {
-      sprintf(filename,"%s/%s",pfad,ep->d_name);
+      snprintf(filename,sizeof(filename),"%s/%s",pfad,ep->d_name);
       if(stat(filename, &fileinfos[anzfiles].dstat)==0) {
         if(S_ISDIR(fileinfos[anzfiles].dstat.st_mode)) {   /* ist es Directory ? */
 	  if(strcmp(ep->d_name,".") && strcmp(ep->d_name,"..")) {
@@ -1853,7 +1854,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
       objects[sbut].ob_state=NORMAL;
     } else if(sbut==FILESELECT_INFO) {    /* ? */
       char buf[128];
-      sprintf(buf,"[1][%d Bytes in %d Files.][ OK ]",dir_bytes(filenamen,anzfiles),anzfiles);
+      snprintf(buf,sizeof(buf),"[1][%d Bytes in %d Files.][ OK ]",dir_bytes(filenamen,anzfiles),anzfiles);
       form_alert(1,buf);
       objects[sbut].ob_state=NORMAL;
     } else if(sbut==FILESELECT_MASK) {    /* MASK */
@@ -1967,7 +1968,7 @@ char *fileselector(const char *titel, const char *pfad, const char *sel) {
       if(showstart+j<anzfiles) {	
       /*  printf("--->%s\n",filenamen[showstart+j].name);*/	
         if(filenamen[showstart+j].typ & FT_DIR) {
-          sprintf(buf,"%s/%s",dpfad,filenamen[showstart+j].name);
+          snprintf(buf,sizeof(buf),"%s/%s",dpfad,filenamen[showstart+j].name);
           strcpy(dpfad,buf);
           sprintf(feld1,"%s/%s",dpfad,mask);
 	  tedinfo[2].te_fontid=strlen(feld1);
@@ -2208,7 +2209,7 @@ int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
       }objects[sbut].ob_state=NORMAL;
     } else if(sbut==LISTSELECT_INFO) {    /* ? */
       char buf[128];
-      sprintf(buf,"[1][%d list entrys.][ OK ]",anzfiles);
+      snprintf(buf,sizeof(buf),"[1][%d list entrys.][ OK ]",anzfiles);
       form_alert(1,buf);objects[sbut].ob_state=NORMAL;
     } else if(sbut==LISTSELECT_MASK) {    /* MASK */
      /* printf("Hier jetzt suchen nach %s \n",findmsk); */

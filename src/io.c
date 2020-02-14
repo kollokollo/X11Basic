@@ -398,7 +398,7 @@ STRING f_fsnexts() {
   }
   if(usbbus) {
     if(usbdev) {
-      ergebnis.pointer=malloc(256*4);
+      ergebnis.pointer=malloc(2+strlen(usbbus->dirname)+strlen(usbdev->filename)+16);
       sprintf(ergebnis.pointer,"%s/%s %04X/%04X",usbbus->dirname,usbdev->filename,
         usbdev->descriptor.idVendor, usbdev->descriptor.idProduct);
       ergebnis.len=strlen(ergebnis.pointer);
