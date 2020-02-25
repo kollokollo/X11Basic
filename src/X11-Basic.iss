@@ -31,7 +31,7 @@ AppPublisherURL={#MyAppURL}
 UninstallDisplayIcon={app}\x11basic.ico
 
 OutputDir=Inno-Output
-AppCopyright=Copyright (C) 1991-2019 Markus Hoffmann
+AppCopyright=Copyright (C) 1991-2020 Markus Hoffmann
 LicenseFile=../COPYING 
 InfoBeforeFile=../RELEASE_NOTES
 InfoAfterFile=INTRO

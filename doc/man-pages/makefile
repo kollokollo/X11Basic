@@ -1,5 +1,4 @@
-# Makefile for X11-Basic html-man-pages (c) Markus Hoffmann V.1.13
-
+# Makefile for X11-Basic html-man-pages (c) Markus Hoffmann
 
 # This file is part of X11BASIC, the basic interpreter for Unix/X
 # ======================================================================
@@ -14,7 +13,7 @@ DIR=$(NAME)-$(VERSION)
 
 DIST=makefile \
 bas2x11basic.1  gui2bas.1  rsc2gui.1     x11basic.1  xbbc.1  xbvm.1 \
-doocsxbasic.1   myzip.1    tinexbasic.1  xb2c.1      xbc.1  \
+myzip.1    xb2c.1      xbc.1  \
 ybasic.1 fbxbasic.1
 
 MANS=$(wildcard *.1)
