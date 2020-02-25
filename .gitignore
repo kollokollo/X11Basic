@@ -61,12 +61,15 @@ doc/manual/main.toc
 doc/manual/menu.eps
 doc/manual/nedit-x11basic.eps
 doc/manual/nedit-x11basic.jpg
+doc/manual/nano-x11basic.eps
 src/test.bas
 src/t.bas
 htdocs/X11-Basic-manual.pdf
 doc/x11basic-de.html
-src/Debian/Outputs
-src/Inno-Output
 doc/x11basic-raspi-de.html
 doc/x11basic-raspi-de.pdf
+doc/x11basic-web-cgi-de.html
+doc/x11basic-web-cgi-en.html
 src/X11-Basic-1.*-*-win.zip
+src/Debian/Outputs
+src/Inno-Output

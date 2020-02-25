@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.4">
+<meta name="generator" content="Asciidoctor 1.5.5">
 <meta name="author" content="Markus Hoffmann">
 <title>X11-BASIC Version 1.25 Benutzerhandbuch</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -18,7 +18,6 @@ audio:not([controls]){display:none;height:0}
 [hidden],template{display:none}
 script{display:none!important}
 html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
-body{margin:0}
 a{background:transparent}
 a:focus{outline:thin dotted}
 a:active,a:hover{outline:0}
@@ -53,7 +52,7 @@ textarea{overflow:auto;vertical-align:top}
 table{border-collapse:collapse;border-spacing:0}
 *,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
 html,body{font-size:100%}
-body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 a:hover{cursor:pointer}
 img,object,embed{max-width:100%;height:auto}
 object,embed{height:100%}
@@ -65,7 +64,6 @@ img{-ms-interpolation-mode:bicubic}
 .text-center{text-align:center!important}
 .text-justify{text-align:justify!important}
 .hide{display:none}
-body{-webkit-font-smoothing:antialiased}
 img,object,svg{display:inline-block;vertical-align:middle}
 textarea{height:auto;min-height:50px}
 select{width:100%}
@@ -120,13 +118,16 @@ table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:
 table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
 table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
 table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
-body{tab-size:4}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
 h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
 .clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
 .clearfix:after,.float-group:after{clear:both}
-*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed;word-wrap:break-word}
+*:not(pre)>code.nobreak{word-wrap:normal}
+*:not(pre)>code.nowrap{white-space:nowrap}
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+em em{font-style:normal}
+strong strong{font-weight:400}
 .keyseq{color:rgba(51,51,51,.8)}
 kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
@@ -432,13 +433,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel1">
 <li><a href="#_x11_basic_version_1_25_benutzerhandbuch">1. X11-BASIC Version 1.25 Benutzerhandbuch</a>
 <ul class="sectlevel2">
-<li><a href="#_Über_dieses_dokument">1.1. Über dieses Dokument</a></li>
+<li><a href="#_über_dieses_dokument">1.1. Über dieses Dokument</a></li>
 <li><a href="#_vorwort">1.2. Vorwort</a></li>
 <li><a href="#_schnellinstallation">1.3. Schnellinstallation</a></li>
 <li><a href="#_mein_erstes_programm">1.4. Mein erstes Programm</a></li>
 </ul>
 </li>
-<li><a href="#_Über_x11_basic">2. Über X11-Basic</a>
+<li><a href="#_über_x11_basic">2. Über X11-Basic</a>
 <ul class="sectlevel2">
 <li><a href="#_portabilität">2.1. Portabilität</a></li>
 <li><a href="#_strukturierte_programmierung">2.2. Strukturierte Programmierung</a></li>
@@ -453,7 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_kommandozeilen_parameter">3.3. Kommandozeilen-Parameter</a></li>
 <li><a href="#_x11_basic_programme_erstellen_und_modifizieren">3.4. X11-Basic Programme erstellen und modifizieren</a></li>
 <li><a href="#_der_bytecode_compiler_und_die_virtuelle_maschine">3.5. Der Bytecode Compiler und die Virtuelle Maschine</a></li>
-<li><a href="#_den_bytecode_nach_c_Übersetzer_benutzen">3.6. Den Bytecode nach C Übersetzer benutzen</a></li>
+<li><a href="#_den_bytecode_nach_c_übersetzer_benutzen">3.6. Den Bytecode nach C Übersetzer benutzen</a></li>
 <li><a href="#_der_x11_basic_compiler_manager_code_xbc_code">3.7. Der X11-Basic Compiler-Manager <code>xbc</code></a></li>
 <li><a href="#_der_ansi_basic_zu_x11_basic_konverter">3.8. Der ANSI-Basic zu X11-Basic Konverter</a></li>
 <li><a href="#_gfa_basic_programme_verwenden">3.9. GFA-BASIC Programme verwenden</a></li>
@@ -515,95 +516,88 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_alert_und_fileselect">16.1. ALERT und FILESELECT</a></li>
 <li><a href="#_grafische_resourcen">16.2. Grafische Resourcen</a></li>
-<li><a href="#_the_gui_file_format">16.3. The gui file format</a></li>
+<li><a href="#_das_gui_dateiformat">16.3. Das gui Dateiformat</a></li>
 <li><a href="#_menus">16.4. Menus</a></li>
 </ul>
 </li>
-<li><a href="#_web_programmierung">17. WEB Programmierung</a>
+<li><a href="#_quick_reference">17. Quick Reference</a>
 <ul class="sectlevel2">
-<li><a href="#_was_ist_cgi">17.1. Was ist CGI?</a></li>
-<li><a href="#_wie_cgi_funktioniert">17.2. Wie CGI funktioniert</a></li>
-<li><a href="#_ein_beispiel_cgi_skript">17.3. Ein Beispiel CGI Skript</a></li>
+<li><a href="#_reservierte_variablennamen">17.1. Reservierte Variablennamen</a></li>
+<li><a href="#_bedingungen">17.2. Bedingungen</a></li>
+<li><a href="#_zahlen_und_konstanten">17.3. Zahlen und Konstanten</a></li>
+<li><a href="#_operatoren_2">17.4. Operatoren</a></li>
+<li><a href="#_matritzenoperatoren">17.5. Matritzenoperatoren&#8201;&#8212;&#8201;</a></li>
+<li><a href="#_abkürzungen">17.6. Abkürzungen</a></li>
+<li><a href="#_interpreter_kommandos">17.7. Interpreter-Kommandos</a></li>
+<li><a href="#_kommandos_für_die_ablaufkontrolle">17.8. Kommandos für die Ablaufkontrolle</a></li>
+<li><a href="#_ein_ausgabekommandos_für_die_textkonsole">17.9. Ein-/Ausgabekommandos für die Textkonsole</a></li>
+<li><a href="#_ein_ausgabekommandos_für_dateien">17.10. Ein-/Ausgabekommandos für Dateien</a></li>
+<li><a href="#_kommandos_für_variablen">17.11. Kommandos für Variablen</a></li>
+<li><a href="#_kommandos_für_speichermanipulation">17.12. Kommandos für Speichermanipulation</a></li>
+<li><a href="#_mathematik_kommandos">17.13. Mathematik-Kommandos</a></li>
+<li><a href="#_sonstige_kommandos">17.14. Sonstige Kommandos</a></li>
 </ul>
 </li>
-<li><a href="#_quick_reference">18. Quick Reference</a>
+<li><a href="#_graphic_commands">18. Graphic commands</a>
 <ul class="sectlevel2">
-<li><a href="#_reservierte_variablennamen">18.1. Reservierte Variablennamen</a></li>
-<li><a href="#_bedingungen">18.2. Bedingungen</a></li>
-<li><a href="#_zahlen_und_konstanten">18.3. Zahlen und Konstanten</a></li>
-<li><a href="#_operatoren_2">18.4. Operatoren</a></li>
-<li><a href="#_matritzenoperatoren">18.5. Matritzenoperatoren&#8201;&#8212;&#8201;</a></li>
-<li><a href="#_abkürzungen">18.6. Abkürzungen</a></li>
-<li><a href="#_interpreter_kommandos">18.7. Interpreter-Kommandos</a></li>
-<li><a href="#_kommandos_für_die_ablaufkontrolle">18.8. Kommandos für die Ablaufkontrolle</a></li>
-<li><a href="#_ein_ausgabekommandos_für_die_textkonsole">18.9. Ein-/Ausgabekommandos für die Textkonsole</a></li>
-<li><a href="#_ein_ausgabekommandos_für_dateien">18.10. Ein-/Ausgabekommandos für Dateien</a></li>
-<li><a href="#_kommandos_für_variablen">18.11. Kommandos für Variablen</a></li>
-<li><a href="#_kommandos_für_speichermanipulation">18.12. Kommandos für Speichermanipulation</a></li>
-<li><a href="#_mathematik_kommandos">18.13. Mathematik-Kommandos</a></li>
-<li><a href="#_sonstige_kommandos">18.14. Sonstige Kommandos</a></li>
+<li><a href="#_drawing_and_painting">18.1. Drawing and painting</a></li>
+<li><a href="#_bildschirmkommandos">18.2. Bildschirmkommandos</a></li>
+<li><a href="#_kommandos_der_grafischen_benutzerschnittstelle">18.3. Kommandos der Grafischen Benutzerschnittstelle</a></li>
 </ul>
 </li>
-<li><a href="#_graphic_commands">19. Graphic commands</a>
+<li><a href="#_funktionen_2">19. Funktionen</a>
 <ul class="sectlevel2">
-<li><a href="#_drawing_and_painting">19.1. Drawing and painting</a></li>
-<li><a href="#_bildschirmkommandos">19.2. Bildschirmkommandos</a></li>
-<li><a href="#_kommandos_der_grafischen_benutzerschnittstelle">19.3. Kommandos der Grafischen Benutzerschnittstelle</a></li>
+<li><a href="#_dateiein_und_ausgabefunktionen">19.1. Dateiein- und -ausgabefunktionen</a></li>
+<li><a href="#_funktionen_für_variablen_und_stringverarbeitung">19.2. Funktionen für Variablen und Stringverarbeitung</a></li>
+<li><a href="#_datenkompression_und_kodierung">19.3. Datenkompression und -kodierung</a></li>
+<li><a href="#_speicherfunktionen">19.4. Speicherfunktionen</a></li>
+<li><a href="#_logische_und_bit_funktionen">19.5. Logische und Bit-Funktionen</a></li>
+<li><a href="#_mathematische_funktionen">19.6. Mathematische Funktionen</a></li>
+<li><a href="#_systemfunktionen">19.7. Systemfunktionen</a></li>
+<li><a href="#_grafik_funktionen">19.8. Grafik-Funktionen</a></li>
+<li><a href="#_sonstige_funktionen">19.9. Sonstige Funktionen</a></li>
+<li><a href="#_unterroutinen_und_funktionen">19.10. Unterroutinen und Funktionen</a></li>
+<li><a href="#_fehlermeldungen">19.11. Fehlermeldungen</a></li>
 </ul>
 </li>
-<li><a href="#_funktionen_2">20. Funktionen</a>
+<li><a href="#_kommando_beschreibungen_befehlsreferenz">20. Kommando-Beschreibungen Befehlsreferenz</a>
 <ul class="sectlevel2">
-<li><a href="#_dateiein_und_ausgabefunktionen">20.1. Dateiein- und -ausgabefunktionen</a></li>
-<li><a href="#_funktionen_für_variablen_und_stringverarbeitung">20.2. Funktionen für Variablen und Stringverarbeitung</a></li>
-<li><a href="#_datenkompression_und_kodierung">20.3. Datenkompression und -kodierung</a></li>
-<li><a href="#_speicherfunktionen">20.4. Speicherfunktionen</a></li>
-<li><a href="#_logische_und_bit_funktionen">20.5. Logische und Bit-Funktionen</a></li>
-<li><a href="#_mathematische_funktionen">20.6. Mathematische Funktionen</a></li>
-<li><a href="#_systemfunktionen">20.7. Systemfunktionen</a></li>
-<li><a href="#_grafik_funktionen">20.8. Grafik-Funktionen</a></li>
-<li><a href="#_sonstige_funktionen">20.9. Sonstige Funktionen</a></li>
-<li><a href="#_unterroutinen_und_funktionen">20.10. Unterroutinen und Funktionen</a></li>
-<li><a href="#_fehlermeldungen">20.11. Fehlermeldungen</a></li>
+<li><a href="#_syntax_beispiel">20.1. Syntax-Beispiel</a></li>
 </ul>
 </li>
-<li><a href="#_kommando_beschreibungen_befehlsreferenz">21. Kommando-Beschreibungen Befehlsreferenz</a>
+<li><a href="#_häufig_gestellte_fragen_und_antworten">21. Häufig gestellte Fragen und Antworten</a>
 <ul class="sectlevel2">
-<li><a href="#_syntax_beispiel">21.1. Syntax-Beispiel</a></li>
+<li><a href="#_wie_leicht_ist_es_in_meine_programme_zu_hacken">21.1. Wie leicht ist es, in meine Programme zu hacken?</a></li>
+<li><a href="#_brauche_ich_eine_lizenz_um_meine_programme_zu_verteilen">21.2. Brauche ich eine Lizenz, um meine Programme zu verteilen?</a></li>
+<li><a href="#_wie_schnell_ist_x11_basic">21.3. Wie schnell ist X11-Basic?</a></li>
+<li><a href="#_utf_8_zeichensatz">21.4. UTF-8 Zeichensatz</a></li>
+<li><a href="#_gui_designer">21.5. GUI-Designer</a></li>
+<li><a href="#_andere">21.6. Andere</a></li>
 </ul>
 </li>
-<li><a href="#_häufig_gestellte_fragen_und_antworten">22. Häufig gestellte Fragen und Antworten</a>
+<li><a href="#_kompatibilität">22. Kompatibilität</a>
 <ul class="sectlevel2">
-<li><a href="#_wie_leicht_ist_es_in_meine_programme_zu_hacken">22.1. Wie leicht ist es, in meine Programme zu hacken?</a></li>
-<li><a href="#_brauche_ich_eine_lizenz_um_meine_programme_zu_verteilen">22.2. Brauche ich eine Lizenz, um meine Programme zu verteilen?</a></li>
-<li><a href="#_wie_schnell_ist_x11_basic">22.3. Wie schnell ist X11-Basic?</a></li>
-<li><a href="#_utf_8_zeichensatz">22.4. UTF-8 Zeichensatz</a></li>
-<li><a href="#_gui_designer">22.5. GUI-Designer</a></li>
-<li><a href="#_andere">22.6. Andere</a></li>
+<li><a href="#_allgemein">22.1. Allgemein</a></li>
+<li><a href="#_gfa_basic_kompatibilität">22.2. GFA-Basic Kompatibilität</a></li>
 </ul>
 </li>
-<li><a href="#_kompatibilität">23. Kompatibilität</a>
+<li><a href="#_gnu_free_documentation_license">23. GNU Free Documentation License</a>
 <ul class="sectlevel2">
-<li><a href="#_allgemein">23.1. Allgemein</a></li>
-<li><a href="#_gfa_basic_kompatibilität">23.2. GFA-Basic Kompatibilität</a></li>
+<li><a href="#_präambel">23.1. Präambel</a></li>
+<li><a href="#_anwendbarkeit_und_definitionen">23.2. Anwendbarkeit und Definitionen</a></li>
+<li><a href="#_datenträgerkopien">23.3. Datenträgerkopien</a></li>
+<li><a href="#_kopien_in_stückzahlen">23.4. Kopien in Stückzahlen</a></li>
+<li><a href="#_modifikationen">23.5. Modifikationen</a></li>
+<li><a href="#_dokumente_kombinieren">23.6. Dokumente Kombinieren</a></li>
+<li><a href="#_sammlungen_von_dokumenten">23.7. Sammlungen von Dokumenten</a></li>
+<li><a href="#_aggregation_mit_unabhängigen_werken">23.8. Aggregation mit unabhängigen Werken</a></li>
+<li><a href="#_übersetzung">23.9. Übersetzung</a></li>
+<li><a href="#_abschlussbestimmungen">23.10. Abschlussbestimmungen</a></li>
+<li><a href="#_spätere_überarbeitungen_dieser_lizenz">23.11. Spätere Überarbeitungen dieser Lizenz</a></li>
+<li><a href="#_anhang_wie_sie_diese_lizenz_für_ihre_dokumente_verwenden_können">23.12. Anhang: Wie Sie diese Lizenz für Ihre Dokumente verwenden können</a></li>
 </ul>
 </li>
-<li><a href="#_gnu_free_documentation_license">24. GNU Free Documentation License</a>
-<ul class="sectlevel2">
-<li><a href="#_präambel">24.1. Präambel</a></li>
-<li><a href="#_anwendbarkeit_und_definitionen">24.2. Anwendbarkeit und Definitionen</a></li>
-<li><a href="#_datenträgerkopien">24.3. Datenträgerkopien</a></li>
-<li><a href="#_kopien_in_stückzahlen">24.4. Kopien in Stückzahlen</a></li>
-<li><a href="#_modifikationen">24.5. Modifikationen</a></li>
-<li><a href="#_dokumente_kombinieren">24.6. Dokumente Kombinieren</a></li>
-<li><a href="#_sammlungen_von_dokumenten">24.7. Sammlungen von Dokumenten</a></li>
-<li><a href="#_aggregation_mit_unabhängigen_werken">24.8. Aggregation mit unabhängigen Werken</a></li>
-<li><a href="#_Übersetzung">24.9. Übersetzung</a></li>
-<li><a href="#_abschlussbestimmungen">24.10. Abschlussbestimmungen</a></li>
-<li><a href="#_spätere_Überarbeitungen_dieser_lizenz">24.11. Spätere Überarbeitungen dieser Lizenz</a></li>
-<li><a href="#_anhang_wie_sie_diese_lizenz_für_ihre_dokumente_verwenden_können">24.12. Anhang: Wie Sie diese Lizenz für Ihre Dokumente verwenden können</a></li>
-</ul>
-</li>
-<li><a href="#_danksagung">25. Danksagung</a></li>
+<li><a href="#_danksagung">24. Danksagung</a></li>
 </ul>
 </div>
 </div>
@@ -628,7 +622,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div style="page-break-after: always;"></div>
 <div class="sect2">
-<h3 id="_Über_dieses_dokument">1.1. Über dieses Dokument</h3>
+<h3 id="_über_dieses_dokument">1.1. Über dieses Dokument</h3>
 <div class="paragraph">
 <p>Dieses Dokument beschreibt die Funktionen von X11-Basic. Sie finden
 Informationen zum X11-Basic-Interpreter (das Programm <code>xbasic</code> unter
@@ -836,7 +830,7 @@ App.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_Über_x11_basic">2. Über X11-Basic</h2>
+<h2 id="_über_x11_basic">2. Über X11-Basic</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>X11-Basic ist ein Dialekt der Programmiersprache BASIC. X11-Basic
@@ -2657,7 +2651,7 @@ xbvm mandel-einfach.b</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_den_bytecode_nach_c_Übersetzer_benutzen">3.6. Den Bytecode nach C Übersetzer benutzen</h3>
+<h3 id="_den_bytecode_nach_c_übersetzer_benutzen">3.6. Den Bytecode nach C Übersetzer benutzen</h3>
 <div class="paragraph">
 <p>Es ist möglich, den durch <code>xbbc</code> erzeugten Bytecode in C-Quellcode zu
 übersetzen und schließlich diesen C-Quellcode zu einer ausführbaren
@@ -7920,7 +7914,7 @@ bis der Benutzer ein EXIT- oder TOUCHEXIT-Objekt anwählt.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_gui_file_format">16.3. The gui file format</h3>
+<h3 id="_das_gui_dateiformat">16.3. Das gui Dateiformat</h3>
 <div class="paragraph">
 <p>Bei dem Dateiformat <code>.gui</code> handelt es sich im Wesentlichen um eine
 ASCII-Darstellung der ATARI ST-Ressourcendateien (<code>.rsc</code>). Diese können
@@ -8060,742 +8054,10 @@ RETURN</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_web_programmierung">17. WEB Programmierung</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>In diesem Kapitel wird erläutert, wie Sie X11-Basic-Programme für
-WEB-Schnittstellen verwenden können. Insbesondere durch die Verwendung
-sogenannter <em>CGI-Scripts</em>.</p>
-</div>
-<div class="sect2">
-<h3 id="_was_ist_cgi">17.1. Was ist CGI?</h3>
-<div class="paragraph">
-<p>CGI steht für <em>Common Gateway Interface</em>&#8201;&#8212;&#8201;ein Begriff, den Sie nicht wirklich kennen müssen. Kurz gesagt definiert CGI, wie Webserver und Webbrowser Informationen aus HTML-Formularen auf Webseiten verarbeiten. Dies bedeutet, dass anstelle des WEB-Servers, der statische Webseiten an die Clients sendet, ein Programm, typischerweise ein CGI-Skript genannt, aufgerufen werden kann, um die Seite zu dem Zeitpunkt zu erzeugen, zu dem die Anfrage empfangen wurde. Diese CGI-Skripte ergreifen einige Maßnahmen und senden dann eine Ergebnisseite an den Webbrowser des Benutzers zurück. Die Ergebnisseite kann bei jeder Ausführung des Programms anders aussehen.</p>
-</div>
-<div class="paragraph">
-<p>Und diese Programme können X11-Basic-Programme sein.</p>
-</div>
-<div class="sect3">
-<h4 id="_konfiguration">17.1.1. Konfiguration</h4>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Alle X11-Basic-Skripte müssen mit der folgenden Anweisung in der ersten Zeile beginnen:</p>
-<div class="listingblock">
-<div class="content">
-<pre>#!/usr/bin/xbasic</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Da Unix keine speziellen Dateiendungen für Programme hat, müssen Sie so dem Betriebsystem (Unix) mitteilen, dass es sich bei dieser Datei um ein X11-Basic-Programm handelt und dass es vom X11-Basic-Interpreter <code>xbasic</code> ausgeführt werden soll. Dies funktioniert genauso wie bei Shell-Skripten. Der X11-Basic Interpreter <code>xbasic</code> befindet sich nach der Installation normalerweise im
-Verzeichnis <code>/usr/bin</code>. Dies kann bei einigen Systemen aber auch anders sein. Wenn Sie nicht sicher sind, wo die ausführbare Datei <code>xbasic</code> ist, geben Sie <code>which xbasic</code> in die Befehlszeile ein und es gibt Ihnen den Pfad zurück.</p>
-</div>
-</li>
-<li>
-<p>Alle Skripte müssen als ausführbar markiert sein.</p>
-<div class="paragraph">
-<p>Ausführbare Dateien sind solche, die Maschinenanwewisungen oder Code für einen Interpreter wie <code>xbasic</code> enthalten. Um eine Datei als ausführbar zu markieren, müssen Sie die Dateiberechtigungen ändern. Dies geschieht mit dem folgenden Befehl (aus einem Terminalfenster):</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>chmod 755 filename.bas</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Die Nummer 755 ist die Dateizugriffsmaske. Die erste Ziffer ist Ihre Erlaubnis; es ist 7 für den vollen Zugriff. Die Einstellungen für andere sind 5 zum Lesen und Ausführen (aber nicht verändern).</p>
-</div>
-</li>
-<li>
-<p><strong>Die allererste PRINT-Anweisung</strong> in einem X11-Basic CGI-Skript, das HTML zurückgibt, muß sein:</p>
-<div class="listingblock">
-<div class="content">
-<pre>PRINT "Content-type: text/html"+CHR$(13)
-PRINT ""+CHR$(13)
-FLUSH</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Wenn Ihr X11-Basic-Skript HTML-Daten zurückgibt, müssen Sie dies als erste PRINT-Anweisung haben, um dem Webserver mitzuteilen, dass es sich um eine HTML-Datei handelt. Es müssen zwei Zeilenendezeichen (CR + LF) verwendet werden (das erklärt das zusätzliche <code>CHR$(13)</code>), damit dies funktioniert. Die FLUSH-Anweisung stellt sicher, dass diese Anweisung an den Webserver gesendet wird. Danach kommt normalerweise ein</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>PRINT "&lt;HTML&gt;&lt;BODY&gt;"
-.... und so weiter......</pre>
-</div>
-</div>
-</li>
-<li>
-<p><strong>Beenden Sie das Programm unbedingt mit <code>QUIT</code></strong>.</p>
-<div class="paragraph">
-<p>Ansonsten bleibt das cgi-Programm als Zombie im Speicher des Servers.</p>
-</div>
-</li>
-<li>
-<p><strong>Verwenden Sie immer die POST-Methode mit HTML-Formularen</strong>,</p>
-<div class="paragraph">
-<p>Es gibt zwei Möglichkeiten, um Informationen vom Client zurück zum Webserver zu bekommen. Die GET-Methode übernimmt alle Daten aus den Formularen und verknüpft sie mit dem Ende der URL. Diese Information wird dann als Umgebungsvariable <code>QUERY_STRING</code> an das CGI-Programm übergeben. Da die GET-Methode eine Beschränkung auf 1024 Zeichen hat, empfiehlt es sich, die POST-Methode zu verwenden. Diese nimmt die Daten und sendet sie zusammen mit der Anfrage an den Webserver, ohne dass der Benutzer die hässlichen Zeichenfolgen in der URL sieht. Diese Information wird an das CGI-Programm über die Standard-Eingabe übergeben, von dem das CGI-Programm leicht (mit <code>LINEINPUT</code>) lesen kann. Stellen Sie sicher, dass Ihr HTML-Formular-Tag <code>METHOD=POST</code> hat, um die POST-Methode zu verwenden (keine Anführungszeichen).</p>
-</div>
-</li>
-<li>
-<p><strong>HTML-Formulare müssen auf das auszuführende CGI-Skript verweisen.</strong></p>
-<div class="paragraph">
-<p>In Ihrem FORM-Tag gibt es ein ACTION-Attribut. Dies ist wie das HREF-Attribut für einen Link. Es sollte die URL des CGI-Programms sein, an das die Formulardaten gesendet werden sollen. Normalerweise ist dies <code>ACTION="/cgi-bin/filename.bas"</code>.</p>
-</div>
-</li>
-<li>
-<p><strong>X11-Basic-CGI-Dateien müssen normalerweise im Verzeichnis <code>cgi-bin</code> Ihres Webservers abgelegt werden.</strong></p>
-<div class="paragraph">
-<p>Jeder Webserver hat ein Wurzel-Verzeichnis. Dies ist das höchste Verzeichnis, auf das Ihre HTML-Dateien zugreifen können. (Sie möchten nicht, dass Clients in der Lage sind, Ihr gesamtes System zu durchsuchen.). In diesem Verzeichnis befindet sich normalerweise ein weiteres namens <code>cgi-bin</code>, in dem alle CGI-Programme abgelegt werden. Nur dort dürfen sie gestartet werden.  Einige Web-Service-Provider geben jedem Benutzer ein eigenes lokales cgi-Verzeichnis in seinem Home-Verzeichnis, in das sie ihre CGI-Skripte legen können. Wenn dies der Fall ist, verwenden Sie stattdessen also dieses Verzeichnis.</p>
-</div>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_wie_cgi_funktioniert">17.2. Wie CGI funktioniert</h3>
-<div class="paragraph">
-<p>Wenn ein Benutzer einen Link zu einem Gateway-Skript ansurft, werden
-Daten an den Server gesendet. Der Server formatiert diese Daten in
-Umgebungsvariablen und prüft, ob zusätzliche Daten über den
-Standard-Eingabestream übermittelt wurden. Die Umgebungsvariablen können
-dann im CGI-Skript ausgewertet werden.</p>
-</div>
-<div class="sect3">
-<h4 id="_environment_variables">17.2.1. Environment Variables</h4>
-<div class="paragraph">
-<p>Eingangsdaten für CGI-Skripte werden normalerweise in Umgebungsvariablen
-übergeben. Die Daten werden vom Browser übergeben, der die Seite
-angesurft hat.</p>
-</div>
-<div class="paragraph">
-<p>Umgebungsvariablen unterscheiden zwischen Groß- und Kleinschreibung und
-werden normalerweise wie in diesem Abschnitt beschrieben verwendet.
-Einige häufig verwendetete standartisierte (und plattformunabhängige)
-Umgebungsvariablen sind in der folgenden Tabelle aufgeführt:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Variable</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Bedeutung</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AUTH_TYPE</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt die Authentifizierungsmethode an und wird verwendet, um den Zugriff eines Benutzers zu überprüfen.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CONTENT_LENGTH</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Länge der Datenzeichenfolge als numerischen Wert.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CONTENT_TYPE</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Der MIME-Typ der Daten.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GATEWAY_INTERFACE</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt an, welche Version des CGI-Standards der Server verwendet.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>HTTP_ACCEPT</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt die MIME-Typen an, die der Browser akzeptiert, wenn sie über den Server an das Gateway-Skript übergeben werden.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>HTTP_USER_AGENT</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt den Typ des Browsers an, der zum Senden der Anfrage verwendet wurde.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PATH_INFO</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Identifiziert die zusätzlichen Informationen in der URL nach der Identifizierung des CGI-Skripts.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PATH_TRANSLATED</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Wird vom Server basierend auf der Variablen <code>PATH_INFO</code> festgelegt. Der Server übersetzt die Variable <code>PATH_INFO</code> in diese Variable.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>QUERY_STRING</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Anfragezeichenfolge (wenn die URL eine Anfragezeichenfolge enthält).</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REMOTE_ADDR</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Identifiziert die Internetprotokolladresse des Remotecomputers, der die Anforderung stellt.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REMOTE_HOST</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Name des Computers, der die Anforderung stellt.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REMOTE_IDENT</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Machinenidentifikation  des Computers, der die Anforderung stellt.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REMOTE_USER</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Benutzername zur Authentifizierung des Benutzers</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REQUEST_METHOD</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt die Methode an, mit der die Anforderung durchgeführt wurde.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SCRIPT_NAME</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Identifiziert den virtuellen Pfad zum ausgeführten Skript.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SERVER_NAME</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Identifiziert den Server anhand seines Hostnamens, Alias oder seiner IP-Adresse.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SERVER_PORT</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt die Portnummer an, an der der Server die Anforderung erhalten hat.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SERVER_PROTOCOL</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Gibt das Protokoll der an den Server gesendeten Anforderung an.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="hdlist">
-<table>
-<tr>
-<td class="hdlist1">
-<code>AUTH_TYPE</code> 
-</td>
-<td class="hdlist2">
-<p>Die `AUTH_TYPE'-Variable ermöglicht die Zugriffssteuerung für geschützte Bereiche des Webservers und kann nur auf Servern verwendet werden, die die Benutzerauthentifizierung unterstützen. Wenn ein Bereich der Website Zugriffssteuerung hat, ist die 'AUTH_TYPE'-Variable auf einen Wert gesetzt, der das verwendete Authentifizierungsschema angibt. Z.B. "Basic".</p>
-<div class="paragraph">
-<p>Mit diesem Mechanismus kann der Server Nutzernamen und Passwort abfragen und überprüfen.
-Dazu legt der Server einen Wert für die Variable <code>AUTH_TYPE</code> fest und der Client liefert einen passenden Wert. Der nächste Schritt besteht darin, den Benutzer zu authentifizieren. Unter Verwendung des zugrundeliegenden Authentifizierungsschemas muss der Browser des Benutzers Authentifizierungsinformationen bereitstellen, die den Benutzer eindeutig identifizieren. Diese Information enthält eine Benutzer-ID und ein Passwort.</p>
-</div>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>CONTENT_LENGTH</code> 
-</td>
-<td class="hdlist2">
-<p>Die <code>CONTENT_LENGTH</code>-Variable bietet eine Möglichkeit, die Länge der Datenfolge zu ermitteln, die der Client dem Server über den Standard-Eingabestream übermitteln möchte. Der Wert der Variablen entspricht der Anzahl der Zeichen in den mit der Anfrage übergebenen Daten. Wenn keine Daten übergeben werden, hat die Variable keinen Wert.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>CONTENT_TYPE</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>CONTENT_TYPE</code> gibt den MIME-Typ der Daten an. Diese Variable wird nur gesetzt, wenn angehängte Daten mit dem Standardeingabe- oder -ausgangsstrom übergeben werden. Der der Variablen zugewiesene Wert identifiziert den zugrundeliegenden MIME-Typ und Subtyp wie folgt:</p>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Typ</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Beschreibung</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Binärdaten welche als Programm ausgeführt werden können oder mit einer anderen application verwendet werden.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">audio</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Sound-file welches auf einem Ausgabegerät abgespielt werden kann.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Bild</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Eine eingekapselte e-mail-Nachricht</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">multipart</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Daten, welche aus meheren Teilen und möglicherweise verschiedenenen Datentypen bestehen.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">text</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Text-Daten</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">video</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Video-file</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x-world</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Experimentelle Daten für world files</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>MIME-Subtypen sind in drei Kategorien eingeteilt: <em>primär</em>, <em>zusätzlich definiert</em> und <em>erweitert</em>. Der primäre Subtyp ist der primäre Datentyp, der zur Verwendung als MIME-Inhaltstyp verwendet wird. Zusätzlich definierte Datentypen sind immer Subtypen, die offiziell als MIME-Inhaltstypen übernommen wurden. Erweiterte Datentypen sind experimentelle Subtypen, die nicht offiziell als MIME-Inhaltstypen übernommen wurden. Sie können erweiterte Subtypen leicht identifizieren, da sie mit dem Buchstaben x gefolgt von einem Bindestrich beginnen. Die folgende Tabelle listet häufige MIME-Typen und ihre Beschreibungen auf:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Typ/Subtyp</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Beschreibung</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/octet-stream</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Binärdaten zum Ausführen oder für eine externe Anwendung als Octet-Datenstrom.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/pdf</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein ACROBAT PDF Document</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/postscript</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Eine Postscript-Datei</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/x-compress</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Daten, die mit dem UNIX compress Programm komprimiert wurden.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/x-gzip</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Daten, die mit GNU gzip komprimiert wurden.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">application/x-tar</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Daten, die mit UNIX tar archiviert wurden</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">audio/x-wav</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Eine Audio-Date im Microsoft WAV Format</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image/gif</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Bild im gif Format</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image/jpeg</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Bild im JPEG Format</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image/tiff</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ein Bild im TIFF Format</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">multipart/mixed</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Daten in mehreren Teilen verschiednener Formate</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">text/html</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">HTML-formatierter text</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">text/plain</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Plain text ohne HTML Formatierungen</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">video/mpeg</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Video im MPEG Format</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Beachten Sie, dass es noch mehr als die oben aufgeführten Typen gibt.</p>
-</div>
-<div class="paragraph">
-<p>Einige MIME-Inhaltstypen können mit zusätzlichen Parametern verwendet werden. Diese Inhaltstypen umfassen <code>text/plain</code>, <code>text/html</code> und alle mehrteiligen Nachrichtendaten. Der optionale <code>charset</code>-Parameter wird mit dem <code>text/plain</code>-Typ verwendet, um den für die Daten verwendeten Zeichensatz zu bestimmen. Wenn kein Zeichensatz angegeben wird, wird der Standardwert <code>charset=us-ascii</code> angenommen. Andere Werte für Zeichensatz umfassen alle Zeichensätze, die von der International Standards Organization genehmigt wurden. Diese Zeichensätze sind durch ISO-8859-1 bis ISO-8859-9 definiert und können etwa so spezifiziert werden:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre> CONTENT_TYPE = text/plain; charset=iso-8859-1</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Bei mehrteiligen Daten ist der Boundary-Parameter erforderlich, um die Grenzzeichenfolge anzugeben, die Nachrichtenteile trennt. Die Zeichenfolge darf 1 bis 70 Zeichen lang sein und beliebige Buchstaben, Ziffern und Leerzeichen sowie eine begrenzte Anzahl von Sonderzeichen enthalten, darf aber nicht mit einem Leerzeichen enden. Sie muss eindeutig sein und darf in den Teilen der Nachrich nicht vorkommen.
-So etwa sieht das dann aus:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre> CONTENT_TYPE = multipart/mixed; boundary=boundary_string</pre>
-</div>
-</div>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>GATEWAY_INTERFACE</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>GATEWAY_INTERFACE</code> gibt an, welche Version der CGI-Spezifikation der Server verwendet. Der der Variablen zugewiesene Wert identifiziert den Namen und die Version der verwendeten Spezifikation wie folgt:</p>
-<div class="listingblock">
-<div class="content">
-<pre> GATEWAY_INTERFACE = name/version</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Die Version der CGI-Spezifikation ist 1.1. Ein Server, der dieser Version entspricht, würde die <code>GATEWAY_INTERFACE</code>-Variable also wie folgt setzen:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre> GATEWAY_INTERFACE = CGI/1.1</pre>
-</div>
-</div>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>HTTP_ACCEPT</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>HTTP_ACCEPT</code> definiert die Datentypen, die der Client akzeptiert. Die akzeptablen Werte werden jeweils als "Typ/Subtyp"-Paare ausgedrückt. Jedes Typ/Untertyp-Paar ist durch Kommas getrennt.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>HTTP_USER_AGENT</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>HTTP_USER_AGENT</code> identifiziert den Typ des Browsers, der zum Senden der Anfrage verwendet wird. Die zulässigen Werte werden als "Softwaretyp/Version" oder Bibliothek/Version ausgedrückt.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>PATH_INFO</code> 
-</td>
-<td class="hdlist2">
-<p>Die <code>PATH_INFO</code>-Variable gibt zusätzliche Pfadinformationen an und kann verwendet werden, um zusätzliche Informationen an ein Gateway-Skript zu senden. Die zusätzlichen Pfadinformationen folgen der URL des verwiesenen Gateway-Skripts. Im Allgemeinen ist diese Information ein virtueller oder relativer Pfad zu einer Ressource, die der Server interpretieren muss.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>PATH_TRANSLATED</code> 
-</td>
-<td class="hdlist2">
-<p>Server übersetzen die <code>PATH_INFO</code>-Variable in die <code>PATH_TRANSLATED</code>-Variable, indem sie den Verzeichnispfad des Standard-Web-Dokuments vor die zusätzlichen Pfadinformationen einfügen.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>QUERY_STRING</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>QUERY_STRING</code> gibt eine URL-codierte Suchzeichenfolge an. Sie legen diese Variable fest, wenn Sie die GET-Methode zum Senden eines Formulars verwenden. Die Abfragezeichenfolge wird durch ein Fragezeichen von der URL getrennt. Der Benutzer sendet alle Informationen nach dem Fragezeichen, die die URL von der Abfragezeichenfolge trennen. Hier  ein Beispiel:</p>
-<div class="listingblock">
-<div class="title">URL:</div>
-<div class="content">
-<pre> /cgi-bin/doit.cgi?word1+word2+word3</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Gleichheitszeichen trennen die von der Seite vorgegebenen  Schlüsselwörter von den vom Benutzer eingegebenen Werten. Im folgenden Beispiel ist das Schlüsselwort "key" und der vom Benutzer eingegebene Wert "never":</p>
-</div>
-<div class="listingblock">
-<div class="title">URL:</div>
-<div class="content">
-<pre> /cgi-bin/doit.cgi?response=never</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Und-Symbole (<code>&amp;</code>) trennen Schlüssel/Werte-Paare. Im folgenden Beispiel erhält der erste Schlüssel "response" den Wert "sometimes" und der zweite Schlüssel "reason" den Wert "I+am+not+really+sure":</p>
-</div>
-<div class="listingblock">
-<div class="title">URL:</div>
-<div class="content">
-<pre> /cgi-bin/doit.cgi?response=sometimes&amp;reason=I+am+not+really+sure</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Schließlich wird das Prozentzeichen verwendet, um Sonderzeichen zu kennzeichnen. Dem Prozentzeichen folgt ein Escape-Code für ein Sonderzeichen, ausgedrückt als hexadezimaler Wert. So könnte die vorherige Abfragezeichenfolge mithilfe des Escape-Codes für ein Apostroph umgeschrieben werden:</p>
-</div>
-<div class="listingblock">
-<div class="title">URL:</div>
-<div class="content">
-<pre> /cgi-bin/doit.cgi?response=sometimes&amp;reason=I%27m+not+really+sure</pre>
-</div>
-</div>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>REMOTE_ADDR</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>REMOTE_ADDR</code> wird auf die Internetprotokoll (IP)-Adresse des Remote-Computers gesetzt, der die Anfrage stellt.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>REMOTE_HOST</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>REMOTE_HOST</code> gibt den Namen des Host-Rechners an, der eine Anfrage stellt. Diese Variable wird nur gesetzt, wenn der Server diese Informationen über eine Anfrage an den Nameserver ermitteln kann.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>REMOTE_IDENT</code> 
-</td>
-<td class="hdlist2">
-<p>Die <code>REMOTE_IDENT</code>-Variable identifiziert den Benutzer, der eine Anfrage stellt. Die Variable wird nur gesetzt, wenn der Server und der Rechner, der die Anfrage stellt, das Identifikationsprotokoll unterstützt. Darüber hinaus sind Informationen zum Benutzer nicht immer verfügbar, weshalb Sie sich nicht darauf verlassen sollten.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>REMOTE_USER</code> 
-</td>
-<td class="hdlist2">
-<p>Die <code>REMOTE_USER</code>-Variable ist der Benutzername, der vom Benutzer authentifiziert wurde, und als solche ist dies die einzige Variable, auf die Sie sich verlassen können, um einen Benutzer zu identifizieren. Wie bei anderen Arten der Benutzerauthentifizierung wird diese Variable nur dann gesetzt, wenn der Server die Benutzerauthentifizierung unterstützt.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>REQUEST_METHOD</code> 
-</td>
-<td class="hdlist2">
-<p>Die Variable <code>REQUEST_METHOD</code> gibt die Methode an, mit der die Anfrage gemacht wurde. Die Methoden können "GET", "HEAD", "POST", "PUT", "DELETE", "LINK" und "UNLINK" sein.</p>
-<div class="paragraph">
-<p>Die Methoden <code>GET</code>,` HEAD` und <code>POST</code> sind die am häufigsten verwendeten Anforderungsmethoden. Sowohl "GET" als auch "POST" werden zum Senden von Formularen verwendet.</p>
-</div>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>SCRIPT_NAME</code> 
-</td>
-<td class="hdlist2">
-<p>gibt den virtuellen Pfad zum ausgeführten Skript an. Diese Information ist nützlich, wenn das Skript ein HTML-Dokument generiert, das auf das Skript verweist.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>SERVER_NAME</code> 
-</td>
-<td class="hdlist2">
-<p>identifiziert den Server anhand seines Hostnamens, Alias oder seiner IP-Adresse. Diese Variable ist immer gesetzt.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>SERVER_PORT</code> 
-</td>
-<td class="hdlist2">
-<p>gibt die Portnummer an, auf der der Server die Anfrage erhalten hat. Diese Information kann bei Bedarf von der URL zum Skript interpretiert werden. Die meisten Server verwenden jedoch den Standardport 80 für HTTP-Anforderungen.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>SERVER__PROTOCOL</code> 
-</td>
-<td class="hdlist2">
-<p>identifiziert das Protokoll, das zum Senden der Anfrage verwendet wird. Der der Variablen zugewiesene Wert identifiziert den Namen und die Version des verwendeten Protokolls. Das Format ist "Name/Version", z.B. HTTP/1.0.</p>
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cgi_standard_input">17.2.2. CGI Standard Input</h4>
-<div class="paragraph">
-<p>Die meisten Daten, die an einen Webserver gesendet werden, werden zum in
-Umgebungsvariablen gespeichert, aber nicht alle Eingaben passen in eine
-Umgebungsvariable. Wenn ein Benutzer Daten übermittelt, die von einem
-Gateway-Skript verarbeitet werden sollen, werden diese Daten als
-URL-codierte Suchzeichenfolge oder über den Standard-Eingabestream
-empfangen. Der Server weiß, wie diese Daten verarbeitet werden, da die
-Methode (POST oder GET in HTTP 1.0) zum Übermitteln der Daten verwendet
-wird.</p>
-</div>
-<div class="paragraph">
-<p>Das Senden von Daten über die Standardeingabe ist der direkteste Weg zum
-Senden von Daten. Der Server teilt dem Gateway-Skript mit, wie viele
-Bytes aus der Standardeingabe gelesen werden sollen. Das Skript öffnet
-dann den Standard-Eingabestream und liest die angegebene Datenmenge.
-Lange URL-codierte Suchzeichenfolgen können abgeschnitten werden. Daten,
-die über den Standard-Eingabestream gesendet werden, bleiben immer
-vollständig erhalten, egal, wie lang. Folglich ist der
-Standard-Eingabestrom der bessere Weg, um Daten zu übergeben.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_welche_cgi_eingabe_daten_methode_soll_man_nutzen">17.2.3. Welche CGI Eingabe-Daten-Methode soll man nutzen?</h4>
-<div class="paragraph">
-<p>Sie können eine Methode für die Datenübermittlung angeben, wenn Sie Ihre
-Web-Formulare erstellen. Es gibt zwei Eingabemethoden für Formulare. Die
-HTTP-GET-Methode verwendet URL-codierte Suchzeichenfolgen. Wenn ein
-Server eine URL-codierte Suchzeichenfolge erhält, weist der Server den
-Wert der Suchzeichenfolge der Variable <code>QUERY_STRING</code> zu.</p>
-</div>
-<div class="paragraph">
-<p>Die HTTP-POST-Methode verwendet die Standard-Eingabeströme. Wenn ein
-Server Daten über den Standard-Eingabestream empfängt, ordnet der Server
-der Variablen <code>CONTENT_LENGTH</code> deren Länge in Bytes zu. Vom CGI-Script
-aus können die Daten dann z.B. mit <code>INPUT$()</code> gelesen werden.</p>
-</div>
-<div class="paragraph">
-<p>Vielleicht möchten Sie einige der X11-Basic Beispielprogramme studieren,
-um die für Ihren Einsatzzweck geeignete Methode zu finden.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_die_ausgaben_des_cgi_skripts">17.2.4. Die Ausgaben des CGI-Skripts</h4>
-<div class="paragraph">
-<p>Nachdem das Skript die Eingabedaten gelesen und verarbeitet hat, sollte
-das Skript irgendeine Art von Ausgabe an den Server zurückgeben. Der
-Server wird dann die Ausgabe an den Client zurücksenden. Im Allgemeinen
-hat diese Ausgabe die Form einer HTTP-Antwort. Also eine Kopfzeile
-gefolgt von einer Leerzeile und dann gefolgt vom eigentlichen
-Textkörper, der dann den HTML-Code enthalten kann.  Der Hauptteil kann
-beispielsweise ein HTML-Dokument enthalten, das der Client anzeigen
-soll.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cgi_kopfzeilen">17.2.5. CGI Kopfzeilen</h4>
-<div class="paragraph">
-<p>CGI-Kopfzeilen (Header) enthalten Anweisungen für den Server. Derzeit
-sind diese drei Server-Direktiven gültig:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Content-Type</p>
-</li>
-<li>
-<p>Location</p>
-</li>
-<li>
-<p>Status</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Ein einzelner Header kann eine oder alle Serverdirektiven enthalten. Ihr
-CGI-Skript gibt diese Anweisungen an den Server aus. Obwohl auf den
-Header eine Leerzeile folgt, die den Header vom Hauptteil trennt, muss
-die Ausgabe keinen Hauptteil enthalten.</p>
-</div>
-<div class="paragraph">
-<p>Das Feld <strong>Content-Type</strong> in einem CGI-Header identifiziert den MIME-Typ
-der Daten, die Sie an den Client zurücksenden. Normalerweise ist die
-Datenausgabe eines Skripts ein vollständig formatiertes Dokument, z.B.
-ein HTML-Dokument. Sie könnten diese Ausgabe in der Kopfzeile wie folgt
-angeben:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>Content-Type: text/html</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Aber wenn Ihr Programm andere Daten wie Bilder etc. ausgibt, sollten Sie
-natürlich den entsprechenden Inhaltstyp angeben.</p>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Location </dt>
-<dd>
-<p>Die Ausgabe Ihres Skripts muss kein im Skript erstelltes Dokument sein. Sie können auf jedes Dokument im Web verweisen, indem Sie das Feld <strong>Location</strong> verwenden. Das Feld <strong>Location</strong> kann auf eine Datei verweisen, die anhand ihrer URL angegeben wird. Server verarbeiten diese Referenzen entweder direkt oder indirekt abhängig vom Speicherort der Datei. Wenn der Server die Datei lokal finden kann, übergibt er die Datei an den Client. Andernfalls leitet der Server die URL an den Client um, und der Client muss die Datei selbst abrufen. Sie können einen Speicherort in einem Skript wie folgt angeben:</p>
-<div class="listingblock">
-<div class="content">
-<pre> Location: http://www.new-jokes.com/</pre>
-</div>
-</div>
-</dd>
-<dt class="hdlist1">Status </dt>
-<dd>
-<p>Das Feld <strong>Status</strong> übergibt eine Statuszeile an den Server zur
-Weiterleitung an den Client. Statuscodes werden als dreistelliger Code
-gefolgt von einem String ausgedrückt, der allgemein erklärt, was
-passiert ist. Die erste Ziffer eines Statuscodes zeigt den allgemeinen
-Status wie folgt an:</p>
-<div class="listingblock">
-<div class="content">
-<pre>  1XX Not yet allocated
-  2XX Success
-  3XX Redirection
-  4XX Client error
-  5XX Server error</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Obwohl viele Statuscodes von Servern verwendet werden, sind die
-Statuscodes, die Sie über Ihr CGI-Skript an einen Client übergeben, in
-der Regel Client-Fehlercodes. Angenommen, das Skript konnte keine Datei
-finden und Sie haben angegeben, dass das Skript in solchen Fällen einen
-Fehlercode ausgeben soll, anstatt nichts zurückzugeben. Hier ist eine
-Liste der Client-Fehlercodes, die Sie möglicherweise verwenden möchten:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>401 Unauthorized Authentication has failed.
-    Der Benutzer hat keine Zugriffsrechte auf diese Datei. Er muss sich Authentifizieren.
-
-403 Forbidden. The request is not acceptable.
-    Der Benutzer darf auf das File nicht zugreifen.
-
-404 Not found.
-    Die angegebene Datei oder Daten konnte nicht gefunden werden.
-
-405 Method not allowed.
-    Die Übertragungsmethode ist nicht erlaubt hier.</pre>
-</div>
-</div>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_ein_beispiel_cgi_skript">17.3. Ein Beispiel CGI Skript</h3>
-<div class="paragraph">
-<p>Hier ist ein einfaches Beispiel-CGI-Skript, das einfach alle
-Informationen zurückgibt, die es vom Webserver als HTML-Seite erhält.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>#!/usr/bin/xbasic
-PRINT "Content-type: text/html"+CHR$(13)
-PRINT ""+CHR$(13)
-FLUSH
-PRINT "&lt;html&gt;&lt;head&gt;&lt;TITLE&gt;Test CGI&lt;/TITLE&gt;&lt;head&gt;&lt;body&gt;"
-PRINT "&lt;h1&gt;Commandline:&lt;/h1&gt;"
-i=0
-WHILE LEN(PARAM$(i))
-  PRINT STR$(i)+": "+PARAM$(i)+"&lt;br&gt;"
-  INC i
-WEND
-PRINT "&lt;h1&gt;Environment:&lt;/h1&gt;&lt;pre&gt;"
-FLUSH      ! flush the output before another program is executed !
-SYSTEM "env"
-PRINT "&lt;/pre&gt;&lt;h1&gt;Stdin:&lt;/h1&gt;&lt;pre&gt;"
-length=VAL(ENV$("CONTENT_LENGTH"))
-IF length
-  FOR i=0 TO length-1
-    t$=t$+CHR$(inp(-2))
-  NEXT i
-  PRINT t$
-ENDIF
-PRINT "&lt;/pre&gt;"
-PRINT "&lt;FORM METHOD=POST ACTION=/cgi-bin/envtest.cgi&gt;"
-PRINT "Name: &lt;INPUT NAME=name&gt;&lt;BR&gt;"
-PRINT "Email: &lt;INPUT NAME=email&gt;&lt;BR&gt;"
-PRINT "&lt;INPUT TYPE=submit VALUE="+CHR$(34)+"Test POST Method"+CHR$(34)+"&gt;"
-PRINT "&lt;/FORM&gt;"
-PRINT "&lt;hr&gt;&lt;h6&gt;(c) Markus Hoffmann cgi with X11-basic&lt;/h6&gt;&lt;/body&gt;&lt;/html&gt;"
-FLUSH
-QUIT</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_quick_reference">18. Quick Reference</h2>
+<h2 id="_quick_reference">17. Quick Reference</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_reservierte_variablennamen">18.1. Reservierte Variablennamen</h3>
+<h3 id="_reservierte_variablennamen">17.1. Reservierte Variablennamen</h3>
 <div class="paragraph">
 <p>Es gibt einige reservierte Variablen bzw. Variablennamen. Einige
 Schlüsselwörter funktionieren außerdem möglicherweise nicht als
@@ -8982,20 +8244,20 @@ unterscheidet, kann sie im Allgemeinen als Name verwendet werden.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bedingungen">18.2. Bedingungen</h3>
+<h3 id="_bedingungen">17.2. Bedingungen</h3>
 <div class="paragraph">
 <p>Bedingungen und Ausdrücke sind gleich, <code>FALSE</code> ist definiert als 0 und <code>TRUE</code> als -1. Boolesche Operatoren wie <code>AND</code>, <code>OR</code>, <code>XOR</code> usw. werden als bitweise Operation angewendet. Auf diese Weise können sie sowohl in Ausdrücken als auch in Bedingungen verwendet werden.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_zahlen_und_konstanten">18.3. Zahlen und Konstanten</h3>
+<h3 id="_zahlen_und_konstanten">17.3. Zahlen und Konstanten</h3>
 <div class="paragraph">
 <p>Zahlenkonstanten können mit <code>0x</code> vorangestellt werden, um Hexadezimalwerte darzustellen. String-Konstanten werden mit Paaren von <code>""</code> markiert. Array-Konstanten haben folgendes Format:
 <code>[ , , ; , ; , , ]</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_operatoren_2">18.4. Operatoren</h3>
+<h3 id="_operatoren_2">17.4. Operatoren</h3>
 <div class="paragraph">
 <p>Die Rangfolge ist wie folgt definiert (höchster zuerst):</p>
 </div>
@@ -9029,7 +8291,7 @@ unterscheidet, kann sie im Allgemeinen als Name verwendet werden.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_matritzenoperatoren">18.5. Matritzenoperatoren&#8201;&#8212;&#8201;</h3>
+<h3 id="_matritzenoperatoren">17.5. Matritzenoperatoren&#8201;&#8212;&#8201;</h3>
 <div class="paragraph">
 <p>Matritzenoperatoren oder allgemein Feld-Operatoren operieren auf Feldern.
 Je nach Feldtyp und Dimension koennen sie unterschiedliche Bedeuting haben.</p>
@@ -9049,7 +8311,7 @@ Variablenklassen Operieren: z.B.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_abkürzungen">18.6. Abkürzungen</h3>
+<h3 id="_abkürzungen">17.6. Abkürzungen</h3>
 <div class="paragraph">
 <p>Im Interpreter kann jeder Befehl abgekürzt werden, solange der Befehlsparser den Befehl eindeutig identifizieren kann. Sie können also <code>q</code> anstelle von <code>QUIT</code> verwenden.</p>
 </div>
@@ -9068,7 +8330,7 @@ Variablenklassen Operieren: z.B.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_interpreter_kommandos">18.7. Interpreter-Kommandos</h3>
+<h3 id="_interpreter_kommandos">17.7. Interpreter-Kommandos</h3>
 <div class="literalblock">
 <div class="content">
 <pre>CLEAR           löscht und entfernt alle Variablen aus dem Speicher
@@ -9101,7 +8363,7 @@ XRUN            Dateiauswahl zum starten eines Programms</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_kommandos_für_die_ablaufkontrolle">18.8. Kommandos für die Ablaufkontrolle</h3>
+<h3 id="_kommandos_für_die_ablaufkontrolle">17.8. Kommandos für die Ablaufkontrolle</h3>
 <div class="literalblock">
 <div class="content">
 <pre>AFTER n,procedure   Ruft eine Prozedur nach n Sekunden auf
@@ -9143,7 +8405,7 @@ SPAWN procedure      Schnüre einen neuen Thread ab</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ein_ausgabekommandos_für_die_textkonsole">18.9. Ein-/Ausgabekommandos für die Textkonsole</h3>
+<h3 id="_ein_ausgabekommandos_für_die_textkonsole">17.9. Ein-/Ausgabekommandos für die Textkonsole</h3>
 <div class="literalblock">
 <div class="content">
 <pre>BEEP                 Glockenton (auf TTY/Konsole)
@@ -9165,7 +8427,7 @@ PUTBACK a            Gebe ein Zeichen an Konsole zurück</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ein_ausgabekommandos_für_dateien">18.10. Ein-/Ausgabekommandos für Dateien</h3>
+<h3 id="_ein_ausgabekommandos_für_dateien">17.10. Ein-/Ausgabekommandos für Dateien</h3>
 <div class="literalblock">
 <div class="content">
 <pre>BGET #f,a,n       Lese n Bytes aus Datei #f nach Adresse a
@@ -9194,7 +8456,7 @@ WATCH file$       Beobachte Datei-Änderungen</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_kommandos_für_variablen">18.11. Kommandos für Variablen</h3>
+<h3 id="_kommandos_für_variablen">17.11. Kommandos für Variablen</h3>
 <div class="literalblock">
 <div class="content">
 <pre>ABSOLUTE x,adr%       Weist einer Variablen x die Speicheradresse adr% zu.
@@ -9214,7 +8476,7 @@ VAR vars              Deklariere Argumente eine Funktion als Übergabe "by refer
 </div>
 </div>
 <div class="sect2">
-<h3 id="_kommandos_für_speichermanipulation">18.12. Kommandos für Speichermanipulation</h3>
+<h3 id="_kommandos_für_speichermanipulation">17.12. Kommandos für Speichermanipulation</h3>
 <div class="literalblock">
 <div class="content">
 <pre>ABSOLUTE x,adr% Weist einer Variablen x die Speicheradresse adr% zu..
@@ -9231,7 +8493,7 @@ SHM_FREE adr%   Gebe ein Shared Memory Segment frei</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_mathematik_kommandos">18.13. Mathematik-Kommandos</h3>
+<h3 id="_mathematik_kommandos">17.13. Mathematik-Kommandos</h3>
 <div class="literalblock">
 <div class="content">
 <pre>ADD a,b               Dasselbe wie a=a+b, aber schneller
@@ -9252,7 +8514,7 @@ SUB a,b               Dasselbe wie a=a-b, aber schneller</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sonstige_kommandos">18.14. Sonstige Kommandos</h3>
+<h3 id="_sonstige_kommandos">17.14. Sonstige Kommandos</h3>
 <div class="literalblock">
 <div class="content">
 <pre>CALL adr[,par,...]     Siehe EXEC
@@ -9299,10 +8561,10 @@ WORT_SEP               siehe SPLIT</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_graphic_commands">19. Graphic commands</h2>
+<h2 id="_graphic_commands">18. Graphic commands</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_drawing_and_painting">19.1. Drawing and painting</h3>
+<h3 id="_drawing_and_painting">18.1. Drawing and painting</h3>
 <div class="literalblock">
 <div class="content">
 <pre>BOUNDARY f              Schaltet Umrandung an oder aus
@@ -9347,7 +8609,7 @@ TEXT x,y,t$             Gebe Text aus (bitmap font)</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bildschirmkommandos">19.2. Bildschirmkommandos</h3>
+<h3 id="_bildschirmkommandos">18.2. Bildschirmkommandos</h3>
 <div class="literalblock">
 <div class="content">
 <pre>CLEARW [#n]         Lösche das Grafik-Fenster
@@ -9373,7 +8635,7 @@ VSYNC               Dasselbe wie SHOWPAGE</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_kommandos_der_grafischen_benutzerschnittstelle">19.3. Kommandos der Grafischen Benutzerschnittstelle</h3>
+<h3 id="_kommandos_der_grafischen_benutzerschnittstelle">18.3. Kommandos der Grafischen Benutzerschnittstelle</h3>
 <div class="literalblock">
 <div class="content">
 <pre>ALERT a,b$,c,d$,var[,ret$] Zeigt eine Alert/Infobox und wartet auf Benutzereingaben
@@ -9404,10 +8666,10 @@ SHOWM                  Zeigt den Mauszeiger</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_funktionen_2">20. Funktionen</h2>
+<h2 id="_funktionen_2">19. Funktionen</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_dateiein_und_ausgabefunktionen">20.1. Dateiein- und -ausgabefunktionen</h3>
+<h3 id="_dateiein_und_ausgabefunktionen">19.1. Dateiein- und -ausgabefunktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre>d%=DEVICE(file$)     Gibt die Geräte-ID einer Datei zurück
@@ -9431,7 +8693,7 @@ t$=TERMINALNAME$(#n) Gibt den Namen des Terminals zurück</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_funktionen_für_variablen_und_stringverarbeitung">20.2. Funktionen für Variablen und Stringverarbeitung</h3>
+<h3 id="_funktionen_für_variablen_und_stringverarbeitung">19.2. Funktionen für Variablen und Stringverarbeitung</h3>
 <div class="literalblock">
 <div class="content">
 <pre> adr%=ARRPTR(b())      Zeiger auf eine ARRAY Struktur
@@ -9482,7 +8744,7 @@ e=WORT_SEP(t$,d$,m,a$,b$)
 </div>
 </div>
 <div class="sect2">
-<h3 id="_datenkompression_und_kodierung">20.3. Datenkompression und -kodierung</h3>
+<h3 id="_datenkompression_und_kodierung">19.3. Datenkompression und -kodierung</h3>
 <div class="literalblock">
 <div class="content">
 <pre>b$=ARID$(a$)     Dekodiert a$ mit order-0 adaptive arithmetic decoding
@@ -9514,7 +8776,7 @@ b$=RLE$(a$)          "run length" Kodierung</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_speicherfunktionen">20.4. Speicherfunktionen</h3>
+<h3 id="_speicherfunktionen">19.4. Speicherfunktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre> adr%=ARRPTR(b())       Zeiger auf eine ARRAY Struktur
@@ -9532,7 +8794,7 @@ adr%=SYM_ADR(#n,s$)    return pointer to symbol from shared object file
 </div>
 </div>
 <div class="sect2">
-<h3 id="_logische_und_bit_funktionen">20.5. Logische und Bit-Funktionen</h3>
+<h3 id="_logische_und_bit_funktionen">19.5. Logische und Bit-Funktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre> c%=AND(a%,b%)    Dasselbe wie c=(a AND b)
@@ -9557,7 +8819,7 @@ b%=SWAP(a)       Swaps High and Low words of a</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_mathematische_funktionen">20.6. Mathematische Funktionen</h3>
+<h3 id="_mathematische_funktionen">19.6. Mathematische Funktionen</h3>
 <div class="paragraph">
 <p>Die Mathematikfunktionsbibliothek enthält einen umfassenden Satz
 mathematischer Funktionen, einschließlich:</p>
@@ -9629,7 +8891,7 @@ z=VARIAT(n,k)      Anzahl der Permutationen von n elements</pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_winkel">20.6.1. Winkel</h4>
+<h4 id="_winkel">19.6.1. Winkel</h4>
 <div class="paragraph">
 <p>Winkel sind immer Bogenmaß, sowohl für Argumente als auch für Rückgabewerte.</p>
 </div>
@@ -9641,7 +8903,7 @@ b=DEG(a)     Wandelt Bogenmaß in Grad um</pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_trigonometrische_funktionen">20.6.2. Trigonometrische Funktionen</h4>
+<h4 id="_trigonometrische_funktionen">19.6.2. Trigonometrische Funktionen</h4>
 <div class="literalblock">
 <div class="content">
 <pre>b=SIN(a)     Sinus
@@ -9662,7 +8924,7 @@ b=ATANH(a)   Hyperbolischer Arcus-Tangens</pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_zufallszahlen">20.6.3. Zufallszahlen</h4>
+<h4 id="_zufallszahlen">19.6.3. Zufallszahlen</h4>
 <div class="literalblock">
 <div class="content">
 <pre>a=GASDEV(dummy)  ergibt eine Gauß-verteilte Zufallszahl
@@ -9675,7 +8937,7 @@ a=SRAND(seed)    Dasselbe wie RANDOMIZE</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_systemfunktionen">20.7. Systemfunktionen</h3>
+<h3 id="_systemfunktionen">19.7. Systemfunktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre> ret%=CALL(adr%[,par]) Ruft eine Maschinencode oder C Funktion auf mit Rückgabewert
@@ -9695,7 +8957,7 @@ d$=UNIXDATE$(i)       give date$ from TIMER value</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_grafik_funktionen">20.8. Grafik-Funktionen</h3>
+<h3 id="_grafik_funktionen">19.8. Grafik-Funktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre> c=COLOR_RGB(r,g,b[,a]) Alloziert eine Farbe per rgb-Wert und gibt die Nummer zurück.
@@ -9716,7 +8978,7 @@ a=OBJC_OFFSET(t%,o,x,y)calculate absolute object coordinates
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sonstige_funktionen">20.9. Sonstige Funktionen</h3>
+<h3 id="_sonstige_funktionen">19.9. Sonstige Funktionen</h3>
 <div class="literalblock">
 <div class="content">
 <pre>a=EVAL(t$)        Berechne einen Ausdruck in t$
@@ -9729,7 +8991,7 @@ m=MIN(function()) noch nicht implementiert</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_unterroutinen_und_funktionen">20.10. Unterroutinen und Funktionen</h3>
+<h3 id="_unterroutinen_und_funktionen">19.10. Unterroutinen und Funktionen</h3>
 <div class="hdlist">
 <table>
 <tr>
@@ -9781,7 +9043,7 @@ ENDFUNCTION</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_fehlermeldungen">20.11. Fehlermeldungen</h3>
+<h3 id="_fehlermeldungen">19.11. Fehlermeldungen</h3>
 <div class="paragraph">
 <p>X11-Basic kann eine Reihe von internen Fehlern erzeugen, auf die mit
 einer Nummer (<code>ERR</code>) verwiesen wird (siehe auch <code>ERROR</code>).</p>
@@ -10032,7 +9294,7 @@ einer Nummer (<code>ERR</code>) verwiesen wird (siehe auch <code>ERROR</code>).<
 </div>
 </div>
 <div class="sect1">
-<h2 id="_kommando_beschreibungen_befehlsreferenz">21. Kommando-Beschreibungen Befehlsreferenz</h2>
+<h2 id="_kommando_beschreibungen_befehlsreferenz">20. Kommando-Beschreibungen Befehlsreferenz</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Dieses Kapitel ist eine Befehlsreferenz zum schnellen Nachschlagen
@@ -10043,7 +9305,7 @@ Befehle und Funktionen.</p>
 <p>Bitte schlagen Sie die Beschreibungen im englischen Orginal-Handbuch nach.</p>
 </div>
 <div class="sect2">
-<h3 id="_syntax_beispiel">21.1. Syntax-Beispiel</h3>
+<h3 id="_syntax_beispiel">20.1. Syntax-Beispiel</h3>
 <div class="paragraph">
 <p>Dieses Handbuch beschreibt die Syntax von BASIC-Befehlen und
 BASIC-Funktionen in verallgemeinerter Form. Hier ist ein Beispiel:</p>
@@ -10081,10 +9343,10 @@ PRINT "result = ";result</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_häufig_gestellte_fragen_und_antworten">22. Häufig gestellte Fragen und Antworten</h2>
+<h2 id="_häufig_gestellte_fragen_und_antworten">21. Häufig gestellte Fragen und Antworten</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_wie_leicht_ist_es_in_meine_programme_zu_hacken">22.1. Wie leicht ist es, in meine Programme zu hacken?</h3>
+<h3 id="_wie_leicht_ist_es_in_meine_programme_zu_hacken">21.1. Wie leicht ist es, in meine Programme zu hacken?</h3>
 <div class="paragraph">
 <p>Nun, zuallererst: es ist möglich. Die grundlegenden Quelldateien (.bas) sind natürlich von jedem Texteditor lesbar und modifizierbar. Der Bytecode kompilierte Code (.b) ist bereits schwieriger zu lesen und fast unmöglich wieder in Quellcode zu konvertieren. Da X11-Basic jedoch Open Source ist, kann jeder, der möchte, in den Quellcode schauen und alle Informationen lesen, die notwendig sind, um den Bytecode zu dekodieren und ihn auch zu modifizieren.</p>
 </div>
@@ -10110,7 +9372,7 @@ PRINT "result = ";result</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_brauche_ich_eine_lizenz_um_meine_programme_zu_verteilen">22.2. Brauche ich eine Lizenz, um meine Programme zu verteilen?</h3>
+<h3 id="_brauche_ich_eine_lizenz_um_meine_programme_zu_verteilen">21.2. Brauche ich eine Lizenz, um meine Programme zu verteilen?</h3>
 <div class="paragraph">
 <p>Nein. Sie benötigen keine Lizenz, um X11-Basic zu benutzen (es ist kostenlos). Und Sie brauchen definitiv keine Lizenz, um Ihre Programme zu vertreiben oder zu verkaufen. Die einzige Vereinbarung, um die Sie sich sorgen müssen, ist, dass Sie, wenn Sie X11-Basic verwenden, alle direkten und indirekten Konsequenzen aus der Nutzung von X11-Basic übernehmen. Das bedeutet u.a.:
 Beschimpfen Sie mich nicht, wenn irgendwas nicht so funktioniert, wie Sie es erwarten. X11-Basic kann für jede Aufgabe verwendet werden, egal, ob diese gewinnorientiert ist oder nicht. Ich will es nicht wissen, und Sie brachen mir keinen Cent zu zahlen. Sie müssen nicht einmal erwähnen, dass Ihr Programm mit X11-Basic erstellt wurde (obwohl dies eine nette Geste wäre).</p>
@@ -10121,7 +9383,7 @@ dass er nicht X11-Basic kauft oder dafür zahlt, sondern nur Ihr Programm oder I
 </div>
 </div>
 <div class="sect2">
-<h3 id="_wie_schnell_ist_x11_basic">22.3. Wie schnell ist X11-Basic?</h3>
+<h3 id="_wie_schnell_ist_x11_basic">21.3. Wie schnell ist X11-Basic?</h3>
 <div class="paragraph">
 <p>Die Antwort hängt davon ab, wie ein X11-Basic-Programm ausgeführt wird: Es hängt davon ab, ob der Code interpretiert wird, als Bytecode in einer virtuellen Maschine ausgeführt wird oder in eine native Maschinensprache kompiliert wird. Generell finden wir:</p>
 </div>
@@ -10155,7 +9417,7 @@ dass er nicht X11-Basic kauft oder dafür zahlt, sondern nur Ihr Programm oder I
 </div>
 </div>
 <div class="sect2">
-<h3 id="_utf_8_zeichensatz">22.4. UTF-8 Zeichensatz</h3>
+<h3 id="_utf_8_zeichensatz">21.4. UTF-8 Zeichensatz</h3>
 <div class="paragraph">
 <p>Ich habe das letzte Update auf X11-Basic heruntergeladen, aber ich habe ein Problem mit dem UTF-8-Zeichensatz&#8230;&#8203; Ich kann den ASCII-Zeichensatz nicht mehr verwenden, besonders den grafischen Teil davon&#8230;&#8203; Ich habe ein kleines Spiel gemacht, das es benutzt, jetzt funktioniert es nicht mehr&#8230;&#8203; Gibt es eine Möglichkeit, dieses Problem zu beheben?</p>
 </div>
@@ -10192,7 +9454,7 @@ ENDFUNCTION</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_gui_designer">22.5. GUI-Designer</h3>
+<h3 id="_gui_designer">21.5. GUI-Designer</h3>
 <div class="paragraph">
 <p>Gibt es einen GUI-Designer für die grafischen Benutzeroberflächenfunktionen von X11-Basic?</p>
 </div>
@@ -10206,7 +9468,7 @@ ENDFUNCTION</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_andere">22.6. Andere</h3>
+<h3 id="_andere">21.6. Andere</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">F</dt>
@@ -10223,33 +9485,33 @@ ENDFUNCTION</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_kompatibilität">23. Kompatibilität</h2>
+<h2 id="_kompatibilität">22. Kompatibilität</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_allgemein">23.1. Allgemein</h3>
+<h3 id="_allgemein">22.1. Allgemein</h3>
 <div class="paragraph">
 <p>X11-Basic weicht in zahlreichen Aspekten von ANSI BASIC ab. Es unterscheidet sich auch von GfA-Basic (Atari ST), obwohl es versucht, kompatibel zu sein und wirklich ähnlich aussieht:</p>
 </div>
 <div class="sect3">
-<h4 id="_else_if_vs_elseif">23.1.1. ELSE IF vs ELSEIF</h4>
+<h4 id="_else_if_vs_elseif">22.1.1. ELSE IF vs ELSEIF</h4>
 <div class="paragraph">
 <p>Dieser Interpreter verwendet die ELSE-IF-Form der Anweisung "else if" mit einem Leerzeichen zwischen ELSE und IF. Im Gegensatz dazu verwendet ANSI BASIC "ELSEIF" und "END IF". Andere Interpreter können auch die Kombination "ELSEIF" und "ENDIF" verwenden.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_lokale_variablen">23.1.2. Lokale Variablen</h4>
+<h4 id="_lokale_variablen">22.1.2. Lokale Variablen</h4>
 <div class="paragraph">
 <p>Lokale Variablen müssen in der Prozedur bzw. Funktion als lokal deklariert werden. Alle anderen Variablen werden als global behandelt.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_call_by_value_oder_by_reference">23.1.3. Call By-Value oder By-Reference</h4>
+<h4 id="_call_by_value_oder_by_reference">22.1.3. Call By-Value oder By-Reference</h4>
 <div class="paragraph">
 <p>Variablen in einer GOSUB-Anweisung wie in <code>GOSUB test(a)</code> werden "by-value" an die <code>PROCEDURE</code> übergeben: Die Subroutine erhält den Wert, kann aber die Variable, aus der der Wert stammt, nicht ändern. Um die Variable "by-reference" zu übergeben, verwenden Sie das Schlüsselwort <code>VAR</code> wie in <code>GOSUB test(VAR a)</code>: Das Unterprogramm erhält dann nicht nur den Wert, sondern auch die Variable selbst und kann sie ändern (weitere Informationen finden Sie in der Dokumentation der GOSUB-Anweisung). Für <code>FUNCTION</code> gelten die gleichen Regeln: <code>VAR</code> in der Parameterliste eines Funktionsaufrufs ermöglicht es einer FUNCTION, einen variablen Parameter "by-reference" zu erhalten. Im Gegensatz dazu übergeben traditionelle BASIC-Interpreter Variablen immer in Parameterlisten "by-reference". Das Problem mit "by-reference"-Parametern ist, dass Sie sich dessen bewusst sein müssen, was innerhalb der Subroutine passiert: Zuweisungen an Parametervariablen innerhalb der Subroutine können die Werte von Variablen in der aufrufenden Zeile verändern.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_zuweisungsoperator">23.1.4. Zuweisungsoperator</h4>
+<h4 id="_zuweisungsoperator">22.1.4. Zuweisungsoperator</h4>
 <div class="paragraph">
 <p>X11-BASIC hat keinen speziellen Zuweisungsoperator, sondern weist dem Gleichheitszeichen zusätzlich diese Funktion zu. Das <code>=</code> Zeichen hat also je nach Kontext eine andere Funktion. Einmal als Vergleichsoperator in Ausdrücken (wie in <code>IF a=2</code>) und zum zweiten als Zuweisungsoperator in Zuweisungen (wie in <code>LET a=1</code>). In einer Zuweisung wird immer das erste Gleichheitszeichen als Zuweisungsoperator betrachtet, alle folgenden als Vergleichsoperator.
 Hier ist ein Beispiel, das das Ergebnis eines Vergleichs (TRUE oder FALSE) der Variablen &lt;a&gt; zuordnet und somit beide Formen der Verwendung des Gleichheitszeichens zeigt:</p>
@@ -10261,19 +9523,19 @@ Hier ist ein Beispiel, das das Ergebnis eines Vergleichs (TRUE oder FALSE) der V
 </div>
 </div>
 <div class="sect3">
-<h4 id="_zuweisungen_zum_modifizierbaren_l_inks_werten">23.1.5. Zuweisungen zum modifizierbaren l(inks)-Werten</h4>
+<h4 id="_zuweisungen_zum_modifizierbaren_l_inks_werten">22.1.5. Zuweisungen zum modifizierbaren l(inks)-Werten</h4>
 <div class="paragraph">
 <p>Einige Implementierungen von BASIC erlauben die Verwendung von Funktionen auf der linken Seite von Zuweisungen wie in <code>MID$(a$,5,1)="a"</code>. X11-Basic unterstützt diese Syntax nicht, benötigt stattdessen auf der linken Seite solcher Ausdrücke immer eine Variable (einen "modifizierbaren links-Wert").</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_die_code_int_code_funktion">23.1.6. Die <code>INT()</code>-Funktion</h4>
+<h4 id="_die_code_int_code_funktion">22.1.6. Die <code>INT()</code>-Funktion</h4>
 <div class="paragraph">
 <p>In X11-Basic gibt <code>INT()</code> wahrscheinlich andere Ergebnisse für negative Zahlen und für Zahlen größer als 2147483648 als in anderen Implementationen von BASIC. <code>INT()</code> wird intern als "Cast to Int" implementiert. (Das war schon immer so und ist sehr schnell, und der Compiler besteht darauf.) Dies bedeutet, dass das Argument nicht aus Zahlen bestehen darf, die sich nicht in 32-Bit-Ganzzahlen konvertieren lassen. Der Nachkommateil der Fließkommazahlen wird abgeschnitten (wie in <code>TRUNC()</code>) statt abgerundet (wie bei den meisten anderen BASIC-Dialekten). Wenn Sie ein korrektes Verhalten auch bei negativen Zahlen brauchen, dann sollten Sie lieber <code>FLOOR()</code> anstelle von <code>INT()</code> verwenden</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_die_dim_anweisung">23.1.7. Die DIM-Anweisung</h4>
+<h4 id="_die_dim_anweisung">22.1.7. Die DIM-Anweisung</h4>
 <div class="paragraph">
 <p>In X11-Basic verhält sich die "DIM"-Anweisung wahrscheinlich anders als in anderen BASIC-Dialekten. <code>DIM</code> in X11-Basic reserviert Speicherplatz für genau die angegebene Anzahl von Indizes. Andere BASIC-Dialekte reservieren einen Speicher für einen Index mehr als angegeben. . Wenn Sie vom Fehler "Feldindex außerhalb des Bereichs" überrascht werden, liegt es wahrscheinlich daran, dass Sie nicht genug Dimensioniert haben.</p>
 </div>
@@ -10282,26 +9544,26 @@ Hier ist ein Beispiel, das das Ergebnis eines Vergleichs (TRUE oder FALSE) der V
 </div>
 </div>
 <div class="sect3">
-<h4 id="_die_let_anweisung">23.1.8. Die LET-Anweisung</h4>
+<h4 id="_die_let_anweisung">22.1.8. Die LET-Anweisung</h4>
 <div class="paragraph">
 <p>Obwohl es in X11-Basic implementiert ist, hat die Verwendung der LET-Anweisung keinen Vorteil. Im Gegenteil macht die Verwendung von LET Ihr Programm langsamer als nötig.
 Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können ohne die LET-Anweisung vorgenommen werden.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_die_tos_gem_implementierung">23.1.9. Die TOS/GEM Implementierung</h4>
+<h4 id="_die_tos_gem_implementierung">22.1.9. Die TOS/GEM Implementierung</h4>
 <div class="paragraph">
 <p>Da GfA-Basic auf ATARI-ST die integrierten GUI-Funktionen des ATARI ST (TOS/GEM) nutzt, die auf anderen Betriebssystemen nicht verfügbar sind, kann X11-Basic nur bedingt kompatibel sein. GEM-kompatible ALERT-Boxen, Menüs und Objekte werden von X11-Basic unterstützt und können auf ähnliche Weise verwendet werden. Sogar ATARI ST <code>.rsc</code> Dateien können geladen werden. Andere Funktionen wie LINEA-Funktionen, VDISYS-, GEMSYS-, BIOS-, XBIOS- und GEMDOS-Aufrufe sind nicht möglich. Außerdem werden viele andere Dinge nicht implementiert, weil der Autor denkt, dass sie auf UNIX-Plattformen keinen nützlichen Effekt haben. Einige könnten in einer späteren Version von X11-Basic enthalten sein (siehe Liste unten). Da viele GfA-Basic-Programme diese Funktionen nutzen, werden sie modifiziert werden müssen, bevor sie mit X11-Basic ausgeführt werden können.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_die_inline_anweisung">23.1.10. Die INLINE-Anweisung</h4>
+<h4 id="_die_inline_anweisung">22.1.10. Die INLINE-Anweisung</h4>
 <div class="paragraph">
 <p>Die INLINE-Anweisung wird nicht unterstützt, da der Quellcode X11-Basic-Programme reiner ASCII-Text ist. Eine Alternative wurde aber implementiert. (siehe <code>INLINE$()</code>).</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_inkompatible_datentypen">23.1.11. Inkompatible Datentypen</h4>
+<h4 id="_inkompatible_datentypen">22.1.11. Inkompatible Datentypen</h4>
 <div class="paragraph">
 <p>X11-Basic verwendet den Standarddatentyp (ohne Suffix) und den Integer-Datentyp (Suffix <code>%</code>). Dies ist mit den meisten BASIC-Dialekten kompatibel. Der komplexe Datentyp (Suffix <code><mark></code>) wird jedoch von den meisten BASIC-Dialekten nicht unterstützt und das Suffix <code></mark></code> wird manchmal auch für reguläre Float-Variablen verwendet (wie in GFA-Basic).</p>
 </div>
@@ -10328,7 +9590,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_gfa_basic_kompatibilität">23.2. GFA-Basic Kompatibilität</h3>
+<h3 id="_gfa_basic_kompatibilität">22.2. GFA-Basic Kompatibilität</h3>
 <div class="paragraph">
 <p>TODO</p>
 </div>
@@ -10336,7 +9598,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect1">
-<h2 id="_gnu_free_documentation_license">24. GNU Free Documentation License</h2>
+<h2 id="_gnu_free_documentation_license">23. GNU Free Documentation License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Der Autor dieser Übersetzung ist:</p>
@@ -10363,7 +9625,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 <p>Copyright &#169; 2000,2001,2002 Free Software Foundation, Inc. 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA Jeder darf diese Lizenzurkunde kopieren und wortwörtliche Kopien davon verteilen, Änderungen daran sind jedoch nicht gestattet.</p>
 </div>
 <div class="sect2">
-<h3 id="_präambel">24.1. Präambel</h3>
+<h3 id="_präambel">23.1. Präambel</h3>
 <div class="paragraph">
 <p>Der Zweck dieser Lizenz ist es, ein Handbuch, Textbuch oder ein anderes zweckdienliches und nützliches Dokument frei, im Sinne von Freiheit, zu machen; jedermann die Freiheit zu sichern, es zu kopieren und mit oder ohne Änderungen daran, sowohl kommerziell als auch nicht kommerziell weiter zu verbreiten. Weiterhin sichert diese Lizenz einem Autor oder Verleger die Möglichkeit, Anerkennung für seine Arbeit zu erhalten ohne für Änderungen durch Andere verantwortlich gemacht zu werden.</p>
 </div>
@@ -10375,7 +9637,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_anwendbarkeit_und_definitionen">24.2. Anwendbarkeit und Definitionen</h3>
+<h3 id="_anwendbarkeit_und_definitionen">23.2. Anwendbarkeit und Definitionen</h3>
 <div class="paragraph">
 <p>Diese Lizenz findet Anwendung auf jedes Handbuch oder andere Werk, unabhängig von dem Medium, auf dem es erscheint, das einen vom Rechteinhaber eingefügten Hinweis enthält, der besagt, daß das Werk unter den Bedingungen dieser Lizenz verbreitet werden darf. Ein solcher Hinweis gewährt eine weltweit gültige, tantiemenfreie und zeitlich unbefristete Lizenz, die es gestattet das Werk, unter den hier festgelegten Bedingungen, zu nutzen. Der Begriff Dokument wird im Folgenden für alle solche Handbücher und Werke verwendet. Jede Person kann Lizenznehmer sein und wird im Folgenden mit Sie angesprochen. Sie akzeptieren diese Lizenz, wenn Sie ein Dokument derart kopieren, verändern oder verteilen, daß Sie gemäß den Gesetzen zum Copyright die Erlaubnis benötigen.</p>
 </div>
@@ -10411,13 +9673,13 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_datenträgerkopien">24.3. Datenträgerkopien</h3>
+<h3 id="_datenträgerkopien">23.3. Datenträgerkopien</h3>
 <div class="paragraph">
 <p>Sie dürfen das Dokument auf jedem Medium sowohl kommerziell als auch nicht kommerziell kopieren und verbreiten, vorausgesetzt, daß diese Lizenz, die Copyright-Hinweise sowie der Lizenzhinweis, der besagt, daß diese Lizenz auf das Dokument anzuwenden ist, in allen Kopien reproduziert wird, und daß keine weiteren Bedingungen jeglicher Art zu denen dieser Lizenz hinzugefügt werden. Sie dürfen in den Kopien, die Sie erstellen oder verbreiten, keinerlei technische Maßnahmen treffen um das Lesen oder das weitere Kopieren zu erschweren oder zu kontrollieren. Dennoch dürfen Sie Gegenleistungen für Kopien akzeptieren. Wenn Sie eine ausreichend große Menge von Kopien verteilen, müssen Sie zusätzlich die bestimmungen von Ziffer 4 beachten. Sie können ausserdem unter denselben Bedingungen, die oben angeführt sind, Kopien verleihen und sie können Kopien auch öffentlich bewerben.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_kopien_in_stückzahlen">24.4. Kopien in Stückzahlen</h3>
+<h3 id="_kopien_in_stückzahlen">23.4. Kopien in Stückzahlen</h3>
 <div class="paragraph">
 <p>Wenn Sie gedruckte Kopien des Dokumentes (oder Kopien auf Medien, die üblicherweise gedruckte Umschläge haben), in einer Stückzahl von mehr als 100 veröffentlichen, und der Lizenzhinweis des Dokumentes Umschlagtexte verlangt, müssen die Kopien in Hüllen verpackt sein, die alle diese Umschlagtexte klar und lesbar enthalten. Die vorderen Umschlagtexte auf dem vorderen Umschlag, die hinteren Umschlagtexte auf dem hinteren Umschlag. Beide Umschläge müssen Sie ausserdem klar und lesbar als den Herausgeber dieser Kopien benennen. Der vordere Umschlag muss den gesamten Titel darstellen, mit allen Worten gleich auffällig und sichtbar. Sie können weiteres Material den Umschlägen hinzufügen. Das Kopieren mit Änderungen, die auf Umschläge begrenzt sind, können, so lange der Titel des Dokuments erhalten bleibt, ansonsten als Datenträgerkopien behandelt werden.</p>
 </div>
@@ -10435,7 +9697,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_modifikationen">24.5. Modifikationen</h3>
+<h3 id="_modifikationen">23.5. Modifikationen</h3>
 <div class="paragraph">
 <p>Unter den obigen Bedingungen unter Ziffer 3 und 4 können Sie modifizierte Versionen kopieren und verbreiten, vorausgesetzt, daß Sie die modifizierte Version unter exakt dieser Lizenz herausgeben, wobei die modifizierte Version die Rolle des Dokumentes einnimmt, und dadurch die weitere Modifikation und Verbreitung an jeden Lizensieren, der eine Kopie davon besitzt. Zusätzlich müssen Sie die folgenden Dinge in der modifizierten Version beachten:</p>
 </div>
@@ -10505,7 +9767,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_dokumente_kombinieren">24.6. Dokumente Kombinieren</h3>
+<h3 id="_dokumente_kombinieren">23.6. Dokumente Kombinieren</h3>
 <div class="paragraph">
 <p>Sie können mehrere Dokumente, die unter dieser Lizenz freigegeben sind, unter den Bedingungen unter Ziffer 5 für modifizierte Versionen miteinander kombinieren, vorausgesetzt, daß in der Kombination alle unveränderlichen Abschnitte aller Originaldokumente, enthalten sind, und daß Sie diese alle in der Liste der unveränderlichen Abschnitte der Lizenzanmerkung des kombinierten Dokumentes aufführen, sowie alle Garantieausschlüsse erhalten.</p>
 </div>
@@ -10517,7 +9779,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sammlungen_von_dokumenten">24.7. Sammlungen von Dokumenten</h3>
+<h3 id="_sammlungen_von_dokumenten">23.7. Sammlungen von Dokumenten</h3>
 <div class="paragraph">
 <p>Sie können eine Sammlung von Dokumenten erstellen, bestehend aus diesem Dokument und weiteren, unter dieser Lizenz stehenden Dokumenten, wobei Sie die einzelnen Kopien dieser Lizenz in den verschiedenen Dokumenten durch eine einzelne Kopie, die in der Sammlung enthalten ist, ersetzen, vorausgesetzt, Sie befolgen in allen andern Punkten, für jedes der Dokumente, die Regeln für Datenträgerkopien.</p>
 </div>
@@ -10526,7 +9788,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_aggregation_mit_unabhängigen_werken">24.8. Aggregation mit unabhängigen Werken</h3>
+<h3 id="_aggregation_mit_unabhängigen_werken">23.8. Aggregation mit unabhängigen Werken</h3>
 <div class="paragraph">
 <p>Eine Zusammenstellung des Werkes, oder von Ableitungen davon, mit anderen, separaten und unabhängigen Dokumenten oder Werken, in oder auf demselben Band eines Speicher- oder Verbreitungsmediums, wird dann eine Aggregation genannt, wenn die Copyrights der Zusammenstellung nicht dazu verwendet werden die Rechte der Benutzer, die für die einzelnen Werke gewährt werden, stärker zu beschränken als dies durch die Lizenzen der einzelnen Werke geschieht. Wenn das Werk in einer Aggregation vorhanden ist, so gilt diese Lizenz nicht für die anderen Werke dieser Aggregation, die keine Ableitung des Dokumentes sind.</p>
 </div>
@@ -10535,7 +9797,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_Übersetzung">24.9. Übersetzung</h3>
+<h3 id="_übersetzung">23.9. Übersetzung</h3>
 <div class="paragraph">
 <p>Übersetzungen werden als eine Art von Modifikationen betrachtet. Damit können Sie eine Übersetzung des Dokumentes unter den Bestimmungen von Ziffer 5 verbreiten. Um die unveränderlichen Abschnitte durch eine Übersetzung zu ersetzen, benötigen Sie die spezielle Erlaubnis des Copyright-Inhabers. Sie können allerdings Übersetzungen von einigen oder allen unveränderlichen Abschnitten zu den original Versionen der unveränderlichen Abschnitte hinzufügen. Sie können eine Übersetzung dieser Lizenz und allen Lizenzhinweisen im Dokument sowie allen Garantieausschlüssen hinzufügen, vorausgesetzt, daß Sie ebenso die originale englische Version dieser Lizenz und aller Hinweise und Ausschlüsse beifügen. Sollten die Übersetzung und die Originalversion dieser Lizenz oder eines Hinweises oder Ausschlusses voneinander abweichen, so hat die Originalversion vorrang.</p>
 </div>
@@ -10544,13 +9806,13 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_abschlussbestimmungen">24.10. Abschlussbestimmungen</h3>
+<h3 id="_abschlussbestimmungen">23.10. Abschlussbestimmungen</h3>
 <div class="paragraph">
 <p>Sie dürfen dieses Dokument nicht kopieren, verändern, unterlizensieren oder verteilen mit der Ausnahme, daß Sie es ausdrücklich unter dieser Lizenz tun. Jedweder andere Versuch zu kopieren, zu modifizieren, unter zu lizensieren oder zu verbreiten ist unzulässig und führt automatisch zum Entzug der durch diese Lizenz gewährten Rechte. Dennoch verlieren jene Parteien, die von ihnen Kopien oder Rechte unter dieser Lizen erhalten haben, nicht Ihre Rechte, so lange sie sich in völliger Übereinstimmung mit der Lizenz befinden.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_spätere_Überarbeitungen_dieser_lizenz">24.11. Spätere Überarbeitungen dieser Lizenz</h3>
+<h3 id="_spätere_überarbeitungen_dieser_lizenz">23.11. Spätere Überarbeitungen dieser Lizenz</h3>
 <div class="paragraph">
 <p>Die Free Software Foundation kann von Zeit zu Zeit neue, überarbeitete Versionen der GNU Free Dokumentation License veröffentlichen. Diese neuen Versionen werden im Geiste gleich bleiben, können sich aber in Details unterscheiden um neuen Problemen oder Besorgnissen gerecht zu werden. Siehe:  <a href="http://www.gnu.org/copyleft/" class="bare">http://www.gnu.org/copyleft/</a>.</p>
 </div>
@@ -10559,7 +9821,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect2">
-<h3 id="_anhang_wie_sie_diese_lizenz_für_ihre_dokumente_verwenden_können">24.12. Anhang: Wie Sie diese Lizenz für Ihre Dokumente verwenden können</h3>
+<h3 id="_anhang_wie_sie_diese_lizenz_für_ihre_dokumente_verwenden_können">23.12. Anhang: Wie Sie diese Lizenz für Ihre Dokumente verwenden können</h3>
 <div class="paragraph">
 <p>Um diese Lizenz in einem Dokument zu verwenden, das sie selbst geschrieben haben, schliessen Sie eine Kopie dieser Lizenz (eine englische Kopie des Originals anm. des Übersetzers) in Ihr Dokument mit ein, und setzen Sie den folgenden Copyright- und Lizenzhinweis gleich hinter die Titelseite:</p>
 </div>
@@ -10584,7 +9846,7 @@ Lassen Sie es einfach weg, benutzen Sie es überhaupt nicht. Zuweisungen können
 </div>
 </div>
 <div class="sect1">
-<h2 id="_danksagung">25. Danksagung</h2>
+<h2 id="_danksagung">24. Danksagung</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Danke an alle, welche mir geholfen haben, dieses Programmpaket zu realisieren.</p>
@@ -10743,16 +10005,13 @@ Erwähnt seien hier nur die Libraries, welche unmittelbar mit dem X11-Basic Pake
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>Teile dieses Handbuchs (Kapitel CGI-Programmierung) stammen aus oder basieren auf einer Dokumentation, die in den 1990er Jahren verwendet wurde. (Ich hoffe, es war Public Domain oder ähnliches.) Leider habe ich den Link verloren zu seiner Quelle. Wenn Sie Ihre potentielle Quelle kennen, lassen Sie es mich wissen. Dann kann ich es hier zitieren und dem Autor danken.</p>
-</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.25<br>
-Last updated 2018-02-23 14:14:27 CET
+Last updated 2020-02-25 11:10:31 CET
 </div>
 </div>
 </body>

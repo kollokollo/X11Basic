@@ -1,0 +1,516 @@
+= WEB Programming with X11-Basic
+Markus Hoffmann <kollo@users.sourceforge.net>
+v1.27, 2020-02-02  
+:docversion: 1.27
+:docyear: 2020
+:homepage: http://x11-basic.sourceforge.net/
+:toc:
+:sectnums:
+
+
+Addendum to the X11-Basic User Manual
+
+This document is not the user manual for X11-Basic. 
+You can find the user manual and command reference im 
+here: {homepage}.
+
+
+== WEB Programming with X11-Basic
+
+This chapter explains how you can use X11-Basic programs for WEB-interfacing.
+Especially via the use of so-called __CGI-Scripts__.
+
+
+=== What is CGI?
+
+CGI stands for __Common Gateway Interface__ --- a term you don't really need to
+know. In short, CGI defines how web servers and web browsers handle information
+from HTML forms on web pages. This means instead of the WEB server sending
+static  web pages to the clients, it can invoke a program, typically called a
+cgi-script,  to generate the page on the time the request was received. These
+cgi-scripts take some action, and then send a results page back to the user's
+web browser. The results page might be different every time the program is run.
+
+And these programs can be X11-Basic programs.
+
+
+==== Configuration
+
+
+. All X11-Basic scripts must begin with the following statement on the first line:
++
+----
+#!/usr/bin/xbasic
+----
++
+
+Because Unix does not map file suffixes to programs, there has to be a way to 
+tell Unix that this file is a X11-Basic program, and that it is to be executed
+by the X11-Basic interpreter `xbasic`. This is seen before in shell
+scripts, in which the first line tells Unix to execute it with one of the shell
+programs. The xbasic executable, which will take this file, parse it, and
+execute it, is located in the directory `/usr/bin`. This may be different on some
+systems. If you are not sure where the xbasic executable is, type 
+`which xbasic` on the command line, and it will return you the path.
+. All scripts should be marked as executable by the system.
++
+Executable files are types that contain instructions for the machine or an
+interpreter, such as xbasic, to execute. To mark a file as executable, you need
+to alter the file permissions on the script file. X11-Basic files should have
+their permissions changed so that you, the owner, has permission to read, write
+and execute your file, while others only have permission to read and execute
+your file. This is done with the following command:
++
+----
+chmod 755 filename.bas
+----
++
+The number 755 is the file access mask. The first digit is your permission; it
+is 7 for full access. The user and anyone settings are 5 for read and execute.
+. *The very first print statement* in a X11-Basic cgi script that
+returns HTML should be:
++
+----
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+----
++
+When your X11-Basic script is going to return an HTML file, you must have this
+as the very first print statement in order to tell the web server that this is
+an HTML file. There must be two end of line characters (CR+LF) (the additional
+`chr$(13)`) in order for this to work. The flush statement ensures, that
+this statement is sent to the web-server. After that, you usually do a 
++
+----
+PRINT "<HTML><BODY>"
+.... and so on ...
+----
+. *End your program with `QUIT`*.
++
+Do not use `END`. Otherwise the cgi-program will remain is the servers 
+memory as a zombie.
+. *Always use the POST method with HTML forms*.
++
+There are 2 ways to get information from the client to the web server. The GET
+method takes all of the data from the forms and concatenates it onto the end of
+the URL. This information is then passed to the CGI program as an environment 
+variable (`QUERY_STRING`). Because the GET method has the limitation of being 1024 characters
+long, it is best to use the POST method. This takes the data and sends it
+along with the request to the web server, without the user seeing the ugly
+strings in the URL. This information is passed to the CGI program through
+standard in, which the program can easily read from. To use the POST method,
+make sure that your HTML form tag has `METHOD=POST` (no quotes).
+. *HTML forms must reference the cgi script to be executed.*
++
+In your FORM tag, there is an ACTION attribute. This is like the HREF attribute
+for a link. It should be the URL of the CGI program you want the form data sent
+to. Usually this is `ACTION="/cgi-bin/filename.bas"`.
+. *X11-Basic-cgi files usually go in the `cgi-bin` directory of your web server.*
++
+The web server has a "root" directory. This is the highest directory your HTML
+files can access. (You don't want clients to be able to snoop around your
+entire system, so the rest of the system is sealed off) in
+this directory, there is usually one called cgi-bin, where all the CGI programs
+go. Some web service providers give each user a cgi-local directory in their
+home directory where they can put their cgi scripts. If this is the case, use
+this one instead. 
+
+=== How it works
+
+When a user activates a link to a gateway script, input is sent to the server.
+The server formats this data into environment variables and checks to see
+whether additional data was submitted via the standard input stream.
+
+==== Environment Variables
+
+Input to CGI scripts is usually in the form of environment variables. The
+environment variables passed to gateway scripts are associated with the browser
+requesting information from the server, the server processing the request, and
+the data passed in the request. Environment variables are case-sensitive and are
+normally used as described in this section. The standard (and platform
+independent) environment variables are shown in the following table:
+
+|=======
+|*Variable*       | *Purpose*
+|`AUTH_TYPE`      | Specifies the authentication method and is used to validate a user's access.
+|`CONTENT_LENGTH` | Used to provide a way of tracking the length of the data string as a numeric value.
+|`CONTENT_TYPE`   | Indicates the MIME type of data.
+|`GATEWAY_INTERFACE`| Indicates which version of the CGI standard the server is using.
+|`HTTP_ACCEPT`    | Indicates the MIME content types the browser will accept, as passed to the gateway script via the server.
+|`HTTP_USER_AGENT`| Indicates the type of browser used to send the request, as passed to the gateway script via the server.
+|`PATH_INFO`      | Identifies the extra information included in the URL after the identification of the CGI script.
+|`PATH_TRANSLATED`| Set by the server based on the `PATH_INFO` variable. The server translates the `PATH_INFO` variable into this variable.
+|`QUERY_STRING`   | Set to the query string (if the URL contains a query string).
+|`REMOTE_ADDR`    | Identifies the Internet Protocol address of the remote computer making the request.
+|`REMOTE_HOST`    | Identifies the name of the machine making the request.
+|`REMOTE_IDENT`   | Identifies the machine making the request.
+|`REMOTE_USER`    | Identifies the user name as authenticated by the user.
+|`REQUEST_METHOD` | Indicates the method by which the request was made.
+|`SCRIPT_NAME`    | Identifies the virtual path to the script being executed.
+|`SERVER_NAME`    | Identifies the server by its host name, alias, or IP address.
+|`SERVER_PORT`    | Identifies the port number the server received the request on.
+|`SERVER_PROTOCOL`| Indicates the protocol of the request sent to the server.
+|=======
+
+[horizontal]
+`AUTH_TYPE` :: The `AUTH_TYPE` variable provides access control to protected 
+areas of the Web server and can be used only on servers that support user
+authentication. If an area of the Web site has no access control, the
+`AUTH_TYPE` variable has no value associated with it. If an area of the
+Web site has access control, the `AUTH_TYPE` variable is set to a specific
+value that identifies the authentication scheme being used. e.g. "Basic".
++
+Using this mechanism, the server can challenge a client's request and the
+client can respond. To do this, the server sets a value for the
+`AUTH_TYPE` variable and the client supplies a matching value. The next
+step is to authenticate the user. Using the basic authentication scheme, the
+user's browser must supply authentication information that uniquely
+identifies the user. This information includes a user ID and password.
+`CONTENT_LENGTH` :: The `CONTENT_LENGTH` variable provides a way of tracking 
+the length of the data string. This variable tells the client and server how 
+much data to read on the standard input stream. The value of the variable 
+corresponds to the number of characters in the data passed with the request. 
+If no data is being passed, the variable has no value.
+`CONTENT_TYPE` :: The `CONTENT_TYPE` variable indicates the data's MIME type. 
+This variable is set only when attached data is passed using the standard 
+input or output stream. The value assigned to the variable identifies the 
+basic MIME type and subtype as follows:
++
+|=======
+|*Type*      | *Description*
+|application | Binary data that can be executed or used with another application
+|audio       | A sound file that requires an output device to preview
+|image       | A picture that requires an output device to preview
+|message     | An encapsulated mail message
+|multipart   | Data consisting of multiple parts and possibly many data types
+|text        | Textual data that can be represented in any character set or formatting language
+|video       | A video file that requires an output device to preview
+|x-world     | Experimental data type for world files
+|=======
++
+MIME subtypes are defined in three categories: __primary__, 
+__additionally defined__, and __extended__. The primary subtype is the 
+primary type of data adopted for use
+as a MIME content type. Additionally defined data types are additional subtypes
+that have been officially adopted as MIME content types. Extended data types
+are experimental subtypes that have not been officially adopted as MIME content
+types. You can easily identify extended subtypes because they begin with the
+letter x followed by a hyphen. The following Table lists common MIME types and
+their descriptions.
++
+|=======
+|*Type/Subtype*       | *Description*
+|application/octet-stream | Binary data that can be executed or used with another application
+|application/pdf       | ACROBAT PDF document
+|application/postscript| Postscript-formatted data
+|application/x-compress| Data that has been compressed using UNIX compress
+|application/x-gzip    | Data that has been compressed using UNIX gzip
+|application/x-tar     | Data that has been archived using UNIX tar
+|audio/x-wav           | Audio in Microsoft WAV format
+|image/gif             | Image in gif format
+|image/jpeg            | Image in JPEG format
+|image/tiff            | Image in TIFF format
+|multipart/mixed       | Multipart message with data in multiple formats
+|text/html             | HTML-formatted text
+|text/plain            | Plain text with no HTML formatting included
+|video/mpeg            | Video in the MPEG format
+|=======
++
+Note, that there are more than the above listed types.
++
+Some MIME content types can be used with additional parameters. These content
+types include text/plain, text/html, and all multi-part message data. The
+charset parameter, which is optional, is used with the text/plain type to
+identify the character set used for the data. If a charset is not specified, the
+default value `charset=us-ascii` is assumed. Other values for charset include any
+character set approved by the International Standards Organization. These
+character sets are defined by ISO-8859-1 to ISO-8859-9 and are specified as
+follows:
++
+----
+ CONTENT_TYPE = text/plain; charset=iso-8859-1
+----
++
+The boundary parameter, which is required, is used with multi-part data to
+identify the boundary string that separates message parts. The boundary value is
+set to a string of 1 to 70 characters. Although the string cannot end in a
+space, it can contain any valid letter or number and can include spaces and a
+limited set of special characters. Boundary parameters are unique strings that
+are defined as follows:
++
+----
+ CONTENT_TYPE = multipart/mixed; boundary=boundary_string
+----
++
+`GATEWAY_INTERFACE` :: The `GATEWAY_INTERFACE` variable indicates which version 
+of the CGI specification the server is using. The value assigned to the 
+variable identifies the name and version of the specification used as follows:
++
+----
+ GATEWAY_INTERFACE = name/version
+----
++
+The version of the CGI specification is 1.1. A server conforming
+to this version would set the `GATEWAY_INTERFACE` variable as follows:
++
+----
+ GATEWAY_INTERFACE = CGI/1.1
+----
+`HTTP_ACCEPT` :: The `HTTP_ACCEPT` variable defines the types of data the client will
+accept. The acceptable values are expressed as a type/subtype pair. Each
+type/subtype pair is separated by commas.
+`HTTP_USER_AGENT` :: The `HTTP_USER_AGENT` variable identifies the type of browser used to send
+the request. The acceptable values are expressed as software type/version
+or library/version. 
+`PATH_INFO` :: The `PATH_INFO` variable specifies extra path information and can be used
+to send additional information to a gateway script. The extra path information
+follows the URL to the gateway script referenced. Generally, this information
+is a virtual or relative path to a resource that the server must interpret. 
+`PATH_TRANSLATED` :: Servers translate the `PATH_INFO` variable into the 
+`PATH_TRANSLATED` variable by inserting the default Web document's directory path in front of the
+extra path information. 
+`QUERY_STRING` :: The `QUERY_STRING` variable specifies an URL-encoded search string. You set
+this variable when you use the GET method to submit a fill-out form. The query string is
+separated from the URL by a question mark. The user submits all the
+information following the question mark separating the URL from the query
+string. The following is an example:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?string
+----
++
+When the query string is URL-encoded, the browser encodes key parts of the
+string. The plus sign is a placeholder between words and acts as a
+substitute for spaces:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?word1+word2+word3
+----
++
+Equal signs separate keys assigned by the publisher from values entered by
+the user. In the following example, response is the key assigned by the
+publisher, and never is the value entered by the user:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=never
+----
++
+Ampersand symbols (`&`) separate sets of keys and values. In the following
+example, response is the first key assigned by the publisher, and
+sometimes is the value entered by the user. The second key assigned by the
+publisher is "reason", and the value entered by the user is "I am not really
+sure":
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=sometimes&reason=I+am+not+really+sure
+----
++
+Finally, the percent sign is used to identify escape characters. Following
+the percent sign is an escape code for a special character expressed as a
+hexadecimal value. Here is how the previous query string could be
+rewritten using the escape code for an apostrophe:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=sometimes&reason=I%27m+not+really+sure
+----
+`REMOTE_ADDR` :: The `REMOTE_ADDR` variable is set to the Internet Protocol 
+(IP) address of the remote computer making the request. 
+`REMOTE_HOST` :: The `REMOTE_HOST` variable specifies the name of the host computer making a
+request. This variable is set only if the server can figure out this
+information using a reverse lookup procedure. 
+`REMOTE_IDENT` :: The `REMOTE_IDENT` variable identifies the remote user making a request. The
+variable is set only if the server and the remote machine making the
+request support the identification protocol. Further, information on the
+remote user is not always available, so you should not rely on it even
+when it is available. 
+`REMOTE_USER` :: The `REMOTE_USER` variable is the user name as authenticated by the user,
+and as such is the only variable you should rely upon to identify a user.
+As with other types of user authentication, this variable is set only if
+the server supports user authentication and if the gateway script is
+protected. 
+`REQUEST_METHOD` :: The `REQUEST_METHOD` variable specifies the method by which the request
+was made. The methods could be any of `GET`, `HEAD`, `POST,
+`PUT`, `DELETE`, `LINK` and `UNLINK`.
++
+The `GET`, `HEAD` and `POST` methods are the most commonly
+used request methods. Both `GET` and `POST` are used to submit forms. 
+`SCRIPT_NAME` :: The `SCRIPT_NAME` variable specifies the virtual path to the script being
+executed. This information is useful if the script generates an HTML document
+that references the script.
+`SERVER_NAME` :: The `SERVER_NAME` variable identifies the server by its host name, alias,
+or IP address. This variable is always set.
+`SERVER_PORT` :: The `SERVER_PORT` variable specifies the port number on which the server received
+the request. This information can be interpreted from the URL to the script if
+necessary. However, most servers use the default port of 80 for HTTP requests.
+`SERVER__PROTOCOL` :: The `SERVER_PROTOCOL` variable identifies the protocol used to send the
+request. The value assigned to the variable identifies the name and
+version of the protocol used. The format is name/version, such as `HTTP/1.0`. 
+
+==== CGI Standard Input
+
+Most input sent to a Web server is used to set environment variables, yet
+not all input fits neatly into an environment variable. When a user
+submits data to be processed by a gateway script, this data is received as
+an URL-encoded search string or through the standard input stream. The
+server knows how to process this data because of the method (either POST
+or GET in HTTP 1.0) used to submit the data.
+
+Sending data as standard input is the most direct way to send data. The
+server tells the gateway script how many eight-bit sets of data to read
+from standard input. The script opens the standard input stream and reads
+the specified amount of data. Although long URL-encoded search strings may
+get truncated, data sent on the standard input stream will not.
+Consequently, the standard input stream is the preferred way to pass data.
+
+==== Which CGI Input Method to use?
+
+You can identify a submission method when you create your fill-out forms.
+Two submission methods for forms exist. The HTTP GET
+method uses URL-encoded search strings. When a server receives an
+URL-encoded search string, the server assigns the value of the search
+string to the `QUERY_STRING` variable.
+
+The HTTP POST method uses the standard input streams. When a server
+receives data by the standard input stream, the server assigns the value
+associated with the length of the input stream to the `CONTENT_LENGTH`
+variable.
+
+==== Output from CGI Scripts
+
+
+After the script finishes processing the input, the script should return
+output to the server. The server will then return the output to the
+client. Generally, this output is in the form of an HTTP response that
+includes a header followed by a blank line and a body. Although the CGI
+header output is strictly formatted, the body of the output is formatted
+in the manner you specify in the header. For example, the body can contain
+an HTML document for the client to display.
+
+==== CGI Headers
+
+CGI headers contain directives to the server. Currently, these three
+server directives are valid:
+
+* Content-Type
+* Location
+* Status
+
+A single header can contain one or all of the server directives. Your CGI
+script outputs these directives to the server. Although the header is
+followed by a blank line that separates the header from the body, the
+output does not have to contain a body.
+
+The *Content-Type* field in a CGI header identifies the MIME type of the
+data you are sending back to the client. Usually the data output from a script
+is a fully formatted document, such as an HTML document. You could specify this
+output in the header as follows:
+
+----
+Content-Type: text/html
+----
+
+But of course, if your program outputs other data like images etc. you should 
+specify the corresponding content type. 
+
+Location :: The output of your script doesn't have to be a document created within the
+script. You can reference any document on the Web using the Location
+field. The Location field references a file by its URL. Servers process
+location references either directly or indirectly depending on the
+location of the file. If the server can find the file locally, it passes
+the file to the client. Otherwise, the server redirects the URL to the
+client and the client has to retrieve the file. You can specify a location
+in a script as follows:
++
+----
+ Location: http://www.new-jokes.com/
+----
+Status :: The Status field passes a status line to the server for forwarding to the
+client. Status codes are expressed as a three-digit code followed by a
+string that generally explains what has occurred. The first digit of a
+status code shows the general status as follows:
++
+----
+  1XX Not yet allocated
+  2XX Success
+  3XX Redirection
+  4XX Client error
+  5XX Server error
+----
++
+Although many status codes are used by servers, the status codes you pass
+to a client via your CGI script are usually client error codes. Suppose
+the script could not find a file and you have specified that in such
+cases, instead of returning nothing, the script should output an error
+code. Here is a list of the client error codes you may want to use:
++
+----
+401 Unauthorized Authentication has failed. 
+    User is not allowed to access the file and should try again.
+
+403 Forbidden. The request is not acceptable. 
+    User is not permitted to access file.
+
+404 Not found. 
+    The specified resource could not be found.
+
+405 Method not allowed. 
+    The submission method used is not allowed.
+----
+
+
+
+
+
+=== An Example cgi-Script
+
+Here is a simple sample cgi-script, which simply returns all the information 
+which it gets from the web server as a html page. 
+
+
+----
+#!/usr/bin/xbasic
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+PRINT "<html><head><TITLE>Test CGI</TITLE><head><body>"
+PRINT "<h1>Commandline:</h1>"
+i=0
+WHILE LEN(PARAM$(i))
+  PRINT STR$(i)+": "+PARAM$(i)+"<br>"
+  INC i
+WEND
+PRINT "<h1>Environment:</h1><pre>"
+FLUSH      ! flush the output before another program is executed !
+SYSTEM "env"
+PRINT "</pre><h1>Stdin:</h1><pre>"
+length=VAL(ENV$("CONTENT_LENGTH"))
+IF length
+  FOR i=0 TO length-1
+    t$=t$+CHR$(inp(-2))
+  NEXT i
+  PRINT t$
+ENDIF
+PRINT "</pre>"
+PRINT "<FORM METHOD=POST ACTION=/cgi-bin/envtest.cgi>"
+PRINT "Name: <INPUT NAME=name><BR>"
+PRINT "Email: <INPUT NAME=email><BR>"
+PRINT "<INPUT TYPE=submit VALUE="+CHR$(34)+"Test POST Method"+CHR$(34)+">"
+PRINT "</FORM>"
+PRINT "<hr><h6>(c) Markus Hoffmann cgi with X11-basic</h6></body></html>"
+FLUSH
+QUIT
+----
+
+== Acknowledgements
+
+Portions of this chapter come from or are based on documentation that was used 
+in the 1990s.
+(I hope it was public domain or something like that.)
+Unfortunately I lost the link to its source. If you know your potential 
+source, let me know. Then I can quote it here and thank the author.

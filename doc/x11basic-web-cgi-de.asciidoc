@@ -1,0 +1,404 @@
+= WEB Programmierung mit X11-Basic
+Markus Hoffmann <kollo@users.sourceforge.net>
+v1.27, 2020-02-02  
+:docversion: 1.27
+:docyear: 2020
+:homepage: http://x11-basic.sourceforge.net/
+:toc:
+:sectnums:
+
+
+Ergänzung zum X11-Basic Benutzerhandbuch
+
+Dieses Dokument ist nicht das Benutzerhandbuch zu X11-Basic. 
+Dieses und die Befehlsreferenz finden Sie im englischen Benutzerhandbuch 
+und in der Android-Direkthilfe. 
+
+(siehe auch: {homepage})  
+
+
+== WEB Programmierung mit X11-Basic
+
+In diesem Kapitel wird erläutert, wie Sie X11-Basic-Programme für 
+WEB-Schnittstellen verwenden können. Insbesondere durch die Verwendung 
+sogenannter __CGI-Scripts__.
+
+=== Was ist CGI?
+
+CGI steht für __Common Gateway Interface__ -- ein Begriff, den Sie nicht wirklich kennen müssen. Kurz gesagt definiert CGI, wie Webserver und Webbrowser Informationen aus HTML-Formularen auf Webseiten verarbeiten. Dies bedeutet, dass anstelle des WEB-Servers, der statische Webseiten an die Clients sendet, ein Programm, typischerweise ein CGI-Skript genannt, aufgerufen werden kann, um die Seite zu dem Zeitpunkt zu erzeugen, zu dem die Anfrage empfangen wurde. Diese CGI-Skripte ergreifen einige Maßnahmen und senden dann eine Ergebnisseite an den Webbrowser des Benutzers zurück. Die Ergebnisseite kann bei jeder Ausführung des Programms anders aussehen.
+
+Und diese Programme können X11-Basic-Programme sein.
+
+==== Konfiguration
+
+. Alle X11-Basic-Skripte müssen mit der folgenden Anweisung in der ersten Zeile beginnen:
++
+----
+#!/usr/bin/xbasic
+----
++
+Da Unix keine speziellen Dateiendungen für Programme hat, müssen Sie so dem Betriebsystem (Unix) mitteilen, dass es sich bei dieser Datei um ein X11-Basic-Programm handelt und dass es vom X11-Basic-Interpreter `xbasic` ausgeführt werden soll. Dies funktioniert genauso wie bei Shell-Skripten. Der X11-Basic Interpreter `xbasic` befindet sich nach der Installation normalerweise im 
+Verzeichnis `/usr/bin`. Dies kann bei einigen Systemen aber auch anders sein. Wenn Sie nicht sicher sind, wo die ausführbare Datei `xbasic` ist, geben Sie `which xbasic` in die Befehlszeile ein und es gibt Ihnen den Pfad zurück.
+. Alle Skripte müssen als ausführbar markiert sein.
++
+Ausführbare Dateien sind solche, die Maschinenanwewisungen oder Code für einen Interpreter wie `xbasic` enthalten. Um eine Datei als ausführbar zu markieren, müssen Sie die Dateiberechtigungen ändern. Dies geschieht mit dem folgenden Befehl (aus einem Terminalfenster):
++
+----
+chmod 755 filename.bas
+----
++
+Die Nummer 755 ist die Dateizugriffsmaske. Die erste Ziffer ist Ihre Erlaubnis; es ist 7 für den vollen Zugriff. Die Einstellungen für andere sind 5 zum Lesen und Ausführen (aber nicht verändern).
+. *Die allererste PRINT-Anweisung* in einem X11-Basic CGI-Skript, das HTML zurückgibt, muß sein:
++
+----
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+----
++
+Wenn Ihr X11-Basic-Skript HTML-Daten zurückgibt, müssen Sie dies als erste PRINT-Anweisung haben, um dem Webserver mitzuteilen, dass es sich um eine HTML-Datei handelt. Es müssen zwei Zeilenendezeichen (CR + LF) verwendet werden (das erklärt das zusätzliche `CHR$(13)`), damit dies funktioniert. Die FLUSH-Anweisung stellt sicher, dass diese Anweisung an den Webserver gesendet wird. Danach kommt normalerweise ein
++
+----
+PRINT "<HTML><BODY>"
+.... und so weiter......
+----
+. *Beenden Sie das Programm unbedingt mit `QUIT`*.
++
+Ansonsten bleibt das cgi-Programm als Zombie im Speicher des Servers.
+. *Verwenden Sie immer die POST-Methode mit HTML-Formularen*.
++
+Es gibt zwei Möglichkeiten, um Informationen vom Client zurück zum Webserver zu bekommen. Die GET-Methode übernimmt alle Daten aus den Formularen und verknüpft sie mit dem Ende der URL. Diese Information wird dann als Umgebungsvariable `QUERY_STRING` an das CGI-Programm übergeben. Da die GET-Methode eine Beschränkung auf 1024 Zeichen hat, empfiehlt es sich, die POST-Methode zu verwenden. Diese nimmt die Daten und sendet sie zusammen mit der Anfrage an den Webserver, ohne dass der Benutzer die hässlichen Zeichenfolgen in der URL sieht. Diese Information wird an das CGI-Programm über die Standard-Eingabe übergeben, von dem das CGI-Programm leicht (mit `LINEINPUT`) lesen kann. Stellen Sie sicher, dass Ihr HTML-Formular-Tag `METHOD=POST` hat, um die POST-Methode zu verwenden (keine Anführungszeichen).
+. *HTML-Formulare müssen auf das auszuführende CGI-Skript verweisen.*
++
+In Ihrem FORM-Tag gibt es ein ACTION-Attribut. Dies ist wie das HREF-Attribut für einen Link. Es sollte die URL des CGI-Programms sein, an das die Formulardaten gesendet werden sollen. Normalerweise ist dies `ACTION="/cgi-bin/filename.bas"`.
+. *X11-Basic-CGI-Dateien müssen normalerweise im Verzeichnis `cgi-bin` Ihres Webservers abgelegt werden.*
++
+Jeder Webserver hat ein Wurzel-Verzeichnis. Dies ist das höchste Verzeichnis, auf das Ihre HTML-Dateien zugreifen können. (Sie möchten nicht, dass Clients in der Lage sind, Ihr gesamtes System zu durchsuchen.). In diesem Verzeichnis befindet sich normalerweise ein weiteres namens `cgi-bin`, in dem alle CGI-Programme abgelegt werden. Nur dort dürfen sie gestartet werden.  Einige Web-Service-Provider geben jedem Benutzer ein eigenes lokales cgi-Verzeichnis in seinem Home-Verzeichnis, in das sie ihre CGI-Skripte legen können. Wenn dies der Fall ist, verwenden Sie stattdessen also dieses Verzeichnis.
+
+
+=== Wie CGI funktioniert
+
+Wenn ein Benutzer einen Link zu einem Gateway-Skript ansurft, werden 
+Daten an den Server gesendet. Der Server formatiert diese Daten in 
+Umgebungsvariablen und prüft, ob zusätzliche Daten über den 
+Standard-Eingabestream übermittelt wurden. Die Umgebungsvariablen können 
+dann im CGI-Skript ausgewertet werden.
+
+==== Environment Variables
+
+Eingangsdaten für CGI-Skripte werden normalerweise in Umgebungsvariablen 
+übergeben. Die Daten werden vom Browser übergeben, der die Seite 
+angesurft hat.
+
+Umgebungsvariablen unterscheiden zwischen Groß- und Kleinschreibung und 
+werden normalerweise wie in diesem Abschnitt beschrieben verwendet. 
+Einige häufig verwendetete standartisierte (und plattformunabhängige) 
+Umgebungsvariablen sind in der folgenden Tabelle aufgeführt:
+
+|=======
+|*Variable*       | *Bedeutung*
+|`AUTH_TYPE`      | Gibt die Authentifizierungsmethode an und wird verwendet, um den Zugriff eines Benutzers zu überprüfen.
+|`CONTENT_LENGTH` | Länge der Datenzeichenfolge als numerischen Wert.
+|`CONTENT_TYPE`   | Der MIME-Typ der Daten.
+|`GATEWAY_INTERFACE`| Gibt an, welche Version des CGI-Standards der Server verwendet.
+|`HTTP_ACCEPT`    | Gibt die MIME-Typen an, die der Browser akzeptiert, wenn sie über den Server an das Gateway-Skript übergeben werden.
+|`HTTP_USER_AGENT`| Gibt den Typ des Browsers an, der zum Senden der Anfrage verwendet wurde.
+|`PATH_INFO`      | Identifiziert die zusätzlichen Informationen in der URL nach der Identifizierung des CGI-Skripts.
+|`PATH_TRANSLATED`| Wird vom Server basierend auf der Variablen `PATH_INFO` festgelegt. Der Server übersetzt die Variable `PATH_INFO` in diese Variable.
+|`QUERY_STRING`   | Anfragezeichenfolge (wenn die URL eine Anfragezeichenfolge enthält).
+|`REMOTE_ADDR`    | Identifiziert die Internetprotokolladresse des Remotecomputers, der die Anforderung stellt.
+|`REMOTE_HOST`    | Name des Computers, der die Anforderung stellt.
+|`REMOTE_IDENT`   | Machinenidentifikation  des Computers, der die Anforderung stellt.
+|`REMOTE_USER`    | Benutzername zur Authentifizierung des Benutzers
+|`REQUEST_METHOD` | Gibt die Methode an, mit der die Anforderung durchgeführt wurde.
+|`SCRIPT_NAME`    | Identifiziert den virtuellen Pfad zum ausgeführten Skript.
+|`SERVER_NAME`    | Identifiziert den Server anhand seines Hostnamens, Alias oder seiner IP-Adresse.
+|`SERVER_PORT`    | Gibt die Portnummer an, an der der Server die Anforderung erhalten hat.
+|`SERVER_PROTOCOL`| Gibt das Protokoll der an den Server gesendeten Anforderung an.
+|=======
+
+[horizontal]
+`AUTH_TYPE` :: Die `AUTH_TYPE'-Variable ermöglicht die Zugriffssteuerung für geschützte Bereiche des Webservers und kann nur auf Servern verwendet werden, die die Benutzerauthentifizierung unterstützen. Wenn ein Bereich der Website Zugriffssteuerung hat, ist die 'AUTH_TYPE'-Variable auf einen Wert gesetzt, der das verwendete Authentifizierungsschema angibt. Z.B. "Basic".
++
+Mit diesem Mechanismus kann der Server Nutzernamen und Passwort abfragen und überprüfen.  
+Dazu legt der Server einen Wert für die Variable `AUTH_TYPE` fest und der Client liefert einen passenden Wert. Der nächste Schritt besteht darin, den Benutzer zu authentifizieren. Unter Verwendung des zugrundeliegenden Authentifizierungsschemas muss der Browser des Benutzers Authentifizierungsinformationen bereitstellen, die den Benutzer eindeutig identifizieren. Diese Information enthält eine Benutzer-ID und ein Passwort.
+`CONTENT_LENGTH` :: Die `CONTENT_LENGTH`-Variable bietet eine Möglichkeit, die Länge der Datenfolge zu ermitteln, die der Client dem Server über den Standard-Eingabestream übermitteln möchte. Der Wert der Variablen entspricht der Anzahl der Zeichen in den mit der Anfrage übergebenen Daten. Wenn keine Daten übergeben werden, hat die Variable keinen Wert.
+`CONTENT_TYPE` :: Die Variable `CONTENT_TYPE` gibt den MIME-Typ der Daten an. Diese Variable wird nur gesetzt, wenn angehängte Daten mit dem Standardeingabe- oder -ausgangsstrom übergeben werden. Der der Variablen zugewiesene Wert identifiziert den zugrundeliegenden MIME-Typ und Subtyp wie folgt:
++
+|=======
+|*Typ*       | *Beschreibung*
+|application | Binärdaten welche als Programm ausgeführt werden können oder mit einer anderen application verwendet werden.
+|audio       | Ein Sound-file welches auf einem Ausgabegerät abgespielt werden kann. 
+|image       | Ein Bild 
+|message     | Eine eingekapselte e-mail-Nachricht
+|multipart   | Daten, welche aus meheren Teilen und möglicherweise verschiedenenen Datentypen bestehen.
+|text        | Text-Daten
+|video       | Ein Video-file 
+|x-world     | Experimentelle Daten für world files
+|=======
++
+MIME-Subtypen sind in drei Kategorien eingeteilt: __primär__, __zusätzlich definiert__ und __erweitert__. Der primäre Subtyp ist der primäre Datentyp, der zur Verwendung als MIME-Inhaltstyp verwendet wird. Zusätzlich definierte Datentypen sind immer Subtypen, die offiziell als MIME-Inhaltstypen übernommen wurden. Erweiterte Datentypen sind experimentelle Subtypen, die nicht offiziell als MIME-Inhaltstypen übernommen wurden. Sie können erweiterte Subtypen leicht identifizieren, da sie mit dem Buchstaben x gefolgt von einem Bindestrich beginnen. Die folgende Tabelle listet häufige MIME-Typen und ihre Beschreibungen auf:
++
+|=======
+|*Typ/Subtyp*       | *Beschreibung*
+|application/octet-stream | Binärdaten zum Ausführen oder für eine externe Anwendung als Octet-Datenstrom. 
+|application/pdf    | Ein ACROBAT PDF Document 
+|application/postscript| Eine Postscript-Datei
+|application/x-compress| Daten, die mit dem UNIX compress Programm komprimiert wurden.
+|application/x-gzip    | Daten, die mit GNU gzip komprimiert wurden.
+|application/x-tar     | Daten, die mit UNIX tar archiviert wurden
+|audio/x-wav           | Eine Audio-Date im Microsoft WAV Format
+|image/gif             | Ein Bild im gif Format
+|image/jpeg            | Ein Bild im JPEG Format
+|image/tiff            | Ein Bild im TIFF Format
+|multipart/mixed       | Daten in mehreren Teilen verschiednener Formate
+|text/html             | HTML-formatierter text
+|text/plain            | Plain text ohne HTML Formatierungen 
+|video/mpeg            | Video im MPEG Format
+|=======
++
+Beachten Sie, dass es noch mehr als die oben aufgeführten Typen gibt.
++
+Einige MIME-Inhaltstypen können mit zusätzlichen Parametern verwendet werden. Diese Inhaltstypen umfassen `text/plain`, `text/html` und alle mehrteiligen Nachrichtendaten. Der optionale `charset`-Parameter wird mit dem `text/plain`-Typ verwendet, um den für die Daten verwendeten Zeichensatz zu bestimmen. Wenn kein Zeichensatz angegeben wird, wird der Standardwert `charset=us-ascii` angenommen. Andere Werte für Zeichensatz umfassen alle Zeichensätze, die von der International Standards Organization genehmigt wurden. Diese Zeichensätze sind durch ISO-8859-1 bis ISO-8859-9 definiert und können etwa so spezifiziert werden:
++
+----
+ CONTENT_TYPE = text/plain; charset=iso-8859-1
+----
++
+Bei mehrteiligen Daten ist der Boundary-Parameter erforderlich, um die Grenzzeichenfolge anzugeben, die Nachrichtenteile trennt. Die Zeichenfolge darf 1 bis 70 Zeichen lang sein und beliebige Buchstaben, Ziffern und Leerzeichen sowie eine begrenzte Anzahl von Sonderzeichen enthalten, darf aber nicht mit einem Leerzeichen enden. Sie muss eindeutig sein und darf in den Teilen der Nachrich nicht vorkommen. 
+So etwa sieht das dann aus: 
++
+----
+ CONTENT_TYPE = multipart/mixed; boundary=boundary_string
+----
++
+`GATEWAY_INTERFACE` :: Die Variable `GATEWAY_INTERFACE` gibt an, welche Version der CGI-Spezifikation der Server verwendet. Der der Variablen zugewiesene Wert identifiziert den Namen und die Version der verwendeten Spezifikation wie folgt:
++
+----
+ GATEWAY_INTERFACE = name/version
+----
++
+Die Version der CGI-Spezifikation ist 1.1. Ein Server, der dieser Version entspricht, würde die `GATEWAY_INTERFACE`-Variable also wie folgt setzen:
++
+----
+ GATEWAY_INTERFACE = CGI/1.1
+----
+`HTTP_ACCEPT` :: Die Variable `HTTP_ACCEPT` definiert die Datentypen, die der Client akzeptiert. Die akzeptablen Werte werden jeweils als "Typ/Subtyp"-Paare ausgedrückt. Jedes Typ/Untertyp-Paar ist durch Kommas getrennt.
+`HTTP_USER_AGENT` :: Die Variable `HTTP_USER_AGENT` identifiziert den Typ des Browsers, der zum Senden der Anfrage verwendet wird. Die zulässigen Werte werden als "Softwaretyp/Version" oder Bibliothek/Version ausgedrückt. 
+`PATH_INFO` :: Die `PATH_INFO`-Variable gibt zusätzliche Pfadinformationen an und kann verwendet werden, um zusätzliche Informationen an ein Gateway-Skript zu senden. Die zusätzlichen Pfadinformationen folgen der URL des verwiesenen Gateway-Skripts. Im Allgemeinen ist diese Information ein virtueller oder relativer Pfad zu einer Ressource, die der Server interpretieren muss.
+`PATH_TRANSLATED` :: Server übersetzen die `PATH_INFO`-Variable in die `PATH_TRANSLATED`-Variable, indem sie den Verzeichnispfad des Standard-Web-Dokuments vor die zusätzlichen Pfadinformationen einfügen.
+`QUERY_STRING` :: Die Variable `QUERY_STRING` gibt eine URL-codierte Suchzeichenfolge an. Sie legen diese Variable fest, wenn Sie die GET-Methode zum Senden eines Formulars verwenden. Die Abfragezeichenfolge wird durch ein Fragezeichen von der URL getrennt. Der Benutzer sendet alle Informationen nach dem Fragezeichen, die die URL von der Abfragezeichenfolge trennen. Hier  ein Beispiel:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?string
+----
++
+Wenn der query string URL-kodiert ist, dann wird dieser vom Browser dekodiert.
+Das Plus-Zeichen ist ein Platzhalter zwischen Wörtern und hat die Funktion von 
+Zwischenraumzeichen (space):
++
+.URL:
+----
+ /cgi-bin/doit.cgi?word1+word2+word3
+----
++
+Gleichheitszeichen trennen die von der Seite vorgegebenen  Schlüsselwörter von den vom Benutzer eingegebenen Werten. Im folgenden Beispiel ist das Schlüsselwort "key" und der vom Benutzer eingegebene Wert "never":
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=never
+----
++
+Und-Symbole (`&`) trennen Schlüssel/Werte-Paare. Im folgenden Beispiel erhält der erste Schlüssel "response" den Wert "sometimes" und der zweite Schlüssel "reason" den Wert "I+am+not+really+sure":
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=sometimes&reason=I+am+not+really+sure
+----
++
+Schließlich wird das Prozentzeichen verwendet, um Sonderzeichen zu kennzeichnen. Dem Prozentzeichen folgt ein Escape-Code für ein Sonderzeichen, ausgedrückt als hexadezimaler Wert. So könnte die vorherige Abfragezeichenfolge mithilfe des Escape-Codes für ein Apostroph umgeschrieben werden:
++
+.URL:
+----
+ /cgi-bin/doit.cgi?response=sometimes&reason=I%27m+not+really+sure
+----
+`REMOTE_ADDR` :: Die Variable `REMOTE_ADDR` wird auf die Internetprotokoll (IP)-Adresse des Remote-Computers gesetzt, der die Anfrage stellt.
+`REMOTE_HOST` :: Die Variable `REMOTE_HOST` gibt den Namen des Host-Rechners an, der eine Anfrage stellt. Diese Variable wird nur gesetzt, wenn der Server diese Informationen über eine Anfrage an den Nameserver ermitteln kann.
+`REMOTE_IDENT` :: Die `REMOTE_IDENT`-Variable identifiziert den Benutzer, der eine Anfrage stellt. Die Variable wird nur gesetzt, wenn der Server und der Rechner, der die Anfrage stellt, das Identifikationsprotokoll unterstützt. Darüber hinaus sind Informationen zum Benutzer nicht immer verfügbar, weshalb Sie sich nicht darauf verlassen sollten.
+`REMOTE_USER` :: Die `REMOTE_USER`-Variable ist der Benutzername, der vom Benutzer authentifiziert wurde, und als solche ist dies die einzige Variable, auf die Sie sich verlassen können, um einen Benutzer zu identifizieren. Wie bei anderen Arten der Benutzerauthentifizierung wird diese Variable nur dann gesetzt, wenn der Server die Benutzerauthentifizierung unterstützt.
+`REQUEST_METHOD` :: Die Variable `REQUEST_METHOD` gibt die Methode an, mit der die Anfrage gemacht wurde. Die Methoden können "GET", "HEAD", "POST", "PUT", "DELETE", "LINK" und "UNLINK" sein.
++
+Die Methoden `GET`,` HEAD` und `POST` sind die am häufigsten verwendeten Anforderungsmethoden. Sowohl "GET" als auch "POST" werden zum Senden von Formularen verwendet.
+`SCRIPT_NAME` :: gibt den virtuellen Pfad zum ausgeführten Skript an. Diese Information ist nützlich, wenn das Skript ein HTML-Dokument generiert, das auf das Skript verweist.
+`SERVER_NAME` :: identifiziert den Server anhand seines Hostnamens, Alias oder seiner IP-Adresse. Diese Variable ist immer gesetzt.
+`SERVER_PORT` :: gibt die Portnummer an, auf der der Server die Anfrage erhalten hat. Diese Information kann bei Bedarf von der URL zum Skript interpretiert werden. Die meisten Server verwenden jedoch den Standardport 80 für HTTP-Anforderungen.
+`SERVER__PROTOCOL` :: identifiziert das Protokoll, das zum Senden der Anfrage verwendet wird. Der der Variablen zugewiesene Wert identifiziert den Namen und die Version des verwendeten Protokolls. Das Format ist "Name/Version", z.B. HTTP/1.0.
+
+==== CGI Standard Input
+
+Die meisten Daten, die an einen Webserver gesendet werden, werden zum in 
+Umgebungsvariablen gespeichert, aber nicht alle Eingaben passen in eine 
+Umgebungsvariable. Wenn ein Benutzer Daten übermittelt, die von einem 
+Gateway-Skript verarbeitet werden sollen, werden diese Daten als 
+URL-codierte Suchzeichenfolge oder über den Standard-Eingabestream 
+empfangen. Der Server weiß, wie diese Daten verarbeitet werden, da die 
+Methode (POST oder GET in HTTP 1.0) zum Übermitteln der Daten verwendet 
+wird.
+
+Das Senden von Daten über die Standardeingabe ist der direkteste Weg zum 
+Senden von Daten. Der Server teilt dem Gateway-Skript mit, wie viele 
+Bytes aus der Standardeingabe gelesen werden sollen. Das Skript öffnet 
+dann den Standard-Eingabestream und liest die angegebene Datenmenge. 
+Lange URL-codierte Suchzeichenfolgen können abgeschnitten werden. Daten, 
+die über den Standard-Eingabestream gesendet werden, bleiben immer 
+vollständig erhalten, egal, wie lang. Folglich ist der 
+Standard-Eingabestrom der bessere Weg, um Daten zu übergeben.
+
+==== Welche CGI Eingabe-Daten-Methode soll man nutzen?
+
+Sie können eine Methode für die Datenübermittlung angeben, wenn Sie Ihre 
+Web-Formulare erstellen. Es gibt zwei Eingabemethoden für Formulare. Die 
+HTTP-GET-Methode verwendet URL-codierte Suchzeichenfolgen. Wenn ein 
+Server eine URL-codierte Suchzeichenfolge erhält, weist der Server den 
+Wert der Suchzeichenfolge der Variable `QUERY_STRING` zu.
+
+Die HTTP-POST-Methode verwendet die Standard-Eingabeströme. Wenn ein 
+Server Daten über den Standard-Eingabestream empfängt, ordnet der Server 
+der Variablen `CONTENT_LENGTH` deren Länge in Bytes zu. Vom CGI-Script 
+aus können die Daten dann z.B. mit `INPUT$()` gelesen werden.
+
+Vielleicht möchten Sie einige der X11-Basic Beispielprogramme studieren, 
+um die für Ihren Einsatzzweck geeignete Methode zu finden.
+
+
+==== Die Ausgaben des CGI-Skripts
+
+Nachdem das Skript die Eingabedaten gelesen und verarbeitet hat, sollte 
+das Skript irgendeine Art von Ausgabe an den Server zurückgeben. Der 
+Server wird dann die Ausgabe an den Client zurücksenden. Im Allgemeinen 
+hat diese Ausgabe die Form einer HTTP-Antwort. Also eine Kopfzeile 
+gefolgt von einer Leerzeile und dann gefolgt vom eigentlichen 
+Textkörper, der dann den HTML-Code enthalten kann.  Der Hauptteil kann 
+beispielsweise ein HTML-Dokument enthalten, das der Client anzeigen 
+soll.
+
+==== CGI Kopfzeilen
+
+CGI-Kopfzeilen (Header) enthalten Anweisungen für den Server. Derzeit 
+sind diese drei Server-Direktiven gültig:
+
+* Content-Type
+* Location
+* Status
+
+Ein einzelner Header kann eine oder alle Serverdirektiven enthalten. Ihr 
+CGI-Skript gibt diese Anweisungen an den Server aus. Obwohl auf den 
+Header eine Leerzeile folgt, die den Header vom Hauptteil trennt, muss 
+die Ausgabe keinen Hauptteil enthalten.
+
+Das Feld *Content-Type* in einem CGI-Header identifiziert den MIME-Typ 
+der Daten, die Sie an den Client zurücksenden. Normalerweise ist die 
+Datenausgabe eines Skripts ein vollständig formatiertes Dokument, z.B. 
+ein HTML-Dokument. Sie könnten diese Ausgabe in der Kopfzeile wie folgt 
+angeben:
+
+----
+Content-Type: text/html
+----
+
+Aber wenn Ihr Programm andere Daten wie Bilder etc. ausgibt, sollten Sie 
+natürlich den entsprechenden Inhaltstyp angeben.
+
+Location :: Die Ausgabe Ihres Skripts muss kein im Skript erstelltes Dokument sein. Sie können auf jedes Dokument im Web verweisen, indem Sie das Feld *Location* verwenden. Das Feld *Location* kann auf eine Datei verweisen, die anhand ihrer URL angegeben wird. Server verarbeiten diese Referenzen entweder direkt oder indirekt abhängig vom Speicherort der Datei. Wenn der Server die Datei lokal finden kann, übergibt er die Datei an den Client. Andernfalls leitet der Server die URL an den Client um, und der Client muss die Datei selbst abrufen. Sie können einen Speicherort in einem Skript wie folgt angeben:
++
+----
+ Location: http://www.new-jokes.com/
+----
+Status :: Das Feld *Status* übergibt eine Statuszeile an den Server zur 
+Weiterleitung an den Client. Statuscodes werden als dreistelliger Code 
+gefolgt von einem String ausgedrückt, der allgemein erklärt, was 
+passiert ist. Die erste Ziffer eines Statuscodes zeigt den allgemeinen 
+Status wie folgt an:
++
+----
+  1XX Not yet allocated
+  2XX Success
+  3XX Redirection
+  4XX Client error
+  5XX Server error
+----
++
+Obwohl viele Statuscodes von Servern verwendet werden, sind die 
+Statuscodes, die Sie über Ihr CGI-Skript an einen Client übergeben, in 
+der Regel Client-Fehlercodes. Angenommen, das Skript konnte keine Datei 
+finden und Sie haben angegeben, dass das Skript in solchen Fällen einen 
+Fehlercode ausgeben soll, anstatt nichts zurückzugeben. Hier ist eine 
+Liste der Client-Fehlercodes, die Sie möglicherweise verwenden möchten:
++
+----
+401 Unauthorized Authentication has failed. 
+    Der Benutzer hat keine Zugriffsrechte auf diese Datei. Er muss sich Authentifizieren.
+
+403 Forbidden. The request is not acceptable. 
+    Der Benutzer darf auf das File nicht zugreifen.
+
+404 Not found. 
+    Die angegebene Datei oder Daten konnte nicht gefunden werden.
+
+405 Method not allowed. 
+    Die Übertragungsmethode ist nicht erlaubt hier.
+----
+
+=== Ein Beispiel CGI Skript
+
+Hier ist ein einfaches Beispiel-CGI-Skript, das einfach alle 
+Informationen zurückgibt, die es vom Webserver als HTML-Seite erhält.
+
+----
+#!/usr/bin/xbasic
+PRINT "Content-type: text/html"+CHR$(13)
+PRINT ""+CHR$(13)
+FLUSH
+PRINT "<html><head><TITLE>Test CGI</TITLE><head><body>"
+PRINT "<h1>Commandline:</h1>"
+i=0
+WHILE LEN(PARAM$(i))
+  PRINT STR$(i)+": "+PARAM$(i)+"<br>"
+  INC i
+WEND
+PRINT "<h1>Environment:</h1><pre>"
+FLUSH      ! flush the output before another program is executed !
+SYSTEM "env"
+PRINT "</pre><h1>Stdin:</h1><pre>"
+length=VAL(ENV$("CONTENT_LENGTH"))
+IF length
+  FOR i=0 TO length-1
+    t$=t$+CHR$(inp(-2))
+  NEXT i
+  PRINT t$
+ENDIF
+PRINT "</pre>"
+PRINT "<FORM METHOD=POST ACTION=/cgi-bin/envtest.cgi>"
+PRINT "Name: <INPUT NAME=name><BR>"
+PRINT "Email: <INPUT NAME=email><BR>"
+PRINT "<INPUT TYPE=submit VALUE="+CHR$(34)+"Test POST Method"+CHR$(34)+">"
+PRINT "</FORM>"
+PRINT "<hr><h6>(c) Markus Hoffmann cgi with X11-basic</h6></body></html>"
+FLUSH
+QUIT
+----
+
+
+
+
+
+== Danksagung
+
+
+Teile dieses Kapitels stammen aus oder basieren auf einer Dokumentation, 
+die in den 1990er Jahren verwendet wurde. 
+(Ich hoffe, es war Public Domain oder ähnliches.) 
+Leider habe ich den Link verloren zu seiner Quelle. Wenn Sie Ihre 
+potentielle Quelle kennen, lassen Sie es mich wissen. Dann kann ich es hier 
+zitieren und dem Autor danken.
