@@ -335,7 +335,7 @@ WINDIST=WINDOWS/lib/SDL.dll \
         WINDOWS/lib/README-SDL.txt \
         WINDOWS/lib/README-GMP.txt \
         WINDOWS/lib/README-LAPACK.txt \
-	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe \
+	xbasic.exe xbvm.exe xbbc.exe xbc.exe xb2c.exe x11basic.lib \
         WINDOWS/readme-windows.txt \
 	WINDOWS/x11basic.ico  WINDOWS/demo.bas \
 	WINDOWS/bas.ico ../COPYING ../RELEASE_NOTES INTRO

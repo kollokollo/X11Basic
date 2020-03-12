@@ -59,6 +59,7 @@ Source: "WINDOWS/demo.bas"; DestName: "demo.bas"; DestDir: "{app}/examples"
 Source: "WINDOWS/readme-windows.txt"; DestDir: "{app}"; Flags: isreadme
 Source: "WINDOWS/lib/libusb0.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
 Source: "WINDOWS/lib/README-libusb.txt"; DestDir: "{app}/contrib";  Flags: isreadme
+Source: "x11basic.lib"; DestDir: "{app}"
 Source: "WINDOWS/x11basic.ico"; DestDir: "{app}"
 Source: "../doc/manual/Outputs/X11-Basic-manual-1.27.pdf"; DestName: "X11-Basic.pdf"; DestDir: "{app}/doc"
 Source: "WINDOWS/bas.ico"; DestDir: "{app}"
