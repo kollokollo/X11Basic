@@ -1,15 +1,171 @@
 <html>
-<head>
-   <meta name="Description" content="X11-Basic Homepage">
-   <title>X11-Basic Homepage</title>
-<frameset ROWS=150,* BORDER=0 FRAMESPACING=0 FRAMEBORDER=NO MARGINWIDTH="0" MARGINHEIGHT="0">
-<frame SRC="leiste.html" NAME=bandeau SCROLLING=AUTO  MARGINWIDTH="0"
-MARGINHEIGHT="0" FRAMEBORDER="no" FRAMESPACING="0" BORDER=0>
-<frame SRC="framea.html" NAME=bottomframe NORESIZE>
-</frameset>
-<noframes>
-</head>
-<body>
-</body>
-</noframes>
+  <script type="text/javascript">
+  <!--
+                var name = "Hoffmann";
+                var vname = "Markus";
+                var ename = "kollo";
+                var domain = "users.sourceforge.net";
+  // --> 
+  </script>
+  <head>
+    <meta name="Description" content="X11-Basic Homepage">
+    <title>X11-Basic: BASIC for UNIX</title>
+    <meta name="Keywords" content="x11basic, X11-Basic, Basic, GFA, Linux, UNIX, interpreter, compiler, embedded, f-droid, android">
+    <meta name="Description" content="X11-Basic is a structured BASIC programming language with graphics.">
+  </head>
+
+  <BODY BGCOLOR="#888888" text=0 link=ffff00 vlink=d0d010>
+    <center>
+      <table border="0" cellpadding="4" cellspacing="8" bgcolor=#888888>
+        <tr>
+          <td valign="top">
+	    <p>
+	      <font face="Arial" size="7">
+	        <strong><em>X11-Basic</em></strong>
+	      </font>
+	    </p>
+            <font face="Arial" size="2">
+	      <strong>BASIC interpreter/compiler for UNIX</strong>
+	      <br/>(c) 1991-2020 
+<script type="text/javascript">
+<!--
+document.write('<a href=\"mailto:' + ename + '@' + domain+ '\">');
+document.write(vname + ' ' + name + '</a>');
+// --> 
+</script>
+	    </font>
+          </td>
+          <td><img src="x11basic-banner-klein.png"  alt="X11-Basic"></td>
+	  <td align="right" valign="top">
+	    <p>
+              <font face="Arial" size="5">
+                <strong>Version 1.27</strong>
+              </font>
+            </p>
+	    <p> <font face="helvetica" size="-1">
+	    <b>sources:
+&nbsp;&nbsp;&nbsp;<a href="https://codeberg.org/kollo/X11Basic">codeberg</a>
+&nbsp;&nbsp;&nbsp;<a href="https://github.com/kollokollo/X11Basic/">github</a>
+<br>download:
+&nbsp;&nbsp;&nbsp;<a href="http://sourceforge.net/projects/x11-basic/" TARGET="mainpage">binaries</a>
+<br>android:
+&nbsp;&nbsp;&nbsp;<a href="https://codeberg.org/kollo/X11-Basic" TARGET="mainpage">sources</a>
+</font>
+</p>
+	    
+	    
+	    
+          </td>
+        </tr>
+      </table>
+    </center>
+
+<hr>
+  <font face="helvetica" size="-1">
+  <div align="center">
+<br>help:
+&nbsp;&nbsp;&nbsp;<a href="x11basic.html">documentation</a>
+&nbsp;&nbsp;&nbsp;<a href="https://github.com/kollokollo/X11Basic/issues" TARGET="mainpage">issue tracker</a>
+&nbsp;&nbsp;&nbsp;<a href="donate.html">donate</a>
+<br>misc:
+&nbsp;&nbsp;&nbsp;<a href="https://codeberg.org/kollo/X11-Basic_examples" TARGET="mainpage">examples</a>
+&nbsp;&nbsp;&nbsp;<a href="screenshots/index.html">screenshots</a>
+&nbsp;&nbsp;&nbsp;<a href="https://sourceforge.net/projects/x11-basic/reviews/" TARGET="mainpage">guestbook</a>
+&nbsp;&nbsp;&nbsp;<a href="https://codeberg.org/kollo/X11Basic/issues" TARGET="mainpage">Developper's Forum</a>
+&nbsp;&nbsp;&nbsp;<a href="https://sourceforge.net/p/x11-basic/discussion/" TARGET="mainpage">User's Forum</a>
+&nbsp;&nbsp;&nbsp;<a href="links.html">Links</a><br><br>
+</b>
+</div>
+</font>
+<hr>
+<div bgcolor=#fffffff>
+<img src="3Dxbasic2.png" align=right>
+X11-Basic is a dialect of the BASIC programming language with graphics, sound and more.
+<p>
+The syntax is most similar to GFA-Basic on the ATARI-ST. It is a
+structured dialect with no line numbers. X11-Basic supports complex numbers, 
+big integers and big integer arithmetrics.  
+
+<p>
+
+X11-Basic is available for UNIX workstations, Linux, Android, MAC-OSX, as well
+as for MS-WINDOWS.  It is also available for the ATARI ST, TomTom car
+navigation  systems and the Raspberry Pi.
+
+<p> A BASIC compiler is included so that you can make stand-alone
+binaries out of your programs (on all platforms except for Android). 
+
+The X11-Basic interpreter is fast and small.
+</div>
+<div>
+<hr>
+The interpreter (<tt>xbasic</tt>) can be used as a shell. It can run
+basic-scripts in all environments, p.ex. *.cgi-Scripts for handling
+web-input. 
+<p>
+The compiler (<tt>xbc</tt>) makes stand alone binaries out of the BASIC programs, which 
+run much faster than the interpreted code. 
+<p>
+Where no C compiler is available, X11-Basic programs can be compiled into 
+bytecode (see <tt>xbbc</tt>). This bytecode  can be interpreted by a virtual 
+machine (see <tt>xbvm</tt>).
+<p>
+Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
+with the <tt>bas2x11basic</tt> program (see below).
+<p>
+  X11-BASIC is free software and comes with NO WARRANTY - read the file
+  <a href="https://codeberg.org/kollo/X11Basic/src/branch/master/COPYING">COPYING</a> for details
+ <p>
+(Basically that means, free, open source, use and modify as you like, don't
+incorporate it into non-free software, no warranty of any sort, don't blame me
+if it doesn't work.)
+</div>
+<div>
+<h2>Utilities</h2>
+... you might also want to install: 
+<ul>
+<li>
+<a href="download/gfalist_0.01-1_i386.deb">gfalist_0.01-1_i386.deb</a> (22 KBytes)(deb, 32 bit) 
+<a href="download/gfalist_0.01-1_amd64.deb">gfalist_0.01-1_amd64.deb</a> (24 KBytes)(deb, 64 bit) 
+-- A Program which converts *.gfa Files to ASCII ((C) 2001 by Peter Backes) 
+<a href="https://github.com/mmuman/gfalist" TARGET="_top">(sources)</a>
+<li><a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/compiler/bas2x11basic.bas">bas2x11basic.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts ANSI Basic code (with line numbers) to X11-Basic
+<li><a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/Atari-ST/rsc2gui.bas">rsc2gui.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts ATARI-ST *.RSC Files to *.gui (ASCII) Files
+<li><a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/GUI/gui2bas.bas">gui2bas.bas</a> (5 KBytes)(x11basic) 
+-- A Program which converts *.gui Graphic User Interface Forms to executable x11basic
+subroutines. (<a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/GUI/demo.gui">demo.gui</a>--&lt; 
+<a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/GUI/screenshots/guidemo.png">Screenshot</a>)
+<li><a href="https://codeberg.org/kollo/X11-Basic_examples/raw/master/All/compiler/inline.bas">inline.bas</a>
+-- A Program which converts any binary file into X11-Basic sourcecode. This is useful, if you 
+want to include Graphics files (pictures, icons, etc..) or any other data, directly into your program. 
+This way, you need not load these files on runtime.
+</ul>
+
+</div>
+<hr>
+<P>
+<A href="http://sourceforge.net">
+<IMG src="http://sourceforge.net/sflogo.php?group_id=23850&amp;type=5" 
+width=155 height=60 border="0" alt="SourceForge Logo"></A>
+
+<a href="https://f-droid.org/app/net.sourceforge.x11basic">
+<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
+<hr>
+<FONT FACE="ARIAL,HELVETICA" SIZE=1><SCRIPT Language="JavaScript">
+ <!--
+  document.write('Letzte Bearbeitung: '+document.lastModified);
+ //-->
+</SCRIPT>
+<script type="text/javascript">
+<!--
+document.write(vname + ' ' + name + '<a href=\"mailto:' + ename + '@' + domain+ '\">');
+document.write(ename + '@' + domain + '</a>');
+// --> 
+        </script>
+      </FONT>
+
+    </body>
+  </noframes>
 </html>

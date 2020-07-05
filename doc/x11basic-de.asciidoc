@@ -583,7 +583,7 @@ werden.
 Für alle anderen Systeme müssen Sie X11-Basic aus den Quellen 
 kompilieren. Ein Paket mit den Quellen können Sie entweder von der 
 Homepage bzw. sourceforge-Seite aus runterladen oder aber aus den 
-git-Repositories bei `guthub` oder `gitlab` erzeugen. Wenn Sie schonmal 
+git-Repositories bei `github` oder `codeberg` erzeugen. Wenn Sie schonmal 
 mit `git` gearbeitet haben, ist dies unbedingt zu empehlen.
 
 Auf irgendeine Art haben Sie also das Quellpaket (z.B. 
