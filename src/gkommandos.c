@@ -1553,7 +1553,7 @@ void c_allevent(PARAMETER *plist,int e) {
     handle_event(&window[usewindow],&event); break;
   case SDL_KEYUP:
   case SDL_KEYDOWN:
-    if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,(event.type==SDL_KEYDOWN)?EVENT_MOUSEBUTTONPRESS:EVENT_MOUSEBUTTONRELEASE);
+    if(e>0 && plist[0].typ!=PL_LEER) varcastint(plist[0].integer,plist[0].pointer,(event.type==SDL_KEYDOWN)?EVENT_KEYPRESS:EVENT_KEYRELEASE);
     if(e>5 && plist[5].typ!=PL_LEER) varcastint(plist[5].integer,plist[5].pointer,event.key.keysym.mod);
     if(e>6 && plist[6].typ!=PL_LEER) varcastint(plist[6].integer,plist[6].pointer,event.key.keysym.sym);
     if(e>7 && plist[7].typ!=PL_LEER) varcastint(plist[7].integer,plist[7].pointer,event.key.keysym.scancode);
