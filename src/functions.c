@@ -6,7 +6,9 @@
  * COPYING for details
  */
 
+#ifndef WINDOWS
 #define _GNU_SOURCE
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1425,16 +1427,9 @@ static int f_ubound(PARAMETER *p,int e) {
   } else xberror(58,variablen[p->integer].name); /* Variable %s has incorrect type */
   return 0;
 }
-
-
-
 #endif
-/*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
-  output liefern.
-  */
   
-  
-  /* Folgende funktionen sollten noch implemntiert werden
+  /* Folgende funktionen sollten noch implementiert werden
   
   MEAN(ARRAY)
   RMS(ARRAY)
@@ -1446,7 +1441,11 @@ static int f_ubound(PARAMETER *p,int e) {
   NORM(ARRAY)
   
   */
-  
+
+ /*F_CONST fuer die Funktionen, welche bei constantem input imemr das gleiche 
+  output liefern.
+  */
+ 
 const FUNCTION pfuncs[]= {  /* alphabetisch !!! */
  { F_CONST|F_ARGUMENT|F_DRET,  "!nulldummy", f_nop             ,0,0,{0}},
  { F_CONST|F_PLISTE|F_NRET,    "ABS"       , (pfunc)f_abs      ,1,1,{PL_NUMBER}},
