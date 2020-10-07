@@ -1237,8 +1237,8 @@ void c_mouseevent(PARAMETER *plist,int e) { /*MOUSEEVENT x,y,k,rx,ry,s */
 }
 
 void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
-#ifdef WINDOWS_NATIVE
   graphics();
+#ifdef WINDOWS_NATIVE
   ResetEvent(motionevent);
   WaitForSingleObject(motionevent,INFINITE);
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,global_mousex);
@@ -1247,7 +1247,6 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
   if(e>5 && plist[5].typ!=PL_LEER)  varcastint(plist[5].integer,plist[5].pointer,global_mouses);
 #elif defined USE_X11 || defined FRAMEBUFFER
    XEvent event;   
-   graphics();
 #ifdef FRAMEBUFFER
    FB_mouse_events(1);
    FB_showx_mouse();
@@ -1318,8 +1317,8 @@ static char GetModifiedKey(char c,int shiftstate,int capsstate,int modestate, in
 /* Command: KEYEVENT  [nvar,nvar,var$,nvar,nvar,nvar,nvar,nvar] */
 
 void c_keyevent(PARAMETER *plist,int e) {
+  graphics();  /* make sure, window is open, remove Exposure events.*/
 #ifdef WINDOWS_NATIVE
-  graphics();
   ResetEvent(keyevent);
   WaitForSingleObject(keyevent,INFINITE);
   while(global_eventtype!=KeyChar) {
@@ -1336,7 +1335,6 @@ void c_keyevent(PARAMETER *plist,int e) {
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER
    XEvent event;   
-   graphics();
     
    XWindowEvent(window[usewindow].display, window[usewindow].win,KeyPressMask|ExposureMask, &event);
    while(event.type!=KeyPress && event.type!=TerminateEventLoop) { 
@@ -1377,7 +1375,6 @@ void c_keyevent(PARAMETER *plist,int e) {
   SDL_Event event;
   STRING str;
   char buf[4];
-  graphics();
   if(SDL_WaitEvent(&event)==0) return;
   while(event.type!=SDL_KEYDOWN /* && event.type!=SDL_KEYUP */ ) { 
      handle_event(&window[usewindow],&event);
@@ -1422,9 +1419,9 @@ void c_keyevent(PARAMETER *plist,int e) {
 /* Function EVENT?(mask%) */
 
 int f_eventf(int mask) {
+  graphics();  /* Make sure window is open etc..*/
 #if defined USE_X11 || defined FRAMEBUFFER
   XEvent event;
-  graphics();
  again:
   if(XCheckWindowEvent(window[usewindow].display, window[usewindow].win,mask|ExposureMask, &event)) {
     if(event.type==Expose || event.type==GraphicsExpose|| event.type==NoExpose) { 
@@ -1436,7 +1433,30 @@ int f_eventf(int mask) {
     return -1;
   } 
 #elif defined USE_SDL
-  if(SDL_PollEvent(NULL)) return(-1);
+  SDL_Event event;
+  SDL_PumpEvents(); /* store events internally in the event queue */
+  /* filter events according to mask. */
+  int sdlmask=0;
+  if(mask&0x1) sdlmask|=SDL_EVENTMASK(SDL_KEYDOWN);
+  if(mask&0x2) sdlmask|=SDL_EVENTMASK(SDL_KEYUP);
+  if(mask&0x4) sdlmask|=SDL_EVENTMASK(SDL_MOUSEBUTTONDOWN);
+  if(mask&0x8) sdlmask|=SDL_EVENTMASK(SDL_MOUSEBUTTONUP);
+#ifdef SDL_WINDOWEVENT
+  if(mask&0x10) sdlmask|=SDL_EVENTMASK(SDL_WINDOWEVENT_ENTER);
+  if(mask&0x20) sdlmask|=SDL_EVENTMASK(SDL_WINDOWEVENT_LEAVE);
+#endif
+  if(mask&0x40) sdlmask|=SDL_EVENTMASK(SDL_MOUSEMOTION);
+#ifdef SDL_WINDOWEVENT
+  if(mask&0x40000) sdlmask|=SDL_EVENTMASK(SDL_WINDOWEVENT_RESIZED)|SDL_EVENTMASK(SDL_WINDOWEVENT_MOVED);
+  if(mask&0x200000) sdlmask|=SDL_EVENTMASK(SDL_WINDOWEVENT_FOCUS_GAINED)|SDL_EVENTMASK(SDL_WINDOWEVENT_FOCUS_LOST);
+#endif
+
+  if(mask==-1) sdlmask=SDL_ALLEVENTS;
+
+  int a=SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, sdlmask);
+  if(a<0) {
+    printf("SDL_Error: %d\n",a);
+  } else if(a>0) return(-1);
 #endif
   return 0;
 }
@@ -1461,9 +1481,9 @@ int f_eventf(int mask) {
 
 
 void c_allevent(PARAMETER *plist,int e) {
+  graphics();  /* make sure, window is open, remove Exposure events.*/
 #ifdef WINDOWS_NATIVE
   HANDLE evn[3];
-  graphics();
   evn[0]=keyevent;
   evn[1]=motionevent;
   evn[2]=buttonevent;
@@ -1482,8 +1502,7 @@ void c_allevent(PARAMETER *plist,int e) {
   }
   if(e>7 && plist[7].typ!=PL_LEER)  varcastint(plist[7].integer,plist[7].pointer,global_ks);
 #elif defined USE_X11 || defined FRAMEBUFFER
-   XEvent event;   
-   graphics();
+   XEvent event;
 #ifdef FRAMEBUFFER
    FB_mouse_events(1);
    FB_showx_mouse();
@@ -1593,7 +1612,6 @@ void c_allevent(PARAMETER *plist,int e) {
 #elif defined USE_SDL
   SDL_Event event;
   char buf[4];
-  graphics();
   if(SDL_WaitEvent(&event)==0) return;
 
 #if 0

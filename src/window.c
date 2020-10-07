@@ -602,7 +602,14 @@ void handle_window(WINDOWDEF *w) {
   /* TODO ... */
 #elif defined USE_SDL
   SDL_Event event;
-  while(SDL_PollEvent(&event)) handle_event(w,&event);
+  SDL_PumpEvents(); /* store events internally in the event queue */
+  /* filter for WINDOW events only (all but keyboard, mouse, joystick) */
+  int sdlmask=SDL_ALLEVENTS^(SDL_KEYEVENTMASK|SDL_MOUSEMOTIONMASK|SDL_MOUSEEVENTMASK|SDL_JOYEVENTMASK);
+  int a=SDL_PeepEvents(&event, 1, SDL_GETEVENT, sdlmask);
+  while(a>0) {
+    handle_event(w,&event);
+    a=SDL_PeepEvents(&event, 1, SDL_GETEVENT, sdlmask);
+  }
 #elif defined USE_X11
   XEvent event;
   while(XCheckWindowEvent(w->display,w->win,ExposureMask, &event)) {
