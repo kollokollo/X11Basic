@@ -1349,7 +1349,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-bluetooth        support blutooth [default=yes]
-  --with-mqtt             support mqtt [default=yes]
+  --with-mqtt             support mqtt [default=no]
   --with-usb              support USB [default=yes]
   --with-readline         support readline library [default=yes]
   --with-framebuffer      support framebuffer [default=no]
@@ -2529,7 +2529,7 @@ fi
 if test "${with_mqtt+set}" = set; then :
   withval=$with_mqtt; with_mqtt=$withval
 else
-  with_mqtt=yes
+  with_mqtt=no
 fi
 
 
@@ -7553,6 +7553,8 @@ main ()
     if (*(data + i) != *(data3 + i))
       return 14;
   close (fd);
+  free (data);
+  free (data3);
   return 0;
 }
 _ACEOF

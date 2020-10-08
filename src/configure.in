@@ -62,7 +62,7 @@ AC_ARG_WITH(bluetooth, AS_HELP_STRING([--with-bluetooth],
               [support blutooth @<:@default=yes@:>@]), [with_bluetooth=$withval], [with_bluetooth=yes])
 
 AC_ARG_WITH(mqtt, AS_HELP_STRING([--with-mqtt],
-              [support mqtt @<:@default=yes@:>@]), [with_mqtt=$withval], [with_mqtt=yes])
+              [support mqtt @<:@default=no@:>@]), [with_mqtt=$withval], [with_mqtt=no])
 
 AC_ARG_WITH(usb, AS_HELP_STRING([--with-usb],
               [support USB @<:@default=yes@:>@]), [with_usb=$withval], [with_usb=yes])
