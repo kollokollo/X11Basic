@@ -295,7 +295,9 @@ void dump_parameterlist(PARAMETER *p, int n) {
         case PL_LABEL:  printf(" <label>\n");break;
         case PL_PROC:   printf(" <proc>\n");break;
         case PL_FUNC:   printf(" <func>\n");break;
-        case PL_ARRAY:  printf(" <array,$%x,dim=%d>\n",p[j].arraytyp,p[j].integer);break;
+        case PL_ARRAY:  
+        case PL_FARRAY: 
+        case PL_IARRAY: printf(" <array,$%x,dim=%d>\n",p[j].arraytyp,p[j].integer);break;
 	case PL_FVAR:   printf(" <var,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
 	case PL_CVAR:   printf(" <var#,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;
 	case PL_AIVAR:  printf(" <var&,%d,%s>\n",p[j].integer,variablen[p[j].integer].name);break;

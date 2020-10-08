@@ -305,12 +305,17 @@ unsigned int type(const char *ausdruck) {
   }
 
   
-  /*  hier ist nun nurnoch ein operand zu untersuchen */
+  /* evaluate brackets */
 
   if(*s=='(' && s[strlen(s)-1]==')') {
     s[strlen(s)-1]=0;
     return(type(s+1));
   }
+
+  /*  hier ist nun nurnoch ein operand zu untersuchen */
+
+
+
   int typ=0;
   int i=0;
   pos=searchchr(s,'(');
@@ -319,7 +324,7 @@ unsigned int type(const char *ausdruck) {
       if(pos==s) printf("WARNING: Syntax-error in expression: parenthesis? <%s>\n",s);
       /* jetzt entscheiden, ob Array-element oder sub-array oder Funktion */
       char *ppp=pos+1;
-      int i=0,flag=0,sflag=0,count=0;
+      int i=0;
       *pos=0;
       if((i=find_func(s))!=-1) { /* Koennte funktion sein: */
  	if(ppp[strlen(ppp)-1]==')') ppp[strlen(ppp)-1]=0;
@@ -348,15 +353,8 @@ unsigned int type(const char *ausdruck) {
         return(typ);
       } else {                   /* wird wohl Array sein.*/
         if(pos[1]==')') typ=(typ | ARRAYTYP);
-        else {
-          while(ppp[i]!=0 && !(ppp[i]==')' && flag==0 && sflag==0)) { /*Fine doppelpunkte in Argumentliste*/
-            if(ppp[i]=='(') flag++;
-	    if(ppp[i]==')') flag--;
-	    if(ppp[i]=='"') sflag=(!sflag);
-	    if(ppp[i]==':' && flag==0 && sflag==0) count++;
-            i++;
-          }
-          if(count) typ=(typ | ARRAYTYP);
+        else {/* Finde Doppelpunkte in Argumentliste, dann ist es auf jeden Fall ein Array, sonst nur array-element.*/
+          if(searchchr3(ppp, ':')) typ=(typ | ARRAYTYP);
         }
       }
     } /* Kann auch @-Funktionsergebnis sein */

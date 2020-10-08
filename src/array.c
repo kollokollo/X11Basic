@@ -1,7 +1,7 @@
 /* array.c (c) Markus Hoffmann             */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ============================================================
+ * ====================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
@@ -24,7 +24,7 @@
 #include "number.h"
 #include "mathematics.h"
 
-/******************** Array variable routines **************************/
+
 /* fill array with a constant */
 void fill_int_array(const ARRAY *arr, const int inh) {
   int anz=anz_eintraege(arr); 
@@ -70,7 +70,6 @@ void fill_array_array(const ARRAY *arr, const ARRAY inh) {
 
 /********************* ARRAY Structure Routines ************************/
 /* create array (need to be freed later) and fill it with a constant value */
-/* Erzeuge jeweils entsprechendes Array und belege es mit value vor. */
 
 ARRAY create_int_array(const uint32_t dimension, const uint32_t *dimlist,const int value) {
   ARRAY ergebnis;
@@ -150,9 +149,6 @@ ARRAY create_string_array(const uint32_t dimension,const uint32_t *dimlist,const
 }
 
 
-
-
-
 ARRAY create_array_array(const uint32_t dimension, const uint32_t *dimlist,const ARRAY *value) {
   ARRAY ergebnis;
   int anz=1,j;
@@ -210,12 +206,12 @@ ARRAY create_array(const unsigned short typ, const uint32_t dimension, const uin
   }
   return(ergebnis);
 }
-/*  Erzeuge ein Array und fuelle es soweit möglich mit Inhalt aus einem anderen Array.
+/*  Erzeuge ein Array und fuelle es soweit moeglich mit Inhalt aus einem anderen Array.
     Erweitere mit 0 bzw mit Strings von Laenge 0
     oder Arrays mit NOTYP und dimension 0 
     
     Es geht noch nicht: Bei mehrdimensionalen Arrays verschieben sich die Elemente. 
-    Wenn die Dimension geanedert wird, was sollen wir tun?
+    Wenn die Dimension geaendert wird, was sollen wir tun?
     
     
     
@@ -402,15 +398,15 @@ ARRAY convert_to_xarray(const ARRAY *a,int rt) {
   } 
   return(double_array(a));
 }
+
 /***********clone an array structure **********************/
-/* Kopiert ein Array  */
+
 ARRAY double_array(const ARRAY *a) {
   int anz=anz_eintraege(a);
   ARRAY b=*a;
   int size=b.dimension*INTSIZE+anz*typlaenge(b.typ);
   // printf("double array: %p/%p\n",a,a->pointer);
   b.pointer=malloc(size);
-  // printf("  array: %p --> %p\n",a->pointer,b.pointer);
   memcpy(b.pointer,a->pointer,size);
   if(b.typ==STRINGTYP) {
     STRING *ppp1=(STRING *)(b.pointer+b.dimension*INTSIZE);
@@ -626,7 +622,7 @@ ARRAY mul_array(ARRAY a1, ARRAY a2) {
   /*Pointer auf daten bestimmen*/
   ar1=a1.pointer+a1.dimension*INTSIZE;
   ar2=a2.pointer+a2.dimension*INTSIZE;
-  /*Dimension des Ergebnisses bestimmen, pointer auf daten des ergebnisses*/
+  /*Dimension des Ergebnisses bestimmen, pointer auf Daten des Ergebnisses*/
   s3=s1;
   if(s1<=1) ergebnis.dimension=0;
   else ergebnis.dimension=2;
@@ -683,7 +679,7 @@ ARRAY trans_array(ARRAY a) {
 	        a.pointer+a.dimension*INTSIZE+(j*((int *)b.pointer)[0]+i)*size,size);
       }
     }
-  } else xberror(85,"TRANS"); /* Transposition nur f�r zweidimensionale Matrizen.*/  
+  } else xberror(85,"TRANS"); /* Transposition nur fuer zweidimensionale Matrizen.*/  
   return(b);
 } 
 
@@ -1151,7 +1147,7 @@ ARRAY get_subarray(ARRAY *arr,int *indexliste) {
   }
 
 /*Aindex sind die Dims fuer jede Dimension
-  Bindex ist die Liste der dims fuer die Dimensionen, welche ubertragen werden*/
+  Bindex ist die Liste der dims fuer die Dimensionen, welche uebertragen werden*/
 
 //printf("get_subarray: adim=%d dim2=%d anz=%d\n",adim,dim2,anz);
   
@@ -1162,7 +1158,7 @@ ARRAY get_subarray(ARRAY *arr,int *indexliste) {
   memcpy(ergebnis.pointer,bindex,dim2*sizeof(int));
  
  
- /*bindex wird jetzt überschrieben*/
+ /*bindex wird jetzt ueberschrieben*/
  
   /*Loop fuer die Komprimierung */
   for(j=0;j<anz;j++) {
@@ -1232,14 +1228,15 @@ int make_indexliste(int dim, char *pos, int *index) {
       flag=1;
       break;
     }
-    if(*w1==':' || *w1==0) {index[i]=-1;flag=1;}	
+    if(*w1==':' || *w1==0) {index[i]=-1;flag=1;}
+    else if(searchchr3(w1,':')) {index[i]=-1;flag=1;}  /* Suche Doppelpunkt auf der ersten Ebene in String.*/
     else index[i]=(int)parser(w1);
     e=wort_sep(w2,',',TRUE,w1,w2);
   }
   return(flag);
 }
 
-/*Überprüft Indexliste auf Fehler*/
+/*Ueberprueft Indexliste auf Fehler*/
 int check_indexliste(const ARRAY *a, const int *idx) {
   int dim=a->dimension;
   int *bbb=(int *)a->pointer;
@@ -1283,7 +1280,7 @@ int idx2idx(int jj,const ARRAY *a,int *idx, int *idx2) {
 #endif
 
 
-/* Liest ein Arrayelement anhand Indizies. */
+/* Liest ein Arrayelement anhand der Indizies. */
 
 int int_array_element(const ARRAY *a, int *idx) {
   int ndim=0,anz=0;
@@ -1343,7 +1340,7 @@ ARRAY array_array_element(const ARRAY *a, int *idx) {
 
 /*********** Subarray functions ****************/
 
-/*bestimmt die dimension eines Subarrays anhand der indexliste*/
+/* bestimmt die Dimension eines Subarrays anhand der Indexliste*/
 int subarraydimf(int *indexliste, int n) {
   int dim=0;
   if(indexliste) {
@@ -1351,5 +1348,3 @@ int subarraydimf(int *indexliste, int n) {
   }
   return dim;
 }
-
-
