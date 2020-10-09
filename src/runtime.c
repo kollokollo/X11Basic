@@ -295,9 +295,9 @@ void x11basicStartup() {
   signal(SIGPIPE, doocssig_handler);
   signal(SIGTERM, doocssig_handler);
 #else
-#ifndef WINDOWS
+  #ifndef WINDOWS
   signal(SIGPIPE, fatal_error_handler);
-#endif
+  #endif
 #endif
 #endif
 }

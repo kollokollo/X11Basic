@@ -1,8 +1,8 @@
-/* raw_keyboard.c     Routinen fuer Event-Driver (c) Markus Hoffmann    */
+/* raw_keyboard.c     routines for event driver (c) Markus Hoffmann    */
 
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ======================================================================
+ * =====================================================================
  * X11BASIC is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
@@ -34,9 +34,9 @@ static pthread_t keyboard_thread;
 
 static int read_keyboard_event(struct input_event *keye) {
   if(keyboard_fd>0) {
-        int bytes=read(keyboard_fd, keye, sizeof(struct input_event));
-        if(bytes==-1) perror("Error reading keyboard device");
-        else if(bytes==sizeof(struct input_event)) return 1;
+    int bytes=read(keyboard_fd, keye, sizeof(struct input_event));
+    if(bytes==-1) perror("Error reading keyboard device");
+    else if(bytes==sizeof(struct input_event)) return 1;
   }
   return 0;
 }

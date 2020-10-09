@@ -15,8 +15,8 @@
 #include <unistd.h>
 #include <signal.h>
 #if defined WINDOWS
-#include <windows.h>
-#include <io.h>
+  #include <windows.h>
+  #include <io.h>
 #elif defined ANDROID
 #else
   #include <sysexits.h>
@@ -33,7 +33,7 @@
 #include "defs.h"
 
 #ifdef HAVE_WIRINGPI
-#include <wiringPi.h>
+  #include <wiringPi.h>
 #endif
  
 #include "x11basic.h"
@@ -62,140 +62,140 @@
 #include "ccs.h"
 
 #ifdef ANDROID
-#include "android.h"
+  #include "android.h"
 #endif
 
 #include "virtual-machine.h"
 
 #ifdef DUMMY_LIST
-#define c_while NULL
-#define c_wave NULL
+#define c_while   NULL
+#define c_wave    NULL
 #define c_version NULL
-#define c_tron NULL
-#define c_troff NULL
-#define c_system NULL
-#define c_swap NULL
-#define c_sub NULL
-#define c_add NULL
-#define c_mul NULL
-#define c_div NULL
-#define c_spawn NULL
-#define c_sort NULL
+#define c_tron    NULL
+#define c_troff   NULL
+#define c_system  NULL
+#define c_swap    NULL
+#define c_sub     NULL
+#define c_add     NULL
+#define c_mul     NULL
+#define c_div     NULL
+#define c_spawn   NULL
+#define c_sort    NULL
 #define c_shm_free NULL
-#define c_detach NULL
-#define c_shell NULL
-#define c_until NULL
-#define c_split NULL
-#define c_speak NULL
-#define c_sound NULL
+#define c_detach  NULL
+#define c_shell   NULL
+#define c_until   NULL
+#define c_split   NULL
+#define c_speak   NULL
+#define c_sound   NULL
 #define c_detatch NULL
-#define c_sensor NULL
-#define c_select NULL
-#define c_save NULL
-#define c_run NULL
+#define c_sensor  NULL
+#define c_select  NULL
+#define c_save    NULL
+#define c_run     NULL
 #define c_restore NULL
-#define c_read NULL
+#define c_read    NULL
 #define c_randomize NULL
-#define c_plist NULL
+#define c_plist   NULL
 #define c_playsoundfile NULL
 #define c_playsound NULL
-#define c_ongoto NULL
+#define c_ongoto  NULL
 #define c_ongosub NULL
-#define c_poke NULL
+#define c_poke    NULL
 #define c_onbreakerrormenuother NULL
 #define c_onbreakerrormenugoto NULL
 #define c_onbreakerrormenugosub NULL
-#define c_on NULL
-#define c_next NULL
-#define c_merge NULL
+#define c_on      NULL
+#define c_next    NULL
+#define c_merge   NULL
 #define c_memdump NULL
-#define c_lpoke NULL
-#define c_local NULL
-#define c_load NULL
-#define c_list NULL
-#define c_let NULL
-#define c_inc NULL
-#define c_dec NULL
-#define c_help NULL
-#define c_home NULL
-#define c_gpio NULL
-#define c_gps NULL
-#define c_goto NULL
-#define c_gosub NULL
-#define c_free NULL
-#define c_fit NULL
+#define c_lpoke   NULL
+#define c_local   NULL
+#define c_load    NULL
+#define c_list    NULL
+#define c_let     NULL
+#define c_inc     NULL
+#define c_dec     NULL
+#define c_help    NULL
+#define c_home    NULL
+#define c_gpio    NULL
+#define c_gps     NULL
+#define c_goto    NULL
+#define c_gosub   NULL
+#define c_free    NULL
+#define c_fit     NULL
 #define c_fit_linear NULL
 #define c_fit_poly NULL
-#define c_if NULL
-#define c_end NULL
-#define c_return NULL
-#define c_echo NULL
-#define c_dpoke NULL
-#define c_lpoke NULL
-#define c_dim NULL
-#define c_for NULL
-#define c_fft NULL
-#define c_exit NULL
-#define c_every NULL
+#define c_if      NULL
+#define c_end     NULL
+#define c_return  NULL
+#define c_echo    NULL
+#define c_dpoke   NULL
+#define c_lpoke   NULL
+#define c_dim     NULL
+#define c_for     NULL
+#define c_fft     NULL
+#define c_exit    NULL
+#define c_every   NULL
 #define c_getlocation NULL
-#define c_eval NULL
-#define c_error NULL
-#define c_erase NULL
-#define c_edit NULL
-#define c_pause NULL
-#define c_clr NULL
-#define c_cls NULL
-#define c_chain NULL
-#define c_beep NULL
+#define c_eval    NULL
+#define c_error   NULL
+#define c_erase   NULL
+#define c_edit    NULL
+#define c_pause   NULL
+#define c_clr     NULL
+#define c_cls     NULL
+#define c_chain   NULL
+#define c_beep    NULL
 #define c_arrayfill NULL
 #define c_arraycopy NULL
-#define c_after NULL
+#define c_after   NULL
 #define c_absolute NULL
-#define c_case NULL
-#define c_clear NULL
-#define c_ NULL
+#define c_case    NULL
+#define c_clear   NULL
+#define c_        NULL
 #define c_print   NULL
-#define c_alert  NULL
-#define  c_bget  NULL
-#define  c_bload  NULL
-#define  c_bmove  NULL
-#define  c_bottomw  NULL
-#define  c_boundary  NULL
-#define  c_box  NULL
-#define  c_bput  NULL
-#define  c_bsave  NULL
-#define  c_call  NULL
-#define  c_chdir  NULL
-#define  c_chmod  NULL
-#define  c_circle  NULL
-#define  c_clearw  NULL
-#define  c_clip  NULL
-#define  c_close  NULL
-#define  c_closew  NULL
-#define  c_color  NULL
-#define  c_connect  NULL
-#define  c_cont  NULL
-#define  c_copyarea  NULL
-#define  c_curve  NULL
-#define  c_deffill  NULL
-#define  c_defline  NULL
-#define  c_defmark  NULL
-#define  c_defmouse  NULL
-#define  c_deftext  NULL
-#define  c_draw  NULL
-#define  c_dump  NULL
-#define  c_ellipse  NULL
-#define  c_allevent  NULL
-#define  c_exec  NULL
-#define  c_fileselect  NULL
+#define c_alert   NULL
+#define c_bget    NULL
+#define c_bload   NULL
+#define c_bmove   NULL
+#define c_bottomw NULL
+#define c_boundary NULL
+#define c_box     NULL
+#define c_bput    NULL
+#define c_bsave   NULL
+#define c_call    NULL
+#define c_chdir   NULL
+#define c_chmod   NULL
+#define c_circle  NULL
+#define c_clearw  NULL
+#define c_clip    NULL
+#define c_close   NULL
+#define c_closew  NULL
+#define c_color   NULL
+#define c_connect NULL
+#define c_cont    NULL
+#define c_copyarea NULL
+#define c_curve   NULL
+#define c_deffill NULL
+#define c_defline NULL
+#define c_defmark NULL
+#define c_defmouse NULL
+#define c_deftext NULL
+#define c_draw    NULL
+#define c_dump    NULL
+#define c_ellipse NULL
+#define c_allevent NULL
+#define c_exec    NULL
+#define c_fileselect NULL
 #define c_polyline NULL
 #define c_polymark NULL
 #define c_prbox NULL
-#define c_put NULL
+#define c_put   NULL
 #define c_unget NULL
 #define c_put_bitmap NULL
-#define c_quit NULL
-#define c_rbox NULL
+#define c_quit  NULL
+#define c_rbox  NULL
 #define c_receive NULL
 #define c_relseek NULL
 #define c_rename NULL
@@ -207,73 +207,73 @@
 #define c_savewindow NULL
 #define c_scope NULL
 #define c_screen NULL
-#define c_seek NULL
-#define c_send NULL
+#define c_seek  NULL
+#define c_send  NULL
 #define c_publish NULL
 #define c_broker NULL
 #define c_subscribe NULL
 #define c_setfont NULL
 #define c_setmouse NULL
-#define c_sget NULL
+#define c_sget  NULL
 #define c_showk NULL
 #define c_showm NULL
 #define c_vsync NULL
 #define c_sizew NULL
-#define c_sput NULL
-#define c_stop NULL
-#define  c_text NULL
-#define  c_titlew NULL
-#define  c_topw NULL
-#define  touch NULL
-#define  c_unmap NULL
-#define  c_usewindow NULL
-#define  c_void NULL
-#define  c_vsync NULL
-#define  c_watch NULL
-#define  c_xload NULL
-#define c_xrun NULL
-#define  c_fill NULL
-#define  c_flush NULL
-#define  c_fullw NULL
-#define  c_get NULL
-#define  c_getgeometry NULL
-#define  c_getscreensize NULL
-#define  c_gprint NULL
-#define  c_graphmode NULL
-#define  c_hidem NULL
-#define  c_hidek NULL
-#define  c_infow NULL
-#define  c_input NULL
-#define  c_keyevent NULL
-#define  c_kill NULL
-#define  c_line NULL
-#define  c_lineinput NULL
-#define  c_link NULL
-#define  c_locate NULL
-#define  c_ltext NULL
-#define  c_menu NULL
-#define  c_menudef NULL
-#define  c_menukill NULL
-#define  c_menuset NULL
-#define  c_mkdir NULL
-#define  c_mouse NULL
-#define  c_mouseevent NULL
-#define  c_motionevent NULL
-#define  c_movew NULL
-#define  c_msync NULL
-#define  c_new NULL
-#define  c_norootwindow NULL
-#define  c_objc_add NULL
-#define  c_objc_delete NULL
-#define  c_open NULL
-#define  c_openw NULL
-#define  c_out NULL
-#define  c_pbox NULL
-#define  c_pcircle NULL
-#define  c_pellipse NULL
-#define  c_pipe NULL
-#define  c_plot NULL
-#define  c_polyfill NULL
+#define c_sput  NULL
+#define c_stop  NULL
+#define c_text  NULL
+#define c_titlew NULL
+#define c_topw  NULL
+#define touch   NULL
+#define c_unmap NULL
+#define c_usewindow NULL
+#define c_void  NULL
+#define c_vsync NULL
+#define c_watch NULL
+#define c_xload NULL
+#define c_xrun  NULL
+#define c_fill  NULL
+#define c_flush NULL
+#define c_fullw NULL
+#define c_get   NULL
+#define c_getgeometry NULL
+#define c_getscreensize NULL
+#define c_gprint NULL
+#define c_graphmode NULL
+#define c_hidem NULL
+#define c_hidek NULL
+#define c_infow NULL
+#define c_input NULL
+#define c_keyevent NULL
+#define c_kill  NULL
+#define c_line  NULL
+#define c_lineinput NULL
+#define c_link  NULL
+#define c_locate NULL
+#define c_ltext NULL
+#define c_menu  NULL
+#define c_menudef NULL
+#define c_menukill NULL
+#define c_menuset NULL
+#define c_mkdir NULL
+#define c_mouse NULL
+#define c_mouseevent NULL
+#define c_motionevent NULL
+#define c_movew NULL
+#define c_msync NULL
+#define c_new   NULL
+#define c_norootwindow NULL
+#define c_objc_add NULL
+#define c_objc_delete NULL
+#define c_open  NULL
+#define c_openw NULL
+#define c_out   NULL
+#define c_pbox  NULL
+#define c_pcircle  NULL
+#define c_pellipse NULL
+#define c_pipe     NULL
+#define c_plot     NULL
+#define c_polyfill NULL
 #else
 
 /* Save the internal program buffer to a file */
@@ -290,14 +290,18 @@ static int saveprg(const char *fname) {
   return(bsave(fname,buf,programbufferlen));
 }
 
+/* Command: MEMDUMP adr%, len% */
+
 static void c_memdump(PARAMETER *plist,int e) {
   memdump((unsigned char *)INT2POINTER(plist->integer),plist[1].integer);
 }
 
+/* Dump String content (truncated) */
+#define STRINGDUMPLEN 60
 static void stringdump(const char *s,int l,char *d) {
   int i=0;
   unsigned char a;
-  while(i<l && i<60) {
+  while(i<l && i<STRINGDUMPLEN) {
     a=s[i];
     if(isprint(a)) d[i]=a;
     else d[i]='.';
@@ -312,33 +316,39 @@ static void stringdump(const char *s,int l,char *d) {
 }
 
 
-/*****************************************/
-/* Kommandos zur Programmablaufkontrolle */
+/**************************************/
+/* Commands for program flow control  */
 
-void c_stop()  {batch=0;} 
+void c_stop()         {batch=0;}         /* Command: STOP  */
+static void c_tron()  {echoflag=1;}      /* Command: TRON  */
+static void c_troff() {echoflag=0;}      /* Command: TROFF */
+static void c_beep()  {putchar('\007');} /* Command: BEEP  */
 
-static void c_tron()  {echoflag=1;}
-static void c_troff() {echoflag=0;}
-static void c_beep()  {putchar('\007');}
- 
-static void c_clear(PARAMETER *plist,int e){
+static void c_eval(PARAMETER *plist,int e) { kommando(plist->pointer); } /* Command: EVAL t$ */
+
+static void c_clear(PARAMETER *plist,int e) { /* Command: CLEAR */
   clear_all_variables(); 
   graphics_setdefaults();
 }
 
-void c_new(const char *n) {
+void c_new(const char *n) { /* Command: NEW */
   newprg();
   strcpy(ifilename,"new.bas");
   graphics_setdefaults();
 }
+
+/* Command: WHILE <expression> */
+
 static void c_while(PARAMETER *plist, int e) {
-  if(pc<=0) {xberror(38,"WHILE"); /* Befehl im Direktmodus nicht moeglich */return;}
+  if(pc<=0) {xberror(38,"WHILE");return;} /* Command not allowed in interactive mode */
   if(plist->integer==0) { 
     int npc=pcode[pc-1].integer;
-    if(npc==-1) xberror(36,"WHILE"); /*Programmstruktur fehlerhaft */
+    if(npc==-1) xberror(36,"WHILE"); /* Error in program structure */
     pc=npc;
   } 
 }
+
+/* Command: GOSUB <label> */
 
 void c_gosub(const char *n) {
   char *pos2;
@@ -358,25 +368,28 @@ void c_gosub(const char *n) {
     else pos2[0]=0;
   } else pos=buffer+strlen(buffer);
     
-    pc2=procnr(buffer,1);
-    if(pc2==-1)   xberror(19,buffer); /* Procedure nicht gefunden */
-    else {       
-	if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) {
-          restore_locals(sp+1);
-	  xberror(42,buffer); /* Zu wenig Parameter */
-	} else { batch=1;
-	  pc2=procs[pc2].zeile;
-	  if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
-	  else {
-	    printf("Stack overflow! PC=%d\n",pc); 
-	    restore_locals(sp+1);
-	    xberror(39,buffer); /* Program Error Gosub impossible */
-	  }
-	}
+  pc2=procnr(buffer,1);
+  if(pc2==-1) xberror(19,buffer); /* Procedure not found */
+  else {       
+    if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) {
+      restore_locals(sp+1);
+      xberror(42,buffer); /* Not enough parameters */
+    } else { batch=1;
+      pc2=procs[pc2].zeile;
+      if(stack_check(sp)) {stack[sp++]=pc;pc=pc2+1;}
+      else {
+    	printf("Stack overflow! PC=%d\n",pc); 
+    	restore_locals(sp+1);
+    	xberror(39,buffer); /* Program Error Gosub impossible */
+      }
     }
+  }
   free(buffer);
 }
-/* Spawn soll eine Routine als separaten thread ausfuehren.
+
+/* Command: SPAWN <procedure>
+   
+   TODO: Spawn soll eine Routine als separaten thread ausfuehren.
    Derzeit klappt as nur als separater Task. Das bedeutet, dass 
    die beiden Programmteile nicht ueber die Variablen reden koennen.
    Hierzu muesste man die XBASIC-Variablen in Shared-Memory auslagern.
@@ -384,8 +397,7 @@ void c_gosub(const char *n) {
    
    Man muesste das als pthread realisieren und aber PC und SP und den 
    Stack duplizieren.
-   
-   
+
    */
 static void c_spawn(const char *n) {
   char *buffer,*pos,*pos2;
@@ -404,7 +416,7 @@ static void c_spawn(const char *n) {
   } else pos=buffer+strlen(buffer);
   
   pc2=procnr(buffer,1);
-  if(pc2==-1)	xberror(19,buffer); /* Procedure nicht gefunden */
+  if(pc2==-1)	xberror(19,buffer); /* Procedure not found */
   else {
     #if defined WINDOWS || defined ATARI
     #else
@@ -413,7 +425,7 @@ static void c_spawn(const char *n) {
     if(forkret==0) {
       if(do_parameterliste(pos,procs[pc2].parameterliste,procs[pc2].anzpar)) {
         restore_locals(sp+1);
-        xberror(42,buffer); /* Zu wenig Parameter */
+        xberror(42,buffer); /* Not enough parameters */
       } else { 
         batch=1;
         pc2=procs[pc2].zeile;
@@ -432,26 +444,29 @@ static void c_spawn(const char *n) {
   free(buffer);
 }
       
+/* Command: LOCAL <list of vars>*/
 
 static void c_local(PARAMETER *plist,int e) {
-  if(e) {
-    for(int i=0;i<e;i++) do_local(plist[i].integer,sp);
-  }
+  if(e) { for(int i=0;i<e;i++) do_local(plist[i].integer,sp); }
 }
+
+/* Command: GOTO <label> */
 
 static void c_goto(const char *n) {
   char *b=indirekt2(n);
   pc=labelzeile(b);
-  if(pc==-1) {xberror(20,b);/* Label nicht gefunden */ batch=0;}
+  if(pc==-1) {xberror(20,b); batch=0;}/* Label not found */
   else batch=1;
   free(b);
 }
 
+/* Command: SYSTEM scmd$ */
 
 static void c_system(PARAMETER *plist,int e) {
   if(system(plist->pointer)==-1) io_error(errno,"system");
 }
 
+/* Command: SHELL scmd$ */
 
 static void c_shell(PARAMETER *plist,int e) {
   char *argv[e+1];
@@ -483,12 +498,16 @@ static void c_edit(const char *n) {
 #endif
 }
 
+/* Command: AFTER i%,<procedure> */
+
 static void c_after(PARAMETER *plist,int e) {
   everyflag=0;
   alarmpc=plist[1].integer;    /* Proc nummer */
   alarmpctype=plist[1].arraytyp;
   alarm(plist[0].integer);     /* Zeit in sec */
 }
+
+/* Command: EVERY i%,<procedure> */
 
 static void c_every(PARAMETER *plist,int e) {
   everyflag=1;
@@ -499,13 +518,15 @@ static void c_every(PARAMETER *plist,int e) {
 }
 
 
-static inline void do_restore(int offset) {
-  datapointer=offset;
+static inline void do_restore(int offset) { datapointer=offset; }
+
+/* Command:  RESTORE [<label>] */
+
+static void c_restore(PARAMETER *plist,int e) {
+  if(e) do_restore((int)labels[plist[0].integer].datapointer);
+  else  do_restore(0);
 }
 
-static void c_run(const char *n) {        /* Programmausfuehrung starten und bei 0 beginnen */
-  do_run();
-}
 void do_run() {
   restore_all_locals(); /* sp=0; von einem vorherigen Abbruch koennten noch locale vars im Zwischenspeicher sein.*/
   clear_all_variables();
@@ -515,14 +536,20 @@ void do_run() {
   do_restore(0);
 }
 
+/* Command: RUN */
+
+static void c_run(const char *n) { do_run(); }
+
+/* Command: CONT[INUE] */
+
 void c_cont() {
   if(batch==0) {
     if(prglen>0 && pc>=0 && pc<=prglen) batch=1;
-    else xberror(41,"");     /*CONT nicht moeglich !*/
+    else xberror(41,"");     /* CONT not possible */
   } else {
     /*hier koennte es ein CONTINUE in einer SWITCH Anweisung sein. */
     /*gehe zum (bzw. hinter) naechsten CASE oder DEFAULT*/
-    if(pc<=0) {xberror(38,"SELECT"); /* Befehl im Direktmodus nicht moeglich */return;}
+    if(pc<=0) {xberror(38,"SELECT"); return;} /* Command not allowed in interactive mode */
     int j,f=0,o;
     for(j=pc; (j<prglen && j>=0);j++) {
       o=pcode[j].opcode&PM_SPECIAL;
@@ -530,16 +557,12 @@ void c_cont() {
       if(o & P_LEVELIN) f++;
       if(o & P_LEVELOUT) f--;
     }
-    if(j==prglen) xberror(36,"SELECT/CONTINUE"); /*Programmstruktur fehlerhaft !*/ 
+    if(j==prglen) xberror(36,"SELECT/CONTINUE"); /* Error in program structure */ 
     else pc=j+1;
   }
 }
-static void c_restore(PARAMETER *plist,int e) {
-  if(e) {
-    do_restore((int)labels[plist[0].integer].datapointer);
-  //  printf("RESTORE: %d %s\n",plist[0].integer,labels[plist[0].integer].name);
-  } else do_restore(0);
-}
+
+
 
 static char *get_next_data_entry() {
   char *ptr,*ptr2;
@@ -561,38 +584,40 @@ static char *get_next_data_entry() {
   return(ergebnis);
 }
 
+/* Command:  READ <list of vars> */
+
 static void c_read(PARAMETER *plist,int e) {
   char *t;
   for(int i=0;i<e;i++) {
     t=get_next_data_entry();
-    if(t==NULL) xberror(34,""); /* Zu wenig Data */
+    if(t==NULL) xberror(34,""); /* Not enough data */
     else {
-    switch(plist[i].typ) {
-    case PL_ARRAYVAR:
-      xberror(9,"READ Array"); /* Funktion noch nicht moeglich */ 
-      break;
-    case PL_SVAR:
-      free_string((STRING *)plist[i].pointer);
-      if(*t=='\"') *((STRING *)(plist[i].pointer))=string_parser(t);
-      else *((STRING *)(plist[i].pointer))=create_string(t);
-      break;
-    case PL_IVAR:
-      *((int *)(plist[i].pointer))=(int)parser(t);
-      break;
-    case PL_FVAR:
-      *((double *)(plist[i].pointer))=parser(t);
-      break;
-    case PL_AIVAR:
-      mpz_set_str(*(ARBINT *)(plist[i].pointer),t,10);
-      break;
-    case PL_CVAR:
-      *((COMPLEX *)(plist[i].pointer))=complex_parser(t);
-      break;
-    default:
-      xberror(13,"");  /* Type mismatch */
-      dump_parameterlist(&plist[i],1);
-    }
-    free(t);
+      switch(plist[i].typ) {
+      case PL_ARRAYVAR:
+        xberror(9,"READ Array"); /* Function or command is not implemented in this version */ 
+        break;
+      case PL_SVAR:
+        free_string((STRING *)plist[i].pointer);
+        if(*t=='\"') *((STRING *)(plist[i].pointer))=string_parser(t);
+        else *((STRING *)(plist[i].pointer))=create_string(t);
+        break;
+      case PL_IVAR:
+        *((int *)(plist[i].pointer))=(int)parser(t);
+        break;
+      case PL_FVAR:
+        *((double *)(plist[i].pointer))=parser(t);
+        break;
+      case PL_AIVAR:
+        mpz_set_str(*(ARBINT *)(plist[i].pointer),t,10);
+        break;
+      case PL_CVAR:
+        *((COMPLEX *)(plist[i].pointer))=complex_parser(t);
+        break;
+      default:
+        xberror(13,"");  /* Type mismatch */
+        dump_parameterlist(&plist[i],1);
+      }
+      free(t);
     }
   }
 }
@@ -600,8 +625,10 @@ static void c_read(PARAMETER *plist,int e) {
 gmp_randstate_t state;
 int randstate_isinit=0;
 
-/*RANDOMIZE. Hier k"onnte man noch unterscheiden op der parameter int oder big int
-  ist....*/
+/* Command: RANDOMIZE [seed%]
+   TODO: Hier k"onnte man noch unterscheiden, ob der parameter 
+   int oder big int ist....*/
+
 static void c_randomize(PARAMETER *plist, int e) {
   unsigned int seed;
   if(e) seed=plist->integer;
@@ -616,6 +643,8 @@ static void c_randomize(PARAMETER *plist, int e) {
   } 
   gmp_randseed_ui(state, seed);
 }
+
+/* Command: LIST [i%,i%] */
 
 static void c_list(PARAMETER *plist, int e) {
   int i,a=0,o=prglen;
@@ -822,13 +851,13 @@ static int plist_printzeile(FILE *dptr,P_CODE *code, int level) {
   return(level);
 }
 
-/*  PLIST [#n] */
+/* Command: PLIST [#n] */
 
 static void c_plist(PARAMETER *plist, int e) {
   FILEINFO fff=get_fileptr(-4);  /* stdout */
   if(e>0) {
     fff=get_fileptr(plist->integer);
-    if(fff.typ==0) {xberror(24,""); /* File nicht geoeffnet */return;}
+    if(fff.typ==0) {xberror(24,""); return;}  /* File not opened */
   }
   int i,f=0;
   for(i=0;i<prglen;i++) { 
@@ -859,7 +888,9 @@ static void c_save(PARAMETER *plist, int e) {
   }
 }
 
-/*MERGE: batch und PC bleibt wie es ist. Das Programm kann dann weiterlaufen.*/
+/* Command: MERGE t$
+   same as RUN, but batch and pc will stay as they are so the programm can continue at that position.*/
+
 static void c_merge(PARAMETER *plist, int e){
   if(exist(plist->pointer)) {
     if(programbufferlen==0) strcpy(ifilename,plist->pointer);
@@ -867,12 +898,20 @@ static void c_merge(PARAMETER *plist, int e){
   } else xberror(-33,plist->pointer); /* file not found*/
 }
 
-/*LOAD: altes Programm stoppen und loeschen.*/
+/* Command: LOAD t$
+   stop and erase the current program, load a new file.*/
+
 static void c_load(PARAMETER *plist, int e) { 
   newprg();
   c_merge(plist,e); 
 }
+
+/* Command: CHAIN t$ */
+
 static void c_chain(PARAMETER *plist,int e){ c_load(plist,e); do_run(); }
+
+/* Command: LET ... 
+   this is very slow. */
 
 static void c_let(const char *n) {  
   char v[strlen(n)+1],w[strlen(n)+1];
@@ -880,6 +919,7 @@ static void c_let(const char *n) {
   xzuweis(v,w);
 }
 
+/* Command: QUIT [i%] */
 
 void c_quit(PARAMETER *plist, int e) { 
   int ecode=0;
@@ -1522,6 +1562,8 @@ void c_dump(PARAMETER *plist,int e) {
     }
   }
 }
+
+/* Command: END */
 
 static void c_end() { batch=0; pc=0; close_all_files();}
 
@@ -2543,7 +2585,7 @@ static void c_next(PARAMETER *plist,int e) {
    free(buf);
 }
 
-/* FOR
+/* Command: FOR
  * -- erledigt nur die erste Zuweiseung der Variable und betritt dann den Schleifenblock 
  */
 
@@ -2572,11 +2614,14 @@ static void c_for(const char *n) {
   } else xberror(32,n); /* Syntax error */
   free(buf);
 }
+
+/* Command: UNTIL i% */
+
 static void c_until(PARAMETER *plist, int e) {
-  if(pc<=0) {xberror(38,"UNTIL"); /* Befehl im Direktmodus nicht moeglich */ return;}
+  if(pc<=0) {xberror(38,"UNTIL"); return;} /* Command not allowed in interactive mode */
   if(plist->integer==0) {
     int npc=pcode[pc-1].integer;
-    if(npc==-1) xberror(36,"UNTIL"); /*Programmstruktur fehlerhaft */
+    if(npc==-1) xberror(36,"UNTIL"); /* Error in program structure */
     else pc=npc+1;
   }
 }
@@ -2636,7 +2681,8 @@ static int s_wort_sep2(const STRING *t,const STRING *c,int klamb ,STRING *w1, ST
 
 
 
-/* Bei split wollen wir den optionalen int parameter ans ende setzen.
+/* Command: SPLIT t$,t$,i%,var$[,var$]
+   TODO: Bei split wollen wir den optionalen int parameter ans ende setzen.
    ist aber noch nicht wegen kompatibilitaet.*/
 static void c_split(PARAMETER *plist,int e) {
   STRING str1,str2;
@@ -2653,6 +2699,8 @@ double gps_alt,gps_lat=-1,gps_lon=-1;
 double gps_bearing,gps_accuracy,gps_speed;
 double gps_time;
 char *gps_provider;
+
+/* Command: GET_LOCATION nvar,nvar[,nvar,nvar,nvar,nvar,nvar,var$] */
 
 static void c_getlocation(PARAMETER *plist,int e) {
 #ifdef ANDROID
@@ -2675,21 +2723,28 @@ static void c_getlocation(PARAMETER *plist,int e) {
   }
 }
 
+/* Command: POKE i%,i% */
 
 static void c_poke(PARAMETER *plist,int e) {
   char *adr=(char *)INT2POINTER(plist->integer);
   *adr=(char)plist[1].integer;
 }
+
+/* Command: DPOKE i%,i% */
+
 static void c_dpoke(PARAMETER *plist,int e) {
   short *adr=(short *)INT2POINTER(plist->integer);
   *adr=(short)plist[1].integer;
 }
+
+/* Command: LPOKE i%,i% */
+
 static void c_lpoke(PARAMETER *plist,int e) {
   uint32_t *adr=(uint32_t *)INT2POINTER(plist->integer);
   *adr=(uint32_t)plist[1].integer;
 }
 
-/* SOUND channel,frequency [Hz],volume (0-1),duration (s)*/
+/* Command: SOUND channel,frequency [Hz],volume (0-1),duration (s)*/
 
 static void c_sound(PARAMETER *plist,int e) { 
   double duration=-1;
@@ -2704,7 +2759,7 @@ static void c_sound(PARAMETER *plist,int e) {
   do_sound(c,frequency,volume,duration);
 }
 
-/* PLAYSOUND channel,data$[,pitch,volume] */
+/* Command: PLAYSOUND channel,data$[,pitch,volume] */
 
 static void c_playsound(PARAMETER *plist,int e) { 
   int pitch=0x100,volume=0xffff;
@@ -2715,6 +2770,8 @@ static void c_playsound(PARAMETER *plist,int e) {
   if(e>=4) volume= (int)(plist[3].real*0xffff);
   do_playsound(c,plist[1].pointer,plist[1].integer,pitch,volume,0);
 }
+
+/* Command: PLAYSOUNDFILE t$ */
 
 static void c_playsoundfile(PARAMETER *plist,int e) {
   if(exist(plist[0].pointer)) {
@@ -2729,7 +2786,7 @@ static void c_playsoundfile(PARAMETER *plist,int e) {
 }
 
 
-/* WAVE channel,...*/
+/* Command: WAVE channel%,i%[,a,a,a,a] */
 
 static void c_wave(PARAMETER *plist,int e) { 
   int c=-1;
@@ -2753,6 +2810,8 @@ static void c_wave(PARAMETER *plist,int e) {
   extern void ANDROID_speek(char *,double,double,char *);
 #endif
 
+/* Command: SPEAK t$[,a,a,t$] */
+
 static void c_speak(PARAMETER *plist,int e) { 
 #ifdef ANDROID
   double pitch=-1,rate=-1;
@@ -2763,11 +2822,11 @@ static void c_speak(PARAMETER *plist,int e) {
   ANDROID_speek(plist[0].pointer,pitch,rate,enc);
 #endif
 }
+#endif /* DUMMY_LIST */
 
-static void c_eval(PARAMETER *plist,int e) { kommando(plist->pointer); }
-
-#endif
-/* Kommandoliste: muss alphabetisch sortiert sein !   */
+/* List and data structure for all implemented commands.
+   It must be ordered alphabetically. And the first entry will be ignored. 
+   (so speed up searches)              */
 
 const COMMAND comms[]= {
  { P_IGNORE,    " nulldummy", NULL        , 0, 0},

@@ -1,4 +1,4 @@
-/* do_gets.c */
+/* do_gets.c : read a string from stdin with editing (c) Markus Hoffmann */
 
 /* eventually needs readline and curses libraries  */
 
@@ -71,7 +71,7 @@ static int strlen_utf8(const char *s) {
 }
 
 void out_line(const char *prompt,const char *edittext, const int cursorpos) {
-  /* ESC sequenz fuer ganze Zeile l"oschen, cursor an*/
+  /* ESC sequenz for delete whole line, cursor on*/
 #if 0
   putchar(13);
 #else
@@ -84,11 +84,11 @@ void out_line(const char *prompt,const char *edittext, const int cursorpos) {
   if(strlen_utf8(edittext)>cursorpos) {
     for(int i=0;i<strlen_utf8(edittext)-cursorpos;i++) putchar(8);
   }
-  #ifdef ANDROID
-    invalidate_screen();
-  #else
-    fflush(stdout);
-  #endif
+#ifdef ANDROID
+  invalidate_screen();
+#else
+  fflush(stdout);
+#endif
 }
 char *readline(char *prompt) {
   int i,cur=0,tcur=0,len=0,escflag=0,hip=0,hisav=0;
@@ -117,7 +117,6 @@ char *readline(char *prompt) {
 	if(!hisav) {
             add_history(line_read);
             hisav=1;
-	    
 	}
         if(historyp-hip-1>0) hip++;
 	if(history[historyp-hip-1]) strcpy(line_read,history[historyp-hip-1]);
@@ -215,10 +214,10 @@ char *do_gets (char *prompt) {
   line_read=(char *)NULL;
   set_input_mode_echo(1);
   /* Get a line from the user. */
-  line_read = readline (prompt);
+  line_read=readline(prompt);
   set_input_mode_echo(0);
   /* If the line has any text in it, save it on the history. */
-  if (line_read && *line_read) add_history (line_read);
+  if(line_read && *line_read) add_history(line_read);
   reenter=0;
   return(line_read);
 }

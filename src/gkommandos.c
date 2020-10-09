@@ -1301,8 +1301,7 @@ void c_keyevent(PARAMETER *plist,int e) {
   if(e>3 && plist[3].typ!=PL_LEER)  varcastint(plist[3].integer,plist[3].pointer,global_mouses);
   if(e>4 && plist[4].typ!=PL_LEER)  varcastint(plist[4].integer,plist[4].pointer,global_mousex);
   if(e>5 && plist[5].typ!=PL_LEER)  varcastint(plist[5].integer,plist[5].pointer,global_mousey);
-#endif
-#ifdef FRAMEBUFFER
+#elif defined FRAMEBUFFER
    FB_keyboard_events(1);
 #endif
 #if defined USE_X11 || defined FRAMEBUFFER
@@ -1344,8 +1343,7 @@ void c_keyevent(PARAMETER *plist,int e) {
   } else if(event.type==TerminateEventLoop) {
     puts("** BREAK");
   }
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
   SDL_Event event;
   STRING str;
   char buf[4];
@@ -1370,6 +1368,9 @@ void c_keyevent(PARAMETER *plist,int e) {
    FB_keyboard_events(0);
 #endif
 }
+
+
+/* Function EVENT?(mask%) */
 
 int f_eventf(int mask) {
 #if defined USE_X11 || defined FRAMEBUFFER
@@ -1600,6 +1601,10 @@ void c_allevent(PARAMETER *plist,int e) {
   }
 #endif
 }
+
+
+/* Command: TITLEW */
+
 void c_titlew(PARAMETER *plist,int e) {
   int winnr=DEFAULTWINDOW;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
@@ -1607,19 +1612,22 @@ void c_titlew(PARAMETER *plist,int e) {
     graphics();
     if(window[winnr].flags&WIN_CREATED) {
 #ifdef WINDOWS_NATIVE
-  SetWindowText(window[winnr].win_hwnd,plist[1].pointer);
+      SetWindowText(window[winnr].win_hwnd,plist[1].pointer);
 #elif defined USE_X11
-    if (!XStringListToTextProperty((char **)&(plist[1].pointer), 1, &window[winnr].win_name))    
-      printf("Couldn't set Name of Window.\n");
-    XSetWMName(window[winnr].display, window[winnr].win, &window[winnr].win_name);
+      if(!XStringListToTextProperty((char **)&(plist[1].pointer), 1, &window[winnr].win_name))
+        printf("X11-Error: Couldn't set name of window.\n");
+      XSetWMName(window[winnr].display, window[winnr].win, &window[winnr].win_name);
 #elif defined USE_SDL
-    SDL_WM_SetCaption(plist[1].pointer,NULL);
+      SDL_WM_SetCaption(plist[1].pointer,NULL);
 #endif
-    if(window[winnr].title) free(window[winnr].title);
-    window[winnr].title=strdup(plist[1].pointer);
+      if(window[winnr].title) free(window[winnr].title);
+      window[winnr].title=strdup(plist[1].pointer);
     } else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: INFOW */
+
 void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
   int winnr=usewindow;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
@@ -1627,15 +1635,18 @@ void c_infow(PARAMETER *plist,int e) {  /* Set the Icon Name */
     graphics();
     if(window[winnr].flags&WIN_CREATED) {
 #ifdef USE_X11
-    XSetIconName(window[winnr].display, window[winnr].win,plist[1].pointer);
+      XSetIconName(window[winnr].display, window[winnr].win,plist[1].pointer);
 #elif defined USE_SDL
-    SDL_WM_SetCaption(NULL,plist[1].pointer);
+      SDL_WM_SetCaption(NULL,plist[1].pointer);
 #endif
-    if(window[winnr].info) free(window[winnr].info);
-    window[winnr].info=strdup(plist[1].pointer);
+      if(window[winnr].info) free(window[winnr].info);
+      window[winnr].info=strdup(plist[1].pointer);
     } else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: CLEARW [#n] */
+
 void c_clearw(PARAMETER *plist,int e) {
   int winnr=usewindow;
   if(e) winnr=plist->integer;
@@ -1671,6 +1682,9 @@ void c_clearw(PARAMETER *plist,int e) {
     } else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: CLOSEW [#n] */
+
 void c_closew(PARAMETER *plist,int e) {
   int winnr=usewindow;
   if(e) winnr=plist->integer;
@@ -1681,6 +1695,9 @@ void c_closew(PARAMETER *plist,int e) {
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: OPENW */
+
 void c_openw(PARAMETER *plist,int e) {
   int winnr=DEFAULTWINDOW;
   if(e) winnr=plist->integer;
@@ -1690,6 +1707,8 @@ void c_openw(PARAMETER *plist,int e) {
     else xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: SIZEW */
 
 void c_sizew(PARAMETER *plist,int e) {
   int winnr=usewindow;
@@ -1701,6 +1720,9 @@ void c_sizew(PARAMETER *plist,int e) {
   } else if(winnr==0) xberror(97,"SIZEW"); /* This operation %s is not allowed for root window  */
   else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: MOVEW */
+
 void c_movew(PARAMETER *plist,int e) {
   int winnr=usewindow;
   if(plist->typ!=PL_LEER) winnr=plist->integer;
@@ -1711,6 +1733,8 @@ void c_movew(PARAMETER *plist,int e) {
   } else if(winnr==0) xberror(97,"MOVEW"); /* This operation %s is not allowed for root window  */
   else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: FULLW */
 
 void c_fullw(PARAMETER *plist,int e) {
   int winnr=usewindow;
@@ -1728,12 +1752,14 @@ void c_fullw(PARAMETER *plist,int e) {
         DefaultScreen(window[winnr].display)),&root,&ox,&oy,&ow,&oh,&ob,&d);
       do_sizew(&window[winnr],ow,oh);
 #elif defined USE_SDL
-/*Hier haben wir die chance, den fullscreenmodus zu aktivieren...*/
+  /* TODO: Here we have the chance to activate the full screen mode in SDL... */
 #endif
     } else  xberror(99,""); /* Window %s does not exist  */
   } else if(winnr==0) xberror(97,"FULLW"); /* This operation %s is not allowed for root window  */
   else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: TOPW */
 
 void c_topw(PARAMETER *plist,int e) {
   int winnr=usewindow;
@@ -1748,6 +1774,9 @@ void c_topw(PARAMETER *plist,int e) {
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: BOTTOMW */
+
 void c_bottomw(PARAMETER *plist,int e) {
   int winnr=usewindow;
   if(e) winnr=plist->integer;
@@ -1761,6 +1790,9 @@ void c_bottomw(PARAMETER *plist,int e) {
     } else  xberror(99,""); /* Window %s does not exist  */
   } else xberror(98,""); /* Illegal Window number %s (0-16) */
 }
+
+/* Command: DEFMOUSE */
+
 #ifndef USE_GEM
 #include "bitmaps/biene.bmp"
 #include "bitmaps/biene_mask.bmp"
@@ -1880,9 +1912,7 @@ void c_defmouse(PARAMETER *plist,int e) {
 
 /*   graphic window print functions. Should probably be unified with the
      framebuffer terminal routines. Only few VT100 codes are implemented, 
-     no colors, no attibutes.*/
-
-
+     no colors, no attibutes. */
 
 #define LINEFEED() {lin++; col=0; \
     if(lin*window[usewindow].chh>=window[usewindow].h){\
@@ -2069,9 +2099,10 @@ static void g_out(char a) {
   } 
   }
 }
+
+
 static inline void g_outs(STRING t) {
-  int i;
-  if(t.len) { for(i=0;i<t.len;i++) g_out(t.pointer[i]); }
+  if(t.len) {int i; for(i=0;i<t.len;i++) g_out(t.pointer[i]); }
 }
 
 
@@ -2121,9 +2152,7 @@ void c_alert(PARAMETER *plist,int e) {
   STRING str;
   str.pointer=malloc(sizeof(buffer));
   char *a=buffer;
-  *a++='[';
-  *a++='0'+plist->integer;
-  *a++=']';
+  *a++='['; *a++='0'+plist->integer; *a++=']';
   *a++='[';
   int i;
   for(i=0;i<plist[1].integer;i++) *a++=((char *)plist[1].pointer)[i];
@@ -2151,9 +2180,9 @@ void c_fileselect(PARAMETER *plist,int e) {
 
 
 int menuaction=-1;
-int menuactiontype=0;    /*  0= menuaction ist zeilennummer
-                             1= menuaction ist pointer in bytecode
-			     3= menuaction ist reelle adresse void *(function())*/
+int menuactiontype=0;    /*  0= menuaction is line number
+                             1= menuaction is pointer into bytecode
+			     3= menuaction is real address void *(function()) */
 
 
 MENUENTRY menuentry[MAXMENUENTRYS];
@@ -2250,27 +2279,24 @@ void c_menuset(PARAMETER *plist, int e) {
     else xberror(62,"");  /* MENU wrong */
   }
 }
-void c_menukill(char *n) {
-  if(menuaction!=-1) menuaction=-1;
-}
+void c_menukill(char *n) { if(menuaction!=-1) menuaction=-1; }
 
 
-/**************  RSRC-Library *******************************************/
+/************  RSRC-Library wrappers ************/
 
 
 void c_rsrc_load(PARAMETER *plist,int e) {
   graphics();  /* Wegen Screendimensionen */
   if(rsrc_load(plist->pointer)) xberror(72,"");  /*  Fehler bei RSRC_LOAD*/
 }
-void c_rsrc_free(char *n) {
-  if(rsrc_free()) xberror(73,"");  /*  Fehler bei RSRC_FREE*/
-}
-void c_objc_add(PARAMETER *plist,int e) {
-  objc_add((OBJECT *)INT2POINTER(plist->integer),plist[1].integer,plist[2].integer);
-}
-void c_objc_delete(PARAMETER *plist,int e) {
-  objc_delete((OBJECT *)INT2POINTER(plist->integer),plist[1].integer);
-}
+
+void c_rsrc_free(char *n)                  { if(rsrc_free()) xberror(73,"");  /*  Fehler bei RSRC_FREE*/ }
+void c_objc_add(PARAMETER *plist,int e)    { objc_add((OBJECT *)INT2POINTER(plist->integer),plist[1].integer,plist[2].integer); }
+void c_objc_delete(PARAMETER *plist,int e) { objc_delete((OBJECT *)INT2POINTER(plist->integer),plist[1].integer); }
+
+
+/*** XLOAD and XRUN ***/
+
 static int do_xload(char *n) {
   int ret=0;
   char *name=fileselector("Load X11-Basic program:","./*.bas","");
@@ -2288,10 +2314,8 @@ static int do_xload(char *n) {
   free(name);
   return(ret);
 }
-void c_xload(char *n) {
-  do_xload(n);
-}
-void c_xrun(char *n) {
-  if(!do_xload(n)) do_run();
-}
+
+void c_xload(char *n) { do_xload(n); }
+void c_xrun(char *n)  { if(!do_xload(n)) do_run(); }
+
 #endif /* NOGRAPHICS */

@@ -28,7 +28,8 @@ void io_error(int,char *);
 
 /* read a whole line from an open (ASCII) file n 
  * reads until \n or EOF 
- * reads at maximum size bytes. */
+ * reads at maximum size bytes. 
+ */
 
 char *lineinput(FILE *n, char *line,int size) {
   int c; int i=0;
@@ -112,7 +113,7 @@ int bsave(const char *name, char *adr, size_t len) {
 /* loads the file with filename name to a memory location at address adr.
    a maximum of len bytes are read. if len==-1 the whole file is read. 
    RETURNS the number of read bytes or 0 on error.
-   */
+ */
 
 size_t bload(const char *name, char *adr, size_t len) {	
   FILE *fdis=fopen(name,"rb");
@@ -141,42 +142,63 @@ int exist(const char *filename) {
 }
 #endif
 
+/* Return device number of the file given by filename 
+   (ID of device containing the file) */
+
 int stat_device(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_dev);  
 }
+
+/* Return inode of the file given by filename */
+
 int stat_inode(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_ino);  
 }
+
+/* Return file protection mode of the file given by filename */
+
 int stat_mode(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_mode);  
 }
+
+/* Return number of hard links of the file given by filename */
+
 int stat_nlink(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_nlink);  
 }
+
+/* Return user id of the owner of the file given by filename */
+
 int stat_uid(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_uid);  
 }
+
+/* Return goup id of the file given by filename */
+
 int stat_gid(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);
   if(retc==-1) io_error(errno,"stat");
   return(fstats.st_gid);  
 }
+
+/* Return size in bytes of the file given by filename */
+
 int stat_size(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);

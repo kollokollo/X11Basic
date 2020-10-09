@@ -49,13 +49,10 @@ char **param_argumente=NULL;
 int everytime=0,alarmpc=-1,alarmpctype=0;
 
 
-
-
-
 /*
- * Removes all struktures/variables/labels/procs/data from memory, 
+ * Removes all structures/variables/labels/procs/data from memory, 
  * including stack clearance, 
- * such that a new program (.bas or bytecode) cn be loaded. 
+ * such that a new program (.bas or bytecode) can be loaded. 
  */
 
 void clear_program() {
@@ -70,7 +67,7 @@ void clear_program() {
   clear_procliste();
 }
 
-/* cleans up the pcode strukture and frees all allocaed memory
+/* cleans up the pcode structure and frees all allocated memory
  */
 
 void free_pcode(int l) {
@@ -120,7 +117,7 @@ int loadprg(const char *filename) {
 
 
 
-/* gently quit the X11-Baisic interpreter and clean up. 
+/* gently quit the X11-Basic interpreter and clean up. 
  */
 
 void quit_x11basic(int c) {
