@@ -275,15 +275,16 @@
 #define  c_plot NULL
 #define  c_polyfill NULL
 #else
-/*********************/
+
+/* Save the internal program buffer to a file */
+
 static int saveprg(const char *fname) {
   char *buf=malloc(programbufferlen);
   int i=0;
   while(i<programbufferlen) {
     if(programbuffer[i]==0 || programbuffer[i]=='\n')
       buf[i]='\n';
-    else
-      buf[i]=programbuffer[i];
+    else buf[i]=programbuffer[i];
     i++;
   }
   return(bsave(fname,buf,programbufferlen));
@@ -459,25 +460,26 @@ static void c_shell(PARAMETER *plist,int e) {
   if(spawn_shell(argv)==-1) io_error(errno,"shell");
 }
 
+/* Command: EDIT */
+
 static void c_edit(const char *n) {
 #ifndef ANDROID
-    char filename[strlen(ifilename)+8];
-    char buffer[256];
-    char *buffer2=strdup(ifilename);
-    sprintf(filename,"%s.~~~",ifilename);
-    saveprg(filename);
-    sprintf(buffer,"$EDITOR %s",filename); 
-    if(system(buffer)==-1) io_error(errno,"system");
-    c_new(NULL);  
-    strcpy(ifilename,buffer2);
-    free(buffer2);
-    mergeprg(filename);
-    sprintf(buffer,"rm -f %s",filename); 
-    if(system(buffer)==-1) io_error(errno,"system");
+  char filename[strlen(ifilename)+8];
+  char buffer[256];
+  char *buffer2=strdup(ifilename);
+  sprintf(filename,"%s.~~~",ifilename);
+  saveprg(filename);
+  sprintf(buffer,"$EDITOR %s",filename); 
+  if(system(buffer)==-1) io_error(errno,"system");
+  c_new(NULL);  
+  strcpy(ifilename,buffer2);
+  free(buffer2);
+  mergeprg(filename);
+  if(unlink(filename)==-1) io_error(errno,"unlink");
 #else
-    puts("The EDIT command is not available in the ANDROID version.\n"
-    "Please use Menu --> Editor to edit the current program.");
-    xberror(9,"EDIT"); /* Funktion nicht implementiert */
+  puts("The EDIT command is not available in the ANDROID version.\n"
+       "Please use Menu --> Editor to edit the current program.");
+  xberror(9,"EDIT"); /* Function or command is not implemented in this version */
 #endif
 }
 
@@ -839,6 +841,8 @@ static void c_plist(PARAMETER *plist, int e) {
   }
 }
 
+/* Command: SAVE [f$] 
+   if the file already exist the old file will be renamed to .bak */
 
 static void c_save(PARAMETER *plist, int e) { 
   if(programbufferlen) {
@@ -847,9 +851,9 @@ static void c_save(PARAMETER *plist, int e) {
     else name=ifilename;
     if(*name==0) name=ifilename;
     if(exist(name)) {
-      char buf[100];
-      sprintf(buf,"mv %s %s.bak",name,name);
-      if(system(buf)==-1) io_error(errno,"system");
+      char buf[strlen(name)+8];
+      sprintf(buf,"%s.bak",name);
+      if(rename(name,buf)==-1) io_error(errno,"rename");
     }
     saveprg(name);
   }
@@ -2767,7 +2771,6 @@ static void c_eval(PARAMETER *plist,int e) { kommando(plist->pointer); }
 /* Kommandoliste: muss alphabetisch sortiert sein !   */
 
 const COMMAND comms[]= {
-
  { P_IGNORE,    " nulldummy", NULL        , 0, 0},
  { P_REM,       "!"         , NULL        , 0,-1,(unsigned short []){PL_EVAL}},
  { P_PLISTE,    "?"         , c_print     , 0,-1,(unsigned short []){PL_EVAL}},
