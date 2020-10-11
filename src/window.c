@@ -760,9 +760,9 @@ static void *memrevcpy(char *dest, const char *src, size_t n) {
 }
 #endif
 
-/*Eine einfache Bitmap auf den Screen bringen, hierbei gibt es 
-  fordergrundfarbe, hintergrundfarbe und Graphmodi zu berücksichtigen.
-  */
+/* Map a simple momochrome bitmap to the screen at coordinats (x,y). 
+ * Use foreground and background colors and graphmode (transparencncy). 
+ */
 
 void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
 #ifdef USE_X11
@@ -772,7 +772,7 @@ void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
 #elif defined USE_SDL
   SDL_Surface *data;
   SDL_Surface *image;
-  int bpl=(w+1)>>3;
+  int bpl=(w>0?(((w-1)>>3)+1):0);
   data=SDL_CreateRGBSurface(SDL_SWSURFACE,w,h,1, 0,0,0,0);
   memrevcpy(data->pixels,adr,bpl*h);
   data->pitch=bpl;
@@ -797,7 +797,7 @@ void put_bitmap(const char *adr,int x,int y,unsigned int w, unsigned int h) {
   SDL_FreeSurface(data);
   SDL_Rect a={0,0,image->w,image->h};
   SDL_Rect b={x,y,image->w,image->h};
-//  printf("putbitmap: %dx%d %d %d\n",image->w,image->h,bpl,image->pitch);
+ // printf("putbitmap: %dx%d %d %d\n",image->w,image->h,bpl,image->pitch);
   SDL_BlitSurface(image, &a,window[usewindow].display, &b);
   SDL_FreeSurface(image);
 #elif defined FRAMEBUFFER

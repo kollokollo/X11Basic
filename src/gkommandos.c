@@ -379,10 +379,14 @@ void c_put(PARAMETER *plist,int e) {
 #endif
 }
 
+/* Command: PUT_BITMAP t$,i%,i%,i%,i%  */
+
 void c_put_bitmap(PARAMETER *plist,int e) {  
   graphics();	 
   put_bitmap(plist[0].pointer,plist[1].integer,plist[2].integer,plist[3].integer,plist[4].integer);
 }
+
+/* Command: SGET var$ */
 
 void c_sget(PARAMETER *plist,int e) {
   int len;
