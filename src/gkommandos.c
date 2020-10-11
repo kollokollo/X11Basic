@@ -1287,6 +1287,34 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
 #endif
 }
 
+#ifdef WINDOWS
+/* Helper function to get a modified character from keyboard*/
+
+static char GetModifiedKey(char c,int shiftstate,int capsstate,int modestate, int ctrstate,int altstate) {
+  short sc = VkKeyScan(c);
+  // printf("Scan-Code: %04x shift=%d, caps=%d AltGr=%d ctr=%d alt=%d\n",sc,shiftstate,capsstate,modestate,ctrstate,altstate);
+  if(sc==-1) printf("WIN32 error: No key mapping for %c \n",c);
+
+    // sc & 0xff is the base key, without any modifiers
+    unsigned int code = (unsigned int)sc & 0xff;
+
+    // set shift key pressed
+    unsigned char b[256];
+    bzero(b,256);
+    if(shiftstate) b[0x10]=0x80; /* Shift key is scan code 0x10 */
+    if(capsstate)  b[0x14]=0x1;  /* CapsLock key is scan code 0x14 */
+    if(modestate)  b[0x38]=0x80; /* keycode 0x38 ? */
+    if(ctrstate)   b[0x11]=0x80; /* Ctrl key is scan code 0x11 */
+    if(altstate)   b[0x12]=0x80; /* Alt key is scan code 0x12 */
+
+    short unsigned int r=0;
+    // return value of 1 expected (1 character copied to r)
+  if(1!=ToAscii(code, code, b, &r, 0)) printf("WIN32 error: Could not translate modified state\n");
+  return (char)r;
+}
+#endif
+
+
 /* Command: KEYEVENT  [nvar,nvar,var$,nvar,nvar,nvar,nvar,nvar] */
 
 void c_keyevent(PARAMETER *plist,int e) {
@@ -1360,11 +1388,30 @@ void c_keyevent(PARAMETER *plist,int e) {
   str.pointer=buf;
   str.len=1;
 
+/* Evaluate modifiers and at least also return uppercase charackters. SDL cannot map this, so 
+   we need a sort of workaround here. */
+
+/* TODO: It looks like the AltGr key is not recognized ...*/
+  if(((event.key.keysym.mod)!=KMOD_NONE) && *buf>0) {
+ //    printf("Mods-on: %c %04x\n",*buf,event.key.keysym.mod);
+#ifdef WINDOWS
+    *buf=GetModifiedKey(*buf,(event.key.keysym.mod&KMOD_SHIFT)!=0,
+                             (event.key.keysym.mod&KMOD_CAPS)!=0,(event.key.keysym.mod&KMOD_MODE)!=0,
+			     (event.key.keysym.mod&KMOD_CTRL)!=0,(event.key.keysym.mod&KMOD_ALT)!=0);
+#endif
+  }
+  int keystate=event.key.state; /* pressed or released */
+
+/* SDL has a flag which indicates, if the key was in keyrepeat mode. This 
+   is also returned in the state variable. damn, works only in SDL 2.0
+
+  if(event.key.repeat) keystate|=0x80;
+*/
   if(e>0 && plist[0].typ!=PL_LEER)  varcastint(plist[0].integer,plist[0].pointer,event.key.keysym.scancode);
   if(e>1 && plist[1].typ!=PL_LEER)  varcastint(plist[1].integer,plist[1].pointer,event.key.keysym.sym);
   if(e>2 && plist[2].typ!=PL_LEER)  varcaststring(plist[2].integer,plist[2].pointer,str);
   if(e>3 && plist[3].typ!=PL_LEER)  varcastint(plist[3].integer,plist[3].pointer,event.key.keysym.mod);
-  if(e>4 && plist[4].typ!=PL_LEER)  varcastint(plist[4].integer,plist[4].pointer,event.key.state);
+  if(e>4 && plist[4].typ!=PL_LEER)  varcastint(plist[4].integer,plist[4].pointer,keystate);
 #endif
 #ifdef FRAMEBUFFER
    FB_keyboard_events(0);
