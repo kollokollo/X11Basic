@@ -1673,7 +1673,15 @@ void c_clearw(PARAMETER *plist,int e) {
       XCopyGC(window[winnr].display,sgc,GCForeground, window[winnr].gc);
       XFreeGC(window[winnr].display,sgc); 
 #elif defined USE_SDL
-      SDL_FillRect(window[winnr].display,NULL,0);
+  //    printf("FGC=%08x\n",window[winnr].fcolor);
+  //    printf("BGC=%08x\n",window[winnr].bcolor);
+
+        /* TODO: adapt color pattern, this is just a workaround */
+  	unsigned int bc=window[winnr].bcolor>>8;
+  //    printf("BGC=%08x\n",bc);
+	
+      SDL_FillRect(window[winnr].display,NULL,bc);
+  //    SDL_FillRect(window[winnr].display,NULL,SDL_MapRGB(window[winnr].display->format,window[winnr].bcolor));
 #elif defined USE_GEM
       v_clrwk(window[winnr].vdi_handle);
 #elif defined FRAMEBUFFER
