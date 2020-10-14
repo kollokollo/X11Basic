@@ -732,6 +732,7 @@ x11basic.eps : ../artwork/x11basicVersion.fig
 	convert  $< $@
 
 install : xbasic fbxbasic x11basic.svg x11basic.desktop libx11basic.so x11basic.h xb2csol.h x11basic.a xbvm xbbc xbc xb2c bas2x11basic
+	install -d $(ICONDIR)
 	install -m 644 x11basic.svg $(ICONDIR)/
 	install -m 644 x11basic.desktop $(DESKTOPDIR)/
 	install -s -m 755 xbasic $(BINDIR)/
