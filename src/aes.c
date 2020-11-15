@@ -254,11 +254,12 @@ void load_GEMFONT(int n) {
   }
 #endif
 }
-/* -------------------------------- AES-Implementationen ------------------*/
 
 
-/* Form-Alert-Routine. Dem GEM nachempfunden.
-(c) markus Hoffmann   1998               */
+/* Form-Alert-Routine. 
+ * Similar to ATARI ST GEM function.
+ * (c) Markus Hoffmann   1998
+ */
 
 double ltext(int, int, double, double, double , int, char *);
 
@@ -266,11 +267,12 @@ double ltext(int, int, double, double, double , int, char *);
 short form_alert(short dbut,char *n) {return(form_alert2(dbut,n,strlen(n),NULL));}
 #endif
 
-/* Diese Funktion kann ja auch Input-Felder annehmen. Es können
-   0-bytes in n sein.*/
+/* This is a modified alert function which can have also 
+ * input fields. It is allowed that the Format String contains zero bytes.
+ */
 
 int form_alert2(int dbut,char *nn,int size, char *tval) {
-  char *mbuffer=malloc(sizeof(OBJECT)*64+sizeof(TEDINFO)*32+2*32*80+strlen(nn));
+  char *mbuffer=malloc(sizeof(OBJECT)*64+sizeof(TEDINFO)*32+2*32*80+size);
   bzero(mbuffer,sizeof(OBJECT)*64+sizeof(TEDINFO)*32+2*32*80);
 
   TEDINFO *tedinfo=(TEDINFO *)(mbuffer+sizeof(OBJECT)*64);
@@ -278,7 +280,7 @@ int form_alert2(int dbut,char *nn,int size, char *tval) {
   char *tmplt=(char *)(mbuffer+sizeof(OBJECT)*64+sizeof(TEDINFO)*32);
   char *valid=(char *)(mbuffer+sizeof(OBJECT)*64+sizeof(TEDINFO)*32+32*80);
   char *n=(char *)(mbuffer+sizeof(OBJECT)*64+sizeof(TEDINFO)*32+32*80*2);
-  memcpy(n,nn,strlen(nn));
+  memcpy(n,nn,size);
   char *bzeilen[30],*bbuttons[30],*buffer[30];
   int bzeilenlen[30],bbuttonslen[30];
   int anzzeilen=0,anzbuttons=0,anztedinfo=0,anzbuffer=0;
@@ -808,7 +810,7 @@ static void draw_object(OBJECT *tree,int idx,int rootx,int rooty) {
     load_GEMFONT(FONT_DEFAULT);}
     break;
   default:
-    printf("Unbekanntes Objekt #%d\n",tree[idx].ob_type);
+    printf("Unknown aes object #%d\n",tree[idx].ob_type);
   }
 
 /* Rand zeichnen */
