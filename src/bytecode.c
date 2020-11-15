@@ -2452,7 +2452,7 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   add_rodata(cb,ifilename,strlen(ifilename));  /* store filename */
   int len=cb->textseglen;
   int rodatalen=cb->rodataseglen;
-  int dlen=cb->dataseglen;
+  int dlen=cb->sdataseglen;
   /* align to even adresses: */
   len=(len+3)&0xfffffffc;
   rodatalen=(rodatalen+3)&0xfffffffc;
