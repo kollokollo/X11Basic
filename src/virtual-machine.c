@@ -31,11 +31,11 @@
 
 /* For performance reasons the verbose mode can be switched off, 
  * where it does not make sense (e.g. for Android) */
-// #define USE_VERBODE
+// #define USE_VERBOSE
 
 #ifdef USE_VERBOSE
 extern int verbose;
-#define  VERBOSE(...)  if(verbose) printf(__VA_ARGS__)
+#define  VERBOSE(...)  if(verbose>0) printf(__VA_ARGS__)
 #else 
 #define  VERBOSE(...) 
 #endif

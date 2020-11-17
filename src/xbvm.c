@@ -1,9 +1,9 @@
 /* XBVM.C   The X11-Basic virtual machine.  (c) Markus Hoffmann */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
- * ======================================================================
- * X11BASIC is free software and comes with NO WARRANTY - read the file
- * COPYING for details
+ * ================================================================
+ * X11BASIC is free software and comes with NO WARRANTY - 
+ * read the file COPYING for details.
  */
 
 #include <stdio.h>
@@ -57,7 +57,7 @@ static void intro() {
          "*    ====> Version without graphics support <====        *\n"
 #else
          "***  " FEATURE1 FEATURE2 FEATURE3 FEATURE4 FEATURE5 FEATURE6 FEATURE7 
-	      FEATURE8 FEATURE9 FEATURE10 "          ***\n"
+	      FEATURE8 FEATURE9 FEATURE10 FEATURE11 "     ***\n"
 #endif
 #ifdef GERMAN
          "* Programmversion vom     %30s *\n"
@@ -135,7 +135,6 @@ static void show_embedded_docu(char *filename) {
 
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count;
-  /* process command line parameters */
   for(count=1;count<anzahl;count++) {
     if(!strcmp(argumente[count],"--eval")) {
       printf("%.13g\n",parser(argumente[++count]));
@@ -144,7 +143,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
       if(p[0]==':') { /* If it is hex-coded bytecode, load and run it...*/
         bcpc=inhexs(p+1);
 	// memdump(bcpc.pointer,bcpc.len);
-  	do_run(); /*set variables etc to zero */
+  	do_run(); /* set variables etc to zero */
   	run_bytecode(bcpc.pointer,bcpc.len);
       } else kommando(p);
     } 
@@ -180,7 +179,7 @@ static int loadbcprg(char *filename) {
   fclose(dptr);
   bcpc.pointer=malloc(bcpc.len+1);
   bload(filename,bcpc.pointer,bcpc.len);
-  if(verbose) printf("%s loaded (%d Bytes)\n",filename,bcpc.len);
+  if(verbose>0) printf("%s loaded (%d Bytes)\n",filename,bcpc.len);
  // memdump(bcpc.pointer,32);
  
   /* Check if it is a valid header...*/
@@ -189,7 +188,7 @@ static int loadbcprg(char *filename) {
     bcpc.len=bytecode_make_bss(bytecode,&bcpc.pointer,bcpc.len);
     programbufferlen=bcpc.len;
     programbuffer=bcpc.pointer;
-    if(verbose) print_bytecode_info(bytecode);
+    if(verbose>0) print_bytecode_info(bytecode);
     return(0);
   } else {
     printf("ERROR: file format not recognized. $%02x $%02x\n",bcpc.pointer[0],bcpc.pointer[1]);
@@ -232,7 +231,7 @@ int main(int anzahl, char *argumente[]) {
    #endif
     }
     if(!exist(filename)) printf("ERROR: could not link X11-Basic code from <%s>.\n",filename);
-    if(verbose) printf("selfseek=%s %d\n",selfseek,s);
+    if(verbose>0) printf("selfseek=%s %d\n",selfseek,s);
     FILE *dptr=fopen(filename,"rb"); 
     fseek(dptr,s,SEEK_SET);
     bcpc.len=lof(dptr)-s; 
@@ -253,7 +252,7 @@ int main(int anzahl, char *argumente[]) {
     sleep(5);
    #endif
 
-    if(verbose) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
+    if(verbose>0) printf("%s loaded (%d Bytes)\n",argumente[0],bcpc.len);
     if(fix_bytecode_header((BYTECODE_HEADER *)bcpc.pointer)==0) {
       BYTECODE_HEADER *bytecode=(BYTECODE_HEADER *)bcpc.pointer;
       

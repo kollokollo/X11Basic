@@ -290,7 +290,7 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
 
 int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
   if(((char *)bytecode)[0]==BC_BRAs && ((char *)bytecode)[1]==sizeof(BYTECODE_HEADER)-2) {
-    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    if(verbose>0) printf("Bytecode header found (V.%x)\n",bytecode->version);
     #ifdef IS_BIG_ENDIAN
     WSWAP((char *)&bytecode->version);
     #endif
@@ -1196,7 +1196,7 @@ void run_bytecode(char *adr,int len) {
   bcpc.pointer=adr;
   bcpc.len=len;
   BYTECODE_HEADER *bh=(BYTECODE_HEADER *)adr;
-  if(verbose) printf("Virtual Machine: %d bytes.\n",bcpc.len);
+  if(verbose>0) printf("Virtual machine: %d bytes.\n",bcpc.len);
   if(verbose>1) memdump((unsigned char *)bcpc.pointer,bcpc.len);
   int n;
   char *rodata=adr+sizeof(BYTECODE_HEADER)+bh->textseglen;

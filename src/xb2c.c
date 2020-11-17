@@ -130,7 +130,7 @@ static int frishmemcpy(unsigned char *d,unsigned char *s,unsigned int n) {
 static void data_section(FILE *optr) {
   int i=0,c;
   int count=0;
-  if(verbose) {
+  if(verbose>0) {
     printf("Make data section ...");
     fflush(stdout);
   }
@@ -171,7 +171,7 @@ static void data_section(FILE *optr) {
     }
 
   }
-  if(verbose) printf(" (done.)\n");
+  if(verbose>0) printf(" (done.)\n");
 }
 
 static void translate(FILE *optr) {
@@ -187,13 +187,13 @@ static void translate(FILE *optr) {
 
   int a=bytecode->symbolseglen/sizeof(BYTECODE_SYMBOL);
   int vidx[a];
-  if(verbose) {
+  if(verbose>0) {
     printf("Translate ... ");
     fflush(stdout);
   }
   
   if(a>0) { 
-    if(verbose) {printf("protos ... ");fflush(stdout);}
+    if(verbose>0) {printf("protos ... ");fflush(stdout);}
     fprintf(optr,"\n/* Function prototypes */\n");
     for(i=0;i<a;i++) {
       if(symtab[i].typ==STT_FUNC) {
@@ -206,7 +206,7 @@ static void translate(FILE *optr) {
   
   /*Jetzt Variablen:*/
   if(a>0) { 
-    if(verbose) {printf("variables ... ");fflush(stdout);}
+    if(verbose>0) {printf("variables ... ");fflush(stdout);}
     int count=0;
     fprintf(optr,"\n/* Variables */\n");
     for(i=0;i<a;i++) {
@@ -232,7 +232,7 @@ static void translate(FILE *optr) {
       fflush(optr);
     }
   }
-  if(verbose) {printf("init ... ");fflush(stdout);}
+  if(verbose>0) {printf("init ... ");fflush(stdout);}
   
   if(nomain) {
     char nn[256];
@@ -303,7 +303,7 @@ static void translate(FILE *optr) {
       fflush(optr);
     }
   }
-  if(verbose) {printf("TEXT ... ");fflush(stdout);}
+  if(verbose>0) {printf("TEXT ... ");fflush(stdout);}
   i=0;
   while((cmd=bcpc[i]) && i<bytecode->textseglen) {
     fflush(optr);
@@ -721,7 +721,7 @@ static void translate(FILE *optr) {
     }
   }
   fprintf(optr,"}\n");
-  if(verbose)  printf(" (done.)\n");
+  if(verbose>0)  printf(" (done.)\n");
 }
 
 static int loadbcprg(char *filename, FILE *optr) {  
@@ -742,7 +742,7 @@ static int loadbcprg(char *filename, FILE *optr) {
 #ifdef IS_BIG_ENDIAN
     WSWAP((char *)&bytecode->version);
 #endif
-    if(verbose) printf("Bytecode header found (V.%x)\n",bytecode->version);
+    if(verbose>0) printf("Bytecode header found (V.%x)\n",bytecode->version);
     if(bytecode->version!=BC_VERSION) {
       printf("xb2c: ERROR: Cannot translate this bytecode.\n"
       "This bytecode was compiled for a different version (%04x) of "

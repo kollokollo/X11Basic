@@ -2406,7 +2406,7 @@ int compile(COMPILE_BLOCK *cb,int compile_flags) {
     }
   }
   if(verbose>1) printf("PASS B: %d relocations\n",cb->anzreloc);
-  else if(verbose) printf("%d\trelocations.\n",cb->anzreloc);
+  else if(cb->comp_flags&COMPILE_VERBOSE) printf("%d\trelocations.\n",cb->anzreloc);
   int dummy=0;
   int a,b;
   for(int i=0;i<cb->anzreloc;i++) {
@@ -2444,7 +2444,7 @@ int compile(COMPILE_BLOCK *cb,int compile_flags) {
  */
 
 int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
-  if(verbose) {printf("--> %s [",name);fflush(stdout);}
+  if(verbose>0) {printf("--> %s [",name);fflush(stdout);}
   int fdis=open(name,O_CREAT|O_BINARY|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP);
   if(fdis==-1) {perror("open");return(-1);}
   BYTECODE_HEADER h;
@@ -2474,7 +2474,7 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   h.version=cb->bc_version;
   h.relseglen=0;
 
-  if(verbose) print_bytecode_info(&h);
+  if(verbose>0) print_bytecode_info(&h);
   #ifdef IS_BIG_ENDIAN
   WSWAP((char *)&h.version);
   LWSWAP((short *)&h.textseglen);
@@ -2509,6 +2509,6 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   }
 #endif
   if(write(fdis,cb->symtab,h.symbolseglen)==-1) io_error(errno,"write symtab");
-  if(verbose) printf("] done.\n");
+  if(verbose>0) printf("] done.\n");
   return(close(fdis));
 }
