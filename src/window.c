@@ -1270,6 +1270,15 @@ short form_do(OBJECT *tree,short startob) {
   FB_mouse_events(0);
   FB_keyboard_events(0);
 #endif
+#ifdef ANDROID
+  /* On Android each keypress is fed into the event queue 
+  and in addition into the stdin pipe. So we should clear both
+  here not to have keypresses left over.
+   */
+  char *inkey();
+  FB_clear_events();
+  inkey();       /* clear the stdin */
+#endif
   return(sbut);
 }
 #endif
