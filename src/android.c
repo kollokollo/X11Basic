@@ -314,7 +314,10 @@ JNIEXPORT jstring JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdout(JNIE
 JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_Stdin(JNIEnv *env, jobject  obj, jstring in) {
   const char *n = (*env)->GetStringUTFChars(env,in, 0);    //Get the native string from javaString
   NLOG("Stdin.");
-  if(android_init) write(in_pipe[1],n,strlen(n));
+  if(android_init) {
+    write(in_pipe[1],n,strlen(n));
+    fsync(in_pipe[1]);
+  }
   (*env)->ReleaseStringUTFChars(env,in, n);                //DON'T FORGET THIS LINE!!!
 }
 JNIEXPORT void JNICALL Java_net_sourceforge_x11basic_X11basicView_queueKeyEvent(JNIEnv *env, jclass c, jint key, jint state) {
