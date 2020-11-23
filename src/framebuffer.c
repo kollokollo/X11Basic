@@ -436,6 +436,10 @@ void FB_DrawLine(int x0, int y0, int x1, int y1,unsigned short color) {
     }
   }
 }
+
+/* Draw a thick line. width is >=1  */
+
+
 #define HYPOT(x,y) sqrt((double)(x)*(double)(x)+(double)(y)*(double)(y)) 
 
 void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short color) {
@@ -446,26 +450,20 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
   int ddx1,ddy1;
   int ddx2,ddy2;
   int w2=width>>1;
-  
   if(dx==0) {
     int i;
     /* Swap y1, y2 if required */
     if(y0>y1) {int ytmp=y0;y0=y1;y1=ytmp;}
-    for (i=y0; i<=y1; i++) {
-      DrawHorizontalLine(x0-w2, i, width, color);
-    }  
+    for (i=y0; i<=y1; i++) {DrawHorizontalLine(x0-w2,i,width-1,color);}
     return;
   }
   if(dy==0) {
     int i;
     /* Swap x1, x2 if required */
     if(x0>x1) {int xtmp=x0;x0=x1;x1=xtmp;}
-    for (i=0; i<width; i++) {
-      DrawHorizontalLine(x0, y0-w2+i,x1-x0, color);
-    }  
+    for (i=0; i<width; i++) {DrawHorizontalLine(x0,y0-w2+i,x1-x0,color);}
     return;
   }
-
 
   if(dy<0) {dy=-dy; stepy=-1;} else stepy=1;
   if(dx<0) {dx=-dx; stepx=-1;} else stepx=1;
@@ -489,30 +487,28 @@ void FB_DrawThickLine(int x0, int y0, int x1, int y1,int width, unsigned short c
   FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
 
   if(dx>dy) {
-    int fraction=dy-(dx>>1);     // same as 2*dy - dx
+    int fraction=dy-(dx>>1);  /* same as 2*dy-dx */
     while(x0!=x1) {
-	if(fraction>=0) {
-	  y0+=stepy;
-  FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
-	  fraction-=dx;	    // same as fraction -= 2*dx
-	}
-	x0+=stepx;
-	fraction+=dy;	    // same as fraction -= 2*dy
-  FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
-
+      if(fraction>=0) {
+        y0+=stepy;
+        FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
+	fraction-=dx;	    /* same as fraction-=2*dx */
+      }
+      x0+=stepx;
+      fraction+=dy;	    /* same as fraction-=2*dy */
+      FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
     }
   } else {
     int fraction=dx-(dy>>1);
     while(y0!=y1) {
       if(fraction>=0) {
-        x0 += stepx;
-  FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
-
-        fraction -= dy;
+        x0+=stepx;
+        FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
+        fraction-=dy;
       }
-      y0 += stepy;
-      fraction += dx;
-  FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
+      y0+=stepy;
+      fraction+=dx;
+      FB_DrawLine(x0-ddx1*stepx,y0+ddy1*stepy,x0+ddx2*stepx,y0-ddy2*stepy,color);
     }
   }
 }
