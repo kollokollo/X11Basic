@@ -537,6 +537,10 @@ xbasic.framebuffer : main.c $(LIBCSRCFB)
 	$(CC) -DFRAMEBUFFER $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRCFB)  $(LIBS1) 
 	strip $@
 
+fbtest: xbasic.framebuffer
+	./xbasic.framebuffer --framebuffer /tmp/screen0 ../examples/tests/fbtest.bas
+
+
 # Make a version of X11-basic which is statically linked to libx11basic and 
 # therefor can be used without the .so file
 

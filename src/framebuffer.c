@@ -80,15 +80,21 @@ void Fb_Open() {
     perror(fbdevname);
     exit(EX_OSFILE);
   }
-  // Get fixed screen information
-  if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
+  /* Get fixed screen information */
+  if(ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
     perror("ERROR: Could not get fixed screen information.");
-    exit(EX_IOERR);
   }
   // Get variable screen information
   if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
     perror("ERROR: Could not get variable screen information.");
-    exit(EX_IOERR);
+   // exit(EX_IOERR);
+   /* That default values, used e.g. by a virtual or dummy fb 
+      TODO: let the user specify size and depth via commandline
+      parameters.
+    */
+    vinfo.bits_per_pixel=16;
+    vinfo.xres=640;
+    vinfo.yres=400;
   }
   screen.bpp=vinfo.bits_per_pixel;
   if(screen.bpp!=16) printf("WARNING: The color depth of the framebuffer should be 16!\n");
