@@ -2152,7 +2152,6 @@ static void c_help(PARAMETER *plist,int e) {
 void do_help(const char *w) {
   int i;
   char *p=NULL;
-  // printf("HELP: <%s>\n",w);
   for(i=0;i<anzcomms;i++) {
     // printf("<%s> -> %d\n",comms[i].name,fnmatch(w,comms[i].name,FNM_NOESCAPE));
     if(fnmatch(w,comms[i].name,FNM_NOESCAPE)==0) {
@@ -2170,7 +2169,7 @@ void do_help(const char *w) {
   }
   for(i=0;i<anzpsfuncs;i++) {
     if(fnmatch(w,psfuncs[i].name,FNM_NOESCAPE)==0) {
-      do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
+      p=do_explain(psfuncs[i].opcode|F_SRET,psfuncs[i].name,"(",")",psfuncs[i].pliste,psfuncs[i].pmin,psfuncs[i].pmax);
       printf("Function: %s\n",p);
       free(p);
     }
