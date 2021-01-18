@@ -52,7 +52,7 @@ static char selfseek[]="4007111";
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s virtual machine     V." VERSION "               *\n"
-         "*                       by Markus Hoffmann 1997-2020 (c) *\n"
+         "*                       by Markus Hoffmann 1997-2021 (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
 #else

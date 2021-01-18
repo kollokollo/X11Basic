@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2020
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2021
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -31,8 +31,8 @@
 //#include "xb2c.h"
 
 
-char ifilename[128]="b.b";       /* Standard inputfile  */
-static char *ofilename="11.c";       /* Standard outputfile     */
+char ifilename[128]="b.b";       /* default input file name */
+static char *ofilename="11.c";   /* default output file name */
 static int loadfile=FALSE;
 #ifdef ATARI
 int verbose=1;
@@ -48,7 +48,7 @@ char *strings;
 unsigned char *datasec;
 char *rodata=NULL;
 
-/* X11-Basic needs these declar<ations:  */
+/* X11-Basic needs these declarations:  */
 int prglen=0;
 char *programbuffer=NULL;
 char **program=NULL;
@@ -57,7 +57,7 @@ int programbufferlen=0;
 extern void memdump(unsigned char *,int);
 
 #ifdef DUMMY_LIST
-/*Kurzform der Error-Routine, tritt hier nur bei IO-Errors auf.*/
+/* Short version of the error routine, only used with IO errors. */
 void xberror(char errnr, const char *bem) {
   printf("ERROR: #%d %s\n",errnr,bem);
   perror(strerror(errno));
@@ -69,7 +69,7 @@ void xberror(char errnr, const char *bem);
 static void intro(){
   printf("**************************************************\n"
          "*  X11-Basic bytecode to C translator            *\n"
-         "*              by Markus Hoffmann 1997-2020 (c)  *\n"
+         "*              by Markus Hoffmann 1997-2021 (c)  *\n"
          "* V." VERSION "/%04x       date:  " __DATE__ " " __TIME__ "  *\n"
          "**************************************************\n",BC_VERSION);
 }
@@ -83,8 +83,9 @@ static void usage(){
 	 ,"xb2c",ifilename,ofilename);
 }
 
+/* Process command line options */
+
 static void kommandozeile(int anzahl, char *argumente[]) {
-  /* Kommandozeile bearbeiten   */
   for(int count=1;count<anzahl;count++) {
     if(!strcmp(argumente[count],"-o")) ofilename=argumente[++count];
     else if(!strcmp(argumente[count],"-h") || !strcmp(argumente[count],"--help")) {
@@ -734,7 +735,7 @@ static int loadbcprg(char *filename, FILE *optr) {
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
     fprintf(optr,"/* X11-Basic-Compiler Version " VERSION "\n"
-                 "   (c) Markus Hoffmann 2002-2020\n"
+                 "   (c) Markus Hoffmann 2002-2021\n"
                  "\n\n"
 		 "Compile this with:\n tcc -lx11basic " TCC_COMPILE_FLAGS " %s\n"
                  "\nBytecode: %s (%d Bytes)\n\n",ofilename,filename,len);
@@ -823,16 +824,14 @@ static int loadbcprg(char *filename, FILE *optr) {
   }
 }
 
+/* xb2c : Bytecode to C translator */
 
 int main(int anzahl, char *argumente[]) {
-  /* Initialize data segment buffer */
-  if(anzahl<2) {    /* Kommandomodus */
-    intro();usage();
-  } else {
-    kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
+  if(anzahl<2) { intro();usage(); }   /* nothing to do, display intro...*/
+  else {
+    kommandozeile(anzahl, argumente); /* process command line */
     if(loadfile) {
-      if(exist(ifilename)) {
-          /* file oeffnen */
+      if(exist(ifilename)) {  /* open file */
 	#ifdef ATARI
 	intro();
 	printf("--> %s\n",ofilename);

@@ -39,7 +39,7 @@
 
 /* Schreibt einen einzelnen Parameter in "C" style als X11-Basic 
  * Parameter auf den X11-Basic Operanden-Stack
- * Der C-Stype parametere wird aus der Liste antfernt.
+ * Der C-Style parameter wird aus der Liste antfernt.
  */
 
 static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
@@ -48,7 +48,7 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
   double f;
   int i;
   PARAMETER *opstack=*sp;
-  va_list arguments;     /*Patch von Matthias Vogl, 29.12.2012*/
+  va_list arguments;     /* Patch by Matthias Vogl, 29.12.2012 */
   va_copy(arguments, *arg);
   switch(typ) {
   case 'a': a=va_arg ( arguments, ARRAY );  *((ARRAY *)INT2POINTER(opstack->integer))=double_array(&a); opstack->typ=PL_ARRAY; opstack++; break;
@@ -66,27 +66,27 @@ static void do_pusharg(va_list *arg, unsigned char typ, PARAMETER **sp) {
 }
 
 
-/* API for the virtual machine: 
-   These are the functions offered: */
-
+/* API for the virtual machine:  */
 
 /* Push all Arguments in "C" style from the list (va_list) to the
  * X11-Basic parameter stack. The types are defined in a separate list.
  */
+
 int pusharg(PARAMETER **opstack, char *typ,...)   {
   int count=0;
   unsigned char c;
   va_list arguments;    
   va_start ( arguments, typ ); 
   while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
+  va_end(arguments);       // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   return(count);
-}  /* jetzt kann die X11-Basic Funktion aufgerufen werden... */
+} 
 
+/* Call functions for X11-Basic functions: */
 
-/* Call an X11-Basic integer function (wrapped in C) with 
- * a list of parameters, types in a separate list. */
+/* Call a X11-Basic integer function (wrapped in C) with 
+ * a list of parameters, have types in a separate list. */
 
 int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   int count=0;
@@ -95,13 +95,15 @@ int callifunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   va_list arguments;    
   va_start(arguments,typ); 
   while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
+  va_end(arguments);     // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
   return(osp->integer);
 }
-/* Call an X11-Basic function (wrapped in C) with 
- * a list of parameters, types in a separate list. */
+
+/* Call a X11-Basic function (wrapped in C) with 
+ * a list of parameters, have types in a separate list. */
+
 double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   int count=0;
   unsigned char c;
@@ -109,13 +111,15 @@ double callfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   va_list arguments;    
   va_start(arguments,typ); 
   while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
+  va_end(arguments);      // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
   return(osp->real);
 }
-/* Call an X11-Basic string function (wrapped in C) with 
- * a list of parameters, types in a separate list. */
+
+/* Call a X11-Basic string function (wrapped in C) with 
+ * a list of parameters, have types in a separate list. */
+
 STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   int count=0;
   unsigned char c;
@@ -123,13 +127,15 @@ STRING callsfunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   va_list arguments;    
   va_start(arguments,typ); 
   while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
+  va_end(arguments);       // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
   return(*((STRING *)&(osp->integer)));
 }
-/* Call an X11-Basic array function (wrapped in C) with 
- * a list of parameters, types in a separate list. */
+
+/* Call a X11-Basic array function (wrapped in C) with 
+ * a list of parameters, have types in a separate list. */
+
 ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   int count=0;
   unsigned char c;
@@ -137,7 +143,7 @@ ARRAY callafunc(PARAMETER **opstack,void (*name)(),char *typ,...) {
   va_list arguments;    
   va_start(arguments,typ); 
   while((c=typ[count++])) do_pusharg(&arguments,c,opstack);
-  va_end ( arguments );                  // Cleans up the list
+  va_end(arguments);         // Cleans up the list
   (*opstack)->integer=count; (*opstack)->typ=PL_INT; (*opstack)++;
   name();
   return(*((ARRAY *)&(osp->integer)));

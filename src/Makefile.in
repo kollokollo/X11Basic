@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=61
+RELEASE=62
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -290,7 +290,7 @@ EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
 	  $(EXAMPLES_GAMES) $(EXAMPLES_MATHEMATICS) $(EXAMPLES_ATARI_ST) \
         ../examples2/RELEASE-NOTES 
 
-DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+DIST= ../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
       ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
@@ -312,7 +312,7 @@ DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	examples/tests/* \
 	examples/graphics/* 
 
-BINDIST=../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+BINDIST=../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY \
 	../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
 	../doc/editors/* xbasic fbxbasic xbc bas2x11basic xbbc xbvm xb2c \
@@ -540,7 +540,6 @@ xbasic.framebuffer : main.c $(LIBCSRCFB)
 fbtest: xbasic.framebuffer
 	./xbasic.framebuffer --framebuffer /tmp/screen0 ../examples/tests/fbtest.bas
 
-
 # Make a version of X11-basic which is statically linked to libx11basic and 
 # therefor can be used without the .so file
 
@@ -623,7 +622,7 @@ $(DIR33).zip: README xbasic.tomtom  xbvm.tomtom TomTom.extension/x11basic.bmp To
 	mkdir /tmp/$(DIR33)/X11-Basic/examples
 	mkdir /tmp/$(DIR33)/SDKRegistry
 	rsync -a README /tmp/$(DIR33)/
-	cp ../README /tmp/$(DIR33)/X11-Basic/
+	cp ../README.md /tmp/$(DIR33)/X11-Basic/
 	cp ../RELEASE_NOTES /tmp/$(DIR33)/X11-Basic/
 	(cd ..; tar cf - $(EXAMPLES))|(cd /tmp/$(DIR33)/X11-Basic; tar xpf -)
 	rsync -a xbasic.tomtom /tmp/$(DIR33)/bin/xbasic
@@ -823,13 +822,13 @@ DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.De
 	../doc/editors/nedit.defs ../doc/editors/README \
 	../doc/editors/920.conf ../doc/editors/x11basic.lang \
 	../doc/editors/x11basic.geany ../doc/editors/x11basic.nanorc \
-	../RELEASE_NOTES ../README \
+	../RELEASE_NOTES ../README.md \
 	../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
 	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY $@/
-	cp ../doc/AUTHORS ../RELEASE_NOTES ../README $@/
+	cp ../doc/AUTHORS ../RELEASE_NOTES ../README.md $@/
 	cp Debian/changelog.Debian $@/
 	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/

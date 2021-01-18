@@ -4,7 +4,7 @@
 X11-Basic
 =========  
 
-(c) 1997-2020 by Markus Hoffmann
+(c) 1997-2021 by Markus Hoffmann
 
 A Basic interpreter and compiler with graphics capabilities
 
@@ -49,7 +49,7 @@ code.
 
 X11-Basic programs can also be compiled into a bytecode (see xbbc). This
 bytecode can be interpreted by a virtual machine (see xbvm). Finally, the
-bytecode can be converted to C sourcefiles (see xb2c) which can be compiled
+bytecode can be converted to C source files (see xb2c) which can be compiled
 with the gnu C compiler (or the tiny C compiler) to native excecutables.
 
 Ancient ANSI-Basic programs (with line numbers) can be converted to X11-Basic
@@ -184,12 +184,11 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-bluetooth        support blutooth [default=yes]
   --with-usb              support USB [default=yes]
-  --with-mqtt             support mqtt [default=yes]
+  --with-mqtt             support mqtt [default=no]
   --with-readline         support readline library [default=yes]
   --with-framebuffer      support framebuffer [default=no]
   --with-sdl              support SDL library [default=no]
   --with-x                use the X Window System [default=yes]
-  --with-x                use the X Window System
 
 Some influential environment variables:
   CC          C compiler command
@@ -216,7 +215,7 @@ To compile the X11-Basic interpreter (called xbasic), simply type
 	
     make static
 
-at the shell prompt. The produced file is independant of the x11basic 
+at the shell prompt. The produced file is independent of the x11basic 
 library and does not need the x11basic framework to be installed.
 
 After X11Basic has been compiled and linked successfully, you can start it
@@ -253,7 +252,7 @@ compiler can use them --
 
     make xbbc.static xbvm.static xb2c.static xbc
 
-will produce the statically linkd versions of the compilers.
+will produce the statically linked versions of the compilers.
 
 #### C) The framebuffer version
   

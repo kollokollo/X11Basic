@@ -32,8 +32,8 @@
 #include "x11basic.h"
 #include "bytecode.h"
 
-char ifilename[128]="new.bas";   /* Standard inputfile  */
-static char *ofilename="b.b";       /* Standard outputfile     */
+char ifilename[128]="new.bas";   /* default input file name */
+static char *ofilename="b.b";    /* default output file name */
 #ifdef ATARI
 int compile_flags=COMPILE_DEFAULT|COMPILE_VERBOSE;
 int verbose=1;
@@ -52,7 +52,7 @@ int prglen=0;
 static void intro(){
   puts("**************************************************\n"
        "*  X11-Basic bytecode compiler                   *\n"
-       "*              by Markus Hoffmann 1997-2020 (c)  *");
+       "*              by Markus Hoffmann 1997-2021 (c)  *");
   printf("* V." VERSION "/%04x      date:    " __DATE__ " " __TIME__ " *\n",BC_VERSION);
   puts("**************************************************\n");
 }
@@ -67,13 +67,13 @@ static void usage(){
 }
 
 
+/* process command line  */
+
 static void kommandozeile(int anzahl, char *argumente[]) {
-  /* Kommandozeile bearbeiten   */
   for(int count=1;count<anzahl;count++) {
     if(!strcmp(argumente[count],"-o")) ofilename=argumente[++count];
     else if(!strcmp(argumente[count],"-h")) {
-      intro();
-      usage();
+      intro();usage();
     } else if(!strcmp(argumente[count],"-n")) compile_flags=compile_flags|COMPILE_NOOPS;
     else if(!strcmp(argumente[count],"-c"))   compile_flags=compile_flags|COMPILE_COMMENTS;
     else if(!strcmp(argumente[count],"-s"))   dostrip=!dostrip;
@@ -93,13 +93,13 @@ static void kommandozeile(int anzahl, char *argumente[]) {
 
 int main(int anzahl, char *argumente[]) {
   /* Initialize data segment buffer */
-  if(anzahl<2) {    /* Kommandomodus */
+  if(anzahl<2) { /* Nothing to do, just display intro ... */
     intro();usage();
   } else {
-    kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
+    kommandozeile(anzahl, argumente);    /* process command line */
     if(loadfile) {
       if(exist(ifilename)) {
-        libx11basic_init();  /* Alles vorbereiten, damit loadprg() funktioniert. */
+        libx11basic_init();  /* prepare everything, so that loadprg() can work. */
 	#ifdef ATARI
 	intro();
 	printf("<-- %s\n",ifilename);

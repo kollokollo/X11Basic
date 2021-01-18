@@ -9,8 +9,8 @@ Release notes for Version 1.26 (June 2018 -- June 2019)
 - new commandline function --quitonend
 - bugfix in FOR (compiler) and better error handling
 
-Release notes for Version 1.27 (June 2019 -- 2020)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Release notes for Version 1.27 (June 2019 -- Jan 2021)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - removed VERSION and VERSION_DATE from library
 - new function REGEXP() and MATCH()
 - little fix for HELP, REM and DATA
