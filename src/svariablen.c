@@ -231,7 +231,7 @@ static STRING vs_date() {
   struct tm * loctim;
   timec = time(&timec);
   loctim=localtime(&timec);
-  ergebnis.pointer=malloc(12);
+  ergebnis.pointer=malloc(32);
   sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);

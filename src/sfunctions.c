@@ -368,7 +368,7 @@ static STRING f_unixdates(int n) {
   struct tm * loctim;
   time_t nn=(time_t)n;
   loctim=localtime(&nn);
-  ergebnis.pointer=malloc(12);
+  ergebnis.pointer=malloc(32);
   sprintf(ergebnis.pointer,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
   ergebnis.len=strlen(ergebnis.pointer);
   return(ergebnis);
@@ -401,7 +401,7 @@ static STRING f_strs(PARAMETER *plist,int e) {         /* STR$(a[,b[,c[,d]]])   
     sprintf(ergebnis.pointer,formatter,plist->real);
     break;
   case PL_COMPLEX: {
-    char *formatter2=malloc(48);
+    char *formatter2=malloc(2*24+4);
     if(plist->imag>=0) {
       sprintf(formatter2,"(%s+%si)",formatter,formatter);
       sprintf(ergebnis.pointer,formatter2,plist->real,plist->imag);

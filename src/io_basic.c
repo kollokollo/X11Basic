@@ -62,6 +62,9 @@ void memdump(const unsigned char *adr,int l) {
 #endif
 }
 
+
+/* Mapping table for IO-Error values to X11-Basic error numbers. */
+
 static const struct {int sf; char xf; } ioemaptable[] = {
     { 0,   7 }, /* 0: No error status currently */
     { EPERM,   -51 }, /* 1: Not super-user */

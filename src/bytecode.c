@@ -1051,14 +1051,15 @@ static int add_string(COMPILE_BLOCK *cb,const char *n) {
   if(n) {
     int ol=cb->stringseglen;
     int i=0;
+    int len=strlen(n)+1;  /* including 0 byte at the end. */
     /* Suche, ob schon vorhanden */
     while(i<ol) {
-      if(!strncmp(&((cb->stringseg)[i]),n,strlen(n)+1)) return(i);
+      if(!strncmp(&((cb->stringseg)[i]),n,len)) return(i);
       i+=strlen(&((cb->stringseg)[i]))+1;
     }  
-    cb->stringseglen+=strlen(n)+1;
+    cb->stringseglen+=len;
     cb->stringseg=realloc(cb->stringseg,cb->stringseglen);
-    strncpy(&((cb->stringseg)[ol]),n,strlen(n)+1);
+    strncpy(&((cb->stringseg)[ol]),n,len);
     return(ol);
   } else return(0);
 }

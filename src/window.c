@@ -1570,14 +1570,14 @@ static int read_dir(FINFO *fileinfos,int maxentries,const char *pfad,const char 
       if(stat(filename, &fileinfos[anzfiles].dstat)==0) {
         if(S_ISDIR(fileinfos[anzfiles].dstat.st_mode)) {   /* ist es Directory ? */
 	  if(strcmp(ep->d_name,".") && strcmp(ep->d_name,"..")) {
-	    fileinfos[anzfiles].name=malloc(128);
-	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
+	    fileinfos[anzfiles].name=malloc(256);
+	    strncpy(fileinfos[anzfiles].name,ep->d_name,256);
 	    fileinfos[anzfiles++].typ=FT_DIR;
 	  }
         } else {  /* kein Directory */
 	  if (fnmatch(mask,ep->d_name,FNM_PERIOD)==0) {
-	    fileinfos[anzfiles].name=malloc(128);
-	    strncpy(fileinfos[anzfiles].name,ep->d_name,128);
+	    fileinfos[anzfiles].name=malloc(256);
+	    strncpy(fileinfos[anzfiles].name,ep->d_name,256);
 	    fileinfos[anzfiles++].typ=FT_NORMAL;
 	  }
 	}

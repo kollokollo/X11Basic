@@ -1,4 +1,4 @@
-/* io.c I/O_Routinen  (c) Markus Hoffmann  */
+/* io.c I/O functions  (c) Markus Hoffmann  */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
  * ============================================================
@@ -6,7 +6,6 @@
  * COPYING for details
  */
 
-/* termio.h (weil obsolet) entfernt.    11.08.2003   MH  */
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +38,6 @@
 #endif
 #ifdef HAVE_USB
 #include <usb.h>
-// #include <libusb-1.0/libusb.h>
 #define TIMEOUT 5000
 #endif
 
@@ -106,7 +104,7 @@
 
 double sensordata[ANZSENSORS];
 
-/* fuer Dynamisches Linken von shared Object-Files   */
+/* for dynamically linking of shared object files */
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
@@ -131,7 +129,7 @@ static int init_sockaddr(struct sockaddr_in *name,const char *hostname, unsigned
 static int make_socket(unsigned short int port);
 static int make_UDP_socket(unsigned short int port);
 
-/*futimens does not exist on Android NDK.
+/* futimens does not exist on Android NDK.
 
 This does not work either for NDK r7c:*/
 
@@ -145,13 +143,14 @@ This does not work either for NDK r7c:*/
 
 #ifndef HAVE_FUTIMENS
 #ifndef HAVE_UTIMENSAT
-  /* Bei ANdroid gibt es beide nicht. */
+  /* Both do not exist on Android. */
 #ifndef HAVE_FUTIMES
 #ifndef HAVE_UTIME
   #define futimens(a,b)  (0);   /* not supported  */
   #pragma message ("TOUCH/futimes not supportet. Feature disabled." )
 #else
-/* Here we can try to use utime with proc file system, but we can easily get a permission denied error. */
+/* Here we can try to use utime with proc file system, 
+   but we can easily get a permission denied error. */
    int futimens(int fd, void * dummy) {
       char pn[64];
       sprintf(pn,"/proc/%d/fd/%d",getpid(),fd);
@@ -169,6 +168,7 @@ This does not work either for NDK r7c:*/
 
 #if defined ANDROID
 extern int lin,col;
+
 /* get the current cursor position */
 
 void getcrsrowcol(int *_row, int *_col) {
@@ -184,6 +184,7 @@ void getcrsrowcol(int *_row, int *_col) {
 #endif
 
 /* Get the number of rows and columns for this screen. */
+
 #ifdef ANDROID
 extern struct winsize win;
 void getrowcols(int *rows, int *cols) {
@@ -212,12 +213,9 @@ void getrowcols(int *rows, int *cols) {
 #endif
 }
 
-/* fuer die Dateiverwaltung     */
+/* for file management in X11-Basic */
+
 FILEINFO filenr[ANZFILENR];
-
-
-/*******************************/
-/* Ein- und Ausgaberoutinen    */
 
 FILEINFO get_fileptr(int n) {
   FILEINFO ret;
@@ -236,6 +234,8 @@ FILEINFO get_fileptr(int n) {
   return(ret);
 }
 
+/* Function: i%=FREEFILE() */
+
 int f_freefile() {
   int i=0;
   while(++i<ANZFILENR) {
@@ -243,6 +243,7 @@ int f_freefile() {
   }
   return(-1);
 }
+
 #ifdef HAVE_USB
 
 static void print_usb_endpoint(char *ret,struct usb_endpoint_descriptor *endpoint) {
@@ -312,9 +313,11 @@ inquiry_info *bt_ii=NULL;
   struct usb_bus *usbbus;
   struct usb_device *usbdev;
 #endif
-/*TODO: FSFIRST und FSNEXT könnte man auch zum Scannen der 
-  BLUETOOTH-Umgebung benutzen. Genauso zum suchen nach USB devices....
-  */
+/* TODO: FSFIRST and FSNEXT could be used for scanning the  
+   BLUETOOTH environment. Also for searching for USB devices....
+ */
+
+/* Function: t$=FSFIRST$(t$[,t$,t$]) */
 
 STRING f_fsfirsts(PARAMETER *plist,int e) {
 #ifdef WINDOWS
@@ -369,6 +372,7 @@ STRING f_fsfirsts(PARAMETER *plist,int e) {
   return(f_fsnexts());
 }
 
+/* Function: t$=FSNEXT$() */
 
 STRING f_fsnexts() {
   STRING ergebnis;
@@ -511,6 +515,9 @@ int f_map(PARAMETER *plist,int e) {
   return(ergebnis);
 }
 #endif
+
+/* Command: MSYNC i%,i% */
+
 void c_msync(PARAMETER *plist,int e) {
   if(e>=2) {
   #ifndef WINDOWS
@@ -521,6 +528,9 @@ void c_msync(PARAMETER *plist,int e) {
   #endif
   }
 }
+
+/* Command: UNMAP i%,i% */
+
 void c_unmap(PARAMETER *plist,int e) {
   if(e>=2) {
    #ifndef WINDOWS
@@ -531,9 +541,15 @@ void c_unmap(PARAMETER *plist,int e) {
    #endif
   }
 }
+
+/* Command: LOCATE i%,i% */
+
 void c_locate(PARAMETER *plist,int e) {
   printf("\033[%.3d;%.3dH",plist->integer+1,plist[1].integer+1);
 }
+
+/* Command: PRINT [...] */
+
 void c_print(PARAMETER *plist,int e) {
   if(e) {
     int i;
@@ -592,6 +608,8 @@ void c_print(PARAMETER *plist,int e) {
 #endif
   }
 }
+
+/* Command: INPUT var[,...] */
 
 void c_input(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
@@ -678,6 +696,9 @@ static STRING longlineinput(FILE *n) {   /* liest eine ganze Zeile aus einem ASC
   line.len=i;
   return(line);
 }
+
+/* Function: t$=LINEINPUT$(#n) */
+
 STRING f_lineinputs(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(filenr[i].typ) {
@@ -687,6 +708,9 @@ STRING f_lineinputs(PARAMETER *plist,int e) {
     return(vs_error());
   }
 }
+
+/* Function: t$=INPUT$(#n[,i%]) */
+
 STRING f_inputs(char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   int e=wort_sep(n,',',TRUE,s,t);
@@ -712,6 +736,9 @@ STRING f_inputs(char *n) {
   } else xberror(32,"INPUT$"); /* Syntax Error */
   return(vs_error());
 }
+
+/* Command: LINEINPUT #n[,t$] */
+
 void c_lineinput(const char *n) {
   char s[strlen(n)+1],t[strlen(n)+1];
   char *u,*text=NULL;
@@ -761,6 +788,8 @@ void c_lineinput(const char *n) {
   }
   if(text) free(text);
 }
+
+
 /********************/
 /* File-Routinen    */
 
@@ -1555,7 +1584,8 @@ int execvpe(const char *program, char **argv, char **envp) {
 }
 #endif
 
-/*Exec */
+/* Command: EXEC t$[,t$,t$] */
+
 void c_exec(PARAMETER *plist,int e) {
   char *newargv[128]; 
   char *newenviron[128];
@@ -1603,7 +1633,8 @@ void c_exec(PARAMETER *plist,int e) {
   if(ret==-1) io_error(errno,"EXEC");
 }
 
-/*Diese funktion liefert den Rueckgabewert aus exit zurueck*/
+/* Function: i%=EXEC(a[,a])
+   returns the value from exit() of the child process */
 
 int f_exec(PARAMETER *plist,int e) {
   int statval;
@@ -1795,6 +1826,7 @@ Was funktioniert sind integer und pointer.*/
 
 /* Basic file operations.*/
 
+/* Command: BLOAD t$,i%[,i%] */
 
 void c_bload(PARAMETER *plist,int e) {
   int len=-1;
@@ -1802,9 +1834,14 @@ void c_bload(PARAMETER *plist,int e) {
   if(bload(plist->pointer,(char *)INT2POINTER(plist[1].integer),len)==-1) io_error(errno,"BLOAD");
 }
 
+/* Command: BSAVE t$,i%,i% */
+
 void c_bsave(PARAMETER *plist,int e) {
   if(bsave(plist->pointer,(char *)INT2POINTER(plist[1].integer),plist[2].integer)==-1) io_error(errno,"BSAVE");
 }
+
+/* Command: BGET #n,i%,i% */
+
 void c_bget(PARAMETER *plist,int e) {
   int i=plist->integer;
   if(filenr[i].typ) {
@@ -1812,14 +1849,23 @@ void c_bget(PARAMETER *plist,int e) {
     if(e<plist[2].integer) xberror(26,""); /* Fileende erreicht EOF */
   } else xberror(24,""); /* File nicht geoeffnet */
 }
+
+/* Command: BPUT #n,i%,i% */
+
 void c_bput(PARAMETER *plist,int e) {
   int i=plist->integer;
   if(filenr[i].typ) fwrite((char *)INT2POINTER(plist[1].integer),1,plist[2].integer,filenr[i].dptr);
   else xberror(24,""); /* File nicht geoeffnet */
 }
+
+/* Command: BMOVE i%,i%,i% */
+
 void c_bmove(PARAMETER *plist,int e) {   /* Memory copy  BMOVE quelladr%,zieladr%,anzahl%    */
   memmove((char *)INT2POINTER(plist[1].integer),(char *)INT2POINTER(plist[0].integer),(size_t)plist[2].integer);
 }
+
+/* Command: PIPE #n,#n */
+
 void c_pipe(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   int j=plist[1].integer;
@@ -1842,7 +1888,7 @@ void c_pipe(PARAMETER *plist,int e) {
   }
 }
 
-
+/* Command: PUTBACK #n,i% */
 
 void c_unget(PARAMETER *plist,int e) {
   FILEINFO fff;
@@ -1851,6 +1897,8 @@ void c_unget(PARAMETER *plist,int e) {
   if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */
   else ungetc(plist[1].integer,fff.dptr);
 }
+
+/* Command: FLUSH [#n] */
 
 void c_flush(PARAMETER *plist,int e) {
   FILEINFO fff;
@@ -1865,6 +1913,8 @@ void c_flush(PARAMETER *plist,int e) {
   if(fflush(fff.dptr)) io_error(errno,"FLUSH");
 }
 
+/* Command: SEEK #n[,i%] */
+
 void c_seek(PARAMETER *plist,int e) {
   int j=0,i=plist[0].integer;
   if(e>1) j=plist[1].integer;
@@ -1872,12 +1922,17 @@ void c_seek(PARAMETER *plist,int e) {
     if(fseek(filenr[i].dptr,j,SEEK_SET)) io_error(errno,"SEEK");
   } else xberror(24,""); /* File nicht geoeffnet */
 }
+
+/* Command: RELSEEK #n,i% */
+
 void c_relseek(PARAMETER *plist,int e) {
   int i=plist[0].integer;
   if(filenr[i].typ) {
     if(fseek(filenr[i].dptr,plist[1].integer,SEEK_CUR)) io_error(errno,"RELSEEK");
   } else xberror(24,""); /* File nicht geoeffnet */
 }
+
+/* Command: TOUCH #n */
 
 void touch(PARAMETER *plist,int e) {
   if(plist->integer>0) {
@@ -1888,6 +1943,7 @@ void touch(PARAMETER *plist,int e) {
   }
 }
 
+/* Function: i%=INP(#n) */
 
 int inp8(PARAMETER *plist,int e) {
 #ifdef WINDOWS
@@ -1899,6 +1955,9 @@ int inp8(PARAMETER *plist,int e) {
   if(fread(&ergebnis,1,1,fff.dptr)<1) {xberror(26,"");return(-1);}/* Fileende erreicht EOF */  
   return((int)ergebnis);
 }
+
+/* Function: i%=INP?(#n) */
+
 int inpf(PARAMETER *plist,int e) {
   if(plist->integer==-2) return(kbhit() ? -1 : 0);
   FILEINFO fff=get_fileptr(plist->integer);
@@ -1912,6 +1971,9 @@ int inpf(PARAMETER *plist,int e) {
   return(((feof(fff.dptr)) ? 0 : -1)); 
 #endif  
 }
+
+/* Function: i%=INP&(#n) */
+
 int inp16(PARAMETER *plist,int e) {
   unsigned short ergebnis;
   FILEINFO fff=get_fileptr(plist->integer);
@@ -1919,6 +1981,9 @@ int inp16(PARAMETER *plist,int e) {
   if(fread(&ergebnis,sizeof(short),1,fff.dptr)<1)  io_error(errno,"fread");
   return((int)ergebnis);
 }
+
+/* Function: i%=INP%(#n) */
+
 int inp32(PARAMETER *plist,int e) {
   unsigned int ergebnis;
   FILEINFO fff=get_fileptr(plist->integer);
@@ -1971,7 +2036,7 @@ void reset_input_mode() {
 #endif
 }
 
-/* Dynamisches Linken von Shared-Object-Files */
+/* Function: i%=SYM_ADR(#n,t$) */
 
 int f_symadr(PARAMETER *plist,int e) {
   int adr=0;
@@ -2045,6 +2110,7 @@ void c_out(PARAMETER *plist,int e) {
   if(plist->typ==PL_LEER) invalidate_screen();
 #endif
 }
+
 #ifndef WINDOWS
 /* kbhit-Funktion   */
 int kbhit() {
@@ -2460,7 +2526,8 @@ void speaker(int frequency) {
 #endif
 }
 
-/* IOCTL #n,rec[,pointer]   implementation on normal files/sockets and USB devices...*/
+/* Function: i%=IOCTL(#n,rec%[,pointer%])  
+   implementation on normal files/sockets and USB devices...*/
 
 int f_ioctl(PARAMETER *plist,int e) {
   int ret=-1;
@@ -2503,7 +2570,7 @@ int f_ioctl(PARAMETER *plist,int e) {
     case 7: filenr[plist->integer].ep_out=plist[2].integer; ret=0; break; /*  Set ep_out */
     case 12: {  /* get filename+path */
       	struct usb_device *a=usb_device((usb_dev_handle *) filenr[plist->integer].dptr);
-    	strncpy(INT2POINTER(plist[2].integer),a->filename,sizeof(a->filename));
+    	strcpy(INT2POINTER(plist[2].integer),a->filename);
         ret=strlen(a->filename);
       } break;
     case 13: {  /* get manufacturer */
@@ -2545,10 +2612,13 @@ int f_ioctl(PARAMETER *plist,int e) {
   return(ret);
 }
 
+/* Command: CHDIR t$ */
 
 void c_chdir(PARAMETER *plist,int e) {
   if(chdir(plist->pointer)==-1) io_error(errno,"chdir");
 }
+
+/* Command: MKDIR t$[,i%] */
 
 void c_mkdir(PARAMETER *plist,int e) {
 #ifndef WINDOWS
@@ -2560,18 +2630,26 @@ void c_mkdir(PARAMETER *plist,int e) {
 #endif
 }
 
+/* Command: RMDIR t$ */
 
 void c_rmdir(PARAMETER *plist,int e) {
   if(rmdir(plist->pointer)==-1) io_error(errno,plist->pointer);
 }
 
+/* Command: KILL t$ */
 
 void c_kill(PARAMETER *plist,int e) {
   if(unlink(plist->pointer)==-1) io_error(errno,plist->pointer);
 }
+
+/* Command: RENAME t$,t$ */
+
 void c_rename(PARAMETER *plist,int e) {
   if(rename(plist->pointer,plist[1].pointer)==-1) io_error(errno,plist->pointer);
 }
+
+/* Command: CHMOD t$,i% */
+
 void c_chmod(PARAMETER *plist,int e) {
   if(chmod(plist->pointer,plist[1].integer)==-1) io_error(errno,plist->pointer);
 }
