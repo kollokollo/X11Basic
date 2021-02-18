@@ -21,6 +21,7 @@
   #include <SDL/SDL.h>
   #include <SDL/SDL_gfxPrimitives.h>
 #endif
+#include <errno.h>
 #include "x11basic.h"
 #include "xbasic.h"
 #include "memory.h"
@@ -28,6 +29,7 @@
 #include "aes.h"
 #include "file.h"
 #include "window.h"
+#include "io.h"
 
 #ifdef FRAMEBUFFER
 #include "framebuffer.h"
@@ -873,23 +875,45 @@ short rsrc_gaddr(short re_gtype, unsigned short re_gindex, char **re_gaddr) {
   } 
   return(0);
 }
-static void fix_trindex() {
+
+
+/* Print errormessage about RSC file. */
+
+static void rsrc_error(char *message) {
+  printf("RSC file error: %s\n",message);
+#if DEBUG
+  printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
+  printf("%d Trees and %d FRSTRs \n",rsrc->rsh_ntree,rsrc->rsh_nstring);
+
+  printf("OBJC:    %08x  (%d)\n",rsrc->rsh_object,rsrc->rsh_nobs);
+  printf("TEDINFO: %08x  (%d)\n",rsrc->rsh_tedinfo,rsrc->rsh_nted);
+  printf("ICONBLK: %08x  (%d)\n",rsrc->rsh_iconblk,rsrc->rsh_nib);
+  printf("BITBLK:  %08x  (%d)\n",rsrc->rsh_bitblk,rsrc->rsh_nbb);
+#endif
+}
+
+static int fix_trindex() {
   int anzahl=rsrc->rsh_ntree;
   if(anzahl) {
+    if((LONG)rsrc->rsh_trindex<sizeof(RSHDR)) return(-1);
     LONG *ptreebase = (LONG *)((char *)rsrc+(LONG)rsrc->rsh_trindex);
     int i; for(i=anzahl-1;i>=0;i--) {LWSWAP((char *)&ptreebase[i]);}
   }
+  return(0);
 }
-static void fix_frstrindex() {
+static int fix_frstrindex() {
   int anzahl=rsrc->rsh_nstring;
   if(anzahl) {
+    if((LONG)rsrc->rsh_frstr<sizeof(RSHDR)) return(-1);
     char **ptreebase = (char **)((char *)rsrc+(LONG)rsrc->rsh_frstr);
     int i; for(i=anzahl-1;i>= 0;i--) {LWSWAP((char *)(&ptreebase[i]));}
   }
+  return(0);
 }
-static void fix_objc(int chw,int chh) {
+static int fix_objc(int chw,int chh) {
   int anzahl=rsrc->rsh_nobs;
   if(anzahl) {
+    if((LONG)rsrc->rsh_object<sizeof(RSHDR)) return(-1);
     OBJECT *base = (OBJECT *)((char *)rsrc+(LONG)rsrc->rsh_object);
     int i,j;
     for(i =0; i < anzahl; i++) {
@@ -905,9 +929,11 @@ static void fix_objc(int chw,int chh) {
       base[i].ob_height=LOBYTE(base[i].ob_height)*chh+HIBYTE(base[i].ob_height);
     }
   }
+  return(0);
 }
-static void fix_tedinfo() {
+static int fix_tedinfo() {
   if(rsrc->rsh_nted) {
+    if((LONG)rsrc->rsh_tedinfo<sizeof(RSHDR)) return(-1);
     TEDINFO *base = (TEDINFO *)((char *)rsrc+(LONG)rsrc->rsh_tedinfo);
     int i,j;
     for(i =0; i < rsrc->rsh_nted; i++) {
@@ -917,13 +943,15 @@ static void fix_tedinfo() {
       base[i].te_pvalid=(CHAR_P)(POINTER2INT(rsrc)+swap_LONG((LONG)base[i].te_pvalid));
     }
   }
+  return(0);
 }
-static void fix_bitblk() {
+static int fix_bitblk() {
   unsigned int i,j,k,l,m,n=0;
   LONG *helper;
   BITBLK *base = (BITBLK *)((char *)rsrc+(LONG)rsrc->rsh_bitblk);
   int anzahl=rsrc->rsh_nbb;
   if(anzahl) {
+    if((LONG)rsrc->rsh_bitblk<sizeof(RSHDR)) return(-1);
    // printf("FIX_BITBLK: Anzahl=$%04x\n",anzahl);
     for(i=0; i<anzahl; i++) {
       // if(rsrc->rsh_vrsn==0) {
@@ -952,13 +980,15 @@ static void fix_bitblk() {
       // }
     }
   }
+  return(0);
 }
-static void fix_iconblk() {
+static int fix_iconblk() {
   unsigned int i,j,k,l,m,n=0;
   LONG *helper,*helper2;
   ICONBLK *base=(ICONBLK *)((char *)rsrc+(LONG)rsrc->rsh_iconblk);
   int anzahl=rsrc->rsh_nib;
   if(anzahl) {
+    if((LONG)rsrc->rsh_iconblk<sizeof(RSHDR)) return(-1);
     for(i=0; i<anzahl; i++) {
     //  if(rsrc->rsh_vrsn==0) {
 	    for(j=0;j<sizeof(ICONBLK)/2;j++) {
@@ -1010,60 +1040,76 @@ static void fix_iconblk() {
       //}
     }
   }
+  return(0);
 }
-void memdump    (const unsigned char *adr,int l);	    
+
+/* Load GEM RSC file */	    
 short rsrc_load(const char *filename) {
-  if(exist(filename)) {
-    FILE *dptr=fopen(filename,"rb");
-    if(dptr==NULL) return(-1);
-    int len=lof(dptr);
-    rsrc=malloc(len);
-    int i,a;
-    if((a=fread(rsrc,1,len,dptr))==len) {
-      WSWAP((char *)rsrc);
-      if(rsrc->rsh_vrsn==0 || rsrc->rsh_vrsn==1) {
-//      if(rsrc->rsh_vrsn==0) {
-          for(i=1;i<HDR_LENGTH/2;i++) {WSWAP((char *)((char *)rsrc+2*i));}
-//      }
-#if DEBUG 
-        printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
-        printf("Version: %04x   xlen=%d\n",rsrc->rsh_vrsn,rsrc->rsh_rssize);
-        printf("%d Trees and %d FRSTRs \n",rsrc->rsh_ntree,rsrc->rsh_nstring);
-
-        printf("OBJC:    %08x  (%d)\n",rsrc->rsh_object,rsrc->rsh_nobs);
-        printf("TEDINFO: %08x  (%d)\n",rsrc->rsh_tedinfo,rsrc->rsh_nted);
-        printf("ICONBLK: %08x  (%d)\n",rsrc->rsh_iconblk,rsrc->rsh_nib);
-        printf("BITBLK:  %08x  (%d)\n",rsrc->rsh_bitblk,rsrc->rsh_nbb);
-
-#endif	
-        if(rsrc->rsh_rssize<=len) {
-	  if(rsrc->rsh_rssize<len) {
-	    printf("Warning: %d extra Bytes detected at end of RSC file.\n",len-rsrc->rsh_rssize);
-            memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
-	  }
-	
-          fix_trindex();
-          fix_frstrindex();
-	  fix_objc(window[usewindow].chw,window[usewindow].chh);
-	  fix_tedinfo();
-	  fix_bitblk();
-	  fix_iconblk();
-	
-       	  fclose(dptr);
-          return(0);
-        } else printf("Invalid RSC file structure. len: %d<>%d\n",len,rsrc->rsh_rssize);
-      } else {
-        printf("Unsupported RSC version %d.\n",rsrc->rsh_vrsn);
-	memdump((unsigned char *)rsrc,64);
-      }
-    } else {
-      printf("ERROR: fread failed. %d  %d \n",a,len);
-    }
+  if(!exist(filename)) {
+    xberror(-33,filename); /* File not found*/
+    return(-1);
+  }
+  FILE *dptr=fopen(filename,"rb");
+  if(dptr==NULL) {io_error(errno,"open");return(-1);}
+  int len=lof(dptr);
+  rsrc=malloc(len);
+  int i,a;
+  if((a=fread(rsrc,1,len,dptr))!=len) {
+    io_error(errno,"read");
     fclose(dptr);
     free(rsrc);
     rsrc=NULL;
-  } else xberror(-33,filename); /* File not found*/
-  return(-1);
+    return(-1);
+  }
+  fclose(dptr);
+#if DEBUG
+  printf("RSC loaded: name=<%s> len=%d Bytes\n",filename,len);
+#endif
+  WSWAP((char *)rsrc);
+  if(rsrc->rsh_vrsn!=0 && rsrc->rsh_vrsn!=1) {
+    rsrc_error("version error.");
+    printf("Unsupported RSC version %d.\n",rsrc->rsh_vrsn);
+#if DEBUG
+    memdump((unsigned char *)rsrc,64);
+#endif
+    xberror(53,"rsc"); /* Falsches Grafik-Format */
+    free(rsrc);
+    rsrc=NULL;
+    return(-1);
+  }
+  
+  
+// if(rsrc->rsh_vrsn==0) {
+     for(i=1;i<HDR_LENGTH/2;i++) {WSWAP((char *)((char *)rsrc+2*i));}
+// }
+  if(rsrc->rsh_rssize>len) {
+    printf("Invalid RSC file structure. len: %d<>%d\n",len,rsrc->rsh_rssize);
+    rsrc_error("file size error.");
+    xberror(26,""); /* Fileende erreicht EOF */
+    free(rsrc);
+    rsrc=NULL;
+    return(-1);
+  }
+  if(rsrc->rsh_rssize<len) {
+    rsrc_error("file size warning.");
+    printf("Warning: %d extra Bytes detected at end of RSC file.\n",len-rsrc->rsh_rssize);
+#if DEBUG
+    memdump((unsigned char *)rsrc,len-rsrc->rsh_rssize);
+#endif
+  }
+  if(fix_trindex() || 
+     fix_frstrindex() ||
+     fix_objc(window[usewindow].chw,window[usewindow].chh) ||
+     fix_tedinfo() ||
+     fix_bitblk() ||
+     fix_iconblk()) {
+    rsrc_error("offset error.");
+    xberror(64,""); /* Pointer wrong */
+    free(rsrc);
+    rsrc=NULL;
+    return(-1);
+  }
+  return(0);
 }
 
 void objc_add(OBJECT *tree,int p,int c) {
