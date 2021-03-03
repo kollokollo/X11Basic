@@ -1,4 +1,15 @@
-These are some few example programs for X11-Basic.
+X11-Basic examples -- small collection
+======================================
 
+These are some few example programs for X11-Basic. The mainly 
+demonstrate special use cases, like how to write linkable libraries, they 
+include the compiler manager and provide some tests.
+
+ 
 Many more example programs are maintained in a separate repository called
-"X11-Basic_examples" (hosted on gitlab.com).
+"X11-Basic_examples" (hosted on codeberg.org).
+
+Please see here: 
+
+https://codeberg.org/kollo/X11-Basic_examples
+
