@@ -12,7 +12,7 @@ A Basic interpreter and compiler with graphics capabilities
     Group   : Development/Languages
     License : GPL
 
-Home-Page   : http://x11-basic.sourceforge.net/
+Home-Page   : https://x11-basic.codeberg.page/
 
 
 X11-Basic is a dialect of the BASIC programming language with graphics
@@ -33,6 +33,7 @@ Many more example programs can be found in this collection:
 https://codeberg.org/kollo/X11-Basic_examples
 
 For further documentation please refer to the X11-Basic home page:
+https://x11-basic.codeberg.page/ or 
 http://x11-basic.sourceforge.net/
 
 The Android Version of X11-Basic can be found here: 
@@ -60,7 +61,7 @@ You will find the compiler sourcecode and some other sample programs in
 other sample programs can be found in an X11-Basic examples repository 
 https://codeberg.org/kollo/X11-Basic_examples
 
-Please also refer to the home page http://x11-basic.sourceforge.net/ . 
+Please also refer to the home page https://x11-basic.codeberg.page/ . 
 Also an up-to-date pdf-version of the manual can be found there.
 
 Please read the file X11-Basic-manual.txt (or the .pdf manual) 
@@ -292,3 +293,17 @@ c) MS WINDOWS (with i586-mingw32msvc-gcc)
 
 For more details you may want to look into the Makefile. 
 Improvements are welcome.
+
+#### Download
+
+Sources and binary packages:
+
+<a href="https://codeberg.org/kollo/X11Basic/">
+    <img alt="Get it on Codeberg" src="https://get-it-on.codeberg.org/get-it-on-blue-on-white.png" height="60">
+</a>
+
+
+<a href="https://f-droid.org/app/net.sourceforge.x11basic">
+<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
+
+
