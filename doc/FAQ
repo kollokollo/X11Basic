@@ -1,5 +1,5 @@
-4. FAQ frequently asked questions
-=================================
+4. FAQ frequently asked questions about X11-Basic
+=================================================
 
 Q: How do I leave the interpreter `gently'?
 A: type quit or press ctrl-c (twice)
@@ -56,15 +56,16 @@ A: Yes, you may. But you should state clearly, that xbasic itself is available
 
 Q: Where can I get the newest version of X11-Basic? 
 A: Probably at 
-   http://x11-basic.sourceforge.net/
+   https://codeberg.org/kollo/X11Basic
    Don't bet on it though! :-) 
 
 Q: What can I do to speed up the development of X11-Basic?
 A: You can try to bribe me with any amount of money, any type of hardware or
-   software (no pirated stuff please). Well cidding...
+   software (no pirated stuff please). Well cudding...
    A nice postcard might suffice too. :-)
    You can contribute to the official development of X11-Basic on codeberg 
    or github. Please visit the project pages here:
+   Home-Page:        https://x11-basic.codeberg.page
    Android Version:  https://codeberg.org/kollo/X11-Basic
    Example Programs: https://codeberg.org/kollo/X11-Basic_examples
    Main Repository:  https://codeberg.org/kollo/X11Basic

@@ -1,0 +1,69 @@
+= X11-BASIC bytecode file format 
+Markus Hoffmann
+v1.27, 2020-06-20
+:docversion: 1.27/4
+:docyear: 2020
+:homepage: https://x11-basic.codeberg.page/
+:toc:
+:sectnums:
+
+
+Addendum to the X11-Basic User Manual
+
+
+== Description of the bytecode file format.
+
+The ending is usually .b.
+
+
+=== Header
+The file starts with a 40 bytes header. All values are little endian.
+
+|=======
+|*offset*|*type*|*content*| *purpose*
+|0x00| byte  | 0x11       |  magic byte 1
+|0x01| byte  | 0x26       |  magic byte 2
+|0x02| short | 0x0000     |  not used (reserved)
+|0x04| int   | 0x........ |  size of the text/code segment
+|0x08| int   | 0x........ |  size of the readonly data segment
+|0x0C| int   | 0x........ |  size of the data segment for DATA statements
+|0x10| int   | 0x........ |  size of the data segment
+|0x14| int   | 0x........ |  storage space for variables
+|0x18| int   | 0x........ |  size of the symbol table segment
+|0x1C| int   | 0x........ |  size of the string segment 
+|0x20| int   | 0x........ |  size of the relocation data
+|0x24| short | 0x0000     |  not used (reservd)
+|0x26| short | 0x1274     |  version 1.27/4
+|=======
+
+The file format can be identified by evaluating the first two bytes together 
+with the version information. The Version information is in BCD and can be
+read as
+
+----
+ 0xGHIJ --> "Version G.HI/J"
+----
+
+
+Compatibility is also determined by version: It the version differs, the 
+bytecode is incompatible and should not be excecuted.
+
+=== text/code segment
+
+In this segment the bytecode itself is stored.
+
+===  readonly data segment
+
+===  data segment for DATA statements
+
+===  data segment
+
+===  space for variables
+So-called block storage segment. 
+
+===  symbol table segment
+
+===  string segment 
+
+===  relocation data
+

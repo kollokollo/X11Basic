@@ -5,5 +5,5 @@ Readme for the X11-Basic files at sourceforge:
 * X11-Basic-src: The sources as archived tarballs. More recent: see the git repositories. 
 * X11-Basic-programs: the collection of example programs written in X11-Basic 
 * X11-Basic-TomTom: A special compile for TomTom devices (ARM-linux+framebuffer)
-* X11-Basic-Android: package for Android. Also available in the Android Market.
+* X11-Basic-Android: package for Android. 
 

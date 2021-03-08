@@ -35,7 +35,7 @@ Soll auch nach PRINT AT() funktionieren! Dann evtl. promt$ weglassen!
 * GPRINT routines should be extendet to a full VT100 emulation. 
 (including a cursor). 
 * implement 16 possible windows, USEWINDOW, --> SETWINDOW num,mode
-* Was tun mit SCREEN und ROOTWINDOW? SAVESCREEN/SAVEWINDOW?
+* What about SCREEN and ROOTWINDOW? SAVESCREEN/SAVEWINDOW?
 
 ## Sound
 
@@ -68,6 +68,6 @@ on sourceforge (I think)...
 # Incompatible changes:
 
 * rename X11-Basic, make the name of the excecutables more unique. 
-xbasic und xbasic.exe umbenennen in x11basic und x11basic.exe
+rename xbasic and xbasic.exe into x11basic und x11basic.exe
 (vielleicht mit einem link von xbasic)
 
