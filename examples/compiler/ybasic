@@ -4,7 +4,7 @@
 #  (c) 2015-2018 by Markus Hoffmann
 #
 #
-if [ "$#" -le 1 ]; then
+if [ "$#" -lt 1 ]; then
   echo "Usage: $0 filename.bas" >&2
   exit 1
 fi
