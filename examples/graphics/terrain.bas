@@ -158,7 +158,7 @@ FOR y%=0 TO m%
       COLOR palette%(i%)
     ENDIF
     PBOX TLX,TLY,BRX+1,BRY
-  L350:
+    L350:
   NEXT x%
   SHOWPAGE
 NEXT y%

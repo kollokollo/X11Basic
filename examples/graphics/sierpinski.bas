@@ -32,14 +32,14 @@ FOR k=1 TO 50000
   COLOR get_color(a*256,b*256,(255-a)*256)
   PLOT x1,y1
   IF (k MOD 1000)=0
-    VSYNC
-    PRINT timer-t;" Sekunden."
+    SHOWPAGE
+    PRINT timer-t;" Sekunden.";CHR$(13);
     t=timer
   ENDIF
   x2=x1
   y2=y1
 NEXT k
-VSYNC
+SHOWPAGE
 ' next r
 ~inp(-2)
 QUIT

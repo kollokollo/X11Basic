@@ -29,7 +29,7 @@ PLOT sw/2,sh/2
 COLOR col(2)
 BOX 0,0,sw-1,sh-1
 '  plot sw/2,sh/2
-VSYNC
+SHOWPAGE
 PAUSE 1
 DIM feld(bw,bh),ofeld(bw,bh)
 ARRAYFILL feld(),0
@@ -72,6 +72,6 @@ PROCEDURE showit
   NEXT x
   COLOR col(nc-1)
   TEXT 20,s*bh+12,STR$(count)
-  VSYNC
+  SHOWPAGE
 RETURN
 

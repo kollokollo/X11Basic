@@ -2,6 +2,11 @@
 ' http://lodev.org/cgtutor/raycasting.html
 ' Converted to X11-Basic 2015
 '
+IF ANDROID?
+  mousecontrol=TRUE
+ELSE
+  mousecontrol=FALSE
+ENDIF
 RANDOMIZE
 @init_palette
 GET_GEOMETRY 1,bx%,by%,scrw%,scrh%
@@ -19,7 +24,7 @@ CLR OMX,OMY,OS,OH1,OH2
 IF MAP(PX+1,PY)=0
   PLA=0  ! Orientierung rechts
 ELSE
-  PLA=90.001  ! Orientierung unten
+  PLA=90.001 ! Orientierung unten
 ENDIF
 DO    ! ENGINE
   @render
@@ -34,7 +39,21 @@ DO    ! ENGINE
   COLOR gelb,schwarz
   TEXT 130,20,"w=forward, y=back, a=turn left, d=turn right"
   SHOWPAGE
-  KEYEVENT a,b,k$
+  IF mousecontrol
+    ' MOUSEEVENT x,y,b
+    MOUSE x,y,b
+    IF x>2*scrw%/3
+      k$="d"
+    ELSE IF x<scrw%/3
+      k$="a"
+    ELSE IF y<scrh%/3
+      k$="w"
+    ELSE IF y>2*scrh%/3
+      k$="y"
+    ENDIF
+  ELSE
+    KEYEVENT a,b,k$
+  ENDIF
   IF PX>=MW%-0.4 OR Py>=MH%-0.4  ! WIN!
     ALERT 1,"CONGRATULATIONS!||Play again?",1,"YES|NO",a%
     IF a%=1
