@@ -21,6 +21,9 @@
   #include <SDL/SDL.h>
   #include <SDL/SDL_gfxPrimitives.h>
 #endif
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 #include <errno.h>
 #include "x11basic.h"
 #include "xbasic.h"

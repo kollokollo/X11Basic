@@ -49,10 +49,10 @@ CCSHARED=@CC@  -fPIC -shared -Wl,-Bsymbolic-functions
 
 # Cross-Compiler fuer Windows-Excecutable
 
-WINCC=i686-w64-mingw32-gcc
+WINCC=i686-w64-mingw32-gcc -std=c99
 
 # Cross-Compiler fuer ATARI ST TOS
-TOSCC=m68k-atari-mint-gcc
+TOSCC=m68k-atari-mint-gcc -std=c99
 
 # Cross-Compiler fuer ARM-Linux-Excecutable
 
