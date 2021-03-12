@@ -56,9 +56,9 @@ in 2018:
 in 2019:
 * Yet Another Troll  (beta testing and bug fixing)
 
-in 2020:
+in 2020 and 2021:
 * amaendle (bug fixing)
-
+* Bruno (shakenfr) for the Dockerfile and help with docker CI
 
 X11-Basic is build on top of many free softwares, and could not exist without 
 them.
@@ -104,7 +104,7 @@ Some pieces of code of X11-Basic are based on third party software:
     from the 1987 CACM article by Witten, Neal, and Cleary.
     
 
-Parts of this manual (the chapter about CGI programming) are taken from or 
+Parts of the manual (the chapter about CGI programming) are taken from or 
 based on a documentation which used to be freely available on the internet  in
 the 1990ies. (I hope, it was public domain or similar.) Unfortunately I have
 lost the link to its source. If you happen to know its potential source, please
