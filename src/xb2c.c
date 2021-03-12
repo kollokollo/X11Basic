@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 #if defined WINDOWS || defined ANDROID
 #define EX_CANTCREAT	73	/* can't create (user) output file */
 #define EX_NOINPUT	66	/* cannot open input */
@@ -22,12 +23,17 @@
 #include <sysexits.h>
 #endif
 
+#ifdef ATARI
+char *strdup(const char *s);
+#endif
+
 #include "defs.h"
 #include "x11basic.h"
 #include "xbasic.h"
 #include "bytecode.h"
 #include "variablen.h"
 #include "keywords.h"
+#include "memory.h"
 //#include "xb2c.h"
 
 
@@ -734,9 +740,9 @@ static int loadbcprg(char *filename, FILE *optr) {
   bload(filename,p,len);
   if(p[0]==BC_BRAs && p[1]==sizeof(BYTECODE_HEADER)-2) {
     bytecode=(BYTECODE_HEADER *)p;
-    fprintf(optr,"/* X11-Basic-Compiler Version " VERSION "\n"
-                 "   (c) Markus Hoffmann 2002-2021\n"
-                 "\n\n"
+
+    fprintf(optr,"/* X11-Basic-Compiler Version " VERSION "\n" 
+                 "   (c) Markus Hoffmann 2002-2021\n\n\n" 
 		 "Compile this with:\n tcc -lx11basic " TCC_COMPILE_FLAGS " %s\n"
                  "\nBytecode: %s (%d Bytes)\n\n",ofilename,filename,len);
 
@@ -751,14 +757,14 @@ static int loadbcprg(char *filename, FILE *optr) {
       return(-1);
     }
 #ifdef IS_BIG_ENDIAN
-  LWSWAP((short *)&bytecode->textseglen);
-  LWSWAP((short *)&bytecode->rodataseglen);
-  LWSWAP((short *)&bytecode->sdataseglen);
-  LWSWAP((short *)&bytecode->dataseglen);
-  LWSWAP((short *)&bytecode->bssseglen);
-  LWSWAP((short *)&bytecode->symbolseglen);
-  LWSWAP((short *)&bytecode->stringseglen);
-  LWSWAP((short *)&bytecode->relseglen);
+  LWSWAP((char *)&bytecode->textseglen);
+  LWSWAP((char *)&bytecode->rodataseglen);
+  LWSWAP((char *)&bytecode->sdataseglen);
+  LWSWAP((char *)&bytecode->dataseglen);
+  LWSWAP((char *)&bytecode->bssseglen);
+  LWSWAP((char *)&bytecode->symbolseglen);
+  LWSWAP((char *)&bytecode->stringseglen);
+  LWSWAP((char *)&bytecode->relseglen);
   WSWAP((char *)&bytecode->flags);
 #endif
         /* Sicherstellen, dass der Speicherbereich auch gross genug ist fuer bss segment*/
@@ -808,8 +814,8 @@ static int loadbcprg(char *filename, FILE *optr) {
     fprintf(optr,"%d symbols:\n",c);
     for(i=0;i<c;i++) {
 	#ifdef IS_BIG_ENDIAN
-	  LWSWAP((short *)&symtab[i].name);
-	  LWSWAP((short *)&symtab[i].adr);
+	  LWSWAP((char *)&symtab[i].name);
+	  LWSWAP((char *)&symtab[i].adr);
 	#endif
       if(verbose>1) fprintf(optr,"%4d : $%08x %s\n",i,(unsigned int)symtab[i].adr,&strings[symtab[i].name]);
     }

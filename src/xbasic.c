@@ -34,15 +34,20 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <strings.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #include <windows.h>
 #endif
 
+#ifdef ATARI
+char *strdup(const char *s);
+#endif
 
 #include <math.h>
 #include <errno.h>
 #include <time.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "defs.h"
 #include "x11basic.h"
@@ -120,11 +125,11 @@ static void do_relocation(char *adr,unsigned char *fixup, int l) {
       adr+=fixup[i];
       memcpy(&ll,adr,sizeof(uint32_t));
       #ifdef IS_BIG_ENDIAN
-        LWSWAP((short *)&ll);
+        LWSWAP((char *)&ll);
       #endif
       ll+=POINTER2INT(adr);
       #ifdef IS_BIG_ENDIAN
-        LWSWAP((short *)&ll);
+        LWSWAP((char *)&ll);
       #endif
       memcpy(adr,&ll,sizeof(uint32_t));
     }
@@ -219,8 +224,8 @@ COMPILE_BLOCK *bytecode_init(char *adr) {
     if(a>0) {
       for(i=0;i<a;i++) {
 	#ifdef IS_BIG_ENDIAN
-	  LWSWAP((short *)&symtab[i].name);
-	  LWSWAP((short *)&symtab[i].adr);
+	  LWSWAP((char *)&cb->symtab[i].name);
+	  LWSWAP((char *)&cb->symtab[i].adr);
 	#endif
         if(cb->symtab[i].typ==STT_OBJECT) {
 	  typ=cb->symtab[i].subtyp;
@@ -300,14 +305,14 @@ int fix_bytecode_header(BYTECODE_HEADER *bytecode) {
       return(-1);
     }
 #ifdef IS_BIG_ENDIAN
-    LWSWAP((short *)&bytecode->textseglen);
-    LWSWAP((short *)&bytecode->rodataseglen);
-    LWSWAP((short *)&bytecode->sdataseglen);
-    LWSWAP((short *)&bytecode->dataseglen);
-    LWSWAP((short *)&bytecode->bssseglen);
-    LWSWAP((short *)&bytecode->symbolseglen);
-    LWSWAP((short *)&bytecode->stringseglen);
-    LWSWAP((short *)&bytecode->relseglen);
+    LWSWAP((char *)&bytecode->textseglen);
+    LWSWAP((char *)&bytecode->rodataseglen);
+    LWSWAP((char *)&bytecode->sdataseglen);
+    LWSWAP((char *)&bytecode->dataseglen);
+    LWSWAP((char *)&bytecode->bssseglen);
+    LWSWAP((char *)&bytecode->symbolseglen);
+    LWSWAP((char *)&bytecode->stringseglen);
+    LWSWAP((char *)&bytecode->relseglen);
     WSWAP((char *)&bytecode->flags);
 #endif
     return(0);

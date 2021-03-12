@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
 #if defined(__CYGWIN__) || defined(__MINGW32__)

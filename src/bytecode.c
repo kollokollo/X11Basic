@@ -22,6 +22,8 @@
 #include <windows.h>
 #endif
 
+#include <strings.h>
+
 #include "defs.h"
 #include "x11basic.h"
 #include "variablen.h"
@@ -33,6 +35,10 @@
 #include "parameter.h"
 #include "number.h"
 #include "io.h"
+#ifdef ATARI
+char *strdup(const char *s);
+#include "memory.h"
+#endif
 
 #include "functions.h"
 #include "wort_sep.h"
@@ -2478,14 +2484,14 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   if(verbose>0) print_bytecode_info(&h);
   #ifdef IS_BIG_ENDIAN
   WSWAP((char *)&h.version);
-  LWSWAP((short *)&h.textseglen);
-  LWSWAP((short *)&h.rodataseglen);
-  LWSWAP((short *)&h.sdataseglen);
-  LWSWAP((short *)&h.dataseglen);
-  LWSWAP((short *)&h.bssseglen);
-  LWSWAP((short *)&h.symbolseglen);
-  LWSWAP((short *)&h.stringseglen);
-  LWSWAP((short *)&h.relseglen);
+  LWSWAP((char *)&h.textseglen);
+  LWSWAP((char *)&h.rodataseglen);
+  LWSWAP((char *)&h.sdataseglen);
+  LWSWAP((char *)&h.dataseglen);
+  LWSWAP((char *)&h.bssseglen);
+  LWSWAP((char *)&h.symbolseglen);
+  LWSWAP((char *)&h.stringseglen);
+  LWSWAP((char *)&h.relseglen);
   WSWAP((char *)&h.flags);
   #endif
   if(write(fdis,&h,sizeof(BYTECODE_HEADER))==-1) io_error(errno,"write");
@@ -2494,9 +2500,9 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   if(dlen) {if(write(fdis,cb->sdataseg,dlen)==-1) io_error(errno,"write");}
   /* zurückwandeln, damit wir damit rechnen können...*/
   #ifdef IS_BIG_ENDIAN
-  LWSWAP((short *)&h.symbolseglen);
-  LWSWAP((short *)&h.stringseglen);
-  LWSWAP((short *)&h.relseglen);
+  LWSWAP((char *)&h.symbolseglen);
+  LWSWAP((char *)&h.stringseglen);
+  LWSWAP((char *)&h.relseglen);
   #endif
   
   if(write(fdis,cb->stringseg,h.stringseglen)==-1) io_error(errno,"write strings");
@@ -2504,8 +2510,8 @@ int save_bytecode(const char *name,COMPILE_BLOCK *cb, int dostrip) {
   int n=h.symbolseglen/sizeof(BYTECODE_SYMBOL);
   if(n>0) {
     for(int i=0;i<n;i++) {
-        LWSWAP((short *)&cb->symtab[i].name); // TODO: this destroys original symtab
-        LWSWAP((short *)&cb->symtab[i].adr);
+        LWSWAP((char *)&cb->symtab[i].name); // TODO: this destroys original symtab
+        LWSWAP((char *)&cb->symtab[i].adr);
     }
   }
 #endif

@@ -511,8 +511,8 @@ xbvm.prg: x11basic.toslib bytecode.h xbvm.c
 xbc.prg : xbasic examples/compiler/xbc-st.bas xbvm.prg xbbc
 	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-st.bas -o $@
 	chmod 755 $@ 
-xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c
-	$(TOSCC) -DATARI -DDUMMY_LIST $(OPT) -o $@ xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c svariablen.c file.c
+xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c keywords.c
+	$(TOSCC) -DATARI -DDUMMY_LIST $(OPT) -o $@ xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c svariablen.c file.c keywords.c
 	m68k-atari-mint-strip $@
 	
 # Make the (static) library for ATARI ST
@@ -652,9 +652,9 @@ windows: $(WINDIST) X11-Basic.iss
 
 # Make an ATARI ST version
 
-tos: $(TOSDIST) xbasic.prg xbvm.prg xbbc.ttp xbc.prg xb2c.ttp
-	rm -f X11-Basic-atari-@version@.zip
-	zip -j -D  -o X11-Basic-@version@-st.zip $(TOSDIST)
+tos: $(TOSDIST)
+	rm -f X11-Basic-@version@-$(RELEASE)-st.zip
+	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-st.zip $(TOSDIST)
 
 
 examples: X11-Basic-examples-$(LIBNO)-$(RELEASE).zip \
