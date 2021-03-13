@@ -1,0 +1,21 @@
+Dockerfile for X11-Basic
+========================
+
+Dockerfile for X11-Basic based on the one by Bruno
+https://github.com/shakenfr/x11basic_docker/
+
+The docker file generates an installable .deb package of X11-Basic as well as
+the User-Manul as .pdf
+
+
+Important docker commands:
+-------------------------
+
+
+
+sudo docker build . -t kollo/x11basic:1.27
+
+
+# sudo docker images
+
+# sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:1.27 --net=host --env="DISPLAY"

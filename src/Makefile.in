@@ -867,12 +867,13 @@ deb2 :	$(DIR).tar.gz
 	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
 	sudo dpkg-buildpackage -rfakeroot)
 
-tinerpm : $(TINEDIR).tar.gz Extensions/tinexbasic.spec
-	cp $(TINEDIR).tar.gz /usr/src/packages/SOURCES/
-	rpmbuild -ba --clean Extensions/tinexbasic.spec
-doocsrpm : $(DOOCSDIR).tar.gz Extensions/doocsxbasic.spec
-	cp $(DOOCSDIR).tar.gz /usr/src/packages/SOURCES/
-	rpmbuild -ba --clean Extensions/doocsxbasic.spec
+# excecute the Dockerfile and extract the debian package and the User Manual
+docker: docker/Dockerfile
+	cd docker;sudo docker build . -t kollo/x11basic:$(LIBNO)-$(RELEASE)
+	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf dockerfilevolume/"'
+#	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE)
+
+
 $(DIR3).zip : $(BINDIST)
 	rm -rf /tmp/$(DIR3)
 	mkdir /tmp/$(DIR3)
