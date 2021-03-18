@@ -3,3 +3,10 @@ framebuffer.png
 AUTH
 *.zip
 obsolete/
+WINDOWS/tmp/
+WINDOWS/lib/LICENSE.freetype.txt
+WINDOWS/lib/LICENSE.zlib.txt
+WINDOWS/lib/libfreetype-6.dll
+WINDOWS/lib/zlib1.dll
+WINDOWS/lib/SDL_ttf.dll
+

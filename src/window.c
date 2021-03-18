@@ -36,6 +36,7 @@
 #elif defined USE_SDL
   #include <SDL/SDL.h>
   #include <SDL/SDL_gfxPrimitives.h>
+  #include <SDL/SDL_ttf.h>
 #endif
 
 
@@ -221,7 +222,12 @@ static int init_sdl() {
     perror("SDL_Init failed.");
     return -1;
   }
-     atexit(SDL_Quit);
+  atexit(SDL_Quit);
+  /* Initialize SDL_ttf  */
+  if(TTF_Init()==-1) {
+    perror("SDL_TTF_Init failed.");
+    return -1;
+  }
   /* Enable Unicode translation */
   SDL_EnableUNICODE( 1 );
 
@@ -450,6 +456,12 @@ void open_window(WINDOWDEF *w) {
 }
 
 void close_window(WINDOWDEF *w) {
+#ifdef HAVE_FREETYPE
+  if(freetype_face) FT_Done_Face(freetype_face);
+  if(freetype_library) FT_Done_FreeType(freetype_library);
+  freetype_face=NULL;
+  freetype_library=NULL;
+#endif
 #ifdef WINDOWS_NATIVE
   if(w->flags&WIN_CREATED) {
     DestroyWindow(w->win_hwnd);

@@ -217,6 +217,7 @@ void FB_set_textmode(unsigned int mode);
 void FB_set_clip(G_CONTEXT *screen,int x,int y,int w,int h);
 void FB_clip_off(G_CONTEXT *screen);
 void FB_plot(int x, int y);
+void FB_bgplot(int x, int y);
 unsigned short FB_point(int x, int y);
 void FB_line(int x1,int y1,int x2,int y2);
 void FB_box(int x1,int y1,int x2,int y2);

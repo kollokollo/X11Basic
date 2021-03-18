@@ -219,7 +219,7 @@ FILEINFO filenr[ANZFILENR];
 
 FILEINFO get_fileptr(int n) {
   FILEINFO ret;
-  ret.typ=FT_FILE; 
+  ret.typ=FT_REGULARFILE; 
   if(n==-1) ret.dptr=stderr;  
   else if(n==-2) ret.dptr=stdin;  
   else if(n==-4) ret.dptr=stdout;  
@@ -1398,7 +1398,7 @@ void c_open(PARAMETER *plist, int e) {
   } else if(special=='Y') filenr[number].typ=FT_USB;
   else if(special=='Z') filenr[number].typ=FT_BTRC;
   else if(special=='V') filenr[number].typ=FT_BTL2;
-  else filenr[number].typ=FT_FILE;
+  else filenr[number].typ=FT_REGULARFILE;
 }
 
 void c_link(PARAMETER *plist, int e) {
@@ -1530,7 +1530,7 @@ static void do_close(int i) {
 	CloseHandle(filenr[i].cport);        
 #endif
        /*  kein break !*/      
-    case FT_FILE:
+    case FT_REGULARFILE:
     case FT_SOCKET:
     case FT_PIPE:
     case FT_BTRC:
@@ -1877,10 +1877,10 @@ void c_pipe(PARAMETER *plist,int e) {
     else {
         filenr[i].dptr=fdopen(filedes[0],"r");
 	if(filenr[i].dptr==NULL) io_error(errno,"PIPE");
-	else filenr[i].typ=FT_FILE;
+	else filenr[i].typ=FT_REGULARFILE;
         filenr[j].dptr=fdopen(filedes[1],"w");
 	if(filenr[j].dptr==NULL) io_error(errno,"PIPE");
-	else filenr[j].typ=FT_FILE;
+	else filenr[j].typ=FT_REGULARFILE;
     }
 #else
     io_error(errno,"PIPE");
@@ -1892,7 +1892,7 @@ void c_pipe(PARAMETER *plist,int e) {
 
 void c_unget(PARAMETER *plist,int e) {
   FILEINFO fff;
-  if(plist->typ==PL_LEER) {fff.dptr=stdin;fff.typ=FT_FILE;}
+  if(plist->typ==PL_LEER) {fff.dptr=stdin;fff.typ=FT_REGULARFILE;}
   else fff=get_fileptr(plist->integer);
   if(fff.typ==0) xberror(24,""); /* File nicht geoeffnet */
   else ungetc(plist[1].integer,fff.dptr);

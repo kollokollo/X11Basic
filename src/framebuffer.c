@@ -271,6 +271,11 @@ void FB_plot(int x, int y) {
   FB_PutPixel(x,y,screen.fcolor);
  // FB_showx_mouse(); muss nicht sein (nur langsam) Mousebewegung aktiviert es wieder
 }
+void FB_bgplot(int x, int y) {
+  FB_hidex_mouse();
+  FB_PutPixel(x,y,screen.bcolor);
+ // FB_showx_mouse(); muss nicht sein (nur langsam) Mousebewegung aktiviert es wieder
+}
 unsigned short FB_point(int x, int y) {
   if(x<0 || y<0 || x>=screen.width || y>=screen.height) return(0);
   unsigned short *ptr  = (unsigned short*)(screen.pixels+x*2+y*screen.scanline);

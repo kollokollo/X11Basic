@@ -226,21 +226,32 @@ Syntax:     DEFTEXT flag%,width,height,angle
 
 DESCRIPTION:
 
-	Defines the style, rotation and size of the line font used
-	by the LTEXT command. COLOR and linestyles (e.g. thickness) 
+	Defines the style, rotation and size of the line font or
+	TrueType font used by the LTEXT and TEXT commands. 
+	COLOR and linestyles (e.g. thickness) 
 	can be set with COLOR and DEFLINE.
 ----*
-  flag% : text style - 0=monospace, 1=normal
+  flag% : text style - 0=monospace, 1=normal (only LTEXT)
   angle : rotation in degrees 
-  width and height : size of text in % 
+  width and height : For LTEXT: size of text in % 
   	   (100% corresponds to 100 Pixel font)
+  width : for TrueType fonts: defines the size of the font in pt.
 *----
+COMMENT: 
+	The DEFTEXT command can set values for TEXT and LTEXT.
+	TrueType font support is not available on every platform, and 
+	so far we have implemented a very rudimentary renderung, only
+	monochrome, no alaiasing, no alpha channel.
+	So it makes only sense to use the TrueType fonts in large sizes.
 
 EXAMPLE:
 	DEFTEXT 0,0.05,0.1,0      ! Size of the charackters is approx 10x5 pixels
 	LTEXT 100,100,"Hello"
+	SETFONT "/usr/share/fonts/truetype/ubuntu/UbuntuMono-B.ttf"
+	DEFTEXT ,64,,30    ! Set 64 pt , 30 degrees
+	TEXT 180,370,"TTF Font ..."
 
-SEE ALSO: LTEXT, TEXT, COLOR, DEFLINE
+SEE ALSO: LTEXT, TEXT, COLOR, DEFLINE, SETFONT
 ##############################################################################
 Function: DEG()
 Syntax:  d=DEG(x)

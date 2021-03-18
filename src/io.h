@@ -25,7 +25,7 @@
 /*  File handling structures */
 
 #define FT_NONE   0
-#define FT_FILE   1
+#define FT_REGULARFILE   1
 #define FT_DLL    2
 #define FT_DEV    3
 #define FT_SOCKET 4

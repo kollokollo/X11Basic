@@ -371,12 +371,12 @@ DESCRIPTION:
 
 	With UNIX and the X-WINDOW system, the font name t$ may be any valid
 	font name or pattern. On other platforms true-type font filenames can
-	be used. This way, also proportional fonts can be  used.
+	be used. This way, also proportional fonts can be used.
 
 COMMENT: 
-	The support for true-type .TTF fonts is not usable at the moment. You
-	should prefer the standard names given obove instead of platform dependant
-	names to stay platform independant.
+	The support for true-type .TTF fonts is very bold at the moment and
+	does not work on all platforms. You should prefer the standard names 
+	given above to stay platform independant.
 	
 	Currently the font setting is overwritten by ALERT, FILESELCT and others
 	every time they are used. It is planned to have this independant and also

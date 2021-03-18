@@ -6,6 +6,14 @@
  * COPYING for details
  */
 
+#ifdef HAVE_FREETYPE
+  #include <freetype2/ft2build.h>
+#ifndef DEPEND // switch that off, of preprocessor runs dependencies
+  #include FT_FREETYPE_H
+#endif
+  extern FT_Library    freetype_library;
+  extern FT_Face       freetype_face;
+#endif
 #ifdef FRAMEBUFFER
   #include "framebuffer.h"
 #elif defined USE_SDL
@@ -29,8 +37,6 @@
   extern HANDLE keyevent,buttonevent,motionevent;
   #define XSetLineAttributes(a,b,c,d,e,f) ; 
 #endif
-
-
 
 /* Orginal VDI Graphmodi */
 
@@ -71,6 +77,7 @@
 #define XDrawArc(a,b,c,d,e,f,g,h,i) Arc(window[usewindow].bitcon,d,e,d+f,d+g,0,0,0,0)
 #define XFillArc(a,b,c,d,e,f,g,h,i) Ellipse(window[usewindow].bitcon,d,e,d+f,d+g)
 #define DrawPoint(a,b) SetPixelV(window[usewindow].bitcon,a,b,window[usewindow].fcolor)
+#define DrawBgPoint(a,b) SetPixelV(window[usewindow].bitcon,a,b,window[usewindow].bcolor)
 #define CopyArea(a,b,c,d,e,f) BitBlt(window[usewindow].bitcon,e,f,c,d,window[usewindow].bitcon,a,b,SRCCOPY)
 #define DrawString(a,b,c,d) TextOut(window[usewindow].bitcon,a,(b-window[usewindow].baseline),c,d)
 #define SetFillRule(c)   ;
@@ -86,6 +93,7 @@
 #define DrawString(a,b,c,d) FB_DrawString(a,b-window[usewindow].baseline,c,d,window[usewindow].chw,window[usewindow].chh)
 #define DrawLine(a,b,c,d)  FB_line(a,b,c,d)
 #define DrawPoint(a,b)  FB_plot(a,b)
+#define DrawBgPoint(a,b)  FB_bgplot(a,b)
 #define CopyArea(a,b,c,d,e,f) FB_CopyArea(a,b,c,d,e,f)
 #elif defined USE_SDL
 #define SetFillRule(c)   ;
@@ -97,6 +105,7 @@
 #define DrawString(a,b,c,d) {char s[d+1];memcpy(s,c,d);s[d]=0;stringColor(window[usewindow].display,a,(b)-window[usewindow].chh+4,s,window[usewindow].fcolor);}
 #define DrawLine(a,b,c,d)  lineColor(window[usewindow].display,a,b,c,d,window[usewindow].fcolor)
 #define DrawPoint(a,b)  pixelColor(window[usewindow].display,a,b,window[usewindow].fcolor)
+#define DrawBgPoint(a,b)  pixelColor(window[usewindow].display,a,b,window[usewindow].bcolor)
 #define CopyArea(a,b,c,d,e,f) ;
 #define XDrawArc(a,b,c,d,e,f,g,h,i) pieColor(a,d,e,f,h/64,i/64,window[usewindow].fcolor)
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;
@@ -111,6 +120,7 @@
 #define DrawString(a,b,c,d) v_gtext(window[usewindow].vdi_handle,a,b,c)
 #define DrawLine(a,b,c,d)  ;
 #define DrawPoint(a,b) ;
+#define DrawBgPoint(a,b) ;
 #define CopyArea(a,b,c,d,e,f) ;
 #define XDrawArc(a,b,c,d,e,f,g,h,i) ;
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;
@@ -125,6 +135,7 @@
 #define DrawString(a,b,c,d) XDrawString(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)
 #define DrawLine(a,b,c,d)  XDrawLine(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b,c,d)
 #define DrawPoint(a,b)     XDrawPoint(window[usewindow].display,window[usewindow].pix,window[usewindow].gc,a,b)
+#define DrawBgPoint(a,b)   ;
 #define CopyArea(a,b,c,d,e,f) XCopyArea(window[usewindow].display,window[usewindow].pix,window[usewindow].pix,window[usewindow].gc,a,b,c,d,e,f)
 #else
 #define SetFillRule(c)   ;
@@ -136,6 +147,7 @@
 #define DrawString(a,b,c,d) ;
 #define DrawLine(a,b,c,d)  ;
 #define DrawPoint(a,b) ;
+#define DrawBgPoint(a,b) ;
 #define CopyArea(a,b,c,d,e,f) ;
 #define XDrawArc(a,b,c,d,e,f,g,h,i) ;
 #define XFillArc(a,b,c,d,e,f,g,h,i) ;

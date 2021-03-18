@@ -1524,7 +1524,7 @@ void c_dump(PARAMETER *plist,int e) {
   }
   if(kkk=='#') {                   /*  dump Channels */
     for(i=0;i<ANZFILENR;i++) {
-      if(filenr[i].typ==FT_FILE)        fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","FILE");
+      if(filenr[i].typ==FT_REGULARFILE)        fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","FILE");
       else if(filenr[i].typ==FT_DEV)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","DEVICE");
       else if(filenr[i].typ==FT_DLL)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","SHARED OBJECT");
       else if(filenr[i].typ==FT_USB)    fprintf(fff.dptr,"#%d: %s [%s]\n",i,"","USB CONNECTION");

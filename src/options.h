@@ -15,7 +15,6 @@
 /*#define SMALL_RAM*/
 
 
-
 #ifdef WINDOWS
   #undef HAVE_READLINE
  // #undef HAVE_LAPACK
@@ -36,6 +35,7 @@
   #undef HAVE_FFTW
   #undef HAVE_RFFTW
   #undef HAVE_BLUETOOTH 
+  #undef HAVE_FREETYPE
   #undef HAVE_BACKTRACE 
   #undef HAVE_MQTT
   #define USE_SDL
@@ -62,6 +62,9 @@
   #define SMALL_RAM 1
 #endif
 
+#ifdef USE_SDL
+  #undef HAVE_FREETYPE
+#endif
 
 #ifndef HAVE_SDL 
   #undef USE_SDL

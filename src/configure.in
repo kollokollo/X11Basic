@@ -240,6 +240,12 @@ AC_DEFINE(HAVE_ALSA,1,[snd_pcm_recover in asound])
 #AC_DEFINE(HAVE_JPEG,1,[jpeg_read_header in jpeg])
 #],,[$libs])
 
+# `-lfreetype':
+AC_CHECK_LIB([freetype], [FT_Init_FreeType], [
+libs="$libs -lfreetype"
+AC_DEFINE(HAVE_FREETYPE,1,[FT_Init_FreeType in freetype])
+],,[$libs])
+
 # `-lutil':
 AC_CHECK_LIB([util], [forkpty], [
 libs="$libs -lutil"

@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "defs.h"
 #ifdef USE_GEM
   #include <osbind.h>
@@ -21,7 +22,6 @@
   #include <SDL/SDL.h>
   #include <SDL/SDL_gfxPrimitives.h>
 #endif
-
 #include "x11basic.h"
 #include "graphics.h"
 #include "aes.h"
@@ -118,11 +118,7 @@ void set_boundary(int n) {
 }
 
 
-
-
-#if defined USE_X11 || defined USE_SDL
 int global_graphmode=GRAPHMD_REPLACE;
-#endif
 
 void set_graphmode(int n) { 
 /*            n=1 copy src
@@ -133,8 +129,8 @@ void set_graphmode(int n) {
               n<0 uebergibt -n an X-Server
  */  
 
-#ifdef USE_X11
   global_graphmode=n;
+#ifdef USE_X11
   XGCValues gc_val;  
   switch (n) {
     case GRAPHMD_REPLACE:gc_val.function=GXcopy;       break;
@@ -152,7 +148,6 @@ void set_graphmode(int n) {
   } 
   XChangeGC(window[usewindow].display, window[usewindow].gc,  GCFunction, &gc_val);
 #elif defined USE_SDL
-  global_graphmode=n;
 #elif defined FRAMEBUFFER
   FB_setgraphmode(n);
   switch (n) {
@@ -178,7 +173,59 @@ void set_graphmode(int n) {
 
 */
 
+#ifdef HAVE_FREETYPE
+  FT_Library    freetype_library=NULL;
+  FT_Face       freetype_face=NULL;
+#endif
+#if defined USE_SDL
+#include <SDL/SDL_ttf.h>
+TTF_Font *ttffont = NULL;
+int ttffontheight=20;  /* pt @ 100dpi*/
+#endif
+
 void set_font(char *name) {
+  if(name==NULL || *name==0) return;
+  if(!strcmp(name+strlen(name)-4,".ttf") || !strcmp(name+strlen(name)-4,".TTF")) {
+    if(exist(name)) {
+
+#ifdef HAVE_FREETYPE
+//  FT_Error      error;
+  if(!freetype_library) FT_Init_FreeType( &freetype_library ); 
+  FT_New_Face( freetype_library, name, 0, &freetype_face );/* create face object */
+  /* error handling omitted */
+  /* use 50pt at 100dpi */
+  FT_Set_Char_Size( freetype_face, 50 * 64, 0,100, 0 );                /* set character size */
+  /* error handling omitted */
+
+  /* cmap selection omitted;                                        */
+
+  /* Use defaults */
+
+  window[usewindow].chw=24;
+  window[usewindow].chh=48;
+  window[usewindow].baseline=window[usewindow].chh-6;
+#elif defined USE_SDL
+  if(ttffont) {
+    TTF_CloseFont(ttffont);
+    ttffont=NULL;
+  }
+  ttffont=TTF_OpenFont(name,20);
+  if(ttffont) ttffontheight=TTF_FontHeight(ttffont);
+  else ttffontheight=20;
+
+#else
+      printf("WARNING: True-type font support not compiled in.\n");
+#endif
+      return;
+    }
+  } 
+#ifdef HAVE_FREETYPE
+   if(freetype_face) FT_Done_Face(freetype_face);
+   if(freetype_library) FT_Done_FreeType(freetype_library);
+   freetype_face=NULL;
+   freetype_library=NULL;
+#endif
+
 #ifdef USE_X11
    XGCValues gc_val;  
    XFontStruct *fs;
@@ -224,6 +271,7 @@ void set_font(char *name) {
     window[usewindow].baseline=window[usewindow].chh-0;
   }
 #elif defined USE_SDL
+  ttffont = NULL;
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
     window[usewindow].chw=8;
     window[usewindow].chh=16;
@@ -243,8 +291,63 @@ void set_font(char *name) {
 #endif
 }
 
+#ifdef HAVE_FREETYPE
+/* Helper function for True Type Font drawing */
+static void draw_fontbitmap(FT_Bitmap* bitmap,FT_Int x,FT_Int y) {
+  FT_Int i,j,p,q;
+  FT_Int x_max=x+bitmap->width;
+  FT_Int y_max=y+bitmap->rows;
+
+  /* for simplicity, we assume that `bitmap->pixel_mode' */
+  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+  unsigned char a=1;
+  for(i=x,p=0;i<x_max;i++,p++) {
+    for(j=y,q=0;j<y_max;j++,q++) {
+      if(i<0 || j<0 || i>=window[usewindow].w || j>=window[usewindow].h) continue;
+      a=bitmap->buffer[q*bitmap->width+p];
+      if(a && (double)random()/RAND_MAX*255.0<(double)a) {DrawPoint(i,j);}
+      else if(global_graphmode!=GRAPHMD_TRANS)           {DrawBgPoint(i,j);}
+    }
+  }
+}
+#endif
+
+
+/* Draw a TEXT String, using the builtin fonts or TrueType Fonts (.ttf) */
 
 void draw_string(int x, int y, char *text,int len) {
+#ifdef HAVE_FREETYPE
+  if(freetype_face) {
+    FT_GlyphSlot slot;
+    FT_Matrix    matrix;  /* transformation matrix */
+    FT_Vector    pen;     /* untransformed origin  */
+    FT_Error     error;
+    FT_Set_Char_Size(freetype_face,ltextxfaktor*64,0,100,0); /* set character size use xx pt at 100dpi */
+    slot=freetype_face->glyph;
+    double angle=(double)ltextwinkel/180.0*PI;
+    /* set up matrix */
+    matrix.xx=(FT_Fixed)( cos(angle)*0x10000L);
+    matrix.xy=(FT_Fixed)(-sin(angle)*0x10000L);
+    matrix.yx=(FT_Fixed)( sin(angle)*0x10000L);
+    matrix.yy=(FT_Fixed)( cos(angle)*0x10000L);
+    /* the pen position starts at */
+    pen.x=x*64;
+    pen.y=(window[usewindow].h-y)*64;
+    int n;
+    for(n=0;n<len;n++) {
+      FT_Set_Transform(freetype_face,&matrix,&pen);   /* set transformation */
+      /* load glyph image into the slot (erase previous one) */
+      error=FT_Load_Char(freetype_face,text[n],FT_LOAD_RENDER);
+      if(error) continue;                 /* ignore errors */
+
+      /* now, draw to our target surface (convert position) */
+      draw_fontbitmap(&slot->bitmap,slot->bitmap_left,window[usewindow].h-slot->bitmap_top);
+      pen.x+=slot->advance.x;    /* increment pen position */
+      pen.y+=slot->advance.y;
+    }
+    return;
+  }
+#endif
 #ifdef WINDOWS_NATIVE
   TextOut(bitcon[usewindow],x,(y-window[usewindow].baseline),text,len);
 #elif defined FRAMEBUFFER
@@ -262,6 +365,22 @@ void draw_string(int x, int y, char *text,int len) {
   char s[len+1];
   memcpy(s,text,len);
   s[len]=0;
+  
+  /* TODO: implement SDL_TTF with angle here ....*/
+  if(ttffont) {
+    SDL_Surface *message = NULL;
+
+    unsigned int fgc=window[usewindow].fcolor;
+    SDL_Color textColor = { (fgc&0xff000000)>>24, (fgc&0xff0000)>>16, (fgc&0xff00)>>8 };
+    message = TTF_RenderUTF8_Blended(ttffont,s, textColor);
+    if(message) {
+      SDL_Rect a={0,0,message->w,message->h};
+      SDL_Rect b={x,y-message->h,message->w,message->h};
+      SDL_BlitSurface(message, &a,window[usewindow].display, &b);
+      SDL_FreeSurface(message);
+      return;
+    }
+  }
   stringColor(window[usewindow].display,x,y-window[usewindow].baseline+2,s,window[usewindow].fcolor);
 #endif
 }

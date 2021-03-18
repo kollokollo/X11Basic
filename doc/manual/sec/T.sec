@@ -60,7 +60,10 @@ Syntax:   TEXT x,y,t$
 
 DESCRIPTION:
 
-	Draws text t$ in graphics window at position x,y.
+	Draws text t$ in graphics window at position x,y. The size and angle
+	of the text is defined by the font used (SETFONT) and by the 
+	definitions made with DEFTEXT. GRAPHMODE determines is the font is
+	drawn with a solid or transparent background.
 
 EXAMPLE:
 
@@ -74,7 +77,7 @@ FOR x=0 to 15
 NEXT x
 SHOWPAGE
 
-SEE ALSO: SETFONT, DEFTEXT
+SEE ALSO: SETFONT, DEFTEXT, GRAPHMODE
 ##############################################################################
 Variable:   TIME$
 Syntax:     a$=TIME$

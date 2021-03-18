@@ -54,7 +54,10 @@ Source: "xbc.exe"; DestDir: "{app}"
 Source: "xb2c.exe"; DestDir: "{app}"
 Source: "xbvm.exe"; DestDir: "{app}"
 Source: "xbbc.exe"; DestDir: "{app}"
-Source: "WINDOWS/lib/SDL.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/SDL.dll";     DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/SDL_ttf.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libfreetype-6.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/zlib1.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
 Source: "WINDOWS/demo.bas"; DestName: "demo.bas"; DestDir: "{app}/examples"
 Source: "WINDOWS/readme-windows.txt"; DestDir: "{app}"; Flags: isreadme
 Source: "WINDOWS/lib/libusb0.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
@@ -64,10 +67,13 @@ Source: "WINDOWS/x11basic.ico"; DestDir: "{app}"
 Source: "../doc/manual/Outputs/X11-Basic-manual-1.27.pdf"; DestName: "X11-Basic.pdf"; DestDir: "{app}/doc"
 Source: "WINDOWS/bas.ico"; DestDir: "{app}"
 Source: "WINDOWS/lib/README-SDL.txt"; DestDir: "{app}/contrib" ;  Flags: isreadme
+Source: "WINDOWS/lib/LICENSE.freetype.txt"; DestName: "LICENSE-FREETYPE.txt"; DestDir: "{app}/contrib"
+Source: "WINDOWS/lib/LICENSE.zlib.txt"; DestName: "LICENSE-ZLIB.txt"; DestDir: "{app}/contrib"
+Source: "WINDOWS/lib/LICENSE-SDL_ttf.txt"; DestName: "LICENSE-SDL_TTF.txt"; DestDir: "{app}/contrib"
 Source: "WINDOWS/lib/README-GMP.txt"; DestDir: "{app}/contrib"         ;  Flags: isreadme
 Source: "WINDOWS/lib/README-LAPACK.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
 Source: "WINDOWS/ansicon/readme.txt"; DestName: "README-ANSICON.txt"; DestDir: "{app}/contrib"      ;  Flags: isreadme
-Source: "WINDOWS/ansicon/LICENSE.txt"; DestName: "LICENSE-ANSICON.txt"; DestDir: "{app}/contrib"  
+Source: "WINDOWS/ansicon/LICENSE.txt"; DestName: "LICENSE-ANSICON.txt"; DestDir: "{app}/contrib"
 Source: "WINDOWS/ansicon/x86/ANSI32.dll"; DestDir: "{app}/contrib"  
 Source: "WINDOWS/ansicon/x86/ansicon.exe";  DestDir: "{app}/contrib"  
 Source: "WINDOWS/xbasic-wrapper.bat";  DestDir: "{app}"  
