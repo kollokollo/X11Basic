@@ -7,6 +7,7 @@ DESCRIPTION:
 	Waits until a key is pressed (in graphic window).
 	After the key event has occurred, the variables have
 	following content:
+
 ----*
    kc    -- Key-code
    ks    -- state of Shift/Control/Alt etc.
@@ -18,7 +19,9 @@ DESCRIPTION:
    k     -- mouse button state
 *----
 
-SEE ALSO: MOUSEEVENT
+
+
+SEE ALSO: MOUSEEVENT, EVENT, EVENT?()
 #############################################################################
 
 Command: KILL

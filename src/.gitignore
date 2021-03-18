@@ -1,1 +1,5 @@
 framebuffer.png
+*.deb
+AUTH
+*.zip
+obsolete/

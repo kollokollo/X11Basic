@@ -233,7 +233,7 @@ void fetch_icon_pixmap(WINDOWDEF *,int);
 
 static int create_window2(int nummer,const char *title, const char* info,int x,int y,unsigned int w,unsigned int h) {
 #ifdef WINDOWS
-    static int class_reg=0;
+  static int class_reg=0;
 #endif
   if(window[nummer].flags&WIN_CREATED) {
     printf("X11-Basic: Window %d already open !\n",nummer);
@@ -243,37 +243,37 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
     return(-1);
   } else {
 #ifdef WINDOWS_NATIVE
-  if (buttonevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
-  if (keyevent==INVALID_HANDLE_VALUE) keyevent=CreateEvent(NULL,FALSE,FALSE,NULL);
-  if (motionevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
-  if (tsync==INVALID_HANDLE_VALUE) tsync=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if(buttonevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if(keyevent==INVALID_HANDLE_VALUE)    keyevent=   CreateEvent(NULL,FALSE,FALSE,NULL);
+  if(motionevent==INVALID_HANDLE_VALUE) buttonevent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  if(tsync==INVALID_HANDLE_VALUE)       tsync=      CreateEvent(NULL,FALSE,FALSE,NULL);
   if(!class_reg) {
-   	win_class.cbSize		 = sizeof(WNDCLASSEX);
-	win_class.style 	      = 0;
-	win_class.lpfnWndProc	      = WndProc;
-	win_class.cbClsExtra  = 0;
-	win_class.cbWndExtra  = 0;
-	win_class.hInstance   = hInstance;
-	win_class.hIcon 	      = LoadIcon(NULL, IDI_APPLICATION);
-	win_class.hCursor	      = LoadCursor(NULL, IDC_ARROW);
-	win_class.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-	win_class.lpszMenuName  = NULL;
-	win_class.lpszClassName = "X11-Basic";
-	win_class.hIconSm	      = LoadIcon(NULL, IDI_APPLICATION);
-	if(!RegisterClassEx(&win_class)){
-		MessageBox(NULL, "Window Registration Failed!", "Error!",
-			MB_ICONEXCLAMATION | MB_OK);
-          return(-1);
-	}
-       class_reg=1;
+    win_class.cbSize	    = sizeof(WNDCLASSEX);
+    win_class.style	    = 0;
+    win_class.lpfnWndProc   = WndProc;
+    win_class.cbClsExtra    = 0;
+    win_class.cbWndExtra    = 0;
+    win_class.hInstance     = hInstance;
+    win_class.hIcon	    = LoadIcon(NULL, IDI_APPLICATION);
+    win_class.hCursor	    = LoadCursor(NULL, IDC_ARROW);
+    win_class.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    win_class.lpszMenuName  = NULL;
+    win_class.lpszClassName = "X11-Basic";
+    win_class.hIconSm	    = LoadIcon(NULL, IDI_APPLICATION);
+    if(!RegisterClassEx(&win_class)){
+      MessageBox(NULL, "Window Registration Failed!", "Error!",
+        MB_ICONEXCLAMATION | MB_OK);
+      return(-1);
     }
-    ResetEvent(tsync);
+    class_reg=1;
+  }
+  ResetEvent(tsync);
   /* create thread to care for window */
   window[nummer].wthandle=_beginthread((LPTHREAD_START_ROUTINE)winthread,0,nummer);
   if (window[nummer].wthandle==NULL) {
     MessageBox(NULL,"X11-Basic: can't create thread for window" , "Error!",
-			MB_ICONEXCLAMATION | MB_OK);
-			return(-1);
+	MB_ICONEXCLAMATION | MB_OK);
+    return(-1);
   }
   WaitForSingleObject(tsync,INFINITE);
   
@@ -315,26 +315,27 @@ static int create_window2(int nummer,const char *title, const char* info,int x,i
   vs_clip(window[nummer].vdi_handle,1,clip);
   unsigned short w,h;
   window[nummer].aesvdi_handle=graf_handle(&window[nummer].chw,&window[nummer].chh,&w,&h);
-  /* w und h sind nun die verkleinerten Screengrößen. Wollen wir eigentlich nicht.*/
+  /* w und h sind nun die verkleinerten Screengrößen. 
+     Wollen wir eigentlich nicht.*/
   gem_init();
 #elif defined USE_SDL
-    init_sdl();
-    if(!(window[nummer].display=SDL_SetVideoMode(WINDOW_DEFAULT_W, 
-       WINDOW_DEFAULT_H, 32,
-    // SDL_FULLSCREEN |
-       SDL_HWSURFACE|SDL_SRCALPHA))) {
-      printf("cannot open SDL surface \n");
-      SDL_Quit();
-      return(-1);
-    }
-    window[nummer].x=window[nummer].y=0;
-    window[nummer].w=window[nummer].display->w;
-    window[nummer].h=window[nummer].display->h;
-    window[nummer].fcolor=0xffffffff;
-    window[nummer].bcolor=0;
-    SDL_WM_SetCaption(title,info);
+  init_sdl();
+  if(!(window[nummer].display=SDL_SetVideoMode(WINDOW_DEFAULT_W, 
+     WINDOW_DEFAULT_H, 32,
+  // SDL_FULLSCREEN |
+     SDL_HWSURFACE|SDL_SRCALPHA))) {
+    printf("cannot open SDL surface \n");
+    SDL_Quit();
+    return(-1);
+  }
+  window[nummer].x=window[nummer].y=0;
+  window[nummer].w=window[nummer].display->w;
+  window[nummer].h=window[nummer].display->h;
+  window[nummer].fcolor=0xffffffff;
+  window[nummer].bcolor=0;
+  SDL_WM_SetCaption(title,info);
 #elif defined USE_X11
-  XGCValues gc_val;            /* */
+  XGCValues gc_val;
   Window root;
   XTextProperty win_name, icon_name;
   char *agv[1];
@@ -581,15 +582,15 @@ void handle_window(WINDOWDEF *w) {
   if(!(w->flags&WIN_CREATED)) return;
 
 #ifdef WINDOWS_NATIVE
-#endif
-#ifdef USE_SDL
+  /* TODO ... */
+#elif defined USE_SDL
   SDL_Event event;
   while(SDL_PollEvent(&event)) handle_event(w,&event);
 #elif defined USE_X11
-   XEvent event;
-   while(XCheckWindowEvent(w->display,w->win,ExposureMask, &event)) {
+  XEvent event;
+  while(XCheckWindowEvent(w->display,w->win,ExposureMask, &event)) {
      handle_event(w,&event);
-   }
+  }
 #endif
 }
 
@@ -941,8 +942,28 @@ short form_dial(unsigned short fo_diflag,short x1,short y1,short w1,short h1,
   #define PAGEDOWN  (event.key.keysym.sym==SDLK_PAGEDOWN)   
 #endif
 
+/* ATARI TOS GEM AES functions, graphical user interface */
 
 #ifndef USE_GEM
+
+/* Process the dialog with input from the user.
+   form_do takes over the processing of user actions (mouse, keyboard) 
+   in a dialog from the calling application, 
+   and handling all selectable objects, radio buttons etc.
+   The function only returns when the user activates an object with the 
+   EXIT or TOUCHEXIT flag.
+
+   startob 	Index of the editable object where the text cursor should be 
+                at the opening of the dialog (the object must have the 
+		EDITABLE flag set); it will be 0 if the object tree contains 
+		no editable object
+
+   Return value: 
+     This will be the index of the object which was used to close the dialog. 
+     With a double-click, in addition bit 15 will be set.
+
+ */
+
 
 short form_do(OBJECT *tree,short startob) {
 #ifdef WINDOWS_NATIVE
@@ -956,22 +977,17 @@ short form_do(OBJECT *tree,short startob) {
 #endif
   int exitf=0,bpress=0;
   int sbut=-1,edob=-1,idx;
-#ifdef DEBUG
-  printf("**form_do:\n");
-#endif
+
 #if defined FRAMEBUFFER
   FB_clear_events();
   FB_mouse_events(1);
   FB_keyboard_events(1);
   FB_show_mouse();
 #endif
-    /* erstes editierbare Objekt finden */
 
-  edob=finded(tree,0,0);
- /* objc_draw(tree,0,-1,0,0); */
+  edob=finded(tree,0,0);    /* find first ediable object */
 	
-  /* Cursor plazieren */
-	
+  /* place cursor */
   if(edob>=0) {
     ((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_fontid=strlen((char *)INT2POINTER(((TEDINFO *)INT2POINTER(tree[edob].ob_spec.tedinfo))->te_ptext));
     draw_edcursor(tree,edob);
@@ -1104,8 +1120,7 @@ short form_do(OBJECT *tree,short startob) {
 #ifdef FRAMEBUFFER
     case KeyPress:   /* Return gedrueckt ? */
       if((event.xkey.ks & 255)==13 || (event.xkey.ks & 255)==10) {                /* RETURN  */
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
     case KeyPress:   /* Return gedrueckt ? */
       XLookupString((XKeyEvent *)&event,buf,sizeof(buf),&ks,&status);
 
@@ -1188,11 +1203,9 @@ short form_do(OBJECT *tree,short startob) {
 	     activate();
 #ifdef FRAMEBUFFER
 	   } else printf("Key: %x\n",event.xkey.ks);
-#endif
-#ifdef USE_X11
+#elif defined USE_X11
 	   } else printf("Key: %x\n",(unsigned int)ks);
-#endif
-#ifdef USE_SDL
+#elif defined USE_SDL
            } else {
       printf("Keydown: %d\n",event.key.keysym.sym);
       /* Print the hardware scancode first */
@@ -1618,7 +1631,7 @@ static void make_scaler(OBJECT *objects,int anzfiles,int showstart){
 char *fileselector(const char *titel, const char *pfad, const char *sel) {
   int sbut=-1;
   int i=0;
-  /* Das ist der Speicherbereich f�r Objekt-strukturen. 
+  /* Das ist der Speicherbereich für Objekt-strukturen. 
   Bei 64bit systemem darf er nicht auf dem Stack liegen.*/
   char *buffer=malloc(FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*5);
   bzero(buffer,FILESELECT_NOBJ*sizeof(OBJECT)+FILESELECT_NTED*sizeof(TEDINFO)+128*5);
@@ -2061,7 +2074,7 @@ static void make_scaler2(OBJECT *objects,int anzfiles,int showstart){
 #define LISTSELECT_NTED (4+ANZSHOW)
 
 int lsel_input(const char *titel, STRING *strs,int anzfiles,int sel) {
-  /* Das ist der Speicherbereich f�r Objekt-strukturen. 
+  /* Das ist der Speicherbereich für Objekt-strukturen. 
   Bei 64bit systemem darf er nicht auf dem Stack liegen.*/
   char *buffer=malloc(LISTSELECT_NOBJ*sizeof(OBJECT)+LISTSELECT_NTED*sizeof(TEDINFO)+128*5);
   bzero(buffer,LISTSELECT_NOBJ*sizeof(OBJECT)+LISTSELECT_NTED*sizeof(TEDINFO)+128*5);

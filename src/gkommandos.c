@@ -1287,6 +1287,8 @@ void c_motionevent(PARAMETER *plist,int e) {  /* x,y,b,rx,ry,s   */
 #endif
 }
 
+/* Command: KEYEVENT  [nvar,nvar,var$,nvar,nvar,nvar,nvar,nvar] */
+
 void c_keyevent(PARAMETER *plist,int e) {
 #ifdef WINDOWS_NATIVE
   graphics();

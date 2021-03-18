@@ -423,6 +423,8 @@ DESCRIPTION:
     mask=       2 --- key release event
     mask=       4 --- mouse button press event
     mask=       8 --- mouse button release event
+    mask=    0x10 --- mouse enters window event
+    mask=    0x20 --- mouse leaves window event
     mask=    0x40 --- mouse motion event
     mask= 0x40000 --- window resize events
     mask=0x200000 --- window focus change events

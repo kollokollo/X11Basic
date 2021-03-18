@@ -369,7 +369,7 @@ DESCRIPTION:
           s=64 Windows-Key
           s=128 AltGr
 *----
-SEE ALSO: MOUSE, MOUSEX, MOUSEY, MOUSEK, KEYEVENT
+SEE ALSO: MOUSE, MOUSEX, MOUSEY, MOUSEK, KEYEVENT, EVENT, EVENT?()
 ##############################################################################
 
 Variable:  MOUSEX, MOUSEY, MOUSEK
