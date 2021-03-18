@@ -488,7 +488,7 @@ xbvm.exe: bytecode.h xbvm.c $(MYWINLIBS)
 # Make the X11-Basic compiler (for MS WINDOWS)
 
 xbc-win.b: examples/compiler/xbc-win.bas xbbc.static
-	xbbc.static -o $@ examples/compiler/xbc-win.bas
+	./xbbc.static -o $@ examples/compiler/xbc-win.bas
 xbc.exe : xbasic.static  xbvm.exe xbc-win.b
 	./xbasic.static -q xbc-win.b -o $@ 
 	chmod 755 $@ 
@@ -870,7 +870,7 @@ deb2 :	$(DIR).tar.gz
 # excecute the Dockerfile and extract the debian package and the User Manual
 docker: docker/Dockerfile
 	cd docker;sudo docker build . -t kollo/x11basic:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf dockerfilevolume/"'
+	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip dockerfilevolume/"'
 #	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE)
 
 

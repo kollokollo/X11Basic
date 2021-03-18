@@ -1,3 +1,5 @@
 *.pdf
 *.deb
 core
+*.zip
+wineblob.tar.gz
