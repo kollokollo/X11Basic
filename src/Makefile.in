@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=62
+RELEASE=63
 
 
 # Register variables (-ffixed-reg) -Wall
@@ -846,7 +846,7 @@ deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
-        --requires libc6,libasound2,libreadline7,liblapack3,libgmp10,fftw2 --backup  \
+        --requires libc6,libasound2,libreadline7,liblapack3,libgmp10,fftw2,libusb-0.1-4 --backup  \
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
