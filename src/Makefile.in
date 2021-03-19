@@ -293,7 +293,7 @@ EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
 DIST= ../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
-      ../doc/editors/*  $(HSRC) $(CSRC) WINDOWS/X11-Basic.iss \
+      ../doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss.in \
       config.h.in config.h.tomtom config.h.atari \
         Makefile.in configure config.guess configure.in \
         x11basic.spec x11basic.desktop x11basic.svg 5x7-rev.c \
@@ -645,10 +645,15 @@ TomTom: $(DIR33).zip
 # this is depreciated. Better use Inno-Setup to create a self installing
 # .exe file
 
+X11-Basic.iss: X11-Basic.iss.in
+	cp $< $@
+	sed -i "s/@winversion@/$(LIBNO)/g" $@ 
+	sed -i "s/@winrelease@/$(RELEASE)/g" $@ 
+
 windows: $(WINDIST) X11-Basic.iss
 	rm -f X11-Basic-@version@-$(RELEASE)-win.zip
 	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-win.zip $(WINDIST)
-	iscc X11-Basic.iss
+	WINDOWS/contrib/iscc X11-Basic.iss
 
 # Make an ATARI ST version
 

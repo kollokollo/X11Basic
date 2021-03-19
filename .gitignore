@@ -22,6 +22,7 @@ src/xbbc.static
 src/xbvm.static
 src/Makefile
 src/config.h
+src/X11-Basic.iss
 src/xb2c.debug
 src/xbasic.debug
 src/xbbc.debug

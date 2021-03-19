@@ -25,6 +25,10 @@ RUN apt-get install -y gcc-mingw-w64 wine
 #
 RUN apt-get install -y texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-fonts-extra
 #
+# Some more tex packages
+#
+RUN apt-get install -y texlive-xetex texlive-pstricks texlive-science texlive-formats-extra
+#
 # Crosscompiler for version for ATARI ST TOS
 #
 RUN apt-get install -y software-properties-common
@@ -45,10 +49,6 @@ RUN mkdir -p X11Basic/src/Debian/Outputs
 RUN cd X11Basic/src/;./configure --prefix=/usr
 RUN cd X11Basic/src/;sed -i 's/..\/examples\/compiler\/ybasic/\/X11Basic\/examples\/compiler\/ybasic/g' Makefile
 RUN cd X11Basic/src;make;make install
-#
-# Some more tex packages
-#
-RUN apt-get install -y texlive-xetex texlive-pstricks texlive-science texlive-formats-extra
 #
 # Make the User-Manual
 #
@@ -86,8 +86,6 @@ RUN cd X11Basic; wget https://files.jrsoftware.org/is/5/isetup-5.5.8.exe
 
 #ENV DISPLAY :0
 
-
-RUN pwd
 COPY wineblob.tar.gz .
 RUN tar xzfv wineblob.tar.gz
 #RUN cd X11Basic; wine isetup-5.5.8.exe
@@ -105,6 +103,5 @@ RUN cp -R /X11Basic/src/*.zip /
 
 #WORKDIR /dockerfilevolume
 CMD ["/bin/sh"]
-# TODO: It would be nice if we can also create the WINDOWS package inside the docker
 #
 
