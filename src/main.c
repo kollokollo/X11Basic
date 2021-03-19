@@ -70,7 +70,7 @@ void intro() {
   printf("c");
   printf("*************************************\n"
          "* %10s          V.%5s       *\n"
-         "*  by Markus Hoffmann 1997-2021 (c) *\n"
+         "*  by Markus Hoffmann 1997-" VERSION_YEAR " (c) *\n"
          "*                                   *\n"
          "* lib %29s *\n"
          "*************************************\n\n",
@@ -80,7 +80,7 @@ void intro() {
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V." VERSION "               *\n"
-         "*                       by Markus Hoffmann 1997-2021 (c) *\n"
+         "*                       by Markus Hoffmann 1997-" VERSION_YEAR" (c) *\n"
 #ifdef NOGRAPHICS
          "*    ====> Version without graphics support <====        *\n"
 #else

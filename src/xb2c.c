@@ -1,4 +1,4 @@
-/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann 2010-2021
+/* xb2c.C   The X11-basic to C translator   (c) Markus Hoffmann
 */
 
 /* This file is part of X11BASIC, the basic interpreter for Unix/X
@@ -75,7 +75,7 @@ void xberror(char errnr, const char *bem);
 static void intro(){
   printf("**************************************************\n"
          "*  X11-Basic bytecode to C translator            *\n"
-         "*              by Markus Hoffmann 1997-2021 (c)  *\n"
+         "*              by Markus Hoffmann 1997-" VERSION_YEAR " (c)  *\n"
          "* V." VERSION "/%04x       date:  " __DATE__ " " __TIME__ "  *\n"
          "**************************************************\n",BC_VERSION);
 }
@@ -742,7 +742,7 @@ static int loadbcprg(char *filename, FILE *optr) {
     bytecode=(BYTECODE_HEADER *)p;
 
     fprintf(optr,"/* X11-Basic-Compiler Version " VERSION "\n" 
-                 "   (c) Markus Hoffmann 2002-2021\n\n\n" 
+                 "   (c) Markus Hoffmann 2002-" VERSION_YEAR "\n\n\n" 
 		 "Compile this with:\n tcc -lx11basic " TCC_COMPILE_FLAGS " %s\n"
                  "\nBytecode: %s (%d Bytes)\n\n",ofilename,filename,len);
 

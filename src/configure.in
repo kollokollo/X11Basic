@@ -4,6 +4,7 @@
 AC_INIT([X11-Basic], [1.27], [kollo@users.sourceforge.net])
 version=$PACKAGE_VERSION
 vdate=`date`
+vyear=`date +"%Y"`
 # for debugging we want all warnings
 regs=-Wall
 
@@ -568,6 +569,7 @@ AC_CHECK_FUNCS([socket strchr strdup strerror strstr backtrace])
 # Versioning
 AC_DEFINE_UNQUOTED(VERSION,"$version",[Version of actual implementation])
 AC_DEFINE_UNQUOTED(VERSION_DATE,"$vdate",[Date of actual compilation])
+AC_DEFINE_UNQUOTED(VERSION_YEAR,"$vyear",[Year of actual compilation])
 AC_DEFINE_UNQUOTED(TCC_COMPILE_FLAGS,"$regs $libs",[Compilation options for tcc])
 
 #libs=$LIBS

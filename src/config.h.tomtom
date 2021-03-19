@@ -13,7 +13,9 @@
 /* If X11-Basic for some reason will not compile on your system 
    you may want do uncomment some of the defines    */
      
+/* Size of Pointer */
 
+#define SIZEOF_VOID_P 4
 
 /* Define to 1 if you have the `alarm' function. */
 #define HAVE_ALARM 1
@@ -243,13 +245,13 @@
 #define PACKAGE_NAME "X11-Basic"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "X11-Basic 1.18"
+#define PACKAGE_STRING "X11-Basic 1.27"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "x11-basic"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.18"
+#define PACKAGE_VERSION "1.27"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
@@ -270,10 +272,13 @@
 /* #undef TM_IN_SYS_TIME */
 
 /* Version of actual implementation */
-#define VERSION "1.18"
+#define VERSION "1.27"
 
 /* Date of actual compilation */
-#define VERSION_DATE "Fri Jul 22 17:05:45 CEST 2011"
+#define VERSION_DATE "Fri Mar 19 11:23:00 CET 2021"
+
+/* Year of actual compilation */
+#define VERSION_YEAR "2021"
 
 /* Define to 1 if the X Window System is missing or not being used. */
  #define X_DISPLAY_MISSING 

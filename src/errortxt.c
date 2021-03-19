@@ -239,7 +239,7 @@ const char *errortxt[] = {
 /*  99*/  "Das Fenster %s existiert nicht",
 #endif
 
-/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-2021 Markus Hoffmann",
+/* 100*/  "X11-BASIC Version " VERSION "  Copyright (c) 1997-" VERSION_YEAR " Markus Hoffmann",
 #ifdef GERMAN
 /* e*/  "** 1 - Speicherschutzverletzung",
 /* f*/  "** 2 - Bus Error Peek/Poke falsch?",

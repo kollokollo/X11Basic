@@ -358,6 +358,9 @@
 /* Date of actual compilation */
 #undef VERSION_DATE
 
+/* Year of actual compilation */
+#undef VERSION_YEAR
+
 /* Define to 1 if the X Window System is usable. */
 #undef HAVE_X11
 

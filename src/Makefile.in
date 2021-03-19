@@ -26,6 +26,7 @@ LIBNO=@version@
 
 RELEASE=63
 
+YEAR=2021
 
 # Register variables (-ffixed-reg) -Wall
 REGS=@regs@  
@@ -649,6 +650,7 @@ X11-Basic.iss: X11-Basic.iss.in
 	cp $< $@
 	sed -i "s/@winversion@/$(LIBNO)/g" $@ 
 	sed -i "s/@winrelease@/$(RELEASE)/g" $@ 
+	sed -i "s/@winyear@/$(YEAR)/g" $@ 
 
 windows: $(WINDIST) X11-Basic.iss
 	rm -f X11-Basic-@version@-$(RELEASE)-win.zip
@@ -658,8 +660,8 @@ windows: $(WINDIST) X11-Basic.iss
 # Make an ATARI ST version
 
 tos: $(TOSDIST)
-	rm -f X11-Basic-@version@-$(RELEASE)-st.zip
-	zip -j -D  -o X11-Basic-@version@-$(RELEASE)-st.zip $(TOSDIST)
+	rm -f X11-Basic-$(LIBNO)-$(RELEASE)-st.zip
+	zip -j -D -o X11-Basic-$(LIBNO)-$(RELEASE)-st.zip $(TOSDIST)
 
 
 examples: X11-Basic-examples-$(LIBNO)-$(RELEASE).zip \

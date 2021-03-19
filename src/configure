@@ -2451,6 +2451,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 version=$PACKAGE_VERSION
 vdate=`date`
+vyear=`date +"%Y"`
 # for debugging we want all warnings
 regs=-Wall
 
@@ -7897,6 +7898,11 @@ _ACEOF
 
 cat >>confdefs.h <<_ACEOF
 #define VERSION_DATE "$vdate"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define VERSION_YEAR "$vyear"
 _ACEOF
 
 

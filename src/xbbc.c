@@ -53,7 +53,7 @@ int prglen=0;
 static void intro(){
   puts("**************************************************\n"
        "*  X11-Basic bytecode compiler                   *\n"
-       "*              by Markus Hoffmann 1997-2021 (c)  *");
+       "*              by Markus Hoffmann 1997-" VERSION_YEAR " (c)  *");
   printf("* V." VERSION "/%04x      date:    " __DATE__ " " __TIME__ " *\n",BC_VERSION);
   puts("**************************************************\n");
 }
