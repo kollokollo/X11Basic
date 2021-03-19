@@ -878,7 +878,7 @@ deb2 :	$(DIR).tar.gz
 # excecute the Dockerfile and extract the debian package and the User Manual
 docker: docker/Dockerfile
 	cd docker;sudo docker build . -t kollo/x11basic:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip dockerfilevolume/"'
+	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip *.exe dockerfilevolume/"'
 #	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE)
 
 
