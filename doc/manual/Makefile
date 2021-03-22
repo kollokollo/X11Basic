@@ -1,6 +1,6 @@
 # Makefile for X11-Basic documentation, including the user manual
 # 
-# (c) Markus Hoffmann 2003-2019
+# (c) Markus Hoffmann 2003-2021
 #
 # benoetigt:
 # * imagemagic
@@ -15,7 +15,7 @@
 # X11-Basic is free software and comes with NO WARRANTY - read the file
 # COPYING for details
 
-VERSION=1.27
+VERSION=1.28
 NAME=X11-Basic-manual
 
 

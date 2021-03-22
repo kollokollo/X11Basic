@@ -24,7 +24,7 @@ INCDIR=@prefix@/include/x11basic
 
 LIBNO=@version@
 
-RELEASE=63
+RELEASE=64
 
 YEAR=2021
 
@@ -400,7 +400,7 @@ MYWINLIBS = WINDOWS/lib/libgmp.a \
 	    WINDOWS/blas/blas.lib WINDOWS/f2c/f2c.lib WINDOWS/lib/libgfx.lib
 
 
-all :    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic 
+all:    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic x11basic.eps
 
 
 configure : configure.in

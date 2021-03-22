@@ -1,5 +1,5 @@
 
-Release notes for Version 1.27 (June 2019 -- April 2021)
+Release notes for Version 1.27 (June 2019 -- March 2021)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - removed VERSION and VERSION_DATE from library
 - new function REGEXP() and MATCH()
@@ -8,4 +8,8 @@ Release notes for Version 1.27 (June 2019 -- April 2021)
 - New function VARLEN() 
 - New function CRC16() 
 - New mqtt commands BROKER, SUBSCRIBE, PUBLISH
+
+
+Release notes for Version 1.28 (Mar 2021 -- April 2021)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - New TrueType Font support (SETFONT,TEXT,DEFTEXT)

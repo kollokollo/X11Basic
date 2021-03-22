@@ -327,13 +327,13 @@
 #define PACKAGE_NAME "X11-Basic"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "X11-Basic 1.27"
+#define PACKAGE_STRING "X11-Basic 1.28"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "x11-basic"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.27"
+#define PACKAGE_VERSION "1.28"
 
 /* Define to Compilation options for tcc */
 #define TCC_COMPILE_FLAGS "-fno-omit-frame-pointer  -ldl -lm -lpthread -lasound -lutil -lreadline -llapack -lgmp -lfftw"
@@ -357,7 +357,7 @@
 /* #undef TM_IN_SYS_TIME */
 
 /* Version of actual implementation */
-#define VERSION "1.27"
+#define VERSION "1.28"
 
 /* Date of actual compilation */
 #define VERSION_DATE "Fri Mar 19 11:23:00 CET 2021"

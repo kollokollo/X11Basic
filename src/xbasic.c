@@ -14,11 +14,11 @@
 
 
 
-                       VERSION 1.27
+                       VERSION 1.28
 
             (C) 1997-2021 by Markus Hoffmann
-              (kollo@users.sourceforge.net)
-            (http://x11-basic.sourceforge.net/)
+
+(https://x11-basic.codeberg.page/ http://x11-basic.sourceforge.net/)
 
 */
 

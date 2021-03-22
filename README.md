@@ -8,7 +8,7 @@ X11-Basic
 
 A Basic interpreter and compiler with graphics capabilities
 
-    Version : 1.27 
+    Version : 1.28 
     Group   : Development/Languages
     License : GPL
 

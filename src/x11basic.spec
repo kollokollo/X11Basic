@@ -1,13 +1,13 @@
 #
-# spec file for package X11Basic (Version 1.27), by Markus Hoffmann
+# spec file for package X11Basic (Version 1.28), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2019
+# Copyright  (c)  Markus Hoffmann 1997-2021
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
 Name: x11basic
-Version: 1.27
-Release: 57
+Version: 1.28
+Release: 64
 License: GPL
 Group: Development/Languages
 Summary: A Basic Interpreter with X11-Graphics capabilities
@@ -95,6 +95,8 @@ xbc %{_docdir}/%{name}-%{version}/examples/compiler/bas2x11basic.bas --dynamic -
 %{_libdir}/*
 
 %changelog
+* Mon Mar 20 2021 Markus Hoffmann <kollo@users.sourceforge.net> - 1.28
+- adapted for Version 1.28
 * Mon Jun 04 2018 Markus Hoffmann <kollo@users.sourceforge.net> - 1.27
 - adapted for Version 1.27
 * Mon Jun 04 2018 Markus Hoffmann <kollo@users.sourceforge.net> - 1.26
