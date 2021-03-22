@@ -395,9 +395,9 @@ LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadl
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL  -lSDL_ttf -lzlib1 -lfreetype-6
 TOSLIBS = -lm  -lgem
 
-MYWINLIBS = WINDOWS/lib/libgmp.a \
+STATICWINLIBS = WINDOWS/lib/libgmp.a \
             WINDOWS/clapack/lapack.lib WINDOWS/lib/libusb.a \
-	    WINDOWS/blas/blas.lib WINDOWS/f2c/f2c.lib WINDOWS/lib/libgfx.lib
+	    WINDOWS/blas/blas.lib WINDOWS/f2c/f2c.lib WINDOWS/lib/libSDL_gfx.a
 
 
 all:    configure Makefile xbasic xb2c xbbc xbvm xbc bas2x11basic x11basic.eps
@@ -491,22 +491,17 @@ $(WINEXELIB): $(LIBCSRC) WINDOWS/fnmatch.c $(HSRC) WINDOWS/fnmatch.h
 
 # Make the exe for MS WINDOWS
 
-xbasic.exe: main.c $(MYWINLIBS) $(WINEXELIB)
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) main.c -o $@ $(WINEXELIB) $(MYWINLIBS) \
-	 $(WINLIBS)
+xbasic.exe: main.c $(WINEXELIB) $(STATICWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ $+ $(WINLIBS)
 	strip $@
-xbbc.exe: bytecode.h bytecode.c xbbc.c $(MYWINLIBS) $(WINEXELIB)
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xbbc.c bytecode.c \
-	$(MYWINLIBS) $(WINEXELIB) $(WINLIBS)
+xbbc.exe: bytecode.c xbbc.c $(WINEXELIB) $(STATICWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ $+ $(WINLIBS)
 	strip $@
-xb2c.exe: $(WINEXELIB) xb2c.c 
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xb2c.c  \
-	$(MYWINLIBS) $(WINEXELIB) $(WINLIBS)
+xb2c.exe: xb2c.c $(WINEXELIB) $(STATICWINLIBS) 
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ $+ $(WINLIBS)
 	strip $@
-
-xbvm.exe: bytecode.h xbvm.c $(MYWINLIBS) $(WINEXELIB)
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ xbvm.c \
-	 $(MYWINLIBS) $(WINEXELIB) $(WINLIBS)
+xbvm.exe: xbvm.c $(WINEXELIB) $(STATICWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) -o $@ $+ $(WINLIBS)
 	strip $@
 
 # Make the X11-Basic compiler (for MS WINDOWS)
@@ -673,20 +668,48 @@ X11-Basic.iss: X11-Basic.iss.in
 	sed -i "s/@winyear@/$(YEAR)/g" $@ 
 
 
+# Make the InnoSetup Installation
+innosetup:	
+	wget https://files.jrsoftware.org/is/5/isetup-5.5.8.exe  
+	wine isetup-5.5.8.exe
+	mv isetup-5.5.8.exe WINDOWS/contrib/
+
+
 # Make prerequisites for the WINDOWS build
 # get the official WINDOWS binary for libSDL
 WINDOWS/lib/SDL.dll:
 	mkdir -p WINDOWS/tmp
 	cd WINDOWS/tmp;wget https://www.libsdl.org/release/SDL-1.2.15-win32.zip
 	cd WINDOWS/tmp;unzip SDL-1.2.15-win32.zip
+	mv WINDOWS/tmp/SDL-1.2.15-win32.zip WINDOWS/contrib/
 	mkdir -p WINDOWS/lib
 	mv WINDOWS/tmp/README-SDL.txt WINDOWS/lib/
 	mv WINDOWS/tmp/SDL.dll WINDOWS/lib/
+
+# get the DSL_gfx sources and compile a static library for mingw
+
+WINDOWS/lib/libSDL_gfx.a WINDOWS/lib/README-SDL_gfx.txt:
+	mkdir -p WINDOWS/tmp
+	cd WINDOWS/tmp;wget www.ferzkopp.net/Software/SDL_gfx-2.0/SDL_gfx-2.0.26.tar.gz
+	cd WINDOWS/tmp;tar xzfv SDL_gfx-2.0.26.tar.gz
+	mv WINDOWS/tmp/SDL_gfx-2.0.26.tar.gz WINDOWS/contrib/
+	cd WINDOWS/tmp/SDL_gfx-2.0.26/;./configure  --host=i686-w64-mingw32
+	sed -i "s/CC = gcc/CC = i686-w64-mingw32-gcc -std=c99/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/prefix=c:\/dev/prefix=..\/..\//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/-march=athlon-xp -mmmx -msse -m3dnow//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/=SDL_gfx.dll/=/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/SDL_imageFilter.o SDL_rotozoom.o/SDL_imageFilter.o SDL_rotozoom.o SDL_gfxBlitFunc.o/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	cd WINDOWS/tmp/SDL_gfx-2.0.26/;make -f Makefile.mingw
+	mv WINDOWS/tmp/SDL_gfx-2.0.26/README WINDOWS/lib/README-SDL_gfx.txt
+	mv WINDOWS/tmp/SDL_gfx-2.0.26/libSDL_gfx.a WINDOWS/lib/
+
+# get the official WINDOWS binary for libSDL_ttf
 
 WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
 	mkdir -p WINDOWS/tmp
 	cd WINDOWS/tmp;wget https://www.libsdl.org/projects/SDL_ttf/release/SDL_ttf-2.0.11-win32.zip 
 	cd WINDOWS/tmp;unzip SDL_ttf-2.0.11-win32.zip
+	mv WINDOWS/tmp/SDL_ttf-2.0.11-win32.zip WINDOWS/contrib/
 	mkdir -p WINDOWS/lib
 	mv WINDOWS/tmp/LICENSE.zlib.txt     WINDOWS/lib/
 	mv WINDOWS/tmp/LICENSE.freetype.txt WINDOWS/lib/
@@ -694,8 +717,6 @@ WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
 	mv WINDOWS/tmp/zlib1.dll            WINDOWS/lib/
 	mv WINDOWS/tmp/libfreetype-6.dll    WINDOWS/lib/
 	mv WINDOWS/tmp/README.txt           WINDOWS/lib/LICENSE-SDL_ttf.txt
-
-
 
 # Make a simple zip file distribution for WINDOWS
 
@@ -846,6 +867,7 @@ uninstall :
 	rmdir $(INCDIR)
 clean:
 	rm -f *.o a.out b.out b.b Makefile.bak $(DEBUGEXE) $(DEBUGEXELIB) backup-*.tgz *.d
+	rm -rf WINDOWS/tmp
 	rm -rf doc-pak
 moreclean: clean
 	rm -f $(EXE) $(EXTRAEXE) libx11basic.so.1.* $(EXELIB) 11.c  myzip myunzip \
@@ -925,9 +947,9 @@ deb2 :	$(DIR).tar.gz
 # excecute the Dockerfile and extract the debian package and the User Manual
 docker: docker/Dockerfile
 	cd docker;sudo docker build . -t kollo/x11basic:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip *.exe dockerfilevolume/"'
-#	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:$(LIBNO)-$(RELEASE)
-
+	cd docker;sudo docker run -v work -ti -v`pwd`:/work/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip *.exe work/"'
+#	cd docker;sudo docker run --net=host --env="DISPLAY" -v work -ti -v`pwd`:/work/ kollo/x11basic:$(LIBNO)-$(RELEASE)
+	sudo chown 1000 docker/*.exe docker/*.pdf docker/*.deb
 
 $(DIR3).zip : $(BINDIST)
 	rm -rf /tmp/$(DIR3)
@@ -965,8 +987,6 @@ dslpackage : xbasic.staticreadline
 	(md5sum X11Basic.tar.gz > X11Basic.tar.gz.md5.txt )
 check :	xbasic
 	LD_LIBRARY_PATH=. ./xbasic -e version
-	
-	
 
 # Auto dependency stuff (from info make)
 %.d: %.c

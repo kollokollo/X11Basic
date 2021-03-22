@@ -1,9 +1,11 @@
 # Dockerfile for X11-Basic based on the one by Bruno https://github.com/shakenfr/x11basic_docker/
 # Start with Ubuntu 20.04
-# The docker file generates an installable .deb package of X11-Basic as well as the User-Manul as .pdf
+# The docker file generates an installable .deb package of X11-Basic as well as 
+# the User-Manul as .pdf
+# as well as a setup.exe for WINDOWS
 #
 FROM ubuntu:20.04
-VOLUME dockerfilevolume
+VOLUME work
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 #
@@ -13,7 +15,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 
 RUN apt-get update \
 && apt-get install -y apt-utils git tcsh nano vim curl wget make gcc build-essential
-RUN apt-get install -y  checkinstall imagemagick transfig
+RUN apt-get install -y  checkinstall imagemagick transfig zip unzip
 RUN apt-get install -y libreadline-dev xorg-dev libasound2-dev fftw-dev libjpeg-dev \ 
 && apt-get install -y libblas-dev libgmp-dev liblapack-dev libusb-dev libbluetooth-dev libfreetype6-dev
 #
@@ -45,12 +47,22 @@ RUN cd /etc/ImageMagick-6/;sed -i 's/"none"/"read | write"/g' policy.xml
 RUN dpkg --add-architecture i386
 RUN apt-get update
 RUN apt-get install -y wine32
-RUN cd X11Basic; wget https://files.jrsoftware.org/is/5/isetup-5.5.8.exe  
+
+#
+# Clean up some bit
+#
+RUN apt-get clean
+
+
+RUN wget https://files.jrsoftware.org/is/5/isetup-5.5.8.exe  
 RUN mkdir -p /root
 COPY wineblob.tar.gz /root/
 RUN cd /root/; tar xzfv wineblob.tar.gz
 RUN chown -R 0 /root/.wine
-#RUN cd X11Basic; wine isetup-5.5.8.exe
+#RUN wine isetup-5.5.8.exe
+
+# For some reason this command is needed to initialize wine and its directory
+RUN wine cmd /c 'echo %PROGRAMFILES%'
 
 #
 # Get and make X11-Basic
@@ -87,10 +99,6 @@ RUN cp -R /X11Basic/src/Debian/Outputs/*.deb /
 RUN cd X11Basic/src;make clean;make tos
 RUN cp -R /X11Basic/src/*.zip /
 
-
-# For some reason this command is needed to initialize wine and its directory
-RUN wine cmd /c 'echo %PROGRAMFILES%'
-
 #
 # Make Version for WINDOWS
 #
@@ -100,9 +108,25 @@ RUN cp -R X11Basic/src/Inno-Output/*.exe /
 
 
 # Make MQTT Version (TODO)
-
-
-#WORKDIR /dockerfilevolume
-CMD ["/bin/sh"]
+##############################
+#
+# get the paho.c library
 #
 
+RUN git clone https://github.com/eclipse/paho.mqtt.c.git
+RUN cd paho.mqtt.c;git checkout fbf9828200f46e212189d98eaedf8e11281e409a
+# get MQTT-hyperdash
+#RUN git clone https://codeberg.org/kollo/MQTT-Hyperdash.git
+
+#RUN cp MQTT-Hyperdash/etc/paho-description-pak paho.mqtt.c/description-pak
+#RUN cp MQTT-Hyperdash/etc/paho-Makefile paho.mqtt.c/Makefile
+#RUN cd paho.mqtt.c/;sed -i 's/sudo\ checkinstall/checkinstall/g' Makefile
+#RUN cd paho.mqtt.c/;sed -i 's/sudo\ chown/chown/g' Makefile
+#RUN cd paho.mqtt.c;make;make deb
+
+# more TBD
+# TODO
+
+
+WORKDIR /work
+CMD ["/bin/sh"]
