@@ -6326,7 +6326,6 @@ fi
 
 fi
 
-if test "n$with_sdl" = nyes; then
 # `-lSDL':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_MapRGB in -lSDL" >&5
 $as_echo_n "checking for SDL_MapRGB in -lSDL... " >&6; }
@@ -6418,7 +6417,6 @@ $as_echo "#define HAVE_SDL_GFX 1" >>confdefs.h
 
 fi
 
-fi
 
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])

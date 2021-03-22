@@ -14,12 +14,6 @@
 
 /*#define SMALL_RAM*/
 
-/* If you want to compile a versin of X11-basic which uses the SDL library
-   also on unix systems, you can uncomment following line. This is useful 
-   to have a version which is more compatible with the WINDOWS version of
-   X11-Basic.*/
-
-/*#define USE_SDL*/
 
 
 #ifdef WINDOWS
@@ -85,6 +79,7 @@
 #if !defined FRAMEBUFFER && !defined USE_SDL && !defined USE_X11 && !defined USE_GEM
 /* die NOGRAPHICS version ist aber inkompatibel, da einige Kommandos ganz ausgelassen
    werden.*/
+   #pragma message  "######## switch of graphics!"
   #define NOGRAPHICS
 #endif
 

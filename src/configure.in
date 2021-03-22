@@ -333,7 +333,6 @@ AC_DEFINE(HAVE_GCRYPT,1,[gcry_check_version in lgcrypt])
 ],,[$libs])
 fi
 
-if test "n$with_sdl" = nyes; then
 # `-lSDL':
 AC_CHECK_LIB([SDL], [SDL_MapRGB], [
 libs="$libs -lSDL"
@@ -343,7 +342,6 @@ AC_CHECK_LIB([SDL_gfx], [hlineRGBA], [
 libs="$libs -lSDL_gfx"
 AC_DEFINE(HAVE_SDL_GFX,1,[Simple Direct Media GFX])
 ])
-fi
 
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])

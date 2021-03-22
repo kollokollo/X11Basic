@@ -6,7 +6,6 @@
  * COPYING for details
  */
 
-#include "options.h"
 #ifdef FRAMEBUFFER
   #include "framebuffer.h"
 #elif defined USE_SDL

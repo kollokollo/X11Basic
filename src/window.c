@@ -217,8 +217,11 @@ static DWORD winthread(PWORD par) { /* procedure for WIN95-thread */
 static int init_sdl() {
   static int done=0;
   if(done) return(0);
-  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
-  atexit(SDL_Quit);
+  if(SDL_Init(SDL_INIT_VIDEO)<0) {
+    perror("SDL_Init failed.");
+    return -1;
+  }
+     atexit(SDL_Quit);
   /* Enable Unicode translation */
   SDL_EnableUNICODE( 1 );
 

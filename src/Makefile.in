@@ -441,14 +441,14 @@ xbbc.debug : xbbc.o bytecode.o x11basic.a.debug
 
 # Make the virtual machine for interpreting the bytecode
 
-xbvm : bytecode.h xbvm.c 
-	$(CC) -o $@ xbvm.c  -L . $(LINKFLAGS) $(LIBS)  -lx11basic 
+xbvm: xbvm.o
+	$(CC) -o $@ $+ -L . $(LINKFLAGS) $(LIBS)  -lx11basic 
 	strip $@
-xbvm.static : xbvm.o x11basic.a
-	$(CC) -o $@ xbvm.o x11basic.a $(LIBS)
+xbvm.static: xbvm.o x11basic.a
+	$(CC) -o $@ $+ $(LIBS)
 	strip $@
-xbvm.debug : xbvm.o  x11basic.a.debug 
-	$(CC) -o $@ xbvm.o x11basic.a.debug $(LIBS) 	
+xbvm.debug: xbvm.o x11basic.a.debug 
+	$(CC) -o $@ $+ $(LIBS) 	
 
 ###################################################
 #### Fundamentals for X11-Basic (MS WINDOWS) ######
@@ -564,13 +564,14 @@ strip  : xbasic xbbc xbvm xb2c
 debugtest : xbasic.debug
 	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic.debug ../examples2/calculation/diffglei.bas
 
-# Make a version of X11-basic which uses the SDL library for graphics 
-
+#
+# Make a version of X11-Basic which uses the SDL library for graphics 
+#
 xbasic.sdl : main.c $(LIBCSRC)
-	$(CC) -DUSE_SDL $(OPT) $(LINKFLAGS) -o $@ main.c $(LIBCSRC) $(LIBS) -lSDL -lSDL_gfx
+	$(CC) -DUSE_SDL $(OPT) $(LINKFLAGS) -o $@ $+ $(LIBS) -lSDL -lSDL_gfx
 	strip $@
 
-sdl : xbasic.sdl	
+sdl: xbasic.sdl	
 
 config.h: configure
 
