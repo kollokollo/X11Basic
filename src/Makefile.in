@@ -37,7 +37,6 @@ OPT=@copt@
 # Additional header file paths
 INC=@X_CFLAGS@ -I /usr/include/freetype2/ 
 WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP -I./WINDOWS/include/mqtt
-TINEINC=@X_CFLAGS@ -I/usr/include/tine -I/usr/include/doocs -I.
 
 # defines for special flavours
 
@@ -86,9 +85,6 @@ LIBCSRC=$(LIBOBJS:.o=.c)
 
 FBLIBOBJS= $(LIBOBJS) framebuffer.o raw_mouse.o raw_keyboard.o consolefont.o terminal.o spat-a-fnt.o 8x16.o 5x7.o unifont.o unifont57.o 
 LIBCSRCFB=$(FBLIBOBJS:.o=.c) 
-
-
-
 
 
 TOSLIBOBJS= $(LIBOBJS) 
@@ -193,11 +189,7 @@ DIR=X11Basic-@version@
 DIR2=X11Basic-src-@version@
 DIR3=X11Basic-bin-@version@
 DIR33=$(DIR)-bin
-TINEDIR=tinexbasic-@version@
-TINEDIST=$(DIST) ../doc/tine-xbasic.html examples2/DESY/*
-DOOCSDIR=doocsxbasic-@version@
-DOOCSDIST=$(DIST) src/Extensions/doocs-wrapper.cc ../doc/doocs-xbasic.html \
-                  ../doc/tine-xbasic.html examples2/DESY/*
+
 
 LINKFLAGS = @LDFLAGS@
 WINLINKFLAGS = -L./WINDOWS/lib 
@@ -551,26 +543,8 @@ tos: $(TOSDIST)
 	rm -f X11-Basic-$(LIBNO)-$(RELEASE)-st.zip
 	zip -j -D -o X11-Basic-$(LIBNO)-$(RELEASE)-st.zip $(TOSDIST)
 	
-# Fuer die Control System Varianten
-
-tinexbasic.dyn : $(LIBOBJS) main.o 
-	$(CC) -DTINE  $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  -ltine 
-	strip $@
-tinexbasic : $(LIBOBJS) main.o 
-	$(CC) -DTINE $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) $(LIBS)  /usr/lib/libtine.a 
-	strip $@
-doocsxbasic.dyn : $(LIBOBJS) main.o  doocs-wrapper.o
-	$(CC) -DTINE -DDOOCS  $(LINKFLAGS) -o $@ $(AOBJS) doocs-wrapper.o \
-		$(LIBS)  -ltine -lDOOCSclient -lDOOCSserver 
-	strip $@
-doocsxbasic : $(LIBOBJS) main.o  doocs-wrapper.o
-	g++ -DTINE -DDOOCS $(OPT) $(LINKFLAGS) -o $@ $(AOBJS) \
-	$(LIBS) /usr/lib/libtine.a /usr/lib/libDOOCSclient.a \
-	/usr/lib/libDOOCSserver.a doocs-wrapper.o 
-	strip $@
 
 lib:	libx11basic.so $(EXELIB)
-
 
 
 # Make the ANSI-Basic to X11-Basic translator
@@ -679,8 +653,7 @@ moreclean: clean
 
 distclean: moreclean
 	rm -f Makefile config.cache config.status config.log config.h X11-Basic.iss \
-	      X11-Basic-examples-$(LIBNO).zip X11-Basic-$(LIBNO)-$(RELEASE)-win.zip \
-	      tinexbasic doocsxbasic
+	      X11-Basic-examples-$(LIBNO).zip X11-Basic-$(LIBNO)-$(RELEASE)-win.zip
 	rm -rf autom4te.cache
 
 $(DIR).tar.gz : dist
