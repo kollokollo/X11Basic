@@ -107,190 +107,6 @@ HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
        window.h wort_sep.h x11basic.h xb2csol.h xbasic.h memory.h lodepng.h \
        md5.h sha1.h ccs.h
 
-EXAMPLES_TESTS= \
-	../examples/tests/*.bas \
-	../examples/tests/README \
-	../examples/tests/alerts* \
-	../examples/c-usage/* \
-	../examples2/gui/* \
-	../examples2/internet/*.bas \
-	../examples2/misc/* \
-	../examples2/benchmarks/* \
-	../examples2/console/cursestest.bas \
-	../examples2/console/serial.bas \
-	../examples2/utils/stepdir.bas \
-	../examples2/sound/speaktest.bas \
-	../examples2/sound/tonedial.bas \
-	../examples2/Android/modprefs.bas \
-	../examples2/RELEASE-NOTES
-	
-EXAMPLES_TOMTOM= \
-	../examples2/TomTom/*
-
-EXAMPLES_FRAGMENTS= \
-	../examples2/fragments/*
-
-EXAMPLES_GPS_EARTH= \
-	../examples2/gps/*
-
-EXAMPLES_INTERNET= \
-	../examples2/internet/*.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_CGI= \
-	../examples2/internet/cgi/*.cgi \
-	../examples2/resources/* \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_3D_GRAPHICS= \
-	../examples2/3D-graphics/*.bas \
-	../examples2/graphics/3Dmaze.bas \
-	../examples2/graphics/3Dng.bas \
-	../examples2/graphics/carre3D.bas \
-	../examples2/graphics/kugel.bas \
-	../examples2/graphics/netzgraf.bas \
-	../examples2/graphics/terrain.bas \
-	../examples2/simulation/rot.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_CONSOLE= \
-	../examples2/console/ansi*.bas \
-	../examples2/console/cfont.bas \
-	../examples2/console/console_clock.bas \
-	../examples2/console/g*.bas \
-	../examples2/console/l*.bas \
-	../examples2/console/m*.bas \
-	../examples2/console/showunicode.bas \
-	../examples2/console/t*.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_UTILITY= \
-	examples/compiler/bas2x11basic.bas \
-	examples/compiler/gui2bas.bas \
-	examples/compiler/inline.bas \
-	examples/compiler/xbc.bas \
-	examples/compiler/xbc-st.bas \
-	examples/compiler/xbc-win.bas \
-	../examples2/utils/a2ov2.bas \
-	../examples2/utils/ans2bas.bas \
-	../examples2/utils/draftit \
-	../examples2/utils/fotoweb.bas \
-	../examples2/utils/mid2mp3.bas \
-	../examples2/utils/o*.bas \
-	../examples2/utils/raw2bmp.bas \
-	../examples2/utils/myunzip.bas \
-	../examples2/utils/myzip.bas \
-	../examples2/utils/scramble.bas \
-	../examples2/console/showunicode.bas \
-	../examples2/sound/tonedial.bas \
-	../examples2/sound/morse.bas \
-	../examples2/calculation/finanzierung.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_ASTRONOMY= \
-	../examples2/utils/o*.bas \
-	../examples2/utils/mondphas.bas \
-	../examples2/utils/sonnenaufgang.bas \
-	../examples2/calculation/kw.bas \
-	../examples2/fragments/planeten.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_PHYSICS= \
-	../examples2/utils/sonnenaufgang.bas \
-	../examples2/simulation/boing.bas \
-	../examples2/simulation/dipolfel.bas \
-	../examples2/simulation/kohaerenz.bas \
-	../examples2/simulation/mpendel.bas \
-	../examples2/simulation/qatom.bas \
-	../examples2/simulation/resonnances.bas \
-	../examples2/simulation/rot.bas \
-	../examples2/simulation/echoanim.bas \
-	../examples2/simulation/echorealistic.bas \
-	../examples2/calculation/dbtabelle.bas \
-	../examples2/calculation/diffglei.* \
-	../examples2/physik/linsen.bas \
-	../examples2/physik/b7coge.dat \
-	../examples2/physik/spec.bas \
-	../examples2/physik/v48.bas \
-	../examples2/simulation/3kp.bas \
-	../examples2/simulation/brot.bas \
-	../examples2/simulation/schottky-p.bas \
-	../examples2/simulation/trackit.c \
-	../examples2/simulation/wasser.bas \
-	../examples2/fragments/planeten.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_MATHEMATICS= \
-	../examples2/misc/zahlen.bas \
-	../examples2/calculation/1ziff.bas \
-	../examples2/calculation/basprime.bas \
-	../examples2/calculation/brefeld2.bas \
-	../examples2/calculation/brefeld.bas \
-	../examples2/calculation/complex-mandel.bas \
-	../examples2/calculation/factorize.bas \
-	../examples2/calculation/factorize-big.bas \
-	../examples2/calculation/factors.bas \
-	../examples2/calculation/floatingpoint.bas \
-	../examples2/calculation/gen_primes.bas \
-	../examples2/calculation/huffman.bas \
-	../examples2/calculation/Zn-inv.bas \
-	../examples2/calculation/MillionPI.bas \
-	../examples2/calculation/pi800.bas \
-	../examples2/calculation/randomminmax.bas \
-	../examples2/calculation/sieve.bas \
-	../examples2/calculation/sqr.bas \
-	../examples2/calculation/tsp.bas \
-	../examples2/simulation/bifur.bas \
-	../examples2/simulation/life.bas \
-	../examples2/graphics/complex-mandel-sequence.bas \
-	../examples2/graphics/dla.bas \
-	../examples2/graphics/farn.bas \
-	../examples2/graphics/fastmandel.bas \
-	../examples2/graphics/Fractal_Cloud.bas \
-	../examples2/graphics/fractal-tree.bas \
-	../examples2/graphics/lorenz-attractor.bas \
-	../examples2/graphics/mandel.bas \
-	../examples2/graphics/mandel-simple.bas \
-	../examples2/graphics/replicator.bas \
-	../examples2/graphics/rotozoomer-9.bas \
-	../examples2/graphics/sattrac1.bas \
-	../examples2/graphics/sierpinski.bas \
-	../examples2/graphics/spitzenteppich.bas \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_ANIMATION= \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_GAMES= \
-	../examples2/calculation/puzzle-box.bas \
-	../examples2/games/atomium.bas \
-	../examples2/games/zahlenrate.bas \
-	../examples2/games/last.bas \
-	../examples2/games/TicTacToe.bas \
-	../examples2/games/lander.bas \
-	../examples2/games/civil-war.bas \
-	../examples2/games/crap.bas \
-	../examples2/games/sudoku.bas \
-	../examples2/games/Ballerburg/anleitung.txt \
-	../examples2/games/Ballerburg/ballerburg.bas \
-	../examples2/games/Ballerburg/baller.dat \
-	../examples2/games/Ballerburg/baller.rsc \
-	../examples2/games/Ballerburg/README \
-	../examples2/games/Ballerburg/sound/*.ogg \
-	../examples2/RELEASE-NOTES
-
-EXAMPLES_ATARI_ST= \
-	../examples2/Atari-ST/* \
-	../examples2/RELEASE-NOTES
-	
-
-EXAMPLES= $(EXAMPLES_TESTS) $(EXAMPLES_TOMTOM)  $(EXAMPLES_FRAGMENTS) \
-          $(EXAMPLES_GPS_EARTH) $(EXAMPLES_INTERNET) $(EXAMPLES_CGI) \
-	  $(EXAMPLES_3D_GRAPHICS) $(EXAMPLES_CONSOLE)  $(EXAMPLES_UTILITY) \
-	  $(EXAMPLES_ASTRONOMY) $(EXAMPLES_PHYSICS) $(EXAMPLES_ANIMATION) \
-	  $(EXAMPLES_GAMES) $(EXAMPLES_MATHEMATICS) $(EXAMPLES_ATARI_ST) \
-        ../examples2/RELEASE-NOTES 
-
 
 EXE=		xbasic xbc xbbc xbvm xb2c 
 STATICEXE=	xbasic.static xbvm.static xb2c.static xbbc.static 
@@ -576,7 +392,7 @@ strip  : $(EXE)
 
 
 debugtest : xbasic.debug
-	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic.debug ../examples2/calculation/diffglei.bas
+	valgrind --leak-check=full --track-origins=yes --partial-loads-ok=yes ./xbasic.debug ../examples/graphics/diffglei.bas
 
 #
 # Make a version of X11-Basic which uses the SDL library for graphics 
@@ -734,19 +550,7 @@ windows: $(WINDIST) X11-Basic.iss
 tos: $(TOSDIST)
 	rm -f X11-Basic-$(LIBNO)-$(RELEASE)-st.zip
 	zip -j -D -o X11-Basic-$(LIBNO)-$(RELEASE)-st.zip $(TOSDIST)
-
-
-examples: X11-Basic-examples-$(LIBNO)-$(RELEASE).zip \
-	X11-Basic-examples-$(LIBNO).tar.gz 
 	
-	
-# Das hier sind wirklich alle Beispielprogramme, zu Archivierungszwecken
-X11-Basic-examples-$(LIBNO)-$(RELEASE).zip:
-	cd .. ; zip -r  src/X11-Basic-examples-$(LIBNO)-$(RELEASE).zip examples2/
-
-X11-Basic-examples-$(LIBNO).tar.gz:
-	cd .. ; tar czf  src/X11-Basic-examples-$(LIBNO).tar.gz examples2/
-
 # Fuer die Control System Varianten
 
 tinexbasic.dyn : $(LIBOBJS) main.o 
@@ -774,9 +578,9 @@ lib:	libx11basic.so $(EXELIB)
 bas2x11basic : xbc examples/compiler/bas2x11basic.bas
 	LD_LIBRARY_PATH=. ./xbc examples/compiler/bas2x11basic.bas --dynamic -o $@ -L .
 	strip $@
-myzip : xbc ../examples2/utils/myzip.bas ../examples2/utils/myunzip.bas
-	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myzip.bas --dynamic -o myzip -L .
-	LD_LIBRARY_PATH=. ./xbc ../examples2/utils/myunzip.bas --dynamic -o myunzip -L .
+myzip myunzip: xbc ../examples/utility/myzip.bas ../examples/utility/myunzip.bas
+	LD_LIBRARY_PATH=. ./xbc ../examples/utility/myzip.bas --dynamic -o myzip -L .
+	LD_LIBRARY_PATH=. ./xbc ../examples/utility/myunzip.bas --dynamic -o myunzip -L .
 	strip myzip
 	strip myunzip
 
