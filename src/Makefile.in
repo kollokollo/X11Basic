@@ -107,7 +107,8 @@ HSRC=  aes.h afunctions.h android.h array.h bitmap.h bytecode.h \
 EXE=		xbasic xbc xbbc xbvm xb2c 
 STATICEXE=	xbasic.static xbvm.static xb2c.static xbbc.static 
 DEBUGEXE=	xbasic.debug xbbc.debug xb2c.debug xbvm.debug
-EXTRAEXE=	fbxbasic bas2x11basic xbasic.sdl
+EXTRAEXE=	fbxbasic bas2x11basic 
+EXTRASDLEXE=	xbasic.sdl
 EXELIB=		x11basic.a
 DEBUGEXELIB=	x11basic.a.debug
 
@@ -196,12 +197,14 @@ WINLINKFLAGS = -L./WINDOWS/lib
 
 LIBS =  @libs@ @xlibs@ @xtra@
 # fuer Version ohne X
-LIBS1 =  @libs@
-LIBS2 =   -L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
+LIBS1=	@libs@
+LIBS2=	-L. -ldl -lm  -lncurses TomTom.extension/contrib/readline-5.2/libreadline.a 
 
 
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL  -lSDL_ttf -lzlib1 -lfreetype-6
-TOSLIBS = -lm  -lgem
+SDLLIBS=	-lSDL -lSDL_gfx -lSDL_ttf
+
+WINLIBS=	-lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL  -lSDL_ttf -lzlib1 -lfreetype-6
+TOSLIBS=	-lm -lgem
 
 STATICWINLIBS = WINDOWS/lib/libgmp.a \
             WINDOWS/clapack/lapack.lib WINDOWS/lib/libusb.a \
@@ -390,7 +393,7 @@ debugtest : xbasic.debug
 # Make a version of X11-Basic which uses the SDL library for graphics 
 #
 xbasic.sdl: main.c $(LIBCSRC)
-	$(CC) -DUSE_SDL $(OPT) $(LINKFLAGS) -o $@ $+ $(LIBS) -lSDL -lSDL_gfx -lSDL_ttf
+	$(CC) -DUSE_SDL -DFORCE_SDL $(OPT) $(LINKFLAGS) -o $@ $+ $(LIBS) $(SDLLIBS)
 	strip $@
 
 sdl: xbasic.sdl	

@@ -177,7 +177,7 @@ void set_graphmode(int n) {
   FT_Library    freetype_library=NULL;
   FT_Face       freetype_face=NULL;
 #endif
-#if defined USE_SDL
+#if defined HAVE_SDL_TTF
 #include <SDL/SDL_ttf.h>
 TTF_Font *ttffont = NULL;
 int ttffontheight=20;  /* pt @ 100dpi*/
@@ -204,7 +204,7 @@ void set_font(char *name) {
   window[usewindow].chw=24;
   window[usewindow].chh=48;
   window[usewindow].baseline=window[usewindow].chh-6;
-#elif defined USE_SDL
+#elif defined HAVE_SDL_TTF
   if(ttffont) {
     TTF_CloseFont(ttffont);
     ttffont=NULL;
@@ -271,7 +271,9 @@ void set_font(char *name) {
     window[usewindow].baseline=window[usewindow].chh-0;
   }
 #elif defined USE_SDL
+#ifdef HAVE_SDL_TTF
   ttffont = NULL;
+#endif
   if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
     window[usewindow].chw=8;
     window[usewindow].chh=16;
@@ -367,6 +369,7 @@ void draw_string(int x, int y, char *text,int len) {
   s[len]=0;
   
   /* TODO: implement SDL_TTF with angle here ....*/
+#ifdef HAVE_SDL_TTF
   if(ttffont) {
     SDL_Surface *message = NULL;
 
@@ -381,6 +384,7 @@ void draw_string(int x, int y, char *text,int len) {
       return;
     }
   }
+#endif
   stringColor(window[usewindow].display,x,y-window[usewindow].baseline+2,s,window[usewindow].fcolor);
 #endif
 }

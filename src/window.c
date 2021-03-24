@@ -224,10 +224,12 @@ static int init_sdl() {
   }
   atexit(SDL_Quit);
   /* Initialize SDL_ttf  */
+#ifdef HAVE_SDL_TTF
   if(TTF_Init()==-1) {
     perror("SDL_TTF_Init failed.");
     return -1;
   }
+#endif
   /* Enable Unicode translation */
   SDL_EnableUNICODE( 1 );
 

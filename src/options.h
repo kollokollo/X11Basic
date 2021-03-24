@@ -41,6 +41,7 @@
   #define USE_SDL
   #define HAVE_SDL 1 
   #define HAVE_SDL_GFX 1
+  #define HAVE_SDL_TTF 1
   #undef SIZEOF_VOID_P
   #define SIZEOF_VOID_P 4
 #elif defined ATARI
@@ -64,6 +65,11 @@
 
 #ifdef USE_SDL
   #undef HAVE_FREETYPE
+  #ifdef FORCE_SDL
+    #define HAVE_SDL 1 
+    #define HAVE_SDL_GFX 1
+    #define HAVE_SDL_TTF 1
+  #endif
 #endif
 
 #ifndef HAVE_SDL 

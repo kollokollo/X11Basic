@@ -6373,7 +6373,8 @@ fi
 
 fi
 
-# `-lSDL':
+if test "n$with_sdl" = nyes; then
+ # `-lSDL':
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_MapRGB in -lSDL" >&5
 $as_echo_n "checking for SDL_MapRGB in -lSDL... " >&6; }
 if ${ac_cv_lib_SDL_SDL_MapRGB+:} false; then :
@@ -6464,6 +6465,52 @@ $as_echo "#define HAVE_SDL_GFX 1" >>confdefs.h
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TTF_Init in -lSDL_ttf" >&5
+$as_echo_n "checking for TTF_Init in -lSDL_ttf... " >&6; }
+if ${ac_cv_lib_SDL_ttf_TTF_Init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lSDL_ttf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char TTF_Init ();
+int
+main ()
+{
+return TTF_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_SDL_ttf_TTF_Init=yes
+else
+  ac_cv_lib_SDL_ttf_TTF_Init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_ttf_TTF_Init" >&5
+$as_echo "$ac_cv_lib_SDL_ttf_TTF_Init" >&6; }
+if test "x$ac_cv_lib_SDL_ttf_TTF_Init" = xyes; then :
+
+libs="$libs -lSDL_ttf"
+
+$as_echo "#define HAVE_SDL_TTF 1" >>confdefs.h
+
+
+fi
+
+fi
 
 # `-lx11basic':
 #AC_CHECK_LIB([x11basic], [programmlauf],,,[$X_LIBS $libs -$xlibs])

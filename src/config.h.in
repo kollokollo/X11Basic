@@ -169,6 +169,9 @@
 /* Simple Direct Media GFX */
 #undef HAVE_SDL_GFX
 
+/* Simple Direct Media TTF */
+#undef HAVE_SDL_TTF
+
 /* Advanced Sound System present */
 #undef HAVE_ALSA
 
