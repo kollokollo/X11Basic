@@ -13,6 +13,12 @@ The resulting files are installable binary packages. .deb
 on linux, setup.exe on WINDOWS and .apk on android. For TomTom and 
 ATARI ST you will get a .zip file.
 
+
+Hint: If you are a package maintainer and want to know how to reliably 
+build the binary distributions, maybe you want to have a look into the
+docker build instructions (see below) and into the Dockerfile.
+
+
 ## Make the .deb file for Ubuntu linux
 
 On Ubuntu 16.04:
@@ -92,6 +98,32 @@ cd X11Basic/src;make tos
 
 
 ## Build the TomTom ONE version (.zip file)
+
+cd X11Basic/src;make tomtom
+
+## Docker Builds
+
+We now also offer the possibility to create the binary files via a docker
+environment. On Ubuntu you should have docker-compose installed.
+
+
+Then, a simple
+
+make docker 
+
+should do the job.
+
+The outputs are in 
+
+src/docker:
+
+isetup-5.5.8.exe		-- InnoSetup installer (not really needed)
+x11basic_1.28-64_amd64.deb	-- The debian package for X11-Basic for linux
+X11-Basic-manual-1.28.pdf	-- The User Manual
+X11-Basic-1.28-64-setup.exe	-- The Installer for WINDOWS
+xbasic.mqtt			-- Version of X11-basic with MQTT support compiled in (for linux)
+X11-Basic-1.28-64-st.zip	-- A .zip distribution with the ATARI-ST Version of X11-basic
+xbasic.sdl			-- Version of X11-basic with SDL support compiled in (for linux)
 
 
 ## see also:

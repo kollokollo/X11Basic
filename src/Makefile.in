@@ -22,11 +22,15 @@ LIBDIR=@libdir@
 MANDIR=@mandir@
 INCDIR=@prefix@/include/x11basic
 
+NAME=X11-Basic
+SNAME=X11Basic
+DNAME=x11basic
+
 LIBNO=@version@
-
 RELEASE=64
-
 YEAR=2021
+
+MAINTAINER=kollo@users.sourceforge.net
 
 # Register variables (-ffixed-reg) -Wall
 REGS=@regs@  
@@ -110,10 +114,12 @@ DEBUGEXE=	xbasic.debug xbbc.debug xb2c.debug xbvm.debug
 EXTRAEXE=	fbxbasic bas2x11basic 
 EXTRASDLEXE=	xbasic.sdl
 EXELIB=		x11basic.a
+SOLIB=		libx11basic.so libx11basic.so.1 libx11basic.so.$(LIBNO)
 DEBUGEXELIB=	x11basic.a.debug
+MAN=		../doc/man-pages/*.1
 
 
-DIST= ../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+DIST= ../README.md ../doc/INSTALL ../COPYING $(MAN) \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
       ../doc/editors/*  $(HSRC) $(CSRC) X11-Basic.iss.in \
@@ -136,11 +142,11 @@ DIST= ../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
 	examples/graphics/* 
 
 
-BINDIST=../README.md ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+BINDIST=../README.md ../doc/INSTALL ../COPYING $(MAN) \
 	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY \
 	../RELEASE_NOTES ../doc/manual/Outputs/X11-Basic-manual-$(LIBNO).txt \
 	../doc/editors/* $(EXE) $(EXTRAEXE) $(EXELIB) \
-	x11basic.h xb2csol.h libx11basic.so \
+	x11basic.h xb2csol.h $(SOLIB) \
       examples/compiler/xbc.bas.in \
       examples/compiler/inline.bas \
       examples/compiler/bas2x11basic.bas \
@@ -186,10 +192,10 @@ TOMTOMEXELIB=	x11basic.a.tomtom
 
 DIST2=$(LIBOBJS:.o=.c) main.c
 
-DIR=X11Basic-@version@
-DIR2=X11Basic-src-@version@
-DIR3=X11Basic-bin-@version@
-DIR33=$(DIR)-bin
+DIR=	$(SNAME)-@version@
+DIR2=	$(SNAME)-src-@version@
+DIR3=	$(SNAME)-bin-@version@
+DIR33=	$(DIR)-bin
 
 
 LINKFLAGS = @LDFLAGS@
@@ -445,17 +451,17 @@ $(DIR33).zip: README $(TOMTOMEXE) TomTom.extension/x11basic.bmp TomTom.extension
 	rm -rf /tmp/$(DIR33)
 	mkdir /tmp/$(DIR33)
 	mkdir /tmp/$(DIR33)/bin
-	mkdir /tmp/$(DIR33)/X11-Basic
-	mkdir /tmp/$(DIR33)/X11-Basic/examples
+	mkdir /tmp/$(DIR33)/$(NAME)
+	mkdir /tmp/$(DIR33)/$(NAME)/examples
 	mkdir /tmp/$(DIR33)/SDKRegistry
 	rsync -a README /tmp/$(DIR33)/
-	cp ../README.md /tmp/$(DIR33)/X11-Basic/
-	cp ../RELEASE_NOTES /tmp/$(DIR33)/X11-Basic/
-	(cd ..; tar cf - $(EXAMPLES))|(cd /tmp/$(DIR33)/X11-Basic; tar xpf -)
+	cp ../README.md /tmp/$(DIR33)/$(NAME)/
+	cp ../RELEASE_NOTES /tmp/$(DIR33)/$(NAME)/
+	(cd ..; tar cf - $(EXAMPLES))|(cd /tmp/$(DIR33)/$(NAME); tar xpf -)
 	rsync -a xbasic.tomtom /tmp/$(DIR33)/bin/xbasic
 	rsync -a xbvm.tomtom /tmp/$(DIR33)/bin/xbvm
 #	rsync -a xbbc.tomtom /tmp/$(DIR33)/bin/xbbc
-	rsync -a TomTom.extension/x11basic-demo /tmp/$(DIR33)/X11-Basic/xbasic-demo
+	rsync -a TomTom.extension/x11basic-demo /tmp/$(DIR33)/$(NAME)/xbasic-demo
 	rsync -a TomTom.extension/x11basic.bmp /tmp/$(DIR33)/SDKRegistry/
 	rsync -a TomTom.extension/X11-Basic.cap /tmp/$(DIR33)/SDKRegistry/
 	rsync -a /home/hoffmann/c/TTconsole/src/utility/lib/terminfo /tmp/$(DIR33)/lib/
@@ -531,8 +537,8 @@ WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
 
 # Make a simple zip file distribution for WINDOWS
 
-winzip: X11-Basic-$(LIBNO)-$(RELEASE)-win.zip
-X11-Basic-$(LIBNO)-$(RELEASE)-win.zip: $(WINDIST)
+winzip: $(NAME)-$(LIBNO)-$(RELEASE)-win.zip
+$(NAME)-$(LIBNO)-$(RELEASE)-win.zip: $(WINDIST)
 	zip -j -D  -o $@ $(WINDIST)
 
 # Make the setup.exe installation program for WINDOWS
@@ -543,8 +549,8 @@ windows: $(WINDIST) X11-Basic.iss
 # Make an ATARI ST version
 
 tos: $(TOSDIST)
-	rm -f X11-Basic-$(LIBNO)-$(RELEASE)-st.zip
-	zip -j -D -o X11-Basic-$(LIBNO)-$(RELEASE)-st.zip $(TOSDIST)
+	rm -f $(NAME)-$(LIBNO)-$(RELEASE)-st.zip
+	zip -j -D -o $(NAME)-$(LIBNO)-$(RELEASE)-st.zip $(TOSDIST)
 	
 
 lib:	libx11basic.so $(EXELIB)
@@ -655,9 +661,12 @@ moreclean: clean
 	      $(TOSEXE) $(TOSEXELIB) $(WINEXE) $(WINEXELIB) $(STATICEXE) $(TOMTOMEXE) $(TOMTOMEXELIB)
 
 distclean: moreclean
-	rm -f Makefile config.cache config.status config.log config.h X11-Basic.iss \
-	      X11-Basic-examples-$(LIBNO).zip X11-Basic-$(LIBNO)-$(RELEASE)-win.zip
-	rm -rf autom4te.cache
+	rm -f	Makefile config.cache config.status config.log config.h \
+		X11-Basic.iss dockerimage-$(LIBNO)-$(RELEASE) \
+		$(NAME)-examples-$(LIBNO).zip \
+		$(NAME)-$(LIBNO)-$(RELEASE)-st.zip \
+		$(NAME)-$(LIBNO)-$(RELEASE)-win.zip
+	rm -rf	autom4te.cache
 
 $(DIR).tar.gz : dist
 dist :	$(DIST2)
@@ -666,6 +675,7 @@ dist :	$(DIST2)
 	(tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
 	(cd /tmp; tar cf - $(DIR)|gzip -9 > $(DIR).tar.gz)
 	mv /tmp/$(DIR).tar.gz .
+
 bindist : $(DIR3).zip
 
 
@@ -699,54 +709,115 @@ doc-pak: $(DEBDOC)
 	
 	
 deb :	$(BINDIST) doc-pak
-	sudo checkinstall -D --pkgname x11basic --pkgversion @version@ \
+	sudo checkinstall -D --pkgname $(DNAME) --pkgversion @version@ \
 	--pkgrelease $(RELEASE)  \
-	--maintainer "kollo@users.sourceforge.net" \
+	--maintainer $(MAINTAINER) \
         --requires libc6,libasound2,libreadline7,liblapack3,libgmp10,fftw2,libusb-0.1-4,libfreetype6 --backup  \
 	--pkggroup interpreters --provides libx11basic  \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
 	mkdir -p Debian/Outputs/
-	mv x11basic_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
+	mv $(DNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 deb2 :	$(DIR).tar.gz
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
 	cp $(DIR).tar.gz /tmp/$(DIR)/
 	(cd /tmp/$(DIR); \
 	tar xzf $(DIR).tar.gz;\
-	mv $(DIR) x11basic-$(LIBNO) )
-	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
-	dh_make -s -c gpl2 -e kollo@users.sourceforge.net -f ../$(DIR).tar.gz)
-	cp debcontrol.spec /tmp/$(DIR)/x11basic-$(LIBNO)/debian/control
-	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
+	mv $(DIR) $(DNAME)-$(LIBNO) )
+	(cd /tmp/$(DIR)/$(DNAME)-$(LIBNO); \
+	dh_make -s -c gpl2 -e $(MAINTAINER) -f ../$(DIR).tar.gz)
+	cp debcontrol.spec /tmp/$(DIR)/$(DNAME)-$(LIBNO)/debian/control
+	(cd /tmp/$(DIR)/$(DNAME)-$(LIBNO); \
 	dpkg-depcheck -d ./configure;\
 	rm -f examples/compiler/xbc.bas)
-	(cd /tmp/$(DIR)/x11basic-$(LIBNO); \
+	(cd /tmp/$(DIR)/$(DNAME)-$(LIBNO); \
 	sudo dpkg-buildpackage -rfakeroot)
 
-# excecute the Dockerfile and extract the debian package and the User Manual
-docker: docker/Dockerfile
-	cd docker;sudo docker build . -t kollo/x11basic:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v work -ti -v`pwd`:/work/ kollo/x11basic:$(LIBNO)-$(RELEASE) xbasic -e 'SYSTEM "ls -al;cp *.deb *.pdf *.zip *.exe work/"'
-#	cd docker;sudo docker run --net=host --env="DISPLAY" -v work -ti -v`pwd`:/work/ kollo/x11basic:$(LIBNO)-$(RELEASE)
-	sudo chown 1000 docker/*.exe docker/*.pdf docker/*.deb
+####################################
+# excecute the Dockerfile 
+# and extract the debian package 
+# and the User Manual and also
+# more exotic variants of X11-Basic
+####################################
+#
+# build the docker image (basically including the build environment)
+dockerimage-$(LIBNO)-$(RELEASE): docker/Dockerfile 
+	cd docker;sudo docker build . -t kollo/$(DNAME):$(LIBNO)-$(RELEASE)
+	touch $@
+
+
+DOCKERRUNNER=cd docker;sudo docker run -ti -v`pwd`:/work/ kollo/$(DNAME):$(LIBNO)-$(RELEASE) -e 
+
+docker/isetup-5.5.8.exe: dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cp /isetup-5.5.8.exe /work/"'
+	sudo chown 1000 $@
+
+# Make the ATARI ST Version
+docker/$(NAME)-$(LIBNO)-$(RELEASE)-st.zip:  dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cd /X11Basic/src;make tos;cp $(NAME)-$(LIBNO)-$(RELEASE)-st.zip /work/" '
+	sudo chown 1000 $@
+
+# Get the User Manual
+docker/X11-Basic-manual-$(LIBNO).pdf:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cp /X11-Basic-manual-$(LIBNO).pdf /work/"'
+	sudo chown 1000 $@
+
+# Get the debian package
+docker/$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cp /$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb /work/" '
+	sudo chown 1000 $@
+
+
+# Make the .sdl excecutable
+docker/xbasic.sdl:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cd /X11Basic/src;make sdl;cp xbasic.sdl /work/" '
+	sudo chown 1000 $@
+
+# Make the .mqtt excecutable
+docker/xbasic.mqtt:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cd /X11Basic/src;./configure --with-mqtt;make static;cp xbasic.static /work/xbasic.mqtt" '
+	sudo chown 1000 $@
+
+
+# Make the WINDOWS Version
+docker/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) 'SYSTEM "cd /X11Basic/src;make windows;cp Inno-Output/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe /work/" '
+	sudo chown 1000 $@
+
+
+# run the docker container (to make the debian and ATARI packages and the windows installer)
+
+docker: docker/isetup-5.5.8.exe \
+        docker/X11-Basic-manual-$(LIBNO).pdf \
+	docker/$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb \
+	docker/$(NAME)-$(LIBNO)-$(RELEASE)-st.zip \
+	docker/xbasic.sdl \
+	docker/xbasic.mqtt \
+	docker/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe
+	cd docker;sudo docker run -ti -v`pwd`:/work/ kollo/$(DNAME):$(LIBNO)-$(RELEASE) 
+	echo "done."
+
+# Binary distribution as a .zip package
 
 $(DIR3).zip : $(BINDIST)
 	rm -rf /tmp/$(DIR3)
 	mkdir /tmp/$(DIR3)
 	mkdir /tmp/$(DIR3)/bin
+	mkdir /tmp/$(DIR3)/lib
 	mkdir /tmp/$(DIR3)/man
-	rsync -a README /tmp/$(DIR3)/
-	rsync -a INSTALL /tmp/$(DIR3)/
-	rsync -a RELEASE_NOTES /tmp/$(DIR3)/
-	rsync -a xbasic /tmp/$(DIR3)/bin/
-	rsync -a xbc /tmp/$(DIR3)/bin/
-	rsync -a ../doc/man-pages/ybasic.1 /tmp/$(DIR3)/man/ybasic.1
-	rsync -a ../doc/man-pages/fbxbasic.1 /tmp/$(DIR3)/man/fbxbasic.1
-	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/xbasic.1
-	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/
+	mkdir /tmp/$(DIR3)/man/man1
+	rsync -a ../README.md /tmp/$(DIR3)/
+	rsync -a ../doc/INSTALL /tmp/$(DIR3)/
+	rsync -a ../RELEASE_NOTES /tmp/$(DIR3)/
+	rsync -a $(EXE) $(EXTRAEXE) /tmp/$(DIR3)/bin/
+	rsync -a $(EXELIB) /tmp/$(DIR3)/lib/
+	rsync -a $(SOLIB) /tmp/$(DIR3)/lib/
+	rsync -a $(MAN) /tmp/$(DIR3)/man/man1/
+	rsync -a ../doc/man-pages/x11basic.1 /tmp/$(DIR3)/man/man1/xbasic.1
 	(cd /tmp ; zip -r $(DIR3).zip $(DIR3))
 	mv /tmp/$(DIR3).zip .	
+	(md5sum $@ > $@.md5.txt )
 
 # create DSL package (for Damn Small Linux MyDSL)	
 dslpackage : xbasic.staticreadline
@@ -762,9 +833,12 @@ dslpackage : xbasic.staticreadline
 	echo "end" >> /dev/shm/home/dsl/.xtdesktop/x11basic.lnk
 	(cd /dev/shm; mkdir -p opt/X11Basic-@version@)
 	cp xbasic.staticreadline /dev/shm/opt/X11Basic-@version@/xbasic
-	(cd /dev/shm; tar czf X11Basic.tar.gz home/dsl/.xtdesktop/x11basic* opt/X11Basic-@version@)
-	mv /dev/shm/X11Basic.tar.gz .
-	(md5sum X11Basic.tar.gz > X11Basic.tar.gz.md5.txt )
+	(cd /dev/shm; tar czf $(SNAME).tar.gz home/dsl/.xtdesktop/x11basic* opt/X11Basic-@version@)
+	mv /dev/shm/$(SNAME).tar.gz .
+	(md5sum $(SNAME).tar.gz > $(SNAME).tar.gz.md5.txt)
+
+# check if the dynamical linking works
+
 check :	xbasic
 	LD_LIBRARY_PATH=. ./xbasic -e version
 

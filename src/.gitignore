@@ -11,6 +11,7 @@ AUTH
 *.prg
 *.a
 *.lib
+*.md5.txt
 
 test*.bas
 
@@ -21,6 +22,10 @@ xbbc
 xbc
 xbvm
 fbxbasic
+xbasic.sdl
+myzip
+myunzip
+rsc2gui
 
 libx11basic.so
 libx11basic.so.*
@@ -55,6 +60,8 @@ WINDOWS/contrib/SDL-1.2.15-win32.zip
 docker/*.pdf
 docker/*.exe
 docker/*.deb
+docker/xbasic.sdl
+dockerimage-*
 
 Inno-Output
 Debian/Outputs

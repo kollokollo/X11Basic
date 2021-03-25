@@ -7,15 +7,14 @@ https://github.com/shakenfr/x11basic_docker/
 The docker file generates an installable .deb package of X11-Basic as well as
 the User-Manul as .pdf
 
+After a make docker you should find here:
 
-Important docker commands:
--------------------------
+Dockerfile.Ubuntu.20.04         -- The Dockerfile to generate the docker image, based on Ubunut.20.04
+isetup-5.5.8.exe		-- InnoSetup installer (not really needed)
+x11basic_1.28-64_amd64.deb	-- The debian package for X11-Basic for linux
+X11-Basic-manual-1.28.pdf	-- The User Manual
+X11-Basic-1.28-64-setup.exe	-- The Installer for WINDOWS
+xbasic.mqtt			-- Version of X11-basic with MQTT support compiled in (for linux)
+X11-Basic-1.28-64-st.zip	-- A .zip distribution with the ATARI-ST Version of X11-basic
+xbasic.sdl			-- Version of X11-basic with SDL support compiled in (for linux)
 
-
-
-sudo docker build . -t kollo/x11basic:1.27
-
-
-# sudo docker images
-
-# sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/x11basic:1.27 --net=host --env="DISPLAY"
