@@ -67,7 +67,7 @@ RUN wine cmd /c 'echo %PROGRAMFILES%'
 #
 # Get and make X11-Basic
 #
-RUN echo "Get and make X11-Basic"
+RUN echo "Get and make X11-Basic (1)"
 RUN git clone https://codeberg.org/kollo/X11Basic.git
 RUN mkdir -p X11Basic/src/Debian/Outputs
 RUN cd X11Basic/src/;./configure --prefix=/usr

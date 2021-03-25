@@ -327,16 +327,16 @@ xbc.exe : xbasic.static  xbvm.exe xbc-win.b
 ###################################################
 # Make the exe for ATARI ST
 
-xbasic.prg: $(TOSEXELIB) main.c
+xbasic.prg: main.c $(TOSEXELIB) 
 	$(TOSCC) -DATARI $(OPT)  -o $@ $+ $(TOSLIBS)
 	m68k-atari-mint-strip $@
 xbbc.ttp: xbbc.c bytecode.c $(TOSEXELIB)
 	$(TOSCC) -DATARI  $(OPT) -o $@ $+ $(TOSLIBS)
 	m68k-atari-mint-strip $@
-xbvm.prg: $(TOSEXELIB) xbvm.c 
+xbvm.prg: xbvm.c $(TOSEXELIB) 
 	$(TOSCC) -DATARI $(OPT)  -o $@ $+ $(TOSLIBS)
 	m68k-atari-mint-strip $@
-xbc.prg : xbasic examples/compiler/xbc-st.bas xbvm.prg xbbc
+xbc.prg : xbasic xbbc xbbc.ttp examples/compiler/xbc-st.bas xbvm.prg
 	LD_LIBRARY_PATH=. ./xbasic -q examples/compiler/xbc-st.bas -o $@
 	chmod 755 $@ 
 xb2c.ttp: xb2c.c tools.c kommandos.c functions.c io_basic.c afunctions.c sfunctions.c file.c svariablen.c keywords.c
