@@ -18,3 +18,11 @@ xbasic.mqtt			-- Version of X11-basic with MQTT support compiled in (for linux)
 X11-Basic-1.28-64-st.zip	-- A .zip distribution with the ATARI-ST Version of X11-basic
 xbasic.sdl			-- Version of X11-basic with SDL support compiled in (for linux)
 
+You can run the docker container which would start xbasic. Make sure to 
+connect the graphical display. I do it this way:
+
+ 
+  XAUTHORITY=$(xauth info | grep "Authority file" | awk '{ print $3 }')
+  echo $(XAUTHORITY)
+  cd docker;sudo docker run -ti -v`pwd`:/work/ --net=host -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+            -v $(XAUTHORITY):/root/.Xauthority:ro kollo/$(DNAME):$(LIBNO)-$(RELEASE)

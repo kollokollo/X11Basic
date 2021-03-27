@@ -795,7 +795,9 @@ docker: docker/isetup-5.5.8.exe \
 	docker/xbasic.sdl \
 	docker/xbasic.mqtt \
 	docker/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe
-	cd docker;sudo docker run -ti -v`pwd`:/work/ kollo/$(DNAME):$(LIBNO)-$(RELEASE) 
+	XAUTHORITY=$(xauth info | grep "Authority file" | awk '{ print $3 }')
+	cd docker;sudo docker run -ti -v`pwd`:/work/ --net=host -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+	-v $(XAUTHORITY):/root/.Xauthority:ro kollo/$(DNAME):$(LIBNO)-$(RELEASE)
 	echo "done."
 
 # Binary distribution as a .zip package
