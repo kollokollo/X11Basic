@@ -35,12 +35,12 @@ X11-Basic. Does anybody have an idea what could be the problem?
 More things left to do:
 =======================
 - test the thing and find more bugs,
-- Optimize a bit more, improve performance,
-- The WINDOWS-Version needs more work,
+- optimize a bit more, improve performance,
+- the WINDOWS-Version needs more work,
 - work on the sound system,
 - work on the SDL-Graphics implementation (fill styles etc...),
 - documentation needs more work,
-- translate the user manual into other languares (german, french,...)
+- translate the user manual into other languares (japanese, french,...)
 - port it to apple ipad/iphone,
 (etc. etc.)
 
@@ -55,12 +55,12 @@ If you are sourcing a contribution from somewhere else, it must carry a compatib
 
 The best way to contribute to this project is by making a pull request:
 
-1. Login with your Github account or create one now
-2. [Fork](https://github.com/kollokollo/X11Basic#fork-destination-box) the X11Basic repository. Work on your fork.
+1. Login with your Codeberg account or create one now
+2. [Fork](https://codeberg.org/kollo/X11Basic#fork-destination-box) the X11Basic repository. Work on your fork.
 3. Create a new branch on which to make your change, e.g.
 `git checkout -b my_code_contribution`, or make the change on the `new` branch.
 4. Edit the file where you want to make a change or create a new file in the `contrib` directory if you're not sure where your contribution might fit.
-5. Edit `doc/ACKNOWLEGEMENTS` and add your own name to the list of contributors under the section with the current year. Use your name, or a github ID, or a pseudonym.
+5. Edit `doc/ACKNOWLEGEMENTS` and add your own name to the list of contributors under the section with the current year. Use your name, or a codeberg ID, or a pseudonym.
 6. Commit your change. Include a commit message describing the correction.
 7. Submit a pull request against the X11Basic repository.
 
@@ -70,13 +70,10 @@ The best way to contribute to this project is by making a pull request:
 
 If you find a mistake and you're not sure how to fix it, or you don't know how to do a pull request, then you can file an Issue. Filing an Issue will help us see the problem and fix it.
 
-Create a [new Issue](https://github.com/kollokollo/X11Basic/issues/new) now!
+Create a [new Issue](https://codeberg.org/kollo/X11Basic/issues/new) now!
 
 
 
 ## Thanks
 
 We are very grateful for your support. With your help, this BASIC implementation will be a great project. 
-
-
-So you are welcome to help.
