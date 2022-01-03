@@ -434,13 +434,21 @@ static char *i2a(unsigned i, char *a, unsigned r) {
   return a+1;
 }
 
+
+/* We have to use the constant here, because log(2) 
+  produces slightly different results on WINDOWS (compilers).
+  --> Codeberg issue #6 
+*/
+
+#define LOG2 0.6931471805599
+
 static STRING f_bins(PARAMETER *plist,int e) {
   STRING ergebnis;
   if(plist->typ==PL_INT) {
     unsigned int value=plist->integer;
     /*Predict length of string*/
     int plen=1;
-    if(value) plen=(log(value)/(double)log(2))+1;
+    if(value) plen=(log(value)/(double)LOG2)+1;
     int len=plen;
     if(e>1) len=max(plen,plist[1].integer);
     ergebnis.pointer=malloc(len+1);
