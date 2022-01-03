@@ -10,7 +10,7 @@
     
                        VERSION 1.28
 
-            (C) 1997-2021 by Markus Hoffmann
+            (C) 1997-2022 by Markus Hoffmann
             (http://x11-basic.sourceforge.net/)
 
 	             ALL RIGHTS RESERVED

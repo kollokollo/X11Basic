@@ -13,3 +13,4 @@ Release notes for Version 1.27 (June 2019 -- March 2021)
 Release notes for Version 1.28 (Mar 2021 -- today)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - New TrueType Font support (SETFONT,TEXT,DEFTEXT)
+- several minor bugfixes

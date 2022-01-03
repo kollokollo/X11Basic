@@ -4,7 +4,7 @@
 X11-Basic
 =========  
 
-(c) 1997-2021 by Markus Hoffmann
+(c) 1997-2022 by Markus Hoffmann
 
 A Basic interpreter and compiler with graphics capabilities
 

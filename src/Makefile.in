@@ -27,8 +27,8 @@ SNAME=X11Basic
 DNAME=x11basic
 
 LIBNO=@version@
-RELEASE=64
-YEAR=2021
+RELEASE=65
+YEAR=2022
 
 MAINTAINER=kollo@users.sourceforge.net
 

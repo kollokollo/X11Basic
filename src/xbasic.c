@@ -16,7 +16,7 @@
 
                        VERSION 1.28
 
-            (C) 1997-2021 by Markus Hoffmann
+            (C) 1997-2022 by Markus Hoffmann
 
 (https://x11-basic.codeberg.page/ http://x11-basic.sourceforge.net/)
 

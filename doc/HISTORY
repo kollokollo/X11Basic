@@ -424,8 +424,9 @@ Release notes for Version 1.27 (June 2019 -- Mar 2021)
 - New function CRC16() 
 - New mqtt commands BROKER, SUBSCRIBE, PUBLISH
 
-Release notes for Version 1.28 (Mar 2021 -- April 2021)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Release notes for Version 1.28 (Mar 2021 -- June 2022)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - New TrueType Font support (SETFONT,TEXT,DEFTEXT)
+- minor bugfixes
 
 --------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # Makefile for X11-Basic documentation, including the user manual
 # 
-# (c) Markus Hoffmann 2003-2021
+# (c) Markus Hoffmann 2003-2022
 #
 # benoetigt:
 # * imagemagic

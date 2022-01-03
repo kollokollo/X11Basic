@@ -1,7 +1,7 @@
 #
 # spec file for package X11Basic (Version 1.28), by Markus Hoffmann
 #
-# Copyright  (c)  Markus Hoffmann 1997-2021
+# Copyright  (c)  Markus Hoffmann 1997-2022
 #
 # please send bugfixes or comments to kollo@users.sourceforge.net.
 #
