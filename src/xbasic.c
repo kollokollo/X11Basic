@@ -1332,6 +1332,7 @@ void programmlauf(){
 	} break;
       case P_VOID:
         c_void(pcode[opc].argument);
+      case P_REM:
         break;
       default:
         switch(pcode[opc].opcode&PM_TYP) {
