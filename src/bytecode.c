@@ -56,6 +56,10 @@ static int compile_zeile;
 
 
 #define BCADDPUSHX(a) if(a) {BCADD(BC_PUSHX);BCADD(strlen(a));\
+			if(strlen(a)>126) { \
+			 printf("Compiler-ERROR: X-String too long at line %d.\n",compile_zeile); \
+		      exit(0); \
+			} \
                       {int adr=add_rodata(cb,a,strlen(a));\
 		      CP4(&cb->textseg[cb->textseglen],&adr,cb->textseglen);}\
                       } else { \
